@@ -152,9 +152,9 @@ class SignatureAuthentication(authentication.BaseAuthentication):
 
         item_keys = self.get_item_keys(request)
         if api_key == 'xcx' or api_key == 'wechat':
-            headers_string = ['x-date'] + item_keys
+            headers_string = ['x-date', 'nonce'] + item_keys
         else:
-            headers_string = ['date'] + item_keys
+            headers_string = ['date', 'nonce'] + item_keys
 
         return headers_string
 
