@@ -1,0 +1,75 @@
+# -*- coding: UTF-8 -*-
+# 调试模式开关
+DEBUG = True
+# HOST限制规则
+ALLOWED_HOSTS = [
+    '*',    # 因为使用了nginx/apache之类的前端,所以限定规则交给前端,这里设为 *(所有) 就可以了
+]
+
+# 数据库设置
+# <<一定要修改>>
+DB = {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': 'caicai',
+    'HOST': '127.0.0.1',
+    'USER': 'root',
+    'PASSWORD': '123456',
+    'OPTIONS': {
+        'charset': 'utf8mb4',
+        'sql_mode': 'STRICT_TRANS_TABLES',
+        'init_command': 'SET innodb_strict_mode=1',
+    },
+}
+
+# 站点信息相关
+# 使用第一个站点信息
+SITE_ID = 1
+# 后台左上角的"站点"外部链接
+SITE_DOMAIN = "http://wocaicai.ngrok.xiqjv.com"
+# 项目全名
+SITE_NAME = "我猜猜"
+# 项目简称
+SITE_SHORTNAME = '我猜猜'
+
+# 微信通讯配置
+WECHAT_APP_ID = 'wx88d145f9314201be'
+WECHAT_APP_SECRET = 'e2a732f9867b4a0cffa7e647b9d3910b'
+WECHAT_APP_TOKEN = '6CPrGnvFQYAzmUmTsQitvnrJWgk4NiUt'
+WECHAT_ENCRYPT_MODE = 'normal'
+WECHAT_ENCRYPT_AES_KEY = '9jtEo1PghHJr8alicBBSCC8uImr4mGaW2nv2f9YHKpU'
+
+APP_API_KEY = {
+    'ios': 'DJhCZACPX{9,KWcOO0YJAA[DB&qVVsPT',
+    'android': 'NyewR0O9JXlJ4ZvZMKnwO81X4qFN',
+    'xcx': 'B/#NPb2{8VK&fKF3SA&y"fjm*Cd7v;MT',
+    'wechat': 'SxJxdVetmP4uWPmqfIV5molIVXT1ehiT',
+}
+
+# 短信配置
+SMS_APP_KEY = 'XXXXX'
+SMS_APP_SECRET = 'XXXXX'
+SMS_TYPE = 'normal'
+SMS_SIGN_NAME = '阿里云短信测试专用'
+SMS_TEMPLATE_ID = 'SMS_82260017'
+
+MEDIA_DOMAIN_HOST = 'http://up.wocaicai.com'
+STATIC_DOMAIN_HOST = 'http://static.wocaicai.com'
+
+# 分享页面的竞猜ID
+SHARE_QUIZ_ID = 277
+
+# 全局设定默认值,
+# ***不要在这里更改***,
+# 应该在服务启动后,通过后台修改
+DEFAULT_CONFIGURATIONS = [
+]
+
+DJANGO_SILK = False
+
+# 环信配置
+HUANXIN_CLIENT_ID = 'YXA6cBLk0LiPEeeQcKHQ6it0MA'
+HUANXIN_CLENT_SECRET = 'YXA6GWKyfLC0jze4p8WUrZdyI2gJyOw'
+HUANXIN_APP_KEY = '1144171024115072#wocaicai'
+HUANXIN_REST_URL = 'https://a1.sdb.easemob.com'
+HUANXIN_ORG_NAME = '1144171024115072'
+HUANXIN_APP_NAME = 'wocaicai'
