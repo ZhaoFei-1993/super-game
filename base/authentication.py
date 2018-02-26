@@ -3,6 +3,8 @@ from rest_framework import authentication
 from httpsig import HeaderSigner
 from urllib.parse import quote_plus
 import re
+import time
+import dateutil.parser as dateparser
 
 from rest_framework_jwt.settings import api_settings
 from .exceptions import SystemParamException, SignatureNotMatchException, NotLoginException
@@ -10,6 +12,8 @@ from .exceptions import SystemParamException, SignatureNotMatchException, NotLog
 from django.core.cache import caches
 
 from . import code
+
+from users.models import User
 
 
 class SignatureAuthentication(authentication.BaseAuthentication):
@@ -25,92 +29,6 @@ class SignatureAuthentication(authentication.BaseAuthentication):
     API_KEY_HEADER = 'X-Api-Key'
     API_NONCE_HEADER = 'nonce'
     ALGORITHM = 'hmac-sha256'
-
-    # 需要登录验证的URL放到这个列表内
-    authenticate_url = [
-        'v1/user/info/',
-        'v1/user/logout/',
-        'v1/user/recharge/',
-        'v1/user/modifypassword/',
-        'v1/quiz/comment/',
-        'v1/quiz/favorite/',
-        'v1/quiz/bet/',
-        'v1/quiz/bet/daily/',
-        'v1/quiz/bet/competition/',
-        'v1/quiz/mostactiveuser/list/',
-        'v1/user/feedback/',
-        'v1/quiz/competition/(.+?)/join/',
-        'v1/user/favorite/',
-        'v1/sms/content/',
-        'v1/upload/',
-        'v1/quiz/records/',
-        'v1/recharge/diamonds_amount_exchange/',
-        'v1/quiz/comment/like/(.+?)/',
-        'v1/user/quiz/',
-        'v1/user/achievement/',
-        'v1/user/favorite-del/(.+?)/',
-        'v1/user/country_ranking/',
-        'v1/user/friend_ranking/',
-        'v1/user/score/',  #
-        'v1/chat/clublist/',
-        'v1/chat/seekfriend/',
-        'v1/chat/send_friendinvitation/',
-        'v1/chat/friendinvite/',
-        'v1/chat/friendinvitelist/',
-        'v1/chat/friendlist/',
-        'v1/chat/deletefriend/',
-        'v1/chat/friendinfo/',
-        'v1/chat/qualification_list/',
-        'v1/chat/audit_list/',
-        'v1/chat/member_management_list/',
-        'v1/chat/clubuser_list/',
-        'v1/chat/found_club_config/',
-        'v1/chat/club_invitelist/',
-        'v1/chat/modify_club_config/',
-        'v1/chat/found_club/',
-        'v1/chat/modify_club/',
-        'v1/chat/send_clubinvitation/',
-        'v1/chat/dissolve_club/',
-        'v1/chat/leave_oneself/',
-        'v1/chat/category/',
-        'v1/chat/list/',
-        'v1/chat/club_notice/',
-        'v1/chat/left_userinfo/',
-        'v1/chat/through_audit/',
-        'v1/chat/qualification/',
-        'v1/chat/clubinvite/',
-        'v1/chat/member_management/',
-        'v1/chat/system_problem_edit/',
-        'v1/chat/questions_list/',
-        'v1/chat/pause_bets/',
-        'v1/chat/the_topic/',
-        'v1/chat/club_quiz_details/',
-        'v1/chat/Club_bet/',
-        'v1/chat/record_list/',
-        'v1/chat/the_lottery_list/',
-        'v1/chat/the_lottery/',
-        'v1/chat/banker_record_list/',
-        'v1/chat/clubinvitesfriendslist/',
-        'v1/chat/clubbulkinvitation/',
-        'v1/chat/SeekFriendList/',
-        'v1/chat/deposit/',
-        'v1/chat/clubnoticelist/',
-        'v1/chat/clubnoticedelete/',
-        'v1/chat/club_remind/',
-        'v1/chat/betpower_gag_list/',
-        'v1/chat/betpower/',
-        'v1/chat/gag/',
-        'v1/chat/damages/',
-    ]
-    # 未登录可访问，但登录可获取用户信息的URL列表
-    unauthenticate_token_url = [
-        'v1/home/',  # 首页
-        'v1/quiz/competition/list/',  # 比赛列表
-        'v1/quiz/daily/',  # 每日一猜
-        'v1/quiz/competition/(.+?)/quiz/',  # 比赛题目列表
-        'v1/quiz/(.+?)/',  # 题目详情
-        'v1/quiz/commentt/(.+?)/',  # 评论列表
-    ]
 
     def get_signature_from_signature_string(self, signature):
         """Return the signature from the signature header or None."""
@@ -211,38 +129,6 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         """Retuns (User instance, API Secret) or None if api_key is bad."""
         return None
 
-    def check_auth_url(self, request):
-        """
-        判断当前接口URL是否需要登录
-        :param request: 
-        :return: 
-        """
-        full_path = request.get_full_path()
-        api_url = full_path.replace('/caicai/api/', '')
-        is_need_auth = False
-        for url in self.authenticate_url:
-            match = re.compile(url).search(api_url)
-            if match is not None:
-                is_need_auth = True
-                break
-        return is_need_auth
-
-    def check_unauth_token_url(self, request):
-        """
-        判断当前接口URL是否可获得token
-        :param request: 
-        :return: 
-        """
-        full_path = request.get_full_path()
-        api_url = full_path.replace('/caicai/api/', '')
-        is_need_auth_token = False
-        for url in self.unauthenticate_token_url:
-            match = re.compile(url).search(api_url)
-            if match is not None:
-                is_need_auth_token = True
-                break
-        return is_need_auth_token
-
     @staticmethod
     def print_request_data(request):
         print('=========request data begin=========')
@@ -251,6 +137,16 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('=========request data end=========')
 
     def authenticate(self, request):
+        # 60秒以前的请求不再处理
+        date_header = self.header_canonical('date')
+        api_date = request.META.get(date_header)
+        api_date_dt = dateparser.parse(api_date)
+        api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
+        if api_date_timestamp + 60 < time.time():
+            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+
+        # TODO: prevent replay request!!!
+
         # Check for API key header.
         api_key_header = self.header_canonical(self.API_KEY_HEADER)
         api_key = request.META.get(api_key_header)
@@ -278,49 +174,19 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('Bearer = ', sent_token)
         self.print_request_data(request)
 
-        login_required = self.check_auth_url(request)
-        is_need_auth_token = self.check_unauth_token_url(request)
-
-        if login_required:
-            if sent_token is None:
-                raise NotLoginException(code.API_10103_LOGIN_REQUIRE)
-            else:
-                jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-                try:
-                    token = jwt_decode_handler(sent_token)
-                    # request.user = User.objects.get(pk=token['user_id'])
-
-                    # 判断用户token是否存在memcached中
-                    cache = caches['memcached']
-                    cache_key = request.user.username + api_key
-                    if cache.get(cache_key) != sent_token:
-                        raise NotLoginException(code.API_10103_LOGIN_REQUIRE)
-                except Exception:
-                    raise NotLoginException(code.API_10103_LOGIN_REQUIRE)
-
-        if is_need_auth_token:
-            if sent_token is not None:
+        if sent_token is not None:
+            try:
                 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
                 token = jwt_decode_handler(sent_token)
-                request.user = 'user'
-                # request_user = User.objects.filter(pk=token['user_id']).count()
-                # if request_user == 0:
-                #     request.user = 'user'
-                # else:
-                    # request.user = User.objects.get(pk=token['user_id'])
-
-                    # 判断用户token是否存在memcacheddeepin中
-                    # cache = caches['memcached']
-                    # cache_key = request.user.username + api_key
-                    # if cache.get(cache_key) != sent_token:
-                    #     request.user = 'user'
+                request.user = User.objects.get(pk=token['user_id'])
+            except Exception:
+                raise NotLoginException(code.API_403_ACCESS_DENY)
 
         # Fetch credentials for API key from the data store.
         try:
             user, secret = self.fetch_user_secret(api_key)
             if sent_token is not None:
-                if login_required or is_need_auth_token:
-                    user = request.user
+                user = request.user
         except TypeError:
             raise NotLoginException(code.API_10103_LOGIN_REQUIRE)
         # Build string to sign from "headers" part of Signature value.

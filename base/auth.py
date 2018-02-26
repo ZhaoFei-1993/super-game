@@ -19,7 +19,7 @@ class CCSignatureAuthentication(SignatureAuthentication):
         except KeyError:
             raise exceptions.AuthenticationFailed('Bad API key')
 
-        return 'user', token
+        return None, token
 
     def fetch_user_data(self, username):
         try:
