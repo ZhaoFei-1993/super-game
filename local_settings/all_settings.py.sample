@@ -6,6 +6,8 @@ ALLOWED_HOSTS = [
     '*',    # 因为使用了nginx/apache之类的前端,所以限定规则交给前端,这里设为 *(所有) 就可以了
 ]
 
+SECRET_KEY = '4%y($e=ks6t8f)pk#fmobogt=l1wbn*fh=#a$p^973u&%-_bk1'
+
 # 数据库设置
 # <<一定要修改>>
 DB = {
