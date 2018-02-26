@@ -143,7 +143,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
-            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            #raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            pass    # TODO: remove it!!!!
 
         # TODO: prevent replay request!!!
 
