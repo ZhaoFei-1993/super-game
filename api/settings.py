@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'mptt',
 
     'users',
+    'wc_auth',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -122,11 +124,21 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=2592000),  # 一个月时间
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 APP_API_KEY = {
     'ios': local_settings.APP_API_KEY_IOS,
     'android': local_settings.APP_API_KEY_ANDROID,
     'HTML5': local_settings.APP_API_KEY_HTML5,
 }
+
+ROLEPERMISSIONS_MODULE = 'api.roles'
+AUTH_USER_MODEL = "wc_auth.Admin"
+
+FIXTURE_DIRS = (
+    BASE_DIR + '/wc_auth/fixtures/',
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
