@@ -1,4 +1,5 @@
 from rest_framework import generics
+from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.response import Response
 from .code import API_ERROR_MESSAGE
@@ -57,18 +58,6 @@ class BaseView(generics.GenericAPIView):
             return list()
 
         return list(pnp.page)
-
-    def get_paginated_response(self, data):
-        """Avoid case when self does not have page properties for empty list"""
-        if hasattr(self, 'page') and self.page is not None:
-            return super(self).get_paginated_response(data)
-        else:
-            return Response(OrderedDict([
-                ('count', None),
-                ('next', None),
-                ('previous', None),
-                ('results', data)
-            ]))
 
     @staticmethod
     def response(data):
@@ -134,7 +123,18 @@ class FormatListAPIView(generics.ListAPIView, BaseView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
 
-        content = {'code': 0, 'data': items}
+        page = request.GET.get('page')
+        if page is None:
+            page = 1
+
+        content = {
+            'list': items,
+            'pagination': {
+                'current': page,
+                'pageSize': settings.REST_FRAMEWORK['PAGE_SIZE'],
+                'total': results.data.get('count'),
+            }
+        }
         return self.response(content)
 
 

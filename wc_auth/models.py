@@ -11,7 +11,7 @@ class Role(models.Model):
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
 
     class Meta:
-        ordering = ['-updated_at']
+        ordering = ['updated_at']
         verbose_name = verbose_name_plural = '管理员角色'
 
     def __str__(self):

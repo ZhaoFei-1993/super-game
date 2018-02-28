@@ -26,7 +26,7 @@ class AndroidEdition(models.Model):
 
 class SystemDeploy(models.Model):
     # 系统配置数据，这里需要初始化数据
-    conflg = models.CharField(verbose_name="配置项key", max_length=50, default=0)
+    conflg = models.CharField(verbose_name="配置项key", max_length=50, default="")
     value = models.TextField(verbose_name="配置项值")
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间")

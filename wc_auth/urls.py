@@ -5,4 +5,6 @@ from . import views
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name="backend-admin-login"),
+    path('role/', views.RoleListView.as_view(), name="backend-admin-role-list"),
+    path('info/', views.InfoView.as_view(), name="backend-admin-info"),
 ]
