@@ -111,7 +111,7 @@ class Message(models.Model):
     type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PRIVATE)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="发送者ID", default=0)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="发送者ID")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
