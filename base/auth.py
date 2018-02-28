@@ -4,6 +4,7 @@ from rest_framework import authentication
 from .authentication import SignatureAuthentication
 
 from django.conf import settings
+from users.models import User
 
 from rest_framework.authtoken.models import Token
 import re
@@ -13,6 +14,7 @@ class CCSignatureAuthentication(SignatureAuthentication):
     """
     APP接口签名校验
     """
+
     def fetch_user_secret(self, api_key):
         try:
             token = settings.APP_API_KEY[api_key]
@@ -28,7 +30,6 @@ class CCSignatureAuthentication(SignatureAuthentication):
             raise exceptions.AuthenticationFailed('Authentication Fail')
 
         return user
-
 
 # class CCSignatureAuthBackend(authentication.BaseAuthentication):
 #     """
