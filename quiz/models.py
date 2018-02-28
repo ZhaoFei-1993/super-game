@@ -11,10 +11,10 @@ class Category(models.Model):
     lft = models.IntegerField(verbose_name="奖励数", default=0)
     right = models.IntegerField(verbose_name="奖励数", default=0)
     # tree_id = models.IntegerField(verbose_name="奖励数", default=0)
-    mptt_level = models.IntegerField(verbose_name="奖励数")
-    admin_id = models.ForeignKey(Admin, on_delete=models.CASCADE, default=0)
+    mptt_level = models.IntegerField(verbose_name="奖励数", default=0)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE, default=0)
     # parent_id = models.IntegerField(verbose_name="奖励数", default=0)
-    order = models.IntegerField(verbose_name="奖励数")
+    order = models.IntegerField(verbose_name="奖励数", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
     class Meta:
@@ -23,11 +23,11 @@ class Category(models.Model):
 
 
 class Quiz(models.Model):
-    category_id = models.ForeignKey(Category, verbose_name="竞猜分类", on_delete=models.DO_NOTHING)
+    category = models.ForeignKey(Category, verbose_name="竞猜分类", on_delete=models.DO_NOTHING)
     host_team = models.CharField(verbose_name="主队", max_length=255)
     guest_team = models.CharField(verbose_name="客队", max_length=255)
     begin_at = models.DateTimeField(verbose_name="比赛开始时间")
-    admin_id = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -36,8 +36,8 @@ class Quiz(models.Model):
 
 
 class QuizCoin(models.Model):
-    quiz_id = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    coin_id = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['-id']

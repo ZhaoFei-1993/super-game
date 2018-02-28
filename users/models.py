@@ -35,29 +35,6 @@ class User(AbstractBaseUser):
         return self.username
 
 
-class DailySettings(models.Model):
-    days = models.IntegerField(verbose_name="签到天数", default=1)
-    coin_id = models.IntegerField(verbose_name="奖励的货币类型")
-    rewards = models.IntegerField(verbose_name="奖励数", default=0)
-    admin_id = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(verbose_name="创建时间")
-
-    class Meta:
-        ordering = ['-id']
-        verbose_name = verbose_name_plural = "签到配置表"
-
-
-class DailyLog(models.Model):
-    user_id = models.IntegerField(verbose_name="用户id")
-    number = models.IntegerField(verbose_name="连续签到天数", default=0)
-    sign_date = models.IntegerField(verbose_name="签到日期")
-    created_at = models.DateTimeField(verbose_name="创建时间")
-
-    class Meta:
-        ordering = ['-id']
-        verbose_name = verbose_name_plural = "用户签到记录表"
-
-
 class Coin(models.Model):
     EMTH = 1
     ETH = 2
@@ -70,7 +47,7 @@ class Coin(models.Model):
     type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=EMTH)
     exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
     is_lock = models.BooleanField(verbose_name="是否锁定", default=0)
-    admin_id = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间")
 
     class Meta:
@@ -83,7 +60,7 @@ class CoinLock(models.Model):
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=3, default=0.000)
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
-    admin_id = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间")
 
     class Meta:
@@ -92,9 +69,31 @@ class CoinLock(models.Model):
 
 
 class CoinLockRelation(models.Model):
-    coin_id = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    coin_lock_id = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币与货币锁定周期关联表"
+
+class DailySettings(models.Model):
+    days = models.IntegerField(verbose_name="签到天数", default=1)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    rewards = models.IntegerField(verbose_name="奖励数", default=0)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(verbose_name="创建时间")
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "签到配置表"
+
+
+class DailyLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    number = models.IntegerField(verbose_name="连续签到天数", default=0)
+    sign_date = models.IntegerField(verbose_name="签到日期")
+    created_at = models.DateTimeField(verbose_name="创建时间")
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户签到记录表"
