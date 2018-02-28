@@ -8,8 +8,8 @@ from users.models import Coin,User
 
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
-    admin = models.ForeignKey(Admin, on_delete=models.CASCADE, default=0)
-    parent = TreeForeignKey('self', null=True, blank=True,related_name='children',db_index=True)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True, on_delete=models.CASCADE)
     order = models.IntegerField(verbose_name="奖励数", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
