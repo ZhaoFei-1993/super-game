@@ -97,3 +97,97 @@ class DailyLog(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户签到记录表"
+
+
+class Message(models.Model):
+    PRIVATE = 1
+    PUBLIC = 2
+    GLOBAL = 3
+    TYPE_CHOICE = (
+        (PRIVATE, "私信"),
+        (PUBLIC, "公共消息"),
+        (GLOBAL, "系统消息"),
+    )
+    type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PRIVATE)
+    title = models.CharField(verbose_name="消息标题", max_length=100, default="")
+    content = models.CharField(verbose_name="消息内容", max_length=255, default="")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="发送者ID", default=0)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "消息内容表"
+
+
+class UserMessage(models.Model):
+    UNREAD = 0
+    READ = 1
+    DELETE = 2
+    TYPE_CHOICE = (
+        (UNREAD, "未读"),
+        (READ, "已读"),
+        (DELETE, "删除"),
+    )
+    status = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=UNREAD)
+    user = models.ForeignKey(User, verbose_name="收件人ID", on_delete=models.CASCADE)
+    message = models.ForeignKey(Message, verbose_name="消息内容表外键", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户消息表"
+
+
+
+class UserRecharge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户充值记录"
+
+
+class UserPresentation(models.Model):
+    APPLICATION = 0
+    ADOPT = 1
+    REFUSE = 2
+
+    TYPE_CHOICE = (
+        (APPLICATION, "申请中"),
+        (ADOPT, "已处理"),
+        (REFUSE, "已拒绝"),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
+    address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
+    status = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=APPLICATION)
+    feedback = models.CharField(verbose_name="拒绝提现理由", max_length=255, default="")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="更新时间")
+
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户提现记录表"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

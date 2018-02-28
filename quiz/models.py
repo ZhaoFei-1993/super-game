@@ -3,17 +3,13 @@ from django.db import models
 from wc_auth.models import Admin
 from django.template.backends import django
 from mptt.models import MPTTModel, TreeForeignKey
-from users.models import Coin
+from users.models import Coin,User
 
 
-class Category(models.Model):
+class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
-    lft = models.IntegerField(verbose_name="奖励数", default=0)
-    right = models.IntegerField(verbose_name="奖励数", default=0)
-    # tree_id = models.IntegerField(verbose_name="奖励数", default=0)
-    mptt_level = models.IntegerField(verbose_name="奖励数", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE, default=0)
-    # parent_id = models.IntegerField(verbose_name="奖励数", default=0)
+    parent = TreeForeignKey('self', null=True, blank=True,related_name='children',db_index=True)
     order = models.IntegerField(verbose_name="奖励数", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
@@ -43,6 +39,44 @@ class QuizCoin(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜所支持的货币种类"
 
-# class QuizRule(models.Model):
-#     quiz_id = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-# type =
+
+class Rule(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    # type =
+    tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
+    # handicap_score =
+    # estimate_score =
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "竞猜规则表"
+
+
+class Option(models.Model):
+    rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
+    option = models.CharField(verbose_name="选项值", max_length=20, default="")
+    odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "竞猜规则表"
+
+
+
+class Record(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
+    option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    bet = models.IntegerField(verbose_name="下注金额", default=0)
+    created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户下注表"
+
+
+
+
+
+
