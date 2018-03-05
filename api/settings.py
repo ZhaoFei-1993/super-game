@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'users',
     'wc_auth',
     'quiz',
+    'setting',
 ]
 
 MIDDLEWARE = [

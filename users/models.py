@@ -11,11 +11,33 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
+    WECHAT = 1
+    IOS = 2
+    ANDROID = 3
+
+    REGISTER_QQ = 1
+    REGISTER_WECHAT = 2
+    REGISTER_TELEPHONE = 3
+    REGISTER_UNKNOWN = 4
+
+    SOURCE_CHOICE = (
+        (WECHAT, "微信用户"),
+        (IOS, "iOS"),
+        (ANDROID, "Android"),
+    )
+    REGISTER_TYPE = (
+        (REGISTER_WECHAT, "微信登录"),
+        (REGISTER_QQ, "QQ登录"),
+        (REGISTER_TELEPHONE, "手机号码登录"),
+        (REGISTER_TELEPHONE, "未知登录类型"),
+    )
     username = models.CharField(verbose_name="用户账号", max_length=32)
     nickname = models.CharField(verbose_name="用户昵称", max_length=20)
+    register_type = models.CharField(verbose_name="注册类型", choices=REGISTER_TYPE, max_length=1, default=REGISTER_UNKNOWN)
+    source = models.CharField(verbose_name="用户来源", choices=SOURCE_CHOICE, max_length=1, default=IOS)
     avatar = models.CharField(verbose_name="头像", max_length=255, default='')
-    telephone = models.CharField(verbose_name="手机号码", max_length=11)
-    pass_code = models.CharField(verbose_name="资金密保", max_length=32)
+    telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
+    pass_code = models.CharField(verbose_name="资金密保", max_length=32,default='')
     eth_address = models.CharField(verbose_name="ETH地址", max_length=32)
     meth = models.IntegerField(verbose_name="METH余额", default=0)
     ggtc = models.IntegerField(verbose_name="GGTC余额", default=0)
@@ -100,18 +122,17 @@ class DailyLog(models.Model):
 
 
 class Message(models.Model):
-    PRIVATE = 1
+    GLOBAL = 1
     PUBLIC = 2
-    GLOBAL = 3
+    PRIVATE = 3
     TYPE_CHOICE = (
-        (PRIVATE, "私信"),
-        (PUBLIC, "公共消息"),
         (GLOBAL, "系统消息"),
+        (PUBLIC, "公共消息"),
+        (PRIVATE, "私信"),
     )
-    type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PRIVATE)
+    type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PUBLIC)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="发送者ID")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:

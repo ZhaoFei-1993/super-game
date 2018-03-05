@@ -12,10 +12,18 @@ class ListSerialize(serializers.ModelSerializer):
         fields = ("id", "nickname")
 
 
-class InfoSerialize(serializers.ModelSerializer):
+class UserInfoSerializer(serializers.ModelSerializer):
     """
     用户信息
     """
     class Meta:
         model = User
-        fields = ("id", "nickname", "telephone")
+        fields = ("id", "nickname", "avatar", "meth", "ggtc", )
+
+
+class UserSerializer(serializers.ModelDurationField):
+    """
+    放着
+    """
+
+    pass

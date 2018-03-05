@@ -9,8 +9,8 @@ from users.models import Coin,User
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True, on_delete=models.CASCADE)
-    order = models.IntegerField(verbose_name="奖励数", default=0)
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='自身ID', db_index=True, on_delete=models.CASCADE)
+    order = models.IntegerField(verbose_name="排序", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
     class Meta:
@@ -21,7 +21,10 @@ class Category(MPTTModel):
 class Quiz(models.Model):
     category = models.ForeignKey(Category, verbose_name="竞猜分类", on_delete=models.DO_NOTHING)
     host_team = models.CharField(verbose_name="主队", max_length=255)
+    host_team_avatar = models.CharField(verbose_name="主队图标", max_length=255, default='')
     guest_team = models.CharField(verbose_name="客队", max_length=255)
+    guest_team_avatar = models.CharField(verbose_name="客队图标", max_length=255, default='')
+    match_name = models.CharField(verbose_name="联赛名称", max_length=50, default="")
     begin_at = models.DateTimeField(verbose_name="比赛开始时间")
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
