@@ -1,7 +1,6 @@
 from rest_framework import generics
 from django.http import JsonResponse
 from rest_framework.response import Response
-from .auth import CCSignatureAuthentication
 from .code import API_ERROR_MESSAGE
 
 from django.core.paginator import Paginator as DjangoPaginator
@@ -12,7 +11,7 @@ from collections import OrderedDict
 
 
 class BaseView(generics.GenericAPIView):
-    authentication_classes = (CCSignatureAuthentication, )
+    authentication_classes = ()
 
     def get_list_by_sql(self, sql, page_size = 10):
         """

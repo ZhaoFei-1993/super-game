@@ -11,6 +11,7 @@ import pytz
 import datetime
 from django.conf import settings
 
+
 def random_string(length=16):
     """
     生成指定长度随机字符串
@@ -53,6 +54,7 @@ def convert_localtime(value):
 
     return value.replace(tzinfo=pytz.utc).astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
 
+
 def surplus_date(end_date):
     """
     下注截止时间计算
@@ -67,6 +69,7 @@ def surplus_date(end_date):
         return int(surplus)
     else:
         return 0
+
 
 def reasonable_time(end_date):  # 查看客户端传过来的题目结束时间是否合理
     # 将其转换为时间数组
@@ -89,8 +92,3 @@ def value_judge(request, *args):  # 查看客户端有没有漏传字段
         if i not in request.data or request.data.get(i) == '' or request.data.get(i) is None:
             return 0
     return 1
-
-
-
-
-

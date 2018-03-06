@@ -22,6 +22,7 @@ class PermissionManager(models.Manager):
     """
     后台权限操作
     """
+
     def get_role_menu(self, role_id):
         perms = self.model.objects.filter(role_id=role_id)
         permissions = {
@@ -56,6 +57,7 @@ class AdminManager(BaseUserManager):
     """
     管理员操作
     """
+
     def create_user(self, username, password=None):
         if not username:
             raise ValueError("username need")
