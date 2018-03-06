@@ -10,6 +10,7 @@ import time
 import pytz
 import datetime
 from django.conf import settings
+from users.models import DailyLog, UserMessage
 
 
 def random_string(length=16):
@@ -87,8 +88,31 @@ def reasonable_time(end_date):  # 查看客户端传过来的题目结束时间�
         return 0
 
 
-def value_judge(request, *args):  # 查看客户端有没有漏传字段
+def value_judge(request, *args):
+    # 查看客户端有没有漏传字段
     for i in args:
         if i not in request.data or request.data.get(i) == '' or request.data.get(i) is None:
             return 0
     return 1
+
+def sign_confirmation(user_id):
+    # 是否签到
+    user_sign = DailyLog.objects.get(user_id=user_id)
+    sign_date = user_sign.sign_date
+    tmp = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y%m%d")
+    if sign_date==tmp:
+        sign = 1
+    else:
+        sign = 0
+    return sign
+
+
+def message_hints(user_id):
+    # 是否有未读信息
+    user_message = UserMessage.objects.filter(user_id=user_id, status=0)
+    len(user_message)
+    if len(user_message) > 0:
+        message = 1
+    else:
+        message = 0
+    return message

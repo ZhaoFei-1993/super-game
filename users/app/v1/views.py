@@ -1,15 +1,15 @@
 # -*- coding: UTF-8 -*-
-from base.app import FormatListAPIView, FormatRetrieveAPIView
+from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView
 from .serializers import ListSerialize, UserInfoSerializer, UserSerializer
-from ...models import User, UserMessage
+from ...models import User
 from base.app import CreateAPIView, ListCreateAPIView
+from base.function import LoginRequired
 from base.BaseAES import BaseAES
 
-from utils.functions import random_salt
+from utils.functions import random_salt, sign_confirmation,message_hints
 from rest_framework_jwt.settings import api_settings
 
 from django.db import transaction
-import datetime
 
 
 class UserRegister(object):
@@ -150,18 +150,11 @@ class LogoutView(ListCreateAPIView):
         return self.response({'code': 0})
 
 
-class ListView(FormatListAPIView):
+class InfoView(ListAPIView):
     """
-    返回用户列表
+    用户信息
     """
-    serializer_class = ListSerialize
-    queryset = User.objects.all()
-
-
-class InfoView(FormatRetrieveAPIView):
-    """
-    获取用户信息
-    """
+    permission_classes = (LoginRequired, )
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
@@ -169,6 +162,31 @@ class InfoView(FormatRetrieveAPIView):
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
-        tmp = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y%m%d")
+        items = results.data.get('results')
+        user_id = self.request.user.id
+        sing = sign_confirmation(user_id)            # 是否签到
+        message = message_hints(user_id)            # 是否有未读消息
 
-        print(tmp)
+        return self.response({
+            'code': 0,
+            'user_id': items[0]["id"],
+            'nickname': items[0]["nickname"],
+            'avatar': items[0]["avatar"],
+            'meth': items[0]["meth"],
+            'ggtc': items[0]["ggtc"],
+            'is_sound': items[0]["is_sound"],
+            'is_notify': items[0]["is_notify"],
+            'telephone': items[0]["telephone"],
+            'pass_code': items[0]["pass_code"],
+            'message': message,
+            'sing': sing})
+
+    class ListView(FormatListAPIView):
+        """
+        返回用户列表
+        """
+        serializer_class = ListSerialize
+        queryset = User.objects.all()
+
+
+

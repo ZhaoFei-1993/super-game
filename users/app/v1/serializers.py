@@ -5,6 +5,7 @@ from ...models import User
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
@@ -37,6 +38,36 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("id", "username", "password", "avatar")
 
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    """
+    用户信息
+    """
+    telephone = serializers.SerializerMethodField()
+    pass_code = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ("id", "nickname", "avatar", "meth", "ggtc", "is_sound", "is_notify", "telephone", "pass_code")
+
+    @staticmethod
+    def get_telephone(obj):  # 我的选项
+        if obj.telephone == '' or obj.telephone is None:
+            return "未绑定"
+        else:
+            return obj.telephone
+
+    @staticmethod
+    def get_pass_code(obj):  # 我的选项
+        if obj.pass_code == '' or obj.pass_code is None:
+            if obj.telephone == '' or obj.telephone is None:
+                return "请先绑定手机"
+            else:
+                return "未设置"
+        else:
+            return "已设置"
+
+
+
 class ListSerialize(serializers.ModelSerializer):
     """
     用户列表
@@ -46,18 +77,8 @@ class ListSerialize(serializers.ModelSerializer):
         fields = ("id", "nickname")
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
-    """
-    用户信息
-    """
-    class Meta:
-        model = User
-        fields = ("id", "nickname", "avatar", "meth", "ggtc", )
 
 
-class UserSerializer(serializers.ModelDurationField):
-    """
-    放着
-    """
 
-    pass
+
+
