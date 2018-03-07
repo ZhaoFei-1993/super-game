@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'wc_auth',
     'quiz',
     'setting',
+    'sms',
 ]
 
 MIDDLEWARE = [
@@ -171,3 +172,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SMS_PERIOD_TIME = 60  # 短信间隔时间（秒）
+SMS_CODE_EXPIRE_TIME = 60000  # 短信验证码有效时间（秒），0表示长期有效,测试期间写长点

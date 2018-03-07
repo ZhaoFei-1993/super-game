@@ -45,6 +45,7 @@ class User(AbstractBaseUser):
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
+    victory = models.DecimalField(verbose_name="竞猜胜率", max_digits=3, decimal_places=1, default=0.0)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -58,15 +59,15 @@ class User(AbstractBaseUser):
 
 
 class Coin(models.Model):
-    EMTH = 1
+    GGTC = 1
     ETH = 2
     TYPE_CHOICE = (
-        (EMTH, "EMTH"),
+        (GGTC, "GGTC"),
         (ETH, "ETH"),
     )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
-    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=EMTH)
+    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
     exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
     is_lock = models.BooleanField(verbose_name="是否锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
