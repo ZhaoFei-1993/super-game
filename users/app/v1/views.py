@@ -4,20 +4,29 @@ from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, Asse
 from ...models import User, UserRecharge
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
+from base import code as error_code
+from sms.models import Sms
+from datetime import datetime
+import time
+import pytz
+import local_settings
+from django.conf import settings
+from base.exceptions import ParamErrorException
 
-from utils.functions import random_salt, sign_confirmation,message_hints
+from utils.functions import random_salt, sign_confirmation, message_hints
 from rest_framework_jwt.settings import api_settings
 
 from django.db import transaction
+import re
 
 
 class UserRegister(object):
     """
     用户公共处理类
     """
+
     def delete_user_cache(self, key):
         return self.cache.delete(key)
-
 
     @staticmethod
     def get_register_type(username):
@@ -101,7 +110,7 @@ class UserRegister(object):
         return token
 
 
-class LoginView(CreateAPIView):
+class   LoginView(CreateAPIView):
     """
     用户登录:
     用户已经注册-----》登录
@@ -149,7 +158,7 @@ class InfoView(ListAPIView):
     """
     用户信息
     """
-    permission_classes = (LoginRequired, )
+    permission_classes = (LoginRequired,)
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
@@ -159,8 +168,8 @@ class InfoView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
-        sing = sign_confirmation(user_id)            # 是否签到
-        message = message_hints(user_id)            # 是否有未读消息
+        sing = sign_confirmation(user_id)  # 是否签到
+        message = message_hints(user_id)  # 是否有未读消息
 
         return self.response({
             'code': 0,
@@ -176,6 +185,7 @@ class InfoView(ListAPIView):
             'message': message,
             'sing': sing})
 
+
 class ListView(FormatListAPIView):
     """
     返回用户列表
@@ -184,12 +194,11 @@ class ListView(FormatListAPIView):
     queryset = User.objects.all()
 
 
-
 class AssetsView(ListAPIView):
     """
     我的资产
     """
-    permission_classes = (LoginRequired, )
+    permission_classes = (LoginRequired,)
     serializer_class = AssetsSerialize
 
     def get_queryset(self):
@@ -199,11 +208,11 @@ class AssetsView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         userinfo = UserRecharge.objects.get(user_id=self.request.user.id)
-        print("userinfo==========",userinfo)
+        print("userinfo==========", userinfo)
 
         return self.response({
             'code': 0,
-            })
+        })
 
 
 class RankingView(ListAPIView):
@@ -255,9 +264,97 @@ class RankingView(ListAPIView):
         return self.response({'code': 0, 'data': data, 'my_ranking': my_ranking})
 
 
+class SecurityView(ListCreateAPIView):
+    """
+     密保校验 用户绑定密保  and   修改密保
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        type = kwargs['type']
+        pass_code = request.data.get('pass_code')
+        if "pass_code" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
+
+        user = User.objects.get(id=self.request.user.id)
+        if int(type) == 1:
+            if int(user.pass_code)!=int(pass_code):
+                raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
+        elif int(type) == 2:
+            if int(user.pass_code) == int(pass_code):
+                raise ParamErrorException(error_code=error_code.API_20107_ALIKE_PASS_CODE)
+            else:
+                user.pass_code = pass_code
+                user.save()
+        content = {'code': 0}
+        return self.response(content)
+
+
+class BackSecurityView(ListCreateAPIView):
+    """
+     忘记密保
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        telephone = request.data.get('telephone')
+        pass_code = request.data.get('pass_code')
+
+        if "pass_code" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
+        if "sms_code" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
+        message = Sms.objects.filter(telephone=telephone, code=request.data.get('sms_code')).first()
+        if message is None:
+            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
+
+        # 短信发送时间
+        code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        code_time = time.mktime(code_time.timetuple())
+        current_time = time.mktime(datetime.datetime.now().timetuple())
+
+        # 判断code是否过期
+        if (settings.SMS_CODE_EXPIRE_TIME > 0) and (current_time - code_time > settings.SMS_CODE_EXPIRE_TIME):
+            return self.response({'code': error_code.API_20105_SMS_CODE_EXPIRED})
+
+        message = Sms.objects.filter(telephone=telephone, code=request.data.get('sms_code')).first()
+        if message is None:
+            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
+
+        user = User.objects.get(id=self.request.user.id)
+        user.pass_code = pass_code
+        user.save()
+        content = {'code': 0}
+        return self.response(content)
 
 
 
+class SwitchView(ListCreateAPIView):
+    """
+    音效/消息免推送 开关
+    """
 
+    permission_classes = (LoginRequired,)
 
+    def post(self, request, *args, **kwargs):
+        event = request.data.get('event')
+        status = request.data.get('status')
+        if "event" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_10104_PARAMETER_EXPIRED)
+        if "status" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_10104_PARAMETER_EXPIRED)
 
+        regex = re.compile(r'^(0|1)$')
+        if event is None or not regex.match(event):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        if status is None or not regex.match(status):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+
+        user = User.objects.get(id=self.request.user.id)
+        if int(event) == 0:
+            user.is_sound = status
+        else:
+            user.is_notify = status
+        user.save()
+        content = {'code': 0}
+        return self.response(content)
