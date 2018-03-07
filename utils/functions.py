@@ -99,8 +99,13 @@ def sign_confirmation(user_id):
     # 是否签到
     user_sign = DailyLog.objects.get(user_id=user_id)
     sign_date = user_sign.sign_date
-    tmp = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y%m%d")
-    if sign_date==tmp:
+    tmp = time.strftime("%Y%m%d")
+    print("tmp=================",tmp)
+    print("sign_date=================",sign_date)
+
+    if sign_date>int(tmp):
+        sign = 1
+    elif sign_date==int(tmp):
         sign = 1
     else:
         sign = 0
@@ -116,3 +121,6 @@ def message_hints(user_id):
     else:
         message = 0
     return message
+
+def get_money(user_id,coin):
+    pass

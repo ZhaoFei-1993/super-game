@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import User, UserRecharge
+from ...models import User, UserRecharge, DailyLog, DailySettings
 
 
 
@@ -75,6 +75,15 @@ class ListSerialize(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "nickname")
+
+
+class DailySerialize(serializers.ModelSerializer):
+    """
+    签到
+    """
+    class Meta:
+        model = DailySettings
+        fields = ("id", "days", "coin", "rewards")
 
 
 

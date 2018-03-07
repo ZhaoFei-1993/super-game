@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView
-from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize
-from ...models import User, UserRecharge
+from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize, \
+    DailySerialize
+from ...models import User, UserRecharge, DailyLog, DailySettings, Coin
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
@@ -104,13 +105,21 @@ class UserRegister(object):
         user.nickname = nickname
         user.eth_address = 10086  # ETH地址    暂时默认都是10086
         user.save()
+        # 生成签到记录
+        userinfo = User.objects.get(username=username)
+        daily = DailyLog()
+        daily.user_id = userinfo.id
+        daily.number = 0
+        daily.sign_date = time.strftime("%Y%m%d")
+        daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        daily.save()
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
         return token
 
 
-class   LoginView(CreateAPIView):
+class LoginView(CreateAPIView):
     """
     用户登录:
     用户已经注册-----》登录
@@ -156,7 +165,7 @@ class LogoutView(ListCreateAPIView):
 
 class InfoView(ListAPIView):
     """
-    用户信息
+    get方法：首页----设置页面（并用）  post方法：修改昵称
     """
     permission_classes = (LoginRequired,)
     serializer_class = UserInfoSerializer
@@ -185,13 +194,22 @@ class InfoView(ListAPIView):
             'message': message,
             'sing': sing})
 
+    def _update_info(self, request):
+        """
+        修改昵称
+        """
+        user = request.user
+        if "avatar" in request.data:
+            user.avatar = request.data.get("avatar")
+        if "nickname" in request.data:
+            user.nickname = request.data.get("nickname")
+        user.save()
+        content = {'code': 0}
+        return self.response(content)
 
-class ListView(FormatListAPIView):
-    """
-    返回用户列表
-    """
-    serializer_class = ListSerialize
-    queryset = User.objects.all()
+    def post(self, request, *args, **kwargs):
+
+        return self._update_info(request)
 
 
 class AssetsView(ListAPIView):
@@ -278,7 +296,7 @@ class SecurityView(ListCreateAPIView):
 
         user = User.objects.get(id=self.request.user.id)
         if int(type) == 1:
-            if int(user.pass_code)!=int(pass_code):
+            if int(user.pass_code) != int(pass_code):
                 raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
         elif int(type) == 2:
             if int(user.pass_code) == int(pass_code):
@@ -328,7 +346,6 @@ class BackSecurityView(ListCreateAPIView):
         return self.response(content)
 
 
-
 class SwitchView(ListCreateAPIView):
     """
     音效/消息免推送 开关
@@ -358,3 +375,72 @@ class SwitchView(ListCreateAPIView):
         user.save()
         content = {'code': 0}
         return self.response(content)
+
+
+class ListView(FormatListAPIView):
+    """
+    返回用户列表
+    """
+    serializer_class = ListSerialize
+    queryset = User.objects.all()
+
+
+class DailyView(ListAPIView):
+    """
+    get方法：签到列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = DailySerialize
+
+    def get_queryset(self):
+        daily = DailySettings.objects.all()
+        return daily
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        sing = sign_confirmation(user_id)  # 判断是否签到
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+
+        content = {'code': 0,
+                   "items": items,
+                   "sing": sing,  # 今天是否签到
+                   }
+        return self.response(content)
+
+    def _update_info(self, request):
+        """
+        post方法：点击签到
+        """
+        user_id = self.request.user.id
+        sing = sign_confirmation(user_id)  # 判断是否签到
+        if sing == 1:
+            raise ParamErrorException(error_code.API_30105_ALREADY_SING)
+        user = User.objects.get(pk=user_id)
+        daily = DailyLog.objects.get(user_id=user_id)
+        if int(daily.number) == 6:
+            fate = 0
+            daily.number = 0
+        else:
+            fate = daily.number + 1
+            daily.number += 1
+        dailysettings = DailySettings.objects.get(days=fate)
+        rewards = dailysettings.rewards
+        coin = dailysettings.coin.type
+        if int(coin) == 1:
+            user.ggtc += rewards
+            user.save()
+        elif int(coin) == 2:
+            user.meth += rewards
+            user.save()
+        daily.sign_date = time.strftime("%Y%m%d")
+        daily.save()
+
+        content = {'code': 0,
+                   "rewards": rewards,
+                   }
+        return self.response(content)
+
+    def post(self, request, *args, **kwargs):
+
+        return self._update_info(request)

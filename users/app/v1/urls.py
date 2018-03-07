@@ -6,7 +6,7 @@ from . import views
 urlpatterns = [
     #用户列表
     path('list/', views.ListView.as_view(), name="app-v1-user-list"),
-    # 首页----设置页面（并用）
+    # get方法：首页----设置页面（并用）  post方法：修改昵称
     path('info/', views.InfoView.as_view(), name="app-v1-user-info"),
     # 注册,登录接口        已测试
     path('login/', views.LoginView.as_view(), name="app-v1-user-login"),
@@ -22,5 +22,7 @@ urlpatterns = [
     path('back_security/', views.BackSecurityView.as_view(), name="app-v1-user-back-security"),
     # 音效/消息免推送 开关
     path('switch/', views.SwitchView.as_view(), name="app-v1-user-switch"),
+    #  签到
+    path('daily/', views.DailyView.as_view(), name="app-v1-user-daily"),
 ]
 
