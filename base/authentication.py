@@ -27,7 +27,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
     SIGNATURE_HEADERS_RE = re.compile('headers="([()\sa-z0-9-]+?)"')
 
     API_KEY_HEADER = 'X-Api-Key'
-    API_NONCE_HEADER = 'nonce'
+    API_NONCE_HEADER = 'X-Nonce'
     ALGORITHM = 'hmac-sha256'
 
     def get_signature_from_signature_string(self, signature):
