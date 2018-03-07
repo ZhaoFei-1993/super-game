@@ -24,5 +24,7 @@ urlpatterns = [
     path('switch/', views.SwitchView.as_view(), name="app-v1-user-switch"),
     #  签到
     path('daily/', views.DailyView.as_view(), name="app-v1-user-daily"),
+    #  通知列表
+    path('message/<int:type>/', views.MessageView.as_view(), name="app-v1-user-message"),
 ]
 

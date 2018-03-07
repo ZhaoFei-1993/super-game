@@ -10,7 +10,9 @@ import time
 import pytz
 import datetime
 from django.conf import settings
-from users.models import DailyLog, UserMessage
+from django.db.models import Q
+
+from users.models import DailyLog, UserMessage, Message
 
 
 def random_string(length=16):
@@ -121,6 +123,16 @@ def message_hints(user_id):
     else:
         message = 0
     return message
+
+def message_sign(user_id, type):
+    #  公共消息标记
+    usermessage = UserMessage.objects.filter(user_id=user_id, status=0)
+    sign = 0
+    for list in usermessage:
+        if int(list.message.type) == type:
+            sign = 1
+    return sign
+
 
 def get_money(user_id,coin):
     pass

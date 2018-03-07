@@ -1,8 +1,10 @@
 # -*- coding: UTF-8 -*-
-from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView
+from django.db.models import Q
+
+from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView, DestroyAPIView
 from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize, \
-    DailySerialize
-from ...models import User, UserRecharge, DailyLog, DailySettings, Coin
+    DailySerialize, MessageSerialize
+from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
@@ -14,7 +16,7 @@ import local_settings
 from django.conf import settings
 from base.exceptions import ParamErrorException
 
-from utils.functions import random_salt, sign_confirmation, message_hints
+from utils.functions import random_salt, sign_confirmation, message_hints, message_sign
 from rest_framework_jwt.settings import api_settings
 
 from django.db import transaction
@@ -444,3 +446,40 @@ class DailyView(ListAPIView):
     def post(self, request, *args, **kwargs):
 
         return self._update_info(request)
+
+
+class MessageView(ListAPIView,DestroyAPIView):
+    """
+    通知列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = MessageSerialize
+
+    def get_queryset(self):
+        user = self.request.user.id
+        list = UserMessage.objects.filter(Q(user_id=user), Q(status=1) | Q(status=0)).order_by("-created_at")
+        return list
+
+    def list(self, request, *args, **kwargs):
+        type = kwargs['type']
+        user = self.request.user.id
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        system_sign = message_sign(user, 1)
+        public_sign = message_sign(user, 2)
+        for list in items:
+            types = Message.objects.get(pk=list["message"])
+            if int(types.type) != int(type):
+                continue
+            data.append({
+                "id": list["id"],
+                'type': list["type"],
+                'title': list["title"],
+                'status': list["status"],
+                'created_at': list["created_at"],
+            })
+        return self.response({'code': 0,
+                              'data': data,
+                              'system_sign': system_sign,
+                              'public_sign': public_sign})

@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import User, UserRecharge, DailyLog, DailySettings
+from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message
 
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-
+    """
+    用户退出登录
+    """
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
@@ -109,4 +111,31 @@ class RankingSerialize(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "avatar", "nickname")
+
+
+class MessageSerialize(serializers.ModelSerializer):
+    """
+    通知列表
+    """
+    type = serializers.SerializerMethodField()         # 消息类型
+    title = serializers.SerializerMethodField()       # 消息标题
+    # public_sign = serializers.SerializerMethodField()     #  公共消息标记
+    # system_sign = serializers.SerializerMethodField()     #  系统消息标记
+
+    class Meta:
+        model = UserMessage
+        fields = ("id", "message", "type", "title", "status", "created_at")
+
+    @staticmethod
+    def get_type(obj):  # 消息类型
+        list = Message.objects.get(pk=obj.message_id)
+        type = list.type
+        return type
+
+
+    @staticmethod
+    def get_title(obj):  # 消息标题
+        list = Message.objects.get(pk=obj.message_id)
+        title = list.title
+        return title
 
