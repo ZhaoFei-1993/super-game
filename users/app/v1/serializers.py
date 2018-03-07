@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import User
+from ...models import User, UserRecharge
 
 
 
@@ -78,7 +78,26 @@ class ListSerialize(serializers.ModelSerializer):
 
 
 
+class AssetsSerialize(serializers.ModelSerializer):
+    """
+    用户资产
+    """
+    class Meta:
+        model = User
+        fields = ()
+
+    # @staticmethod
+    # def get_eth(obj):
+    #     # ETH
 
 
 
+
+class RankingSerialize(serializers.ModelSerializer):
+    """
+    排行榜
+    """
+    class Meta:
+        model = User
+        fields = ("id", "avatar", "nickname")
 

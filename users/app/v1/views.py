@@ -1,10 +1,9 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView
-from .serializers import ListSerialize, UserInfoSerializer, UserSerializer
-from ...models import User
+from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize
+from ...models import User, UserRecharge
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
-from base.BaseAES import BaseAES
 
 from utils.functions import random_salt, sign_confirmation,message_hints
 from rest_framework_jwt.settings import api_settings
@@ -117,11 +116,7 @@ class LoginView(CreateAPIView):
         avatar = request.data.get('avatar')
         nickname = request.data.get('nickname')
 
-        if 'password' in request.data and request.data['password'] != '':
-            aes = BaseAES(source=source)
-            password = aes.decrypt(request.data.get('password'))
-        else:
-            password = random_salt(8)
+        password = random_salt(8)
 
         user = User.objects.filter(username=username)
         if len(user) == 0:
@@ -181,12 +176,88 @@ class InfoView(ListAPIView):
             'message': message,
             'sing': sing})
 
-    class ListView(FormatListAPIView):
-        """
-        返回用户列表
-        """
-        serializer_class = ListSerialize
-        queryset = User.objects.all()
+class ListView(FormatListAPIView):
+    """
+    返回用户列表
+    """
+    serializer_class = ListSerialize
+    queryset = User.objects.all()
+
+
+
+class AssetsView(ListAPIView):
+    """
+    我的资产
+    """
+    permission_classes = (LoginRequired, )
+    serializer_class = AssetsSerialize
+
+    def get_queryset(self):
+        return UserRecharge.objects.get(user_id=self.request.user.id)
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        userinfo = UserRecharge.objects.get(user_id=self.request.user.id)
+        print("userinfo==========",userinfo)
+
+        return self.response({
+            'code': 0,
+            })
+
+
+class RankingView(ListAPIView):
+    """
+    排行榜
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = RankingSerialize
+
+    def get_queryset(self):
+        return User.objects.all().order_by('id')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        user = request.user
+        user_arr = User.objects.all().values_list('id').order_by('id')[:100]
+        my_ran = "未上榜"
+        index = 0
+        for i in user_arr:
+            index = index + 1
+            if i[0] == user.id:
+                my_ran = index
+        data = []
+        if 'page' not in request.GET:
+            page = 1
+        else:
+            page = int(request.GET.get('page'))
+        i = (page - 1) * 10
+        for fav in Progress:
+            i = i + 1
+            user_id = fav.get('id')
+            data.append({
+                'user_id': user_id,
+                'avatar': fav.get('avatar'),
+                'nickname': fav.get('nickname'),
+                'ranking': i,
+            })
+
+        avatar = user.avatar
+        nickname = user.nickname
+        my_ranking = {
+            "id": user.id,
+            "avatar": avatar,
+            "nickname": nickname,
+            "ranking": my_ran
+        }
+
+        return self.response({'code': 0, 'data': data, 'my_ranking': my_ranking})
+
+
+
+
+
 
 
 
