@@ -5,6 +5,7 @@ from .authentication import SignatureAuthentication
 
 from django.conf import settings
 from users.models import User
+from wc_auth.models import Admin
 
 from rest_framework.authtoken.models import Token
 import re
@@ -31,45 +32,46 @@ class CCSignatureAuthentication(SignatureAuthentication):
 
         return user
 
-# class CCSignatureAuthBackend(authentication.BaseAuthentication):
-#     """
-#     后台接口登录校验
-#     """
-#     SIGNATURE_RE = re.compile('token="(.+?)"')
-#
-#     def get_signature_from_signature_string(self, signature):
-#         """Return the signature from the signature header or None."""
-#         match = self.SIGNATURE_RE.search(signature)
-#         if not match:
-#             return None
-#         return match.group(1)
-#
-#     @staticmethod
-#     def header_canonical(header_name):
-#         """Translate HTTP headers to Django header names."""
-#         header_name = header_name.lower()
-#         if header_name == 'content-type':
-#             return 'CONTENT-TYPE'
-#         elif header_name == 'content-length':
-#             return 'CONTENT-LENGTH'
-#         return 'HTTP_%s' % header_name.replace('-', '_').upper()
-#
-#     def authenticate(self, request):
-#         """
-#         校验
-#         :param request:
-#         :return:
-#         """
-#         authorization_header = self.header_canonical('Authorization')
-#         sent_string = request.META.get(authorization_header)
-#         if sent_string is None:
-#             raise exceptions.AuthenticationFailed('Authentication Fail')
-#
-#         token_string = self.get_signature_from_signature_string(sent_string)
-#
-#         token = Token.objects.filter(key=token_string).values('user_id').first()
-#         user_id = token['user_id']
-#         admin = WccAdmin.objects.get(pk=user_id)
-#         request.user = admin
-#
-#         return admin, token_string
+
+class CCSignatureAuthBackend(authentication.BaseAuthentication):
+    """
+    后台接口登录校验
+    """
+    SIGNATURE_RE = re.compile('token="(.+?)"')
+
+    def get_signature_from_signature_string(self, signature):
+        """Return the signature from the signature header or None."""
+        match = self.SIGNATURE_RE.search(signature)
+        if not match:
+            return None
+        return match.group(1)
+
+    @staticmethod
+    def header_canonical(header_name):
+        """Translate HTTP headers to Django header names."""
+        header_name = header_name.lower()
+        if header_name == 'content-type':
+            return 'CONTENT-TYPE'
+        elif header_name == 'content-length':
+            return 'CONTENT-LENGTH'
+        return 'HTTP_%s' % header_name.replace('-', '_').upper()
+
+    def authenticate(self, request):
+        """
+        校验
+        :param request:
+        :return:
+        """
+        authorization_header = self.header_canonical('Authorization')
+        sent_string = request.META.get(authorization_header)
+        if sent_string is None:
+            raise exceptions.AuthenticationFailed('Authentication Fail')
+
+        token_string = self.get_signature_from_signature_string(sent_string)
+
+        token = Token.objects.filter(key=token_string).values('user_id').first()
+        user_id = token['user_id']
+        admin = Admin.objects.get(pk=user_id)
+        request.user = admin
+
+        return admin, token_string

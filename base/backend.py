@@ -1,23 +1,23 @@
 from rest_framework import generics
 from django.conf import settings
 from django.http import JsonResponse
-from rest_framework.response import Response
 from .code import API_ERROR_MESSAGE
+from .auth import CCSignatureAuthBackend
 
 from django.core.paginator import Paginator as DjangoPaginator
 from django.core.paginator import InvalidPage
 from rest_framework.pagination import PageNumberPagination
 from django.db import connection
-from collections import OrderedDict
 
 
 class BaseView(generics.GenericAPIView):
-    authentication_classes = ()
+    authentication_classes = (CCSignatureAuthBackend, )
 
-    def get_list_by_sql(self, sql, page_size = 10):
+    def get_list_by_sql(self, sql, page_size=10):
         """
         使用原生SQL获取数据
-        :param sql: 
+        :param sql:
+        :param page_size: 每页显示记录数，默认为10
         :return: 
         """
         page = 1
@@ -25,7 +25,7 @@ class BaseView(generics.GenericAPIView):
         if 'page' in self.request.GET:
             try:
                 page = int(self.request.GET.get('page'))
-            except Exception:
+            except InvalidPage:
                 pass
 
         offset = ' LIMIT ' + str((page - 1) * page_size) + ',' + str(page_size)

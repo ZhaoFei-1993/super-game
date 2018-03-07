@@ -16,3 +16,4 @@ PyJWT==1.5.3
 python-dateutil==2.6.1
 pytz==2018.3
 six==1.11.0
+requests==2.18.4
