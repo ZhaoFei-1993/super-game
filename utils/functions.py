@@ -12,7 +12,7 @@ import datetime
 from django.conf import settings
 from django.db.models import Q
 
-from users.models import DailyLog, UserMessage, Message
+from users.models import DailyLog, UserMessage, UserCoinLock
 
 
 def random_string(length=16):
@@ -102,16 +102,14 @@ def sign_confirmation(user_id):
     user_sign = DailyLog.objects.get(user_id=user_id)
     sign_date = user_sign.sign_date
     tmp = time.strftime("%Y%m%d")
-    print("tmp=================",tmp)
-    print("sign_date=================",sign_date)
 
     if sign_date>int(tmp):
-        sign = 1
+        is_sign = 1
     elif sign_date==int(tmp):
-        sign = 1
+        is_sign = 1
     else:
-        sign = 0
-    return sign
+        is_sign = 0
+    return is_sign
 
 
 def message_hints(user_id):
@@ -119,10 +117,10 @@ def message_hints(user_id):
     user_message = UserMessage.objects.filter(user_id=user_id, status=0)
     len(user_message)
     if len(user_message) > 0:
-        message = 1
+        is_message = 1
     else:
-        message = 0
-    return message
+        is_message = 0
+    return is_message
 
 def message_sign(user_id, type):
     #  公共消息标记
@@ -134,5 +132,18 @@ def message_sign(user_id, type):
     return sign
 
 
-def get_money(user_id,coin):
-    pass
+def amount(user_id):
+    usercoin = UserCoinLock.objects.filter(user_id=user_id)
+    coin=0
+    for list in usercoin:
+        if list.end_time<list.created_at:
+            continue
+        elif list.end_time==list.created_at:
+            continue
+        else:
+            coin+=list.amount
+    return coin
+
+
+
+

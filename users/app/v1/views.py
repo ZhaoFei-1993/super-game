@@ -9,14 +9,14 @@ from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
 from sms.models import Sms
-from datetime import datetime
+from datetime import timedelta, datetime
 import time
 import pytz
 import local_settings
 from django.conf import settings
 from base.exceptions import ParamErrorException
 
-from utils.functions import random_salt, sign_confirmation, message_hints, message_sign
+from utils.functions import random_salt, sign_confirmation, message_hints, message_sign, amount
 from rest_framework_jwt.settings import api_settings
 
 from django.db import transaction
@@ -101,7 +101,6 @@ class UserRegister(object):
 
         user.username = username
         user.source = user.__getattribute__(source.upper())
-        user.password = password
         user.register_type = register_type
         user.avatar = avatar
         user.nickname = nickname
@@ -147,7 +146,7 @@ class LoginView(CreateAPIView):
 
         return self.response({
             'code': 0,
-            'data': {'access_token': token, 'chat_username': username}})
+            'data': {'access_token': token,}})
 
 
 class LogoutView(ListCreateAPIView):
@@ -167,7 +166,7 @@ class LogoutView(ListCreateAPIView):
 
 class InfoView(ListAPIView):
     """
-    get方法：首页----设置页面（并用）  post方法：修改昵称
+    用户信息
     """
     permission_classes = (LoginRequired,)
     serializer_class = UserInfoSerializer
@@ -179,60 +178,92 @@ class InfoView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
-        sing = sign_confirmation(user_id)  # 是否签到
-        message = message_hints(user_id)  # 是否有未读消息
+        is_sign = sign_confirmation(user_id)  # 是否签到
+        is_message = message_hints(user_id)  # 是否有未读消息
+        ggtc_locked = amount(user_id)          # 该用户锁定的金额
 
         return self.response({
             'code': 0,
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
+            'eth_address': items[0]["eth_address"],
             'meth': items[0]["meth"],
             'ggtc': items[0]["ggtc"],
-            'is_sound': items[0]["is_sound"],
-            'is_notify': items[0]["is_notify"],
             'telephone': items[0]["telephone"],
-            'pass_code': items[0]["pass_code"],
-            'message': message,
-            'sing': sing})
+            'is_passcode': items[0]["is_passcode"],
+            'ggtc_locked': ggtc_locked,
+            'is_message': is_message,
+            'is_sign': is_sign})
 
-    def _update_info(self, request):
-        """
-        修改昵称
-        """
+
+class NicknameView(ListAPIView):
+    """
+    修改用户昵称
+    """
+    def put(self, request, *args, **kwargs):
         user = request.user
         if "avatar" in request.data:
             user.avatar = request.data.get("avatar")
         if "nickname" in request.data:
             user.nickname = request.data.get("nickname")
         user.save()
+
         content = {'code': 0}
         return self.response(content)
 
-    def post(self, request, *args, **kwargs):
 
-        return self._update_info(request)
-
-
-class AssetsView(ListAPIView):
+class BindTelephoneView(ListCreateAPIView):
     """
-    我的资产
+    绑定手机
     """
     permission_classes = (LoginRequired,)
-    serializer_class = AssetsSerialize
 
-    def get_queryset(self):
-        return UserRecharge.objects.get(user_id=self.request.user.id)
+    def post(self, request, *args, **kwargs):
+        telephone = request.data.get('telephone')
+        if "code" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20401_TELEPHONE_ERROR)
 
-    def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        items = results.data.get('results')
-        userinfo = UserRecharge.objects.get(user_id=self.request.user.id)
-        print("userinfo==========", userinfo)
+        # 获取该手机号码最后一条发短信记录
+        sms = Sms.objects.filter(telephone=telephone).order_by('-id').first()
+        if (sms is None) or (sms.code != request.data.get('code')):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
-        return self.response({
-            'code': 0,
-        })
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
+
+        user = User.objects.get(id=self.request.user.id)
+        user.telephone = telephone
+        user.save()
+        content = {'code': 0}
+        return self.response(content)
+
+
+class UnbindTelephoneView(ListCreateAPIView):
+    """
+    解除手机绑定
+    """
+    def post(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        userinfo = User.objects.get(pk=user_id)
+        # 获取该手机号码最后一条发短信记录
+        sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
+        if (sms is None) or (sms.code != request.data.get('code')):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
+
+        userinfo.telephone = ""
+        userinfo.save()
+        content = {'code': 0}
+        return self.response(content)
 
 
 class RankingView(ListAPIView):
@@ -284,66 +315,72 @@ class RankingView(ListAPIView):
         return self.response({'code': 0, 'data': data, 'my_ranking': my_ranking})
 
 
-class SecurityView(ListCreateAPIView):
+class PasscodeView(ListCreateAPIView):
     """
-     密保校验 用户绑定密保  and   修改密保
+    密保设置
     """
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        type = kwargs['type']
-        pass_code = request.data.get('pass_code')
-        if "pass_code" not in request.data:
-            raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
+        passcode = request.data.get('passcode')
+        if len(passcode)<6:
+            raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_LEN_ERROR)
+        if "passcode" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_ERROR)
 
         user = User.objects.get(id=self.request.user.id)
-        if int(type) == 1:
-            if int(user.pass_code) != int(pass_code):
-                raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
-        elif int(type) == 2:
-            if int(user.pass_code) == int(pass_code):
-                raise ParamErrorException(error_code=error_code.API_20107_ALIKE_PASS_CODE)
-            else:
-                user.pass_code = pass_code
-                user.save()
+        user.pass_code = passcode
+        user.save()
         content = {'code': 0}
         return self.response(content)
 
 
-class BackSecurityView(ListCreateAPIView):
+class ForgetPasscodeView(ListCreateAPIView):
+    """
+    原密保校验
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        passcode = request.data.get('passcode')
+        if "passcode" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20701_USED_PASS_CODE_)
+
+        user = User.objects.get(id=self.request.user.id)
+        if int(passcode) != int(user.pass_code):
+            raise ParamErrorException(error_code=error_code.API_20702_USED_PASS_CODE_ERROR)
+        content = {'code': 0}
+        return self.response(content)
+
+
+class BackPasscodeView(ListCreateAPIView):
     """
      忘记密保
     """
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        telephone = request.data.get('telephone')
-        pass_code = request.data.get('pass_code')
+        passcode = request.data.get('passcode')
+        user_id = self.request.user.id
+        userinfo = User.objects.get(pk=user_id)
+        # 获取该手机号码最后一条发短信记录
+        sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
+        if (sms is None) or (sms.code != request.data.get('code')):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
-        if "pass_code" not in request.data:
-            raise ParamErrorException(error_code=error_code.API_20106_PASS_CODE_ERROR)
-        if "sms_code" not in request.data:
-            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
-        message = Sms.objects.filter(telephone=telephone, code=request.data.get('sms_code')).first()
-        if message is None:
-            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
-
-        # 短信发送时间
-        code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        code_time = time.mktime(code_time.timetuple())
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         current_time = time.mktime(datetime.datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
-        # 判断code是否过期
-        if (settings.SMS_CODE_EXPIRE_TIME > 0) and (current_time - code_time > settings.SMS_CODE_EXPIRE_TIME):
-            return self.response({'code': error_code.API_20105_SMS_CODE_EXPIRED})
+        if len(passcode) < 6:
+            raise ParamErrorException(error_code=error_code.API_20802_PASS_CODE_LEN_ERROR)
+        if "passcode" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20801_PASS_CODE_ERROR)
 
-        message = Sms.objects.filter(telephone=telephone, code=request.data.get('sms_code')).first()
-        if message is None:
-            raise ParamErrorException(error_code=error_code.API_20104_SMS_CODE_INVALID)
-
-        user = User.objects.get(id=self.request.user.id)
-        user.pass_code = pass_code
-        user.save()
+        userinfo.pass_code = passcode
+        userinfo.save()
         content = {'code': 0}
         return self.response(content)
 
@@ -379,17 +416,9 @@ class SwitchView(ListCreateAPIView):
         return self.response(content)
 
 
-class ListView(FormatListAPIView):
+class DailyListView(ListAPIView):
     """
-    返回用户列表
-    """
-    serializer_class = ListSerialize
-    queryset = User.objects.all()
-
-
-class DailyView(ListAPIView):
-    """
-    get方法：签到列表
+    签到列表
     """
     permission_classes = (LoginRequired,)
     serializer_class = DailySerialize
@@ -400,32 +429,53 @@ class DailyView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        sing = sign_confirmation(user_id)  # 判断是否签到
+        sign = sign_confirmation(user_id)  # 判断是否签到
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        daily = DailyLog.objects.get(user_id=user_id)
+        is_sign=0
+        data=[]
+        for list in items:
+            if list["days"]<daily.number or list["days"]==daily.number:
+                is_sign=1
+            if sign==1 and daily.number==0:
+                is_sign=1
+            data.append({
+                "id": list["id"],
+                "days": list["days"],
+                "rewards": list["rewards"],
+                "is_sign": is_sign
+            })
 
-        content = {'code': 0,
-                   "items": items,
-                   "sing": sing,  # 今天是否签到
-                   }
-        return self.response(content)
+        return self.response({'code': 0, 'data': data})
 
-    def _update_info(self, request):
-        """
-        post方法：点击签到
-        """
+
+
+class DailySignListView(ListCreateAPIView):
+    """
+    点击签到
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request):
         user_id = self.request.user.id
-        sing = sign_confirmation(user_id)  # 判断是否签到
-        if sing == 1:
+        sign = sign_confirmation(user_id)  # 判断是否签到
+        yesterday = datetime.today() + timedelta(-1)
+        yesterday_format = yesterday.strftime('%Y%m%d')
+        if sign == 1:
             raise ParamErrorException(error_code.API_30105_ALREADY_SING)
         user = User.objects.get(pk=user_id)
         daily = DailyLog.objects.get(user_id=user_id)
-        if int(daily.number) == 6:
-            fate = 0
-            daily.number = 0
+        if daily.sign_date!=yesterday_format:               # 判断昨天签到没有
+            fate = 1
+            daily.number = 1
         else:
-            fate = daily.number + 1
-            daily.number += 1
+            if int(daily.number) == 6:
+                fate = daily.number+1
+                daily.number = 0
+            else:
+                fate = daily.number + 1
+                daily.number += 1
         dailysettings = DailySettings.objects.get(days=fate)
         rewards = dailysettings.rewards
         coin = dailysettings.coin.type
@@ -443,9 +493,6 @@ class DailyView(ListAPIView):
                    }
         return self.response(content)
 
-    def post(self, request, *args, **kwargs):
-
-        return self._update_info(request)
 
 
 class MessageView(ListAPIView,DestroyAPIView):
@@ -483,3 +530,27 @@ class MessageView(ListAPIView,DestroyAPIView):
                               'data': data,
                               'system_sign': system_sign,
                               'public_sign': public_sign})
+
+
+
+class ReadView(ListCreateAPIView):
+    """
+    阅读  一键阅读
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user.id
+        usermessage_id = request.data.get('usermessage_id')            #  UserMessage表ID
+        content = {'code': 0}
+        if "whole" in request.data:
+            whole = request.data.get('whole')  # 一键阅读
+            if whole == 1:
+                UserMessage.objects.filter(user_id=user, status=0).update(status='1')
+            else:
+                usermessage = UserMessage.objects.get(pk=usermessage_id)
+                print("usermessage================", usermessage)
+
+
+
+        return self.response(content)

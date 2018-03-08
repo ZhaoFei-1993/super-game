@@ -84,6 +84,7 @@ class CoinLock(models.Model):
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    Coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间")
 
     class Meta:
@@ -91,13 +92,16 @@ class CoinLock(models.Model):
         verbose_name = verbose_name_plural = "代币锁定配置"
 
 
-class CoinLockRelation(models.Model):
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+class UserCoinLock(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
+    amount = models.IntegerField(verbose_name="锁定金额", default=0)
+    end_time = models.DateTimeField(verbose_name="锁定结束时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
-        verbose_name = verbose_name_plural = "货币与货币锁定周期关联表"
+        verbose_name = verbose_name_plural = "用户货币锁定记录表"
 
 class DailySettings(models.Model):
     days = models.IntegerField(verbose_name="签到天数", default=1)

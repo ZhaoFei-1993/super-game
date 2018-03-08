@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message
+from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message, UserCoinLock
 
 
 
@@ -45,11 +45,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
     用户信息
     """
     telephone = serializers.SerializerMethodField()
-    pass_code = serializers.SerializerMethodField()
+    is_passcode = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "nickname", "avatar", "meth", "ggtc", "is_sound", "is_notify", "telephone", "pass_code")
+        fields = ("id", "nickname", "avatar", "meth", "ggtc", "telephone", "is_passcode", "eth_address")
 
     @staticmethod
     def get_telephone(obj):  # 我的选项
@@ -59,24 +59,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return obj.telephone
 
     @staticmethod
-    def get_pass_code(obj):  # 我的选项
+    def get_is_passcode(obj):  # 我的选项
         if obj.pass_code == '' or obj.pass_code is None:
-            if obj.telephone == '' or obj.telephone is None:
-                return "请先绑定手机"
-            else:
                 return "未设置"
         else:
             return "已设置"
-
-
-
-class ListSerialize(serializers.ModelSerializer):
-    """
-    用户列表
-    """
-    class Meta:
-        model = User
-        fields = ("id", "nickname")
 
 
 class DailySerialize(serializers.ModelSerializer):
@@ -85,23 +72,7 @@ class DailySerialize(serializers.ModelSerializer):
     """
     class Meta:
         model = DailySettings
-        fields = ("id", "days", "coin", "rewards")
-
-
-
-class AssetsSerialize(serializers.ModelSerializer):
-    """
-    用户资产
-    """
-    class Meta:
-        model = User
-        fields = ()
-
-    # @staticmethod
-    # def get_eth(obj):
-    #     # ETH
-
-
+        fields = ("id", "days", "rewards")
 
 
 class RankingSerialize(serializers.ModelSerializer):
@@ -119,8 +90,6 @@ class MessageSerialize(serializers.ModelSerializer):
     """
     type = serializers.SerializerMethodField()         # 消息类型
     title = serializers.SerializerMethodField()       # 消息标题
-    # public_sign = serializers.SerializerMethodField()     #  公共消息标记
-    # system_sign = serializers.SerializerMethodField()     #  系统消息标记
 
     class Meta:
         model = UserMessage
