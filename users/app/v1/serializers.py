@@ -84,7 +84,7 @@ class RankingSerialize(serializers.ModelSerializer):
         fields = ("id", "avatar", "nickname")
 
 
-class MessageSerialize(serializers.ModelSerializer):
+class MessageListSerialize(serializers.ModelSerializer):
     """
     通知列表
     """

@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView, DestroyAPIView
 from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize, \
-    DailySerialize, MessageSerialize
+    DailySerialize, MessageListSerialize
 from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
@@ -495,12 +495,12 @@ class DailySignListView(ListCreateAPIView):
 
 
 
-class MessageView(ListAPIView,DestroyAPIView):
+class MessageListView(ListAPIView, DestroyAPIView):
     """
     通知列表
     """
     permission_classes = (LoginRequired,)
-    serializer_class = MessageSerialize
+    serializer_class = MessageListSerialize
 
     def get_queryset(self):
         user = self.request.user.id
@@ -520,11 +520,11 @@ class MessageView(ListAPIView,DestroyAPIView):
             if int(types.type) != int(type):
                 continue
             data.append({
-                "id": list["id"],
+                "message_id": list["id"],
                 'type': list["type"],
-                'title': list["title"],
-                'status': list["status"],
-                'created_at': list["created_at"],
+                'message_title': list["title"],
+                'is_read': list["status"],
+                'message_date': list["created_at"],
             })
         return self.response({'code': 0,
                               'data': data,

@@ -31,7 +31,7 @@ urlpatterns = [
     # 点击签到
     path('daily/sign/', views.DailySignListView.as_view(), name="app-v1-user-daily-sign"),
     #  通知列表
-    path('message/<int:type>/', views.MessageView.as_view(), name="app-v1-user-message"),
+    path('message/list/<int:type>/', views.MessageListView.as_view(), name="app-v1-user-message"),
     # 阅读，一键阅读
     path('read/', views.ReadView.as_view(), name="app-v1-user-read"),
 ]
