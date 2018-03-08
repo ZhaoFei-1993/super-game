@@ -528,22 +528,35 @@ class MessageListView(ListAPIView, DestroyAPIView):
                               'public_sign': public_sign})
 
 
-class ReadView(ListCreateAPIView):
+class DetailView(ListAPIView):
     """
-    阅读  一键阅读
+    获取消息详细内容
     """
     permission_classes = (LoginRequired,)
 
-    def post(self, request, *args, **kwargs):
-        user = self.request.user.id
-        usermessage_id = request.data.get('usermessage_id')  # UserMessage表ID
-        content = {'code': 0}
-        if "whole" in request.data:
-            whole = request.data.get('whole')  # 一键阅读
-            if whole == 1:
-                UserMessage.objects.filter(user_id=user, status=0).update(status='1')
-            else:
-                usermessage = UserMessage.objects.get(pk=usermessage_id)
-                print("usermessage================", usermessage)
+    def get_queryset(self):
+        return
 
+    def list(self, request, *args, **kwargs):
+        message_id = kwargs['message_id']
+        message = Message.objects.get(id=message_id)
+        user = self.request.user.id
+        UserMessage.objects.filter(user_id=user,message_id=message_id).update(status=1)
+        content = {'code': 0,
+                   'content': message.content}
+        return self.response(content)
+
+
+
+class AllreadView(ListCreateAPIView):
+    """
+    一键阅读所有消息公告
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request):
+        user_id = self.request.user.id
+        print("user_id================", user_id)
+        UserMessage.objects.filter(user_id=user_id).update(status=1)
+        content = {'code': 0}
         return self.response(content)
