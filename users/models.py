@@ -37,7 +37,7 @@ class User(AbstractBaseUser):
     source = models.CharField(verbose_name="用户来源", choices=SOURCE_CHOICE, max_length=1, default=IOS)
     avatar = models.CharField(verbose_name="头像", max_length=255, default='')
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
-    pass_code = models.CharField(verbose_name="资金密保", max_length=32,default='')
+    pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
     eth_address = models.CharField(verbose_name="ETH地址", max_length=32)
     meth = models.IntegerField(verbose_name="METH余额", default=0)
     ggtc = models.IntegerField(verbose_name="GGTC余额", default=0)
@@ -103,6 +103,7 @@ class UserCoinLock(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户货币锁定记录表"
 
+
 class DailySettings(models.Model):
     days = models.IntegerField(verbose_name="签到天数", default=1)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -164,7 +165,6 @@ class UserMessage(models.Model):
         verbose_name = verbose_name_plural = "用户消息表"
 
 
-
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -194,26 +194,6 @@ class UserPresentation(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="更新时间")
 
-
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户提现记录表"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

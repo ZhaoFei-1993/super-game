@@ -1,10 +1,9 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
-
-from base.app import FormatListAPIView, FormatRetrieveAPIView, ListAPIView, DestroyAPIView
-from .serializers import ListSerialize, UserInfoSerializer, UserSerializer, AssetsSerialize, RankingSerialize, \
+from base.app import ListAPIView, DestroyAPIView
+from .serializers import UserInfoSerializer, UserSerializer, RankingSerialize, \
     DailySerialize, MessageListSerialize
-from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message
+from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
@@ -12,13 +11,10 @@ from sms.models import Sms
 from datetime import timedelta, datetime
 import time
 import pytz
-import local_settings
 from django.conf import settings
 from base.exceptions import ParamErrorException
-
 from utils.functions import random_salt, sign_confirmation, message_hints, message_sign, amount
 from rest_framework_jwt.settings import api_settings
-
 from django.db import transaction
 import re
 
@@ -146,7 +142,7 @@ class LoginView(CreateAPIView):
 
         return self.response({
             'code': 0,
-            'data': {'access_token': token,}})
+            'data': {'access_token': token, }})
 
 
 class LogoutView(ListCreateAPIView):
@@ -180,7 +176,7 @@ class InfoView(ListAPIView):
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        ggtc_locked = amount(user_id)          # 该用户锁定的金额
+        ggtc_locked = amount(user_id)  # 该用户锁定的金额
 
         return self.response({
             'code': 0,
@@ -201,6 +197,7 @@ class NicknameView(ListAPIView):
     """
     修改用户昵称
     """
+
     def put(self, request, *args, **kwargs):
         user = request.user
         if "avatar" in request.data:
@@ -246,6 +243,7 @@ class UnbindTelephoneView(ListCreateAPIView):
     """
     解除手机绑定
     """
+
     def post(self, request, *args, **kwargs):
         user_id = self.request.user.id
         userinfo = User.objects.get(pk=user_id)
@@ -323,7 +321,7 @@ class PasscodeView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         passcode = request.data.get('passcode')
-        if len(passcode)<6:
+        if len(passcode) < 6:
             raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_LEN_ERROR)
         if "passcode" not in request.data:
             raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_ERROR)
@@ -433,13 +431,13 @@ class DailyListView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         daily = DailyLog.objects.get(user_id=user_id)
-        is_sign=0
-        data=[]
+        is_sign = 0
+        data = []
         for list in items:
-            if list["days"]<daily.number or list["days"]==daily.number:
-                is_sign=1
-            if sign==1 and daily.number==0:
-                is_sign=1
+            if list["days"] < daily.number or list["days"] == daily.number:
+                is_sign = 1
+            if sign == 1 and daily.number == 0:
+                is_sign = 1
             data.append({
                 "id": list["id"],
                 "days": list["days"],
@@ -448,7 +446,6 @@ class DailyListView(ListAPIView):
             })
 
         return self.response({'code': 0, 'data': data})
-
 
 
 class DailySignListView(ListCreateAPIView):
@@ -463,15 +460,15 @@ class DailySignListView(ListCreateAPIView):
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime('%Y%m%d')
         if sign == 1:
-            raise ParamErrorException(error_code.API_30105_ALREADY_SING)
+            raise ParamErrorException(error_code.API_30205_ALREADY_SING)
         user = User.objects.get(pk=user_id)
         daily = DailyLog.objects.get(user_id=user_id)
-        if daily.sign_date!=yesterday_format:               # 判断昨天签到没有
+        if daily.sign_date != yesterday_format:  # 判断昨天签到没有
             fate = 1
             daily.number = 1
         else:
             if int(daily.number) == 6:
-                fate = daily.number+1
+                fate = daily.number + 1
                 daily.number = 0
             else:
                 fate = daily.number + 1
@@ -492,7 +489,6 @@ class DailySignListView(ListCreateAPIView):
                    "rewards": rewards,
                    }
         return self.response(content)
-
 
 
 class MessageListView(ListAPIView, DestroyAPIView):
@@ -532,7 +528,6 @@ class MessageListView(ListAPIView, DestroyAPIView):
                               'public_sign': public_sign})
 
 
-
 class ReadView(ListCreateAPIView):
     """
     阅读  一键阅读
@@ -541,7 +536,7 @@ class ReadView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user.id
-        usermessage_id = request.data.get('usermessage_id')            #  UserMessage表ID
+        usermessage_id = request.data.get('usermessage_id')  # UserMessage表ID
         content = {'code': 0}
         if "whole" in request.data:
             whole = request.data.get('whole')  # 一键阅读
@@ -550,7 +545,5 @@ class ReadView(ListCreateAPIView):
             else:
                 usermessage = UserMessage.objects.get(pk=usermessage_id)
                 print("usermessage================", usermessage)
-
-
 
         return self.response(content)

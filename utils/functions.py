@@ -10,7 +10,6 @@ import time
 import pytz
 import datetime
 from django.conf import settings
-from django.db.models import Q
 
 from users.models import DailyLog, UserMessage, UserCoinLock
 
@@ -97,15 +96,16 @@ def value_judge(request, *args):
             return 0
     return 1
 
+
 def sign_confirmation(user_id):
     # 是否签到
     user_sign = DailyLog.objects.get(user_id=user_id)
     sign_date = user_sign.sign_date
     tmp = time.strftime("%Y%m%d")
 
-    if sign_date>int(tmp):
+    if sign_date > int(tmp):
         is_sign = 1
-    elif sign_date==int(tmp):
+    elif sign_date == int(tmp):
         is_sign = 1
     else:
         is_sign = 0
@@ -122,6 +122,7 @@ def message_hints(user_id):
         is_message = 0
     return is_message
 
+
 def message_sign(user_id, type):
     #  公共消息标记
     usermessage = UserMessage.objects.filter(user_id=user_id, status=0)
@@ -134,16 +135,12 @@ def message_sign(user_id, type):
 
 def amount(user_id):
     usercoin = UserCoinLock.objects.filter(user_id=user_id)
-    coin=0
+    coin = 0
     for list in usercoin:
-        if list.end_time<list.created_at:
+        if list.end_time < list.created_at:
             continue
-        elif list.end_time==list.created_at:
+        elif list.end_time == list.created_at:
             continue
         else:
-            coin+=list.amount
+            coin += list.amount
     return coin
-
-
-
-

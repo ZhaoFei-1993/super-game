@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import User, UserRecharge, DailyLog, DailySettings, UserMessage, Message, UserCoinLock
-
+from ...models import User, DailySettings, UserMessage, Message
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -61,7 +60,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_passcode(obj):  # 我的选项
         if obj.pass_code == '' or obj.pass_code is None:
-                return "未设置"
+            return "未设置"
         else:
             return "已设置"
 
@@ -70,6 +69,7 @@ class DailySerialize(serializers.ModelSerializer):
     """
     签到
     """
+
     class Meta:
         model = DailySettings
         fields = ("id", "days", "rewards")
@@ -79,6 +79,7 @@ class RankingSerialize(serializers.ModelSerializer):
     """
     排行榜
     """
+
     class Meta:
         model = User
         fields = ("id", "avatar", "nickname")
@@ -88,8 +89,8 @@ class MessageListSerialize(serializers.ModelSerializer):
     """
     通知列表
     """
-    type = serializers.SerializerMethodField()         # 消息类型
-    title = serializers.SerializerMethodField()       # 消息标题
+    type = serializers.SerializerMethodField()  # 消息类型
+    title = serializers.SerializerMethodField()  # 消息标题
 
     class Meta:
         model = UserMessage
@@ -101,10 +102,8 @@ class MessageListSerialize(serializers.ModelSerializer):
         type = list.type
         return type
 
-
     @staticmethod
     def get_title(obj):  # 消息标题
         list = Message.objects.get(pk=obj.message_id)
         title = list.title
         return title
-

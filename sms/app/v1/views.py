@@ -1,8 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListCreateAPIView, FormatRetrieveAPIView, CreateAPIView
-from base.function import LoginRequired
-from base.exceptions import ResultNotFoundException
-from users.models import User
+from base.app import ListCreateAPIView
 
 from . import serializers
 from wsms import sms
@@ -12,8 +9,6 @@ from datetime import datetime
 import time
 import pytz
 from django.conf import settings
-
-from rest_framework_jwt.settings import api_settings
 
 
 class SmsView(ListCreateAPIView):

@@ -35,4 +35,3 @@ urlpatterns = [
     # 阅读，一键阅读
     path('read/', views.ReadView.as_view(), name="app-v1-user-read"),
 ]
-
