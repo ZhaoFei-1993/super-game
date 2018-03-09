@@ -44,11 +44,33 @@ class QuizCoin(models.Model):
 
 
 class Rule(models.Model):
+    RESULTS = 1
+    ONE_TWO = 2
+    TOTAL = 3
+    SCORE = 4
+    NEXT_BALL = 5
+    OUTCOME = 6
+    MIXTURE = 7
+    COMITY_BRANCH = 8
+    KATSUTA = 9
+    BRANCH_SIZE = 8
+    TYPE_CHOICE = (
+        (RESULTS, "赛果"),
+        (ONE_TWO, "单双"),
+        (TOTAL, "总进球"),
+        (SCORE, "比分"),
+        (NEXT_BALL, "下一进球"),
+        (OUTCOME, "胜负"),
+        (MIXTURE, "混合过关"),
+        (COMITY_BRANCH, "让分胜负"),
+        (KATSUTA, "胜分差"),
+        (BRANCH_SIZE, "大小分"),
+    )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    # type =
+    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
-    # handicap_score =
-    # estimate_score =
+    handicap_score = models.IntegerField(verbose_name="让分分数，让分胜负玩法适用", default=0)
+    estimate_score = models.IntegerField(verbose_name="预估分数，大小分玩法适用", default=0)
 
     class Meta:
         ordering = ['-id']

@@ -10,12 +10,3 @@ class ListSerialize(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "nickname")
-
-
-class InfoSerialize(serializers.ModelSerializer):
-    """
-    用户信息
-    """
-    class Meta:
-        model = User
-        fields = ("id", "nickname", "telephone")

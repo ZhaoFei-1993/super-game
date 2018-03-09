@@ -53,7 +53,6 @@ API_ERROR_MESSAGE = {
     API_40102_SMS_CODE_EXPIRED: '验证码已过期',
     API_40103_SMS_CODE_INVALID: '验证码错误',
     API_40104_SMS_PERIOD_INVALID: '短信间隔期未到',
-
 }
 
 
