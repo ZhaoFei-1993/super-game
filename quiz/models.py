@@ -81,6 +81,7 @@ class Option(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.CharField(verbose_name="选项值", max_length=20, default="")
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
+    is_right = models.BooleanField(verbose_name="是否正确选项", default=False)
 
     class Meta:
         ordering = ['-id']
