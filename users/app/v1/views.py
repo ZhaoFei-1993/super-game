@@ -13,7 +13,7 @@ import time
 import pytz
 from django.conf import settings
 from base.exceptions import ParamErrorException
-from utils.functions import random_salt, sign_confirmation, message_hints, message_sign, amount
+from utils.functions import random_salt, sign_confirmation, message_hints, message_sign, amount, value_judge
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
@@ -69,7 +69,10 @@ class UserRegister(object):
         """
         token = None
 
-        user = User.objects.get(username=username)
+        try:
+            user = User.objects.get(username=username)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         token = self.get_access_token(source=source, user=user)
 
@@ -103,7 +106,10 @@ class UserRegister(object):
         user.eth_address = 10086  # ETH地址    暂时默认都是10086
         user.save()
         # 生成签到记录
-        userinfo = User.objects.get(username=username)
+        try:
+            userinfo = User.objects.get(username=username)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         daily = DailyLog()
         daily.user_id = userinfo.id
         daily.number = 0
@@ -126,7 +132,9 @@ class LoginView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         ur = UserRegister()
-
+        value = value_judge(request, "username")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         avatar = request.data.get('avatar')
         nickname = request.data.get('nickname')
@@ -217,6 +225,9 @@ class BindTelephoneView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        value = value_judge(request, "telephone","code")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         telephone = request.data.get('telephone')
         if "code" not in request.data:
             raise ParamErrorException(error_code=error_code.API_20401_TELEPHONE_ERROR)
@@ -232,7 +243,10 @@ class BindTelephoneView(ListCreateAPIView):
         if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
             return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
-        user = User.objects.get(id=self.request.user.id)
+        try:
+            user = User.objects.get(id=self.request.user.id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user.telephone = telephone
         user.save()
         content = {'code': 0}
@@ -246,7 +260,10 @@ class UnbindTelephoneView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        userinfo = User.objects.get(pk=user_id)
+        try:
+            userinfo = User.objects.get(pk=user_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         # 获取该手机号码最后一条发短信记录
         sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
         if (sms is None) or (sms.code != request.data.get('code')):
@@ -320,13 +337,18 @@ class PasscodeView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        value = value_judge(request, "passcode")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         passcode = request.data.get('passcode')
         if len(passcode) < 6:
             raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_LEN_ERROR)
         if "passcode" not in request.data:
             raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_ERROR)
-
-        user = User.objects.get(id=self.request.user.id)
+        try:
+            user = User.objects.get(id=self.request.user.id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user.pass_code = passcode
         user.save()
         content = {'code': 0}
@@ -340,11 +362,16 @@ class ForgetPasscodeView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        value = value_judge(request, "passcode")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         passcode = request.data.get('passcode')
         if "passcode" not in request.data:
             raise ParamErrorException(error_code=error_code.API_20701_USED_PASS_CODE_)
-
-        user = User.objects.get(id=self.request.user.id)
+        try:
+            user = User.objects.get(id=self.request.user.id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(passcode) != int(user.pass_code):
             raise ParamErrorException(error_code=error_code.API_20702_USED_PASS_CODE_ERROR)
         content = {'code': 0}
@@ -358,9 +385,16 @@ class BackPasscodeView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        value = value_judge(request, "passcode", "code")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         passcode = request.data.get('passcode')
         user_id = self.request.user.id
-        userinfo = User.objects.get(pk=user_id)
+        try:
+            userinfo = User.objects.get(pk=user_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         # 获取该手机号码最后一条发短信记录
         sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
         if (sms is None) or (sms.code != request.data.get('code')):
@@ -391,6 +425,9 @@ class SwitchView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        value = value_judge(request, "event", "status")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         event = request.data.get('event')
         status = request.data.get('status')
         if "event" not in request.data:
@@ -403,8 +440,10 @@ class SwitchView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         if status is None or not regex.match(status):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-
-        user = User.objects.get(id=self.request.user.id)
+        try:
+            user = User.objects.get(id=self.request.user.id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(event) == 0:
             user.is_sound = status
         else:
@@ -430,7 +469,10 @@ class DailyListView(ListAPIView):
         sign = sign_confirmation(user_id)  # 判断是否签到
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        daily = DailyLog.objects.get(user_id=user_id)
+        try:
+            daily = DailyLog.objects.get(user_id=user_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         is_sign = 0
         data = []
         for list in items:
@@ -461,8 +503,14 @@ class DailySignListView(ListCreateAPIView):
         yesterday_format = yesterday.strftime('%Y%m%d')
         if sign == 1:
             raise ParamErrorException(error_code.API_30205_ALREADY_SING)
-        user = User.objects.get(pk=user_id)
-        daily = DailyLog.objects.get(user_id=user_id)
+        try:
+            user = User.objects.get(pk=user_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            daily = DailyLog.objects.get(user_id=user_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if daily.sign_date != yesterday_format:  # 判断昨天签到没有
             fate = 1
             daily.number = 1
@@ -473,7 +521,10 @@ class DailySignListView(ListCreateAPIView):
             else:
                 fate = daily.number + 1
                 daily.number += 1
-        dailysettings = DailySettings.objects.get(days=fate)
+        try:
+            dailysettings = DailySettings.objects.get(days=fate)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
         coin = dailysettings.coin.type
         if int(coin) == 1:
@@ -512,7 +563,10 @@ class MessageListView(ListAPIView, DestroyAPIView):
         system_sign = message_sign(user, 1)
         public_sign = message_sign(user, 2)
         for list in items:
-            types = Message.objects.get(pk=list["message"])
+            try:
+                types = Message.objects.get(pk=list["message"])
+            except Exception:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             if int(types.type) != int(type):
                 continue
             data.append({
@@ -539,7 +593,10 @@ class DetailView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         message_id = kwargs['message_id']
-        message = Message.objects.get(id=message_id)
+        try:
+            message = Message.objects.get(id=message_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = self.request.user.id
         UserMessage.objects.filter(user_id=user,message_id=message_id).update(status=1)
         content = {'code': 0,
@@ -556,7 +613,6 @@ class AllreadView(ListCreateAPIView):
 
     def post(self, request):
         user_id = self.request.user.id
-        print("user_id================", user_id)
         UserMessage.objects.filter(user_id=user_id).update(status=1)
         content = {'code': 0}
         return self.response(content)

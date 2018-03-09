@@ -57,6 +57,14 @@ def convert_localtime(value):
     return value.replace(tzinfo=pytz.utc).astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
+def value_judge(request, *args):  # 查看客户端有没有漏传字段
+    for i in args:
+        if i not in request.data or request.data.get(i) == '' or request.data.get(i) is None:
+            return 0
+    return 1
+
+
+
 def surplus_date(end_date):
     """
     下注截止时间计算
