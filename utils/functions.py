@@ -152,3 +152,19 @@ def amount(user_id):
         else:
             coin += list.amount
     return coin
+
+
+def surplus_date(end_date):
+    """
+    下注截止时间计算
+    """
+    end_date = end_date.astimezone(pytz.timezone(settings.TIME_ZONE))
+    end_date = time.mktime(end_date.timetuple())
+    nowtime = datetime.datetime.now()
+    now = nowtime.astimezone(pytz.timezone(settings.TIME_ZONE))
+    now = time.mktime(now.timetuple())
+    surplus = end_date - now
+    if surplus > 0:
+        return int(surplus)
+    else:
+        return 0

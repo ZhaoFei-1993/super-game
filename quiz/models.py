@@ -19,13 +19,48 @@ class Category(MPTTModel):
 
 
 class Quiz(models.Model):
+    TITLE_FIRST_AUDIT = 1  # 题目初审
+    TITLE_FINAL_AUDIT = 2  # 题目终审
+    OPTION_FIRST_AUDIT = 3  # 答案初审
+    OPTION_FINAL_AUDIT = 4  # 答案终审
+    PUBLISHING = 5  # 已发布       如果是房间题目 则直接已发布
+    ENDED = 6  # 已结束
+    PUBLISHING_ANSWER = 7 #已发布答案
+    BONUS_DISTRIBUTION=8 #已分配奖金
+    REPEALED = 11  # 已作废
+    PAUSE = 12 # 暂停下注 封盘
+    TITLE_FIRST_AUDIT_REJECT = 21  # 题目初审不通过
+    TITLE_FINAL_AUDIT_REJECT = 22  # 题目终审不通过
+    OPTION_FIRST_AUDIT_REJECT = 23  # 答案初审不通过
+    OPTION_FINAL_AUDIT_REJECT = 24  # 答案终审不通过
+
+    STATUS_CHOICE = (
+        (TITLE_FIRST_AUDIT, "题目初审"),
+        (TITLE_FINAL_AUDIT, "题目终审"),
+        (OPTION_FIRST_AUDIT, "答案初审"),
+        (OPTION_FINAL_AUDIT, "答案终审"),
+        (PUBLISHING, "已发布"),
+        (PUBLISHING_ANSWER,"已发布答案"),
+        (BONUS_DISTRIBUTION,"已分配奖金"),
+        (ENDED, "已结束"),
+        (REPEALED, "已作废"),
+        (PAUSE, "暂停下注 封盘"),
+        (TITLE_FIRST_AUDIT_REJECT, "题目初审不通过"),
+        (TITLE_FINAL_AUDIT_REJECT, "题目终审不通过"),
+        (OPTION_FIRST_AUDIT_REJECT, "答案初审不通过"),
+        (OPTION_FINAL_AUDIT_REJECT, "答案终审不通过"),
+    )
     category = models.ForeignKey(Category, verbose_name="竞猜分类", on_delete=models.DO_NOTHING)
     host_team = models.CharField(verbose_name="主队", max_length=255)
     host_team_avatar = models.CharField(verbose_name="主队图标", max_length=255, default='')
     guest_team = models.CharField(verbose_name="客队", max_length=255)
     guest_team_avatar = models.CharField(verbose_name="客队图标", max_length=255, default='')
     match_name = models.CharField(verbose_name="联赛名称", max_length=50, default="")
-    begin_at = models.DateTimeField(verbose_name="比赛开始时间")
+    status = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=2, default=1)
+    is_delete = models.BooleanField(verbose_name="是否删除", default=False)
+    total_people = models.IntegerField(verbose_name="总参与人数",default=0)
+    begin_at = models.DateTimeField(verbose_name="比赛开始时间/截止日期")
+    updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 

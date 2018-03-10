@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from base.function import LoginRequired
-from base.app import ListAPIView, DestroyAPIView
-from ...models import Category
+from base.app import ListAPIView, DestroyAPIView, ListCreateAPIView
+from ...models import Category, Quiz
 from django.db.models import Q
-from .serializers import ListSerialize
+from .serializers import QuizListSerialize, QuizSerialize
 from base.exceptions import ResultNotFoundException
 from users.models import User
 
@@ -37,3 +37,53 @@ class CategoryView(ListAPIView):
                 "children": children
             })
         return self.response({'code': 0, 'data': data})
+
+
+
+class HotestView(ListAPIView):
+    """
+    热门比赛
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizListSerialize
+
+    def get_queryset(self):
+        return Quiz.objects.filter(status=5, is_delete=False).order_by('-number')[:10]
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        return self.response({'code': 0, 'items': items})
+
+
+class QuizListView(ListCreateAPIView):
+    """
+    获取竞猜列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizSerialize
+
+    def get_queryset(self):
+        if 'category' not in self.request.GET:
+            if 'is_end' not in self.request.GET:
+                print("no category===================")
+                return Quiz.objects.filter(is_delete=False)
+            else:
+                print("no category and no is_end==================")
+                return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'))
+        category_id = str(self.request.GET.get('category'))
+        category_arr = category_id.split(',')
+        if 'is_end' not in self.request.GET:
+            print("no is_end==================")
+            return Quiz.objects.filter(is_delete=False, category=category_arr)
+        else:
+            print("all========================")
+            return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'),
+                                           category__in=category_arr)
+
+
+
+
+
+
+
