@@ -342,7 +342,7 @@ class PasscodeView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         passcode = request.data.get('passcode')
         if len(passcode) < 6:
-            raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_LEN_ERROR)
+            raise ParamErrorException(error_code=error_code.API_20602_PASS_CODE_LEN_ERROR)
         if "passcode" not in request.data:
             raise ParamErrorException(error_code=error_code.API_20601_PASS_CODE_ERROR)
         try:
@@ -502,7 +502,7 @@ class DailySignListView(ListCreateAPIView):
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime('%Y%m%d')
         if sign == 1:
-            raise ParamErrorException(error_code.API_30205_ALREADY_SING)
+            raise ParamErrorException(error_code.API_30201_ALREADY_SING)
         try:
             user = User.objects.get(pk=user_id)
         except Exception:
