@@ -4,7 +4,7 @@ from base.function import LoginRequired
 from base.app import ListAPIView, DestroyAPIView, ListCreateAPIView
 from ...models import Category, Quiz
 from django.db.models import Q
-from .serializers import QuizListSerialize, QuizSerialize
+from .serializers import QuizSerialize
 from base.exceptions import ResultNotFoundException
 from users.models import User
 
@@ -45,10 +45,10 @@ class HotestView(ListAPIView):
     热门比赛
     """
     permission_classes = (LoginRequired,)
-    serializer_class = QuizListSerialize
+    serializer_class = QuizSerialize
 
     def get_queryset(self):
-        return Quiz.objects.filter(status=5, is_delete=False).order_by('-number')[:10]
+        return Quiz.objects.filter(status=5, is_delete=False).order_by('-total_people')[:10]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
