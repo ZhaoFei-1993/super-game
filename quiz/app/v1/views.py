@@ -66,18 +66,14 @@ class QuizListView(ListCreateAPIView):
     def get_queryset(self):
         if 'category' not in self.request.GET:
             if 'is_end' not in self.request.GET:
-                print("no category===================")
                 return Quiz.objects.filter(is_delete=False)
             else:
-                print("no category and no is_end==================")
                 return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'))
         category_id = str(self.request.GET.get('category'))
         category_arr = category_id.split(',')
         if 'is_end' not in self.request.GET:
-            print("no is_end==================")
             return Quiz.objects.filter(is_delete=False, category=category_arr)
         else:
-            print("all========================")
             return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'),
                                            category__in=category_arr)
 
