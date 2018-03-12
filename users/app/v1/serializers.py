@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
+from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message
+from quiz.models import Record
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -45,10 +47,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
     """
     telephone = serializers.SerializerMethodField()
     is_passcode = serializers.SerializerMethodField()
+    win_ratio = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "nickname", "avatar", "meth", "ggtc", "telephone", "is_passcode", "eth_address")
+        fields = ("id", "nickname", "avatar", "meth", "ggtc", "telephone", "is_passcode", "eth_address", "win_ratio")
 
     @staticmethod
     def get_telephone(obj):  # 我的选项
@@ -64,6 +67,17 @@ class UserInfoSerializer(serializers.ModelSerializer):
         else:
             return "已设置"
 
+    @staticmethod
+    def get_win_ratio(obj):
+        total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=obj.id).count()
+        win_count = Record.objects.filter(user_id=obj.id, earn_coin__gt=0).count()
+        if total_count == 0 or win_count == 0:
+            win_ratio = "0%"
+        else:
+            record_count = round(win_count / total_count * 100, 2)
+            win_ratio = str(record_count) + "%"
+        return win_ratio
+
 
 class DailySerialize(serializers.ModelSerializer):
     """
@@ -73,16 +87,6 @@ class DailySerialize(serializers.ModelSerializer):
     class Meta:
         model = DailySettings
         fields = ("id", "days", "rewards")
-
-
-class RankingSerialize(serializers.ModelSerializer):
-    """
-    排行榜
-    """
-
-    class Meta:
-        model = User
-        fields = ("id", "avatar", "nickname")
 
 
 class MessageListSerialize(serializers.ModelSerializer):

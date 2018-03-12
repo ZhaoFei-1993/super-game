@@ -10,7 +10,9 @@ import time
 import pytz
 import datetime
 from django.conf import settings
+from django.db.models import Q
 
+from quiz.models import Record
 from users.models import DailyLog, UserMessage, UserCoinLock
 
 
@@ -110,7 +112,6 @@ def sign_confirmation(user_id):
     user_sign = DailyLog.objects.get(user_id=user_id)
     sign_date = user_sign.sign_date
     tmp = time.strftime("%Y%m%d")
-
     if sign_date > int(tmp):
         is_sign = 1
     elif sign_date == int(tmp):
@@ -168,3 +169,28 @@ def surplus_date(end_date):
         return int(surplus)
     else:
         return 0
+
+
+def win_ratio(user_id):
+    """
+    获取自己胜录
+    :param user_id:
+    :return:
+    """
+    total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=user_id).count()
+    win_count = Record.objects.filter(user_id=user_id, earn_coin__gt=0).count()
+    if total_count == 0 or win_count == 0:
+        win_ratio = "0%"
+    else:
+        record_count = round(win_count / total_count * 100, 2)
+        win_ratio = str(record_count) + "%"
+    return win_ratio
+
+
+
+# def calculation(liat,lists):
+#     if liat == lists:
+#         lists = ""
+#     else:
+#         liat = lists
+#     return lists

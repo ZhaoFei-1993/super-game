@@ -130,6 +130,7 @@ class Record(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
     bet = models.IntegerField(verbose_name="下注金额", default=0)
+    earn_coin = models.IntegerField(verbose_name="获得猜币数", default=0)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
 
     class Meta:

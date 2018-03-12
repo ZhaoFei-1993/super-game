@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
 from base.app import ListAPIView, DestroyAPIView
-from .serializers import UserInfoSerializer, UserSerializer, RankingSerialize, \
+from .serializers import UserInfoSerializer, UserSerializer, \
     DailySerialize, MessageListSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from base.app import CreateAPIView, ListCreateAPIView
@@ -13,7 +13,8 @@ import time
 import pytz
 from django.conf import settings
 from base.exceptions import ParamErrorException
-from utils.functions import random_salt, sign_confirmation, message_hints, message_sign, amount, value_judge
+from utils.functions import random_salt, sign_confirmation, message_hints, \
+    message_sign, amount, value_judge
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
@@ -286,16 +287,16 @@ class RankingView(ListAPIView):
     排行榜
     """
     permission_classes = (LoginRequired,)
-    serializer_class = RankingSerialize
+    serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.all().order_by('id')
+        return User.objects.all().order_by('-victory','id')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_arr = User.objects.all().values_list('id').order_by('id')[:100]
+        user_arr = User.objects.all().values_list('id').order_by('-victory','id')[:100]
         my_ran = "未上榜"
         index = 0
         for i in user_arr:
@@ -315,15 +316,21 @@ class RankingView(ListAPIView):
                 'user_id': user_id,
                 'avatar': fav.get('avatar'),
                 'nickname': fav.get('nickname'),
+                'win_ratio': fav.get('win_ratio'),
                 'ranking': i,
             })
+            data.sort(key=lambda x: x["ranking"])
 
         avatar = user.avatar
         nickname = user.nickname
+        win_ratio = user.victory
+        if user.victory==0:
+            win_ratio = 0
         my_ranking = {
             "id": user.id,
             "avatar": avatar,
             "nickname": nickname,
+            "win_ratio": str(win_ratio) + "%",
             "ranking": my_ran
         }
 
