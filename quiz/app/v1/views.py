@@ -92,8 +92,11 @@ class RecordsListView(ListCreateAPIView):
     serializer_class = RecordSerialize
 
     def get_queryset(self):
-        user = self.request.user
-        return Record.objects.filter(user_id=user.id).order_by('created_at')
+        if 'user_id' not in self.request.GET:
+            user_id = self.request.user.id
+        else:
+            self.request.GET.get('user_id')
+        return Record.objects.filter(user_id=user_id).order_by('created_at')
 
 
     def list(self, request, *args, **kwargs):
