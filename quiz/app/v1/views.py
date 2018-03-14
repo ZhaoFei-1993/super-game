@@ -1,18 +1,11 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
+from django.db.models import Q
 from base.function import LoginRequired
-from base.app import ListAPIView, DestroyAPIView, ListCreateAPIView, RetrieveUpdateAPIView
-from ...models import Category, Quiz, Record, Rule
-from django.db.models import Q, Sum
-from base.exceptions import ParamErrorException
-from base import code as error_code
-from datetime import datetime, timedelta
+from base.app import ListAPIView, ListCreateAPIView
+from ...models import Category, Quiz, Record, Rule, Option
+from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer
-import re
-from base.exceptions import ResultNotFoundException
-from users.models import User
-
-from rest_framework_jwt.settings import api_settings
 
 
 class CategoryView(ListAPIView):
@@ -29,7 +22,7 @@ class CategoryView(ListAPIView):
         data = []
         for category in categorys:
             children = []
-            categoryslist = Category.objects.filter(parent_id=category.id,is_delete=0).order_by("order")
+            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("order")
             for categorylist in categoryslist:
                 children.append({
                     "category_id": categorylist.id,
@@ -43,7 +36,6 @@ class CategoryView(ListAPIView):
         return self.response({'code': 0, 'data': data})
 
 
-
 class HotestView(ListAPIView):
     """
     热门比赛
@@ -52,7 +44,7 @@ class HotestView(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        return Quiz.objects.filter(status=5, is_delete=False).order_by('-total_people')[:10]
+        return Quiz.objects.filter(status=0, is_delete=False).order_by('-total_people')[:10]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -70,18 +62,15 @@ class QuizListView(ListCreateAPIView):
     def get_queryset(self):
         if 'category' not in self.request.GET:
             if 'is_end' not in self.request.GET:
-                return Quiz.objects.filter(is_delete=False)
+                return Quiz.objects.filter(~Q(status=2), is_delete=False)
             else:
-                return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'))
+                return Quiz.objects.filter(status=self.request.GET.get('is_end'), is_delete=False)
         category_id = str(self.request.GET.get('category'))
         category_arr = category_id.split(',')
         if 'is_end' not in self.request.GET:
-            return Quiz.objects.filter(is_delete=False, category=category_arr)
+            return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
         else:
-            return Quiz.objects.filter(is_delete=self.request.GET.get('is_end'),
-                                           category__in=category_arr)
-
-
+            return Quiz.objects.filter(status=self.request.GET.get('is_end'), category__in=category_arr, is_delete=False)
 
 
 class RecordsListView(ListCreateAPIView):
@@ -97,7 +86,6 @@ class RecordsListView(ListCreateAPIView):
         else:
             self.request.GET.get('user_id')
         return Record.objects.filter(user_id=user_id).order_by('created_at')
-
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -164,15 +152,80 @@ class QuizDetailView(ListAPIView):
         quiz = Quiz.objects.filter(pk=quiz_id)
         return quiz
 
-    def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        items = results.data.get('results')
-        return self.response({'code': 0, 'items': items})
 
-
-class QuizOptionView(ListAPIView):
+class RuleView(ListAPIView):
     """
-    竞猜选项列表
+    竞猜选项
     """
     permission_classes = (LoginRequired,)
-    serializer_class = Q
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        quiz_id = kwargs['quiz_id']
+        rule = Rule.objects.filter(quiz_id=quiz_id)
+        data=[]
+        for i in rule:
+            option = Option.objects.filter(rule_id=i.pk)
+            list = []
+            total = Record.objects.filter(rule_id=i.pk).count()
+            for s in option:
+                number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
+                if number == 0 or total == 0:
+                    accuracy = "0%"
+                else:
+                    accuracy = number / total * 100
+                    accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                    accuracy = str(accuracy) + '%'
+                list.append({
+                    "option_id": s.pk,
+                    "option": s.option,
+                    "odds": s.odds,
+                    "is_right": s.is_right,
+                    "accuracy": accuracy
+                })
+            data.append({
+                "quiz_id":i.quiz_id,
+                "type": i.TYPE_CHOICE[int(i.type)][1],
+                "tips":i.tips,
+                "handicap_score":i.handicap_score,
+                "estimate_score":i.estimate_score,
+                "list": list
+            })
+        return self.response({'code': 0, 'data':data})
+
+
+# class OptionView(ListAPIView):
+#     """
+#     竞猜玩法下选项
+#     """
+#     permission_classes = (LoginRequired,)
+#
+#     def get_queryset(self):
+#         return
+#
+#     def list(self, request, *args, **kwargs):
+#         rule_id = kwargs['rule_id']
+#         option = Option.objects.filter(rule_id=rule_id)
+#         data=[]
+#         total = Record.objects.filter(rule_id=rule_id).count()
+#         for i in option:
+#             number=Record.objects.filter(rule_id=rule_id,option_id=i.pk).count()
+#             if number == 0 or total == 0:
+#                 accuracy = "0%"
+#             else:
+#                 accuracy = number / total * 100
+#                 accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+#                 accuracy = str(accuracy) + '%'
+#             data.append({
+#                 "option_id": i.pk,
+#                 "rule_id": i.rule_id,
+#                 "option": i.option,
+#                 "odds": i.odds,
+#                 "is_right": i.is_right,
+#                 "accuracy":accuracy
+#             })
+#         return self.response({'code': 0, 'data': data})
+
+

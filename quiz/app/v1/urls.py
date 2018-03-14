@@ -10,11 +10,13 @@ urlpatterns = [
     path('hotest/', views.HotestView.as_view(), name="app-v1-quiz-hotest"),
     # 竞猜列表
     path('list/', views.QuizListView.as_view(), name="app-v1-quiz-list"),
-    # 竞猜记录
+    # 竞猜记录             ***
     path('records/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
-    # 竞猜详情
+    # 竞猜详情    ***
     path('<int:quiz_id>/', views.QuizDetailView.as_view(), name="app-v1-quiz-detail"),
     # 竞猜选项
-    path('option/<int:quiz_id>/', views.QuizOptionView.as_view(), name="app-v1-quiz-option"),
+    path('rule/<int:quiz_id>/', views.RuleView.as_view(), name="app-v1-quiz-rule"),
+    # # 竞猜玩法下选项
+    # path('option/<int:rule_id>/', views.OptionView.as_view(), name="app-v1-quiz-option"),
 ]
 

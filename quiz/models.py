@@ -19,32 +19,30 @@ class Category(MPTTModel):
 
 
 class Quiz(models.Model):
-    TITLE_FIRST_AUDIT = 1  # 题目初审
-    TITLE_FINAL_AUDIT = 2  # 题目终审
-    OPTION_FIRST_AUDIT = 3  # 答案初审
-    OPTION_FINAL_AUDIT = 4  # 答案终审
-    PUBLISHING = 5  # 已发布       如果是房间题目 则直接已发布
-    ENDED = 6  # 已结束
-    PUBLISHING_ANSWER = 7 #已发布答案
-    BONUS_DISTRIBUTION=8 #已分配奖金
-    REPEALED = 11  # 已作废
-    PAUSE = 12 # 暂停下注 封盘
+    PUBLISHING = 0  # 已发布
+    REPEALED = 1  # 比赛中
+    ENDED = 2  # 已结束
+    PUBLISHING_ANSWER = 3   # 已发布答案
+    BONUS_DISTRIBUTION = 4  # 已分配奖金
+    TITLE_FIRST_AUDIT = 11  # 题目初审
+    TITLE_FINAL_AUDIT = 12  # 题目终审
+    OPTION_FIRST_AUDIT = 13  # 答案初审
+    OPTION_FINAL_AUDIT = 14  # 答案终审
     TITLE_FIRST_AUDIT_REJECT = 21  # 题目初审不通过
     TITLE_FINAL_AUDIT_REJECT = 22  # 题目终审不通过
     OPTION_FIRST_AUDIT_REJECT = 23  # 答案初审不通过
     OPTION_FINAL_AUDIT_REJECT = 24  # 答案终审不通过
 
     STATUS_CHOICE = (
+        (PUBLISHING, "已发布"),
+        (REPEALED, "比赛中"),
+        (ENDED, "已结束"),
+        (PUBLISHING_ANSWER, "已发布答案"),
+        (BONUS_DISTRIBUTION, "已分配奖金"),
         (TITLE_FIRST_AUDIT, "题目初审"),
         (TITLE_FINAL_AUDIT, "题目终审"),
         (OPTION_FIRST_AUDIT, "答案初审"),
         (OPTION_FINAL_AUDIT, "答案终审"),
-        (PUBLISHING, "已发布"),
-        (PUBLISHING_ANSWER,"已发布答案"),
-        (BONUS_DISTRIBUTION,"已分配奖金"),
-        (ENDED, "已结束"),
-        (REPEALED, "已作废"),
-        (PAUSE, "暂停下注 封盘"),
         (TITLE_FIRST_AUDIT_REJECT, "题目初审不通过"),
         (TITLE_FINAL_AUDIT_REJECT, "题目终审不通过"),
         (OPTION_FIRST_AUDIT_REJECT, "答案初审不通过"),
@@ -79,6 +77,7 @@ class QuizCoin(models.Model):
 
 
 class Rule(models.Model):
+    BRANCH_SIZE = 0
     RESULTS = 1
     ONE_TWO = 2
     TOTAL = 3
@@ -88,8 +87,8 @@ class Rule(models.Model):
     MIXTURE = 7
     COMITY_BRANCH = 8
     KATSUTA = 9
-    BRANCH_SIZE = 8
     TYPE_CHOICE = (
+        (BRANCH_SIZE, "大小分"),
         (RESULTS, "赛果"),
         (ONE_TWO, "单双"),
         (TOTAL, "总进球"),
@@ -99,7 +98,6 @@ class Rule(models.Model):
         (MIXTURE, "混合过关"),
         (COMITY_BRANCH, "让分胜负"),
         (KATSUTA, "胜分差"),
-        (BRANCH_SIZE, "大小分"),
     )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)

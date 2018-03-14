@@ -3,7 +3,9 @@ from django.db.models import Q
 from base.app import ListAPIView, DestroyAPIView
 from .serializers import UserInfoSerializer, UserSerializer, \
     DailySerialize, MessageListSerialize
+from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
+from quiz.models import Quiz
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
@@ -201,6 +203,28 @@ class InfoView(ListAPIView):
             'is_message': is_message,
             'is_sign': is_sign})
 
+
+class QuizPushView(ListAPIView):
+    """
+    首页推送
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        quiz = Quiz.objects.filter(Q(status=5) | Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
+        data = []
+        for i in quiz:
+            time = i.begin_at.strftime('%H:%M')
+            name = i.host_team + "VS" + i.guest_team
+            quiz_push = str(time) + " " + name
+            data.append({
+                'quiz_push': quiz_push,
+            })
+        content = {'code': 0, 'data':data}
+        return self.response(content)
 
 class NicknameView(ListAPIView):
     """

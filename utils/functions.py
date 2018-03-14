@@ -171,26 +171,17 @@ def surplus_date(end_date):
         return 0
 
 
-def win_ratio(user_id):
-    """
-    获取自己胜录
-    :param user_id:
-    :return:
-    """
-    total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=user_id).count()
-    win_count = Record.objects.filter(user_id=user_id, earn_coin__gt=0).count()
-    if total_count == 0 or win_count == 0:
-        win_ratio = "0%"
-    else:
-        record_count = round(win_count / total_count * 100, 2)
-        win_ratio = str(record_count) + "%"
-    return win_ratio
-
-
-
-# def calculation(liat,lists):
-#     if liat == lists:
-#         lists = ""
+# def win_ratio(user_id):
+#     """
+#     获取自己胜录
+#     :param user_id:
+#     :return:
+#     """
+#     total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=user_id).count()
+#     win_count = Record.objects.filter(user_id=user_id, earn_coin__gt=0).count()
+#     if total_count == 0 or win_count == 0:
+#         win_ratio = "0%"
 #     else:
-#         liat = lists
-#     return lists
+#         record_count = round(win_count / total_count * 100, 2)
+#         win_ratio = str(record_count) + "%"
+#     return win_ratio

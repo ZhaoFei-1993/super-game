@@ -2,7 +2,11 @@
 import time
 from rest_framework import serializers
 from ...models import Quiz, Record, Option, Rule
-from utils.functions import surplus_date
+from time import strftime,gmtime
+from datetime import timedelta, datetime
+from users.models import User
+from api import settings
+import pytz
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -35,13 +39,14 @@ class QuizSerialize(serializers.ModelSerializer):
         return is_vote
 
 
+
 class RecordSerialize(serializers.ModelSerializer):
     """
     竞猜记录表序列化
     """
     host_team = serializers.SerializerMethodField()  # 主队
     guest_team = serializers.SerializerMethodField()  # 竞猜副队
-    created_at = serializers.SerializerMethodField()  # 竞猜年月日
+    created_at = serializers.SerializerMethodField()  # 竞猜时间
     my_option = serializers.SerializerMethodField()  # 投注选项
 
     class Meta:
@@ -77,15 +82,16 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        option = Option.objects.filter(rule_id=obj.rule_id)
-        for i in option:
-            rule = Rule.objects.get(pk=i.rule_id)
+        option_list = Option.objects.filter(rule_id=obj.rule_id)
+        for i in option_list:
+            rule_list = Rule.objects.get(pk=i.rule_id)
             if i.id == obj.option_id:
-                my_option = str(rule.type)+':'+i.option+"/"+str(i.odds)
+                my_rule=rule_list.TYPE_CHOICE[int(rule_list.type)][1]
+                my_option = my_rule+":"+i.option+"/"+str(i.odds)
                 data = []
                 data.append({
-                    'my_option': my_option,
-                    'is_right': i.is_right,
+                    'my_option': my_option,          # 我的选项
+                    'is_right': i.is_right,          # 是否为正确答案
                 })
                 break
         return data
@@ -95,8 +101,60 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     """
     竞猜详情
     """
+    year = serializers.SerializerMethodField()  # 截止时间  年月日
+    time = serializers.SerializerMethodField()  # 截止时间  当天时间
+    quiz_push = serializers.SerializerMethodField()  # 投注推送
+    begin_at = serializers.SerializerMethodField()  # 比赛开始时间
+    status = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Quiz
-        fields = ("id", "host_team", "guest_team", "begin_at")
+        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push")
 
+    @staticmethod
+    def get_begin_at(obj):
+        begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        begin_at = time.mktime(begin_at.timetuple())
+        return int(begin_at)
+
+    @staticmethod
+    def get_status(obj):
+        status = obj.STATUS_CHOICE[int(obj.status)][1]
+        return status
+
+    @staticmethod
+    def get_year(obj):               # 时间
+        yesterday = datetime.today() + timedelta(+1)
+        yesterday_format = yesterday.strftime('%m月%d日')
+        time = strftime('%m月%d日')
+        year = obj.begin_at.strftime('%m月%d日')
+        if time == year:
+            year = year+" "+"今天"
+        elif year == yesterday_format:
+            year = year+" "+"明天"
+        return year
+
+    @staticmethod
+    def get_time(obj):               # 时间
+        time = obj.created_at.strftime('%H:%M')
+        return time
+
+    @staticmethod
+    def get_quiz_push(obj):
+        """
+        竞猜详情推送
+        """
+        record = Record.objects.filter(quiz_id=obj.pk)
+        data = []
+        for i in record:
+            userlist = User.objects.get(pk=i.user_id)
+            user = userlist.nickname
+            rulelist = Rule.objects.get(pk=i.rule_id)
+            my_rule = rulelist.TYPE_CHOICE[int(rulelist.type)][1]
+            optionlist = Option.objects.get(pk=i.option_id)
+            option = optionlist.option
+            quiz_push = user[0]+"**: "+my_rule+"-"+option+" 下注"+str(i.bet)+"金币"
+            data.append({
+                'quiz_push': quiz_push,  # 我的选项
+            })
+        return data
