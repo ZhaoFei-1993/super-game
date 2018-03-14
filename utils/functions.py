@@ -145,6 +145,8 @@ def message_sign(user_id, type):
 def amount(user_id):
     usercoin = UserCoinLock.objects.filter(user_id=user_id)
     coin = 0
+    if len(usercoin)==0:
+        return coin
     for list in usercoin:
         if list.end_time < list.created_at:
             continue

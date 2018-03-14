@@ -12,11 +12,15 @@ urlpatterns = [
     path('list/', views.QuizListView.as_view(), name="app-v1-quiz-list"),
     # 竞猜记录             ***
     path('records/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
-    # 竞猜详情    ***
+    # 竞猜详情
     path('<int:quiz_id>/', views.QuizDetailView.as_view(), name="app-v1-quiz-detail"),
     # 竞猜选项
     path('rule/<int:quiz_id>/', views.RuleView.as_view(), name="app-v1-quiz-rule"),
-    # # 竞猜玩法下选项
-    # path('option/<int:rule_id>/', views.OptionView.as_view(), name="app-v1-quiz-option"),
+    # 竞猜玩法下选项
+    path('bet/<int:type>/', views.BetView.as_view(), name="app-v1-quiz-bet"),
+    # 切换币总
+    path('coin/', views.CoinView.as_view(), name="app-v1-quiz-coin"),
+    # 竞猜下注
+    path(r"^bet/$", view=views.BetView.as_view(), name="app-quiz-qm-bet"),
 ]
 

@@ -16,11 +16,18 @@ class QuizSerialize(serializers.ModelSerializer):
 
     total_coin = serializers.SerializerMethodField()  # 投注总金额
     is_bet = serializers.SerializerMethodField()  # 是否已投注
+    begin_at = serializers.SerializerMethodField()  # 是否已投注
 
     class Meta:
         model = Quiz
         fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team",
                   "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet")
+
+    @staticmethod
+    def get_begin_at(obj):
+        begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        begin_at = time.mktime(begin_at.timetuple())
+        return int(begin_at)
 
     @staticmethod
     def get_total_coin(obj):  # 投注总金额

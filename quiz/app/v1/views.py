@@ -1,11 +1,18 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
+from django.db import transaction
 from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option
+from users.models import User
+from base.exceptions import ParamErrorException
+from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer
+from utils.functions import amount, value_judge
+import re
+
 
 
 class CategoryView(ListAPIView):
@@ -229,3 +236,107 @@ class RuleView(ListAPIView):
 #         return self.response({'code': 0, 'data': data})
 
 
+class CoinView(ListAPIView):
+    """
+    切换币总
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user.id
+        users = User.objects.get(pk=user)
+        meth = users.meth
+        total = users.ggtc
+        ggtc_locked = amount(user)  # 该用户锁定的金额 = amount(user)
+        ggtc = total - ggtc_locked
+        return self.response({'code': 0,
+                              'meth': meth,
+                              'ggtc': ggtc})
+
+
+class BetView(ListCreateAPIView):
+    """
+    竞猜下注
+    """
+    max_wager = 10000
+
+    def get_queryset(self):
+        pass
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, "quiz_id", "coin_type", "option", "wager")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        user = request.user
+        quiz_id = str(self.request.GET.get('quiz_id'))      # 获取竞猜ID
+        coin_type = str(self.request.GET.get('coin_type'))      # 获取货币类型
+        regex = re.compile(r'^(0|1)$')
+        if coin_type is None or not regex.match(coin_type):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        option = str(self.request.GET.get('option'))      # 获取选项ID(字符串)
+        option_arr = option.split(',')
+        coins = str(self.request.GET.get('wager'))  # 获取投注金额(字符串)
+        coins_arr = coins.split(',')
+
+        coin = 0
+        if len(option_arr)!=len(coins_arr):
+            raise ParamErrorException(error_code.API_50106_PARAMETER_EXPIRED)
+
+        for (option_id, wager) in zip(option_arr, coins_arr):
+            try:   # 判断选项ID是否有效
+                option_id = int(option_id)
+            except Exception:
+                raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+
+            coin += int(wager)
+            try:   # 判断赌注是否有效
+                wager = int(wager)
+            except Exception:
+                raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+                # 赌注是否超过上限
+            if wager > self.max_wager:
+                raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
+
+        quiz = Quiz.objects.get(pk=quiz_id)         # 判断比赛数学
+        if int(quiz.status) != Quiz.REPEALED or int(quiz.status) != Quiz.ENDED or quiz.is_delete is True:
+            raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
+
+        if int(coin_type)==1:       # 判断用户金币是否足够
+            if user.meth < coin:
+                raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+        elif int(coin_type)==2:
+            if user.ggtc < coin:
+                raise ParamErrorException(error_code.API_50105_USER_COIN_NOT_GGTC)
+
+        earn_coins = 0
+        for (option_id, wager) in zip(option_arr, coins_arr):
+            # 获取选项赔率
+            options = Option.objects.get(pk=int(option_id))
+
+            record = Record()
+            record.user = user
+            record.quiz = quiz
+            record.rule = options.rule
+            record.option = int(option_id)
+            record.bet = int(wager)
+            record.earn_coin = int(wager)*options.odds
+            record.save()
+            earn_coins+=int(wager)*options.odds
+            # 用户减少金币
+            if int(coin_type) == 1:
+                user.meth -= wager
+                user.save()
+            elif int(coin_type) == 2:
+                user.ggtc -= wager
+                user.save()
+
+        response = {
+            'code': 0,
+            'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins),
+        }
+        return self.response(response)
