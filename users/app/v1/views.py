@@ -485,7 +485,8 @@ class SwitchView(ListCreateAPIView):
         else:
             user.is_notify = status
         user.save()
-        content = {'code': 0}
+        content = {'code': 0,
+                   "data": []}
         return self.response(content)
 
 
@@ -649,5 +650,6 @@ class AllreadView(ListCreateAPIView):
     def post(self, request):
         user_id = self.request.user.id
         UserMessage.objects.filter(user_id=user_id).update(status=1)
-        content = {'code': 0}
+        content = {'code': 0,
+                   "data": []}
         return self.response(content)
