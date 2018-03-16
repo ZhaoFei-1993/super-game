@@ -3,7 +3,7 @@ from django.db import models
 from wc_auth.models import Admin
 from django.template.backends import django
 from mptt.models import MPTTModel, TreeForeignKey
-from users.models import Coin,User
+from users.models import Coin, User
 
 
 class Category(MPTTModel):
@@ -22,7 +22,7 @@ class Quiz(models.Model):
     PUBLISHING = 0  # 已发布
     REPEALED = 1  # 比赛中
     ENDED = 2  # 已结束
-    PUBLISHING_ANSWER = 3   # 已发布答案
+    PUBLISHING_ANSWER = 3  # 已发布答案
     BONUS_DISTRIBUTION = 4  # 已分配奖金
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
@@ -56,7 +56,7 @@ class Quiz(models.Model):
     match_name = models.CharField(verbose_name="联赛名称", max_length=50, default="")
     status = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=2, default=1)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
-    total_people = models.IntegerField(verbose_name="总参与人数",default=0)
+    total_people = models.IntegerField(verbose_name="总参与人数", default=0)
     begin_at = models.DateTimeField(verbose_name="比赛开始时间/截止日期")
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
@@ -121,7 +121,6 @@ class Option(models.Model):
         verbose_name = verbose_name_plural = "竞猜规则表"
 
 
-
 class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
@@ -134,9 +133,3 @@ class Record(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户下注表"
-
-
-
-
-
-

@@ -14,7 +14,6 @@ from utils.functions import amount, value_judge
 import re
 
 
-
 class CategoryView(ListAPIView):
     """
     竞猜分类
@@ -77,7 +76,8 @@ class QuizListView(ListCreateAPIView):
         if 'is_end' not in self.request.GET:
             return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
         else:
-            return Quiz.objects.filter(status=self.request.GET.get('is_end'), category__in=category_arr, is_delete=False)
+            return Quiz.objects.filter(status=self.request.GET.get('is_end'), category__in=category_arr,
+                                       is_delete=False)
 
 
 class RecordsListView(ListCreateAPIView):
@@ -135,7 +135,7 @@ class RecordsListView(ListCreateAPIView):
             # else:
             #     quiz_id=quiz
             data.append({
-                "quiz_id":fav.get('quiz_id'),
+                "quiz_id": fav.get('quiz_id'),
                 'host_team': host_team,
                 'guest_team': guest_team,
                 'pecific_date': pecific_date,
@@ -144,7 +144,7 @@ class RecordsListView(ListCreateAPIView):
                 'is_right': fav.get('my_option')[0].get('is_right'),
             })
 
-        return self.response({'code': 0, 'data':data})
+        return self.response({'code': 0, 'data': data})
 
 
 class QuizDetailView(ListAPIView):
@@ -172,7 +172,7 @@ class RuleView(ListAPIView):
     def list(self, request, *args, **kwargs):
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id)
-        data=[]
+        data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk)
             list = []
@@ -193,14 +193,14 @@ class RuleView(ListAPIView):
                     "accuracy": accuracy
                 })
             data.append({
-                "quiz_id":i.quiz_id,
+                "quiz_id": i.quiz_id,
                 "type": i.TYPE_CHOICE[int(i.type)][1],
-                "tips":i.tips,
-                "handicap_score":i.handicap_score,
-                "estimate_score":i.estimate_score,
+                "tips": i.tips,
+                "handicap_score": i.handicap_score,
+                "estimate_score": i.estimate_score,
                 "list": list
             })
-        return self.response({'code': 0, 'data':data})
+        return self.response({'code': 0, 'data': data})
 
 
 # class OptionView(ListAPIView):
@@ -273,28 +273,28 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         user = request.user
-        quiz_id = str(self.request.GET.get('quiz_id'))      # 获取竞猜ID
-        coin_type = str(self.request.GET.get('coin_type'))      # 获取货币类型
+        quiz_id = str(self.request.GET.get('quiz_id'))  # 获取竞猜ID
+        coin_type = str(self.request.GET.get('coin_type'))  # 获取货币类型
         regex = re.compile(r'^(0|1)$')
         if coin_type is None or not regex.match(coin_type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        option = str(self.request.GET.get('option'))      # 获取选项ID(字符串)
+        option = str(self.request.GET.get('option'))  # 获取选项ID(字符串)
         option_arr = option.split(',')
         coins = str(self.request.GET.get('wager'))  # 获取投注金额(字符串)
         coins_arr = coins.split(',')
 
         coin = 0
-        if len(option_arr)!=len(coins_arr):
+        if len(option_arr) != len(coins_arr):
             raise ParamErrorException(error_code.API_50106_PARAMETER_EXPIRED)
 
         for (option_id, wager) in zip(option_arr, coins_arr):
-            try:   # 判断选项ID是否有效
+            try:  # 判断选项ID是否有效
                 option_id = int(option_id)
             except Exception:
                 raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
             coin += int(wager)
-            try:   # 判断赌注是否有效
+            try:  # 判断赌注是否有效
                 wager = int(wager)
             except Exception:
                 raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
@@ -302,14 +302,14 @@ class BetView(ListCreateAPIView):
             if wager > self.max_wager:
                 raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
 
-        quiz = Quiz.objects.get(pk=quiz_id)         # 判断比赛数学
+        quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
         if int(quiz.status) != Quiz.REPEALED or int(quiz.status) != Quiz.ENDED or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
-        if int(coin_type)==1:       # 判断用户金币是否足够
+        if int(coin_type) == 1:  # 判断用户金币是否足够
             if user.meth < coin:
                 raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
-        elif int(coin_type)==2:
+        elif int(coin_type) == 2:
             if user.ggtc < coin:
                 raise ParamErrorException(error_code.API_50105_USER_COIN_NOT_GGTC)
 
@@ -324,9 +324,9 @@ class BetView(ListCreateAPIView):
             record.rule = options.rule
             record.option = int(option_id)
             record.bet = int(wager)
-            record.earn_coin = int(wager)*options.odds
+            record.earn_coin = int(wager) * options.odds
             record.save()
-            earn_coins+=int(wager)*options.odds
+            earn_coins += int(wager) * options.odds
             # 用户减少金币
             if int(coin_type) == 1:
                 user.meth -= wager

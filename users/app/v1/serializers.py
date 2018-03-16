@@ -73,7 +73,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return "已设置"
 
     @staticmethod
-    def get_win_ratio(obj):         # 胜率
+    def get_win_ratio(obj):  # 胜率
         total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=obj.id).count()
         win_count = Record.objects.filter(user_id=obj.id, earn_coin__gt=0).count()
         if total_count == 0 or win_count == 0:
@@ -85,18 +85,16 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_quiz_push(obj):
-        quiz = Quiz.objects.filter(Q(status=5)|Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
+        quiz = Quiz.objects.filter(Q(status=5) | Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
         data = []
         for i in quiz:
             time = i.begin_at.strftime('%H:%M')
-            name = i.host_team+"VS"+i.guest_team
-            quiz_push = str(time)+" "+name
+            name = i.host_team + "VS" + i.guest_team
+            quiz_push = str(time) + " " + name
             data.append({
                 'quiz_push': quiz_push,
             })
         return data
-
-
 
 
 class DailySerialize(serializers.ModelSerializer):

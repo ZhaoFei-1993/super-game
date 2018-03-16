@@ -223,8 +223,9 @@ class QuizPushView(ListAPIView):
             data.append({
                 'quiz_push': quiz_push,
             })
-        content = {'code': 0, 'data':data}
+        content = {'code': 0, 'data': data}
         return self.response(content)
+
 
 class NicknameView(ListAPIView):
     """
@@ -250,7 +251,7 @@ class BindTelephoneView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, "telephone","code")
+        value = value_judge(request, "telephone", "code")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         telephone = request.data.get('telephone')
@@ -314,41 +315,23 @@ class RankingView(ListAPIView):
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.all().order_by('-victory','id')
+        return User.objects.all().order_by('-victory', 'id')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_arr = User.objects.all().values_list('id').order_by('-victory','id')[:100]
+        user_arr = User.objects.all().values_list('id').order_by('-victory', 'id')[:100]
         my_ran = "未上榜"
         index = 0
         for i in user_arr:
             index = index + 1
             if i[0] == user.id:
                 my_ran = index
-        data = []
-        if 'page' not in request.GET:
-            page = 1
-        else:
-            page = int(request.GET.get('page'))
-        i = (page - 1) * 10
-        for fav in Progress:
-            i = i + 1
-            user_id = fav.get('id')
-            data.append({
-                'user_id': user_id,
-                'avatar': fav.get('avatar'),
-                'nickname': fav.get('nickname'),
-                'win_ratio': fav.get('win_ratio'),
-                'ranking': i,
-            })
-            data.sort(key=lambda x: x["ranking"])
-
         avatar = user.avatar
         nickname = user.nickname
         win_ratio = user.victory
-        if user.victory==0:
+        if user.victory == 0:
             win_ratio = 0
         my_ranking = {
             "id": user.id,
@@ -357,8 +340,30 @@ class RankingView(ListAPIView):
             "win_ratio": str(win_ratio) + "%",
             "ranking": my_ran
         }
+        list = []
+        if 'page' not in request.GET:
+            page = 1
+        else:
+            page = int(request.GET.get('page'))
+        i = (page - 1) * 10
+        for fav in Progress:
+            i = i + 1
+            user_id = fav.get('id')
+            list.append({
+                'user_id': user_id,
+                'avatar': fav.get('avatar'),
+                'nickname': fav.get('nickname'),
+                'win_ratio': fav.get('win_ratio'),
+                'ranking': i,
+            })
+            list.sort(key=lambda x: x["ranking"])
+        data = []
+        data.append({
+            'my_ranking': my_ranking,
+            'list': list,
+        })
 
-        return self.response({'code': 0, 'data': data, 'my_ranking': my_ranking})
+        return self.response({'code': 0, 'data': data})
 
 
 class PasscodeView(ListCreateAPIView):
@@ -629,11 +634,10 @@ class DetailView(ListAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = self.request.user.id
-        UserMessage.objects.filter(user_id=user,message_id=message_id).update(status=1)
+        UserMessage.objects.filter(user_id=user, message_id=message_id).update(status=1)
         content = {'code': 0,
                    'content': message.content}
         return self.response(content)
-
 
 
 class AllreadView(ListCreateAPIView):
