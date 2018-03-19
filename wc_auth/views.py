@@ -2,8 +2,9 @@
 import rest_framework_filters as filters
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
 
-from .serializers import InfoSerialize, RoleListSerialize
+from .serializers import InfoSerialize, RoleListSerialize, QuizSerialize
 from .models import Role, Admin
+from quiz.models import Quiz
 
 
 class LoginView(CreateAPIView):
@@ -52,3 +53,26 @@ class InfoView(FormatRetrieveAPIView):
             "userid": "00000001",
             "notifyCount": 12,
         })
+
+
+class QuizFilter(filters.FilterSet):
+    """
+    竞猜列表筛选
+    """
+    class Meta:
+        model = Quiz
+        fields = {
+            "host_team": ['contains'],
+            "guest_team": ['contains'],
+            "status": ['contains'],
+            "match_name": ['contains']
+        }
+
+
+class QuizView(FormatListAPIView):
+    """
+    竞猜表
+    """
+    serializer_class = QuizSerialize
+    filter_class = QuizFilter
+    queryset = Quiz.objects.all()

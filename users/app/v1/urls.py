@@ -38,4 +38,20 @@ urlpatterns = [
     path('detail/<int:message_id>/', views.DetailView.as_view(), name="app-v1-user-detail"),
     # 一键阅读所有消息公告
     path('message/all-read/', views.AllreadView.as_view(), name="app-v1-user-all-read"),
+    # 列出资产情况
+    path('asset/', views.AssetView.as_view(), name="app-v1-user-asset"),
+    # 资产锁定
+    path('asset/lock/', views.AssetLockView.as_view(), name="app-v1-user-asset-lock"),
+    # 提交提现申请
+    path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),
+    # ETH提现记录表
+    path('asset/list_pre/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
+    # ETH提现审核
+    path('asset/review/', views.ReviewListView.as_view(), name='app-v1-user-asset-review'),
+    # GGTC锁定记录
+    path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
+    # GGTC分红表
+    path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
+    # 用户设置其他(index支持1-5)
+    path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others')
 ]

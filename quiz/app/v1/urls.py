@@ -21,4 +21,3 @@ urlpatterns = [
     # 竞猜下注
     path(r'bet/', views.BetView.as_view(), name="app-v1-quiz-bet"),
 ]
-

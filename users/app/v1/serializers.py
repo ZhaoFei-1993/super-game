@@ -3,9 +3,10 @@ import time
 import pytz
 from django.db.models import Q
 from rest_framework import serializers
-from ...models import User, DailySettings, UserMessage, Message
+from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, UserPresentation
 from quiz.models import Record, Quiz
 from api import settings
+from datetime import datetime
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -73,7 +74,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return "已设置"
 
     @staticmethod
-    def get_win_ratio(obj):         # 胜率
+    def get_win_ratio(obj):  # 胜率
         total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=obj.id).count()
         win_count = Record.objects.filter(user_id=obj.id, earn_coin__gt=0).count()
         if total_count == 0 or win_count == 0:
@@ -85,18 +86,16 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_quiz_push(obj):
-        quiz = Quiz.objects.filter(Q(status=5)|Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
+        quiz = Quiz.objects.filter(Q(status=5) | Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
         data = []
         for i in quiz:
             time = i.begin_at.strftime('%H:%M')
-            name = i.host_team+"VS"+i.guest_team
-            quiz_push = str(time)+" "+name
+            name = i.host_team + "VS" + i.guest_team
+            quiz_push = str(time) + " " + name
             data.append({
                 'quiz_push': quiz_push,
             })
         return data
-
-
 
 
 class DailySerialize(serializers.ModelSerializer):
@@ -133,8 +132,43 @@ class MessageListSerialize(serializers.ModelSerializer):
         title = list.title
         return title
 
+
+class AssetSerialize(serializers.ModelSerializer):
+    """
+    资产信息
+    """
+    period = serializers.CharField(source='coin_lock.period')
+    profit = serializers.DecimalField(source='coin_lock.profit', max_digits=100000, decimal_places=3)
+    time_delta = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserCoinLock
+        fields = ("id", "amount", "period", 'profit', 'created_at', 'end_time', 'time_delta')
+
     @staticmethod
-    def get_created_at(obj):
-        created_at = obj.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        created_at = time.mktime(created_at.timetuple())
-        return int(created_at)
+    def get_time_delta(obj):
+        now = datetime.utcnow()
+        now = now.replace(tzinfo=pytz.timezone('UTC'))
+        if now >= obj.end_time:
+            return "已解锁"
+        else:
+            delta = obj.end_time - now
+            d = delta.days
+            h = int(delta.seconds / 3600)
+            m = int((delta.seconds % 3600) / 60)
+            s = int(delta.seconds % 60)
+            value = '剩余锁定时间:%d天%d小时%d分%d秒' % (d, h, m, s)
+            for item in {'0天': d, '0小时': h, '0分': m}.items():
+                if item[0] in value and item[1] == 0:
+                    value = value.replace(item[0], '')
+            return value
+
+
+class PresentationSerialize(serializers.ModelSerializer):
+    """
+    提现记录
+    """
+
+    class Meta:
+        model = UserPresentation
+        fields = ("id", "user", "amount", "rest", "created_at", "updated_at", "status")
