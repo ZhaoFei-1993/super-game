@@ -97,7 +97,7 @@ class UserCoinLock(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
     amount = models.IntegerField(verbose_name="锁定金额", default=0)
-    end_time = models.DateTimeField(verbose_name="锁定结束时间")
+    end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -188,13 +188,29 @@ class UserPresentation(models.Model):
         (REFUSE, "已拒绝"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
+    amount = models.DecimalField(verbose_name="提现数量", max_digits=10, decimal_places=3, default=0.000)
+    rest = models.DecimalField(verbose_name='剩余数量', max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
     status = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=APPLICATION)
     feedback = models.CharField(verbose_name="拒绝提现理由", max_length=255, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    updated_at = models.DateTimeField(verbose_name="更新时间")
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户提现记录表"
+
+
+class UserSettingOthors(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    version = models.CharField(verbose_name="软件版本", max_length=20, default="")  # 序号1
+    about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
+    helps = models.TextField(verbose_name="帮助")  # 序号3
+    sv_contractus = models.TextField(verbose_name="服务条款")  # 序号4
+    pv_contractus = models.TextField(verbose_name="隐私条款")  # 序号5
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户设置其他"

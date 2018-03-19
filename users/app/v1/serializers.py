@@ -3,9 +3,10 @@ import time
 import pytz
 from django.db.models import Q
 from rest_framework import serializers
-from ...models import User, DailySettings, UserMessage, Message
+from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, UserPresentation
 from quiz.models import Record, Quiz
 from api import settings
+from datetime import datetime
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -131,8 +132,43 @@ class MessageListSerialize(serializers.ModelSerializer):
         title = list.title
         return title
 
+
+class AssetSerialize(serializers.ModelSerializer):
+    """
+    资产信息
+    """
+    period = serializers.CharField(source='coin_lock.period')
+    profit = serializers.DecimalField(source='coin_lock.profit', max_digits=100000, decimal_places=3)
+    time_delta = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserCoinLock
+        fields = ("id", "amount", "period", 'profit', 'created_at', 'end_time', 'time_delta')
+
     @staticmethod
-    def get_created_at(obj):
-        created_at = obj.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        created_at = time.mktime(created_at.timetuple())
-        return int(created_at)
+    def get_time_delta(obj):
+        now = datetime.utcnow()
+        now = now.replace(tzinfo=pytz.timezone('UTC'))
+        if now >= obj.end_time:
+            return "已解锁"
+        else:
+            delta = obj.end_time - now
+            d = delta.days
+            h = int(delta.seconds / 3600)
+            m = int((delta.seconds % 3600) / 60)
+            s = int(delta.seconds % 60)
+            value = '剩余锁定时间:%d天%d小时%d分%d秒' % (d, h, m, s)
+            for item in {'0天': d, '0小时': h, '0分': m}.items():
+                if item[0] in value and item[1] == 0:
+                    value = value.replace(item[0], '')
+            return value
+
+
+class PresentationSerialize(serializers.ModelSerializer):
+    """
+    提现记录
+    """
+
+    class Meta:
+        model = UserPresentation
+        fields = ("id", "user", "amount", "rest", "created_at", "updated_at", "status")
