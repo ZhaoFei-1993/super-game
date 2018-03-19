@@ -65,14 +65,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         section 2.1.3, the headers are optional. If not specified, the single
         value of "Date" must be used.
         """
-        api_key_header = self.header_canonical(self.API_KEY_HEADER)
-        api_key = request.META.get(api_key_header)
-
         item_keys = self.get_item_keys(request)
-        if api_key == 'xcx' or api_key == 'wechat':
-            headers_string = ['x-date', 'nonce'] + item_keys
-        else:
-            headers_string = ['date', 'nonce'] + item_keys
+        headers_string = ['date', 'x-nonce'] + item_keys
 
         return headers_string
 
