@@ -46,7 +46,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         match = self.SIGNATURE_TOKEN_RE.search(signature)
         if not match:
             return None
-        return match.group(1)
+        self.group = match.group(1)
+        return self.group
 
     @staticmethod
     def get_item_keys(request):

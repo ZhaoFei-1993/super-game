@@ -3,6 +3,8 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
 from django.db import transaction
 from users.models import Coin, CoinLock
 from rest_framework import status
+from base import code as error_code
+from base.exceptions import ParamErrorException
 from django.http import HttpResponse
 from . import serializers
 import json
@@ -40,14 +42,14 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        print('request.data = ', request.data)
+        coins = Coin.objects.get(pk=request.data['Coin'])
         admin = self.request.user
         coinlock = CoinLock()
         coinlock.period = request.data['period']
-        coinlock.profit = request.data['profit']
+        coinlock.profit = request.data['profit']/100
         coinlock.limit_start = request.data['limit_start']
         coinlock.limit_end = request.data['limit_end']
-        coinlock.Coin = request.data['Coin']
+        coinlock.Coin = coins
         coinlock.admin = admin
         coinlock.save()
 

@@ -71,7 +71,7 @@ class Coin(models.Model):
     exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
     is_lock = models.BooleanField(verbose_name="是否锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(verbose_name="创建时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
@@ -80,13 +80,13 @@ class Coin(models.Model):
 
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
-    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=3, default=0.000)
+    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.000)
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     Coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
-    created_at = models.DateTimeField(verbose_name="创建时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
@@ -121,7 +121,7 @@ class DailyLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number = models.IntegerField(verbose_name="连续签到天数", default=0)
     sign_date = models.IntegerField(verbose_name="签到日期")
-    created_at = models.DateTimeField(verbose_name="创建时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
