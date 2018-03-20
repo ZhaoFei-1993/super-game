@@ -324,15 +324,15 @@ class BetView(ListCreateAPIView):
             record.rule = options.rule
             record.option = options
             record.bet = int(wager)
-            record.earn_coin = int(wager) * options.odds
+            record.earn_coin = int(wager) * int(options.odds)
             record.save()
             earn_coins += int(wager) * options.odds
             # 用户减少金币
             if int(coin_type) == 1:
-                user.meth -= wager
+                user.meth -= int(wager)
                 user.save()
             elif int(coin_type) == 2:
-                user.ggtc -= wager
+                user.ggtc -= int(wager)
                 user.save()
 
         response = {
