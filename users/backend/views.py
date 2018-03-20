@@ -44,6 +44,7 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
     def post(self, request, *args, **kwargs):
         coins = Coin.objects.get(pk=request.data['Coin'])
         admin = self.request.user
+
         coinlock = CoinLock()
         coinlock.period = request.data['period']
         coinlock.profit = request.data['profit']/100
@@ -56,5 +57,18 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
+    @transaction.atomic
+    def delete(self, request):
+        key = request.GET.get('id')
+        coinlock = CoinLock.objects.get(pk=key)
+        coinlock.is_delete = 1
+        coinlock.save()
 
+        content = {'status': status.HTTP_200_OK}
+        return HttpResponse(json.dumps(content), content_type='text/json')
+
+    @transaction.atomic
+    def put(self, request):
+        key = request.GET.get('id')
+        coinlock = CoinLock.objects.get(pk=key)
 

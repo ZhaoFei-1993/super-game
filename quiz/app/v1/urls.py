@@ -19,5 +19,5 @@ urlpatterns = [
     # 切换币总
     path('coin/', views.CoinView.as_view(), name="app-v1-quiz-coin"),
     # 竞猜下注
-    path(r'bet/', views.BetView.as_view(), name="app-v1-quiz-bet"),
+    path('bet/', views.BetView.as_view(), name="app-v1-quiz-bet"),
 ]

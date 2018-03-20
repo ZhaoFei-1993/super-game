@@ -273,14 +273,14 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         user = request.user
-        quiz_id = str(self.request.GET.get('quiz_id'))  # 获取竞猜ID
-        coin_type = str(self.request.GET.get('coin_type'))  # 获取货币类型
+        quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
+        coin_type = self.request.data['coin_type']  # 获取货币类型
         regex = re.compile(r'^(0|1)$')
         if coin_type is None or not regex.match(coin_type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        option = str(self.request.GET.get('option'))  # 获取选项ID(字符串)
+        option = str(self.request.data['option'])  # 获取选项ID(字符串)
         option_arr = option.split(',')
-        coins = str(self.request.GET.get('wager'))  # 获取投注金额(字符串)
+        coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
         coins_arr = coins.split(',')
 
         coin = 0
@@ -303,7 +303,7 @@ class BetView(ListCreateAPIView):
                 raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
 
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
-        if int(quiz.status) != Quiz.REPEALED or int(quiz.status) != Quiz.ENDED or quiz.is_delete is True:
+        if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
         if int(coin_type) == 1:  # 判断用户金币是否足够
@@ -322,7 +322,7 @@ class BetView(ListCreateAPIView):
             record.user = user
             record.quiz = quiz
             record.rule = options.rule
-            record.option = int(option_id)
+            record.option = options
             record.bet = int(wager)
             record.earn_coin = int(wager) * options.odds
             record.save()
