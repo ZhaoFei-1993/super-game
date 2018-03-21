@@ -242,7 +242,7 @@ class NicknameView(ListAPIView):
             user.nickname = request.data.get("nickname")
         user.save()
 
-        content = {'code': 0}
+        content = {'code': 0, 'nickname': request.data.get("nickname")}
         return self.response(content)
 
 
