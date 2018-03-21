@@ -672,7 +672,7 @@ class AssetView(ListAPIView):
         locked_ggtc = amount(userid)
         valid_ggtc = ggtcs - locked_ggtc
         content = {'code': 0,
-                   'data': {'meth': meths, 'ggtc': ggtcs, 'eth': eth, 'locked_ggtc': locked_ggtc,
+                   'data': {'id': userid, 'meth': meths, 'ggtc': ggtcs, 'eth': eth, 'locked_ggtc': locked_ggtc,
                             'valid_ggtc': valid_ggtc}
                    }
         return self.response(content)
@@ -695,15 +695,12 @@ class AssetLockView(CreateAPIView):
         locked_days = request.data.get('locked_days')
         passcode = request.data.get('passcode')
         try:
-            coin_configs = CoinLock.objects.filter(period=locked_days).order_by('-created_at')[0]
+            coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0).order_by('-created_at')[0]
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if int(passcode) != int(userinfo.pass_code):
-            raise ParamErrorException(error_code.API_20801_PASS_CODE_ERROR)
-
-        if int(locked_days) < 0:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         if int(amounts) > int(userinfo.ggtc - locked_ggtc) \
                 or int(amounts) > int(coin_configs.limit_end) \
@@ -717,9 +714,7 @@ class AssetLockView(CreateAPIView):
         ulcoin.coin_lock = coin_configs
         ulcoin.save()
         new_log = UserCoinLock.objects.filter(user_id=userid).order_by('-created_at')[0]
-        # ulcoin.created_at= datetime.utcnow().replace(tzinfo=utc)
         new_log.end_time = new_log.created_at + timedelta(days=int(locked_days))
-        # ulcoin.save()
         new_log.save()
         content = {'code': 0, 'data': []}
         return self.response(content)
@@ -742,7 +737,7 @@ class UserPresentationView(CreateAPIView):
         p_amount = eval(request.data.get('p_amount')) * 1000
 
         if int(passcode) != int(userinfo.pass_code):
-            raise ParamErrorException(error_code.API_20801_PASS_CODE_ERROR)
+            raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         if p_amount > userinfo.meth or p_amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -784,7 +779,7 @@ class PresentationListView(ListAPIView):
                     'id': x['id'],
                     'amount': x['amount'],
                     'rest': x['rest'],
-                    'updated_at': x['updated_at']
+                    'created_at': x['created_at']
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -898,12 +893,12 @@ class SettingOthersView(ListAPIView):
         user = self.request.user.id
         data = UserSettingOthors.objects.get(user_id=user)
         if index == 1:
-            return self.response({'code': 0, 'data': data.version})
+            return self.response({'code': 0, 'data': {'name': 'version', 'data': data.version}})
         elif index == 2:
-            return self.response({'code': 0, 'data': data.about})
+            return self.response({'code': 0, 'data': {'name': 'about', 'data': data.about}})
         elif index == 3:
-            return self.response({'code': 0, 'data': data.helps})
+            return self.response({'code': 0, 'data': {'name': 'helps', 'data': data.helps}})
         elif index == 4:
-            return self.response({'code': 0, 'data': data.sv_contractus})
+            return self.response({'code': 0, 'data': {'name': 'sv_contractus', 'data': data.sv_contractus}})
         else:
-            return self.response({'code': 0, 'data': data.pv_contractus})
+            return self.response({'code': 0, 'data': {'name': 'pv_contractus', 'data': data.pv_contractus}})
