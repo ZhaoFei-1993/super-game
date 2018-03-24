@@ -36,7 +36,13 @@ class RoleListView(FormatListAPIView):
     """
     serializer_class = RoleListSerialize
     filter_class = RoleFilter
-    queryset = Role.objects.all()
+
+    def get_queryset(self):
+        id = self.request.GET.get('id')
+        if id is not None:
+            return Role.objects.filter(pk=id)
+
+        return Role.objects.all()
 
 
 class InfoView(FormatRetrieveAPIView):
@@ -48,10 +54,11 @@ class InfoView(FormatRetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         return self.response({
-            "name": "Serati Ma",
-            "avatar": "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
-            "userid": "00000001",
-            "notifyCount": 12,
+            "username": "admin",
+            "truename": "Serati Ma",
+            "email": "rexlin0624@gmail.com",
+            "role": "超级管理员",
+            "role_id": "1",
         })
 
 

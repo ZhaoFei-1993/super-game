@@ -17,12 +17,14 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-
     # 用户模块路由
     path('user/', include('users.urls')),
     # 竞猜模块路由
     path('quiz/', include('quiz.urls')),
     # 后台管理模块路由
     path('admin/', include('wc_auth.urls')),
+    # utils模块路由
+    path('utils/', include('utils.urls')),
+    # captcha
+    path('captcha/', include('captcha.urls')),
 ]

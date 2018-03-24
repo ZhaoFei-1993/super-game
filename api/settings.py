@@ -41,8 +41,14 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_jwt',
+    'rest_framework.authtoken',
     'rest_framework_filters',
     'mptt',
+    'captcha',
+    'rolepermissions',
+    'corsheaders',
+
+    'utils',
 
     'users',
     'wc_auth',
@@ -124,6 +130,10 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=2592000),  # 一个月时间
 }
 
+AUTHENTICATION_BACKENDS = ("utils.custom_backend.UsernameOrIdCardBackend",)
+# CAPTCHA
+IS_CAPTCHA_ENABLE = False
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -171,7 +181,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+MEDIA_ROOT = os.path.join(BASE_DIR, "uploads/")
+MEDIA_URL = "/uploads/"
+
+FILE_UPLOAD_PERMISSIONS = 0o0664
+
 STATIC_URL = '/static/'
+STATIC_ROOT = ''
+STATICFILES_DIRS = ['static']
+
+MEDIA_DOMAIN_HOST = local_settings.MEDIA_DOMAIN_HOST
+STATIC_DOMAIN_HOST = local_settings.STATIC_DOMAIN_HOST
 
 SMS_PERIOD_TIME = 60  # 短信间隔时间（秒）
 SMS_CODE_EXPIRE_TIME = 60000  # 短信验证码有效时间（秒），0表示长期有效,测试期间写长点

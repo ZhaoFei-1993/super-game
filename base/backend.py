@@ -1,13 +1,13 @@
 from rest_framework import generics
 from django.conf import settings
-from django.http import JsonResponse
-from .code import API_ERROR_MESSAGE
+from django.http import HttpResponse
 from .auth import CCSignatureAuthBackend
 
 from django.core.paginator import Paginator as DjangoPaginator
 from django.core.paginator import InvalidPage
 from rest_framework.pagination import PageNumberPagination
 from django.db import connection
+import json
 
 
 class BaseView(generics.GenericAPIView):
@@ -66,13 +66,7 @@ class BaseView(generics.GenericAPIView):
         :param data: 
         :return: 
         """
-        response = {}
-        for k in data:
-            response[k] = data[k]
-            if k == 'code' and 'message' not in data:
-                response['message'] = API_ERROR_MESSAGE[data['code']]
-
-        return JsonResponse(response)
+        return HttpResponse(json.dumps(data), content_type='text/json')
 
 
 class CreateAPIView(generics.CreateAPIView, BaseView):

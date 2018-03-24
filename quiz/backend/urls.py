@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-
+    path('categories/', views.CategoryListView.as_view(), name="quiz-category-list"),
+    path('category/<int:pk>/', views.CategoryDetailView.as_view(), name="quiz-category-detail"),
 ]
 
