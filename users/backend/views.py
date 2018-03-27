@@ -72,3 +72,8 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
         key = request.GET.get('id')
         coinlock = CoinLock.objects.get(pk=key)
 
+
+class LoginView(CreateAPIView):
+    """
+    后台管理员登录
+    """

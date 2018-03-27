@@ -8,6 +8,7 @@ from users.models import Coin, User
 
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
+    icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='自身ID', db_index=True, on_delete=models.CASCADE)
     order = models.IntegerField(verbose_name="排序", default=0)
