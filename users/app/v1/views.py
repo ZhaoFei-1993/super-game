@@ -802,12 +802,13 @@ class ReviewListView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
+        STATUS=["申请中","已处理","已拒绝"]
         for x in items:
             data.append(
                 {
                     'id': x['id'],
                     'amount': x['amount'],
-                    'status': x['status'],
+                    'status': STATUS[x['status']],
                     'created_at': x['created_at']
                 }
             )
