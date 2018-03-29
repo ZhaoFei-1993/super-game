@@ -576,7 +576,9 @@ class DailySignListView(ListCreateAPIView):
         daily.save()
 
         content = {'code': 0,
-                   "rewards": rewards,
+                   'data':{
+                   "rewards": rewards
+                   }
                    }
         return self.response(content)
 
