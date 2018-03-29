@@ -67,10 +67,10 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
-    @transaction.atomic
-    def put(self, request):
-        key = request.GET.get('id')
-        coinlock = CoinLock.objects.get(pk=key)
+    # @transaction.atomic
+    # def put(self, request):
+    #     key = request.GET.get('id')
+    #     coinlock = CoinLock.objects.get(pk=key)
 
 
 class LoginView(CreateAPIView):

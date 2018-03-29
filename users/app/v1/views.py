@@ -191,8 +191,7 @@ class InfoView(ListAPIView):
         is_message = message_hints(user_id)  # 是否有未读消息
         ggtc_locked = amount(user_id)  # 该用户锁定的金额
 
-        return self.response({
-            'code': 0,
+        return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
@@ -203,7 +202,8 @@ class InfoView(ListAPIView):
             'is_passcode': items[0]["is_passcode"],
             'ggtc_locked': ggtc_locked,
             'is_message': is_message,
-            'is_sign': is_sign})
+            'is_sign': is_sign}})
+
 
 
 class QuizPushView(ListAPIView):
