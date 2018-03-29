@@ -70,13 +70,13 @@ class QuizListView(ListCreateAPIView):
             if 'is_end' not in self.request.GET:
                 return Quiz.objects.filter(~Q(status=2), is_delete=False)
             else:
-                return Quiz.objects.filter(status=self.request.GET.get('is_end'), is_delete=False)
+                return Quiz.objects.filter(status=2, is_delete=False)
         category_id = str(self.request.GET.get('category'))
         category_arr = category_id.split(',')
         if 'is_end' not in self.request.GET:
             return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
         else:
-            return Quiz.objects.filter(status=self.request.GET.get('is_end'), category__in=category_arr,
+            return Quiz.objects.filter(status=2, category__in=category_arr,
                                        is_delete=False)
 
 
