@@ -80,7 +80,8 @@ class QuizListView(ListCreateAPIView):
                                        is_delete=False)
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
-        return self.response({"code":0,"data":results.data.get('results')})
+        value = results.data.get('results')
+        return self.response({"code":0,"data":value})
 
 
 
