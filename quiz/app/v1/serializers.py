@@ -18,17 +18,28 @@ class QuizSerialize(serializers.ModelSerializer):
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
     category =serializers.SerializerMethodField()
+    is_end = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
         model = Quiz
         fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team",
+                  "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet", "is_delete", "is_end")
                   "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet",'category')
 
     @staticmethod
     def get_begin_at(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
-        return int(begin_at)
+        return int(begin_at) \
+
+    @staticmethod
+    def get_is_end(obj):
+        if int(obj.status) == 2:
+            is_end = 1
+        else:
+            is_end = 0
+
+        return is_end
 
     @staticmethod
     def get_total_coin(obj):  # 投注总金额
@@ -37,7 +48,6 @@ class QuizSerialize(serializers.ModelSerializer):
         for coin in record:
             total_coin = total_coin + coin.bet
         return total_coin
-
 
     def get_is_bet(self, obj):  # 是否已投注
         user = self.context['request'].user.id

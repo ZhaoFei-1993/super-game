@@ -52,6 +52,8 @@ def sitemap(request):
         "sidebar": reverse("backend-sidebar-control", request=request),
         "upload": reverse("backend-upload", request=request),
         "quiz-category": reverse("quiz-category-list", request=request),
+        "quizs": reverse("backend-quiz", request=request),
+        "coinlock": reverse("backend-coin-lock", request=request),
     })
 
 

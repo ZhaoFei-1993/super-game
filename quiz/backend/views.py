@@ -1,10 +1,16 @@
 # -*- coding: UTF-8 -*-
-from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
+from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from .serializers import CategorySerializer
-from ..models import Category
+from ..models import Category, Quiz, Option
+from django.db import connection
+from api.settings import REST_FRAMEWORK
+from django.db import transaction
 
 from mptt.utils import get_cached_trees
 from rest_framework import status
+from utils.functions import convert_localtime
+from rest_framework.reverse import reverse
+from django.http import HttpResponse
 import json
 
 
@@ -98,3 +104,135 @@ class CategoryDetailView(RetrieveUpdateDestroyAPIView):
         instance.save()
         content = {'status': status.HTTP_202_ACCEPTED}
         return self.response(content)
+
+
+class QuizListView(ListCreateAPIView):
+    """
+    get:
+    获取所有竞猜数据
+
+    post:
+    添加一条竞猜数据
+    """
+
+    # serializer_class = serializers.QuizSerializer
+    # filter_class = QuizFilter
+
+    def get(self, request, *args, **kwargs):
+        """
+        竞猜列表只显示自己创建的竞猜数据
+        :return:
+        """
+
+        admin = self.request.user
+
+        current_page = int(request.GET.get('page'))
+        search_content = request.GET.get('title__contains')
+        category = request.GET.get('category')
+        status = request.GET.get('status')
+        is_recommend = request.GET.get('is_recommend')
+        is_daily = request.GET.get('daily')
+        quiz_type = request.GET.get('quiz_type')
+
+        sql = ""
+
+        if is_daily == "1":
+            sql = "select a.title,a.sub_title,a.thumb,a.end_date,a.updated_at,a.is_recommend,b.username,a.id as `key`,c.name,a.status,start_date from "
+            sql += "quiz_quiz a inner join wcc_admin_wccadmin b on a.admin_id=b.id "
+            sql += "inner join quiz_category c on a.category_id=c.id "
+            sql += "inner join quiz_daily d on a.id=d.quiz_id "
+        else:
+            sql = "select a.title,a.sub_title,a.thumb,a.end_date,a.updated_at,a.is_recommend,b.username,a.id as `key`,c.name,a.status,start_date from "
+            sql += "quiz_quiz a inner join wcc_admin_wccadmin b on a.admin_id=b.id "
+            sql += "inner join quiz_category c on a.category_id=c.id "
+            sql += "left join quiz_daily d on a.id=d.quiz_id "
+        sql_where = "where a.title like '%" + search_content + "%' and a.is_delete=0 "
+
+        if not category == "":
+            sql_where += " and a.category_id=" + category
+        if not is_recommend == "":
+            sql_where += " and a.is_recommend=" + is_recommend
+        if not status == "":
+            sql_where += " and a.status=" + status
+        # if is_daily == "1":
+        #     sql_where += " and substring(start_date,1,10)='" + datetime.now().strftime('%Y-%m-%d') + "'"
+        if quiz_type != "" and quiz_type is not None:
+            sql_where += " and a.type=" + quiz_type
+
+        sql += sql_where  # 判断条件
+
+        cursor = connection.cursor()
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+
+        page_size = int(REST_FRAMEWORK['PAGE_SIZE'])
+        offset = ' LIMIT ' + str((current_page - 1) * page_size) + ',' + str(page_size)
+        sql += offset  # 分页设置
+
+        cursor.execute(sql, None)
+        query_set = cursor.fetchall()
+
+        jsonData = []
+        for row in query_set:
+            result = {}
+            result['title'] = row[0]
+            result['sub_title'] = row[1]
+            result['thumb'] = row[2]
+            result['end_date'] = convert_localtime( row[3])
+            result['updated_at'] =  convert_localtime( row[4])
+            result['is_recommend'] = str(row[5])
+            result['admin'] = row[6]
+            result['key'] = row[7]
+            result['category'] = row[8]
+            result['url'] = "/" + reverse('quiz-detail', kwargs={'pk': row[7]}).split('/api/')[1]
+            result['status'] = row[9]
+            result['start_date'] = convert_localtime(row[10]) if row[10] is not None else ''
+            jsonData.append(result)
+
+        data = {'count': len(dt_all), 'results': jsonData}
+        return HttpResponse(json.dumps(data), content_type='text/json')
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        category = Category.objects.get(name=request.data['category'], is_delete=False)
+
+        # 插入竞猜主表
+        quiz = Quiz()
+        quiz.category = category
+        quiz.title = request.data['title']
+        quiz.sub_title = request.data['sub_title']
+        quiz.thumb = request.data['thumb']
+        quiz.begin_at = request.data['end_date']
+        quiz.admin = request.user
+        quiz.status = Quiz.PUBLISHING
+        quiz.save()
+
+        # 插入竞猜答案表
+        option_data = []
+        idx = 1
+        for i in request.data['keys']:
+            option_data.append({
+                'quiz': quiz,
+                'title': request.data['answer-' + str(i)],
+                'odds': request.data['answer-rate-' + str(i)],
+                'order': idx,
+            })
+            idx += 1
+        options = [Option(**item) for item in option_data]
+        Option.objects.bulk_create(options)
+
+        # 插入竞猜审核表
+        # Audit.objects.create_audit(quiz)
+
+        # publish_date = self.request.data.get('publish_date')
+        #
+        # if not publish_date==None:
+        #     if not Daily.objects.filter(start_date__startswith=publish_date[0:10]):
+        #         daily=Daily()
+        #         daily.quiz=quiz
+        #         daily.admin=request.user
+        #         daily.start_date=publish_date
+        #         daily.save()
+
+        content = {'status': status.HTTP_201_CREATED}
+        return HttpResponse(json.dumps(content), content_type='text/json')
