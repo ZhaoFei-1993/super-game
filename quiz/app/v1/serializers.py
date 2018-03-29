@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import time
 from rest_framework import serializers
-from ...models import Quiz, Record, Option, Rule
+from ...models import Quiz, Record, Option, Rule, Category
 from time import strftime, gmtime
 from datetime import timedelta, datetime
 from users.models import User
@@ -17,11 +17,12 @@ class QuizSerialize(serializers.ModelSerializer):
     total_coin = serializers.SerializerMethodField()  # 投注总金额
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
+    category =serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
         fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team",
-                  "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet")
+                  "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet",'category')
 
     @staticmethod
     def get_begin_at(obj):
@@ -37,6 +38,7 @@ class QuizSerialize(serializers.ModelSerializer):
             total_coin = total_coin + coin.bet
         return total_coin
 
+
     def get_is_bet(self, obj):  # 是否已投注
         user = self.context['request'].user.id
         record_count = Record.objects.filter(user_id=user, quiz_id=obj.pk).count()
@@ -44,6 +46,13 @@ class QuizSerialize(serializers.ModelSerializer):
         if record_count > 0:
             is_vote = 1
         return is_vote
+
+    @staticmethod
+    def get_category(obj):
+        vv = Category.objects.get(pk=obj.category_id)
+        type_id = vv.parent_id
+        quiz_type = Category.objects.get(pk=type_id)
+        return quiz_type.name
 
 
 class RecordSerialize(serializers.ModelSerializer):

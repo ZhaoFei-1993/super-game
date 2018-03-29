@@ -55,7 +55,7 @@ class HotestView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        return self.response({'code': 0, 'items': items})
+        return self.response({'code': 0, 'data':{'items':items}})
 
 
 class QuizListView(ListCreateAPIView):
@@ -78,6 +78,11 @@ class QuizListView(ListCreateAPIView):
         else:
             return Quiz.objects.filter(status=self.request.GET.get('is_end'), category__in=category_arr,
                                        is_delete=False)
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        return self.response({"code":0,"data":results.data.get('results')})
+
+
 
 
 class RecordsListView(ListCreateAPIView):
@@ -158,6 +163,10 @@ class QuizDetailView(ListAPIView):
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
         quiz = Quiz.objects.filter(pk=quiz_id)
         return quiz
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        return self.response({"code": 0, "data": results.data.get('results')})
 
 
 class RuleView(ListAPIView):
@@ -253,8 +262,9 @@ class CoinView(ListAPIView):
         ggtc_locked = amount(user)  # 该用户锁定的金额 = amount(user)
         ggtc = total - ggtc_locked
         return self.response({'code': 0,
+                              'data':{
                               'meth': meth,
-                              'ggtc': ggtc})
+                              'ggtc': ggtc}})
 
 
 class BetView(ListCreateAPIView):
@@ -337,6 +347,7 @@ class BetView(ListCreateAPIView):
 
         response = {
             'code': 0,
-            'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins),
+            'data':{
+            'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
         }
         return self.response(response)
