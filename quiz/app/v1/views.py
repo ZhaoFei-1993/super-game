@@ -66,18 +66,26 @@ class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        if 'category' not in self.request.GET:
+        if 'is_user' not in self.request.GET:
+            if 'category' not in self.request.GET:
+                if 'is_end' not in self.request.GET:
+                    return Quiz.objects.filter(~Q(status=2), is_delete=False)
+                else:
+                    return Quiz.objects.filter(status=2, is_delete=False)
+            category_id = str(self.request.GET.get('category'))
+            category_arr = category_id.split(',')
             if 'is_end' not in self.request.GET:
-                return Quiz.objects.filter(~Q(status=2), is_delete=False)
+                return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
             else:
-                return Quiz.objects.filter(status=2, is_delete=False)
-        category_id = str(self.request.GET.get('category'))
-        category_arr = category_id.split(',')
-        if 'is_end' not in self.request.GET:
-            return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
+                return Quiz.objects.filter(status=2, category__in=category_arr,
+                                           is_delete=False)
         else:
-            return Quiz.objects.filter(status=2, category__in=category_arr,
-                                       is_delete=False)
+            userid = self.request.user.id
+            quiz_id = list(set(Record.objects.filter(user_id=userid).values_list('quiz_id',flat=True)))
+            my_quiz = Quiz.objects.filter(id__in=quiz_id)
+            return my_quiz
+
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
