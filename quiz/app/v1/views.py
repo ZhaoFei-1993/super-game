@@ -11,6 +11,7 @@ from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer
 from utils.functions import amount, value_judge
+from datetime import datetime
 import re
 
 
@@ -360,3 +361,24 @@ class BetView(ListCreateAPIView):
             'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
         }
         return self.response(response)
+
+class RecommendView(ListAPIView):
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizSerialize
+
+    def get_queryset(self):
+        return Quiz.objects.filter(status__lt=2, is_delete=False).order_by('-total_people')[:20]
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            data.append(
+                {
+                    "quiz_id": item['id'],
+                    "match": item['host_team']+" VS "+item['guest_team'],
+                    "match_time":datetime.strftime(datetime.fromtimestamp(item['begin_at']),'%Y/%m/%d %H:%M')
+                }
+            )
+        return self.response({"code":0,"data":data})
