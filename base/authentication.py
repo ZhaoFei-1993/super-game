@@ -185,7 +185,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
             if sent_token is not None:
                 user = request.user
         except TypeError:
-            raise NotLoginException(code.API_10103_LOGIN_REQUIRE)
+            raise NotLoginException(code.API_406_LOGIN_REQUIRE)
         # Build string to sign from "headers" part of Signature value.
         computed_string = self.build_signature(api_key, secret, request)
         computed_signature = self.get_signature_from_signature_string(
