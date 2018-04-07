@@ -70,27 +70,26 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET:
                 if 'is_end' not in self.request.GET:
-                    return Quiz.objects.filter(~Q(status=2), is_delete=False)
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1), is_delete=False)
                 else:
-                    return Quiz.objects.filter(status=2, is_delete=False)
+                    return Quiz.objects.filter(Q(status=2) | Q(status=3) | Q(status=4), is_delete=False)
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if 'is_end' not in self.request.GET:
-                return Quiz.objects.filter(~Q(status=2), is_delete=False, category__in=category_arr)
+                return Quiz.objects.filter(Q(status=0) | Q(status=1), is_delete=False, category__in=category_arr)
             else:
-                return Quiz.objects.filter(status=2, category__in=category_arr,
+                return Quiz.objects.filter(Q(status=2) | Q(status=3) | Q(status=4), category__in=category_arr,
                                            is_delete=False)
         else:
             userid = self.request.user.id
-            quiz_id = list(set(Record.objects.filter(user_id=userid).values_list('quiz_id',flat=True)))
+            quiz_id = list(set(Record.objects.filter(user_id=userid).values_list('quiz_id', flat=True)))
             my_quiz = Quiz.objects.filter(id__in=quiz_id)
             return my_quiz
-
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
-        return self.response({"code":0,"data":value})
+        return self.response({"code": 0, "data": value})
 
 
 
@@ -208,6 +207,7 @@ class RuleView(ListAPIView):
                     "option_id": s.pk,
                     "option": s.option,
                     "odds": s.odds,
+                    "option_type": s.option_type,
                     "is_right": s.is_right,
                     "accuracy": accuracy
                 })
