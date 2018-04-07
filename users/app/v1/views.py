@@ -78,6 +78,15 @@ class UserRegister(object):
             user = User.objects.get(username=username)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+        for i in message:
+            message_id = i.id
+            user_message = UserMessage.objects.filter(message=message_id, user=user.id)
+            if len(user_message) == 0:
+                usermessage = UserMessage()
+                usermessage.user = user
+                usermessage.message = i
+                usermessage.save()
 
         token = self.get_access_token(source=source, user=user)
 
