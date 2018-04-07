@@ -85,18 +85,16 @@ class Rule(models.Model):
     SCORE = 4
     NEXT_BALL = 5
     OUTCOME = 6
-    MIXTURE = 7
-    COMITY_BRANCH = 8
-    KATSUTA = 9
+    COMITY_BRANCH = 7
+    KATSUTA = 8
     TYPE_CHOICE = (
         (BRANCH_SIZE, "大小分"),
         (RESULTS, "赛果"),
         (ONE_TWO, "单双"),
         (TOTAL, "总进球"),
         (SCORE, "比分"),
-        (NEXT_BALL, "下一进球"),
+        (NEXT_BALL, "第一球"),
         (OUTCOME, "胜负"),
-        (MIXTURE, "混合过关"),
         (COMITY_BRANCH, "让分胜负"),
         (KATSUTA, "胜分差"),
     )

@@ -251,7 +251,7 @@ class NicknameView(ListAPIView):
             user.nickname = request.data.get("nickname")
         user.save()
 
-        content = {'code': 0, 'nickname': request.data.get("nickname")}
+        content = {'code': 0, 'data': request.data.get("nickname")}
         return self.response(content)
 
 
@@ -612,7 +612,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
             if int(types.type) != int(type):
                 continue
             data.append({
-                "message_id": list["id"],
+                "message_id": list["message"],
                 'type': list["type"],
                 'message_title': list["title"],
                 'is_read': list["status"],
@@ -642,7 +642,7 @@ class DetailView(ListAPIView):
         user = self.request.user.id
         UserMessage.objects.filter(user_id=user, message_id=message_id).update(status=1)
         content = {'code': 0,
-                   'content': message.content}
+                   'data': message.content}
         return self.response(content)
 
 
