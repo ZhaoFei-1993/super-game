@@ -113,6 +113,8 @@ class MessageListSerialize(serializers.ModelSerializer):
     通知列表
     """
     type = serializers.SerializerMethodField()  # 消息类型
+    # type = serializers.SlugRelatedField(read_only=True, slug_field="type")
+    # title = serializers.SlugRelatedField(read_only=True, slug_field="title")
     title = serializers.SerializerMethodField()  # 消息标题
     created_at = serializers.SerializerMethodField()
 
@@ -131,6 +133,11 @@ class MessageListSerialize(serializers.ModelSerializer):
         list = Message.objects.get(pk=obj.message_id)
         title = list.title
         return title
+
+    @staticmethod
+    def get_created_at(obj):  # 时间
+        data = obj.created_at.strftime('%Y年%m月%d日%H:%M')
+        return data
 
 
 class AssetSerialize(serializers.ModelSerializer):

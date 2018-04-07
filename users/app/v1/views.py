@@ -359,13 +359,8 @@ class RankingView(ListAPIView):
                 'ranking': i,
             })
             list.sort(key=lambda x: x["ranking"])
-        data = []
-        data.append({
-            'my_ranking': my_ranking,
-            'list': list,
-        })
 
-        return self.response({'code': 0, 'data': data})
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list,}})
 
 
 class PasscodeView(ListCreateAPIView):
@@ -487,8 +482,7 @@ class SwitchView(ListCreateAPIView):
         else:
             user.is_notify = status
         user.save()
-        content = {'code': 0,
-                   "data": []}
+        content = {'code': 0}
         return self.response(content)
 
 
@@ -652,8 +646,7 @@ class AllreadView(ListCreateAPIView):
     def post(self, request):
         user_id = self.request.user.id
         UserMessage.objects.filter(user_id=user_id).update(status=1)
-        content = {'code': 0,
-                   "data": []}
+        content = {'code': 0}
         return self.response(content)
 
 

@@ -48,6 +48,12 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
 class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView):
     serializer_class = serializers.CoinLockSerializer
 
+    def get_queryset(self, request, *args, **kwargs):
+        print("request.data============", request.data)
+        print("kwargs['index']============", kwargs['index'])
+        id = self.request.data['pk']
+        return CoinLock.objects.get(pk=id, is_delete=0)
+
     def delete(self, request, *args, **kwargs):
         coinlovk_id = self.request.parser_context['kwargs']['pk']
         coinlock = CoinLock.objects.get(pk=coinlovk_id)
