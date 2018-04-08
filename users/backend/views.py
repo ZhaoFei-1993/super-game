@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView
+from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock
+from users.models import Coin, CoinLock, Admin
 from rest_framework import status
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -31,6 +31,7 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
     def post(self, request, *args, **kwargs):
         coins = Coin.objects.get(pk=1)
         admin = self.request.user
+        print("request.data['created_at']", request.data['created_at'])
 
         coinlock = CoinLock()
         coinlock.period = request.data['period']
@@ -45,19 +46,37 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
         return HttpResponse(json.dumps(content), content_type='text/json')
 
 
-class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView):
+class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     serializer_class = serializers.CoinLockSerializer
 
-    def get_queryset(self, request, *args, **kwargs):
-        print("request.data============", request.data)
-        print("kwargs['index']============", kwargs['index'])
-        id = self.request.data['pk']
-        return CoinLock.objects.get(pk=id, is_delete=0)
+    def get(self, request, *args, **kwargs):
+        id = int(kwargs['pk'])
+        coinlock = CoinLock.objects.get(pk=id, is_delete=0)
+        data = {
+            "period": coinlock.period,
+            "profit": str(coinlock.profit),
+            "start_date": coinlock.limit_start,
+            "end_date": coinlock.limit_end,
+            "url": ''
+        }
+        return HttpResponse(json.dumps(data), content_type='text/json')
 
     def delete(self, request, *args, **kwargs):
         coinlovk_id = self.request.parser_context['kwargs']['pk']
         coinlock = CoinLock.objects.get(pk=coinlovk_id)
         coinlock.is_delete = True
+        coinlock.save()
+        content = {'status': status.HTTP_200_OK}
+        return HttpResponse(json.dumps(content), content_type='text/json')
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        id = int(kwargs['pk'])
+        coinlock = CoinLock.objects.get(pk=id, is_delete=0)
+        coinlock.period = int(request.data['period'])
+        coinlock.profit = request.data['profit']
+        coinlock.limit_start = int(request.data['start_date'])
+        coinlock.limit_end = int(request.data['end_date'])
         coinlock.save()
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')

@@ -62,7 +62,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_telephone(obj):  # 电话号码
         if obj.telephone == '' or obj.telephone is None:
-            return "未绑定"
+            return ""
         else:
             return obj.telephone
 
