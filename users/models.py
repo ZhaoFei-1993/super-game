@@ -69,7 +69,7 @@ class Coin(models.Model):
     name = models.CharField(verbose_name="货币名称", max_length=255)
     type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
     exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
-    is_lock = models.BooleanField(verbose_name="是否锁定", default=0)
+    is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 

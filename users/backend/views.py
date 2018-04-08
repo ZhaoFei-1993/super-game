@@ -31,11 +31,10 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
     def post(self, request, *args, **kwargs):
         coins = Coin.objects.get(pk=1)
         admin = self.request.user
-        print("request.data['created_at']", request.data['created_at'])
 
         coinlock = CoinLock()
         coinlock.period = request.data['period']
-        coinlock.profit = int(request.data['profit'])/100
+        coinlock.profit = int(request.data['profit']) / 100
         coinlock.limit_start = request.data['start_date']
         coinlock.limit_end = request.data['end_date']
         coinlock.Coin = coins

@@ -19,7 +19,7 @@ class CoinLockSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_coin_range(obj):
-        coin_range = str(obj.limit_start)+"-"+str(obj.limit_end)
+        coin_range = str(obj.limit_start) + "-" + str(obj.limit_end)
         return coin_range
 
     @staticmethod

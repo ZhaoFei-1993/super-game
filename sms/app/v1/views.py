@@ -43,7 +43,7 @@ class SmsView(ListCreateAPIView):
         model.status = Sms.READY
         model.save()
 
-        return self.response({'code': error_code.API_0_SUCCESS})
+        return self.response({'code': error_code.API_0_SUCCESS, 'data': code})
 
 
 class SmsVerifyView(ListCreateAPIView):
