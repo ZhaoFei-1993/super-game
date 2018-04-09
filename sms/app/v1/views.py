@@ -16,8 +16,6 @@ class SmsView(ListCreateAPIView):
     """
     发送手机短信
     """
-    serializer_class = serializers.SmsSerializer
-    queryset = Sms.objects.all()
 
     def post(self, request, *args, **kwargs):
         """
@@ -28,7 +26,7 @@ class SmsView(ListCreateAPIView):
         telephone = request.data.get('telephone')
 
         code_type = request.data.get('code_type')
-        if int(code_type) not in range(1, 4):
+        if int(code_type) not in range(1, 5):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         # 判断距离上次发送是否超过了60秒
         record = Sms.objects.filter(telephone=telephone).order_by('-id').first()
@@ -54,8 +52,6 @@ class SmsVerifyView(ListCreateAPIView):
     """
     校验手机短信验证码
     """
-    serializer_class = serializers.SmsSerializer
-    queryset = Sms.objects.all()
 
     def post(self, request, *args, **kwargs):
         if "telephone" not in request.data:
@@ -64,7 +60,7 @@ class SmsVerifyView(ListCreateAPIView):
             message = Sms.objects.get(telephone=request.data.get('telephone'), code=request.data.get('code'))
 
         code_type = request.data.get('code_type')
-        if int(code_type) not in range(1, 4):
+        if int(code_type) not in range(1, 5):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
         if int(code_type) != int(message.type):
