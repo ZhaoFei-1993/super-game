@@ -25,7 +25,6 @@ class CCBaseException(Exception):
         context = {
             'code': self.error_code,
             'message': API_ERROR_MESSAGE[self.error_code],
-            'data': {}
         }
         if self.context is not None:
             context = {**context, **self.context}

@@ -57,7 +57,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "nickname", "avatar", "meth", "ggtc", "telephone", "is_passcode",
-                  "eth_address", "win_ratio", "quiz_push")
+                  "eth_address", "win_ratio", "quiz_push", "is_sound", "is_notify")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
@@ -69,9 +69,9 @@ class UserInfoSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_passcode(obj):  # 密保
         if obj.pass_code == '' or obj.pass_code is None:
-            return "未设置"
+            return "0"
         else:
-            return "已设置"
+            return "1"
 
     @staticmethod
     def get_win_ratio(obj):  # 胜率

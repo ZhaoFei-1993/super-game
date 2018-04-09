@@ -211,6 +211,8 @@ class InfoView(ListAPIView):
             'is_passcode': items[0]["is_passcode"],
             'ggtc_locked': ggtc_locked,
             'is_message': is_message,
+            'is_sound': items[0]["is_sound"],
+            'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
 
@@ -418,7 +420,7 @@ class ForgetPasscodeView(ListCreateAPIView):
             user = User.objects.get(id=self.request.user.id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if int(passcode) != int(user.pass_code):
+        if passcode != user.pass_code:
             raise ParamErrorException(error_code=error_code.API_20702_USED_PASS_CODE_ERROR)
         content = {'code': 0}
         return self.response(content)
@@ -451,7 +453,7 @@ class BackPasscodeView(ListCreateAPIView):
 
         # 判断验证码是否已过期
         sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        current_time = time.mktime(datetime.datetime.now().timetuple())
+        current_time = time.mktime(datetime.now().timetuple())
         if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
             return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
