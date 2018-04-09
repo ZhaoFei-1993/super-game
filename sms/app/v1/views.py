@@ -27,8 +27,8 @@ class SmsView(ListCreateAPIView):
 
         telephone = request.data.get('telephone')
 
-        pk = request.data.get('pk')
-        if int(pk) not in range(1, 4):
+        code_type = request.data.get('code_type')
+        if int(code_type) not in range(1, 4):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         # 判断距离上次发送是否超过了60秒
         record = Sms.objects.filter(telephone=telephone).order_by('-id').first()
@@ -43,7 +43,7 @@ class SmsView(ListCreateAPIView):
         model.telephone = telephone
         model.code = code
         model.message = '你好，你的验证码为：' + code + '，10分钟内有效。'
-        model.type = pk
+        model.type = code_type
         model.status = Sms.READY
         model.save()
 
@@ -63,11 +63,11 @@ class SmsVerifyView(ListCreateAPIView):
         else:
             message = Sms.objects.get(telephone=request.data.get('telephone'), code=request.data.get('code'))
 
-        pk = request.data.get('pk')
-        if int(pk) not in range(1, 4):
+        code_type = request.data.get('code_type')
+        if int(code_type) not in range(1, 4):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
-        if int(pk) != int(message.type):
+        if int(code_type) != int(message.type):
             return self.response({'code': error_code.API_40106_SMS_PARAMETER})
 
         # 短信发送时间
