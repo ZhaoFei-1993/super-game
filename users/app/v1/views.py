@@ -253,7 +253,7 @@ class NicknameView(ListAPIView):
             user.nickname = request.data.get("nickname")
         user.save()
 
-        content = {'code': 0, 'data': request.data.get("nickname")}
+        content = {'code': 0, "data": request.data.get("nickname")}
         return self.response(content)
 
 
@@ -905,7 +905,7 @@ class SettingOthersView(ListAPIView):
         user = self.request.user.id
         data = UserSettingOthors.objects.get(user_id=user)
         if index == 1:
-            return self.response({'code': 0, 'data': {'name': 'version', 'data': data.version}})
+            return self.response({'code': 0, 'data': {'name': 'version', 'data': data.version,'download_url':''}})
         elif index == 2:
             return self.response({'code': 0, 'data': {'name': 'about', 'data': data.about}})
         elif index == 3:
