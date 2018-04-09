@@ -3,11 +3,10 @@ from django.db import models
 # Create your models here.
 
 
-
-
 class Sms(models.Model):
     NORMAL = 1
-    FORGET_PASSWORD = 2
+    ABNORMAL = 2
+    FORGET_PASSWORD = 3
 
     READY = 1
     SUCCESS = 2
@@ -15,6 +14,7 @@ class Sms(models.Model):
 
     TYPE_CHOICE = (
         (NORMAL, "绑定手机"),
+        (ABNORMAL, "解除手机绑定"),
         (FORGET_PASSWORD, "忘记密保"),
     )
 

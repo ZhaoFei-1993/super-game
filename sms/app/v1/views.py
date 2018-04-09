@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 import pytz
 from django.conf import settings
+from base.exceptions import ParamErrorException
 
 
 class SmsView(ListCreateAPIView):
@@ -26,6 +27,9 @@ class SmsView(ListCreateAPIView):
 
         telephone = request.data.get('telephone')
 
+        pk = request.data.get('pk')
+        if int(pk) not in range(1, 4):
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         # 判断距离上次发送是否超过了60秒
         record = Sms.objects.filter(telephone=telephone).order_by('-id').first()
         if record is not None:
@@ -39,7 +43,7 @@ class SmsView(ListCreateAPIView):
         model.telephone = telephone
         model.code = code
         model.message = '你好，你的验证码为：' + code + '，10分钟内有效。'
-        model.type = Sms.NORMAL
+        model.type = pk
         model.status = Sms.READY
         model.save()
 
@@ -54,7 +58,17 @@ class SmsVerifyView(ListCreateAPIView):
     queryset = Sms.objects.all()
 
     def post(self, request, *args, **kwargs):
-        message = Sms.objects.get(id=request.data.get('sms_code_id'))
+        if "telephone" not in request.data:
+            message = Sms.objects.get(code=request.data.get('code'))
+        else:
+            message = Sms.objects.get(telephone=request.data.get('telephone'), code=request.data.get('code'))
+
+        pk = request.data.get('pk')
+        if int(pk) not in range(1, 4):
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+
+        if int(pk) != int(message.type):
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
 
         # 短信发送时间
         code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))

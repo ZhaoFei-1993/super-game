@@ -54,6 +54,7 @@ def sitemap(request):
         "quiz-category": reverse("quiz-category-list", request=request),
         "quizs": reverse("backend-quiz", request=request),
         "coinlock": reverse("backend-coin-lock", request=request),
+        "currency": reverse("backend-coin-currency", request=request),
     })
 
 

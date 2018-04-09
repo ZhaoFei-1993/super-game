@@ -274,9 +274,11 @@ class BindTelephoneView(ListCreateAPIView):
         if (sms is None) or (sms.code != request.data.get('code')):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
+        if int(sms.type) != 1:
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
         # 判断验证码是否已过期
         sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        current_time = time.mktime(datetime.datetime.now().timetuple())
+        current_time = time.mktime(datetime.now().timetuple())
         if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
             return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
@@ -306,9 +308,11 @@ class UnbindTelephoneView(ListCreateAPIView):
         if (sms is None) or (sms.code != request.data.get('code')):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
+        if int(sms.type) != 2:
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
         # 判断验证码是否已过期
         sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        current_time = time.mktime(datetime.datetime.now().timetuple())
+        current_time = time.mktime(datetime.now().timetuple())
         if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
             return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
@@ -441,6 +445,9 @@ class BackPasscodeView(ListCreateAPIView):
         sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
         if (sms is None) or (sms.code != request.data.get('code')):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+
+        if int(sms.type) != 3:
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
 
         # 判断验证码是否已过期
         sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))

@@ -21,6 +21,8 @@ urlpatterns = [
     path('user/', include('users.urls')),
     # 竞猜模块路由
     path('quiz/', include('quiz.urls')),
+    # 手机短信
+    path('sms/', include('sms.urls')),
     # 后台管理模块路由
     path('admin/', include('wc_auth.urls')),
     # utils模块路由

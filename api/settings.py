@@ -193,5 +193,5 @@ STATICFILES_DIRS = ['static']
 MEDIA_DOMAIN_HOST = local_settings.MEDIA_DOMAIN_HOST
 STATIC_DOMAIN_HOST = local_settings.STATIC_DOMAIN_HOST
 
-SMS_PERIOD_TIME = 60  # 短信间隔时间（秒）
-SMS_CODE_EXPIRE_TIME = 60000  # 短信验证码有效时间（秒），0表示长期有效,测试期间写长点
+SMS_PERIOD_TIME = 2  # 短信间隔时间（秒）
+SMS_CODE_EXPIRE_TIME = 20  # 短信验证码有效时间（秒），0表示长期有效,测试期间写长点

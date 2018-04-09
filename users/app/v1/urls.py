@@ -6,7 +6,7 @@ from . import views
 urlpatterns = [
     # 用户信息        已测试
     path('info/', views.InfoView.as_view(), name="app-v1-user-info"),
-    # quiz_push
+    # 首页推送
     path('quiz_push/', views.QuizPushView.as_view(), name="app-v1-user-quiz_push"),
     # 注册,登录接口        已测试
     path('login/', views.LoginView.as_view(), name="app-v1-user-login"),
