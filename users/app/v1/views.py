@@ -2,11 +2,12 @@
 from django.db.models import Q
 from base.app import ListAPIView, DestroyAPIView
 from .serializers import UserInfoSerializer, UserSerializer, \
-    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize
+    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize
 from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from quiz.models import Quiz
-from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, CoinLock, UserPresentation, \
+from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
+    CoinLock, UserPresentation, UserCoin, Coin, \
     UserCoinLock, UserSettingOthors
 from base.app import CreateAPIView, ListCreateAPIView
 from base.function import LoginRequired
@@ -130,6 +131,18 @@ class UserRegister(object):
         daily.sign_date = time.strftime("%Y%m%d")
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
+        # 生成代币余额
+        coin = Coin.objects.filter()
+        for i in coin:
+            usercoin = UserCoin()
+            usercoin.user_id = userinfo.id
+            usercoin.coin_id = i.id
+            if i.name == 'METH':
+                usercoin.is_opt = True
+            else:
+                usercoin.is_opt = False
+            usercoin.save()
+
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -205,7 +218,8 @@ class InfoView(ListAPIView):
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
             'eth_address': items[0]["eth_address"],
-            'meth': items[0]["meth"],
+            'usercoin': items[0]["usercoin"],
+            'usercoin_avatar': items[0]["usercoin_avatar"],
             'ggtc': items[0]["ggtc"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
@@ -214,7 +228,6 @@ class InfoView(ListAPIView):
             'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
-
 
 
 class QuizPushView(ListAPIView):
@@ -375,7 +388,7 @@ class RankingView(ListAPIView):
             })
             list.sort(key=lambda x: x["ranking"])
 
-        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list,}})
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list, }})
 
 
 class PasscodeView(ListCreateAPIView):
@@ -581,9 +594,10 @@ class DailySignListView(ListCreateAPIView):
         if int(coin) == 1:
             user.ggtc += rewards
             user.save()
-        elif int(coin) == 2:
-            user.meth += rewards
-            user.save()
+        else:
+            usercoin = UserCoin.objects.filter(user_id=user.id, coin_id=dailysettings.coin)
+            usercoin.balance += rewards
+            usercoin.save()
         daily.sign_date = time.strftime("%Y%m%d")
         daily.save()
 
@@ -673,20 +687,29 @@ class AssetView(ListAPIView):
     资产情况
     """
     permission_classes = (LoginRequired,)
+    serializer_class = UserCoinSerialize
+
+    def get_queryset(self):
+        user = self.request.user.id
+        list = UserCoin.objects.filter(user_id=user)
+        return list
 
     def list(self, request, *args, **kwargs):
-        userid = self.request.user.id
-        user = User.objects.get(pk=userid)
-        meths = user.meth
-        ggtcs = user.ggtc
-        eth = round(meths / 1000, 4)
-        locked_ggtc = amount(userid)
-        valid_ggtc = ggtcs - locked_ggtc
-        content = {'code': 0,
-                   'data': {'id': userid, 'meth': meths, 'ggtc': ggtcs, 'eth': eth, 'locked_ggtc': locked_ggtc,
-                            'valid_ggtc': valid_ggtc}
-                   }
-        return self.response(content)
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        data = []
+        for list in Progress:
+            data.append({
+                "id": list["id"],
+                'name': list["name"],
+                'coin_name': list["coin_name"],
+                'icon': list["icon"],
+                'lock_ggtc': list["lock_ggtc"],
+                'total': list["total"],
+                'coin': list["coin"],
+                'aglie': list["aglie"],
+            })
+        return self.response({'code': 0, 'data': data})
 
 
 class AssetLockView(CreateAPIView):
@@ -813,7 +836,7 @@ class ReviewListView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
-        STATUS=["申请中","已处理","已拒绝"]
+        STATUS = ["申请中", "已处理", "已拒绝"]
         for x in items:
             data.append(
                 {
@@ -900,17 +923,14 @@ class SettingOthersView(ListAPIView):
             index = kwargs['index']
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if int(index) not in range(1, 6):
+        if int(index) not in range(1, 5):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        user = self.request.user.id
-        data = UserSettingOthors.objects.get(user_id=user)
+        data = UserSettingOthors.objects.all()
         if index == 1:
-            return self.response({'code': 0, 'data': {'name': 'version', 'data': data.version,'download_url':''}})
+            return self.response({'code': 0, 'data': data[0].about})
         elif index == 2:
-            return self.response({'code': 0, 'data': {'name': 'about', 'data': data.about}})
+            return self.response({'code': 0, 'data': data[0].helps})
         elif index == 3:
-            return self.response({'code': 0, 'data': {'name': 'helps', 'data': data.helps}})
-        elif index == 4:
-            return self.response({'code': 0, 'data': {'name': 'sv_contractus', 'data': data.sv_contractus}})
+            return self.response({'code': 0, 'data': data[0].sv_contractus})
         else:
-            return self.response({'code': 0, 'data': {'name': 'pv_contractus', 'data': data.pv_contractus}})
+            return self.response({'code': 0, 'data': data[0].pv_contractus})

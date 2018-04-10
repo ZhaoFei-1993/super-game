@@ -3,8 +3,10 @@ import time
 import pytz
 from django.db.models import Q
 from rest_framework import serializers
-from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, UserPresentation
+from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
+    UserPresentation, UserCoin, Coin
 from quiz.models import Record, Quiz
+from utils.functions import amount
 from api import settings
 from datetime import datetime
 
@@ -53,10 +55,13 @@ class UserInfoSerializer(serializers.ModelSerializer):
     is_passcode = serializers.SerializerMethodField()
     win_ratio = serializers.SerializerMethodField()
     quiz_push = serializers.SerializerMethodField()
+    usercoin = serializers.SerializerMethodField()
+    usercoin_avatar = serializers.SerializerMethodField()
+    ggtc = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "nickname", "avatar", "meth", "ggtc", "telephone", "is_passcode",
+        fields = ("id", "nickname", "avatar", "usercoin", "usercoin_avatar", "ggtc", "telephone", "is_passcode",
                   "eth_address", "win_ratio", "quiz_push", "is_sound", "is_notify")
 
     @staticmethod
@@ -72,6 +77,23 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return "0"
         else:
             return "1"
+
+    @staticmethod
+    def get_usercoin(obj):  # 代币余额
+        usercoin = UserCoin.objects.filter(user_id=obj.id, is_opt=True)
+        return usercoin.balance
+
+    @staticmethod
+    def get_ggtc(obj):  # GGTC余额
+        ggtc = Coin.objects.filter(type=1)
+        userggtc = UserCoin.objects.filter(user_id=obj.id, coin_id=ggtc.id)
+        return userggtc.balance
+
+    @staticmethod
+    def get_usercoin_avatar(obj):  # 代币图片
+        usercoin = UserCoin.objects.filter(user_id=obj.id, is_opt=True)
+        coin = Coin.objects.filter(pk=usercoin.balance)
+        return coin.icon
 
     @staticmethod
     def get_win_ratio(obj):  # 胜率
@@ -179,3 +201,73 @@ class PresentationSerialize(serializers.ModelSerializer):
     class Meta:
         model = UserPresentation
         fields = ("id", "user", "amount", "rest", "created_at", "updated_at", "status")
+
+
+class UserCoinSerialize(serializers.ModelSerializer):
+    """
+    用户余额
+    """
+    name = serializers.SerializerMethodField()  # 代币名
+    coin_name = serializers.SerializerMethodField()  # 交易所币名
+    icon = serializers.SerializerMethodField()  # 代币头像
+    lock_ggtc = serializers.SerializerMethodField()  # 代币锁定金额
+    total = serializers.SerializerMethodField()  # 总金额
+    coin = serializers.SerializerMethodField()  # 交易所币数
+    aglie = serializers.SerializerMethodField()  # 代币数
+
+    class Meta:
+        model = UserCoin
+        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie")
+
+    @staticmethod
+    def get_name(obj):  # 代币名
+        list = Coin.objects.get(pk=obj.coin_id)
+        title = list.name
+        return title
+
+    @staticmethod
+    def get_coin_name(obj):  # 交易所币名
+        list = Coin.objects.get(pk=obj.coin_id)
+        my_rule = ''
+        if int(list.type) != 1:
+            my_rule = list.TYPE_CHOICE[int(list.type) - 1][0]
+        return my_rule
+
+    @staticmethod
+    def get_icon(obj):  # 代币头像
+        list = Coin.objects.get(pk=obj.coin_id)
+        title = list.icon
+        return title
+
+    @staticmethod
+    def get_lock_ggtc(obj):  # 代币锁定金额
+        ggtc = Coin.objects.get(pk=obj.coin_id)
+        list = 0
+        if int(ggtc.type) == 1:
+            list = amount(obj.user_id)
+        return list
+
+    @staticmethod
+    def get_total(obj):  # 总金额
+        ggtc = Coin.objects.get(pk=obj.coin_id)
+        list = obj.balance
+        if int(ggtc.type) == 1:
+            coin = amount(obj.user_id)
+            list = list + coin
+        return list
+
+    @staticmethod
+    def get_coin(obj):  # 交易所币数
+        coin = Coin.objects.get(pk=obj.coin_id)
+        list = 0
+        if int(coin.type) != 1:
+            list = round(obj.balance / coin.exchange_rate, 4)
+        return list
+
+    @staticmethod
+    def get_aglie(obj):  # 代币数
+        coin = Coin.objects.get(pk=obj.coin_id)
+        list = 0
+        if int(coin.type) == 1:
+            list = obj.balance
+        return list

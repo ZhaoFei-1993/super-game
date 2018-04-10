@@ -39,8 +39,6 @@ class User(AbstractBaseUser):
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
     pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
     eth_address = models.CharField(verbose_name="ETH地址", max_length=32)
-    meth = models.IntegerField(verbose_name="METH余额", default=0)
-    ggtc = models.IntegerField(verbose_name="GGTC余额", default=0)
     is_sound = models.BooleanField(verbose_name="是否开启音效", default=False)
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -76,6 +74,17 @@ class Coin(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币种类表"
+
+
+class UserCoin(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.IntegerField(verbose_name="余额", default=0)
+    is_opt = models.BooleanField(verbose_name="是否选择", default=False)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户代币余额表"
 
 
 class CoinLock(models.Model):
@@ -202,8 +211,6 @@ class UserPresentation(models.Model):
 
 
 class UserSettingOthors(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    version = models.CharField(verbose_name="软件版本", max_length=20, default="")  # 序号1
     about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
     helps = models.TextField(verbose_name="帮助")  # 序号3
     sv_contractus = models.TextField(verbose_name="服务条款")  # 序号4
