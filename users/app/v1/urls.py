@@ -53,5 +53,7 @@ urlpatterns = [
     # GGTC分红表
     path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
     # 用户设置其他(index支持1-5)
-    path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others')
+    path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
+    # get:币种切换列表   post：币种切换
+    path('coin/type/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type')
 ]

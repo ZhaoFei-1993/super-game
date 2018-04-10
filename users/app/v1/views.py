@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
-from base.app import ListAPIView, DestroyAPIView
 from .serializers import UserInfoSerializer, UserSerializer, \
     DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize
 from quiz.app.v1.serializers import QuizSerialize
@@ -9,7 +8,7 @@ from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
     CoinLock, UserPresentation, UserCoin, Coin, \
     UserCoinLock, UserSettingOthors
-from base.app import CreateAPIView, ListCreateAPIView
+from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView
 from base.function import LoginRequired
 from sms.models import Sms
 from datetime import timedelta, datetime
@@ -88,6 +87,16 @@ class UserRegister(object):
                 usermessage.user = user
                 usermessage.message = i
                 usermessage.save()
+
+        coin = Coin.objects.all()
+        for i in coin:
+            userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
+            if userbalance == 0:
+                usercoin = UserCoin()
+                usercoin.user_id = user.id
+                usercoin.coin_id = i.id
+                usercoin.is_opt = False
+                usercoin.save()
 
         token = self.get_access_token(source=source, user=user)
 
@@ -958,3 +967,58 @@ class SettingOthersView(ListAPIView):
             return self.response({'code': 0, 'data': data[0].sv_contractus})
         else:
             return self.response({'code': 0, 'data': data[0].pv_contractus})
+
+
+class CoinTypeView(CreateAPIView, ListAPIView):
+    """
+    # get:币种切换列表
+    post：币种切换
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = UserCoinSerialize
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        query = UserCoin.objects.filter(~(Q(coin__type=1)|Q(is_opt=1)), user_id=user_id, balance__gt=0)
+        return query
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for i in items:
+            data.append(
+                {
+                    'id': i['id'],
+                    'name': i['name'],
+                    'coin_name': i['coin_name'],
+                    'total': i['total'],
+                    'coin': i['coin']
+                }
+            )
+        return self.response({'code': 0, 'data': data})
+
+    def post(self, request, *args, **kwargs):
+        userid = self.request.user.id
+        value = value_judge(request, 'new_coin')
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        new_coin = request.data.get('new_coin')
+        try:
+            used = UserCoin.objects.get(user_id=userid, is_opt=1)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            new = UserCoin.objects.get(pk=new_coin)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        used.is_opt = 0
+        used.save()
+        new.is_opt = 1
+        new.save()
+        content = {'code': 0}
+        return self.response(content)
+
+
+
+
