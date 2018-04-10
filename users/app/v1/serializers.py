@@ -80,19 +80,19 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_usercoin(obj):  # 代币余额
-        usercoin = UserCoin.objects.filter(user_id=obj.id, is_opt=True)
+        usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
         return usercoin.balance
 
     @staticmethod
     def get_ggtc(obj):  # GGTC余额
-        ggtc = Coin.objects.filter(type=1)
-        userggtc = UserCoin.objects.filter(user_id=obj.id, coin_id=ggtc.id)
+        ggtc = Coin.objects.get(type=1)
+        userggtc = UserCoin.objects.get(user_id=obj.id, coin_id=ggtc.id)
         return userggtc.balance
 
     @staticmethod
     def get_usercoin_avatar(obj):  # 代币图片
-        usercoin = UserCoin.objects.filter(user_id=obj.id, is_opt=True)
-        coin = Coin.objects.filter(pk=usercoin.balance)
+        usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
+        coin = Coin.objects.get(pk=usercoin.coin_id)
         return coin.icon
 
     @staticmethod

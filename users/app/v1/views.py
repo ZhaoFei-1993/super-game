@@ -132,12 +132,13 @@ class UserRegister(object):
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
         # 生成代币余额
-        coin = Coin.objects.filter()
+        coin = Coin.objects.all()
         for i in coin:
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
-            if i.name == 'METH':
+            if i.name == "METC":
+                print("i.name=================", i.name)
                 usercoin.is_opt = True
             else:
                 usercoin.is_opt = False
