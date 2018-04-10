@@ -66,7 +66,7 @@ class Coin(models.Model):
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
     type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
-    exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
+    exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值不为1时", default=0)
     is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -197,6 +197,7 @@ class UserPresentation(models.Model):
         (REFUSE, "已拒绝"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, default=1)
     amount = models.DecimalField(verbose_name="提现数量", max_digits=10, decimal_places=3, default=0.000)
     rest = models.DecimalField(verbose_name='剩余数量', max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")

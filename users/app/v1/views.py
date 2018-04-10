@@ -724,25 +724,28 @@ class AssetLockView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
-        locked_ggtc = amount(userid)
-        userinfo = User.objects.get(pk=userid)
+        userinfo = User.objects.get(id=userid)
         amounts = request.data.get('amounts')
         locked_days = request.data.get('locked_days')
         passcode = request.data.get('passcode')
+        coin = Coin.objects.get(type=1)
         try:
-            coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0).order_by('-created_at')[0]
+            coin_configs = \
+            CoinLock.objects.filter(period=locked_days, is_delete=0, Coin_id=coin.id).order_by('-created_at')[0]
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if int(passcode) != int(userinfo.pass_code):
             raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
-        if int(amounts) > int(userinfo.ggtc - locked_ggtc) \
+        user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+        if int(amounts) > int(user_coin.balance) \
                 or int(amounts) > int(coin_configs.limit_end) \
                 or int(amounts) < int(coin_configs.limit_start) \
                 or int(amounts) == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-
+        user_coin.balance -= int(amounts)
+        user_coin.save()
         ulcoin = UserCoinLock()
         ulcoin.user = userinfo
         ulcoin.amount = int(amounts)
@@ -757,35 +760,45 @@ class AssetLockView(CreateAPIView):
 
 class UserPresentationView(CreateAPIView):
     """
-    ETH提现
+    币种提现
     """
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'passcode', 'p_address', 'p_amount')
+        value = value_judge(request, 'passcode', 'p_address', 'p_amount', 'p_type')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
         userinfo = User.objects.get(pk=userid)
         passcode = request.data.get('passcode')
         p_address = request.data.get('p_address')
-        p_amount = eval(request.data.get('p_amount')) * 1000
+        p_type = request.data.get('p_type')  # p_type需要大于1,因为1为GGTC币种
+        coin = Coin.objects.get(type=int(p_type))
+        user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+        p_amount = eval(request.data.get('p_amount')) * coin.exchange_rate
+
+        if int(p_type) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if int(passcode) != int(userinfo.pass_code):
             raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
-        if p_amount > userinfo.meth or p_amount <= 0:
+        if p_amount > user_coin.balance or p_amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        userinfo.meth -= p_amount
-        userinfo.save()
+        user_coin.balance -= p_amount
+        user_coin.save()
         presentation = UserPresentation()
         presentation.user = userinfo
-        presentation.amount = p_amount / 1000
-        presentation.rest = userinfo.meth / 1000
+        presentation.coin = coin
+        presentation.amount = p_amount
+        try:
+            presentation.rest = user_coin.balance / coin.exchange_rate
+        except Exception:
+            raise
         presentation.address = p_address
         presentation.save()
         content = {'code': 0, 'data': []}
@@ -801,7 +814,11 @@ class PresentationListView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserPresentation.objects.filter(user_id=userid, status=1)
+        if 'p_type' not in self.request.GET or int(self.request.GET.get('p_type')) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        p_type = int(self.request.GET.get('p_type'))
+        coin = Coin.objects.get(type=p_type)
+        query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
 
     def list(self, request, *args, **kwargs):
@@ -812,6 +829,7 @@ class PresentationListView(ListAPIView):
             data.append(
                 {
                     'id': x['id'],
+                    'coin': x['coin'],
                     'amount': x['amount'],
                     'rest': x['rest'],
                     'created_at': x['created_at']
@@ -830,7 +848,11 @@ class ReviewListView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserPresentation.objects.filter(user_id=userid)
+        if 'p_type' not in self.request.GET or int(self.request.GET.get('p_type')) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        p_type = int(self.request.GET.get('p_type'))
+        coin = Coin.objects.get(type=p_type)
+        query = UserPresentation.objects.filter(user_id=userid, coin_id=coin.id)
         return query
 
     def list(self, request, *args, **kwargs):
@@ -842,6 +864,7 @@ class ReviewListView(ListAPIView):
             data.append(
                 {
                     'id': x['id'],
+                    'coin': x['coin'],
                     'amount': x['amount'],
                     'status': STATUS[x['status']],
                     'created_at': x['created_at']

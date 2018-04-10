@@ -197,10 +197,10 @@ class PresentationSerialize(serializers.ModelSerializer):
     """
     提现记录
     """
-
+    coin= serializers.CharField(source='coin.name')
     class Meta:
         model = UserPresentation
-        fields = ("id", "user", "amount", "rest", "created_at", "updated_at", "status")
+        fields = ("id", "user","coin","amount", "rest", "created_at", "updated_at", "status")
 
 
 class UserCoinSerialize(serializers.ModelSerializer):
