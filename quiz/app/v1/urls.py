@@ -16,8 +16,6 @@ urlpatterns = [
     path('<int:quiz_id>/', views.QuizDetailView.as_view(), name="app-v1-quiz-detail"),
     # 竞猜选项
     path('rule/<int:quiz_id>/', views.RuleView.as_view(), name="app-v1-quiz-rule"),
-    # 切换币总
-    path('coin/', views.CoinView.as_view(), name="app-v1-quiz-coin"),
     # 竞猜下注
     path('bet/', views.BetView.as_view(), name="app-v1-quiz-bet"),
     # 竞猜推荐

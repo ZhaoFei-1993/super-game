@@ -81,6 +81,7 @@ class UserCoin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     balance = models.IntegerField(verbose_name="余额", default=0)
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
+    is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
 
     class Meta:
         ordering = ['-id']

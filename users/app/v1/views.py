@@ -147,10 +147,9 @@ class UserRegister(object):
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
             if i.name == "METC":
-                print("i.name=================", i.name)
                 usercoin.is_opt = True
-            else:
-                usercoin.is_opt = False
+            if i.name == "GGTC":
+                usercoin.is_bet =True
             usercoin.save()
 
         # 生成客户端加密串
@@ -979,23 +978,50 @@ class CoinTypeView(CreateAPIView, ListAPIView):
 
     def get_queryset(self):
         user_id = self.request.user.id
-        query = UserCoin.objects.filter(~(Q(coin__type=1)|Q(is_opt=1)), user_id=user_id, balance__gt=0)
+        try:
+            index = self.request.parser_context['kwargs']['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if index == 1:
+            query = UserCoin.objects.filter(~(Q(coin__type=1)|Q(is_opt=1)), user_id=user_id, balance__gt=0)         # 首页
+        elif index == 2:
+            query = UserCoin.objects.filter(user_id=user_id, balance__gt=0)          # 下注
         return query
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
-        for i in items:
-            data.append(
-                {
-                    'id': i['id'],
-                    'name': i['name'],
-                    'coin_name': i['coin_name'],
-                    'total': i['total'],
-                    'coin': i['coin']
-                }
-            )
+        try:
+            index = kwargs['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) == 1:
+            for i in items:
+                data.append(
+                    {
+                        'id': i['id'],
+                        'name': i['name'],
+                        'coin_name': i['coin_name'],
+                        'icon': i['icon'],
+                        'total': i['total'],
+                        'coin': i['coin']
+                    }
+                )
+        elif int(index) == 2:
+            for i in items:
+                data.append(
+                    {
+                        'id': i['id'],
+                        'name': i['name'],
+                        'icon': i['icon'],
+                        'balance': i['balance'],
+                    }
+                )
         return self.response({'code': 0, 'data': data})
 
     def post(self, request, *args, **kwargs):
@@ -1012,9 +1038,19 @@ class CoinTypeView(CreateAPIView, ListAPIView):
             new = UserCoin.objects.get(pk=new_coin)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        used.is_opt = 0
+        try:
+            index = kwargs['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) == 1:
+            used.is_opt = 0
+            new.is_opt = 1
+        elif int(index) == 2:
+            used.is_bet = 0
+            new.is_bet = 1
         used.save()
-        new.is_opt = 1
         new.save()
         content = {'code': 0}
         return self.response(content)

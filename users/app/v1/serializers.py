@@ -217,7 +217,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = UserCoin
-        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie")
+        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie", "balance")
 
     @staticmethod
     def get_name(obj):  # 代币名
@@ -271,3 +271,4 @@ class UserCoinSerialize(serializers.ModelSerializer):
         if int(coin.type) == 1:
             list = obj.balance
         return list
+
