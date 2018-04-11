@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-import time
+
 import pytz
 from django.db.models import Q
 from rest_framework import serializers
@@ -9,6 +9,7 @@ from quiz.models import Record, Quiz
 from utils.functions import amount
 from api import settings
 from datetime import datetime
+from django.utils import timezone
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -169,6 +170,7 @@ class AssetSerialize(serializers.ModelSerializer):
     period = serializers.CharField(source='coin_lock.period')
     profit = serializers.DecimalField(source='coin_lock.profit', max_digits=100000, decimal_places=3)
     time_delta = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = UserCoinLock
@@ -191,6 +193,13 @@ class AssetSerialize(serializers.ModelSerializer):
                 if item[0] in value and item[1] == 0:
                     value = value.replace(item[0], '')
             return value
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = timezone.localtime(obj.created_at)
+        created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
+        return created_at
+
 
 
 class PresentationSerialize(serializers.ModelSerializer):

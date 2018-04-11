@@ -848,7 +848,7 @@ class PresentationListView(ListAPIView):
 
 class ReviewListView(ListAPIView):
     """
-    提现审核
+    提现审核情况
     """
 
     permission_classes = (LoginRequired,)
@@ -931,12 +931,13 @@ class DividendView(ListAPIView):
         data = []
         for x in items:
             end_time = datetime.strptime(x['end_time'], '%Y-%m-%dT%H:%M:%S+08:00')
-            if end_time > now:
+            if now > end_time:
                 dividend = int(x['amount']) * float(x['profit'])
                 data.append(
                     {
                         'id': x['id'],
                         'amount': x['amount'],
+                        'period': x['period'],
                         'dividend': dividend,
                         'created_at': x['created_at']
                     }
