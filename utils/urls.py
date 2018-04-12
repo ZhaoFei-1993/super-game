@@ -8,4 +8,5 @@ urlpatterns = [
     path('captcha/', views.captcha_generate, name="backend-captcha"),
     path('captcha/', views.sidebar_control, name="backend-sidebar-control"),
     path('upload/', views.upload, name="backend-upload"),
+    path('upload_file/', views.upload_file, name="backend-upload-file"),
 ]
