@@ -904,6 +904,7 @@ class ReviewListView(ListAPIView):
                     'coin_id': x['coin'],
                     'amount': x['amount'],
                     'status': STATUS[x['status']],
+                    'status_code': x['status'],
                     'created_at': x['created_at']
                 }
             )
@@ -969,7 +970,8 @@ class DividendView(ListAPIView):
                     'amount': x['amount'],
                     'period': x['period'],
                     'dividend': dividend,
-                    'created_at': x['created_at']
+                    'created_at': x['created_at'],
+                    'end_time': x['end_time']
                 }
             )
         return self.response({'code': 0, 'data': data})
