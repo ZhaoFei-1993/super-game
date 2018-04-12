@@ -40,7 +40,6 @@ class User(AbstractBaseUser):
     avatar = models.CharField(verbose_name="头像", max_length=255, default='')
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
     pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
-    eth_address = models.CharField(verbose_name="ETH地址", max_length=32)
     is_sound = models.BooleanField(verbose_name="是否开启音效", default=False)
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -84,6 +83,7 @@ class UserCoin(models.Model):
     balance = models.IntegerField(verbose_name="余额", default=0)
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
+    address = models.CharField(verbose_name="充值地址", max_length=32)
 
     class Meta:
         ordering = ['-id']

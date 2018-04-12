@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock, Admin
+from users.models import Coin, CoinLock, Admin, UserCoinLock
 from rest_framework import status
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -156,6 +156,16 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coin.save()
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
+
+
+class UserLockListView(CreateAPIView, FormatListAPIView):
+    """
+
+    """
+    serializer_class = serializers.UserCoinLockSerializer
+
+    def get_queryset(self):
+        return UserCoinLock.objects.all()
 
 
 class LoginView(CreateAPIView):

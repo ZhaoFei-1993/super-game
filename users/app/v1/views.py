@@ -160,8 +160,10 @@ class UserRegister(object):
             usercoin.coin_id = i.id
             if i.name == "METC":
                 usercoin.is_opt = True
+                usercoin.address = 1008611
             if i.name == "GGTC":
-                usercoin.is_bet = True
+                usercoin.is_bet =True
+                usercoin.address = 0
             usercoin.save()
 
         # 生成客户端加密串
@@ -776,6 +778,7 @@ class AssetLockView(CreateAPIView):
         ulcoin.save()
         new_log = UserCoinLock.objects.filter(user_id=userid).order_by('-created_at')[0]
         new_log.end_time = new_log.created_at + timedelta(days=int(locked_days))
+        new_log.save()
         content = {'code': 0, 'data': []}
         return self.response(content)
 

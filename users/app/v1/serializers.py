@@ -63,7 +63,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "nickname", "avatar", "usercoin", "usercoin_avatar", "ggtc", "telephone", "is_passcode",
-                  "eth_address", "win_ratio", "quiz_push", "is_sound", "is_notify")
+                  "win_ratio", "quiz_push", "is_sound", "is_notify")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
@@ -223,10 +223,11 @@ class UserCoinSerialize(serializers.ModelSerializer):
     total = serializers.SerializerMethodField()  # 总金额
     coin = serializers.SerializerMethodField()  # 交易所币数
     aglie = serializers.SerializerMethodField()  # 代币数
+    exchange_rate = serializers.SerializerMethodField()  # 代币数
 
     class Meta:
         model = UserCoin
-        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie", "balance")
+        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie", "balance", "exchange_rate", "address")
 
     @staticmethod
     def get_name(obj):  # 代币名
@@ -279,5 +280,11 @@ class UserCoinSerialize(serializers.ModelSerializer):
         list = 0
         if int(coin.type) == 1:
             list = obj.balance
+        return list
+
+    @staticmethod
+    def get_exchange_rate(obj):  # 代币数
+        coin = Coin.objects.get(pk=obj.coin_id)
+        list = coin.exchange_rate
         return list
 
