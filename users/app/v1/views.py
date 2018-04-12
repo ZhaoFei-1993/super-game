@@ -149,7 +149,7 @@ class UserRegister(object):
             if i.name == "METC":
                 usercoin.is_opt = True
             if i.name == "GGTC":
-                usercoin.is_bet =True
+                usercoin.is_bet = True
             usercoin.save()
 
         # 生成客户端加密串
@@ -739,11 +739,11 @@ class AssetLockView(CreateAPIView):
         coin = Coin.objects.get(type=1)
         try:
             coin_configs = \
-            CoinLock.objects.filter(period=locked_days, is_delete=0, Coin_id=coin.id).order_by('-created_at')[0]
+                CoinLock.objects.filter(period=locked_days, is_delete=0, Coin_id=coin.id).order_by('-created_at')[0]
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if int(passcode) != int(userinfo.pass_code):
+        if passcode == '' and int(passcode) != int(userinfo.pass_code):
             raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
@@ -761,7 +761,6 @@ class AssetLockView(CreateAPIView):
         ulcoin.save()
         new_log = UserCoinLock.objects.filter(user_id=userid).order_by('-created_at')[0]
         new_log.end_time = new_log.created_at + timedelta(days=int(locked_days))
-        new_log.save()
         content = {'code': 0, 'data': []}
         return self.response(content)
 
@@ -921,27 +920,29 @@ class DividendView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserCoinLock.objects.filter(user_id=userid)
+        now = datetime.now()
+        query = UserCoinLock.objects.filter(user_id=userid,
+                                            end_time__lte=now)  # USE_TZ = True时,可直接用now比较,否则now=datetime.utcnow()
         return query
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        now = datetime.now()
+        # now = datetime.now()
         data = []
         for x in items:
-            end_time = datetime.strptime(x['end_time'], '%Y-%m-%dT%H:%M:%S+08:00')
-            if now > end_time:
-                dividend = int(x['amount']) * float(x['profit'])
-                data.append(
-                    {
-                        'id': x['id'],
-                        'amount': x['amount'],
-                        'period': x['period'],
-                        'dividend': dividend,
-                        'created_at': x['created_at']
-                    }
-                )
+            # end_time = datetime.strptime(x['end_time'], '%Y-%m-%dT%H:%M:%S+08:00')
+            # if now > end_time:
+            dividend = int(x['amount']) * float(x['profit'])
+            data.append(
+                {
+                    'id': x['id'],
+                    'amount': x['amount'],
+                    'period': x['period'],
+                    'dividend': dividend,
+                    'created_at': x['created_at']
+                }
+            )
         return self.response({'code': 0, 'data': data})
 
 
@@ -986,9 +987,9 @@ class CoinTypeView(CreateAPIView, ListAPIView):
         if int(index) not in range(1, 3):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if index == 1:
-            query = UserCoin.objects.filter(~(Q(coin__type=1)|Q(is_opt=1)), user_id=user_id, balance__gt=0)         # 首页
+            query = UserCoin.objects.filter(~(Q(coin__type=1) | Q(is_opt=1)), user_id=user_id, balance__gt=0)  # 首页
         elif index == 2:
-            query = UserCoin.objects.filter(user_id=user_id, balance__gt=0)          # 下注
+            query = UserCoin.objects.filter(user_id=user_id, balance__gt=0)  # 下注
         return query
 
     def list(self, request, *args, **kwargs):
@@ -1055,7 +1056,3 @@ class CoinTypeView(CreateAPIView, ListAPIView):
         new.save()
         content = {'code': 0}
         return self.response(content)
-
-
-
-

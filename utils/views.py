@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+import os
+
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework import decorators, status, parsers, renderers
@@ -15,6 +17,7 @@ from django.conf import settings
 from wc_auth.models import Permission
 from .models import Image
 from .forms import ImageForm
+from api.settings import BASE_DIR
 
 
 class ObtainAuthToken(APIView):
@@ -54,6 +57,8 @@ def sitemap(request):
         "quiz-category": reverse("quiz-category-list", request=request),
         "quizs": reverse("backend-quiz", request=request),
         "coinlock": reverse("backend-coin-lock", request=request),
+        "configs": reverse("config-list", request=request),
+        "upload_file": reverse("backend-upload-file", request=request),
         "currency": reverse("backend-coin-currency", request=request),
     })
 
@@ -95,9 +100,9 @@ def upload(request):
                 if not settings.DEBUG:
                     url = url.replace('uploads/', '')
                 else:
-                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/','')
+                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/', '')
 
-                print("上传的图片地址："+url)
+                print("上传的图片地址：" + url)
 
                 return JsonResponse({
                     "url": url,
@@ -105,3 +110,21 @@ def upload(request):
                 }, status=201)
         else:
             return JsonResponse({}, status=400)
+
+
+@csrf_exempt
+def upload_file(request):
+    if request.method == 'POST':
+        if 'files' not in request.FILES:
+            return JsonResponse({"Error": "File Not Fount!"}, status=status.HTTP_400_BAD_REQUEST)
+        files = request.FILES.get('files')
+        if not files.chunks():
+            return JsonResponse({"Error": "Empty File!"}, status=status.HTTP_400_BAD_REQUEST)
+        file_type = files.name.split('.')[-1] in ['apk']
+        if not file_type:
+            return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
+        save_file = os.path.join(BASE_DIR, 'static', 'upload/apps/versions', files.name)
+        with open(save_file, 'wb') as f:
+            for line in files.chunks():
+                f.write(line)
+        return JsonResponse({}, status=201)
