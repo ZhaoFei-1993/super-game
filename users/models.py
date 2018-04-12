@@ -14,6 +14,7 @@ class User(AbstractBaseUser):
     WECHAT = 1
     IOS = 2
     ANDROID = 3
+    HTML5 = 4
 
     REGISTER_QQ = 1
     REGISTER_WECHAT = 2
@@ -24,6 +25,7 @@ class User(AbstractBaseUser):
         (WECHAT, "微信用户"),
         (IOS, "iOS"),
         (ANDROID, "Android"),
+        (HTML5, "HTML5"),
     )
     REGISTER_TYPE = (
         (REGISTER_WECHAT, "微信登录"),

@@ -16,7 +16,7 @@ import time
 import pytz
 from django.conf import settings
 from base import code as error_code
-from base.exceptions import ParamErrorException
+from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
     message_sign, amount, value_judge
 from rest_framework_jwt.settings import api_settings
@@ -64,7 +64,7 @@ class UserRegister(object):
 
         return token
 
-    def login(self, source, username):
+    def login(self, source, username, password=None):
         """
         用户登录
         :param source:   用户来源
@@ -74,21 +74,31 @@ class UserRegister(object):
         """
         token = None
 
-        try:
-            user = User.objects.get(username=username)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-        for i in message:
-            message_id = i.id
-            user_message = UserMessage.objects.filter(message=message_id, user=user.id)
-            if len(user_message) == 0:
-                usermessage = UserMessage()
-                usermessage.user = user
-                usermessage.message = i
-                usermessage.save()
+        if password is not None:
+            try:
+                user = User.objects.get(username=username)
+            except Exception:
+                raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
+            if user.check_password(password):
+                token = self.get_access_token(source=source, user=user)
+            else:
+                raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
+        else:
+            try:
+                user = User.objects.get(username=username)
+            except Exception:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+            for i in message:
+                message_id = i.id
+                user_message = UserMessage.objects.filter(message=message_id, user=user.id)
+                if len(user_message) == 0:
+                    usermessage = UserMessage()
+                    usermessage.user = user
+                    usermessage.message = i
+                    usermessage.save()
 
-        token = self.get_access_token(source=source, user=user)
+            token = self.get_access_token(source=source, user=user)
 
         return token
 
@@ -98,6 +108,7 @@ class UserRegister(object):
         用户注册
         :param source:      用户来源：ios、android
         :param username:    用户账号：openid
+        :param password     登录密码
         :param avatar:      用户头像，第三方登录提供
         :param nickname:    用户昵称，第三方登录提供
         :return:
@@ -114,6 +125,7 @@ class UserRegister(object):
 
         user.username = username
         user.source = user.__getattribute__(source.upper())
+        user.set_password(password)
         user.register_type = register_type
         user.avatar = avatar
         user.nickname = nickname
@@ -153,14 +165,17 @@ class LoginView(CreateAPIView):
         avatar = request.data.get('avatar')
         nickname = request.data.get('nickname')
 
-        password = random_salt(8)
+        password = None
+        if 'password' in request.data:
+            password = request.data.get('password')
 
         user = User.objects.filter(username=username)
         if len(user) == 0:
+            password = random_salt(8)
             token = ur.register(source=source, username=username, password=password,
                                 avatar=avatar, nickname=nickname)
         else:
-            token = ur.login(source=source, username=username)
+            token = ur.login(source=source, username=username, password=password)
 
         return self.response({
             'code': 0,
@@ -212,7 +227,6 @@ class InfoView(ListAPIView):
             'ggtc_locked': ggtc_locked,
             'is_message': is_message,
             'is_sign': is_sign}})
-
 
 
 class QuizPushView(ListAPIView):
@@ -912,3 +926,38 @@ class SettingOthersView(ListAPIView):
             return self.response({'code': 0, 'data': {'name': 'sv_contractus', 'data': data.sv_contractus}})
         else:
             return self.response({'code': 0, 'data': {'name': 'pv_contractus', 'data': data.pv_contractus}})
+
+
+class RegisterView(CreateAPIView):
+    """
+    用户注册
+    """
+    def post(self, request, *args, **kwargs):
+        source = request.META.get('HTTP_X_API_KEY')
+        telephone = request.data.get('username')
+        code = request.data.get('code')
+        password = request.data.get('password')
+
+        # 校验手机短信验证码
+        message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
+        if len(message) == 0:
+            return self.response({
+                'code': error_code.API_20402_INVALID_SMS_CODE
+            })
+
+        # 判断该手机号码是否已经注册
+        user = User.objects.filter(username=telephone)
+        if len(user) > 0:
+            return self.response({
+                'code': error_code.API_20102_TELEPHONE_REGISTERED
+            })
+
+        # 用户注册
+        ur = UserRegister()
+        token = ur.register(source=source, username=telephone, password=password, avatar='', nickname=telephone)
+        return self.response({
+            'code': error_code.API_0_SUCCESS,
+            'data': {
+                'access_token': token
+            }
+        })
