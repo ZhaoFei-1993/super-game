@@ -60,9 +60,13 @@ class User(AbstractBaseUser):
 class Coin(models.Model):
     GGTC = 1
     ETH = 2
+    BTC = 3
+    LTC = 4
     TYPE_CHOICE = (
         (GGTC, "GGTC"),
-        (ETH, "ETH"),
+        (ETH, "METH"),
+        (BTC,"MBTC"),
+        (LTC,"MLTC"),
     )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)

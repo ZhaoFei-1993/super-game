@@ -174,13 +174,13 @@ class AssetSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = UserCoinLock
-        fields = ("id", "amount", "period", 'profit', 'created_at', 'end_time', 'time_delta')
+        fields = ("id", "amount","period", 'profit', 'created_at', 'end_time', 'time_delta','is_free')
 
     @staticmethod
     def get_time_delta(obj):
         now = datetime.utcnow()
         now = now.replace(tzinfo=pytz.timezone('UTC'))
-        if now >= obj.end_time:
+        if obj.is_free:
             return "已解锁"
         else:
             delta = obj.end_time - now
@@ -188,7 +188,7 @@ class AssetSerialize(serializers.ModelSerializer):
             h = int(delta.seconds / 3600)
             m = int((delta.seconds % 3600) / 60)
             s = int(delta.seconds % 60)
-            value = '剩余锁定时间:%d天%d小时%d分%d秒' % (d, h, m, s)
+            value = '剩余锁定时间:%d天%d小时%d分' % (d, h, m)
             for item in {'0天': d, '0小时': h, '0分': m}.items():
                 if item[0] in value and item[1] == 0:
                     value = value.replace(item[0], '')
@@ -205,7 +205,7 @@ class PresentationSerialize(serializers.ModelSerializer):
     """
     提现记录
     """
-    coin= serializers.CharField(source='coin.name')
+
     class Meta:
         model = UserPresentation
         fields = ("id", "user","coin","amount", "rest", "created_at", "updated_at", "status")
@@ -282,7 +282,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         return list
 
     @staticmethod
-    def get_exchange_rate(obj):  # 代币数
+    def get_exchange_rate(obj):  # 币种交换汇率
         coin = Coin.objects.get(pk=obj.coin_id)
         list = coin.exchange_rate
         return list

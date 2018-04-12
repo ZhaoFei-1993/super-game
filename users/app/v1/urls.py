@@ -47,9 +47,9 @@ urlpatterns = [
     # 提交提现申请
     path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),
     # ETH提现记录表
-    path('asset/list_pre/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
+    path('asset/list_pre/<int:c_id>/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
     # ETH提现审核
-    path('asset/review/', views.ReviewListView.as_view(), name='app-v1-user-asset-review'),
+    path('asset/review/<int:c_id>/', views.ReviewListView.as_view(), name='app-v1-user-asset-review'),
     # GGTC锁定记录
     path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
     # GGTC分红表
