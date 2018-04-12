@@ -168,7 +168,7 @@ class AssetSerialize(serializers.ModelSerializer):
     资产信息
     """
     period = serializers.CharField(source='coin_lock.period')
-    profit = serializers.DecimalField(source='coin_lock.profit', max_digits=100000, decimal_places=3)
+    profit = serializers.DecimalField(source='coin_lock.profit', max_digits=1000000, decimal_places=3)
     time_delta = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
 
@@ -205,10 +205,16 @@ class PresentationSerialize(serializers.ModelSerializer):
     """
     提现记录
     """
-
+    created_at = serializers.SerializerMethodField()
     class Meta:
         model = UserPresentation
         fields = ("id", "user","coin","amount", "rest", "created_at", "updated_at", "status")
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = timezone.localtime(obj.created_at)
+        created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
+        return created_at
 
 
 class UserCoinSerialize(serializers.ModelSerializer):

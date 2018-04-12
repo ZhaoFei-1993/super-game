@@ -951,8 +951,7 @@ class DividendView(ListAPIView):
     def get_queryset(self):
         userid = self.request.user.id
         # now = datetime.now()
-        query = UserCoinLock.objects.filter(user_id=userid,
-                                            is_free=True)  # USE_TZ = True时,可直接用now比较,否则now=datetime.utcnow()
+        query = UserCoinLock.objects.filter(user_id=userid, is_free=1)  # USE_TZ = True时,可直接用now比较,否则now=datetime.utcnow()
         return query
 
     def list(self, request, *args, **kwargs):
