@@ -18,7 +18,7 @@ class BaseView(generics.GenericAPIView):
         使用原生SQL获取数据
         :param sql:
         :param page_size: 每页显示记录数，默认为10
-        :return: 
+        :return:
         """
         page = 1
         page_size = page_size

@@ -25,6 +25,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = local_settings.SECRET_KEY
 
+CACHE_DIR = os.path.join(BASE_DIR, 'cache')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.DEBUG
 
@@ -56,6 +58,7 @@ INSTALLED_APPS = [
     'quiz',
     'setting',
     'sms',
+    'config'
 ]
 
 MIDDLEWARE = [
