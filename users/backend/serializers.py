@@ -2,6 +2,7 @@
 from rest_framework import serializers
 import time
 from ..models import CoinLock, Coin, UserCoinLock
+from datetime import datetime
 
 
 class CoinLockSerializer(serializers.HyperlinkedModelSerializer):
@@ -60,19 +61,35 @@ class UserCoinLockSerializer(serializers.HyperlinkedModelSerializer):
     """
     end_time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
+    dividend = serializers.SerializerMethodField()
+    is_free = serializers.SerializerMethodField()
     user = serializers.SlugRelatedField(read_only=True, slug_field="nickname")
     coin_lock = serializers.SlugRelatedField(read_only=True, slug_field="period")
 
     class Meta:
         model = UserCoinLock
-        fields = ("id", "user", "coin_lock", "amount", "end_time", "created_at")
+        fields = ("id", "user", "coin_lock", "amount", "end_time", "created_at", "dividend", "is_free")
 
     @staticmethod
-    def get_end_time(obj):  # 时间
+    def get_end_time(obj):  # 结束时间
         data = obj.end_time.strftime('%Y年%m月%d日%H:%M')
         return data
 
     @staticmethod
     def get_created_at(obj):  # 时间
         data = obj.created_at.strftime('%Y年%m月%d日%H:%M')
+        return data
+
+    @staticmethod
+    def get_dividend(obj):  # 时间
+        coinlock = CoinLock.objects.get(pk=obj.coin_lock_id)
+        dividend = int(obj.amount) * float(coinlock.profit)
+        return dividend
+
+    @staticmethod
+    def get_is_free(obj):
+        is_free = obj.is_free
+        data = "绑定中"
+        if is_free == 1:
+            data = "已解锁"
         return data

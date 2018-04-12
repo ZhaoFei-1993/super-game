@@ -734,6 +734,8 @@ class AssetView(ListAPIView):
                 'total': list["total"],
                 'coin': list["coin"],
                 'aglie': list["aglie"],
+                'exchange_rate': list["exchange_rate"],
+                'address': list["address"],
             })
         return self.response({'code': 0, 'data': data})
 

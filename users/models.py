@@ -110,6 +110,7 @@ class UserCoinLock(models.Model):
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
     amount = models.IntegerField(verbose_name="锁定金额", default=0)
     end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
+    is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:

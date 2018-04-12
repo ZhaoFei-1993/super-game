@@ -201,7 +201,6 @@ class AssetSerialize(serializers.ModelSerializer):
         return created_at
 
 
-
 class PresentationSerialize(serializers.ModelSerializer):
     """
     提现记录
