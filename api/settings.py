@@ -14,6 +14,7 @@ import os
 import datetime
 
 import local_settings
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -136,6 +137,13 @@ IS_CAPTCHA_ENABLE = False
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = default_headers + (
+    'x-date',
+    'X-Api-Key',
+    'X-Nonce',
+    'Authorization',
+    'date',
+)
 
 APP_API_KEY = {
     'ios': local_settings.APP_API_KEY_IOS,

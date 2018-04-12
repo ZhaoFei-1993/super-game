@@ -5,12 +5,12 @@ from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option
-from users.models import User
+from users.models import UserCoin
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer
-from utils.functions import amount, value_judge
+from utils.functions import value_judge
 from datetime import datetime
 import re
 
@@ -190,6 +190,13 @@ class RuleView(ListAPIView):
     def list(self, request, *args, **kwargs):
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id)
+        type = UserCoin.objects.filter(is_bet=1).count()
+        if len(type) == 0:
+            usercoin = UserCoin.objects.get(coin__type=1, is_opt=0)
+            is_bet = usercoin.id
+        else:
+            usercoin = UserCoin.objects.get(~Q(coin__type=1), is_bet=1)
+            is_bet = usercoin.id
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk)
@@ -219,7 +226,7 @@ class RuleView(ListAPIView):
                 "estimate_score": i.estimate_score,
                 "list": list
             })
-        return self.response({'code': 0, 'data': data})
+        return self.response({'code': 0, 'data': data, 'is_bet': is_bet})
 
 
 # class OptionView(ListAPIView):
@@ -255,28 +262,6 @@ class RuleView(ListAPIView):
 #         return self.response({'code': 0, 'data': data})
 
 
-class CoinView(ListAPIView):
-    """
-    切换币总
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        return
-
-    def list(self, request, *args, **kwargs):
-        user = self.request.user.id
-        users = User.objects.get(pk=user)
-        meth = users.meth
-        total = users.ggtc
-        ggtc_locked = amount(user)  # 该用户锁定的金额 = amount(user)
-        ggtc = total - ggtc_locked
-        return self.response({'code': 0,
-                              'data':{
-                              'meth': meth,
-                              'ggtc': ggtc}})
-
-
 class BetView(ListCreateAPIView):
     """
     竞猜下注
@@ -288,16 +273,13 @@ class BetView(ListCreateAPIView):
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, "quiz_id", "coin_type", "option", "wager")
+        value = value_judge(request, "usercoin_id", "coin_type", "option", "wager")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         user = request.user
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
-        coin_type = self.request.data['coin_type']  # 获取货币类型
-        regex = re.compile(r'^(0|1)$')
-        if coin_type is None or not regex.match(coin_type):
-            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
         option = str(self.request.data['option'])  # 获取选项ID(字符串)
         option_arr = option.split(',')
         coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
@@ -326,12 +308,10 @@ class BetView(ListCreateAPIView):
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
-        if int(coin_type) == 1:  # 判断用户金币是否足够
-            if user.meth < coin:
-                raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
-        elif int(coin_type) == 2:
-            if user.ggtc < coin:
-                raise ParamErrorException(error_code.API_50105_USER_COIN_NOT_GGTC)
+        usercoin = UserCoin.objects.get(pk=usercoin_id)
+        # 判断用户金币是否足够
+        if usercoin.balance < coin:
+            raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         earn_coins = 0
         for (option_id, wager) in zip(option_arr, coins_arr):
@@ -348,12 +328,9 @@ class BetView(ListCreateAPIView):
             record.save()
             earn_coins += int(wager) * options.odds
             # 用户减少金币
-            if int(coin_type) == 1:
-                user.meth -= int(wager)
-                user.save()
-            elif int(coin_type) == 2:
-                user.ggtc -= int(wager)
-                user.save()
+
+            usercoin.balance -= int(wager)
+            usercoin.save()
 
         response = {
             'code': 0,

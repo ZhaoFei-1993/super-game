@@ -66,8 +66,15 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         section 2.1.3, the headers are optional. If not specified, the single
         value of "Date" must be used.
         """
+        api_key_header = self.header_canonical(self.API_KEY_HEADER)
+        api_key = request.META.get(api_key_header)
+
         item_keys = self.get_item_keys(request)
-        headers_string = ['date', 'x-nonce'] + item_keys
+        date_key = 'date'
+        if api_key == 'HTML5':
+            date_key = 'x-date'
+
+        headers_string = [date_key, 'x-nonce'] + item_keys
 
         return headers_string
 
@@ -106,7 +113,6 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         path = request.get_full_path()
         signature_headers = self.get_headers_from_signature(request)
         unsigned = self.build_dict_to_sign(request, signature_headers)
-        print('unsigned = ', unsigned)
 
         # Sign string and compare.
         signer = HeaderSigner(
@@ -132,23 +138,26 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('=========request data end=========')
 
     def authenticate(self, request):
-        # 60秒以前的请求不再处理
-        date_header = self.header_canonical('date')
-        api_date = request.META.get(date_header)
-        api_date_dt = dateparser.parse(api_date)
-        api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
-        if api_date_timestamp + 60 < time.time():
-            #raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
-            pass    # TODO: remove it!!!!
-
-        # TODO: prevent replay request!!!
-
         # Check for API key header.
         api_key_header = self.header_canonical(self.API_KEY_HEADER)
         api_key = request.META.get(api_key_header)
         print('api_key = ', api_key)
         if not api_key:
             raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
+
+        # 60秒以前的请求不再处理
+        date_key = 'date'
+        if api_key == 'HTML5':
+            date_key = 'x-date'
+        date_header = self.header_canonical(date_key)
+        api_date = request.META.get(date_header)
+        api_date_dt = dateparser.parse(api_date)
+        api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
+        if api_date_timestamp + 60 < time.time():
+            # raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            pass  # TODO: remove it!!!!
+
+        # TODO: prevent replay request!!!
 
         # Check if request has a "Signature" request header.
         authorization_header = self.header_canonical('Authorization')
@@ -162,8 +171,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         nonce_header = self.header_canonical(self.API_NONCE_HEADER)
         sent_nonce = request.META.get(nonce_header)
         if not sent_nonce:
-            pass
-            # raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
+            raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
 
         # 登录验证
         sent_token = self.get_token_from_signature_string(sent_string)

@@ -41,8 +41,6 @@ class User(AbstractBaseUser):
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
     pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
     eth_address = models.CharField(verbose_name="ETH地址", max_length=32)
-    meth = models.IntegerField(verbose_name="METH余额", default=0)
-    ggtc = models.IntegerField(verbose_name="GGTC余额", default=0)
     is_sound = models.BooleanField(verbose_name="是否开启音效", default=False)
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -70,7 +68,7 @@ class Coin(models.Model):
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
     type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
-    exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值为2（ETH）时", default=0)
+    exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值不为1时", default=0)
     is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -78,6 +76,18 @@ class Coin(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币种类表"
+
+
+class UserCoin(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    balance = models.IntegerField(verbose_name="余额", default=0)
+    is_opt = models.BooleanField(verbose_name="是否选择", default=False)
+    is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户代币余额表"
 
 
 class CoinLock(models.Model):
@@ -190,6 +200,7 @@ class UserPresentation(models.Model):
         (REFUSE, "已拒绝"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, default=1)
     amount = models.DecimalField(verbose_name="提现数量", max_digits=10, decimal_places=3, default=0.000)
     rest = models.DecimalField(verbose_name='剩余数量', max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
@@ -204,8 +215,6 @@ class UserPresentation(models.Model):
 
 
 class UserSettingOthors(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    version = models.CharField(verbose_name="软件版本", max_length=20, default="")  # 序号1
     about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
     helps = models.TextField(verbose_name="帮助")  # 序号3
     sv_contractus = models.TextField(verbose_name="服务条款")  # 序号4

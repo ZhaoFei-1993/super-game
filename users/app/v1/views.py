@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
-from base.app import ListAPIView, DestroyAPIView
 from .serializers import UserInfoSerializer, UserSerializer, \
-    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize
+    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize
 from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from quiz.models import Quiz
-from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, CoinLock, UserPresentation, \
+from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
+    CoinLock, UserPresentation, UserCoin, Coin, \
     UserCoinLock, UserSettingOthors
-from base.app import CreateAPIView, ListCreateAPIView
+from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView
 from base.function import LoginRequired
 from sms.models import Sms
 from datetime import timedelta, datetime
@@ -98,6 +98,16 @@ class UserRegister(object):
                     usermessage.message = i
                     usermessage.save()
 
+            coin = Coin.objects.all()
+            for i in coin:
+                userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
+                if userbalance == 0:
+                    usercoin = UserCoin()
+                    usercoin.user_id = user.id
+                    usercoin.coin_id = i.id
+                    usercoin.is_opt = False
+                    usercoin.save()
+
             token = self.get_access_token(source=source, user=user)
 
         return token
@@ -142,6 +152,18 @@ class UserRegister(object):
         daily.sign_date = time.strftime("%Y%m%d")
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
+        # 生成代币余额
+        coin = Coin.objects.all()
+        for i in coin:
+            usercoin = UserCoin()
+            usercoin.user_id = userinfo.id
+            usercoin.coin_id = i.id
+            if i.name == "METC":
+                usercoin.is_opt = True
+            if i.name == "GGTC":
+                usercoin.is_bet =True
+            usercoin.save()
+
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -220,12 +242,15 @@ class InfoView(ListAPIView):
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
             'eth_address': items[0]["eth_address"],
-            'meth': items[0]["meth"],
+            'usercoin': items[0]["usercoin"],
+            'usercoin_avatar': items[0]["usercoin_avatar"],
             'ggtc': items[0]["ggtc"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'ggtc_locked': ggtc_locked,
             'is_message': is_message,
+            'is_sound': items[0]["is_sound"],
+            'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
 
@@ -265,7 +290,7 @@ class NicknameView(ListAPIView):
             user.nickname = request.data.get("nickname")
         user.save()
 
-        content = {'code': 0, 'data': request.data.get("nickname")}
+        content = {'code': 0, "data": request.data.get("nickname")}
         return self.response(content)
 
 
@@ -387,7 +412,7 @@ class RankingView(ListAPIView):
             })
             list.sort(key=lambda x: x["ranking"])
 
-        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list,}})
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list, }})
 
 
 class PasscodeView(ListCreateAPIView):
@@ -432,7 +457,7 @@ class ForgetPasscodeView(ListCreateAPIView):
             user = User.objects.get(id=self.request.user.id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if int(passcode) != int(user.pass_code):
+        if passcode != user.pass_code:
             raise ParamErrorException(error_code=error_code.API_20702_USED_PASS_CODE_ERROR)
         content = {'code': 0}
         return self.response(content)
@@ -465,7 +490,7 @@ class BackPasscodeView(ListCreateAPIView):
 
         # 判断验证码是否已过期
         sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        current_time = time.mktime(datetime.datetime.now().timetuple())
+        current_time = time.mktime(datetime.now().timetuple())
         if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
             return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
 
@@ -593,9 +618,10 @@ class DailySignListView(ListCreateAPIView):
         if int(coin) == 1:
             user.ggtc += rewards
             user.save()
-        elif int(coin) == 2:
-            user.meth += rewards
-            user.save()
+        else:
+            usercoin = UserCoin.objects.filter(user_id=user.id, coin_id=dailysettings.coin)
+            usercoin.balance += rewards
+            usercoin.save()
         daily.sign_date = time.strftime("%Y%m%d")
         daily.save()
 
@@ -685,20 +711,29 @@ class AssetView(ListAPIView):
     资产情况
     """
     permission_classes = (LoginRequired,)
+    serializer_class = UserCoinSerialize
+
+    def get_queryset(self):
+        user = self.request.user.id
+        list = UserCoin.objects.filter(user_id=user)
+        return list
 
     def list(self, request, *args, **kwargs):
-        userid = self.request.user.id
-        user = User.objects.get(pk=userid)
-        meths = user.meth
-        ggtcs = user.ggtc
-        eth = round(meths / 1000, 4)
-        locked_ggtc = amount(userid)
-        valid_ggtc = ggtcs - locked_ggtc
-        content = {'code': 0,
-                   'data': {'id': userid, 'meth': meths, 'ggtc': ggtcs, 'eth': eth, 'locked_ggtc': locked_ggtc,
-                            'valid_ggtc': valid_ggtc}
-                   }
-        return self.response(content)
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        data = []
+        for list in Progress:
+            data.append({
+                "id": list["id"],
+                'name': list["name"],
+                'coin_name': list["coin_name"],
+                'icon': list["icon"],
+                'lock_ggtc': list["lock_ggtc"],
+                'total': list["total"],
+                'coin': list["coin"],
+                'aglie': list["aglie"],
+            })
+        return self.response({'code': 0, 'data': data})
 
 
 class AssetLockView(CreateAPIView):
@@ -712,25 +747,28 @@ class AssetLockView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
-        locked_ggtc = amount(userid)
-        userinfo = User.objects.get(pk=userid)
+        userinfo = User.objects.get(id=userid)
         amounts = request.data.get('amounts')
         locked_days = request.data.get('locked_days')
         passcode = request.data.get('passcode')
+        coin = Coin.objects.get(type=1)
         try:
-            coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0).order_by('-created_at')[0]
+            coin_configs = \
+            CoinLock.objects.filter(period=locked_days, is_delete=0, Coin_id=coin.id).order_by('-created_at')[0]
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if int(passcode) != int(userinfo.pass_code):
             raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
-        if int(amounts) > int(userinfo.ggtc - locked_ggtc) \
+        user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+        if int(amounts) > int(user_coin.balance) \
                 or int(amounts) > int(coin_configs.limit_end) \
                 or int(amounts) < int(coin_configs.limit_start) \
                 or int(amounts) == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-
+        user_coin.balance -= int(amounts)
+        user_coin.save()
         ulcoin = UserCoinLock()
         ulcoin.user = userinfo
         ulcoin.amount = int(amounts)
@@ -745,35 +783,45 @@ class AssetLockView(CreateAPIView):
 
 class UserPresentationView(CreateAPIView):
     """
-    ETH提现
+    币种提现
     """
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'passcode', 'p_address', 'p_amount')
+        value = value_judge(request, 'passcode', 'p_address', 'p_amount', 'p_type')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
         userinfo = User.objects.get(pk=userid)
         passcode = request.data.get('passcode')
         p_address = request.data.get('p_address')
-        p_amount = eval(request.data.get('p_amount')) * 1000
+        p_type = request.data.get('p_type')  # p_type需要大于1,因为1为GGTC币种
+        coin = Coin.objects.get(type=int(p_type))
+        user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+        p_amount = eval(request.data.get('p_amount')) * coin.exchange_rate
+
+        if int(p_type) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if int(passcode) != int(userinfo.pass_code):
             raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
-        if p_amount > userinfo.meth or p_amount <= 0:
+        if p_amount > user_coin.balance or p_amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        userinfo.meth -= p_amount
-        userinfo.save()
+        user_coin.balance -= p_amount
+        user_coin.save()
         presentation = UserPresentation()
         presentation.user = userinfo
-        presentation.amount = p_amount / 1000
-        presentation.rest = userinfo.meth / 1000
+        presentation.coin = coin
+        presentation.amount = p_amount
+        try:
+            presentation.rest = user_coin.balance / coin.exchange_rate
+        except Exception:
+            raise
         presentation.address = p_address
         presentation.save()
         content = {'code': 0, 'data': []}
@@ -789,7 +837,11 @@ class PresentationListView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserPresentation.objects.filter(user_id=userid, status=1)
+        if 'p_type' not in self.request.GET or int(self.request.GET.get('p_type')) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        p_type = int(self.request.GET.get('p_type'))
+        coin = Coin.objects.get(type=p_type)
+        query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
 
     def list(self, request, *args, **kwargs):
@@ -800,6 +852,7 @@ class PresentationListView(ListAPIView):
             data.append(
                 {
                     'id': x['id'],
+                    'coin': x['coin'],
                     'amount': x['amount'],
                     'rest': x['rest'],
                     'created_at': x['created_at']
@@ -810,7 +863,7 @@ class PresentationListView(ListAPIView):
 
 class ReviewListView(ListAPIView):
     """
-    提现审核
+    提现审核情况
     """
 
     permission_classes = (LoginRequired,)
@@ -818,18 +871,23 @@ class ReviewListView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserPresentation.objects.filter(user_id=userid)
+        if 'p_type' not in self.request.GET or int(self.request.GET.get('p_type')) <= 1:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        p_type = int(self.request.GET.get('p_type'))
+        coin = Coin.objects.get(type=p_type)
+        query = UserPresentation.objects.filter(user_id=userid, coin_id=coin.id)
         return query
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
-        STATUS=["申请中","已处理","已拒绝"]
+        STATUS = ["申请中", "已处理", "已拒绝"]
         for x in items:
             data.append(
                 {
                     'id': x['id'],
+                    'coin': x['coin'],
                     'amount': x['amount'],
                     'status': STATUS[x['status']],
                     'created_at': x['created_at']
@@ -888,12 +946,13 @@ class DividendView(ListAPIView):
         data = []
         for x in items:
             end_time = datetime.strptime(x['end_time'], '%Y-%m-%dT%H:%M:%S+08:00')
-            if end_time > now:
+            if now > end_time:
                 dividend = int(x['amount']) * float(x['profit'])
                 data.append(
                     {
                         'id': x['id'],
                         'amount': x['amount'],
+                        'period': x['period'],
                         'dividend': dividend,
                         'created_at': x['created_at']
                     }
@@ -912,20 +971,17 @@ class SettingOthersView(ListAPIView):
             index = kwargs['index']
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if int(index) not in range(1, 6):
+        if int(index) not in range(1, 5):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        user = self.request.user.id
-        data = UserSettingOthors.objects.get(user_id=user)
+        data = UserSettingOthors.objects.all()
         if index == 1:
-            return self.response({'code': 0, 'data': {'name': 'version', 'data': data.version}})
+            return self.response({'code': 0, 'data': data[0].about})
         elif index == 2:
-            return self.response({'code': 0, 'data': {'name': 'about', 'data': data.about}})
+            return self.response({'code': 0, 'data': data[0].helps})
         elif index == 3:
-            return self.response({'code': 0, 'data': {'name': 'helps', 'data': data.helps}})
-        elif index == 4:
-            return self.response({'code': 0, 'data': {'name': 'sv_contractus', 'data': data.sv_contractus}})
+            return self.response({'code': 0, 'data': data[0].sv_contractus})
         else:
-            return self.response({'code': 0, 'data': {'name': 'pv_contractus', 'data': data.pv_contractus}})
+            return self.response({'code': 0, 'data': data[0].sv_contractus})
 
 
 class RegisterView(CreateAPIView):
@@ -961,3 +1017,91 @@ class RegisterView(CreateAPIView):
                 'access_token': token
             }
         })
+
+
+class CoinTypeView(CreateAPIView, ListAPIView):
+    """
+    # get:币种切换列表
+    post：币种切换
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = UserCoinSerialize
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        try:
+            index = self.request.parser_context['kwargs']['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if index == 1:
+            query = UserCoin.objects.filter(~(Q(coin__type=1)|Q(is_opt=1)), user_id=user_id, balance__gt=0)         # 首页
+        elif index == 2:
+            query = UserCoin.objects.filter(user_id=user_id, balance__gt=0)          # 下注
+        return query
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        try:
+            index = kwargs['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) == 1:
+            for i in items:
+                data.append(
+                    {
+                        'id': i['id'],
+                        'name': i['name'],
+                        'coin_name': i['coin_name'],
+                        'icon': i['icon'],
+                        'total': i['total'],
+                        'coin': i['coin']
+                    }
+                )
+        elif int(index) == 2:
+            for i in items:
+                data.append(
+                    {
+                        'id': i['id'],
+                        'name': i['name'],
+                        'icon': i['icon'],
+                        'balance': i['balance'],
+                    }
+                )
+        return self.response({'code': 0, 'data': data})
+
+    def post(self, request, *args, **kwargs):
+        userid = self.request.user.id
+        value = value_judge(request, 'new_coin')
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        new_coin = request.data.get('new_coin')
+        try:
+            used = UserCoin.objects.get(user_id=userid, is_opt=1)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            new = UserCoin.objects.get(pk=new_coin)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            index = kwargs['index']
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) not in range(1, 3):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if int(index) == 1:
+            used.is_opt = 0
+            new.is_opt = 1
+        elif int(index) == 2:
+            used.is_bet = 0
+            new.is_bet = 1
+        used.save()
+        new.save()
+        content = {'code': 0}
+        return self.response(content)

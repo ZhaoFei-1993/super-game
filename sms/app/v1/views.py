@@ -16,6 +16,7 @@ class SmsView(ListCreateAPIView):
     """
     发送手机短信
     """
+    serializer_class = serializers.SmsSerializer
 
     def post(self, request, *args, **kwargs):
         """
@@ -52,6 +53,7 @@ class SmsVerifyView(ListCreateAPIView):
     """
     校验手机短信验证码
     """
+    serializer_class = serializers.SmsSerializer
 
     def post(self, request, *args, **kwargs):
         if "telephone" not in request.data:
