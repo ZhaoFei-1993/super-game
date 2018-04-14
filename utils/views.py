@@ -61,6 +61,8 @@ def sitemap(request):
         "upload_file": reverse("backend-upload-file", request=request),
         "currency": reverse("backend-coin-currency", request=request),
         "userlock": reverse("backend-user-lock", request=request),
+        "usercoin": reverse("backend-user-coin", request=request),
+        "users": reverse("backend-user-list", request=request),
     })
 
 

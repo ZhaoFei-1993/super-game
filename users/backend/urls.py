@@ -13,4 +13,9 @@ urlpatterns = [
     path('login/', views.LoginView.as_view(), name="backend-login"),
     #  锁定列表
     path('user/lock/', views.UserLockListView.as_view(), name="backend-user-lock"),
+    # 用户资产管理
+    path('user/coin/', views.UserCoinListView.as_view(), name="backend-user-coin"),
+    # 用户列表
+    path('users/', views.UserListView.as_view(), name="backend-user-list"),
+    path('users/<int:pk>/', views.UserListDetailView.as_view(), name="user-detail"),
 ]
