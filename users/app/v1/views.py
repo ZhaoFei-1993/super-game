@@ -243,7 +243,6 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'eth_address': items[0]["eth_address"],
             'usercoin': items[0]["usercoin"],
             'usercoin_avatar': items[0]["usercoin_avatar"],
             'ggtc': items[0]["ggtc"],
@@ -616,14 +615,9 @@ class DailySignListView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
-        coin = dailysettings.coin.type
-        if int(coin) == 1:
-            user.ggtc += rewards
-            user.save()
-        else:
-            usercoin = UserCoin.objects.filter(user_id=user.id, coin_id=dailysettings.coin)
-            usercoin.balance += rewards
-            usercoin.save()
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
+        usercoin.balance += rewards
+        usercoin.save()
         daily.sign_date = time.strftime("%Y%m%d")
         daily.save()
 
@@ -734,6 +728,7 @@ class AssetView(ListAPIView):
                 'aglie':list["aglie"],
                 'coin_name':list["coin_name"],
                 'coin':list["coin"],
+                'coin_number':list["coin_number"],
                 'exchange_rate': list["exchange_rate"],
                 'address': list["address"]
             })
@@ -767,10 +762,10 @@ class AssetLockView(CreateAPIView):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
-        if int(amounts) > int(user_coin.balance) \
-                or int(amounts) > int(coin_configs.limit_end) \
-                or int(amounts) < int(coin_configs.limit_start) \
-                or int(amounts) == 0:
+        if int(amounts) > int(user_coin.balance) or int(amounts) == 0:
+                # or int(amounts) > int(coin_configs.limit_end) \
+                # or int(amounts) < int(coin_configs.limit_start) \
+
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance -= int(amounts)
         user_coin.save()
@@ -969,7 +964,7 @@ class DividendView(ListAPIView):
                     'id': x['id'],
                     'amount': x['amount'],
                     'period': x['period'],
-                    'dividend': dividend,
+                    'dividend': round(dividend, 2),
                     'created_at': x['created_at'].split(' ')[0].replace('-','/'),
                     'end_time': x['end_time'].split(' ')[0].replace('-','/')
                 }

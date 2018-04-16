@@ -234,13 +234,13 @@ class UserCoinSerialize(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()  # 代币头像
     lock_ggtc = serializers.SerializerMethodField()  # 代币锁定金额
     total = serializers.SerializerMethodField()  # 总金额
-    coin = serializers.SerializerMethodField()  # 交易所币数
+    coin_number = serializers.SerializerMethodField()  # 交易所币数
     aglie = serializers.SerializerMethodField()  # 代币数
     exchange_rate = serializers.SerializerMethodField()  # 代币数
 
     class Meta:
         model = UserCoin
-        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "aglie", "balance", "exchange_rate", "address")
+        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "coin_number", "aglie", "balance", "exchange_rate", "address")
 
     @staticmethod
     def get_name(obj):  # 代币名
@@ -280,7 +280,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         return list
 
     @staticmethod
-    def get_coin(obj):  # 交易所币数
+    def get_coin_number(obj):  # 交易所币数
         coin = Coin.objects.get(pk=obj.coin_id)
         list = 0
         if int(coin.type) != 1:

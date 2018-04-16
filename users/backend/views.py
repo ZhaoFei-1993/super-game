@@ -204,6 +204,17 @@ class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     serializer_class = serializers.UserSerializer
     queryset = User.objects.all()
 
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        id = int(kwargs['pk'])
+        user = User.objects.get(pk=id)
+        admin = self.request.user
+        data = request.data
+        user.status = data
+        user.save()
+        content = {'status': status.HTTP_201_CREATED}
+        return HttpResponse(json.dumps(content), content_type='text/json')
+
     def delete(self, request, *args, **kwargs):
         coinlovk_id = self.request.parser_context['kwargs']['pk']
         coinlock = CoinLock.objects.get(pk=coinlovk_id)
@@ -215,12 +226,17 @@ class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
-        coinlock = CoinLock.objects.get(pk=id, is_delete=0)
-        coinlock.period = int(request.data['period'])
-        coinlock.profit = int(request.data['profit']) / 100
-        coinlock.limit_start = int(request.data['start_date'])
-        coinlock.limit_end = int(request.data['end_date'])
-        coinlock.save()
+        coins = UserCoin.objects.filter(user_id=id)
+        for i in coins:
+            coin_name = i.coin.name
+            coinname = 'balance-' + coin_name
+            coinname = request.data[coinname]
+            i.balance = coinname
+            i.save()
+        users = User.objects.get(pk=id)
+        users.nickname = request.data['nickname']
+        users.status = request.data['status']
+        users.save()
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
