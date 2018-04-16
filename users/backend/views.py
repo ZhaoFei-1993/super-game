@@ -1,14 +1,17 @@
 # -*- coding: UTF-8 -*-
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock, Admin, UserCoinLock
+from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User
 from rest_framework import status
+import jsonfield
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from django.http import HttpResponse
 from . import serializers
 import json
 import rest_framework_filters as filters
+from utils.filter import JsonFilter
+from base import backend
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -160,12 +163,66 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
 
 class UserLockListView(CreateAPIView, FormatListAPIView):
     """
-
+    锁定列表
     """
     serializer_class = serializers.UserCoinLockSerializer
 
     def get_queryset(self):
         return UserCoinLock.objects.all()
+
+
+class UserCoinListView(CreateAPIView, FormatListAPIView):
+    """
+    用户资产管理
+    """
+    serializer_class = serializers.UserCoinSerializer
+
+    def get_queryset(self):
+        return UserCoin.objects.all()
+
+
+class UserFilter(filters.FilterSet):
+    class Meta:
+        model = User
+        fields = {
+            'username': ['contains'],
+        }
+        filter_overrides = {
+            jsonfield.JSONField: {
+                'filter_class': JsonFilter,
+            }
+        }
+
+
+class UserListView(backend.ListCreateAPIView):
+    serializer_class = serializers.UserSerializer
+    queryset = User.objects.all()
+    filter_class = UserFilter
+
+
+class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
+    serializer_class = serializers.UserSerializer
+    queryset = User.objects.all()
+
+    def delete(self, request, *args, **kwargs):
+        coinlovk_id = self.request.parser_context['kwargs']['pk']
+        coinlock = CoinLock.objects.get(pk=coinlovk_id)
+        coinlock.is_delete = True
+        coinlock.save()
+        content = {'status': status.HTTP_200_OK}
+        return HttpResponse(json.dumps(content), content_type='text/json')
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        id = int(kwargs['pk'])
+        coinlock = CoinLock.objects.get(pk=id, is_delete=0)
+        coinlock.period = int(request.data['period'])
+        coinlock.profit = int(request.data['profit']) / 100
+        coinlock.limit_start = int(request.data['start_date'])
+        coinlock.limit_end = int(request.data['end_date'])
+        coinlock.save()
+        content = {'status': status.HTTP_200_OK}
+        return HttpResponse(json.dumps(content), content_type='text/json')
 
 
 class LoginView(CreateAPIView):

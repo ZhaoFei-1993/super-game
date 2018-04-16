@@ -21,6 +21,16 @@ class User(AbstractBaseUser):
     REGISTER_TELEPHONE = 3
     REGISTER_UNKNOWN = 4
 
+    DISABLE = 0
+    ENABLE = 1
+    DELETE = 2
+
+    USER_STATUS = (
+        (DISABLE, "用户禁用"),
+        (ENABLE, "用户启用"),
+        (DELETE, "用户删除")
+    )
+
     SOURCE_CHOICE = (
         (WECHAT, "微信用户"),
         (IOS, "iOS"),
@@ -44,6 +54,7 @@ class User(AbstractBaseUser):
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
+    status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
     victory = models.DecimalField(verbose_name="竞猜胜率", max_digits=3, decimal_places=1, default=0.0)
 
     USERNAME_FIELD = 'username'
