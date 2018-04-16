@@ -866,7 +866,7 @@ class PresentationListView(ListAPIView):
                     'coin_id': x['coin'],
                     'amount': x['amount'],
                     'rest': x['rest'],
-                    'created_at': x['created_at']
+                    'created_at': x['created_at'].split(' ')[0].replace('-','/')
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -905,7 +905,7 @@ class ReviewListView(ListAPIView):
                     'amount': x['amount'],
                     'status': STATUS[x['status']],
                     'status_code': x['status'],
-                    'created_at': x['created_at']
+                    'created_at': x['created_at'].split(' ')[0].replace('-','/')
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -933,7 +933,7 @@ class LockListView(ListAPIView):
                 {
 
                     'id': x['id'],
-                    'created_at': x['created_at'],
+                    'created_at': x['created_at'].split(' ')[0].replace('-','/'),
                     'amount': x['amount'],
                     'time_delta': x['time_delta']
                 }
@@ -970,8 +970,8 @@ class DividendView(ListAPIView):
                     'amount': x['amount'],
                     'period': x['period'],
                     'dividend': dividend,
-                    'created_at': x['created_at'],
-                    'end_time': x['end_time']
+                    'created_at': x['created_at'].split(' ')[0].replace('-','/'),
+                    'end_time': x['end_time'].split(' ')[0].replace('-','/')
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -984,21 +984,22 @@ class SettingOthersView(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def list(self, request, *args, **kwargs):
+        r_type = int(request.user.register_type)
         try:
             index = kwargs['index']
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(index) not in range(1, 5):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        data = UserSettingOthors.objects.all()
+        data = UserSettingOthors.objects.get(reg_type=r_type)
         if index == 1:
-            return self.response({'code': 0, 'data': data[0].about})
+            return self.response({'code': 0, 'data': data.about})
         elif index == 2:
-            return self.response({'code': 0, 'data': data[0].helps})
+            return self.response({'code': 0, 'data': data.helps})
         elif index == 3:
-            return self.response({'code': 0, 'data': data[0].sv_contractus})
+            return self.response({'code': 0, 'data': data.sv_contractus})
         else:
-            return self.response({'code': 0, 'data': data[0].sv_contractus})
+            return self.response({'code': 0, 'data': data.sv_contractus})
 
 
 class RegisterView(CreateAPIView):

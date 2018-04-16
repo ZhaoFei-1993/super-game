@@ -31,7 +31,7 @@ class User(AbstractBaseUser):
         (REGISTER_WECHAT, "微信登录"),
         (REGISTER_QQ, "QQ登录"),
         (REGISTER_TELEPHONE, "手机号码登录"),
-        (REGISTER_TELEPHONE, "未知登录类型"),
+        (REGISTER_UNKNOWN, "未知登录类型"),
     )
     username = models.CharField(verbose_name="用户账号", max_length=32)
     nickname = models.CharField(verbose_name="用户昵称", max_length=20)
@@ -222,6 +222,7 @@ class UserPresentation(models.Model):
 class UserSettingOthors(models.Model):
     about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
     helps = models.TextField(verbose_name="帮助")  # 序号3
+    reg_type= models.IntegerField(verbose_name="用户注册类型",default=1)
     sv_contractus = models.TextField(verbose_name="服务条款")  # 序号4
     pv_contractus = models.TextField(verbose_name="隐私条款")  # 序号5
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
