@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from .serializers import CategorySerializer
-from ..models import Category, Quiz, Option
+from ..models import Category, Quiz, Option, QuizCoin, Coin
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
@@ -213,31 +213,41 @@ class QuizListView(ListCreateAPIView):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         category = Category.objects.get(name=request.data['category'], is_delete=False)
+        print("request_data==================",request.data)
 
         # 插入竞猜主表
         quiz = Quiz()
         quiz.category = category
-        quiz.title = request.data['title']
-        quiz.sub_title = request.data['sub_title']
-        quiz.thumb = request.data['thumb']
-        quiz.begin_at = request.data['end_date']
+        quiz.host_team = request.data['host_team']
+        quiz.host_team_avatar = request.data['host_team_avatar']
+        quiz.guest_team = request.data['guest_team']
+        quiz.guest_team_avatar = request.data['guest_team_avatar']
+        quiz.begin_at = request.data['begin_at']
         quiz.admin = request.user
         quiz.status = Quiz.PUBLISHING
         quiz.save()
 
+        cointype = request.data['cointype']
+        for i in cointype:
+            coin = Coin.objects.filter(name=i)
+            quizcoin = QuizCoin()
+            quizcoin.quiz = quiz
+            quizcoin.coin = coin[0]
+            quizcoin.save()
+
         # 插入竞猜答案表
-        option_data = []
-        idx = 1
-        for i in request.data['keys']:
-            option_data.append({
-                'quiz': quiz,
-                'title': request.data['answer-' + str(i)],
-                'odds': request.data['answer-rate-' + str(i)],
-                'order': idx,
-            })
-            idx += 1
-        options = [Option(**item) for item in option_data]
-        Option.objects.bulk_create(options)
+        # option_data = []
+        # idx = 1
+        # for i in request.data['keys']:
+        #     option_data.append({
+        #         'quiz': quiz,
+        #         'title': request.data['answer-' + str(i)],
+        #         'odds': request.data['answer-rate-' + str(i)],
+        #         'order': idx,
+        #     })
+        #     idx += 1
+        # options = [Option(**item) for item in option_data]
+        # Option.objects.bulk_create(options)
 
         # 插入竞猜审核表
         # Audit.objects.create_audit(quiz)
