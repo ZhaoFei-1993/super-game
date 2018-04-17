@@ -158,7 +158,7 @@ class UserRegister(object):
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
-            if i.name == "METC":
+            if i.name == "METh":
                 usercoin.is_opt = True
                 usercoin.address = 1008611
             if i.name == "GGTC":

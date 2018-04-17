@@ -178,6 +178,32 @@ class QuizDetailView(ListAPIView):
         return self.response({"code": 0, "data": results.data.get('results')})
 
 
+class QuizPushView(ListAPIView):
+    """
+    下注页面推送
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizDetailSerializer
+
+    def get_queryset(self):
+        quiz_id = self.request.parser_context['kwargs']['quiz_id']
+        quiz = Quiz.objects.filter(pk=quiz_id)
+        return quiz
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            data.append(
+                {
+                    "quiz_id": item['id'],
+                    "quiz_push": item['quiz_push']
+                }
+            )
+        return self.response({"code": 0, "data": data})
+
+
 class RuleView(ListAPIView):
     """
     竞猜选项
@@ -191,7 +217,7 @@ class RuleView(ListAPIView):
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id)
         type = UserCoin.objects.filter(is_bet=1).count()
-        if len(type) == 0:
+        if type == 0:
             usercoin = UserCoin.objects.get(coin__type=1, is_opt=0)
             is_bet = usercoin.id
         else:
@@ -338,6 +364,7 @@ class BetView(ListCreateAPIView):
             'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
         }
         return self.response(response)
+
 
 class RecommendView(ListAPIView):
     permission_classes = (LoginRequired,)

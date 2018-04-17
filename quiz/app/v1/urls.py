@@ -14,6 +14,8 @@ urlpatterns = [
     path('records/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
     # 竞猜详情
     path('<int:quiz_id>/', views.QuizDetailView.as_view(), name="app-v1-quiz-detail"),
+    # 竞猜详情页面推送
+    path('quiz_push/<int:quiz_id>/', views.QuizPushView.as_view(), name="app-v1-quiz-push"),
     # 竞猜选项
     path('rule/<int:quiz_id>/', views.RuleView.as_view(), name="app-v1-quiz-rule"),
     # 竞猜下注

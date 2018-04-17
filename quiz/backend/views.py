@@ -36,8 +36,10 @@ class RecurseTreeNode(object):
             context['children'] = bits
         return context
 
-    def tree(self):
-        roots = get_cached_trees(Category.objects.filter(is_delete=False))
+    def tree(self, parent_id = None):
+
+
+        roots = get_cached_trees(Category.objects.filter(is_delete=False, parent_id=2))
         bits = [self._node(node) for node in roots]
         return bits
 
@@ -49,8 +51,11 @@ class CategoryListView(FormatListAPIView, CreateAPIView):
     serializer_class = CategorySerializer
 
     def list(self, request, *args, **kwargs):
+        if 'parent_id' not in request.GET.get:
+            print("好像要成功了哦！")
+        parent_id = request.GET.get('parent_id')
         category_tree = RecurseTreeNode()
-        return self.response(category_tree.tree())
+        return self.response(category_tree.tree(parent_id=parent_id))
 
     def post(self, request, *args, **kwargs):
         parent = None
@@ -178,13 +183,13 @@ class QuizListView(ListCreateAPIView):
             result['title'] = row[0]
             result['sub_title'] = row[1]
             result['thumb'] = row[2]
-            result['end_date'] = convert_localtime( row[3])
-            result['updated_at'] =  convert_localtime( row[4])
+            result['end_date'] = convert_localtime( row[3])                 #
+            result['updated_at'] =  convert_localtime( row[4])              # 更新时间
             result['is_recommend'] = str(row[5])
-            result['admin'] = row[6]
+            result['admin'] = row[6]                               # 管理员
             result['key'] = row[7]
-            result['category'] = row[8]
-            result['url'] = "/" + reverse('quiz-detail', kwargs={'pk': row[7]}).split('/api/')[1]
+            result['category'] = row[8]                              # 分类
+            result['url'] = "/" + reverse('quiz-detail', kwargs={'pk': row[7]}).split('/api/')[1]                # url
             result['status'] = row[9]
             result['start_date'] = convert_localtime(row[10]) if row[10] is not None else ''
             jsonData.append(result)
