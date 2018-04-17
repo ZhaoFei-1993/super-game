@@ -111,7 +111,7 @@ def sign_confirmation(user_id):
     # 是否签到
     user_sign = DailyLog.objects.get(user_id=user_id)
     sign_date = user_sign.sign_date
-    tmp = time.strftime("%Y%m%d")
+    tmp = time.strftime("%Y%m%d%H%M%S")
     if sign_date > int(tmp):
         is_sign = 1
     elif sign_date == int(tmp):

@@ -149,7 +149,7 @@ class UserRegister(object):
         daily = DailyLog()
         daily.user_id = userinfo.id
         daily.number = 0
-        daily.sign_date = time.strftime("%Y%m%d")
+        daily.sign_date = time.strftime("%Y%m%d%H%M%S")
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
         # 生成代币余额

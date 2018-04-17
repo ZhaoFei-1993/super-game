@@ -36,12 +36,23 @@ class RecurseTreeNode(object):
             context['children'] = bits
         return context
 
-    def tree(self, parent_id = None):
-
-
-        roots = get_cached_trees(Category.objects.filter(is_delete=False, parent_id=2))
-        bits = [self._node(node) for node in roots]
-        return bits
+    def tree(self, parent_id=None):
+        print("parent_id=================================", parent_id)
+        if parent_id == '' or parent_id == None:
+            print("none======================")
+            roots = get_cached_trees(Category.objects.filter(is_delete=False))
+            bits = [self._node(node) for node in roots]
+            return bits
+        elif int(parent_id) == 2:
+            print("籃球================================")
+            roots = get_cached_trees(Category.objects.filter(is_delete=False, parent_id=2))
+            bits = [self._node(node) for node in roots]
+            return bits
+        elif int(parent_id) == 1:
+            print("足球==========================")
+            roots = get_cached_trees(Category.objects.filter(is_delete=False, parent_id=1))
+            bits = [self._node(node) for node in roots]
+            return bits
 
 
 class CategoryListView(FormatListAPIView, CreateAPIView):
@@ -51,11 +62,13 @@ class CategoryListView(FormatListAPIView, CreateAPIView):
     serializer_class = CategorySerializer
 
     def list(self, request, *args, **kwargs):
-        if 'parent_id' not in request.GET.get:
-            print("好像要成功了哦！")
-        parent_id = request.GET.get('parent_id')
-        category_tree = RecurseTreeNode()
-        return self.response(category_tree.tree(parent_id=parent_id))
+        if 'parent_id' not in self.request.GET:
+            category_tree = RecurseTreeNode()
+            return self.response(category_tree.tree())
+        else:
+            category_tree = RecurseTreeNode()
+            parent_id = request.GET.get('parent_id')
+            return self.response(category_tree.tree(parent_id=parent_id))
 
     def post(self, request, *args, **kwargs):
         parent = None
