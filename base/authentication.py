@@ -75,6 +75,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
             date_key = 'x-date'
 
         headers_string = [date_key, 'x-nonce'] + item_keys
+        print('headers_string = ', headers_string)
 
         return headers_string
 
@@ -151,6 +152,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
             date_key = 'x-date'
         date_header = self.header_canonical(date_key)
         api_date = request.META.get(date_header)
+        print('date = ', api_date)
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
