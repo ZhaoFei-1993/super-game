@@ -173,7 +173,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         nonce_header = self.header_canonical(self.API_NONCE_HEADER)
         sent_nonce = request.META.get(nonce_header)
         print('x-nonce = ', sent_nonce)
-        if not sent_nonce:
+        if not sent_nonce or len(sent_nonce) < 16:
             raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
 
         # 登录验证
