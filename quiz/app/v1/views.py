@@ -240,11 +240,10 @@ class RuleView(ListAPIView):
             for s in option:
                 number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:
-                    accuracy = "0%"
+                    accuracy = "0"
                 else:
-                    accuracy = number / total * 100
+                    accuracy = number / total
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
-                    accuracy = str(accuracy) + '%'
                 list.append({
                     "option_id": s.pk,
                     "option": s.option,
