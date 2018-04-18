@@ -229,7 +229,7 @@ class RuleView(ListAPIView):
             usercoin = UserCoin.objects.get(coin__type=1, is_opt=0)
             is_bet = usercoin.id
         else:
-            usercoin = UserCoin.objects.get(~Q(coin__type=1), is_bet=1)
+            usercoin = UserCoin.objects.get(is_bet=1)
             is_bet = usercoin.id
         data = []
         for i in rule:
