@@ -17,7 +17,7 @@ class QuizSerialize(serializers.ModelSerializer):
     total_coin = serializers.SerializerMethodField()  # 投注总金额
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
-    category =serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
     is_end = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:

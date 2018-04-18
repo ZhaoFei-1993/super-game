@@ -89,10 +89,7 @@ class QuizListView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
-        print('value = ', value)
         return self.response({"code": 0, "data": value})
-
-
 
 
 class RecordsListView(ListCreateAPIView):
