@@ -222,14 +222,15 @@ class RuleView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
+        user = request.user.id
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id)
-        type = UserCoin.objects.filter(is_bet=1).count()
+        type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
         if type == 0:
-            usercoin = UserCoin.objects.get(coin__type=1, is_opt=0)
+            usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)
             is_bet = usercoin.id
         else:
-            usercoin = UserCoin.objects.get(is_bet=1)
+            usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
             is_bet = usercoin.id
         data = []
         for i in rule:
