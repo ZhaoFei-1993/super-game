@@ -22,8 +22,8 @@ class QuizSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team",
-                  "guest_team_avatar", "begin_at", "total_people", "total_coin", "is_bet", "is_delete", "category","is_end")
+        fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team", "guest_team_avatar",
+                  "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end")
 
     @staticmethod
     def get_begin_at(obj):
