@@ -565,10 +565,11 @@ class DailyListView(ListAPIView):
         is_sign = 0
         data = []
         for list in items:
-            if list["days"] < daily.number or list["days"] == daily.number:
-                is_sign = 1
             if sign == 1 and daily.number == 0:
                 is_sign = 1
+            else:
+                if list["days"] < daily.number or list["days"] == daily.number:
+                    is_sign = 1
             data.append({
                 "id": list["id"],
                 "days": list["days"],
@@ -589,7 +590,8 @@ class DailySignListView(ListCreateAPIView):
         user_id = self.request.user.id
         sign = sign_confirmation(user_id)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
-        yesterday_format = yesterday.strftime("%Y%m%d%H%M%S")
+        yesterday_format = yesterday.strftime("%Y%m%d")
+        yesterday_format = str(yesterday_format)+"000000"
         if sign == 1:
             raise ParamErrorException(error_code.API_30201_ALREADY_SING)
         try:
@@ -601,7 +603,7 @@ class DailySignListView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
-        if sign_date > yesterday_format:  # 判断昨天签到没有
+        if sign_date < yesterday_format:  # 判断昨天签到没有
             fate = 1
             daily.number = 1
         else:
@@ -621,6 +623,7 @@ class DailySignListView(ListCreateAPIView):
         usercoin.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.save()
+        print("daily===================", daily.number)
 
         content = {'code': 0,
                    'data': rewards
