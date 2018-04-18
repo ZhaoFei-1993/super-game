@@ -92,8 +92,6 @@ class QuizListView(ListCreateAPIView):
         return self.response({"code": 0, "data": value})
 
 
-
-
 class RecordsListView(ListCreateAPIView):
     """
     竞猜记录
@@ -175,7 +173,17 @@ class QuizDetailView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
-        return self.response({"code": 0, "data": results.data.get('results')})
+        items = results.data.get('results')
+        item = items[0]
+        return self.response({"code": 0, "data":  {
+                    "id": item['id'],
+                    "host_team": item['host_team'],
+                    "guest_team": item['guest_team'],
+                    "begin_at": item['begin_at'],
+                    "year": item['year'],
+                    "time": item['time'],
+                    "status": item['status']
+                }})
 
 
 class QuizPushView(ListAPIView):

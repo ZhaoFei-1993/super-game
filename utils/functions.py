@@ -110,11 +110,12 @@ def value_judge(request, *args):
 def sign_confirmation(user_id):
     # 是否签到
     user_sign = DailyLog.objects.get(user_id=user_id)
-    sign_date = user_sign.sign_date
-    tmp = time.strftime("%Y%m%d%H%M%S")
-    if sign_date > int(tmp):
+    sign_date = user_sign.sign_date.strftime("%Y%m%d%H%M%S")
+    today = datetime.date.today()
+    today_time = today.strftime("%Y%m%d%H%M%S")
+    if int(sign_date) > int(today_time):
         is_sign = 1
-    elif sign_date == int(tmp):
+    elif int(sign_date) == int(today_time):
         is_sign = 1
     else:
         is_sign = 0

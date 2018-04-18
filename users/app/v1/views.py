@@ -149,7 +149,7 @@ class UserRegister(object):
         daily = DailyLog()
         daily.user_id = userinfo.id
         daily.number = 0
-        daily.sign_date = time.strftime("%Y%m%d%H%M%S")
+        daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
         # 生成代币余额
@@ -158,7 +158,7 @@ class UserRegister(object):
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
-            if i.name == "METh":
+            if i.name == "METH":
                 usercoin.is_opt = True
                 usercoin.address = 1008611
             if i.name == "GGTC":
@@ -589,7 +589,7 @@ class DailySignListView(ListCreateAPIView):
         user_id = self.request.user.id
         sign = sign_confirmation(user_id)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
-        yesterday_format = yesterday.strftime('%Y%m%d')
+        yesterday_format = yesterday.strftime("%Y%m%d%H%M%S")
         if sign == 1:
             raise ParamErrorException(error_code.API_30201_ALREADY_SING)
         try:
@@ -600,7 +600,8 @@ class DailySignListView(ListCreateAPIView):
             daily = DailyLog.objects.get(user_id=user_id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if daily.sign_date != yesterday_format:  # 判断昨天签到没有
+        sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
+        if sign_date > yesterday_format:  # 判断昨天签到没有
             fate = 1
             daily.number = 1
         else:
@@ -618,7 +619,7 @@ class DailySignListView(ListCreateAPIView):
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
         usercoin.balance += rewards
         usercoin.save()
-        daily.sign_date = time.strftime("%Y%m%d")
+        daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.save()
 
         content = {'code': 0,

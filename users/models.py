@@ -148,7 +148,7 @@ class DailySettings(models.Model):
 class DailyLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number = models.IntegerField(verbose_name="连续签到天数", default=0)
-    sign_date = models.IntegerField(verbose_name="签到日期")
+    sign_date = models.DateTimeField(verbose_name="签到时间")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
