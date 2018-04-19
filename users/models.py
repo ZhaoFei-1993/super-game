@@ -138,7 +138,8 @@ class DailySettings(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     rewards = models.IntegerField(verbose_name="奖励数", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(verbose_name="创建时间")
+    days_delta = models.IntegerField(verbose_name="间隔天数", default=1)
+    created_at = models.DateTimeField(verbose_name="创建时间",auto_now=True)
 
     class Meta:
         ordering = ['-id']

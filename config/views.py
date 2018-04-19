@@ -4,7 +4,7 @@ import os
 
 from django.http import HttpResponse
 from config.models import Config, Article, AndroidVersion
-from config.serializers import ConfigSerializer, ArticleSerializer, LargeResultsSetPagination, AndroidSerializer
+from config.serializers import ConfigSerializer, ArticleSerializer, LargeResultsSetPagination, AndroidSerializer, DailySettingSerializer
 from rest_framework import status
 from django.http import JsonResponse
 
@@ -13,7 +13,7 @@ from utils.functions import value_judge
 from base.exceptions import ParamErrorException
 import base.code as error_code
 from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-
+from users.models import UserSettingOthors, User, DailySettings, Coin
 
 # from base.log_operation import LogOperation
 
@@ -75,7 +75,7 @@ class ArticleView(ListCreateAPIView):
 
 class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
     """
-    安卓版本信息
+    系统设置->安卓版本管理
     """
     queryset = AndroidVersion.objects.filter(is_delete=False).order_by('-create_at')
     serializer_class = AndroidSerializer
@@ -134,10 +134,98 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         ad_id = request.data.get("id")
-        print(ad_id)
         if not ad_id:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         item = AndroidVersion.objects.get(id=ad_id)
         item.is_delete = 1
         item.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class AppSetting(ListCreateAPIView):
+    """
+    系统设置->App设置
+    """
+
+    def get(self, request, *args, **kwargs):
+        if "reg_type" not in request.query_params:
+            return JsonResponse({"Error":"ParamError"},status=status.HTTP_400_BAD_REQUEST)
+        r_type=int(request.query_params.get('reg_type'))
+        try:
+            others=UserSettingOthors.objects.get(reg_type=r_type)
+        except Exception:
+            raise ParamErrorException
+        seletions = dict()
+        for v in User.REGISTER_TYPE:
+            seletions[str(v[0])]=v[1]
+        data={
+                "seletions":seletions,
+                "results":{
+                    "system_maintenance":Config.objects.filter(key="system_maintenance")[0].configs,
+                    "about":others.about,
+                    "helps":others.helps,
+                    "sv_contractus":others.sv_contractus,
+                    "pv_contractus":others.pv_contractus
+                }
+            }
+        return JsonResponse(data,status=status.HTTP_200_OK)
+
+
+    def patch(self, request, *args, **kwargs):
+        if "reg_type" not in request.data:
+            return JsonResponse({"Error":"ParamError"},status=status.HTTP_400_BAD_REQUEST)
+        r_type = int(request.data.pop('reg_type'))
+        try:
+            others=UserSettingOthors.objects.filter(reg_type=r_type)
+        except Exception:
+            raise ParamErrorException
+        fileds = ["system_maintenance","about", "helps", "sv_contractus", "pv_contractus"]
+        for key,value in request.data.items():
+            if key not in fileds:
+                return JsonResponse({"Error":"Not Allow Field"},status=status.HTTP_400_BAD_REQUEST)
+            else:
+                item = {key: value}
+                if key == "system_maintenance":
+                    Config.objects.filter(key='system_maintenance').update(configs=int(value))
+                else:
+                    others.update(**item)
+        return JsonResponse({},status=status.HTTP_200_OK)
+
+
+class DailySettingView(ListCreateAPIView):
+    """
+    每日签到设置
+    """
+    queryset = DailySettings.objects.filter().order_by('days')
+    serializer_class = DailySettingSerializer
+
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        list_t = Coin.objects.filter(admin=1).values('id', 'name').distinct()
+        coin_list = {}
+        for x in list_t:
+            coin_list[x['name']] = x['id']
+        return JsonResponse({"results":items,"coin_list":coin_list},status=status.HTTP_200_OK)
+        # return self.response({"status":status.HTTP_200_OK,"results":data})
+
+    def post(self, request, *args, **kwargs):
+        if request.data:
+            items = []
+            for index, x in enumerate(request.data):
+                for y in ['coin_id','days','rewards','days_delta']:
+                    value = (True if (y not in x) else False)
+                if value:
+                    return JsonResponse({"Error": "%d Item ParamError"%(index+1)}, status=status.HTTP_400_BAD_REQUEST)
+                x.pop('coin_name')
+                x['admin_id']=1
+                items.append(x)
+
+            DailySettings.objects.filter(coin_id=int(items[0]['coin_id'])).delete()
+            for item in items:
+                new_item=DailySettings(**item)
+                new_item.save()
+            return JsonResponse({},status=status.HTTP_200_OK)
+
+

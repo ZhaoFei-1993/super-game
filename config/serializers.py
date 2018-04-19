@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 from config.models import Config, Article, AndroidVersion
 from django.utils import timezone
+from users.models import DailySettings
 
 
 class LargeResultsSetPagination(PageNumberPagination):
@@ -41,3 +42,13 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
         create_time = timezone.localtime(obj.create_at)
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
         return create_at
+
+class DailySettingSerializer(serializers.ModelSerializer):
+    """
+    每日签到设置
+    """
+    coin_name = serializers.CharField(source="coin.name")
+    coin_id = serializers.CharField(source="coin.id")
+    class Meta:
+        model = DailySettings
+        fields = ("days","coin_id","coin_name","rewards","days_delta")
