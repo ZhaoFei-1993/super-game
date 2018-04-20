@@ -256,7 +256,8 @@ class RuleView(ListAPIView):
                 "quiz_id": i.quiz_id,
                 "type": i.TYPE_CHOICE[int(i.type)][1],
                 "tips": i.tips,
-                "handicap_score": i.handicap_score,
+                "home_let_score": i.home_let_score,
+                "guest_let_score": i.guest_let_score,
                 "estimate_score": i.estimate_score,
                 "list": list
             })
