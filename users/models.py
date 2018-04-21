@@ -105,6 +105,21 @@ class UserCoin(models.Model):
         verbose_name = verbose_name_plural = "用户代币余额表"
 
 
+class CoinDetail(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    amount = models.IntegerField(verbose_name="操作数额",default=0)
+    rest = models.IntegerField(verbose_name="余额",default=0)
+    sources = models.CharField(verbose_name="资金源", max_length=50)
+    is_delete = models.BooleanField(verbose_name="是否删除", default=False)
+    created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = verbose_name_plural = "用户资金明细"
+
+
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.000)
@@ -195,6 +210,8 @@ class UserMessage(models.Model):
         verbose_name = verbose_name_plural = "用户消息表"
 
 
+
+
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -217,7 +234,7 @@ class UserPresentation(models.Model):
         (REFUSE, "已拒绝"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, default=1)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="提现数量", max_digits=10, decimal_places=3, default=0.000)
     rest = models.DecimalField(verbose_name='剩余数量', max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
