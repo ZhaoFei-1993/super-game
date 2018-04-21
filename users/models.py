@@ -76,8 +76,8 @@ class Coin(models.Model):
     TYPE_CHOICE = (
         (GGTC, "GGTC"),
         (ETH, "METH"),
-        (BTC,"MBTC"),
-        (LTC,"MLTC"),
+        (BTC, "MBTC"),
+        (LTC, "MLTC"),
     )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
@@ -92,10 +92,20 @@ class Coin(models.Model):
         verbose_name = verbose_name_plural = "货币种类表"
 
 
+class CoinValue(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    value = models.IntegerField(verbose_name="货币允许投注值", default=0)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "货币投注值表"
+
+
 class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.IntegerField(verbose_name="余额", default=0)
+    balance = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.00)
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
     address = models.CharField(verbose_name="充值地址", max_length=32)
@@ -106,11 +116,10 @@ class UserCoin(models.Model):
 
 
 class CoinDetail(models.Model):
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    amount = models.IntegerField(verbose_name="操作数额",default=0)
-    rest = models.IntegerField(verbose_name="余额",default=0)
+    amount = models.IntegerField(verbose_name="操作数额", default=0)
+    rest = models.IntegerField(verbose_name="余额", default=0)
     sources = models.CharField(verbose_name="资金源", max_length=50)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
@@ -154,7 +163,7 @@ class DailySettings(models.Model):
     rewards = models.IntegerField(verbose_name="奖励数", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     days_delta = models.IntegerField(verbose_name="间隔天数", default=1)
-    created_at = models.DateTimeField(verbose_name="创建时间",auto_now=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now=True)
 
     class Meta:
         ordering = ['-id']
@@ -210,8 +219,6 @@ class UserMessage(models.Model):
         verbose_name = verbose_name_plural = "用户消息表"
 
 
-
-
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -251,7 +258,7 @@ class UserPresentation(models.Model):
 class UserSettingOthors(models.Model):
     about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
     helps = models.TextField(verbose_name="帮助")  # 序号3
-    reg_type= models.IntegerField(verbose_name="用户注册类型",default=1)
+    reg_type = models.IntegerField(verbose_name="用户注册类型", default=1)
     sv_contractus = models.TextField(verbose_name="服务条款")  # 序号4
     pv_contractus = models.TextField(verbose_name="隐私条款")  # 序号5
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)

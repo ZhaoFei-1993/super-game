@@ -225,9 +225,17 @@ class QuizListView(ListCreateAPIView):
         quiz.begin_at = request.data['begin_at']
         quiz.admin = request.user
         quiz.status = Quiz.PUBLISHING
-        quiz.save()
+        # quiz.save()
 
-        cointype = request.data['cointype']
+        print("request===============",request.data)
+        cointype = request.data['singleordouble']
+        singleordouble = request.data['singleordouble']
+        totalscore = request.data['totalscore']
+        score = request.data['score']
+        print("cointyp==================", cointype)
+        print("singleordouble==================", singleordouble)
+        print("totalscore==================", totalscore)
+        print("score==================", score)
         for i in cointype:
             coin = Coin.objects.filter(name=i)
             quizcoin = QuizCoin()

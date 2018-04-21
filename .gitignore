@@ -4,3 +4,4 @@ __pycache__/
 all_settings.py
 *.pyc
 *.djcache
+uploads

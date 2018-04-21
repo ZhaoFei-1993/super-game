@@ -56,7 +56,7 @@ class HotestView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        return self.response({'code': 0, 'data':{'items':items}})
+        return self.response({'code': 0, 'data': {'items': items}})
 
 
 class QuizListView(ListCreateAPIView):
@@ -175,15 +175,15 @@ class QuizDetailView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         item = items[0]
-        return self.response({"code": 0, "data":  {
-                    "id": item['id'],
-                    "host_team": item['host_team'],
-                    "guest_team": item['guest_team'],
-                    "begin_at": item['begin_at'],
-                    "year": item['year'],
-                    "time": item['time'],
-                    "status": item['status']
-                }})
+        return self.response({"code": 0, "data": {
+            "id": item['id'],
+            "host_team": item['host_team'],
+            "guest_team": item['guest_team'],
+            "begin_at": item['begin_at'],
+            "year": item['year'],
+            "time": item['time'],
+            "status": item['status']
+        }})
 
 
 class QuizPushView(ListAPIView):
@@ -229,9 +229,15 @@ class RuleView(ListAPIView):
         if type == 0:
             usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)
             is_bet = usercoin.id
+            balance = usercoin.balance
+            coin_name = usercoin.coin.name
+            coin_icon = usercoin.coin.icon
         else:
             usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
             is_bet = usercoin.id
+            balance = usercoin.balance
+            coin_name = usercoin.coin.name
+            coin_icon = usercoin.coin.icon
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk)
@@ -261,7 +267,9 @@ class RuleView(ListAPIView):
                 "estimate_score": i.estimate_score,
                 "list": list
             })
-        return self.response({'code': 0, 'data': data, 'is_bet': is_bet})
+        return self.response({'code': 0, 'data': data,
+                              'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
+                                       'coin_icon': coin_icon}})
 
 
 # class OptionView(ListAPIView):
@@ -369,8 +377,8 @@ class BetView(ListCreateAPIView):
 
         response = {
             'code': 0,
-            'data':{
-            'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
+            'data': {
+                'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
         }
         return self.response(response)
 
@@ -390,8 +398,8 @@ class RecommendView(ListAPIView):
             data.append(
                 {
                     "quiz_id": item['id'],
-                    "match": item['host_team']+" VS "+item['guest_team'],
-                    "match_time":datetime.strftime(datetime.fromtimestamp(item['begin_at']),'%Y/%m/%d %H:%M')
+                    "match": item['host_team'] + " VS " + item['guest_team'],
+                    "match_time": datetime.strftime(datetime.fromtimestamp(item['begin_at']), '%Y/%m/%d %H:%M')
                 }
             )
-        return self.response({"code":0,"data":data})
+        return self.response({"code": 0, "data": data})
