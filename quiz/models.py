@@ -64,6 +64,7 @@ class Quiz(models.Model):
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
 
     class Meta:
         ordering = ['-id']
@@ -101,9 +102,9 @@ class Rule(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
-    home_let_score = models.IntegerField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", default=0)
-    guest_let_score = models.IntegerField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", default=0)
-    estimate_score = models.IntegerField(verbose_name="预估分数，大小分玩法适用", default=0)
+    home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2, default=0.00)
+    guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2, default=0.00)
+    estimate_score = models.DecimalField(verbose_name="预估分数，大小分玩法适用", max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
         ordering = ['-id']
@@ -116,6 +117,7 @@ class Option(models.Model):
     option_type = models.CharField(verbose_name="选项分类", max_length=20, default="")
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
     is_right = models.BooleanField(verbose_name="是否正确选项", default=False)
+    flag = models.CharField(verbose_name='开奖标记', max_length=8, default="")
 
     class Meta:
         ordering = ['-id']
