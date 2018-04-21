@@ -80,30 +80,29 @@ class QuizCoin(models.Model):
 
 
 class Rule(models.Model):
-    BRANCH_SIZE = 0
-    RESULTS = 1
-    ONE_TWO = 2
-    TOTAL = 3
-    SCORE = 4
-    NEXT_BALL = 5
-    OUTCOME = 6
-    COMITY_BRANCH = 7
-    KATSUTA = 8
+    RESULTS = 0
+    POLITENESS_RESULTS = 1
+    SCORE = 2
+    TOTAL_GOAL = 3
+    RESULT = 4
+    POLITENESS_RESULT = 5
+    SIZE_POINTS = 6
+    VICTORY_GAP = 7
     TYPE_CHOICE = (
-        (BRANCH_SIZE, "大小分"),
         (RESULTS, "赛果"),
-        (ONE_TWO, "单双"),
-        (TOTAL, "总进球"),
+        (POLITENESS_RESULTS, "让分赛果"),
         (SCORE, "比分"),
-        (NEXT_BALL, "第一球"),
-        (OUTCOME, "胜负"),
-        (COMITY_BRANCH, "让分胜负"),
-        (KATSUTA, "胜分差"),
+        (TOTAL_GOAL, "总进球"),
+        (RESULT, "胜负"),
+        (POLITENESS_RESULT, "让分胜负"),
+        (SIZE_POINTS, "大小分"),
+        (VICTORY_GAP, "胜分差"),
     )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
-    handicap_score = models.IntegerField(verbose_name="让分分数，让分胜负玩法适用", default=0)
+    home_let_score = models.IntegerField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", default=0)
+    guest_let_score = models.IntegerField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", default=0)
     estimate_score = models.IntegerField(verbose_name="预估分数，大小分玩法适用", default=0)
 
     class Meta:
