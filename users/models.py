@@ -74,7 +74,7 @@ class Coin(models.Model):
     BTC = 3
     LTC = 4
     TYPE_CHOICE = (
-        (GGTC, "GGTC"),
+        (GGTC, "GSG"),
         (ETH, "METH"),
         (BTC, "MBTC"),
         (LTC, "MLTC"),
@@ -116,11 +116,27 @@ class UserCoin(models.Model):
 
 
 class CoinDetail(models.Model):
+    RECHARGE = 1
+    REALISATION = 2
+    BETS = 3
+    ACTIVITY = 4
+    OPEB_PRIZE = 5
+    LOCK = 6
+    OTHER = 7
+    TYPE_CHOICE = (
+        (RECHARGE, "充值"),
+        (REALISATION, "提现"),
+        (BETS, "下注"),
+        (ACTIVITY, "活动"),
+        (OPEB_PRIZE, "开奖"),
+        (LOCK, "锁定"),
+        (OTHER, "系统增加"),
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    amount = models.IntegerField(verbose_name="操作数额", default=0)
-    rest = models.IntegerField(verbose_name="余额", default=0)
-    sources = models.CharField(verbose_name="资金源", max_length=50)
+    amount = models.CharField(verbose_name="操作数额", max_length=255)
+    rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.00)
+    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
 

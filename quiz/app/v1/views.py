@@ -323,7 +323,7 @@ class BetView(ListCreateAPIView):
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, "usercoin_id", "coin_type", "option", "wager")
+        value = value_judge(request, "usercoin_id", "quiz_id", "option", "wager")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 

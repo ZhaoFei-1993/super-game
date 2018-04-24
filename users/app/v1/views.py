@@ -160,10 +160,12 @@ class UserRegister(object):
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
-            if i.name == "METH":
+            gsg = Coin.TYPE_CHOICE[0][1]
+            is_coin = Coin.TYPE_CHOICE[1][1]
+            if i.name == is_coin:
                 usercoin.is_opt = True
                 usercoin.address = 1008611
-            if i.name == "GGTC":
+            if i.name == gsg:
                 usercoin.is_bet =True
                 usercoin.address = 0
             usercoin.save()
@@ -193,18 +195,6 @@ class LoginView(CreateAPIView):
         if source != "HTML5":
             nickname = request.data.get('nickname')
             avatar = request.data.get('avatar')
-
-        for i in [12.12300, 12.00, 200.12000, 200.0]:
-            t = str(i)
-            r = t.rstrip('0').strip('.') if '.' in t else t
-            print("88888888888888888888888888888", t)
-
-        for i in [12.12300, 12.00, 200.12000, 200.0]:
-            s = '{:g}'.format(i)
-            print("int========================", s)
-            print("type========================", type(s))
-            print('{:g}===========================', int())
-
         password = None
         if 'password' in request.data:
             password = request.data.get('password')
