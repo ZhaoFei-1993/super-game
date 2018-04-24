@@ -557,7 +557,7 @@ class DailyListView(ListAPIView):
     serializer_class = DailySerialize
 
     def get_queryset(self):
-        daily = DailySettings.objects.all()
+        daily = DailySettings.objects.all().order_by('days')
         return daily
 
     def list(self, request, *args, **kwargs):
