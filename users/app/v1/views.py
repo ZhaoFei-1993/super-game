@@ -252,6 +252,7 @@ class InfoView(ListAPIView):
             'usercoin': items[0]["usercoin"],
             'usercoin_avatar': items[0]["usercoin_avatar"],
             'ggtc': items[0]["ggtc"],
+            'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'ggtc_locked': ggtc_locked,

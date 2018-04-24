@@ -58,11 +58,12 @@ class UserInfoSerializer(serializers.ModelSerializer):
     quiz_push = serializers.SerializerMethodField()
     usercoin = serializers.SerializerMethodField()
     usercoin_avatar = serializers.SerializerMethodField()
+    ggtc_avatar = serializers.SerializerMethodField()
     ggtc = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "nickname", "avatar", "usercoin", "usercoin_avatar", "ggtc", "telephone", "is_passcode",
+        fields = ("id", "nickname", "avatar", "usercoin", "usercoin_avatar", "ggtc_avatar", "ggtc", "telephone", "is_passcode",
                   "win_ratio", "quiz_push", "is_sound", "is_notify")
 
     @staticmethod
@@ -89,6 +90,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
         ggtc = Coin.objects.get(type=1)
         userggtc = UserCoin.objects.get(user_id=obj.id, coin_id=ggtc.id)
         return userggtc.balance
+
+    @staticmethod
+    def get_ggtc_avatar(obj):  # GSG图片
+        ggtc = Coin.objects.get(type=1)
+        return ggtc.icon
 
     @staticmethod
     def get_usercoin_avatar(obj):  # 代币图片
