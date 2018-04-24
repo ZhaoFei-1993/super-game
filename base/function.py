@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 from rest_framework.permissions import IsAuthenticated
 from .exceptions import NotLoginException
 from .code import API_403_ACCESS_DENY
+import random  
 
 
 class LoginRequired(IsAuthenticated):
@@ -64,3 +65,10 @@ def urlencode(string):
 
     return string
 
+
+def randomnickname():
+    xing = '赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜戚谢邹喻柏水窦章云苏潘葛奚范彭郎鲁韦昌马苗凤花方俞任袁柳酆鲍史唐'
+    ming = '一二三四五六七八九十'
+    X = random.choice(xing)
+    M = "".join(random.choice(ming) for i in range(2))
+    return X+M

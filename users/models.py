@@ -94,7 +94,7 @@ class Coin(models.Model):
 
 class CoinValue(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    value = models.IntegerField(verbose_name="货币允许投注值", default=0)
+    value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=1, default=0.0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:

@@ -5,7 +5,7 @@ from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option
-from users.models import UserCoin
+from users.models import UserCoin, CoinValue
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
@@ -232,12 +232,19 @@ class RuleView(ListAPIView):
             balance = usercoin.balance
             coin_name = usercoin.coin.name
             coin_icon = usercoin.coin.icon
+            coin_id = usercoin.coin.pk
+            coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         else:
             usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
             is_bet = usercoin.id
             balance = usercoin.balance
             coin_name = usercoin.coin.name
             coin_icon = usercoin.coin.icon
+            coin_id = usercoin.coin.pk
+            coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        value1 = coinvalue[0].value
+        value2 = coinvalue[1].value
+        value3 = coinvalue[2].value
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk)
@@ -269,7 +276,7 @@ class RuleView(ListAPIView):
             })
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
-                                       'coin_icon': coin_icon}})
+                                       'coin_icon': coin_icon, 'value1': value1, 'value2': value2, 'value3': value3}})
 
 
 # class OptionView(ListAPIView):

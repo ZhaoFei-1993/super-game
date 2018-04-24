@@ -44,6 +44,7 @@ class SmsView(ListCreateAPIView):
         model.type = code_type
         model.status = Sms.READY
         model.save()
+        print("code==============", code)
 
         return self.response({'code': error_code.API_0_SUCCESS, 'data': code})
 

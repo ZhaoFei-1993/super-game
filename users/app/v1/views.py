@@ -10,6 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserC
     UserCoinLock, UserSettingOthors
 from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView
 from base.function import LoginRequired
+from base.function import randomnickname
 from sms.models import Sms
 from datetime import timedelta, datetime
 import time
@@ -187,8 +188,22 @@ class LoginView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
-        avatar = request.data.get('avatar')
-        nickname = request.data.get('nickname')
+        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+        nickname = randomnickname()
+        if source != "HTML5":
+            nickname = request.data.get('nickname')
+            avatar = request.data.get('avatar')
+
+        for i in [12.12300, 12.00, 200.12000, 200.0]:
+            t = str(i)
+            r = t.rstrip('0').strip('.') if '.' in t else t
+            print("88888888888888888888888888888", t)
+
+        for i in [12.12300, 12.00, 200.12000, 200.0]:
+            s = '{:g}'.format(i)
+            print("int========================", s)
+            print("type========================", type(s))
+            print('{:g}===========================', int())
 
         password = None
         if 'password' in request.data:
@@ -1028,7 +1043,8 @@ class RegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
-        token = ur.register(source=source, username=telephone, password=password, avatar='', nickname=telephone)
+        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
         return self.response({
             'code': error_code.API_0_SUCCESS,
             'data': {
@@ -1078,7 +1094,8 @@ class CoinTypeView(CreateAPIView, ListAPIView):
                         'coin_name': i['coin_name'],
                         'icon': i['icon'],
                         'total': i['total'],
-                        'coin': i['coin']
+                        'coin': i['coin'],
+                        'coin_value': i['coin_value']
                     }
                 )
         elif int(index) == 2:
@@ -1089,6 +1106,7 @@ class CoinTypeView(CreateAPIView, ListAPIView):
                         'name': i['name'],
                         'icon': i['icon'],
                         'balance': i['balance'],
+                        'coin_value': i['coin_value']
                     }
                 )
         return self.response({'code': 0, 'data': data})

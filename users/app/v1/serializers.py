@@ -4,7 +4,7 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin
+    UserPresentation, UserCoin, Coin, CoinValue
 from quiz.models import Record, Quiz
 from utils.functions import amount
 from api import settings
@@ -237,16 +237,31 @@ class UserCoinSerialize(serializers.ModelSerializer):
     coin_number = serializers.SerializerMethodField()  # 交易所币数
     aglie = serializers.SerializerMethodField()  # 代币数
     exchange_rate = serializers.SerializerMethodField()  # 代币数
+    coin_value = serializers.SerializerMethodField()      # 投注值
 
     class Meta:
         model = UserCoin
-        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "coin_number", "aglie", "balance", "exchange_rate", "address")
+        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "coin_number", "aglie", "balance", "exchange_rate", "address", "coin_value")
 
     @staticmethod
     def get_name(obj):  # 代币名
         list = Coin.objects.get(pk=obj.coin_id)
         title = list.name
         return title
+
+    @staticmethod
+    def get_coin_value(obj):
+        coin_id = obj.coin_id
+        data = []
+        coin_value = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        for i in coin_value:
+            s = i.value
+            data.append(
+                {
+                    'value': [str(s), int(s)][int(s) == s]
+                }
+            )
+        return data
 
     @staticmethod
     def get_coin_name(obj):  # 交易所币名
