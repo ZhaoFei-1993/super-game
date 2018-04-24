@@ -89,3 +89,15 @@ class Admin(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+
+class AdminOperating(models.Model):
+    original = models.CharField(verbose_name="修改前的数据", max_length=255, default="")
+    new_data = models.CharField(verbose_name="修改后的数据", max_length=255, default="")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    admin_name = models.CharField(verbose_name="管理员昵称", max_length=25)
+    admin = models.ForeignKey(Admin, related_name='管理员ID', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "管理员操作明细表"
