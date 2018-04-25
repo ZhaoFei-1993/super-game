@@ -178,7 +178,9 @@ class QuizDetailView(ListAPIView):
         return self.response({"code": 0, "data": {
             "id": item['id'],
             "host_team": item['host_team'],
+            "host_team_score": item['host_team_score'],
             "guest_team": item['guest_team'],
+            "guest_team_score": item['guest_team_score'],
             "begin_at": item['begin_at'],
             "year": item['year'],
             "time": item['time'],
@@ -331,8 +333,8 @@ class BetView(ListCreateAPIView):
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
         usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
         option = str(self.request.data['option'])  # 获取选项ID(字符串)
-        option_arr = option.split(',')
         coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
+        option_arr = option.split(',')
         coins_arr = coins.split(',')
 
         coin = 0
@@ -385,7 +387,9 @@ class BetView(ListCreateAPIView):
         response = {
             'code': 0,
             'data': {
-                'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins)}
+                'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins),
+                'balance': usercoin.balance
+            }
         }
         return self.response(response)
 

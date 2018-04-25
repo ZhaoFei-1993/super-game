@@ -561,28 +561,17 @@ class DailyListView(ListAPIView):
         return daily
 
     def list(self, request, *args, **kwargs):
-        user_id = self.request.user.id
-        sign = sign_confirmation(user_id)  # 判断是否签到
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        try:
-            daily = DailyLog.objects.get(user_id=user_id)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        is_sign = 0
         data = []
         for list in items:
-            if sign == 1 and daily.number == 0:
-                is_sign = 1
-            else:
-                if list["days"] < daily.number or list["days"] == daily.number:
-                    is_sign = 1
             data.append({
-                "id": list["id"],
-                "days": list["days"],
-                "rewards": list["rewards"],
-                "is_sign": is_sign
-            })
+                    "id": list["id"],
+                    "days": list["days"],
+                    "rewards": list["rewards"],
+                    "is_sign": list["is_sign"],
+                    "is_selected": list["is_selected"]
+                })
 
         return self.response({'code': 0, 'data': data})
 

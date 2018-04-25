@@ -133,7 +133,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push")
+        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push", "host_team_score", "guest_team_score")
 
     @staticmethod
     def get_begin_at(obj):

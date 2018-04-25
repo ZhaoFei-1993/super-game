@@ -4,11 +4,11 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog
 from quiz.models import Record, Quiz
-from utils.functions import amount
+from utils.functions import amount, sign_confirmation
 from api import settings
-from datetime import datetime
+from datetime import timedelta, datetime
 from django.utils import timezone
 
 
@@ -131,10 +131,48 @@ class DailySerialize(serializers.ModelSerializer):
     """
     签到
     """
+    is_sign = serializers.SerializerMethodField()  # 消息类型
+    is_selected = serializers.SerializerMethodField()  # 消息类型
 
     class Meta:
         model = DailySettings
-        fields = ("id", "days", "rewards")
+        fields = ("id", "days", "rewards", "is_sign", "is_selected")
+
+    def get_is_sign(self, obj):  # 消息类型
+        user = self.context['request'].user.id
+        sign = sign_confirmation(user)  # 判断是否签到
+        daily = DailyLog.objects.get(user_id=user)
+        is_sign = 0
+        if sign == 1 and daily.number == 0:
+            is_sign = 1
+        else:
+            if obj.days < daily.number or obj.days == daily.number:
+                is_sign = 1
+        return is_sign
+
+    def get_is_selected(self, obj):
+        yesterday = datetime.today() + timedelta(-1)
+        yesterday_format = yesterday.strftime("%Y%m%d")
+        yesterday_format = str(yesterday_format) + "000000"
+        user = self.context['request'].user.id
+        sign = sign_confirmation(user)  # 判断是否签到
+        daily = DailyLog.objects.get(user_id=user)
+        is_selected = 0
+        sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
+        if sign_date < yesterday_format:  # 判断昨天签到没有
+            is_selected = 0
+            if obj.days == 1:
+                is_selected = 1
+        else:
+            if sign == 1 and sign_date > yesterday_format:
+                if obj.days == daily.number:
+                    is_selected = 1
+            elif sign == 0 and sign_date > yesterday_format:
+                if obj.days == (daily.number - 1):
+                    is_selected = 1
+        return is_selected
+
+
 
 
 class MessageListSerialize(serializers.ModelSerializer):
