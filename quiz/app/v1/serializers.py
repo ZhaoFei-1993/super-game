@@ -6,6 +6,7 @@ from time import strftime, gmtime
 from datetime import timedelta, datetime
 from users.models import User
 from api import settings
+from django.db.models import Q
 import pytz
 
 
@@ -19,17 +20,50 @@ class QuizSerialize(serializers.ModelSerializer):
     begin_at = serializers.SerializerMethodField()  # 是否已投注
     category = serializers.SerializerMethodField()
     is_end = serializers.SerializerMethodField()  # 是否已结束
+    win_rate = serializers.SerializerMethodField()  # 是否已结束
+    planish_rate = serializers.SerializerMethodField()  # 是否已结束
+    lose_rate = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
         model = Quiz
         fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team", "guest_team_avatar",
-                  "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end")
+                  "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate", "planish_rate",
+                  "lose_rate")
 
     @staticmethod
     def get_begin_at(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         return int(begin_at)
+
+    @staticmethod
+    def get_win_rate(obj):
+        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+        for rule in rule_obj:
+            option = Option.objects.get(rule_id=rule.pk, option="胜")
+            odds = option.odds
+        return odds
+
+    @staticmethod
+    def get_planish_rate(obj):
+        vv = Category.objects.get(pk=obj.category_id)
+        type_id = vv.parent_id
+        quiz_type = Category.objects.get(pk=type_id)
+        if quiz_type.name == "篮球":
+            return ''
+        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+        for rule in rule_obj:
+            option = Option.objects.get(rule_id=rule.pk, option="平")
+            odds = option.odds
+        return odds
+
+    @staticmethod
+    def get_lose_rate(obj):
+        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+        for rule in rule_obj:
+            option = Option.objects.get(rule_id=rule.pk, option="负")
+            odds = option.odds
+        return odds
 
     @staticmethod
     def get_is_end(obj):
@@ -133,7 +167,8 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push", "host_team_score", "guest_team_score")
+        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push", "host_team_score",
+                  "guest_team_score")
 
     @staticmethod
     def get_begin_at(obj):

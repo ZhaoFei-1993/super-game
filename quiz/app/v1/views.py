@@ -383,6 +383,8 @@ class BetView(ListCreateAPIView):
 
             usercoin.balance -= int(wager)
             usercoin.save()
+            quiz.total_people += 1
+            quiz.save()
 
         response = {
             'code': 0,
