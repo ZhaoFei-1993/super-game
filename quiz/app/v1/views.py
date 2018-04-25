@@ -412,7 +412,7 @@ class RecommendView(ListAPIView):
                 {
                     "quiz_id": item['id'],
                     "match": item['host_team'] + " VS " + item['guest_team'],
-                    "match_time": datetime.strftime(datetime.fromtimestamp(item['begin_at']), '%Y/%m/%d %H:%M')
+                    "match_time": datetime.strftime(datetime.fromtimestamp(item['begin_at']), '%H:%M')
                 }
             )
         return self.response({"code": 0, "data": data})
