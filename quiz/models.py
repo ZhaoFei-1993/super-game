@@ -115,6 +115,7 @@ class Option(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.CharField(verbose_name="选项值", max_length=20, default="")
     option_type = models.CharField(verbose_name="选项分类", max_length=20, default="")
+    order = models.IntegerField(verbose_name="排序", default=0)
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
     is_right = models.BooleanField(verbose_name="是否正确选项", default=False)
     flag = models.CharField(verbose_name='开奖标记', max_length=8, default="")
