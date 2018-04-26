@@ -195,7 +195,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_time(obj):  # 时间
-        time = obj.created_at.strftime('%H:%M')
+        time = obj.begin_at.strftime('%H:%M')
         return time
 
     @staticmethod

@@ -249,7 +249,7 @@ class RuleView(ListAPIView):
         value3 = coinvalue[2].value
         data = []
         for i in rule:
-            option = Option.objects.filter(rule_id=i.pk)
+            option = Option.objects.filter(rule_id=i.pk).order_by('order')
             list = []
             total = Record.objects.filter(rule_id=i.pk).count()
             for s in option:
