@@ -116,7 +116,7 @@ class CoinValue(models.Model):
 class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=3, default=0.00)
+    balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
     address = models.CharField(verbose_name="充值地址", max_length=32)

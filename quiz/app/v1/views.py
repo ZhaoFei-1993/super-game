@@ -318,7 +318,7 @@ class BetView(ListCreateAPIView):
     """
     竞猜下注
     """
-    max_wager = 10000
+    # max_wager = 10000
 
     def get_queryset(self):
         pass
@@ -352,9 +352,9 @@ class BetView(ListCreateAPIView):
                 wager = int(wager)
             except Exception:
                 raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
-                # 赌注是否超过上限
-            if wager > self.max_wager:
-                raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
+            #     # 赌注是否超过上限
+            # if wager > self.max_wager:
+            #     raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
 
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
