@@ -185,34 +185,43 @@ class LoginView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         ur = UserRegister()
-        value = value_judge(request, "username")
+        value = value_judge(request, "username", "type")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
-        nickname = request.data.get('username')
-        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
 
-        # nickname = randomnickname()
-        # if source != "HTML5":
-            # nickname = request.data.get('nickname')
-            # avatar = request.data.get('avatar')
+        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+        if 'avatar' in request.data:
+            avatar = request.data.get('avatar')
+        type = request.data.get('type')         # 1 注册          2 登录
+        regex = re.compile(r'^(1|2)$')
+        if type is None or not regex.match(type):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         user = User.objects.filter(username=username)
         if len(user) == 0:
+            if int(type) == 2:
+                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             for i in user:
                 if int(i.register_type) == 1 or int(i.register_type) == 2:
                     password = random_salt(8)
-                    if 'password' in request.data:
-                        password = request.data.get('password')
+                    nickname = request.data.get('nickname')
                     token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
                 else:
+                    code = request.data.get('code')
+                    message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
+                    if len(message) == 0:
+                        return self.response({
+                            'code': error_code.API_20402_INVALID_SMS_CODE
+                        })
+                    nickname = randomnickname()
                     password = request.data.get('password')
                     token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
         else:
+            if int(type) == 1:
+                raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
             for i in user:
                 if int(i.register_type) == 1 or int(i.register_type) == 2:
                     password = None
-                    if 'password' in request.data:
-                        password = request.data.get('password')
                     token = ur.login(source=source, username=username, password=password)
                 elif int(i.register_type) == 3:
                     password = ''
