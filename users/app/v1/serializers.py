@@ -328,6 +328,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         list = 0
         if int(ggtc.type) == 1:
             list = amount(obj.user_id)
+            list = [str(list), int(list)][int(list) == list]
         return list
 
     @staticmethod
@@ -337,6 +338,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         if int(ggtc.type) == 1:
             coin = amount(obj.user_id)
             list = list + coin
+            list = [str(list), int(list)][int(list) == list]
         return list
 
     @staticmethod
@@ -345,6 +347,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         list = 0
         if int(coin.type) != 1:
             list = round(obj.balance / coin.exchange_rate, 4)
+            list = [str(list), int(list)][int(list) == list]
         return list
 
     @staticmethod
@@ -353,6 +356,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         list = 0
         if int(coin.type) == 1:
             list = obj.balance
+            list = [str(list), int(list)][int(list) == list]
         return list
 
     @staticmethod

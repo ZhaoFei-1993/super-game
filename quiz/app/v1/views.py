@@ -232,6 +232,7 @@ class RuleView(ListAPIView):
             usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)
             is_bet = usercoin.id
             balance = usercoin.balance
+            balance = [str(balance), int(balance)][int(balance) == balance]
             coin_name = usercoin.coin.name
             coin_icon = usercoin.coin.icon
             coin_id = usercoin.coin.pk
@@ -240,6 +241,7 @@ class RuleView(ListAPIView):
             usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
             is_bet = usercoin.id
             balance = usercoin.balance
+            balance = [str(balance), int(balance)][int(balance) == balance]
             coin_name = usercoin.coin.name
             coin_icon = usercoin.coin.icon
             coin_id = usercoin.coin.pk

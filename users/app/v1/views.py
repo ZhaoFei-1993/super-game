@@ -42,6 +42,8 @@ class UserRegister(object):
         """
         if len(username) == 32:
             register_type = User.REGISTER_QQ
+        if len(username) == 11:
+            register_type = User.REGISTER_TELEPHONE
         else:
             register_type = User.REGISTER_WECHAT
         return register_type
@@ -65,7 +67,7 @@ class UserRegister(object):
 
         return token
 
-    def login(self, source, username, password=None):
+    def login(self, source, username, password):
         """
         用户登录
         :param source:   用户来源
@@ -74,21 +76,21 @@ class UserRegister(object):
         :return:
         """
         token = None
-
-        if password is not None:
+        if password is None:
             try:
                 user = User.objects.get(username=username)
             except Exception:
                 raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
-            if user.check_password(password):
-                token = self.get_access_token(source=source, user=user)
-            else:
-                raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
+            token = self.get_access_token(source=source, user=user)
         else:
             try:
                 user = User.objects.get(username=username)
             except Exception:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if user.check_password(password):
+                token = self.get_access_token(source=source, user=user)
+            else:
+                raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
             message = Message.objects.filter(type=1, created_at__gte=user.created_at)
             for i in message:
                 message_id = i.id
@@ -108,9 +110,6 @@ class UserRegister(object):
                     usercoin.coin_id = i.id
                     usercoin.is_opt = False
                     usercoin.save()
-
-            token = self.get_access_token(source=source, user=user)
-
         return token
 
     @transaction.atomic()
@@ -190,23 +189,40 @@ class LoginView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
+        nickname = request.data.get('username')
         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
-        nickname = randomnickname()
-        if source != "HTML5":
-            nickname = request.data.get('nickname')
-            avatar = request.data.get('avatar')
-        password = None
-        if 'password' in request.data:
-            password = request.data.get('password')
 
+        # nickname = randomnickname()
+        # if source != "HTML5":
+            # nickname = request.data.get('nickname')
+            # avatar = request.data.get('avatar')
         user = User.objects.filter(username=username)
         if len(user) == 0:
-            password = random_salt(8)
-            token = ur.register(source=source, username=username, password=password,
-                                avatar=avatar, nickname=nickname)
+            for i in user:
+                if int(i.register_type) == 1 or int(i.register_type) == 2:
+                    password = random_salt(8)
+                    if 'password' in request.data:
+                        password = request.data.get('password')
+                    token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
+                else:
+                    password = request.data.get('password')
+                    token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
         else:
-            token = ur.login(source=source, username=username, password=password)
-
+            for i in user:
+                if int(i.register_type) == 1 or int(i.register_type) == 2:
+                    password = None
+                    if 'password' in request.data:
+                        password = request.data.get('password')
+                    token = ur.login(source=source, username=username, password=password)
+                elif int(i.register_type) == 3:
+                    password = ''
+                    if 'password' in request.data:
+                        password = request.data.get('password')
+                    token = ur.login(source=source, username=username, password=password)
+                else:
+                    password = request.data.get('password')
+                    token = ur.login(source=source, username=username, password=password)
+        # elif user.register_type==4:
         return self.response({
             'code': 0,
             'data': {'access_token': token, }})
@@ -1099,6 +1115,7 @@ class CoinTypeView(CreateAPIView, ListAPIView):
         new_coin = request.data.get('new_coin')
         try:
             used = UserCoin.objects.get(user_id=userid, is_opt=1)
+            useds = UserCoin.objects.get(user_id=userid, is_bet=1)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         try:
@@ -1114,10 +1131,53 @@ class CoinTypeView(CreateAPIView, ListAPIView):
         if int(index) == 1:
             used.is_opt = 0
             new.is_opt = 1
+            used.save()
         elif int(index) == 2:
-            used.is_bet = 0
+            useds.is_bet = 0
             new.is_bet = 1
-        used.save()
+            useds.save()
         new.save()
+        content = {'code': 0}
+        return self.response(content)
+
+
+class ForgetPasswordView(ListAPIView):
+    """
+    修改密码
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, "password", "code", "username")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        password = request.data.get('password')
+        username = request.data.get('username')
+        try:
+            userinfo = User.objects.get(username=username)
+        except Exception:
+            raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)
+
+        # 获取该手机号码最后一条发短信记录
+        sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
+        if (sms is None) or (sms.code != request.data.get('code')):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+
+        if int(sms.type) != 5:
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
+
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
+
+        if len(password) < 6:
+            raise ParamErrorException(error_code=error_code.API_20802_PASS_CODE_LEN_ERROR)
+        if "password" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20801_PASS_CODE_ERROR)
+
+        userinfo.set_password(password)
+        userinfo.save()
         content = {'code': 0}
         return self.response(content)

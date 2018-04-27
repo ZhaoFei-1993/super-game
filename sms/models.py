@@ -8,6 +8,7 @@ class Sms(models.Model):
     ABNORMAL = 2
     FORGET_PASSWORD = 3
     REGISTER = 4
+    FORGET_REGISTER = 5
 
     READY = 1
     SUCCESS = 2
@@ -18,6 +19,7 @@ class Sms(models.Model):
         (ABNORMAL, "解除手机绑定"),
         (FORGET_PASSWORD, "忘记密保"),
         (REGISTER, "用户注册"),
+        (FORGET_REGISTER, "忘记密码"),
     )
 
     STATUS_CHOICE = (
