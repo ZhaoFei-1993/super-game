@@ -209,8 +209,9 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         record = Record.objects.filter(quiz_id=obj.pk)
         data = []
         for i in record:
-            userlist = User.objects.get(pk=i.user_id)
-            user = userlist.nickname
+            userlist = User.objects.filter(pk=i.user_id)
+            for s in userlist:
+                user = s.nickname
             rulelist = Rule.objects.get(pk=i.rule_id)
             my_rule = rulelist.TYPE_CHOICE[int(rulelist.type)][1]
             optionlist = Option.objects.get(pk=i.option_id)
