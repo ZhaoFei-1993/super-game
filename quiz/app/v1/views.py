@@ -198,7 +198,6 @@ class QuizPushView(ListAPIView):
     def get_queryset(self):
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
         record = Record.objects.filter(quiz_id=quiz_id)
-        print("record=================", record)
         return record
 
     def list(self, request, *args, **kwargs):
@@ -206,7 +205,6 @@ class QuizPushView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
-            print("555555555555555")
             data.append(
                 {
                     "quiz_id": item['id'],
@@ -339,6 +337,7 @@ class BetView(ListCreateAPIView):
     """
     竞猜下注
     """
+
     # max_wager = 10000
 
     def get_queryset(self):
