@@ -267,53 +267,64 @@ class RuleView(ListAPIView):
                     "odds": s.odds,
                     "option_type": s.option_type,
                     "is_right": s.is_right,
-                    "accuracy": accuracy
+                    "accuracy": accuracy,
+                    "order": s.order
                 })
-            data.append({
-                "quiz_id": i.quiz_id,
-                "type": i.TYPE_CHOICE[int(i.type)][1],
-                "tips": i.tips,
-                "home_let_score": i.home_let_score,
-                "guest_let_score": i.guest_let_score,
-                "estimate_score": i.estimate_score,
-                "list": list
-            })
+            # 比分
+            win = []
+            flat = []
+            loss = []
+            if int(i.type) == 2:
+                for l in list:
+                    if str(l['option_type']) == "胜":
+                        win.append(l)
+                    elif str(l['option_type']) == "平":
+                        flat.append(l)
+                    else:
+                        loss.append(l)
+                data.append({
+                    "quiz_id": i.quiz_id,
+                    "type": i.TYPE_CHOICE[int(i.type)][1],
+                    "tips": i.tips,
+                    "home_let_score": i.home_let_score,
+                    "guest_let_score": i.guest_let_score,
+                    "estimate_score": i.estimate_score,
+                    "list_win": win,
+                    "list_flat": flat,
+                    "list_loss": loss
+                })
+            elif int(i.type) == 7:
+                for l in list:
+                    if str(l['option_type']) == "胜":
+                        win.append(l)
+                    else:
+                        loss.append(l)
+                    win.sort(key=lambda x: x["order"])
+                    flat.sort(key=lambda x: x["order"])
+                    loss.sort(key=lambda x: x["order"])
+                data.append({
+                    "quiz_id": i.quiz_id,
+                    "type": i.TYPE_CHOICE[int(i.type)][1],
+                    "tips": i.tips,
+                    "home_let_score": i.home_let_score,
+                    "guest_let_score": i.guest_let_score,
+                    "estimate_score": i.estimate_score,
+                    "list_win": win,
+                    "list_loss": loss,
+                })
+            else:
+                data.append({
+                    "quiz_id": i.quiz_id,
+                    "type": i.TYPE_CHOICE[int(i.type)][1],
+                    "tips": i.tips,
+                    "home_let_score": i.home_let_score,
+                    "guest_let_score": i.guest_let_score,
+                    "estimate_score": i.estimate_score,
+                    "list": list
+                })
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
                                        'coin_icon': coin_icon, 'value1': value1, 'value2': value2, 'value3': value3}})
-
-
-# class OptionView(ListAPIView):
-#     """
-#     竞猜玩法下选项
-#     """
-#     permission_classes = (LoginRequired,)
-#
-#     def get_queryset(self):
-#         return
-#
-#     def list(self, request, *args, **kwargs):
-#         rule_id = kwargs['rule_id']
-#         option = Option.objects.filter(rule_id=rule_id)
-#         data=[]
-#         total = Record.objects.filter(rule_id=rule_id).count()
-#         for i in option:
-#             number=Record.objects.filter(rule_id=rule_id,option_id=i.pk).count()
-#             if number == 0 or total == 0:
-#                 accuracy = "0%"
-#             else:
-#                 accuracy = number / total * 100
-#                 accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
-#                 accuracy = str(accuracy) + '%'
-#             data.append({
-#                 "option_id": i.pk,
-#                 "rule_id": i.rule_id,
-#                 "option": i.option,
-#                 "odds": i.odds,
-#                 "is_right": i.is_right,
-#                 "accuracy":accuracy
-#             })
-#         return self.response({'code': 0, 'data': data})
 
 
 class BetView(ListCreateAPIView):
@@ -334,31 +345,22 @@ class BetView(ListCreateAPIView):
         user = request.user
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
         usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
-        option = str(self.request.data['option'])  # 获取选项ID(字符串)
-        coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
-        option_arr = option.split(',')
-        coins_arr = coins.split(',')
 
+        # 单个下注
+        option = self.request.data['option']  # 获取选项ID
+        coins = self.request.data['wager']  # 获取投注金额
         coin = 0
-        if len(option_arr) != len(coins_arr):
-            raise ParamErrorException(error_code.API_50106_PARAMETER_EXPIRED)
+        try:  # 判断选项ID是否有效
+            option_id = int(option)
+        except Exception:
+            raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        for (option_id, wager) in zip(option_arr, coins_arr):
-            try:  # 判断选项ID是否有效
-                option_id = int(option_id)
-            except Exception:
-                raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+        try:  # 判断赌注是否有效
+            coins = int(coins)
+        except Exception:
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
-            coin += int(wager)
-            try:  # 判断赌注是否有效
-                wager = int(wager)
-            except Exception:
-                raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
-            #     # 赌注是否超过上限
-            # if wager > self.max_wager:
-            #     raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
-
-        quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
+        quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
@@ -367,26 +369,78 @@ class BetView(ListCreateAPIView):
         if usercoin.balance < coin:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
-        earn_coins = 0
-        for (option_id, wager) in zip(option_arr, coins_arr):
-            # 获取选项赔率
-            options = Option.objects.get(pk=int(option_id))
+        options = Option.objects.get(pk=int(option_id))
 
-            record = Record()
-            record.user = user
-            record.quiz = quiz
-            record.rule = options.rule
-            record.option = options
-            record.bet = int(wager)
-            record.earn_coin = int(wager) * int(options.odds)
-            record.save()
-            earn_coins += int(wager) * options.odds
-            # 用户减少金币
+        record = Record()
+        record.user = user
+        record.quiz = quiz
+        record.rule = options.rule
+        record.option = options
+        record.bet = int(coins)
+        record.earn_coin = int(coins) * int(options.odds)
+        record.save()
+        earn_coins = int(coins) * options.odds
+        # 用户减少金币
 
-            usercoin.balance -= int(wager)
-            usercoin.save()
-            quiz.total_people += 1
-            quiz.save()
+        usercoin.balance -= int(coins)
+        usercoin.save()
+        quiz.total_people += 1
+        quiz.save()
+
+        #   多个一起下注(预留)
+        # option = str(self.request.data['option'])  # 获取选项ID(字符串)
+        # coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
+        # option_arr = option.split(',')
+        # coins_arr = coins.split(',')
+        #
+        # coin = 0
+        # if len(option_arr) != len(coins_arr):
+        #     raise ParamErrorException(error_code.API_50106_PARAMETER_EXPIRED)
+        #
+        # for (option_id, wager) in zip(option_arr, coins_arr):
+        #     try:  # 判断选项ID是否有效
+        #         option_id = int(option_id)
+        #     except Exception:
+        #         raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+        #
+        #     coin += int(wager)
+        #     try:  # 判断赌注是否有效
+        #         wager = int(wager)
+        #     except Exception:
+        #         raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+        #     #     # 赌注是否超过上限
+        #     # if wager > self.max_wager:
+        #     #     raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
+        #
+        # quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
+        # if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
+        #     raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
+        #
+        # usercoin = UserCoin.objects.get(pk=usercoin_id)
+        # # 判断用户金币是否足够
+        # if usercoin.balance < coin:
+        #     raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+        #
+        # earn_coins = 0
+        # for (option_id, wager) in zip(option_arr, coins_arr):
+        #     # 获取选项赔率
+        #     options = Option.objects.get(pk=int(option_id))
+        #
+        #     record = Record()
+        #     record.user = user
+        #     record.quiz = quiz
+        #     record.rule = options.rule
+        #     record.option = options
+        #     record.bet = int(wager)
+        #     record.earn_coin = int(wager) * int(options.odds)
+        #     record.save()
+        #     earn_coins += int(wager) * options.odds
+        #     # 用户减少金币
+        #
+        #     usercoin.balance -= int(wager)
+        #     usercoin.save()
+        #     quiz.total_people += 1
+        #     quiz.save()
 
         response = {
             'code': 0,
@@ -399,6 +453,9 @@ class BetView(ListCreateAPIView):
 
 
 class RecommendView(ListAPIView):
+    """
+    竞猜推荐
+    """
     permission_classes = (LoginRequired,)
     serializer_class = QuizSerialize
 

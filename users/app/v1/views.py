@@ -128,7 +128,7 @@ class UserRegister(object):
         # 32 QQ
         # 28 微信
         register_type = self.get_register_type(username)
-
+        print('register_type = ', register_type)
         user = User()
         if len(username) == 11:
             user.telephone = username
@@ -189,6 +189,7 @@ class LoginView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
+        register_type = ur.get_register_type(username)
 
         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
         if 'avatar' in request.data:
@@ -201,40 +202,40 @@ class LoginView(CreateAPIView):
         if len(user) == 0:
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
-            for i in user:
-                if int(i.register_type) == 1 or int(i.register_type) == 2:
-                    password = random_salt(8)
-                    nickname = request.data.get('nickname')
-                    token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
-                else:
-                    code = request.data.get('code')
-                    message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
-                    if len(message) == 0:
-                        return self.response({
-                            'code': error_code.API_20402_INVALID_SMS_CODE
-                        })
-                    nickname = randomnickname()
-                    password = request.data.get('password')
-                    token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
+
+            if int(register_type) == 1 or int(register_type) == 2:
+                password = random_salt(8)
+                nickname = request.data.get('nickname')
+                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
+
+            else:
+                code = request.data.get('code')
+                message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
+                if len(message) == 0:
+                    return self.response({
+                        'code': error_code.API_20402_INVALID_SMS_CODE
+                    })
+                nickname = randomnickname()
+                password = request.data.get('password')
+                print('password = ', password)
+                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
-            for i in user:
-                if int(i.register_type) == 1 or int(i.register_type) == 2:
-                    password = None
-                    token = ur.login(source=source, username=username, password=password)
-                elif int(i.register_type) == 3:
-                    password = ''
-                    if 'password' in request.data:
-                        password = request.data.get('password')
-                    token = ur.login(source=source, username=username, password=password)
-                else:
+            if int(register_type) == 1 or int(register_type) == 2:
+                password = None
+                token = ur.login(source=source, username=username, password=password)
+            elif int(register_type) == 3:
+                password = ''
+                if 'password' in request.data:
                     password = request.data.get('password')
-                    token = ur.login(source=source, username=username, password=password)
-        # elif user.register_type==4:
+                token = ur.login(source=source, username=username, password=password)
+            else:
+                password = request.data.get('password')
+                token = ur.login(source=source, username=username, password=password)
         return self.response({
             'code': 0,
-            'data': {'access_token': token, }})
+            'data': {'access_token': token}})
 
 
 class LogoutView(ListCreateAPIView):
