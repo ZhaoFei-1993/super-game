@@ -162,13 +162,13 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     """
     year = serializers.SerializerMethodField()  # 截止时间  年月日
     time = serializers.SerializerMethodField()  # 截止时间  当天时间
-    quiz_push = serializers.SerializerMethodField()  # 投注推送
+    # quiz_push = serializers.SerializerMethodField()  # 投注推送
     start = serializers.SerializerMethodField()  # 比赛开始时间
     status = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Quiz
-        fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "quiz_push", "host_team_score",
+        fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "host_team_score",
                   "guest_team_score")
 
     @staticmethod
@@ -201,25 +201,57 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         year = year.strftime('%H:%M')
         return year
 
+    # @staticmethod
+    # def get_quiz_push(obj):
+    #     """
+    #     竞猜详情推送
+    #     """
+    #     record = Record.objects.filter(quiz_id=obj.pk)
+    #     data = []
+    #     for i in record:
+    #         userlist = User.objects.filter(pk=i.user_id)
+    #         for s in userlist:
+    #             user = s.nickname
+    #         rulelist = Rule.objects.get(pk=i.rule_id)
+    #         my_rule = rulelist.TYPE_CHOICE[int(rulelist.type)][1]
+    #         optionlist = Option.objects.get(pk=i.option_id)
+    #         option = optionlist.option
+    #         quiz_push = []
+    #         if len(userlist) > 0:
+    #             quiz_push = user[0] + "**: " + my_rule + "-" + option + " 下注" + str(i.bet) + "金币"
+    #         data.append({
+    #             'quiz_push': quiz_push,  # 我的选项
+    #         })
+    #     return data
+
+
+class QuizPushSerializer(serializers.ModelSerializer):
+    """
+    竞猜详情推送序列化
+    """
+    my_rule = serializers.SerializerMethodField()  # 比赛状态
+    my_option = serializers.SerializerMethodField()  # 比赛状态
+    username = serializers.SerializerMethodField()  # 比赛状态
+
+    class Meta:
+        model = Record
+        fields = ("id", "username", "my_rule", "my_option", "bet")
+
     @staticmethod
-    def get_quiz_push(obj):
-        """
-        竞猜详情推送
-        """
-        record = Record.objects.filter(quiz_id=obj.pk)
-        data = []
-        for i in record:
-            userlist = User.objects.filter(pk=i.user_id)
-            for s in userlist:
-                user = s.nickname
-            rulelist = Rule.objects.get(pk=i.rule_id)
-            my_rule = rulelist.TYPE_CHOICE[int(rulelist.type)][1]
-            optionlist = Option.objects.get(pk=i.option_id)
-            option = optionlist.option
-            quiz_push = []
-            if len(userlist) > 0:
-                quiz_push = user[0] + "**: " + my_rule + "-" + option + " 下注" + str(i.bet) + "金币"
-            data.append({
-                'quiz_push': quiz_push,  # 我的选项
-            })
-        return data
+    def get_my_rule(obj):
+        rule = Rule.objects.get(pk=obj.rule_id)
+        my_rule = rule.TYPE_CHOICE[int(rule.type)][1]
+        return my_rule
+
+    @staticmethod
+    def get_my_option(obj):
+        option = Option.objects.get(pk=obj.option_id)
+        my_option = option.option
+        return my_option
+
+    @staticmethod
+    def get_username(obj):
+        user_info = User.objects.get(pk=obj.user_id)
+        username = user_info.nickname
+        user_name = str(username[0]) + "**"
+        return user_name

@@ -9,7 +9,7 @@ from users.models import UserCoin, CoinValue
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
-from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer
+from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
 from utils.functions import value_judge
 from datetime import datetime
 import re
@@ -193,22 +193,27 @@ class QuizPushView(ListAPIView):
     下注页面推送
     """
     permission_classes = (LoginRequired,)
-    serializer_class = QuizDetailSerializer
+    serializer_class = QuizPushSerializer
 
     def get_queryset(self):
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
-        quiz = Quiz.objects.filter(pk=quiz_id)
-        return quiz
+        record = Record.objects.filter(quiz_id=quiz_id)
+        print("record=================", record)
+        return record
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
         for item in items:
+            print("555555555555555")
             data.append(
                 {
                     "quiz_id": item['id'],
-                    "quiz_push": item['quiz_push']
+                    "username": item['username'],
+                    "my_rule": item['my_rule'],
+                    "my_option": item['my_option'],
+                    "bet": item['bet']
                 }
             )
         return self.response({"code": 0, "data": data})
