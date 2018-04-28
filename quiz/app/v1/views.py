@@ -298,7 +298,7 @@ class RuleView(ListAPIView):
                 })
             elif int(i.type) == 7:
                 for l in list:
-                    if str(l['option_type']) == "胜":
+                    if str(l['option_type']) == "主胜":
                         win.append(l)
                     else:
                         loss.append(l)
