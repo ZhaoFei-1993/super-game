@@ -181,7 +181,7 @@ class QuizDetailView(ListAPIView):
             "host_team_score": item['host_team_score'],
             "guest_team": item['guest_team'],
             "guest_team_score": item['guest_team_score'],
-            "begin_at": item['begin_at'],
+            "begin_at": item['start'],
             "year": item['year'],
             "time": item['time'],
             "status": item['status']
@@ -226,7 +226,7 @@ class RuleView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user.id
         quiz_id = kwargs['quiz_id']
-        rule = Rule.objects.filter(quiz_id=quiz_id)
+        rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
         type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
         if type == 0:
             usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)

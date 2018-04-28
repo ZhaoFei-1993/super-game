@@ -32,6 +32,7 @@ urlpatterns = [
     path('captcha/', include('captcha.urls')),
     # config
     path('configs/',include('config.urls')),
+    path('chat/',include('chat.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

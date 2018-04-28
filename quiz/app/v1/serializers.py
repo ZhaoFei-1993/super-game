@@ -34,7 +34,8 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_begin_at(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
-        return int(begin_at)
+        start = int(begin_at) - 28800
+        return start
 
     @staticmethod
     def get_win_rate(obj):
@@ -162,19 +163,20 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     year = serializers.SerializerMethodField()  # 截止时间  年月日
     time = serializers.SerializerMethodField()  # 截止时间  当天时间
     quiz_push = serializers.SerializerMethodField()  # 投注推送
-    begin_at = serializers.SerializerMethodField()  # 比赛开始时间
+    start = serializers.SerializerMethodField()  # 比赛开始时间
     status = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Quiz
-        fields = ("id", "host_team", "guest_team", "begin_at", "year", "time", "status", "quiz_push", "host_team_score",
+        fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "quiz_push", "host_team_score",
                   "guest_team_score")
 
     @staticmethod
-    def get_begin_at(obj):
+    def get_start(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
-        begin_at = time.mktime(begin_at.timetuple())
-        return int(begin_at)
+        start = time.mktime(begin_at.timetuple())
+        start = int(start) - 28800
+        return start
 
     @staticmethod
     def get_status(obj):
@@ -195,8 +197,9 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_time(obj):  # 时间
-        time = obj.begin_at.strftime('%H:%M')
-        return time
+        year = obj.begin_at
+        year = year.strftime('%H:%M')
+        return year
 
     @staticmethod
     def get_quiz_push(obj):

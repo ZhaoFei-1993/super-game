@@ -74,7 +74,7 @@ class Coin(models.Model):
     BTC = 3
     LTC = 4
     TYPE_CHOICE = (
-        (GGTC, "GSG"),
+        (GGTC, "积分"),
         (ETH, "METH"),
         (BTC, "MBTC"),
         (LTC, "MLTC"),
@@ -94,7 +94,7 @@ class Coin(models.Model):
 
 class RewardCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    value_ratio = models.IntegerField(verbose_name="兑换多少个GSG币", default=0)
+    value_ratio = models.IntegerField(verbose_name="兑换多少积分", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 

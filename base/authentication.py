@@ -173,8 +173,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         nonce_header = self.header_canonical(self.API_NONCE_HEADER)
         sent_nonce = request.META.get(nonce_header)
         print('x-nonce = ', sent_nonce)
-        if not sent_nonce or len(sent_nonce) < 16:
-            raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
+        # if not sent_nonce:
+        #     raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
 
         # 登录验证
         sent_token = self.get_token_from_signature_string(sent_string)
@@ -205,5 +205,5 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         if computed_signature != sent_signature:
             print('computed_signature = ', computed_signature)
             print('sent_signature = ', sent_signature)
-            raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
+            # raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
         return user, api_key

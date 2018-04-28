@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'quiz',
     'setting',
     'sms',
-    'config'
+    'config',
+    'chat'
 ]
 
 MIDDLEWARE = [
