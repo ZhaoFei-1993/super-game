@@ -251,6 +251,7 @@ class QuizPushSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_username(obj):
+        print("user_id========================", obj.user_id)
         user_info = User.objects.get(pk=obj.user_id)
         username = user_info.nickname
         user_name = str(username[0]) + "**"
