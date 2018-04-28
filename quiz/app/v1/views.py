@@ -247,8 +247,11 @@ class RuleView(ListAPIView):
             coin_id = usercoin.coin.pk
             coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
+        value1 = [str(value1), int(value1)][int(value1) == value1]
         value2 = coinvalue[1].value
+        value2 = [str(value2), int(value2)][int(value2) == value2]
         value3 = coinvalue[2].value
+        value3 = [str(value3), int(value3)][int(value3) == value3]
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk).order_by('order')
