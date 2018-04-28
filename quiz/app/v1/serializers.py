@@ -216,7 +216,9 @@ class QuizDetailSerializer(serializers.ModelSerializer):
             my_rule = rulelist.TYPE_CHOICE[int(rulelist.type)][1]
             optionlist = Option.objects.get(pk=i.option_id)
             option = optionlist.option
-            quiz_push = user[0] + "**: " + my_rule + "-" + option + " 下注" + str(i.bet) + "金币"
+            quiz_push = []
+            if len(userlist) > 0:
+                quiz_push = user[0] + "**: " + my_rule + "-" + option + " 下注" + str(i.bet) + "金币"
             data.append({
                 'quiz_push': quiz_push,  # 我的选项
             })
