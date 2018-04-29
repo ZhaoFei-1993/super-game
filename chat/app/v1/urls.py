@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    #  创建俱乐部
-    path('hotest/', views.QuizPushView.as_view(), name="app-v1-quiz-hotest"),
+    #  俱乐部列表
+    path('clublist/', views.ClublistView.as_view(), name="chat-club-list"),
 ]
 

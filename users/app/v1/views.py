@@ -8,6 +8,7 @@ from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
     CoinLock, UserPresentation, UserCoin, Coin, \
     UserCoinLock, UserSettingOthors
+from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView
 from base.function import LoginRequired
 from base.function import randomnickname
@@ -264,19 +265,26 @@ class InfoView(ListAPIView):
         return User.objects.filter(id=self.request.user.id)
 
     def list(self, request, *args, **kwargs):
+        user = request.user
+        roomquiz_id = int(request.GET.get('roomquiz_id'))
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
         ggtc_locked = amount(user_id)  # 该用户锁定的金额
+        clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        coin_id = clubinfo.coin.pk
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        user_coin = usercoin.balance
+        usercoin_avatar = clubinfo.coin.icon
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': items[0]["usercoin"],
-            'usercoin_avatar': items[0]["usercoin_avatar"],
+            'usercoin': user_coin,
+            'usercoin_avatar': usercoin_avatar,
             'ggtc': items[0]["ggtc"],
             'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],

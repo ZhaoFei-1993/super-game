@@ -5,6 +5,7 @@ from ...models import Quiz, Record, Option, Rule, Category
 from time import strftime, gmtime
 from datetime import timedelta, datetime
 from users.models import User
+from chat.models import Club
 from api import settings
 from django.db.models import Q
 import pytz
@@ -107,10 +108,13 @@ class RecordSerialize(serializers.ModelSerializer):
     guest_team = serializers.SerializerMethodField()  # 竞猜副队
     created_at = serializers.SerializerMethodField()  # 竞猜时间
     my_option = serializers.SerializerMethodField()  # 投注选项
+    coin_avatar = serializers.SerializerMethodField()  # 投注选项
+    earn_coin = serializers.SerializerMethodField()  # 竞猜结果
+    quiz_category = serializers.SerializerMethodField()  # 竞猜结果
 
     class Meta:
         model = Record
-        fields = ("pk", "quiz_id", "host_team", "guest_team", "created_at", "my_option")
+        fields = ("pk", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar", "quiz_category")
 
     @staticmethod
     def get_guest_team(obj):  # 副队
@@ -141,19 +145,42 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        option_list = Option.objects.filter(rule_id=obj.rule_id)
-        for i in option_list:
-            rule_list = Rule.objects.get(pk=i.rule_id)
-            if i.id == obj.option_id:
-                my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-                my_option = my_rule + ":" + i.option + "/" + str(i.odds)
-                data = []
-                data.append({
-                    'my_option': my_option,  # 我的选项
-                    'is_right': i.is_right,  # 是否为正确答案
-                })
-                break
+        option_info = Option.objects.get(option_id=obj.option_id)
+        rule_list = Rule.objects.get(pk=option_info.rule_id)
+        my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
+        my_option = my_rule + ":" + option_info.option + "/" + str(option_info.odds)
+        data = []
+        data.append({
+            'my_option': my_option,  # 我的选项
+            'is_right': option_info.is_right,  # 是否为正确答案
+        })
         return data
+
+    @staticmethod
+    def get_coin_avatar(obj):
+        if int(obj.roomquiz_id) != 0:
+            club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+            coin_avatar = club_info.coin.icon
+        else:
+            coin_avatar = ''
+        return coin_avatar
+
+    @staticmethod
+    def get_earn_coin(obj):
+        if int(obj.quiz.status) != 3:
+            earn_coin = "待开奖"
+        elif int(obj.quiz.status) == 4 and int(obj.earn_coin) == 0:
+            earn_coin = "猜错"
+        else:
+            earn_coin = obj.earn_coin
+        return earn_coin
+
+    @staticmethod
+    def get_quiz_category(obj):
+        category_parent = obj.quiz.category.parent_id
+        category = Category.objects.get(pk=category_parent)
+        category_icon = category.name
+        return category_icon
 
 
 class QuizDetailSerializer(serializers.ModelSerializer):
@@ -251,7 +278,6 @@ class QuizPushSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_username(obj):
-        print("user_id========================", obj.user_id)
         user_info = User.objects.get(pk=obj.user_id)
         username = user_info.nickname
         user_name = str(username[0]) + "**"

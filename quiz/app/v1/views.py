@@ -5,6 +5,7 @@ from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option
+from chat.models import Club
 from users.models import UserCoin, CoinValue
 from base.exceptions import ParamErrorException
 from base import code as error_code
@@ -56,7 +57,7 @@ class HotestView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        return self.response({'code': 0, 'data': {'items': items}})
+        return self.response({'code': 0, 'data': items})
 
 
 class QuizListView(ListCreateAPIView):
@@ -100,11 +101,20 @@ class RecordsListView(ListCreateAPIView):
     serializer_class = RecordSerialize
 
     def get_queryset(self):
+        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+        if 'roomquiz_id' not in self.request.parser_context['kwargs']:
+            pass
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
         else:
             self.request.GET.get('user_id')
-        return Record.objects.filter(user_id=user_id).order_by('created_at')
+        if 'roomquiz_id' not in self.request.parser_context['kwargs']:
+            return Record.objects.filter(user_id=user_id).order_by('created_at')
+        else:
+            if 'is_end' not in self.request.GET:
+                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+            else:
+                return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3) | Q(quiz__status=4), user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -112,27 +122,27 @@ class RecordsListView(ListCreateAPIView):
         data = []
         # quiz_id = ''
         tmp = ''
-        time = ''
-        host = ''
-        guest = ''
+        # time = ''
+        # host = ''
+        # guest = ''
         for fav in Progress:
             # record = fav.get('pk')
             # quiz = fav.get('quiz_id')
             pecific_date = fav.get('created_at')[0].get('year')
-            pecific_time = fav.get('created_at')[0].get('time')
-            host_team = fav.get('host_team')
-            guest_team = fav.get('guest_team')
-            if tmp == pecific_date and time == pecific_time and host == host_team and guest == guest_team:
-                host_team = ""
-                guest_team = ""
-            else:
-                host = host_team
-                guest = guest_team
-
-            if tmp == pecific_date and time == pecific_time:
-                pecific_time = ""
-            else:
-                time = pecific_time
+            # pecific_time = fav.get('created_at')[0].get('time')
+            # host_team = fav.get('host_team')
+            # guest_team = fav.get('guest_team')
+            # if tmp == pecific_date and time == pecific_time and host == host_team and guest == guest_team:
+            #     host_team = ""
+            #     guest_team = ""
+            # else:
+            #     host = host_team
+            #     guest = guest_team
+            #
+            # if tmp == pecific_date and time == pecific_time:
+            #     pecific_time = ""
+            # else:
+            #     time = pecific_time
 
             if tmp == pecific_date:
                 pecific_date = ""
@@ -148,12 +158,15 @@ class RecordsListView(ListCreateAPIView):
             #     quiz_id=quiz
             data.append({
                 "quiz_id": fav.get('quiz_id'),
-                'host_team': host_team,
-                'guest_team': guest_team,
+                'host_team':fav.get('host_team'),
+                'guest_team': fav.get('guest_team'),
+                'earn_coin': fav.get('earn_coin'),
                 'pecific_date': pecific_date,
-                'pecific_time': pecific_time,
+                'pecific_time': fav.get('created_at')[0].get('time'),
                 'my_option': fav.get('my_option')[0].get('my_option'),
                 'is_right': fav.get('my_option')[0].get('is_right'),
+                'coin_avatar': fav.get('coin_avatar'),
+                'category_name': fav.get('category_icon')
             })
 
         return self.response({'code': 0, 'data': data})
@@ -345,13 +358,14 @@ class BetView(ListCreateAPIView):
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, "usercoin_id", "quiz_id", "option", "wager")
+        value = value_judge(request, "quiz_id", "option", "wager", "roomquiz_id")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         user = request.user
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
-        usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
+        # usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
+        roomquiz_id = self.request.data['roomquiz_id']  # 获取货币类型
 
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
@@ -371,9 +385,11 @@ class BetView(ListCreateAPIView):
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
-        usercoin = UserCoin.objects.get(pk=usercoin_id)
+        clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        coin_id = clubinfo.coin.pk
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if usercoin.balance < coin:
+        if int(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         options = Option.objects.get(pk=int(option_id))

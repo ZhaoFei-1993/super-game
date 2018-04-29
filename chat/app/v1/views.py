@@ -3,7 +3,8 @@ from base.app import ListCreateAPIView
 from . import serializers
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import MessageListSerialize
+from .serializers import ClubListSerialize
+from chat.models import Club
 from wsms import sms
 from base import code as error_code
 from datetime import datetime
@@ -13,28 +14,34 @@ from django.conf import settings
 from base.exceptions import ParamErrorException
 
 
-class QuizPushView(ListAPIView):
+class ClublistView(ListAPIView):
     """
-    下注页面推送
+    俱乐部列表
     """
     permission_classes = (LoginRequired,)
-    serializer_class = MessageListSerialize
+    serializer_class = ClubListSerialize
 
     def get_queryset(self):
-        # quiz_id = self.request.parser_context['kwargs']['quiz_id']
-        # quiz = Quiz.objects.filter(pk=quiz_id)
-        # return quiz
-        pass
+        chat_list = Club.objects.filter(is_dissolve=0).order_by('-is_recommend')
+        return chat_list
 
     def list(self, request, *args, **kwargs):
-        # results = super().list(request, *args, **kwargs)
-        # items = results.data.get('results')
-        # data = []
-        # for item in items:
-        #     data.append(
-        #         {
-        #             "quiz_id": item['id'],
-        #             "quiz_push": item['quiz_push']
-        #         }
-        #     )
-        return self.response({"code": 0})
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            data.append(
+                {
+                    "club_id": item['id'],
+                    "room_title": item['room_title'],
+                    "autograph": item['autograph'],
+                    "user_number": item['user_number'],
+                    "room_number": item['room_number'],
+                    "coin_name": item['coin_name'],
+                    "coin_key": item['coin_key'],
+                    "icon": item['icon'],
+                    "coin_icon": item['coin_icon'],
+                    "is_recommend": item['is_recommend']
+                }
+            )
+        return self.response({"code": 0, "data": data})
