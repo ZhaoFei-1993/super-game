@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'setting',
     'sms',
     'config',
-    'chat'
+    'chat',
+    'reversion',
 ]
 
 MIDDLEWARE = [

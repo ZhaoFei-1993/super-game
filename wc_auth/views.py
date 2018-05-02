@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
 import rest_framework_filters as filters
-from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
+from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, ListAPIView
 
-from .serializers import InfoSerialize, RoleListSerialize, QuizSerialize
-from .models import Role, Admin
+from .serializers import InfoSerialize, RoleListSerialize, QuizSerialize, AdminOperationSerialize
+from .models import Role, Admin, Admin_Operation
 from quiz.models import Quiz
+from url_filter.integrations.drf import DjangoFilterBackend
+from utils.functions import reversion_Decorator
 
 
 class LoginView(CreateAPIView):
@@ -13,6 +15,7 @@ class LoginView(CreateAPIView):
     """
     serializer_class = InfoSerialize
 
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         return self.response({
             'code': 0
@@ -83,3 +86,17 @@ class QuizView(FormatListAPIView):
     serializer_class = QuizSerialize
     filter_class = QuizFilter
     queryset = Quiz.objects.all()
+
+
+class AdminOperationView(ListAPIView):
+    """
+    管理员操作记录
+    """
+    serializer_class = AdminOperationSerialize
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['admin', 'pre_version', 'mod_version', 'revision']
+
+    def get_queryset(self):
+        admin_id = self.request.user.id
+        query_s = Admin_Operation.objects.filter(admin_id=admin_id).order_by('revision')
+        return query_s

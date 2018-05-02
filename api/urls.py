@@ -32,6 +32,7 @@ urlpatterns = [
     path('captcha/', include('captcha.urls')),
     # config
     path('configs/',include('config.urls')),
+    #
     path('chat/',include('chat.urls')),
 ]
 

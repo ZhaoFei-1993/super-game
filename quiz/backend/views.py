@@ -1,17 +1,19 @@
 # -*- coding: UTF-8 -*-
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from .serializers import CategorySerializer
-from ..models import Category, Quiz, Option, QuizCoin, Coin
+from .serializers import CategorySerializer, UserQuizSerializer
+from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
 
+from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
 from rest_framework import status
 from utils.functions import convert_localtime
 from rest_framework.reverse import reverse
 from django.http import HttpResponse
 import json
+from  utils.functions  import  reversion_Decorator
 
 
 class RecurseTreeNode(object):
@@ -70,6 +72,8 @@ class CategoryListView(FormatListAPIView, CreateAPIView):
             parent_id = request.GET.get('parent_id')
             return self.response(category_tree.tree(parent_id=parent_id))
 
+
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         parent = None
         if 'parent' in request.data and request.data['parent'] != '':
@@ -111,6 +115,8 @@ class CategoryDetailView(RetrieveUpdateDestroyAPIView):
         }
         return self.response(content)
 
+
+    @reversion_Decorator
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         if 'is_delete' in request.data:
@@ -210,7 +216,7 @@ class QuizListView(ListCreateAPIView):
         data = {'count': len(dt_all), 'results': jsonData}
         return HttpResponse(json.dumps(data), content_type='text/json')
 
-    @transaction.atomic
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         category = Category.objects.get(name=request.data['category'], is_delete=False)
         print("request_data==================",request.data)
@@ -272,3 +278,12 @@ class QuizListView(ListCreateAPIView):
 
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
+
+class UserQuizView(ListCreateAPIView):
+    """
+    用户竞猜列表
+    """
+    queryset = Record.objects.all()
+    serializer_class = UserQuizSerializer
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['user', 'bet', 'earn_coin', 'option']

@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
+from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, RewardCoin, CoinValue
 from quiz.models import Record
 from datetime import datetime
 
@@ -197,3 +198,33 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
         return data
 
 
+class CoinDetailSerializer(serializers.ModelSerializer):
+    """
+    用户资金明细
+    """
+    coin_name = serializers.CharField(source="coin.name")
+    created_at = serializers.SerializerMethodField()
+    class Meta:
+        model = CoinDetail
+        fields = ("coin", "coin_name", "amount", "rest", "sources", "created_at")
+
+    @staticmethod
+    def get_created_at(obj):
+        local_time = timezone.localtime(obj.created_at)
+        created_time = datetime.strftime(local_time, "%Y-%m-%d %H:%M:%S")
+        return created_time
+
+class CoinValueRewardSerializer(serializers.ModelSerializer):
+    """
+    币允许投注值及兑换积分比例
+    """
+    reward = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CoinValue
+        fields = ("id", "coin", "index", "value", "reward")
+
+    @staticmethod
+    def get_reward(obj):
+        reward = RewardCoin.objects.get(coin_id=obj.coin_id)
+        return reward

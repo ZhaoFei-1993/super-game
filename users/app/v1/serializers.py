@@ -4,9 +4,9 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue, DailyLog
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail
 from quiz.models import Record, Quiz
-from utils.functions import amount, sign_confirmation
+from utils.functions import amount, sign_confirmation, amount_presentation
 from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -260,7 +260,7 @@ class PresentationSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = UserPresentation
-        fields = ("id", "user", "coin", "amount", "rest", "created_at", "updated_at", "status")
+        fields = ("id", "user", "coin", "amount","address","address_name","rest", "created_at", "updated_at", "status")
 
     @staticmethod
     def get_created_at(obj):
@@ -276,17 +276,17 @@ class UserCoinSerialize(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()  # 代币名
     coin_name = serializers.SerializerMethodField()  # 交易所币名
     icon = serializers.SerializerMethodField()  # 代币头像
-    lock_ggtc = serializers.SerializerMethodField()  # 代币锁定金额
     total = serializers.SerializerMethodField()  # 总金额
-    coin_number = serializers.SerializerMethodField()  # 交易所币数
-    aglie = serializers.SerializerMethodField()  # 代币数
     exchange_rate = serializers.SerializerMethodField()  # 代币数
     coin_value = serializers.SerializerMethodField()  # 投注值
+    locked_coin = serializers.SerializerMethodField() #审核中锁定的总币数
+    # service_charge = serializers.CharField(source='coin.service_charge')
+    recent_address = serializers.SerializerMethodField()
 
     class Meta:
         model = UserCoin
-        fields = ("id", "name", "coin_name", "icon", "lock_ggtc", "total", "coin", "coin_number", "aglie", "balance",
-                  "exchange_rate", "address", "coin_value")
+        fields = ("id", "name", "coin_name", "icon", "coin", "total", "balance",
+                  "exchange_rate", "address", "coin_value", "locked_coin", "recent_address")
 
     @staticmethod
     def get_name(obj):  # 代币名
@@ -313,7 +313,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         list = Coin.objects.get(pk=obj.coin_id)
         my_rule = ''
         if int(list.type) != 1:
-            my_rule = list.TYPE_CHOICE[int(list.type) - 1][0]
+            my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
         return my_rule
 
     @staticmethod
@@ -322,45 +322,90 @@ class UserCoinSerialize(serializers.ModelSerializer):
         title = list.icon
         return title
 
-    @staticmethod
-    def get_lock_ggtc(obj):  # 代币锁定金额
-        ggtc = Coin.objects.get(pk=obj.coin_id)
-        list = 0
-        if int(ggtc.type) == 1:
-            list = amount(obj.user_id)
-            list = [str(list), int(list)][int(list) == list]
-        return list
 
     @staticmethod
     def get_total(obj):  # 总金额
-        ggtc = Coin.objects.get(pk=obj.coin_id)
-        list = obj.balance
-        if int(ggtc.type) == 1:
-            coin = amount(obj.user_id)
-            list = list + coin
-            list = [str(list), int(list)][int(list) == list]
+        list = amount_presentation(obj.user.id, obj.coin.id)
+        list = list + obj.balance
+        list = [str(list), int(list)][int(list) == list]
         return list
 
-    @staticmethod
-    def get_coin_number(obj):  # 交易所币数
-        coin = Coin.objects.get(pk=obj.coin_id)
-        list = 0
-        if int(coin.type) != 1:
-            list = round(obj.balance / coin.exchange_rate, 4)
-            list = [str(list), int(list)][int(list) == list]
-        return list
 
-    @staticmethod
-    def get_aglie(obj):  # 代币数
-        coin = Coin.objects.get(pk=obj.coin_id)
-        list = 0
-        if int(coin.type) == 1:
-            list = obj.balance
-            list = [str(list), int(list)][int(list) == list]
-        return list
 
     @staticmethod
     def get_exchange_rate(obj):  # 币种交换汇率
-        coin = Coin.objects.get(pk=obj.coin_id)
-        list = coin.exchange_rate
+        list = obj.coin.exchange_rate
         return list
+
+    @staticmethod
+    def get_locked_coin(obj): #提现申请期间锁定币数
+        return amount_presentation(obj.user.id, obj.coin.id)
+
+
+    @staticmethod
+    def get_recent_address(obj): # 最近使用地址
+        recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[:2]
+        temp_recent=[]
+        for x in recent:
+            temp_recent.append({x.address_name:x.address})
+        return temp_recent
+
+
+class CoinOperateSerializer(serializers.ModelSerializer):
+    """
+    币中充值和提现操作记录
+    """
+    address = serializers.SerializerMethodField()
+    address_name = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    month = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CoinDetail
+        fields = ('id', 'amount', 'address', 'address_name', 'status', 'created_at', 'month', 'time')
+
+    @staticmethod
+    def get_address(obj):
+        if int(obj.sources) == 2:
+            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at)
+            return item.address
+        else:
+            item = UserRecharge.objects.get(user_id=obj.user.id, created_at=obj.created_at)
+            return item.address
+
+    @staticmethod
+    def get_address_name(obj):
+        if int(obj.sources) == 2:
+            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at)
+            return item.address_name
+        else:
+            return None
+
+    @staticmethod
+    def get_status(obj):
+        if int(obj.sources) == 2:
+            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at)
+            status = item.TYPE_CHOICE[int(item.status)][1]
+            return  status
+        else:
+            return '充值成功'
+
+    @staticmethod
+    def get_month(obj):
+        month_time = timezone.localtime(obj.created_at)
+        month = month_time.strftime('%Y年%m月')
+        return month
+
+    @staticmethod
+    def get_time(obj):
+        time_time = timezone.localtime(obj.created_at)
+        time = time_time.strftime('%m-%d %H:%M')
+        return time
+
+    @staticmethod
+    def get_created_at(obj):
+        create_time = timezone.localtime(obj.created_at)
+        created_at = create_time.strftime('%Y-%m-%d %H:%M')
+        return created_at

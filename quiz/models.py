@@ -4,8 +4,9 @@ from wc_auth.models import Admin
 from django.template.backends import django
 from mptt.models import MPTTModel, TreeForeignKey
 from users.models import Coin, User
+import reversion
 
-
+@reversion.register()
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
     icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
@@ -18,7 +19,7 @@ class Category(MPTTModel):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜分类表"
 
-
+@reversion.register()
 class Quiz(models.Model):
     PUBLISHING = 0  # 已发布
     REPEALED = 1  # 比赛中
@@ -70,7 +71,7 @@ class Quiz(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜表"
 
-
+@reversion.register()
 class QuizCoin(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -79,7 +80,7 @@ class QuizCoin(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜所支持的货币种类"
 
-
+@reversion.register()
 class Rule(models.Model):
     RESULTS = 0
     POLITENESS_RESULTS = 1
@@ -110,7 +111,7 @@ class Rule(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜规则表"
 
-
+@reversion.register()
 class Option(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.CharField(verbose_name="选项值", max_length=20, default="")
@@ -124,12 +125,13 @@ class Option(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项表"
 
-
+@reversion.register()
 class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     bet = models.IntegerField(verbose_name="下注金额", default=0)
     earn_coin = models.IntegerField(verbose_name="获得猜币数", default=0)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)

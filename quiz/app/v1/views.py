@@ -5,7 +5,7 @@ from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option
-from users.models import UserCoin, CoinValue
+from users.models import UserCoin, CoinValue, CoinDetail
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
@@ -441,6 +441,14 @@ class BetView(ListCreateAPIView):
         #     usercoin.save()
         #     quiz.total_people += 1
         #     quiz.save()
+
+        coin_detail = CoinDetail()
+        coin_detail.user = user
+        coin_detail.coin = usercoin.coin
+        coin_detail.amount = '-'+str(coins)
+        coin_detail.rest = usercoin.balance
+        coin_detail.sources = 3
+        coin_detail.save()
 
         response = {
             'code': 0,

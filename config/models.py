@@ -4,6 +4,7 @@ from django.conf import settings
 import json
 import os
 from django.core import serializers
+import reversion
 
 
 class ConfigManager(models.Manager):
@@ -66,7 +67,7 @@ class ConfigManager(models.Manager):
         configs = self.get_all()
         return configs[key]
 
-
+@reversion.register()
 class Config(models.Model):
     """
     配置项说明：
@@ -154,20 +155,25 @@ class Config(models.Model):
     def __str__(self):
         return self.key
 
-
+@reversion.register()
 class AndroidVersion(models.Model):
     """
     安卓版本管理
     """
-    version = models.CharField("安卓版本号", max_length=20, unique=True)
+    version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
     is_delete = models.BooleanField("是否已删除", max_length=2, default=False)
     create_at =models.DateTimeField("发布时间", auto_now=True)
 
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "安卓版本管理"
+
 
 
 # 审核状态
+@reversion.register()
 class Inspect_status(models.Model):
     INSPECT = 1
     NORMAL = 2
@@ -178,8 +184,13 @@ class Inspect_status(models.Model):
     )
     category = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=1, default=NORMAL)
 
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "审核状态"
+
 
 # 文章 - 关于我们 - 公告
+@reversion.register()
 class Article(models.Model):
     ABOUT_WE = 1  # 关于我们
 
@@ -191,3 +202,8 @@ class Article(models.Model):
     content = models.TextField(verbose_name="文章内容")
     created_at = models.DateTimeField('date published')
     category = models.CharField(verbose_name="状态", choices=CATEGORY_CHOICE, max_length=1, default=ABOUT_WE)
+
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "文章-关于我们-公告"

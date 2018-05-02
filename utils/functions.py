@@ -9,11 +9,17 @@ from random import Random
 import time
 import pytz
 import datetime
+from decimal import Decimal
 from django.conf import settings
+from django.db.models import Sum
+from base.exceptions import ParamErrorException
 from django.db.models import Q
-
+from wc_auth.models import Admin_Operation
 from quiz.models import Record
-from users.models import DailyLog, UserMessage, UserCoinLock
+from base import code
+from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation
+import reversion
+from wc_auth.functions import  save_operation
 
 
 def random_string(length=16):
@@ -188,3 +194,26 @@ def surplus_date(end_date):
 #         record_count = round(win_count / total_count * 100, 2)
 #         win_ratio = str(record_count) + "%"
 #     return win_ratio
+
+
+
+def reversion_Decorator(func):
+    """
+    各种request请求(不包含OPTIONS, GET ,HEAD)函数装饰器,记录各种操作请求
+    """
+    def wrapper(self, request, *args, **kwargs):
+        if request.method in ['HEAD', 'OPTIONS', 'GET']:
+            raise ParamErrorException(code.API_405_WAGER_PARAMETER)
+        with reversion.create_revision(atomic=True):
+             result = func(self, request, *args, **kwargs)
+             reversion.set_user(request.user)
+             reversion.set_comment(request.method)
+        save_operation(request)
+        return result
+    return wrapper
+
+
+def amount_presentation(user, coin):
+    coin = UserPresentation.objects.filter(user_id=user, coin_id=coin,status=0).aggregate(Sum('amount'))
+    return coin['amount__sum']
+

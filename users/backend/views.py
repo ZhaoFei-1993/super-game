@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView
+from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView, ListCreateAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User
+from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin
 from rest_framework import status
 import jsonfield
 from base import code as error_code
@@ -12,6 +12,8 @@ import json
 import rest_framework_filters as filters
 from utils.filter import JsonFilter
 from base import backend
+from django.http import JsonResponse
+from utils.functions import reversion_Decorator
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -30,7 +32,7 @@ class CoinLockListView(CreateAPIView, FormatListAPIView):
     def get_queryset(self):
         return CoinLock.objects.filter(is_delete=0)
 
-    @transaction.atomic
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         coins = Coin.objects.get(pk=1)
         admin = self.request.user
@@ -65,6 +67,8 @@ class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         }
         return HttpResponse(json.dumps(data), content_type='text/json')
 
+
+    @reversion_Decorator
     def delete(self, request, *args, **kwargs):
         coinlovk_id = self.request.parser_context['kwargs']['pk']
         coinlock = CoinLock.objects.get(pk=coinlovk_id)
@@ -73,7 +77,7 @@ class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
-    @transaction.atomic
+    @reversion_Decorator
     def update(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         coinlock = CoinLock.objects.get(pk=id, is_delete=0)
@@ -99,7 +103,7 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
     def get_queryset(self):
         return Coin.objects.all()
 
-    @transaction.atomic
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         admin = self.request.user
         exchange_rate = request.data['exchange_rate']
@@ -139,6 +143,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         }
         return HttpResponse(json.dumps(data), content_type='text/json')
 
+    @reversion_Decorator
     def delete(self, request, *args, **kwargs):
         coin_id = self.request.parser_context['kwargs']['pk']
         coin = Coin.objects.get(pk=coin_id)
@@ -147,7 +152,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
-    @transaction.atomic
+    @reversion_Decorator
     def update(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         coin = Coin.objects.get(pk=id)
@@ -204,7 +209,7 @@ class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     serializer_class = serializers.UserSerializer
     queryset = User.objects.all()
 
-    @transaction.atomic
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         user = User.objects.get(pk=id)
@@ -215,6 +220,7 @@ class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
+    @reversion_Decorator
     def delete(self, request, *args, **kwargs):
         coinlovk_id = self.request.parser_context['kwargs']['pk']
         coinlock = CoinLock.objects.get(pk=coinlovk_id)
@@ -223,7 +229,7 @@ class UserListDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
-    @transaction.atomic
+    @reversion_Decorator
     def update(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         coins = UserCoin.objects.filter(user_id=id)
@@ -245,3 +251,89 @@ class LoginView(CreateAPIView):
     """
     后台管理员登录
     """
+
+
+class CoinDetailView(ListAPIView, DestroyAPIView):
+    """
+    用户资金明细
+    """
+    serializer_class = serializers.CoinDetailSerializer
+
+    def get_queryset(self):
+        if "uuid" not in self.request.query_params:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        uuid = self.request.query_params.get("uuid")
+        query_s = CoinDetail.objects.filter(user_id=uuid, is_delete=0)
+        return query_s
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        count_item = results.data.get('count')
+        items = results.data.get('results')
+        list_t = Coin.objects.filter(admin=1).values('id', 'name').distinct()
+        coin_list = {}
+        for x in list_t:
+            coin_list[x['name']] = x['id']
+        return JsonResponse({"results": items, "choice": coin_list, "count":count_item}, status=status.HTTP_200_OK)
+
+
+class CoinRewardAndValueView(ListCreateAPIView, UpdateAPIView):
+    """
+    币允许投注额及积分兑换比例
+    """
+    queryset = CoinValue.objects.all()
+    serializer_class = serializers.CoinValueRewardSerializer
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        list_t = Coin.objects.filter(pk__gt=1).values('id', 'name').distinct()
+        coin_list = {}
+        for x in list_t:
+            coin_list[x['name']] = x['id']
+        return JsonResponse({"results": items, "choice": coin_list}, status=status.HTTP_200_OK)
+
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        coin = int(request.data['coin'])
+        options = eval(request.data['options'])
+        ratio = request.data['ratio']
+        for x in options.keys():
+            if CoinValue.objects.filter(coin_id=coin, value_index=x).exists():
+                return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},status=status.HTTP_400_BAD_REQUEST)
+            coin_value = CoinValue()
+            coin_value.coin_id = coin
+            coin_value.value_index = int(x)
+            coin_value.value = options[x]
+            coin_value.save()
+        if RewardCoin.objects.filter(coin_id=coin).exists():
+            return JsonResponse({"ERROR": "RewardCoin Object Exist,You Can Modify It!"}, status=status.HTTP_400_BAD_REQUEST)
+        reward_coin = RewardCoin()
+        reward_coin.coin_id = coin
+        reward_coin.admin_id=1
+        reward_coin.value_ratio = int(ratio)
+        reward_coin.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+    @reversion_Decorator
+    def patch(self, request, *args, **kwargs):
+        coin = int(request.data['coin'])
+        if not RewardCoin.objects.filter(coin_id=coin).exists() and not CoinValue.objects.filter(coin_id=coin).exists():
+             return JsonResponse({"ERROR": "Coin Items Don't Exist,You Need Create It First"},status=status.HTTP_400_BAD_REQUEST)
+        for x in request.data.items():
+            if x[0]=='options':
+                values = eval(x[1])
+                for vv in values.keys():
+                    coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
+                    coin_value.value = values[vv]
+                    coin_value.save()
+            if x[0]=='ratio':
+                reward = RewardCoin.objects.get(coin_id=coin)
+                reward.value_ratio = int(x[1])
+                reward.save()
+        return JsonResponse({},status=status.HTTP_200_OK)
+
+
+

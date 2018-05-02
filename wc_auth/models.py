@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
+from reversion.models import Version, Revision
+import reversion
 
-
+@reversion.register()
 class Role(models.Model):
     """
     后台角色
@@ -37,6 +39,7 @@ class PermissionManager(models.Manager):
         return permissions
 
 
+@reversion.register()
 class Permission(models.Model):
     """
     后台权限
@@ -74,7 +77,7 @@ class AdminManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
+@reversion.register()
 class Admin(AbstractBaseUser):
     """
     后台管理员
@@ -90,14 +93,11 @@ class Admin(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-
-class AdminOperating(models.Model):
-    original = models.CharField(verbose_name="修改前的数据", max_length=255, default="")
-    new_data = models.CharField(verbose_name="修改后的数据", max_length=255, default="")
-    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    admin_name = models.CharField(verbose_name="管理员昵称", max_length=25)
-    admin = models.ForeignKey(Admin, related_name='管理员ID', on_delete=models.CASCADE)
+class Admin_Operation(models.Model):
+    pre_version = models.ForeignKey(Version, related_name='pre_version', on_delete=models.CASCADE, default='')
+    mod_version = models.ForeignKey(Version, related_name='mod_version', on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['-id']
-        verbose_name = verbose_name_plural = "管理员操作明细表"
+        verbose_name = verbose_name_plural = "管理员操作记录"

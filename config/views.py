@@ -14,11 +14,16 @@ from base.exceptions import ParamErrorException
 import base.code as error_code
 from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from users.models import UserSettingOthors, User, DailySettings, Coin
-
+from django.db import transaction
+import reversion
+from django.contrib import admin
+from utils.functions import  reversion_Decorator
+admin.autodiscover()
 # from base.log_operation import LogOperation
 
 # from wcc_admin.models import SysLog
 # from rest_framework.generics import ListCreateAPIView
+
 
 
 class ConfigListView(ListCreateAPIView):
@@ -33,6 +38,7 @@ class ConfigListView(ListCreateAPIView):
     serializer_class = ConfigSerializer
     pagination_class = LargeResultsSetPagination
 
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         # TODO: add insert one logic
         request_data = request.data
@@ -91,6 +97,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         else:
             return super().list(request, *args, **kwargs)
 
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         values = value_judge(request, 'files', 'is_update', 'version')
         if values == 0:
@@ -99,50 +106,58 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         is_update = request.data.get('is_update')
         version = request.data.get('version')
         config = AndroidVersion()
-        version_exist = AndroidVersion.objects.filter(version__contains=str(version))
+        version_exist = AndroidVersion.objects.filter(version__contains=str(version), is_delete=True)
         if version_exist:
             return JsonResponse({"Error":"Version Existed!"},status=status.HTTP_400_BAD_REQUEST)
         else:
             config.version = version
-        config.version = version
         config.is_update = is_update
         config.upload_url = os.path.join(BASE_DIR, "uploads/", files)
         config.save()
         return self.response({"code": 0})
 
+
+    @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         index = request.data.get('id')
         if not index:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         item = AndroidVersion.objects.get(id=index)
-        if "files" in request.data:
-            files = request.data.get("files")
-            if files:
-                files = files.split('\\')[-1]
-                item.upload_url = os.path.join(BASE_DIR, "uploads/", files)
-        if "version" in request.data:
-            version = request.data.get('version')
-            version_exist = AndroidVersion.objects.filter(version__contains=str(version))
-            if version_exist:
-                return JsonResponse({'Error': "Version Exist!"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                item.version = version
-        if "is_update" in request.data:
-            item.is_update = int(request.data.get('is_update'))
-        item.save()
+        with reversion.create_revision():
+            if "files" in request.data:
+                files = request.data.get("files")
+                if files:
+                    files = files.split('\\')[-1]
+                    item.upload_url = os.path.join(BASE_DIR, "uploads/", files)
+            if "version" in request.data:
+                version = request.data.get('version')
+                version_exist = AndroidVersion.objects.filter(version__contains=str(version), is_delete=True)
+                if version_exist:
+                    return JsonResponse({'Error': "Version Exist!"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    item.version = version
+            if "is_update" in request.data:
+                item.is_update = int(request.data.get('is_update'))
+            item.save()
+            reversion.set_comment(request.method)
+            reversion.set_user(request.user)
         return self.response({"code": 0})
 
+    @reversion_Decorator
     def delete(self, request, *args, **kwargs):
-        ad_id = request.data.get("id")
-        if not ad_id:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        item = AndroidVersion.objects.get(id=ad_id)
-        item.is_delete = 1
-        item.save()
+        with reversion.create_revision():
+            ad_id = request.data.get("id")
+            if not ad_id:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            item = AndroidVersion.objects.get(id=ad_id)
+            item.is_delete = 1
+            item.save()
+            reversion.set_comment(request.method)
+            reversion.set_user(request.user)
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
-class AppSetting(ListCreateAPIView):
+class AppSetting(RetrieveUpdateDestroyAPIView):
     """
     系统设置->App设置
     """
@@ -170,26 +185,35 @@ class AppSetting(ListCreateAPIView):
             }
         return JsonResponse(data,status=status.HTTP_200_OK)
 
-
+    @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         if "reg_type" not in request.data:
             return JsonResponse({"Error":"ParamError"},status=status.HTTP_400_BAD_REQUEST)
         r_type = int(request.data.pop('reg_type'))
         try:
-            others=UserSettingOthors.objects.filter(reg_type=r_type)
+            others=UserSettingOthors.objects.get(reg_type=r_type)
         except Exception:
             raise ParamErrorException
         fileds = ["system_maintenance","about", "helps", "sv_contractus", "pv_contractus"]
         for key,value in request.data.items():
             if key not in fileds:
                 return JsonResponse({"Error":"Not Allow Field"},status=status.HTTP_400_BAD_REQUEST)
+            if  key== "system_maintenance":
+                sm = Config.objects.get(key='system_maintenance')
+                sm.configs = int(value)
+                sm.save()
             else:
-                item = {key: value}
-                if key == "system_maintenance":
-                    Config.objects.filter(key='system_maintenance').update(configs=int(value))
+                if key == 'about':
+                    others.about = value
+                elif key == 'helps':
+                    others.helps = value
+                elif key =='sv_contractus':
+                    others.sv_contractus = value
                 else:
-                    others.update(**item)
+                    others.pv_contractus = value
+                others.save()
         return JsonResponse({},status=status.HTTP_200_OK)
+
 
 
 class DailySettingView(ListCreateAPIView):
@@ -210,6 +234,7 @@ class DailySettingView(ListCreateAPIView):
         return JsonResponse({"results":items,"coin_list":coin_list},status=status.HTTP_200_OK)
         # return self.response({"status":status.HTTP_200_OK,"results":data})
 
+    @reversion_Decorator
     def post(self, request, *args, **kwargs):
         if request.data:
             items = []
@@ -221,11 +246,11 @@ class DailySettingView(ListCreateAPIView):
                 x.pop('coin_name')
                 x['admin_id']=1
                 items.append(x)
-
             DailySettings.objects.filter(coin_id=int(items[0]['coin_id'])).delete()
             for item in items:
                 new_item=DailySettings(**item)
                 new_item.save()
             return JsonResponse({},status=status.HTTP_200_OK)
+
 
 

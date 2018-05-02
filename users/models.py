@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
+import reversion
 
 
 class UserManager(BaseUserManager):
@@ -9,7 +10,7 @@ class UserManager(BaseUserManager):
     用户操作
     """
 
-
+@reversion.register()
 class User(AbstractBaseUser):
     WECHAT = 1
     IOS = 2
@@ -67,7 +68,7 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-
+@reversion.register()
 class Coin(models.Model):
     GGTC = 1
     ETH = 2
@@ -83,6 +84,7 @@ class Coin(models.Model):
     name = models.CharField(verbose_name="货币名称", max_length=255)
     type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
     exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值不为1时", default=0)
+    # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
     is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -91,7 +93,7 @@ class Coin(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币种类表"
 
-
+@reversion.register()
 class RewardCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     value_ratio = models.IntegerField(verbose_name="兑换多少积分", default=0)
@@ -103,8 +105,10 @@ class RewardCoin(models.Model):
         verbose_name = verbose_name_plural = "奖励兑换表"
 
 
+@reversion.register()
 class CoinValue(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    value_index = models.IntegerField(verbose_name='投注值序号',default=1)
     value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=1, default=0.0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
@@ -112,7 +116,7 @@ class CoinValue(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币投注值表"
 
-
+@reversion.register()
 class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -125,7 +129,7 @@ class UserCoin(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户代币余额表"
 
-
+@reversion.register()
 class CoinDetail(models.Model):
     RECHARGE = 1
     REALISATION = 2
@@ -146,8 +150,8 @@ class CoinDetail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     amount = models.CharField(verbose_name="操作数额", max_length=255)
-    rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.00)
-    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)
+    rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
+    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1,default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
 
@@ -155,7 +159,7 @@ class CoinDetail(models.Model):
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "用户资金明细"
 
-
+@reversion.register()
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.000)
@@ -170,7 +174,7 @@ class CoinLock(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "代币锁定配置"
 
-
+@reversion.register()
 class UserCoinLock(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
@@ -183,7 +187,7 @@ class UserCoinLock(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户货币锁定记录表"
 
-
+@reversion.register()
 class DailySettings(models.Model):
     days = models.IntegerField(verbose_name="签到天数", default=1)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -196,7 +200,7 @@ class DailySettings(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "签到配置表"
 
-
+@reversion.register()
 class DailyLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number = models.IntegerField(verbose_name="连续签到天数", default=0)
@@ -207,7 +211,7 @@ class DailyLog(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户签到记录表"
 
-
+@reversion.register()
 class Message(models.Model):
     GLOBAL = 1
     PUBLIC = 2
@@ -226,7 +230,7 @@ class Message(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "消息内容表"
 
-
+@reversion.register()
 class UserMessage(models.Model):
     UNREAD = 0
     READ = 1
@@ -245,33 +249,36 @@ class UserMessage(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户消息表"
 
-
+@reversion.register()
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
+    address = models.CharField(verbose_name="充值地址", max_length=255, default="")
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户充值记录"
 
-
+@reversion.register()
 class UserPresentation(models.Model):
     APPLICATION = 0
     ADOPT = 1
     REFUSE = 2
 
     TYPE_CHOICE = (
-        (APPLICATION, "申请中"),
-        (ADOPT, "已处理"),
-        (REFUSE, "已拒绝"),
+        (APPLICATION, "提现申请中"),
+        (ADOPT, "提现成功"),
+        (REFUSE, "提现失败"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="提现数量", max_digits=10, decimal_places=3, default=0.000)
     rest = models.DecimalField(verbose_name='剩余数量', max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
+    address_name = models.CharField(verbose_name="提现地址名称", max_length=255, default="")
     status = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=APPLICATION)
     feedback = models.CharField(verbose_name="拒绝提现理由", max_length=255, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -281,7 +288,7 @@ class UserPresentation(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户提现记录表"
 
-
+@reversion.register()
 class UserSettingOthors(models.Model):
     about = models.CharField(verbose_name="关于", max_length=150, default="")  # 序号2
     helps = models.TextField(verbose_name="帮助")  # 序号3
@@ -292,5 +299,4 @@ class UserSettingOthors(models.Model):
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     class Meta:
-        ordering = ['-id']
         verbose_name = verbose_name_plural = "用户设置其他"
