@@ -1259,8 +1259,9 @@ class CoinOperateView(FormatListAPIView):
     serializer_class = CoinOperateSerializer
 
     def get_queryset(self):
+        coin = int(self.kwargs['coin'])
         uuid = self.request.user.id
-        query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1,2]).order_by('-created_at')
+        query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1,2], coin_id=coin).order_by('-created_at')
         return query_s
 
 
@@ -1269,7 +1270,8 @@ class CoinOperateDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        item = CoinDetail.objects.get(id=pk)
+        coin = int(kwargs['coin'])
+        item = CoinDetail.objects.get(id=pk, coin_id=coin)
         serialize = CoinOperateSerializer(item)
         return self.response({'code':0,'data':serialize.data})
 
