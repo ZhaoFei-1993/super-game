@@ -56,7 +56,7 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
-    victory = models.DecimalField(verbose_name="竞猜胜率", max_digits=3, decimal_places=1, default=0.0)
+    integral = models.IntegerField(verbose_name='积分', default=0)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -75,7 +75,7 @@ class Coin(models.Model):
     BTC = 3
     LTC = 4
     TYPE_CHOICE = (
-        (GGTC, "积分"),
+        (GGTC, "GGTC"),
         (ETH, "METH"),
         (BTC, "MBTC"),
         (LTC, "MLTC"),
@@ -148,7 +148,7 @@ class CoinDetail(models.Model):
         (OTHER, "系统增加"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255)
     amount = models.CharField(verbose_name="操作数额", max_length=255)
     rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
     sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1,default=BETS)

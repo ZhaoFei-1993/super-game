@@ -129,6 +129,7 @@ class RecordsListView(ListCreateAPIView):
         for fav in Progress:
             # record = fav.get('pk')
             # quiz = fav.get('quiz_id')
+            pecific_dates = fav.get('created_at')[0].get('years')
             pecific_date = fav.get('created_at')[0].get('year')
             # pecific_time = fav.get('created_at')[0].get('time')
             # host_team = fav.get('host_team')
@@ -147,6 +148,7 @@ class RecordsListView(ListCreateAPIView):
 
             if tmp == pecific_date:
                 pecific_date = ""
+                pecific_dates = ""
             else:
                 tmp = pecific_date
 
@@ -162,6 +164,7 @@ class RecordsListView(ListCreateAPIView):
                 'host_team':fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
                 'earn_coin': fav.get('earn_coin'),
+                'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
                 'my_option': fav.get('my_option')[0].get('my_option'),

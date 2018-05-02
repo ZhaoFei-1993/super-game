@@ -109,7 +109,7 @@ class UserRegister(object):
                 if userbalance == 0:
                     usercoin = UserCoin()
                     usercoin.user_id = user.id
-                    usercoin.coin_id = i.id
+                    usercoin.coin_id = i.ids
                     usercoin.is_opt = False
                     usercoin.save()
         return token
@@ -266,14 +266,15 @@ class InfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = request.user
-        roomquiz_id = int(request.GET.get('roomquiz_id'))
+        roomquiz_id = kwargs['roomquiz_id']
+        # roomquiz_id = request.GET.get('roomquiz_id')
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
         ggtc_locked = amount(user_id)  # 该用户锁定的金额
-        clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         user_coin = usercoin.balance
@@ -285,8 +286,8 @@ class InfoView(ListAPIView):
             'avatar': items[0]["avatar"],
             'usercoin': user_coin,
             'usercoin_avatar': usercoin_avatar,
-            'ggtc': items[0]["ggtc"],
-            'ggtc_avatar': items[0]["ggtc_avatar"],
+            'ggtc': items[0]["integral"],
+            # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'ggtc_locked': ggtc_locked,
@@ -411,13 +412,13 @@ class RankingView(ListAPIView):
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.all().order_by('-victory', 'id')
+        return User.objects.all().order_by('-integral', 'id')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_arr = User.objects.all().values_list('id').order_by('-victory', 'id')[:100]
+        user_arr = User.objects.all().values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         index = 0
         for i in user_arr:
@@ -426,14 +427,15 @@ class RankingView(ListAPIView):
                 my_ran = index
         avatar = user.avatar
         nickname = user.nickname
-        win_ratio = user.victory
-        if user.victory == 0:
-            win_ratio = 0
+        # win_ratio = user.victory
+        # if user.victory == 0:
+        #     win_ratio = 0
+        # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=1)
         my_ranking = {
             "id": user.id,
             "avatar": avatar,
             "nickname": nickname,
-            "win_ratio": str(win_ratio) + "%",
+            "win_ratio": user.integral,
             "ranking": my_ran
         }
         list = []
@@ -449,7 +451,7 @@ class RankingView(ListAPIView):
                 'user_id': user_id,
                 'avatar': fav.get('avatar'),
                 'nickname': fav.get('nickname'),
-                'win_ratio': fav.get('win_ratio'),
+                'win_ratio': int(fav.get('integral')),
                 'ranking': i,
             })
             list.sort(key=lambda x: x["ranking"])
@@ -648,16 +650,16 @@ class DailySignListView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
-        usercoin.balance += rewards
-        usercoin.save()
+        # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
+        user.integral += rewards
+        user.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin = usercoin.coin
+        coin_detail.coin = "积分"
         coin_detail.amount = '+'+str(rewards)
-        coin_detail.rest = usercoin.balance
+        coin_detail.rest = user.balance
         coin_detail.sources = 7
         coin_detail.save()
         print("daily===================", daily.number)
