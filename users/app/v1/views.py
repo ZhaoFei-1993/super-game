@@ -657,7 +657,7 @@ class DailySignListView(ListCreateAPIView):
         daily.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin = "积分"
+        coin_detail.coin_name = "积分"
         coin_detail.amount = '+'+str(rewards)
         coin_detail.rest = user.balance
         coin_detail.sources = 7
