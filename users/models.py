@@ -70,20 +70,18 @@ class User(AbstractBaseUser):
 
 @reversion.register()
 class Coin(models.Model):
-    GGTC = 1
-    ETH = 2
-    BTC = 3
-    LTC = 4
+    ETH = 1
+    BTC = 2
+    LTC = 3
     TYPE_CHOICE = (
-        (GGTC, "GGTC"),
         (ETH, "METH"),
         (BTC, "MBTC"),
         (LTC, "MLTC"),
     )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
-    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=GGTC)
-    exchange_rate = models.IntegerField(verbose_name="兑换比例，当type值不为1时", default=0)
+    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
+    exchange_rate = models.IntegerField(verbose_name="兑换比例", default=0)
     # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
     is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
@@ -148,7 +146,7 @@ class CoinDetail(models.Model):
         (OTHER, "系统增加"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coin_name = models.CharField(verbose_name="货币名称", max_length=255)
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255,default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
     rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
     sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1,default=BETS)
@@ -190,7 +188,7 @@ class UserCoinLock(models.Model):
 @reversion.register()
 class DailySettings(models.Model):
     days = models.IntegerField(verbose_name="签到天数", default=1)
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    coin_name = models.CharField(verbose_name="签到天数", max_length=5, default='GGTC')
     rewards = models.IntegerField(verbose_name="奖励数", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     days_delta = models.IntegerField(verbose_name="间隔天数", default=1)

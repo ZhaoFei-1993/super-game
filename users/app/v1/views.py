@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, \
-    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize, CoinOperateSerializer
+    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize, \
+    CoinOperateSerializer
 from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from quiz.models import Quiz
@@ -166,7 +167,7 @@ class UserRegister(object):
                 usercoin.is_opt = True
                 usercoin.address = 1008611
             if i.name == gsg:
-                usercoin.is_bet =True
+                usercoin.is_bet = True
                 usercoin.address = 0
             usercoin.save()
 
@@ -195,7 +196,7 @@ class LoginView(CreateAPIView):
         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
         if 'avatar' in request.data:
             avatar = request.data.get('avatar')
-        type = request.data.get('type')         # 1 注册          2 登录
+        type = request.data.get('type')  # 1 注册          2 登录
         regex = re.compile(r'^(1|2)$')
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
@@ -207,7 +208,8 @@ class LoginView(CreateAPIView):
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
                 nickname = request.data.get('nickname')
-                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
+                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
+                                    password=password)
 
             else:
                 code = request.data.get('code')
@@ -219,7 +221,8 @@ class LoginView(CreateAPIView):
                 nickname = randomnickname()
                 password = request.data.get('password')
                 print('password = ', password)
-                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar, password=password)
+                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
+                                    password=password)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -602,12 +605,12 @@ class DailyListView(ListAPIView):
         data = []
         for list in items:
             data.append({
-                    "id": list["id"],
-                    "days": list["days"],
-                    "rewards": list["rewards"],
-                    "is_sign": list["is_sign"],
-                    "is_selected": list["is_selected"]
-                })
+                "id": list["id"],
+                "days": list["days"],
+                "rewards": list["rewards"],
+                "is_sign": list["is_sign"],
+                "is_selected": list["is_selected"]
+            })
 
         return self.response({'code': 0, 'data': data})
 
@@ -623,7 +626,7 @@ class DailySignListView(ListCreateAPIView):
         sign = sign_confirmation(user_id)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime("%Y%m%d")
-        yesterday_format = str(yesterday_format)+"000000"
+        yesterday_format = str(yesterday_format) + "000000"
         if sign == 1:
             raise ParamErrorException(error_code.API_30201_ALREADY_SING)
         try:
@@ -658,8 +661,8 @@ class DailySignListView(ListCreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = "积分"
-        coin_detail.amount = '+'+str(rewards)
-        coin_detail.rest = user.balance
+        coin_detail.amount = '+' + str(rewards)
+        coin_detail.rest = user.integral
         coin_detail.sources = 7
         coin_detail.save()
         print("daily===================", daily.number)
@@ -754,27 +757,26 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user,coin_id__gt=1)
+        list = UserCoin.objects.filter(user_id=user)
         return list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
+        user = request.user.id
         Progress = results.data.get('results')
         data = []
+        user_info = User.objects.get(id=user)
         for list in Progress:
             data.append({
-                "id": list["id"],
-                'name': list["name"],
                 'icon': list["icon"],
-                'total': list["total"],
-                'coin_name':list["coin_name"],
-                'coin':list["coin"],
-                'exchange_rate': list["exchange_rate"],
-                'locked_coin':list['locked_coin'],
-                'address': list["address"],
+                'coin_name': list["coin_name"],
+                'coin': list["coin"],
+                'balance': list['balance'],
+                'locked_coin': list['locked_coin'],
                 'recent_address': list['recent_address']
             })
-        return self.response({'code': 0, 'data': data})
+        return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
+                              'user_integral': user_info.integral, 'data': data})
 
 
 # class AssetLockView(CreateAPIView):
@@ -837,7 +839,7 @@ class UserPresentationView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'p_address','p_address_name', 'p_amount', 'c_id')
+        value = value_judge(request, 'p_address', 'p_address_name', 'p_amount', 'c_id')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -845,10 +847,7 @@ class UserPresentationView(CreateAPIView):
         # passcode = request.data.get('passcode')
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
-        c_id = request.data.get('c_id')  # p_type需要大于1,因为1为GGTC币种
-        if int(c_id) <= 1:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-
+        c_id = request.data.get('c_id')
         try:
             coin = Coin.objects.get(id=int(c_id))
         except Exception:
@@ -865,10 +864,11 @@ class UserPresentationView(CreateAPIView):
         if p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if p_address_name == '' and UserPresentation.objects.filter(user_id=userid,address_name=p_address_name).exists():
+        if p_address_name == '' and UserPresentation.objects.filter(user_id=userid,
+                                                                    address_name=p_address_name).exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        user_coin.balance -= p_amount
+        user_coin.balance -= Decimal(p_amount)
         user_coin.save()
         presentation = UserPresentation()
         presentation.user = userinfo
@@ -883,8 +883,8 @@ class UserPresentationView(CreateAPIView):
         presentation.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
-        coin_detail.coin = user_coin.coin
-        coin_detail.amount = '-'+str(p_amount)
+        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.amount = '-' + str(p_amount)
         coin_detail.rest = user_coin.balance
         coin_detail.sources = 2
         coin_detail.save()
@@ -902,8 +902,6 @@ class PresentationListView(ListAPIView):
     def get_queryset(self):
         userid = self.request.user.id
         c_id = int(self.kwargs['c_id'])
-        if c_id <= 1:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         try:
             coin = Coin.objects.get(id=c_id)
         except Exception:
@@ -922,8 +920,8 @@ class PresentationListView(ListAPIView):
                     'coin_id': x['coin'],
                     'amount': x['amount'],
                     'rest': x['rest'],
-                    'address':x['address'],
-                    'created_at': x['created_at'].split(' ')[0].replace('-','/')
+                    'address': x['address'],
+                    'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -1063,6 +1061,7 @@ class RegisterView(CreateAPIView):
     """
     用户注册
     """
+
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         telephone = request.data.get('username')
@@ -1228,6 +1227,7 @@ class ForgetPasswordView(ListAPIView):
         content = {'code': 0}
         return self.response(content)
 
+
 class UserRechargeView(ListCreateAPIView):
     """
     用户充值
@@ -1240,41 +1240,57 @@ class UserRechargeView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         recharge = int(request.data.get('recharge'))
         r_address = request.data.get('r_address')
+        if not r_address:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if recharge <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = request.user.id
-        user_coin = UserCoin.objects.get(id=index,user_id=uuid)
+        user_coin = UserCoin.objects.get(id=index, user_id=uuid)
         user_coin.balance += recharge
         user_coin.save()
-        coin_detail = CoinDetail(user_id=uuid, coin_id=index,amount='-'+str(recharge), rest=user_coin.balance, sources=1)
+        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
+                                 rest=user_coin.balance, sources=1)
         coin_detail.save()
-        user_recharge=UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
+        user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
-        return self.response({'code':0})
+        return self.response({'code': 0})
 
 
-class CoinOperateView(FormatListAPIView):
+class CoinOperateView(ListAPIView):
     """
     充值和提现记录
     """
-    permission_classes = (LoginRequired, )
+    permission_classes = (LoginRequired,)
     serializer_class = CoinOperateSerializer
 
     def get_queryset(self):
-        coin = int(self.kwargs['coin'])
+        coin = Coin.objects.get(id=self.kwargs['coin'])
         uuid = self.request.user.id
-        query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1,2], coin_id=coin).order_by('-created_at')
+        query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1, 2], coin_name=coin.name).order_by(
+            '-created_at')
         return query_s
 
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        temp_dict={}
+        for x in items:
+            if x['month'] not in temp_dict:
+                x['top']=True
+                temp_dict[x['month']]=[x,]
+            else:
+                temp_dict[x['month']].append(x)
+        return self.response({'code':0, 'data':temp_dict})
 
 class CoinOperateDetailView(RetrieveAPIView):
-    permission_classes = (LoginRequired, )
+    """
+    充值和提现记录明细
+    """
+    permission_classes = (LoginRequired,)
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        coin = int(kwargs['coin'])
-        item = CoinDetail.objects.get(id=pk, coin_id=coin)
+        coin = Coin.objects.get(id=self.kwargs['coin'])
+        item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
         serialize = CoinOperateSerializer(item)
-        return self.response({'code':0,'data':serialize.data})
-
-
+        return self.response({'code': 0, 'data': serialize.data})

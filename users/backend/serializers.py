@@ -226,5 +226,5 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_reward(obj):
-        reward = RewardCoin.objects.get(coin_id=obj.coin_id)
+        reward = RewardCoin.objects.get(coin_name=obj.coin_name)
         return reward
