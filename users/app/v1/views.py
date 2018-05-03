@@ -26,6 +26,8 @@ from utils.functions import random_salt, sign_confirmation, message_hints, \
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
+from config.models import AndroidVersion
+from config.serializers import AndroidSerializer
 
 
 class UserRegister(object):
@@ -1304,3 +1306,15 @@ class CoinOperateDetailView(RetrieveAPIView):
         item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
+
+
+class VersionUpdateView(RetrieveAPIView):
+
+    def retrieve(self, request, *args, **kwargs):
+        version = request.query_params.get('version')
+        last_version = AndroidVersion.objects.filter(is_delete=0).order_by('-create_at')[0]
+        if last_version.version == version:
+            return self.response({'code': 0, 'is_new': 0})
+        else:
+            serialize = AndroidSerializer(last_version)
+            return self.response({'code': 0, 'is_new': 1, 'data': serialize.data})
