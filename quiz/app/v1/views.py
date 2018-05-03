@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from django.db import transaction
+from decimal import Decimal
 from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
@@ -108,7 +109,7 @@ class RecordsListView(ListCreateAPIView):
             if 'is_end' not in self.request.GET:
                 return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
             else:
-                is_end = self.request.parser_context['kwargs']['is_end']
+                is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
                     return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3),
                                                  user_id=user_id,
@@ -221,7 +222,7 @@ class QuizPushView(ListAPIView):
     serializer_class = QuizPushSerializer
 
     def get_queryset(self):
-        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+        roomquiz_id = self.request.GET.get('roomquiz_id')
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
         record = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=roomquiz_id)
         return record
@@ -254,27 +255,35 @@ class RuleView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = request.user.id
+        roomquiz_id = self.request.GET.get('roomquiz_id')
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
-        type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
-        if type == 0:
-            usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)
-            is_bet = usercoin.id
-            balance = usercoin.balance
-            balance = [str(balance), int(balance)][int(balance) == balance]
-            coin_name = usercoin.coin.name
-            coin_icon = usercoin.coin.icon
-            coin_id = usercoin.coin.pk
-            coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
-        else:
-            usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
-            is_bet = usercoin.id
-            balance = usercoin.balance
-            balance = [str(balance), int(balance)][int(balance) == balance]
-            coin_name = usercoin.coin.name
-            coin_icon = usercoin.coin.icon
-            coin_id = usercoin.coin.pk
-            coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        coin_id = clubinfo.coin.pk
+        usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
+        is_bet = usercoin.id
+        balance = usercoin.balance
+        coin_name = usercoin.coin.name
+        coin_icon = usercoin.coin.icon
+        # type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
+        # if type == 0:
+        #     usercoin = UserCoin.objects.get(user_id=user, coin__type=1, is_opt=0)
+        #     is_bet = usercoin.id
+        #     balance = usercoin.balance
+        #     balance = [str(balance), int(balance)][int(balance) == balance]
+        #     coin_name = usercoin.coin.name
+        #     coin_icon = usercoin.coin.icon
+        #     coin_id = usercoin.coin.pk
+        # coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        # else:
+        #     usercoin = UserCoin.objects.get(user_id=user, is_bet=1)
+        #     is_bet = usercoin.id
+        #     balance = usercoin.balance
+        #     balance = [str(balance), int(balance)][int(balance) == balance]
+        #     coin_name = usercoin.coin.name
+        #     coin_icon = usercoin.coin.icon
+        #     coin_id = usercoin.coin.pk
+        coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
         value1 = [str(value1), int(value1)][int(value1) == value1]
         value2 = coinvalue[1].value
@@ -383,16 +392,16 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
-        coin = 0
+        coins = float(coins)
         try:  # 判断选项ID是否有效
             option_id = int(option)
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        try:  # 判断赌注是否有效
-            coins = int(coins)
-        except Exception:
-            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+        # try:  # 判断赌注是否有效
+        #     coins = int(coins)
+        # except Exception:
+        #     raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
@@ -402,9 +411,8 @@ class BetView(ListCreateAPIView):
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if int(usercoin.balance) < coins:
+        if float(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
-
         options = Option.objects.get(pk=int(option_id))
 
         record = Record()
@@ -412,13 +420,13 @@ class BetView(ListCreateAPIView):
         record.quiz = quiz
         record.rule = options.rule
         record.option = options
-        record.bet = int(coins)
+        record.bet = coins
         # record.earn_coin = int(coins) * int(options.odds)
         record.save()
         earn_coins = int(coins) * options.odds
         # 用户减少金币
 
-        usercoin.balance -= int(coins)
+        usercoin.balance = float(usercoin.balance-Decimal(coins))
         usercoin.save()
         quiz.total_people += 1
         quiz.save()
@@ -489,7 +497,7 @@ class BetView(ListCreateAPIView):
         response = {
             'code': 0,
             'data': {
-                'message': '下注成功，金额总数为 ' + str(coin) + '，预计可得猜币 ' + str(earn_coins),
+                'message': '下注成功，金额总数为 ' + str(coins) + '，预计可得猜币 ' + str(earn_coins),
                 'balance': usercoin.balance
             }
         }

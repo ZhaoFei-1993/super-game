@@ -140,7 +140,8 @@ class Record(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
-    bet = models.IntegerField(verbose_name="下注金额", default=0)
+    # bet = models.IntegerField(verbose_name="下注金额", default=0)
+    bet = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=1, default=0.0)
     earn_coin = models.IntegerField(verbose_name="获得猜币数", default=0)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
 
