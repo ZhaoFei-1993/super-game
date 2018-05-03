@@ -115,7 +115,8 @@ class RecordsListView(ListCreateAPIView):
             if 'is_end' not in self.request.GET:
                 return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
             else:
-                return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3) | Q(quiz__status=4), user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+                return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3) | Q(quiz__status=4), user_id=user_id,
+                                             roomquiz_id=roomquiz_id).order_by('created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -161,7 +162,7 @@ class RecordsListView(ListCreateAPIView):
             #     quiz_id=quiz
             data.append({
                 "quiz_id": fav.get('quiz_id'),
-                'host_team':fav.get('host_team'),
+                'host_team': fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
                 'earn_coin': fav.get('earn_coin'),
                 'pecific_dates': pecific_dates,
@@ -471,8 +472,8 @@ class BetView(ListCreateAPIView):
 
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin_name = usercoin.coin.name
-        coin_detail.amount = '-'+str(coins)
+        coin_detail.coin = usercoin.coin
+        coin_detail.amount = '-' + str(coins)
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()

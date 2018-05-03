@@ -52,10 +52,12 @@ class UserInfoSerializer(serializers.ModelSerializer):
     """
     用户信息
     """
-    telephone = serializers.SerializerMethodField()        # 用户电话
+    telephone = serializers.SerializerMethodField()  # 用户电话
     is_passcode = serializers.SerializerMethodField()
     win_ratio = serializers.SerializerMethodField()
     quiz_push = serializers.SerializerMethodField()
+    is_user = serializers.SerializerMethodField()
+
     # usercoin = serializers.SerializerMethodField()
     # usercoin_avatar = serializers.SerializerMethodField()
     # ggtc_avatar = serializers.SerializerMethodField()
@@ -64,8 +66,8 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-        "id", "nickname", "avatar", "integral", "telephone", "is_passcode",
-        "win_ratio", "quiz_push", "is_sound", "is_notify")
+            "id", "nickname", "avatar", "integral", "telephone", "is_passcode",
+            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
@@ -73,6 +75,14 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return ""
         else:
             return obj.telephone
+
+    def get_is_user(self, obj):  # 电话号码
+        user = self.context['request'].user.id
+        if user == obj.id:
+            is_user = 1
+        else:
+            is_user = 0
+        return is_user
 
     @staticmethod
     def get_is_passcode(obj):  # 密保
@@ -260,7 +270,8 @@ class PresentationSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = UserPresentation
-        fields = ("id", "user", "coin", "amount","address","address_name","rest", "created_at", "updated_at", "status")
+        fields = (
+            "id", "user", "coin", "amount", "address", "address_name", "rest", "created_at", "updated_at", "status")
 
     @staticmethod
     def get_created_at(obj):
@@ -279,7 +290,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
     # total = serializers.SerializerMethodField()  # 总金额
     exchange_rate = serializers.SerializerMethodField()  # 代币数
     coin_value = serializers.SerializerMethodField()  # 投注值
-    locked_coin = serializers.SerializerMethodField() #审核中锁定的总币数
+    locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
     # service_charge = serializers.CharField(source='coin.service_charge')
     recent_address = serializers.SerializerMethodField()
 
@@ -287,7 +298,6 @@ class UserCoinSerialize(serializers.ModelSerializer):
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "recent_address")
-
 
     @staticmethod
     def get_coin_value(obj):
@@ -315,7 +325,6 @@ class UserCoinSerialize(serializers.ModelSerializer):
         title = list.icon
         return title
 
-
     # @staticmethod
     # def get_total(obj):  # 总金额
     #     list = amount_presentation(obj.user.id, obj.coin.id)
@@ -323,21 +332,19 @@ class UserCoinSerialize(serializers.ModelSerializer):
     #     list = [str(list), int(list)][int(list) == list]
     #     return list
 
-
-
     @staticmethod
     def get_exchange_rate(obj):  # 币种交换汇率
         list = obj.coin.exchange_rate
         return list
 
     @staticmethod
-    def get_locked_coin(obj): #提现申请期间锁定币数
+    def get_locked_coin(obj):  # 提现申请期间锁定币数
         return amount_presentation(obj.user.id, obj.coin.id)
 
-
     @staticmethod
-    def get_recent_address(obj): # 最近使用地址
-        recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[:2].values('address', 'address_name')
+    def get_recent_address(obj):  # 最近使用地址
+        recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[
+                 :2].values('address', 'address_name')
         return list(recent)
 
 
@@ -356,7 +363,9 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CoinDetail
-        fields = ('id', 'amount', 'coin_name','icon', 'address', 'address_name', 'status', 'status_code', 'created_at', 'month', 'time')
+        fields = (
+        'id', 'amount', 'coin_name', 'icon', 'address', 'address_name', 'status', 'status_code', 'created_at', 'month',
+        'time')
 
     @staticmethod
     def get_address(obj):
@@ -384,7 +393,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                    coin__name=obj.coin_name).order_by('-created_at')[0]
             status = item.TYPE_CHOICE[int(item.status)][1]
-            return  status
+            return status
         else:
             return '充值成功'
 
@@ -394,7 +403,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                    coin__name=obj.coin_name).order_by('-created_at')[0]
             status = item.TYPE_CHOICE[int(item.status)][0]
-            return  status
+            return status
         else:
             return ''
 

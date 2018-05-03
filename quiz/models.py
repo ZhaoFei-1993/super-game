@@ -6,6 +6,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from users.models import Coin, User
 import reversion
 
+
 @reversion.register()
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
@@ -18,6 +19,7 @@ class Category(MPTTModel):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜分类表"
+
 
 @reversion.register()
 class Quiz(models.Model):
@@ -71,6 +73,7 @@ class Quiz(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜表"
 
+
 @reversion.register()
 class QuizCoin(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
@@ -79,6 +82,7 @@ class QuizCoin(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜所支持的货币种类"
+
 
 @reversion.register()
 class Rule(models.Model):
@@ -103,13 +107,16 @@ class Rule(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
-    home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2, default=0.00)
-    guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2, default=0.00)
+    home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
+                                         default=0.00)
+    guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
+                                          default=0.00)
     estimate_score = models.DecimalField(verbose_name="预估分数，大小分玩法适用", max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜规则表"
+
 
 @reversion.register()
 class Option(models.Model):
@@ -124,6 +131,7 @@ class Option(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项表"
+
 
 @reversion.register()
 class Record(models.Model):

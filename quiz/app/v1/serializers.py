@@ -114,7 +114,8 @@ class RecordSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ("pk", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar", "quiz_category")
+        fields = ("pk", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
+                  "quiz_category")
 
     @staticmethod
     def get_guest_team(obj):  # 副队

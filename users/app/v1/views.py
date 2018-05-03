@@ -141,7 +141,6 @@ class UserRegister(object):
         user.register_type = register_type
         user.avatar = avatar
         user.nickname = nickname
-        user.eth_address = 10086  # ETH地址    暂时默认都是10086
         user.save()
         # 生成签到记录
         try:
@@ -161,14 +160,15 @@ class UserRegister(object):
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
-            gsg = Coin.TYPE_CHOICE[0][1]
-            is_coin = Coin.TYPE_CHOICE[1][1]
-            if i.name == is_coin:
-                usercoin.is_opt = True
-                usercoin.address = 1008611
-            if i.name == gsg:
-                usercoin.is_bet = True
-                usercoin.address = 0
+            # gsg = Coin.TYPE_CHOICE[0][1]
+            # is_coin = Coin.TYPE_CHOICE[1][1]
+            # if i.name == is_coin:
+            #     usercoin.is_opt = True
+            #     usercoin.address = 1008611
+            # if i.name == gsg:
+            #     usercoin.is_bet =True
+            #     usercoin.address = 0
+            usercoin.address = 10086
             usercoin.save()
 
         # 生成客户端加密串
@@ -293,7 +293,7 @@ class InfoView(ListAPIView):
             # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
-            'ggtc_locked': ggtc_locked,
+            # 'ggtc_locked': ggtc_locked,
             'is_message': is_message,
             'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
@@ -454,6 +454,7 @@ class RankingView(ListAPIView):
                 'user_id': user_id,
                 'avatar': fav.get('avatar'),
                 'nickname': fav.get('nickname'),
+                'is_user': fav.get('is_user'),
                 'win_ratio': int(fav.get('integral')),
                 'ranking': i,
             })
@@ -662,6 +663,8 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = "积分"
         coin_detail.amount = '+' + str(rewards)
+        coin_detail.rest = user.balance
+        coin_detail.amount = '+' + str(rewards)
         coin_detail.rest = user.integral
         coin_detail.sources = 7
         coin_detail.save()
@@ -771,7 +774,7 @@ class AssetView(ListAPIView):
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
-                'recharge_address':list['address'],
+                'recharge_address': list['address'],
                 'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
                 'recent_address': list['recent_address']
@@ -1274,19 +1277,20 @@ class CoinOperateView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        temp_dict={}
+        temp_dict = {}
         for x in items:
             if x['month'] not in temp_dict:
-                x['top']=True
-                temp_dict[x['month']]=[x,]
+                x['top'] = True
+                temp_dict[x['month']] = [x, ]
             else:
                 temp_dict[x['month']].append(x)
-        temp_list=[]
+        temp_list = []
         for x in temp_dict:
-            item = {'year':x, 'items':temp_dict[x]}
+            item = {'year': x, 'items': temp_dict[x]}
             temp_list.append(item)
 
-        return self.response({'code':0, 'data':temp_list})
+        return self.response({'code': 0, 'data': temp_list})
+
 
 class CoinOperateDetailView(RetrieveAPIView):
     """

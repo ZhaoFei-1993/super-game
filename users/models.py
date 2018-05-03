@@ -10,6 +10,7 @@ class UserManager(BaseUserManager):
     用户操作
     """
 
+
 @reversion.register()
 class User(AbstractBaseUser):
     WECHAT = 1
@@ -68,12 +69,15 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
+
 @reversion.register()
 class Coin(models.Model):
-    ETH = 1
-    BTC = 2
-    LTC = 3
+    GGTC = 1
+    ETH = 2
+    BTC = 3
+    LTC = 4
     TYPE_CHOICE = (
+        (GGTC, "GGTC"),
         (ETH, "METH"),
         (BTC, "MBTC"),
         (LTC, "MLTC"),
@@ -91,6 +95,7 @@ class Coin(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币种类表"
 
+
 @reversion.register()
 class RewardCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -106,13 +111,14 @@ class RewardCoin(models.Model):
 @reversion.register()
 class CoinValue(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    value_index = models.IntegerField(verbose_name='投注值序号',default=1)
+    value_index = models.IntegerField(verbose_name='投注值序号', default=1)
     value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=1, default=0.0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币投注值表"
+
 
 @reversion.register()
 class UserCoin(models.Model):
@@ -126,6 +132,7 @@ class UserCoin(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户代币余额表"
+
 
 @reversion.register()
 class CoinDetail(models.Model):
@@ -149,13 +156,14 @@ class CoinDetail(models.Model):
     coin_name = models.CharField(verbose_name="货币名称", max_length=255,default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
     rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
-    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1,default=BETS)
+    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = "用户资金明细"
+
 
 @reversion.register()
 class CoinLock(models.Model):
@@ -172,6 +180,7 @@ class CoinLock(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "代币锁定配置"
 
+
 @reversion.register()
 class UserCoinLock(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -185,10 +194,11 @@ class UserCoinLock(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户货币锁定记录表"
 
+
 @reversion.register()
 class DailySettings(models.Model):
     days = models.IntegerField(verbose_name="签到天数", default=1)
-    coin_name = models.CharField(verbose_name="签到天数", max_length=5, default='GGTC')
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, default='')
     rewards = models.IntegerField(verbose_name="奖励数", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     days_delta = models.IntegerField(verbose_name="间隔天数", default=1)
@@ -197,6 +207,7 @@ class DailySettings(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "签到配置表"
+
 
 @reversion.register()
 class DailyLog(models.Model):
@@ -208,6 +219,7 @@ class DailyLog(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户签到记录表"
+
 
 @reversion.register()
 class Message(models.Model):
@@ -228,6 +240,7 @@ class Message(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "消息内容表"
 
+
 @reversion.register()
 class UserMessage(models.Model):
     UNREAD = 0
@@ -247,6 +260,7 @@ class UserMessage(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户消息表"
 
+
 @reversion.register()
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -259,6 +273,7 @@ class UserRecharge(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户充值记录"
+
 
 @reversion.register()
 class UserPresentation(models.Model):
@@ -285,6 +300,7 @@ class UserPresentation(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户提现记录表"
+
 
 @reversion.register()
 class UserSettingOthors(models.Model):
