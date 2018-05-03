@@ -102,21 +102,28 @@ class RecordsListView(ListCreateAPIView):
     serializer_class = RecordSerialize
 
     def get_queryset(self):
-        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-        if 'roomquiz_id' not in self.request.parser_context['kwargs']:
-            pass
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
-        else:
-            self.request.GET.get('user_id')
-        if 'roomquiz_id' not in self.request.parser_context['kwargs']:
-            return Record.objects.filter(user_id=user_id).order_by('created_at')
-        else:
+            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             if 'is_end' not in self.request.GET:
                 return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
             else:
-                return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3) | Q(quiz__status=4), user_id=user_id,
-                                             roomquiz_id=roomquiz_id).order_by('created_at')
+                is_end = self.request.parser_context['kwargs']['is_end']
+                if int(is_end) == 1:
+                    return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3),
+                                                 user_id=user_id,
+                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+                else:
+                    return Record.objects.filter(quiz__status=4,
+                                                 user_id=user_id,
+                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+        else:
+            user_id = self.request.GET.get('user_id')
+            return Record.objects.filter(user_id=user_id).order_by('created_at')
+
+        # if 'roomquiz_id' not in self.request.parser_context['kwargs']:
+        #     return Record.objects.filter(user_id=user_id).order_by('created_at')
+        # else:
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -214,8 +221,9 @@ class QuizPushView(ListAPIView):
     serializer_class = QuizPushSerializer
 
     def get_queryset(self):
+        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
-        record = Record.objects.filter(quiz_id=quiz_id)
+        record = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=roomquiz_id)
         return record
 
     def list(self, request, *args, **kwargs):
@@ -405,7 +413,7 @@ class BetView(ListCreateAPIView):
         record.rule = options.rule
         record.option = options
         record.bet = int(coins)
-        record.earn_coin = int(coins) * int(options.odds)
+        # record.earn_coin = int(coins) * int(options.odds)
         record.save()
         earn_coins = int(coins) * options.odds
         # 用户减少金币

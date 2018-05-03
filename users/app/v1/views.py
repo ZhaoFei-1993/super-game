@@ -26,6 +26,8 @@ from utils.functions import random_salt, sign_confirmation, message_hints, \
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
+from config.models import AndroidVersion
+from config.serializers import AndroidSerializer
 
 
 class UserRegister(object):
@@ -276,7 +278,7 @@ class InfoView(ListAPIView):
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        ggtc_locked = amount(user_id)  # 该用户锁定的金额
+        # ggtc_locked = amount(user_id)  # 该用户锁定的金额
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -663,7 +665,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = "积分"
         coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = user.balance
+        coin_detail.rest = user.integral
         coin_detail.amount = '+' + str(rewards)
         coin_detail.rest = user.integral
         coin_detail.sources = 7
@@ -1304,3 +1306,15 @@ class CoinOperateDetailView(RetrieveAPIView):
         item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
+
+
+class VersionUpdateView(RetrieveAPIView):
+
+    def retrieve(self, request, *args, **kwargs):
+        version = request.query_params.get('version')
+        last_version = AndroidVersion.objects.filter(is_delete=0).order_by('-create_at')[0]
+        if last_version.version == version:
+            return self.response({'code': 0, 'is_new': 0})
+        else:
+            serialize = AndroidSerializer(last_version)
+            return self.response({'code': 0, 'is_new': 1, 'data': serialize.data})
