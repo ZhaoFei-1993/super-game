@@ -771,6 +771,7 @@ class AssetView(ListAPIView):
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
+                'recharge_address':list['address'],
                 'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
                 'recent_address': list['recent_address']
@@ -1280,7 +1281,12 @@ class CoinOperateView(ListAPIView):
                 temp_dict[x['month']]=[x,]
             else:
                 temp_dict[x['month']].append(x)
-        return self.response({'code':0, 'data':temp_dict})
+        temp_list=[]
+        for x in temp_dict:
+            item = {'year':x, 'items':temp_dict[x]}
+            temp_list.append(item)
+
+        return self.response({'code':0, 'data':temp_list})
 
 class CoinOperateDetailView(RetrieveAPIView):
     """
