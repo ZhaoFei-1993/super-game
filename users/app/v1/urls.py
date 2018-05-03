@@ -44,26 +44,27 @@ urlpatterns = [
     path('message/all-read/', views.AllreadView.as_view(), name="app-v1-user-all-read"),
     # 列出资产情况
     path('asset/', views.AssetView.as_view(), name="app-v1-user-asset"),
-    # 资产锁定
-    # path('asset/lock/', views.AssetLockView.as_view(), name="app-v1-user-asset-lock"),
     # 提交提现申请
     path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),
     # ETH提现记录表
     path('asset/list_pre/<int:c_id>/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
-    # ETH提现审核
+    # 用户设置其他(index支持1-5)
+    path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
+    # 用户充值
+    path('recharge/<int:index>/', views.UserRechargeView.as_view(), name='app-v1-user-recharge'),
+    # 用户币种充值和提现操作记录
+    path('asset/coin_operate/<int:coin>/', views.CoinOperateView.as_view(), name='app-v1-usre-asset-coin_operate'),
+    # 操作记录明细
+    path('asset/coin_operate/<int:coin>/<int:pk>/', views.CoinOperateDetailView.as_view(),
+         name='app-v1-usre-asset-coin_operate-detail'),
+    # # get:币种切换列表   post：币种切换
+    # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
+    # # 资产锁定
+    # path('asset/lock/', views.AssetLockView.as_view(), name="app-v1-user-asset-lock"),
+    # # ETH提现审核
     # path('asset/review/<int:c_id>/', views.ReviewListView.as_view(), name='app-v1-user-asset-review'),
     # # GGTC锁定记录
     # path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
     # # GGTC分红表
     # path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
-    # 用户设置其他(index支持1-5)
-    path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
-    # get:币种切换列表   post：币种切换
-    path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
-    # 用户充值
-    path('recharge/<int:index>/',views.UserRechargeView.as_view(), name='app-v1-user-recharge'),
-    # 用户币种充值和提现操作记录
-    path('asset/coin_operate/<int:coin>/',views.CoinOperateView.as_view(), name='app-v1-usre-asset-coin_operate'),
-    # 操作记录明细
-    path('asset/coin_operate/<int:coin>/<int:pk>/',views.CoinOperateDetailView.as_view(), name='app-v1-usre-asset-coin_operate-detail'),
 ]

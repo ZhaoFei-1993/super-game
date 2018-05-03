@@ -276,7 +276,7 @@ class InfoView(ListAPIView):
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        ggtc_locked = amount(user_id)  # 该用户锁定的金额
+        # ggtc_locked = amount(user_id)  # 该用户锁定的金额
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -663,7 +663,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = "积分"
         coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = user.balance
+        coin_detail.rest = user.integral
         coin_detail.amount = '+' + str(rewards)
         coin_detail.rest = user.integral
         coin_detail.sources = 7
