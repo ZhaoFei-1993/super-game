@@ -1247,13 +1247,13 @@ class UserRechargeView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = request.user.id
         user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        user_coin.balance += recharge
+        user_coin.balance += Decimal(recharge)
         user_coin.save()
+        user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
+        user_recharge.save()
         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
                                  rest=user_coin.balance, sources=1)
         coin_detail.save()
-        user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
-        user_recharge.save()
         return self.response({'code': 0})
 
 

@@ -352,24 +352,28 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     month = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
+    icon = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
-        fields = ('id', 'amount', 'coin_name', 'address', 'address_name', 'status', 'status_code', 'created_at', 'month', 'time')
+        fields = ('id', 'amount', 'coin_name','icon', 'address', 'address_name', 'status', 'status_code', 'created_at', 'month', 'time')
 
     @staticmethod
     def get_address(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at, coin__name=obj.coin_name)
+            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
         else:
-            item = UserRecharge.objects.get(user_id=obj.user.id, created_at=obj.created_at, coin__name=obj.coin_name)
+            item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                               coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
 
     @staticmethod
     def get_address_name(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at, coin__name=obj.coin_name)
+            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address_name
         else:
             return ''
@@ -377,7 +381,8 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_status(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at, coin__name=obj.coin_name)
+            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
             status = item.TYPE_CHOICE[int(item.status)][1]
             return  status
         else:
@@ -386,7 +391,8 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_status_code(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.get(user_id=obj.user.id, created_at=obj.created_at, coin__name=obj.coin_name)
+            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
             status = item.TYPE_CHOICE[int(item.status)][0]
             return  status
         else:
@@ -409,3 +415,8 @@ class CoinOperateSerializer(serializers.ModelSerializer):
         create_time = timezone.localtime(obj.created_at)
         created_at = create_time.strftime('%Y-%m-%d %H:%M')
         return created_at
+
+    @staticmethod
+    def get_icon(obj):
+        icons = Coin.objects.get(name=obj.coin_name)
+        return icons.icon
