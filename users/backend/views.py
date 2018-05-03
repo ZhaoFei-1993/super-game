@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
-from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
+from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, \
+    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from django.db import transaction
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin
 from rest_framework import status
@@ -60,13 +61,12 @@ class CoinLockDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coinlock = CoinLock.objects.get(pk=id, is_delete=0)
         data = {
             "period": str(coinlock.period),
-            "profit": str(coinlock.profit*100),
+            "profit": str(coinlock.profit * 100),
             "start_date": coinlock.limit_start,
             "end_date": coinlock.limit_end,
             "url": ''
         }
         return HttpResponse(json.dumps(data), content_type='text/json')
-
 
     @reversion_Decorator
     def delete(self, request, *args, **kwargs):
@@ -274,7 +274,7 @@ class CoinDetailView(ListAPIView, DestroyAPIView):
         coin_list = {}
         for x in list_t:
             coin_list[x['name']] = x['id']
-        return JsonResponse({"results": items, "choice": coin_list, "count":count_item}, status=status.HTTP_200_OK)
+        return JsonResponse({"results": items, "choice": coin_list, "count": count_item}, status=status.HTTP_200_OK)
 
 
 class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
@@ -293,7 +293,6 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
             coin_list[x['name']] = x['id']
         return JsonResponse({"results": items, "choice": coin_list}, status=status.HTTP_200_OK)
 
-
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
@@ -301,39 +300,38 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
         ratio = request.data['ratio']
         for x in options.keys():
             if CoinValue.objects.filter(coin_id=coin, value_index=x).exists():
-                return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},
+                                    status=status.HTTP_400_BAD_REQUEST)
             coin_value = CoinValue()
             coin_value.coin_id = coin
             coin_value.value_index = int(x)
             coin_value.value = options[x]
             coin_value.save()
         if RewardCoin.objects.filter(coin_id=coin).exists():
-            return JsonResponse({"ERROR": "RewardCoin Object Exist,You Can Modify It!"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"ERROR": "RewardCoin Object Exist,You Can Modify It!"},
+                                status=status.HTTP_400_BAD_REQUEST)
         reward_coin = RewardCoin()
         reward_coin.coin_id = coin
-        reward_coin.admin_id=1
+        reward_coin.admin_id = 1
         reward_coin.value_ratio = int(ratio)
         reward_coin.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
-
 
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
         if not RewardCoin.objects.filter(coin_id=coin).exists() and not CoinValue.objects.filter(coin_id=coin).exists():
-             return JsonResponse({"ERROR": "Coin Items Don't Exist,You Need Create It First"},status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"ERROR": "Coin Items Don't Exist,You Need Create It First"},
+                                status=status.HTTP_400_BAD_REQUEST)
         for x in request.data.items():
-            if x[0]=='options':
+            if x[0] == 'options':
                 values = eval(x[1])
                 for vv in values.keys():
                     coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
                     coin_value.value = values[vv]
                     coin_value.save()
-            if x[0]=='ratio':
+            if x[0] == 'ratio':
                 reward = RewardCoin.objects.get(coin_id=coin)
                 reward.value_ratio = int(x[1])
                 reward.save()
-        return JsonResponse({},status=status.HTTP_200_OK)
-
-
-
+        return JsonResponse({}, status=status.HTTP_200_OK)
