@@ -168,7 +168,7 @@ class CoinDetail(models.Model):
 @reversion.register()
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
-    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.000)
+    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.00)
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)

@@ -60,7 +60,7 @@ class Quiz(models.Model):
     guest_team_avatar = models.CharField(verbose_name="客队图标", max_length=255, default='')
     guest_team_score = models.IntegerField(verbose_name="客队分数", default=0)
     match_name = models.CharField(verbose_name="联赛名称", max_length=50, default="")
-    status = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=2, default=1)
+    status = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=2, default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     total_people = models.IntegerField(verbose_name="总参与人数", default=0)
     begin_at = models.DateTimeField(verbose_name="比赛开始时间/截止日期")
