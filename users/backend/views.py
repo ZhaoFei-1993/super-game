@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView, ListCreateAPIView
+from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from django.db import transaction
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin
 from rest_framework import status
@@ -277,17 +277,17 @@ class CoinDetailView(ListAPIView, DestroyAPIView):
         return JsonResponse({"results": items, "choice": coin_list, "count":count_item}, status=status.HTTP_200_OK)
 
 
-class CoinRewardAndValueView(ListCreateAPIView, UpdateAPIView):
+class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
     """
     币允许投注额及积分兑换比例
     """
-    queryset = CoinValue.objects.all()
+    queryset = CoinValue.objects.all().order_by('coin_id')
     serializer_class = serializers.CoinValueRewardSerializer
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        list_t = Coin.objects.filter(pk__gt=1).values('id', 'name').distinct()
+        list_t = Coin.objects.all().values('id', 'name').distinct()
         coin_list = {}
         for x in list_t:
             coin_list[x['name']] = x['id']

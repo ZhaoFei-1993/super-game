@@ -222,9 +222,9 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CoinValue
-        fields = ("id", "coin", "index", "value", "reward")
+        fields = ("id", "coin", "value_index", "value", "reward")
 
     @staticmethod
     def get_reward(obj):
-        reward = RewardCoin.objects.get(coin_name=obj.coin_name)
-        return reward
+        reward = RewardCoin.objects.get(coin__name=obj.coin.name)
+        return reward.value_ratio
