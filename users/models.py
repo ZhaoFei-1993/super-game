@@ -70,6 +70,16 @@ class User(AbstractBaseUser):
         return self.username
 
 
+# @reversion.register()
+# class RewardCoin(models.Model):
+#
+#     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+#
+#     class Meta:
+#         ordering = ['-id']
+#         verbose_name = verbose_name_plural = "用户邀请表"
+
+
 @reversion.register()
 class Coin(models.Model):
     GGTC = 1
@@ -153,7 +163,7 @@ class CoinDetail(models.Model):
         (OTHER, "系统增加"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    coin_name = models.CharField(verbose_name="货币名称", max_length=255,default='')
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
     rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
     sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)

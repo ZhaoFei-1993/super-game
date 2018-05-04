@@ -123,7 +123,6 @@ class RecordSerialize(serializers.ModelSerializer):
             return None
         quiz = Quiz.objects.get(pk=obj.quiz_id)
         host_team = quiz.host_team
-        print("host_team=========================", host_team)
         return host_team
 
     @staticmethod
@@ -132,7 +131,6 @@ class RecordSerialize(serializers.ModelSerializer):
             return None
         quiz = Quiz.objects.get(pk=obj.quiz_id)
         guest_team = quiz.guest_team
-        print("guest_team=======================", guest_team)
         return guest_team
 
     @staticmethod
@@ -146,7 +144,6 @@ class RecordSerialize(serializers.ModelSerializer):
             'year': year,
             'time': time,
         })
-        print("data================================", data)
         return data
 
     @staticmethod
@@ -161,7 +158,6 @@ class RecordSerialize(serializers.ModelSerializer):
             'my_option': my_option,  # 我的选项
             'is_right': option_info.is_right,  # 是否为正确答案
         })
-        print("data================================", data)
         return data
 
     @staticmethod
@@ -171,7 +167,6 @@ class RecordSerialize(serializers.ModelSerializer):
             coin_avatar = club_info.coin.icon
         else:
             coin_avatar = ''
-        print("coin_avatar================================", coin_avatar)
         return coin_avatar
 
     @staticmethod
@@ -182,7 +177,6 @@ class RecordSerialize(serializers.ModelSerializer):
             earn_coin = "猜错"
         else:
             earn_coin = obj.earn_coin
-        print("earn_coin================================", earn_coin)
         return earn_coin
 
     @staticmethod
@@ -190,7 +184,6 @@ class RecordSerialize(serializers.ModelSerializer):
         category_parent = obj.quiz.category.parent_id
         category = Category.objects.get(pk=category_parent)
         category_icon = category.name
-        print("category_icon====================", category_icon)
         return category_icon
 
 
