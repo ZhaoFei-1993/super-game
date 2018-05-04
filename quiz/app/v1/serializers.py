@@ -114,16 +114,8 @@ class RecordSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ("pk", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
+        fields = ("id", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
                   "quiz_category")
-
-    @staticmethod
-    def get_guest_team(obj):  # 副队
-        if obj.quiz_id == 0:
-            return None
-        quiz = Quiz.objects.get(pk=obj.quiz_id)
-        guest_team = quiz.guest_team
-        return guest_team
 
     @staticmethod
     def get_host_team(obj):  # 主队
@@ -131,7 +123,17 @@ class RecordSerialize(serializers.ModelSerializer):
             return None
         quiz = Quiz.objects.get(pk=obj.quiz_id)
         host_team = quiz.host_team
+        print("host_team=========================", host_team)
         return host_team
+
+    @staticmethod
+    def get_guest_team(obj):  # 副队
+        if obj.quiz_id == 0:
+            return None
+        quiz = Quiz.objects.get(pk=obj.quiz_id)
+        guest_team = quiz.guest_team
+        print("guest_team=======================", guest_team)
+        return guest_team
 
     @staticmethod
     def get_created_at(obj):  # 时间
@@ -144,11 +146,13 @@ class RecordSerialize(serializers.ModelSerializer):
             'year': year,
             'time': time,
         })
+        print("data================================", data)
         return data
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        option_info = Option.objects.get(option_id=obj.option_id)
+        print("option_id=================", obj.rule_id)
+        option_info = Option.objects.get(pk=obj.option_id)
         rule_list = Rule.objects.get(pk=option_info.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
         my_option = my_rule + ":" + option_info.option + "/" + str(option_info.odds)
@@ -157,6 +161,7 @@ class RecordSerialize(serializers.ModelSerializer):
             'my_option': my_option,  # 我的选项
             'is_right': option_info.is_right,  # 是否为正确答案
         })
+        print("data================================", data)
         return data
 
     @staticmethod
@@ -166,6 +171,7 @@ class RecordSerialize(serializers.ModelSerializer):
             coin_avatar = club_info.coin.icon
         else:
             coin_avatar = ''
+        print("coin_avatar================================", coin_avatar)
         return coin_avatar
 
     @staticmethod
@@ -176,6 +182,7 @@ class RecordSerialize(serializers.ModelSerializer):
             earn_coin = "猜错"
         else:
             earn_coin = obj.earn_coin
+        print("earn_coin================================", earn_coin)
         return earn_coin
 
     @staticmethod
@@ -183,6 +190,7 @@ class RecordSerialize(serializers.ModelSerializer):
         category_parent = obj.quiz.category.parent_id
         category = Category.objects.get(pk=category_parent)
         category_icon = category.name
+        print("category_icon====================", category_icon)
         return category_icon
 
 
