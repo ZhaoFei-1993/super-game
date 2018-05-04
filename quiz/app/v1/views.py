@@ -105,9 +105,7 @@ class RecordsListView(ListCreateAPIView):
     def get_queryset(self):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
-            print("user_id===================", user_id)
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-            print("roomquiz_id=======================", roomquiz_id)
             if 'is_end' not in self.request.GET:
                 record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
                 return record
@@ -123,7 +121,6 @@ class RecordsListView(ListCreateAPIView):
                                                  roomquiz_id=roomquiz_id).order_by('created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            print("user_id========================", user_id)
             return Record.objects.filter(user_id=user_id).order_by('created_at')
 
         # if 'roomquiz_id' not in self.request.parser_context['kwargs']:
