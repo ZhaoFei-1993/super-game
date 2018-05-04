@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 import json
-import os
 
 from django.http import HttpResponse
 from config.models import Config, Article, AndroidVersion
@@ -15,7 +14,6 @@ from base.exceptions import ParamErrorException
 import base.code as error_code
 from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from users.models import UserSettingOthors, User, DailySettings, Coin
-from django.db import transaction
 import reversion
 from django.contrib import admin
 from utils.functions import reversion_Decorator

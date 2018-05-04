@@ -301,9 +301,8 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_coin_value(obj):
-        coin_id = obj.coin_id
         data = []
-        coin_value = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        coin_value = CoinValue.objects.filter(coin_id=obj.coin.id).order_by('value')
         for i in coin_value:
             s = i.value
             data.append(
@@ -315,13 +314,13 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_coin_name(obj):  # 交易所币名
-        list = Coin.objects.get(pk=obj.coin_id)
+        list = Coin.objects.get(pk=obj.coin.id)
         my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
         return my_rule
 
     @staticmethod
     def get_icon(obj):  # 代币头像
-        list = Coin.objects.get(pk=obj.coin_id)
+        list = Coin.objects.get(pk=obj.coin.id)
         title = list.icon
         return title
 
@@ -406,6 +405,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             return status
         else:
             return ''
+
 
     @staticmethod
     def get_month(obj):
