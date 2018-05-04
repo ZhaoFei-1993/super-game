@@ -148,7 +148,6 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        print("option_id=================", obj.rule_id)
         option_info = Option.objects.get(pk=obj.option_id)
         rule_list = Rule.objects.get(pk=option_info.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
