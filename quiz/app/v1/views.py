@@ -109,7 +109,8 @@ class RecordsListView(ListCreateAPIView):
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             print("roomquiz_id=======================", roomquiz_id)
             if 'is_end' not in self.request.GET:
-                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+                record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+                return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
