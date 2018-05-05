@@ -18,6 +18,7 @@ from wc_auth.models import Permission
 from .models import Image
 from .forms import ImageForm
 from api.settings import BASE_DIR
+from datetime import datetime
 
 
 class ObtainAuthToken(APIView):
@@ -126,7 +127,8 @@ def upload_file(request):
         file_type = files.name.split('.')[-1] in ['apk']
         if not file_type:
             return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
-        save_file = os.path.join(BASE_DIR, 'uploads/files', files.name)
+        date = datetime.now().strftime('%Y%m%d')
+        save_file = os.path.join(BASE_DIR, 'uploads/files',date+'_'+files.name)
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)
