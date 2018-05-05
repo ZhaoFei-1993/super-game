@@ -17,6 +17,7 @@ from users.models import UserSettingOthors, User, DailySettings, Coin
 import reversion
 from django.contrib import admin
 from utils.functions import reversion_Decorator
+from datetime import datetime
 
 admin.autodiscover()
 
@@ -90,7 +91,10 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
     def list(self, request, *args, **kwargs):
         if "id" in request.GET:
             id_x = request.GET.get("id")
-            item = AndroidVersion.objects.get(id=id_x)
+            try:
+                item = AndroidVersion.objects.get(id=id_x)
+            except Exception:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             return self.response({'status': 200, 'results': {'id': item.id,
                                                              'version': item.version,
                                                              'is_update': item.is_update
@@ -113,7 +117,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         else:
             config.version = version
         config.is_update = is_update
-        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", files])
+        date = datetime.now().strftime('%Y%m%d')
+        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date+'_'+files])
         config.save()
         return self.response({"code": 0})
 
@@ -122,38 +127,39 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         index = request.data.get('id')
         if not index:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        item = AndroidVersion.objects.get(id=index)
-        with reversion.create_revision():
-            if "files" in request.data:
-                files = request.data.get("files")
-                if files:
-                    files = files.split('\\')[-1]
-                    item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", files])
-            if "version" in request.data:
-                version = request.data.get('version')
-                version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)
-                if version_exist:
-                    return JsonResponse({'Error': "Version Exist!"}, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    item.version = version
-            if "is_update" in request.data:
-                item.is_update = int(request.data.get('is_update'))
-            item.save()
-            reversion.set_comment(request.method)
-            reversion.set_user(request.user)
+        try:
+            item = AndroidVersion.objects.get(id=index)
+        except item.DoesNotExist:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if "files" in request.data:
+            files = request.data.get("files")
+            if files:
+                files = files.split('\\')[-1]
+                date = datetime.now().strftime('%Y%m%d')
+                item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
+        if "version" in request.data:
+            version = request.data.get('version')
+            version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)
+            if version_exist:
+                return JsonResponse({'Error': "Version Exist!"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                item.version = version
+        if "is_update" in request.data:
+            item.is_update = int(request.data.get('is_update'))
+        item.save()
         return self.response({"code": 0})
 
     @reversion_Decorator
     def delete(self, request, *args, **kwargs):
-        with reversion.create_revision():
-            ad_id = request.data.get("id")
-            if not ad_id:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        ad_id = request.data.get("id")
+        if not ad_id:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
             item = AndroidVersion.objects.get(id=ad_id)
-            item.is_delete = 1
-            item.save()
-            reversion.set_comment(request.method)
-            reversion.set_user(request.user)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        item.is_delete = 1
+        item.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
@@ -169,7 +175,7 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
         try:
             others = UserSettingOthors.objects.get(reg_type=r_type)
         except Exception:
-            raise ParamErrorException
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         seletions = dict()
         for v in User.REGISTER_TYPE:
             seletions[str(v[0])] = v[1]

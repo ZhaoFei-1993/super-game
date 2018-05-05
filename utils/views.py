@@ -18,6 +18,7 @@ from wc_auth.models import Permission
 from .models import Image
 from .forms import ImageForm
 from api.settings import BASE_DIR
+from datetime import datetime
 
 
 class ObtainAuthToken(APIView):
@@ -101,9 +102,9 @@ def upload(request):
                 # print('new_doc.file.url值:' + new_doc.image.url)
 
                 if not settings.DEBUG:
-                    url = url.replace('uploads/', '')
+                    url = url.replace('uploads/images', '')
                 else:
-                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/', '')
+                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/images', '')
 
                 print("上传的图片地址：" + url)
 
@@ -126,7 +127,8 @@ def upload_file(request):
         file_type = files.name.split('.')[-1] in ['apk']
         if not file_type:
             return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
-        save_file = os.path.join(BASE_DIR, 'static', 'upload/apps/versions', files.name)
+        date = datetime.now().strftime('%Y%m%d')
+        save_file = os.path.join(BASE_DIR, 'uploads/files',date+'_'+files.name)
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)

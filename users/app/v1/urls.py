@@ -56,7 +56,7 @@ urlpatterns = [
     path('asset/coin_operate/<int:coin>/', views.CoinOperateView.as_view(), name='app-v1-usre-asset-coin_operate'),
     # 操作记录明细
     path('asset/coin_operate/<int:coin>/<int:pk>/', views.CoinOperateDetailView.as_view(),
-         name='app-v1-usre-asset-coin_operate-detail'),
+         name='app-v1-user-asset-coin_operate-detail'),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定
@@ -68,6 +68,9 @@ urlpatterns = [
     # # GGTC分红表
     # path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
     path('asset/coin_operate/<int:coin>/<int:pk>/',views.CoinOperateDetailView.as_view(), name='app-v1-usre-asset-coin_operate-detail'),
-    #
+    # 安卓版本管理
     path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
+    #更换头像
+    path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
+
 ]

@@ -67,6 +67,7 @@ class ConfigManager(models.Manager):
         configs = self.get_all()
         return configs[key]
 
+
 @reversion.register()
 class Config(models.Model):
     """
@@ -155,6 +156,7 @@ class Config(models.Model):
     def __str__(self):
         return self.key
 
+
 @reversion.register()
 class AndroidVersion(models.Model):
     """
@@ -164,12 +166,11 @@ class AndroidVersion(models.Model):
     upload_url = models.CharField("apk地址", max_length=150)
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
     is_delete = models.BooleanField("是否已删除", max_length=2, default=False)
-    create_at =models.DateTimeField("发布时间", auto_now=True)
+    create_at = models.DateTimeField("发布时间", auto_now=True)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "安卓版本管理"
-
 
 
 # 审核状态
@@ -202,7 +203,6 @@ class Article(models.Model):
     content = models.TextField(verbose_name="文章内容")
     created_at = models.DateTimeField('date published')
     category = models.CharField(verbose_name="状态", choices=CATEGORY_CHOICE, max_length=1, default=ABOUT_WE)
-
 
     class Meta:
         ordering = ['-id']
