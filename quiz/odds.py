@@ -90,10 +90,10 @@ class Game(object):
             supple = pay - self._release_factor * pool
             myprint('Supple:', supple)
 
-#            delta = .01 * supple / float(self._max_wager)
+            #            delta = .01 * supple / float(self._max_wager)
             delta = .01 * max_odds / min_odds
             myprint('delta = ', delta)
-#            odds = self._oddses[i] - delta
+            #            odds = self._oddses[i] - delta
             # 庄家赔钱的选项，通过减少赔率让大家少买
             if supple > self._max_wager:
                 odds = self._oddses[i] - delta
@@ -142,7 +142,7 @@ def game():
     g = Game(0.5, 1000000, 5000, [1.8, 1.8])
     while True:
         g.bet(random.choice([0, 1]), random.randint(0, 5000))
-#        g.bet(0, random.randint(0, 5000))
+        #        g.bet(0, random.randint(0, 5000))
         t = input()
         if t == 'q':
             break
@@ -151,4 +151,3 @@ def game():
 if __name__ == '__main__':
     game2()
 #    game()
-

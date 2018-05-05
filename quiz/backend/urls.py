@@ -9,4 +9,3 @@ urlpatterns = [
     path('quizs/', views.QuizListView.as_view(), name="quiz-list"),
     path('user_quiz/', views.UserQuizView.as_view(), name="quiz-user_quiz"),
 ]
-

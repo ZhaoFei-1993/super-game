@@ -8,4 +8,3 @@ urlpatterns = [
     # 校验手机短信验证码是否有效。
     path('code/verify/', views.SmsVerifyView.as_view(), name="sms-code-verify"),
 ]
-

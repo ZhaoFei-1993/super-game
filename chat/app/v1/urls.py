@@ -6,4 +6,3 @@ urlpatterns = [
     #  俱乐部列表
     path('clublist/', views.ClublistView.as_view(), name="chat-club-list"),
 ]
-

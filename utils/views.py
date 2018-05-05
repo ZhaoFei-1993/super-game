@@ -128,7 +128,7 @@ def upload_file(request):
         if not file_type:
             return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
         date = datetime.now().strftime('%Y%m%d')
-        save_file = os.path.join(BASE_DIR, 'uploads/files',date+'_'+files.name)
+        save_file = os.path.join(BASE_DIR, 'uploads/files', date + '_' + files.name)
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)

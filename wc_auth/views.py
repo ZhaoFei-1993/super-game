@@ -26,6 +26,7 @@ class RoleFilter(filters.FilterSet):
     """
     角色列表筛选
     """
+
     class Meta:
         model = Role
         fields = {
@@ -69,6 +70,7 @@ class QuizFilter(filters.FilterSet):
     """
     竞猜列表筛选
     """
+
     class Meta:
         model = Quiz
         fields = {

@@ -71,7 +71,7 @@ urlpatterns = [
          name='app-v1-usre-asset-coin_operate-detail'),
     #
     path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
-    #更换头像
+    # 更换头像
     path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
 
 ]

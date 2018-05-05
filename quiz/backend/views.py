@@ -13,7 +13,7 @@ from utils.functions import convert_localtime
 from rest_framework.reverse import reverse
 from django.http import HttpResponse
 import json
-from  utils.functions  import  reversion_Decorator
+from utils.functions import reversion_Decorator
 
 
 class RecurseTreeNode(object):
@@ -72,7 +72,6 @@ class CategoryListView(FormatListAPIView, CreateAPIView):
             parent_id = request.GET.get('parent_id')
             return self.response(category_tree.tree(parent_id=parent_id))
 
-
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         parent = None
@@ -114,7 +113,6 @@ class CategoryDetailView(RetrieveUpdateDestroyAPIView):
             },
         }
         return self.response(content)
-
 
     @reversion_Decorator
     def update(self, request, *args, **kwargs):
@@ -202,13 +200,13 @@ class QuizListView(ListCreateAPIView):
             result['title'] = row[0]
             result['sub_title'] = row[1]
             result['thumb'] = row[2]
-            result['end_date'] = convert_localtime( row[3])                 #
-            result['updated_at'] =  convert_localtime( row[4])              # 更新时间
+            result['end_date'] = convert_localtime(row[3])  #
+            result['updated_at'] = convert_localtime(row[4])  # 更新时间
             result['is_recommend'] = str(row[5])
-            result['admin'] = row[6]                               # 管理员
+            result['admin'] = row[6]  # 管理员
             result['key'] = row[7]
-            result['category'] = row[8]                              # 分类
-            result['url'] = "/" + reverse('quiz-detail', kwargs={'pk': row[7]}).split('/api/')[1]                # url
+            result['category'] = row[8]  # 分类
+            result['url'] = "/" + reverse('quiz-detail', kwargs={'pk': row[7]}).split('/api/')[1]  # url
             result['status'] = row[9]
             result['start_date'] = convert_localtime(row[10]) if row[10] is not None else ''
             jsonData.append(result)
@@ -219,7 +217,7 @@ class QuizListView(ListCreateAPIView):
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         category = Category.objects.get(name=request.data['category'], is_delete=False)
-        print("request_data==================",request.data)
+        print("request_data==================", request.data)
 
         # 插入竞猜主表
         quiz = Quiz()
@@ -233,7 +231,7 @@ class QuizListView(ListCreateAPIView):
         quiz.status = Quiz.PUBLISHING
         # quiz.save()
 
-        print("request===============",request.data)
+        print("request===============", request.data)
         cointype = request.data['singleordouble']
         singleordouble = request.data['singleordouble']
         totalscore = request.data['totalscore']
@@ -278,6 +276,7 @@ class QuizListView(ListCreateAPIView):
 
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
+
 
 class UserQuizView(ListCreateAPIView):
     """

@@ -212,7 +212,8 @@ class MessageListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):  # 时间
-        created_time = timezone.localtime(obj.created_at)
+        created_time = obj.created_at
+        # created_time = timezone.localtime(obj.created_at)
         data = created_time.strftime('%Y年%m月%d日%H:%M')
         return data
 
@@ -251,13 +252,15 @@ class AssetSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):
-        created_time = timezone.localtime(obj.created_at)
+        # created_time = timezone.localtime(obj.created_at)
+        created_time = obj.created_at
         created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
         return created_at
 
     @staticmethod
     def get_end_time(obj):
-        end_time = timezone.localtime(obj.end_time)
+        end_time = obj.end_time
+        # end_time = timezone.localtime(obj.end_time)
         end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
         return end_time
 
@@ -275,7 +278,8 @@ class PresentationSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):
-        created_time = timezone.localtime(obj.created_at)
+        # created_time = timezone.localtime(obj.created_at)
+        created_time = obj.created_at
         created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
         return created_at
 
@@ -315,8 +319,8 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_coin_name(obj):  # 交易所币名
         list = Coin.objects.get(pk=obj.coin.id)
-        my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
-        return my_rule
+        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+        return list.name
 
     @staticmethod
     def get_icon(obj):  # 代币头像
@@ -409,19 +413,22 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_month(obj):
-        month_time = timezone.localtime(obj.created_at)
+        month_time = obj.created_at
+        # month_time = timezone.localtime(obj.created_at)
         month = month_time.strftime('%Y年%m月')
         return month
 
     @staticmethod
     def get_time(obj):
-        time_time = timezone.localtime(obj.created_at)
+        # time_time = timezone.localtime(obj.created_at)
+        time_time = obj.created_at
         time = time_time.strftime('%m-%d %H:%M')
         return time
 
     @staticmethod
     def get_created_at(obj):
-        create_time = timezone.localtime(obj.created_at)
+        create_time = obj.created_at
+        # create_time = timezone.localtime(obj.created_at)
         created_at = create_time.strftime('%Y-%m-%d %H:%M')
         return created_at
 

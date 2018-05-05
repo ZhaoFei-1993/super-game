@@ -15,6 +15,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
     """
     竞猜详情消费者处理类
     """
+
     async def connect(self):
         """
         连接websocket
@@ -105,7 +106,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         :return:
         """
         command = content.get("command", None)  # 指令
-        group_name = content.get("group")       # 消息组
+        group_name = content.get("group")  # 消息组
 
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)

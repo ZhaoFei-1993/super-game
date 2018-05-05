@@ -3,6 +3,7 @@ from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from reversion.models import Version, Revision
 import reversion
 
+
 @reversion.register()
 class Role(models.Model):
     """
@@ -77,6 +78,7 @@ class AdminManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+
 @reversion.register()
 class Admin(AbstractBaseUser):
     """
@@ -92,6 +94,7 @@ class Admin(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
 
 class Admin_Operation(models.Model):
     pre_version = models.ForeignKey(Version, related_name='pre_version', on_delete=models.CASCADE, default='')

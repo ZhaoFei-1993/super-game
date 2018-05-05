@@ -19,7 +19,7 @@ from quiz.models import Record
 from base import code
 from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation
 import reversion
-from wc_auth.functions import  save_operation
+from wc_auth.functions import save_operation
 
 
 def random_string(length=16):
@@ -70,7 +70,6 @@ def value_judge(request, *args):  # 查看客户端有没有漏传字段
         if i not in request.data or request.data.get(i) == '' or request.data.get(i) is None:
             return 0
     return 1
-
 
 
 def surplus_date(end_date):
@@ -152,7 +151,7 @@ def message_sign(user_id, type):
 def amount(user_id):
     usercoin = UserCoinLock.objects.filter(user_id=user_id)
     coin = 0
-    if len(usercoin)==0:
+    if len(usercoin) == 0:
         return coin
     for list in usercoin:
         if list.end_time < list.created_at:
@@ -196,24 +195,24 @@ def surplus_date(end_date):
 #     return win_ratio
 
 
-
 def reversion_Decorator(func):
     """
     各种request请求(不包含OPTIONS, GET ,HEAD)函数装饰器,记录各种操作请求
     """
+
     def wrapper(self, request, *args, **kwargs):
         if request.method in ['HEAD', 'OPTIONS', 'GET']:
             raise ParamErrorException(code.API_405_WAGER_PARAMETER)
         with reversion.create_revision(atomic=True):
-             result = func(self, request, *args, **kwargs)
-             reversion.set_user(request.user)
-             reversion.set_comment(request.method)
+            result = func(self, request, *args, **kwargs)
+            reversion.set_user(request.user)
+            reversion.set_comment(request.method)
         save_operation(request)
         return result
+
     return wrapper
 
 
 def amount_presentation(user, coin):
-    coin = UserPresentation.objects.filter(user_id=user, coin_id=coin,status=0).aggregate(Sum('amount'))
+    coin = UserPresentation.objects.filter(user_id=user, coin_id=coin, status=0).aggregate(Sum('amount'))
     return coin['amount__sum']
-

@@ -19,4 +19,3 @@ class RequestExceptionHandler(object):
             status = exception.status_code
             exception_dict = exception.to_dict()
             return exception_dict
-
