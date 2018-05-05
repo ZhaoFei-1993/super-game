@@ -363,8 +363,9 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoinDetail
         fields = (
-        'id', 'amount', 'coin_name', 'icon', 'address', 'address_name', 'status', 'status_code', 'created_at', 'month',
-        'time')
+            'id', 'amount', 'coin_name', 'icon', 'address', 'address_name', 'status', 'status_code', 'created_at',
+            'month',
+            'time')
 
     @staticmethod
     def get_address(obj):
@@ -405,7 +406,6 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             return status
         else:
             return ''
-
 
     @staticmethod
     def get_month(obj):
