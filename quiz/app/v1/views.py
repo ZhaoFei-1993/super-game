@@ -107,21 +107,21 @@ class RecordsListView(ListCreateAPIView):
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             if 'is_end' not in self.request.GET:
-                record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+                record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
                     return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3),
                                                  user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
                     return Record.objects.filter(quiz__status=4,
                                                  user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            return Record.objects.filter(user_id=user_id).order_by('created_at')
+            return Record.objects.filter(user_id=user_id).order_by('-created_at')
 
         # if 'roomquiz_id' not in self.request.parser_context['kwargs']:
         #     return Record.objects.filter(user_id=user_id).order_by('created_at')
@@ -180,7 +180,7 @@ class RecordsListView(ListCreateAPIView):
                 'my_option': fav.get('my_option')[0].get('my_option'),
                 'is_right': fav.get('my_option')[0].get('is_right'),
                 'coin_avatar': fav.get('coin_avatar'),
-                'category_name': fav.get('category_icon')
+                'category_name': fav.get('quiz_category')
             })
 
         return self.response({'code': 0, 'data': data})
