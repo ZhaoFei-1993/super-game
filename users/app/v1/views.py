@@ -26,9 +26,12 @@ from utils.functions import random_salt, sign_confirmation, message_hints, \
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
+import os
 from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
-
+from utils.forms import ImageForm
+from utils.models import Image
+from api.settings import  MEDIA_DOMAIN_HOST, BASE_DIR
 
 class UserRegister(object):
     """
@@ -770,7 +773,10 @@ class AssetView(ListAPIView):
         user = request.user.id
         Progress = results.data.get('results')
         data = []
-        user_info = User.objects.get(id=user)
+        try:
+            user_info = User.objects.get(id=user)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         for list in Progress:
             data.append({
                 'icon': list["icon"],
@@ -856,9 +862,9 @@ class UserPresentationView(CreateAPIView):
         c_id = request.data.get('c_id')
         try:
             coin = Coin.objects.get(id=int(c_id))
+            user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
         except Exception:
-            raise
-        user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         p_amount = eval(request.data.get('p_amount')) * coin.exchange_rate
 
         # if int(passcode) != int(userinfo.pass_code):
@@ -911,7 +917,7 @@ class PresentationListView(ListAPIView):
         try:
             coin = Coin.objects.get(id=c_id)
         except Exception:
-            raise
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
 
@@ -1052,7 +1058,10 @@ class SettingOthersView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(index) not in range(1, 5):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        data = UserSettingOthors.objects.get(reg_type=r_type)
+        try:
+            data = UserSettingOthors.objects.get(reg_type=r_type)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if index == 1:
             return self.response({'code': 0, 'data': data.about})
         elif index == 2:
@@ -1251,7 +1260,10 @@ class UserRechargeView(ListCreateAPIView):
         if recharge <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = request.user.id
-        user_coin = UserCoin.objects.get(id=index, user_id=uuid)
+        try:
+            user_coin = UserCoin.objects.get(id=index, user_id=uuid)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance += Decimal(recharge)
         user_coin.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
@@ -1270,7 +1282,10 @@ class CoinOperateView(ListAPIView):
     serializer_class = CoinOperateSerializer
 
     def get_queryset(self):
-        coin = Coin.objects.get(id=self.kwargs['coin'])
+        try:
+            coin = Coin.objects.get(id=self.kwargs['coin'])
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = self.request.user.id
         query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1, 2], coin_name=coin.name).order_by(
             '-created_at')
@@ -1302,19 +1317,53 @@ class CoinOperateDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        coin = Coin.objects.get(id=self.kwargs['coin'])
-        item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
+        try:
+            coin = Coin.objects.get(id=self.kwargs['coin'])
+            item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
 
 
 class VersionUpdateView(RetrieveAPIView):
-
+    """
+    版本更新
+    """
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
-        last_version = AndroidVersion.objects.filter(is_delete=0).order_by('-create_at')[0]
+        try:
+            last_version = AndroidVersion.objects.filter(is_delete=0).order_by('-create_at')[0]
+        except last_version.DoesNotExist:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if last_version.version == version:
             return self.response({'code': 0, 'is_new': 0})
         else:
             serialize = AndroidSerializer(last_version)
             return self.response({'code': 0, 'is_new': 1, 'data': serialize.data})
+
+
+class ImageUpdateView(CreateAPIView):
+    """
+    更换上传头像
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        form = ImageForm(request.POST, request.FILES)
+        safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
+        if safe_image_type:
+            if form.is_valid():
+                new_doc = Image(image=request.FILES['image'])
+                new_doc.save()
+        image_name = request.FILES['image'].name
+        uuid = request.user.id
+        try:
+            user = User.objects.get(pk=uuid)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        date = datetime.now().strftime('%Y%m%d')
+        avatar_url = ''.join([MEDIA_DOMAIN_HOST,'/images/', date, '/', image_name])
+        user.avatar = avatar_url
+        user.save()
+        return self.response({'code':0})
