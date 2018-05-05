@@ -115,7 +115,7 @@ class UserRegister(object):
                 if userbalance == 0:
                     usercoin = UserCoin()
                     usercoin.user_id = user.id
-                    usercoin.coin_id = i.ids
+                    usercoin.coin_id = i.id
                     usercoin.is_opt = False
                     usercoin.save()
         return token

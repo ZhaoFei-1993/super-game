@@ -107,20 +107,21 @@ class RecordsListView(ListCreateAPIView):
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             if 'is_end' not in self.request.GET:
-                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('created_at')
+                record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+                return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
                     return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3),
                                                  user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
                     return Record.objects.filter(quiz__status=4,
                                                  user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('created_at')
+                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            return Record.objects.filter(user_id=user_id).order_by('created_at')
+            return Record.objects.filter(user_id=user_id).order_by('-created_at')
 
         # if 'roomquiz_id' not in self.request.parser_context['kwargs']:
         #     return Record.objects.filter(user_id=user_id).order_by('created_at')
@@ -179,7 +180,7 @@ class RecordsListView(ListCreateAPIView):
                 'my_option': fav.get('my_option')[0].get('my_option'),
                 'is_right': fav.get('my_option')[0].get('is_right'),
                 'coin_avatar': fav.get('coin_avatar'),
-                'category_name': fav.get('category_icon')
+                'category_name': fav.get('quiz_category')
             })
 
         return self.response({'code': 0, 'data': data})
@@ -387,7 +388,7 @@ class BetView(ListCreateAPIView):
         user = request.user
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
         # usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
-        roomquiz_id = self.request.data['roomquiz_id']  # 获取货币类型
+        roomquiz_id = self.request.data['roomquiz_id']  # 获取俱乐部ID
 
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
@@ -398,10 +399,11 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        # try:  # 判断赌注是否有效
-        #     coins = int(coins)
-        # except Exception:
-        #     raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+        i = 0
+        Decimal(i)
+        # 判断赌注是否有效
+        if i >= Decimal(coins):
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
@@ -414,19 +416,24 @@ class BetView(ListCreateAPIView):
         if float(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
         options = Option.objects.get(pk=int(option_id))
+        # print("coins====================", round(Decimal(coins), 2))
+        # print("coins====================", type(round(Decimal(coins), 2)))
 
         record = Record()
         record.user = user
         record.quiz = quiz
+        record.roomquiz_id = roomquiz_id
         record.rule = options.rule
         record.option = options
-        record.bet = coins
+        record.bet = round(Decimal(coins), 2)
         # record.earn_coin = int(coins) * int(options.odds)
         record.save()
-        earn_coins = int(coins) * options.odds
+        earn_coins = Decimal(coins) * options.odds
+        earn_coins = round(earn_coins, 2)
+        # print("earn_coins==============", earn_coins)
         # 用户减少金币
 
-        usercoin.balance = float(usercoin.balance-Decimal(coins))
+        usercoin.balance = float(usercoin.balance - Decimal(coins))
         usercoin.save()
         quiz.total_people += 1
         quiz.save()
