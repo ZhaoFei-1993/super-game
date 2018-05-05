@@ -82,19 +82,20 @@ class User(AbstractBaseUser):
 
 @reversion.register()
 class Coin(models.Model):
-    GGTC = 1
-    ETH = 2
-    BTC = 3
-    LTC = 4
-    TYPE_CHOICE = (
-        (GGTC, "GGTC"),
-        (ETH, "METH"),
-        (BTC, "MBTC"),
-        (LTC, "MLTC"),
-    )
+    # GGTC = 1
+    # ETH = 2
+    # BTC = 3
+    # LTC = 4
+    # TYPE_CHOICE = (
+    #     (GGTC, "GGTC"),
+    #     (ETH, "METH"),
+    #     (BTC, "MBTC"),
+    #     (LTC, "MLTC"),
+    # )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
-    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
+    raw_name = models.CharField(verbose_name="货币充值前名称", max_length=255, default="")
+    # type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
     exchange_rate = models.IntegerField(verbose_name="兑换比例", default=0)
     # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
     is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
