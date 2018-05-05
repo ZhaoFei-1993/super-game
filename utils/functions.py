@@ -215,4 +215,9 @@ def reversion_Decorator(func):
 
 def amount_presentation(user, coin):
     coin = UserPresentation.objects.filter(user_id=user, coin_id=coin, status=0).aggregate(Sum('amount'))
-    return coin['amount__sum']
+    rest = coin['amount__sum']
+    if rest == None:
+        rest = 0
+    else:
+        rest = coin['amount__sum']
+    return rest
