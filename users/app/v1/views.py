@@ -1366,4 +1366,4 @@ class ImageUpdateView(CreateAPIView):
         avatar_url = ''.join([MEDIA_DOMAIN_HOST,'/images/', date, '/', image_name])
         user.avatar = avatar_url
         user.save()
-        return self.response({'code':0})
+        return self.response({'code':0, 'url':avatar_url})
