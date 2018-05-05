@@ -79,3 +79,31 @@ HUANXIN_APP_NAME = 'wocaicai'
 # ETH钱包配置
 ETH_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
 ETH_WALLET_API_URL = 'http://127.0.0.1:3001/api/'
+
+VERIFY_SIGNATURE = True
+
+WEBSOCKE_SECRET = 'H6J4AzqYDpVK8ZM5A5GfJSROJw'
+
+CACHES_MEMCACHED = {
+    'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+    'LOCATION': '127.0.0.1:11211',
+    'TIMEOUT': None,
+}
+
+CACHES_REDIS = {
+    'BACKEND': 'django_redis.cache.RedisCache',
+    'LOCATION': 'redis://127.0.0.1:6379/1',
+    'OPTIONS': {
+        'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+    },
+    'KEY_PREFIX': 'cjyx_',
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}

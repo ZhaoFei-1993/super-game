@@ -10,6 +10,7 @@ from rest_framework_jwt.settings import api_settings
 from .exceptions import SystemParamException, SignatureNotMatchException, NotLoginException
 
 from django.core.cache import caches
+from django.conf import settings
 
 from . import code
 
@@ -202,8 +203,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         computed_signature = self.get_signature_from_signature_string(
             computed_string)
 
-        if computed_signature != sent_signature:
+        if settings.VERIFY_SIGNATURE and computed_signature != sent_signature:
             print('computed_signature = ', computed_signature)
             print('sent_signature = ', sent_signature)
-            # raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
+            raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
         return user, api_key
