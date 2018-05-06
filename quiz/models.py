@@ -201,6 +201,14 @@ class Option(models.Model):
 
 @reversion.register()
 class Record(models.Model):
+    NORMAL = 0
+    CONSOLE = 1
+
+    SOURCE_CHOICE = (
+        (NORMAL, "经典竞猜"),
+        (CONSOLE, "系统下注"),
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
@@ -210,6 +218,7 @@ class Record(models.Model):
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=10, decimal_places=2, default=0.00)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=2, default=0.00)
     earn_coin = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=2, default=0.00)
+    source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
 
     class Meta:
