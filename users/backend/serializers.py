@@ -11,17 +11,20 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     """
     用户表
     """
-    source = serializers.SerializerMethodField()    # 来源
+    source = serializers.SerializerMethodField()  # 来源
     # status = serializers.SerializerMethodField()     # 状态
-    telephone = serializers.SerializerMethodField()     # 电话
-    pass_code = serializers.SerializerMethodField()    # 密保
-    degree = serializers.SerializerMethodField()      # 参与竞猜数
-    created_at = serializers.SerializerMethodField()      # 创建时间
-    assets = serializers.SerializerMethodField()      # 创建时间
+    telephone = serializers.SerializerMethodField()  # 电话
+    pass_code = serializers.SerializerMethodField()  # 密保
+    degree = serializers.SerializerMethodField()  # 参与竞猜数
+    created_at = serializers.SerializerMethodField()  # 创建时间
+    assets = serializers.SerializerMethodField()  # 创建时间
 
     class Meta:
         model = User
-        fields = ("id", "username", "avatar", "nickname", "source", "telephone", "created_at", "status", "pass_code", "degree", "assets", "url")
+        fields = (
+            "id", "username", "avatar", "nickname", "source", "telephone", "created_at", "status", "pass_code",
+            "degree",
+            "assets", "url")
 
     @staticmethod
     def get_created_at(obj):  # 时间
@@ -58,12 +61,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             return obj.telephone
 
     @staticmethod
-    def get_degree(obj):                     # 参与竞猜数
+    def get_degree(obj):  # 参与竞猜数
         data = Record.objects.filter(user_id=obj.id).count()
         return data
 
     @staticmethod
-    def get_assets(obj):                     # 参与竞猜数
+    def get_assets(obj):  # 参与竞猜数
         list = UserCoin.objects.filter(user_id=obj.id)
         data = []
         for i in list:
@@ -188,7 +191,7 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
     @staticmethod
     def get_coin(obj):
         coin = Coin.objects.get(pk=obj.coin_id)
-        data = str(obj.balance)+" "+str(coin.name)
+        data = str(obj.balance) + " " + str(coin.name)
         return data
 
     @staticmethod
@@ -204,15 +207,18 @@ class CoinDetailSerializer(serializers.ModelSerializer):
     """
     coin_name = serializers.CharField(source="coin.name")
     created_at = serializers.SerializerMethodField()
+
     class Meta:
         model = CoinDetail
         fields = ("coin", "coin_name", "amount", "rest", "sources", "created_at")
 
     @staticmethod
     def get_created_at(obj):
-        local_time = timezone.localtime(obj.created_at)
+        # local_time = timezone.localtime(obj.created_at)
+        local_time = obj.created_at
         created_time = datetime.strftime(local_time, "%Y-%m-%d %H:%M:%S")
         return created_time
+
 
 class CoinValueRewardSerializer(serializers.ModelSerializer):
     """

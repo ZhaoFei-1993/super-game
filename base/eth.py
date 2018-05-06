@@ -15,6 +15,7 @@ class Wallet(object):
     """
     钱包处理类
     """
+
     @staticmethod
     def get_header():
         """
@@ -71,4 +72,3 @@ class Wallet(object):
         """
         result = requests.get(local_settings.ETH_WALLET_API_URL + url, headers=self.request_headers())
         return result.json()
-

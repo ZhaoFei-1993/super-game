@@ -10,6 +10,7 @@ class CategorySerializer(serializers.HyperlinkedModelSerializer):
     """
     竞猜分类
     """
+
     class Meta:
         model = Category
         fields = ("name", "parent", "is_delete")
@@ -25,15 +26,17 @@ class UserQuizSerializer(serializers.ModelSerializer):
     guest_team = serializers.CharField(source='quiz.guest_team')
     coin_icon = serializers.CharField(source='coin.icon')
     option = serializers.CharField(source='option.option')
-    created_at =serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Record
-        fields = ("user_name", "match_name", "host_team", "guest_team", "coin", "coin_icon", "option", "bet", "earn_coin", "created_at")
-
+        fields = (
+            "user_name", "match_name", "host_team", "guest_team", "coin", "coin_icon", "option", "bet", "earn_coin",
+            "created_at")
 
     @staticmethod
     def get_created_at(obj):
-        create_time = timezone.localtime(obj.created_at)
+        # create_time = timezone.localtime(obj.created_at)
+        create_time = obj.created_at
         created = create_time.strftime("%Y-%m-%d %H:%M:%S")
         return created

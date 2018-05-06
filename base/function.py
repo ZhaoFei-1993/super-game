@@ -8,13 +8,14 @@ from urllib.parse import quote_plus
 from rest_framework.permissions import IsAuthenticated
 from .exceptions import NotLoginException
 from .code import API_403_ACCESS_DENY
-import random  
+import random
 
 
 class LoginRequired(IsAuthenticated):
     """
     接口访问要求登录公共处理
     """
+
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if has_permission is not True:
@@ -71,4 +72,4 @@ def randomnickname():
     ming = '一二三四五六七八九十'
     X = random.choice(xing)
     M = "".join(random.choice(ming) for i in range(2))
-    return X+M
+    return X + M

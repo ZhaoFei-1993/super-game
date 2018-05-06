@@ -118,7 +118,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             config.version = version
         config.is_update = is_update
         date = datetime.now().strftime('%Y%m%d')
-        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date+'_'+files])
+        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
         config.save()
         return self.response({"code": 0})
 
