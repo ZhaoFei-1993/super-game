@@ -196,7 +196,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "uploads/")
+MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
 MEDIA_URL = "/uploads/"
 
 FILE_UPLOAD_PERMISSIONS = 0o0664
