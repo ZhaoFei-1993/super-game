@@ -242,7 +242,7 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_reward(obj):
         try:
-            reward = RewardCoin.objects.get(coin__name=obj.coin.name)
-        except reward.DoesNotExist:
+            rewards = RewardCoin.objects.get(coin__name=obj.coin.name)
+        except rewards.DoesNotExist:
             return ''
-        return reward.value_ratio
+        return rewards.value_ratio
