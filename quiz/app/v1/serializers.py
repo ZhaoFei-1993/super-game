@@ -135,8 +135,8 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):  # 时间
-        years = obj.created_at.strftime('%Y年')
-        year = obj.created_at.strftime('%m月%d日')
+        years = obj.created_at.strftime('%Y')
+        year = obj.created_at.strftime('%m/%d')
         time = obj.created_at.strftime('%H:%M')
         data = []
         data.append({

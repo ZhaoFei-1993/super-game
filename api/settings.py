@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     'config',
     'chat',
     'reversion',
+    'spider',
+    'console',
 ]
 
 MIDDLEWARE = [

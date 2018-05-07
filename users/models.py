@@ -141,7 +141,9 @@ class CoinValue(models.Model):
 class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
+    # balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
+    balance = models.DecimalField(verbose_name='金额', max_digits=15, decimal_places=8, default=0)
+
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
     address = models.CharField(verbose_name="充值地址", max_length=32, default='')
@@ -185,7 +187,7 @@ class CoinDetail(models.Model):
 @reversion.register()
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
-    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.000)
+    profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.00)
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
@@ -282,10 +284,15 @@ class UserMessage(models.Model):
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
+    # amount = models.DecimalField(verbose_name="充值数量", max_digits=10, decimal_places=3, default=0.000)
     address = models.CharField(verbose_name="充值地址", max_length=255, default="")
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    amount = models.DecimalField(verbose_name='充值数量', max_digits=15, decimal_places=8, default=0)
+    confirmations = models.IntegerField(verbose_name='确认数', default=0)
+    txid = models.CharField(verbose_name='所在区块Hash', max_length=255, default=' ')
+    trade_at = models.DateTimeField(verbose_name='交易时间')
 
     class Meta:
         ordering = ['-id']
@@ -331,3 +338,19 @@ class UserSettingOthors(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "用户设置其他"
+
+
+@reversion.register()
+class UserInvitation(models.Model):
+    inviter = models.ForeignKey(User, related_name='邀请人id',
+                                on_delete=models.CASCADE)
+    invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
+    invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
+    money = models.IntegerField(verbose_name="奖励金额", default=0)
+    is_effective = models.BooleanField(verbose_name="是否有效", default=False)
+    is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
+    created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户邀请表"
+

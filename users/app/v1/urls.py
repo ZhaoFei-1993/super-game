@@ -14,6 +14,10 @@ urlpatterns = [
     path('forgetpassword/', views.ForgetPasswordView.as_view(), name="app-v1-forget_password"),
     # 用户注册，手机号码注册
     path('register/', views.RegisterView.as_view(), name="app-v1-user-register"),
+    # 用户接受邀请并注册
+    path('invitation/register/', views.InvitationRegisterView.as_view(), name="app-v1-user-invitation-register"),
+    # 用户邀请信息界面
+    path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
     #  修改用户昵称
     path('nickname/', views.NicknameView.as_view(), name="app-v1-user-nickname"),
     # 手机号绑定
