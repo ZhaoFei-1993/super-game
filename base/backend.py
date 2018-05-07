@@ -11,7 +11,7 @@ import json
 
 
 class BaseView(generics.GenericAPIView):
-    authentication_classes = (CCSignatureAuthBackend, )
+    authentication_classes = (CCSignatureAuthBackend,)
 
     def get_list_by_sql(self, sql, page_size=10):
         """

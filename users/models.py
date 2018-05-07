@@ -17,11 +17,13 @@ class User(AbstractBaseUser):
     IOS = 2
     ANDROID = 3
     HTML5 = 4
+    ROBOT = 5
 
     REGISTER_QQ = 1
     REGISTER_WECHAT = 2
     REGISTER_TELEPHONE = 3
     REGISTER_UNKNOWN = 4
+    REGISTER_CONSOLE = 5
 
     DISABLE = 0
     ENABLE = 1
@@ -38,12 +40,14 @@ class User(AbstractBaseUser):
         (IOS, "iOS"),
         (ANDROID, "Android"),
         (HTML5, "HTML5"),
+        (ROBOT, "机器人"),
     )
     REGISTER_TYPE = (
         (REGISTER_WECHAT, "微信登录"),
         (REGISTER_QQ, "QQ登录"),
         (REGISTER_TELEPHONE, "手机号码登录"),
         (REGISTER_UNKNOWN, "未知登录类型"),
+        (REGISTER_CONSOLE, "系统注册"),
     )
     username = models.CharField(verbose_name="用户账号", max_length=32)
     nickname = models.CharField(verbose_name="用户昵称", max_length=20)
@@ -58,6 +62,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
     integral = models.IntegerField(verbose_name='积分', default=0)
+    is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -82,22 +87,24 @@ class User(AbstractBaseUser):
 
 @reversion.register()
 class Coin(models.Model):
-    GGTC = 1
-    ETH = 2
-    BTC = 3
-    LTC = 4
-    TYPE_CHOICE = (
-        (GGTC, "GGTC"),
-        (ETH, "METH"),
-        (BTC, "MBTC"),
-        (LTC, "MLTC"),
-    )
+    # GGTC = 1
+    # ETH = 2
+    # BTC = 3
+    # LTC = 4
+    # TYPE_CHOICE = (
+    #     (GGTC, "GGTC"),
+    #     (ETH, "METH"),
+    #     (BTC, "MBTC"),
+    #     (LTC, "MLTC"),
+    # )
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
-    type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
-    exchange_rate = models.IntegerField(verbose_name="兑换比例", default=0)
+    raw_name = models.CharField(verbose_name="货币充值前名称", max_length=255, default="")
+    # type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
+    exchange_rate = models.IntegerField(verbose_name="兑换比例", default=1)
     # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
-    is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
+    cash_control = models.IntegerField(verbose_name="提现下限", default=0)
+    # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
@@ -137,7 +144,7 @@ class UserCoin(models.Model):
     balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
-    address = models.CharField(verbose_name="充值地址", max_length=32)
+    address = models.CharField(verbose_name="充值地址", max_length=32, default='')
 
     class Meta:
         ordering = ['-id']

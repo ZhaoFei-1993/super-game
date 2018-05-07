@@ -14,7 +14,7 @@ from collections import OrderedDict
 class BaseView(generics.GenericAPIView):
     authentication_classes = (CCSignatureAuthentication,)
 
-    def get_list_by_sql(self, sql, page_size = 10):
+    def get_list_by_sql(self, sql, page_size=10):
         """
         使用原生SQL获取数据
         :param sql: 
@@ -121,8 +121,6 @@ class RetrieveDestroyAPIView(generics.RetrieveDestroyAPIView, BaseView):
 
 class RetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView, BaseView):
     pass
-
-
 
 
 class FormatListAPIView(generics.ListAPIView, BaseView):

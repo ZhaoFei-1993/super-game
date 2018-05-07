@@ -67,10 +67,11 @@ urlpatterns = [
     # path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
     # # GGTC分红表
     # path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
-    path('asset/coin_operate/<int:coin>/<int:pk>/',views.CoinOperateDetailView.as_view(), name='app-v1-usre-asset-coin_operate-detail'),
-    # 安卓版本管理
+    path('asset/coin_operate/<int:coin>/<int:pk>/', views.CoinOperateDetailView.as_view(),
+         name='app-v1-usre-asset-coin_operate-detail'),
+    #
     path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
-    #更换头像
+    # 更换头像
     path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
 
 ]

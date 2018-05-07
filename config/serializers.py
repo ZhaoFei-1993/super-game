@@ -28,20 +28,24 @@ class ArticleSerializer(serializers.HyperlinkedModelSerializer):
         model = Article
         fields = ('title', 'content', 'created_at', 'category')
 
+
 class AndroidSerializer(serializers.HyperlinkedModelSerializer):
     """
     安卓版本信息
     """
     create_at = serializers.SerializerMethodField()
+
     class Meta:
         model = AndroidVersion
-        fields= ("id", "version", "upload_url", "is_update", "is_delete", "create_at")
+        fields = ("id", "version", "upload_url", "is_update", "is_delete", "create_at")
 
     @staticmethod
     def get_create_at(obj):
-        create_time = timezone.localtime(obj.create_at)
+        # create_time = timezone.localtime(obj.create_at)
+        create_time = obj.create_at
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
         return create_at
+
 
 class DailySettingSerializer(serializers.ModelSerializer):
     """
@@ -49,6 +53,7 @@ class DailySettingSerializer(serializers.ModelSerializer):
     """
     coin_name = serializers.CharField(source="coin.name")
     coin_id = serializers.CharField(source="coin.id")
+
     class Meta:
         model = DailySettings
-        fields = ("days","coin_id","coin_name","rewards","days_delta")
+        fields = ("days", "coin_id", "coin_name", "rewards", "days_delta")

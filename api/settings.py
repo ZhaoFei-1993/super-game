@@ -30,7 +30,11 @@ CACHE_DIR = os.path.join(BASE_DIR, 'cache')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.DEBUG
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
+VERIFY_SIGNATURE = local_settings.VERIFY_SIGNATURE
+
+# 下注影响因素，影响赔率变化
+BET_FACTOR = 0.9
 
 # Application definition
 
@@ -50,7 +54,8 @@ INSTALLED_APPS = [
     'captcha',
     'rolepermissions',
     'corsheaders',
-
+    'channels',
+    'base',
     'utils',
 
     'users',
@@ -171,13 +176,10 @@ CACHES = {
         'TIMEOUT': None,
     },
 
-    'memcached': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': None,
-    }
-}
+    'memcached': local_settings.CACHES_MEMCACHED,
 
+    'redis': local_settings.CACHES_REDIS,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
@@ -207,5 +209,14 @@ STATICFILES_DIRS = ['static']
 MEDIA_DOMAIN_HOST = local_settings.MEDIA_DOMAIN_HOST
 STATIC_DOMAIN_HOST = local_settings.STATIC_DOMAIN_HOST
 
+SMS_APP_KEY = local_settings.SMS_APP_KEY
+SMS_APP_SECRET = local_settings.SMS_APP_SECRET
+SMS_TYPE = local_settings.SMS_TYPE
+SMS_SIGN_NAME = local_settings.SMS_SIGN_NAME
+SMS_TEMPLATE_ID = local_settings.SMS_TEMPLATE_ID
 SMS_PERIOD_TIME = 60  # 短信间隔时间（秒）
 SMS_CODE_EXPIRE_TIME = 60  # 短信验证码有效时间（秒），0表示长期有效,测试期间写长点
+
+WEBSOCKE_SECRET = local_settings.WEBSOCKE_SECRET
+ASGI_APPLICATION = 'api.routing.application'
+CHANNEL_LAYERS = local_settings.CHANNEL_LAYERS

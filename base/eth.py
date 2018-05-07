@@ -15,6 +15,7 @@ class Wallet(object):
     """
     钱包处理类
     """
+
     @staticmethod
     def get_header():
         """
@@ -26,13 +27,13 @@ class Wallet(object):
             'X-Nonce': random_string()
         }
 
-    def signature(self, data=None):
+    def signature(self, headers, data=None):
         """
         获取签名值
+        :param headers
         :param data:
         :return:
         """
-        headers = self.get_header()
         unsign = 'x-date:' + headers['X-Date'] + 'x-nonce:' + headers['X-Nonce']
         if data is not None:
             data = sort_object(data)
@@ -40,11 +41,13 @@ class Wallet(object):
                 unsign += k + ':' + urlencode(data[k])
 
         secret = local_settings.ETH_WALLET_API_SECRET.encode('ascii')
+
         hash_hmac = HMAC.new(secret, digestmod=SHA256)
         hash_hmac.update(unsign.encode('ascii'))
         signed = hash_hmac.digest()
+        hash_sign = base64.b64encode(signed).decode('ascii')
 
-        return base64.b64encode(signed).decode('ascii')
+        return hash_sign
 
     def request_headers(self, data=None):
         """
@@ -52,7 +55,7 @@ class Wallet(object):
         :return:
         """
         headers = self.get_header()
-        headers['Authorization'] = 'signature="' + self.signature(data) + '"'
+        headers['Authorization'] = 'signature="' + self.signature(headers, data) + '"'
 
         return headers
 
@@ -71,4 +74,3 @@ class Wallet(object):
         """
         result = requests.get(local_settings.ETH_WALLET_API_URL + url, headers=self.request_headers())
         return result.json()
-

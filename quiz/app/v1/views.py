@@ -393,6 +393,7 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
+
         coins = float(coins)
         try:  # 判断选项ID是否有效
             option_id = int(option)
@@ -419,6 +420,9 @@ class BetView(ListCreateAPIView):
         # print("coins====================", round(Decimal(coins), 2))
         # print("coins====================", type(round(Decimal(coins), 2)))
 
+        # 调整赔率
+        Option.objects.change_odds(options.rule_id)
+
         record = Record()
         record.user = user
         record.quiz = quiz
@@ -426,6 +430,7 @@ class BetView(ListCreateAPIView):
         record.rule = options.rule
         record.option = options
         record.bet = round(Decimal(coins), 2)
+        record.odds = round(Decimal(options.odds), 2)
         # record.earn_coin = int(coins) * int(options.odds)
         record.save()
         earn_coins = Decimal(coins) * options.odds

@@ -21,3 +21,10 @@ requests==2.18.4
 jsonfield==2.0.2
 django-reversion==2.0.13
 django-url-filter==0.3.5
+asgi-redis==1.4.3
+asgiref==2.3.0
+channels==2.1.1
+channels-redis==2.1.1
+rq==0.10.0
+qrcode==6.0
+redis==2.10.6

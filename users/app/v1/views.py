@@ -31,7 +31,8 @@ from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
 from utils.models import Image
-from api.settings import  MEDIA_DOMAIN_HOST, BASE_DIR
+from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
+
 
 class UserRegister(object):
     """
@@ -1330,6 +1331,7 @@ class VersionUpdateView(RetrieveAPIView):
     """
     版本更新
     """
+
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
         try:
@@ -1363,7 +1365,7 @@ class ImageUpdateView(CreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         date = datetime.now().strftime('%Y%m%d')
-        avatar_url = ''.join([MEDIA_DOMAIN_HOST,'/images/', date, '/', image_name])
+        avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/images/', date, '/', image_name])
         user.avatar = avatar_url
         user.save()
-        return self.response({'code':0})
+        return self.response({'code': 0, 'url': avatar_url})

@@ -17,6 +17,7 @@ from users.models import UserSettingOthors, User, DailySettings, Coin
 import reversion
 from django.contrib import admin
 from utils.functions import reversion_Decorator
+from datetime import datetime
 
 admin.autodiscover()
 
@@ -116,7 +117,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         else:
             config.version = version
         config.is_update = is_update
-        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", files])
+        date = datetime.now().strftime('%Y%m%d')
+        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
         config.save()
         return self.response({"code": 0})
 
@@ -125,12 +127,16 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         index = request.data.get('id')
         if not index:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        item = AndroidVersion.objects.get(id=index)
+        try:
+            item = AndroidVersion.objects.get(id=index)
+        except item.DoesNotExist:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if "files" in request.data:
             files = request.data.get("files")
             if files:
                 files = files.split('\\')[-1]
-                item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", files])
+                date = datetime.now().strftime('%Y%m%d')
+                item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
         if "version" in request.data:
             version = request.data.get('version')
             version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)

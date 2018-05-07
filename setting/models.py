@@ -34,20 +34,3 @@ class SystemDeploy(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "系统配置表"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

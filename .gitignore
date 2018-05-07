@@ -5,3 +5,4 @@ all_settings.py
 *.pyc
 *.djcache
 uploads
+images

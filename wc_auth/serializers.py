@@ -78,7 +78,7 @@ class AdminOperationSerialize(serializers.ModelSerializer):
                 else:
                     return temp_mod
             else:
-                if in_first:# in_first判断是否将第一个参数作为 for in的值
+                if in_first:                     # in_first判断是否将第一个参数作为 for in的值
                     for key in pre_keys:
                         if key not in mod_keys or pre_v[key]!=mod_keys[key]:
                             temp_pre[key]= pre_v[key]
@@ -104,7 +104,8 @@ class AdminOperationSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_date(obj):
-        date_data = timezone.localtime(obj.revision.date_created)
+        # date_data = timezone.localtime(obj.revision.date_created)
+        date_data = obj.revision.date_created
         date = datetime.strftime(date_data, '%Y-%m-%d')
         return date
     #
@@ -115,7 +116,8 @@ class AdminOperationSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_time(obj):
-        time_data = timezone.localtime(obj.revision.date_created)
+        # time_data = timezone.localtime(obj.revision.date_created)
+        time_data = obj.revision.date_created
         time = time_data.strftime('%H:%M:%S')
         return time
 

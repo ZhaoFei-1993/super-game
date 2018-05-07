@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
 from django.db import models
 from wc_auth.models import Admin
-from django.template.backends import django
 from mptt.models import MPTTModel, TreeForeignKey
 from users.models import Coin, User
 import reversion
+from django.conf import settings
+from django.db.models import Sum, F, FloatField
+
+from .odds import Game
 
 
 @reversion.register()
@@ -118,6 +121,67 @@ class Rule(models.Model):
         verbose_name = verbose_name_plural = "竞猜规则表"
 
 
+class OptionManager(models.Manager):
+    """
+    选项操作
+    TODO: 不同币的俱乐部不同的配置值
+    """
+    require_coin = 1
+    max_wager = 0.03
+
+    def get_odds_config(self, coin):
+        """
+        不同币种不同配置：最大可赔、最大下注数
+        :return:
+        """
+
+    def change_odds(self, rule_id):
+        """
+        变更赔率
+        :param rule_id
+        :return:
+        """
+        rule = Rule.objects.get(pk=rule_id)
+
+        options = Option.objects.filter(rule_id=rule_id).order_by('order')
+        rates = []
+        for o in options:
+            rates.append(float(o.odds))
+
+        # 获取奖池总数
+        pool_sum = Record.objects.filter(quiz_id=rule.quiz_id).aggregate(Sum('bet'))
+        pool = pool_sum['bet__sum']
+        if pool is None:
+            pool = 0
+        else:
+            pool = float(pool)
+
+        # 获取各选项产出猜币数
+        option_pays = Record.objects.filter(quiz_id=rule.quiz_id).values('option_id').annotate(
+            pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
+        pays = []
+        tmp_idx = 0
+        for opt in options:
+            pays.append(0)
+            for op in option_pays:
+                if opt.id == op['option_id']:
+                    pays[tmp_idx] = op['pool_sum']
+            tmp_idx += 1
+
+        g = Game(settings.BET_FACTOR, self.require_coin, self.max_wager, rates)
+        g.bet(pool, pays)
+        odds = g.get_oddses()
+        print('odds = ', odds)
+
+        # 更新选项赔率
+        idx = 0
+        for option in options:
+            option.odds = odds[idx]
+            option.save()
+
+            idx += 1
+
+
 @reversion.register()
 class Option(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
@@ -128,6 +192,8 @@ class Option(models.Model):
     is_right = models.BooleanField(verbose_name="是否正确选项", default=False)
     flag = models.CharField(verbose_name='开奖标记', max_length=8, default="")
 
+    objects = OptionManager()
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项表"
@@ -135,14 +201,24 @@ class Option(models.Model):
 
 @reversion.register()
 class Record(models.Model):
+    NORMAL = 0
+    CONSOLE = 1
+
+    SOURCE_CHOICE = (
+        (NORMAL, "经典竞猜"),
+        (CONSOLE, "系统下注"),
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
     # bet = models.IntegerField(verbose_name="下注金额", default=0)
+    odds = models.DecimalField(verbose_name="下注赔率", max_digits=10, decimal_places=2, default=0.00)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=2, default=0.00)
     earn_coin = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=2, default=0.00)
+    source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
 
     class Meta:
