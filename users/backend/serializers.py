@@ -107,25 +107,25 @@ class CurrencySerializer(serializers.HyperlinkedModelSerializer):
     货币种类表序列化
     """
     created_at = serializers.SerializerMethodField()
-    is_lock = serializers.SerializerMethodField()
+    # is_lock = serializers.SerializerMethodField()
     admin = serializers.SlugRelatedField(read_only=True, slug_field="username")
 
     class Meta:
         model = Coin
-        fields = ("id", "icon", "name", "type", "exchange_rate", "is_lock", "admin", "created_at", "url")
+        fields = ("id", "icon", "name", "exchange_rate", "admin", "created_at", "cash_control", "url")
 
     @staticmethod
     def get_created_at(obj):  # 时间
         data = obj.created_at.strftime('%Y年%m月%d日%H:%M')
         return data
 
-    @staticmethod
-    def get_is_lock(obj):  # 时间
-        if obj.is_lock == False:
-            data = "允许"
-        if obj.is_lock == True:
-            data = "不允许"
-        return data
+    # @staticmethod
+    # def get_is_lock(obj):  # 时间
+    #     if obj.is_lock == False:
+    #         data = "允许"
+    #     if obj.is_lock == True:
+    #         data = "不允许"
+    #     return data
 
 
 class UserCoinLockSerializer(serializers.HyperlinkedModelSerializer):

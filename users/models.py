@@ -101,9 +101,10 @@ class Coin(models.Model):
     name = models.CharField(verbose_name="货币名称", max_length=255)
     raw_name = models.CharField(verbose_name="货币充值前名称", max_length=255, default="")
     # type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
-    exchange_rate = models.IntegerField(verbose_name="兑换比例", default=0)
+    exchange_rate = models.IntegerField(verbose_name="兑换比例", default=1)
     # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
-    is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
+    cash_control = models.IntegerField(verbose_name="提现下限", default=0)
+    # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 

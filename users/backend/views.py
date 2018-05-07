@@ -107,14 +107,19 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
     def post(self, request, *args, **kwargs):
         admin = self.request.user
         exchange_rate = request.data['exchange_rate']
+        cash_control = request.data['cash_control']
 
         coin = Coin()
         coin.icon = request.data['icon']
-        if int(exchange_rate) != 0:
+        if int(exchange_rate) != 1:
+            coin.exchange_rate = 1
+        else:
             coin.exchange_rate = exchange_rate
+        if int(cash_control) != cash_control:
+            coin.cash_control = 0
         coin.name = request.data['name']
-        coin.type = request.data['type']
-        coin.is_lock = request.data['is_lock']
+        # coin.type = request.data['type']
+        # coin.is_lock = request.data['is_lock']
         coin.admin = admin
         coin.save()
 
@@ -128,17 +133,18 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     def get(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         coin = Coin.objects.get(pk=id)
-        is_lock = coin.is_lock
-        if is_lock == False:
-            is_lock = 0
-        if is_lock == True:
-            is_lock = 1
+        # is_lock = coin.is_lock
+        # if is_lock == False:
+        #     is_lock = 0
+        # if is_lock == True:
+        #     is_lock = 1
         data = {
             "icon": coin.icon,
             "name": coin.name,
-            "type": coin.type,
+            # "type": coin.type,
             "exchange_rate": coin.exchange_rate,
-            "is_lock": str(is_lock),
+            "cash_control": coin.cash_control,
+            # "is_lock": str(is_lock),
             "url": ''
         }
         return HttpResponse(json.dumps(data), content_type='text/json')
@@ -158,9 +164,10 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coin = Coin.objects.get(pk=id)
         coin.icon = request.data['icon']
         coin.name = request.data['name']
-        coin.type = request.data['type']
+        # coin.type = request.data['type']
         coin.exchange_rate = request.data['exchange_rate']
-        coin.is_lock = request.data['is_lock']
+        coin.cash_control = request.data['cash_control']
+        # coin.is_lock = request.data['is_lock']
         coin.save()
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')

@@ -97,14 +97,14 @@ def upload(request):
                 new_doc.save()
                 url = ""
 
-                # print('upload')
-                # print("MEDIA_DOMAIN_HOST值：" + settings.MEDIA_DOMAIN_HOST)
-                # print('new_doc.file.url值:' + new_doc.image.url)
+                print('upload')
+                print("MEDIA_DOMAIN_HOST值：" + settings.MEDIA_DOMAIN_HOST)
+                print('new_doc.file.url值:' + new_doc.image.url)
 
                 if not settings.DEBUG:
                     url = url.replace('uploads/images', '')
                 else:
-                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/images', '')
+                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url
 
                 print("上传的图片地址：" + url)
 
