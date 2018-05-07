@@ -288,7 +288,7 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
     """
     币允许投注额及积分兑换比例
     """
-    queryset = CoinValue.objects.all().order_by('coin_id')
+    queryset = CoinValue.objects.all().order_by('coin_id', 'value_index')
     serializer_class = serializers.CoinValueRewardSerializer
 
     def list(self, request, *args, **kwargs):
@@ -303,8 +303,8 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
-        options = eval(request.data['options'])
-        ratio = request.data['ratio']
+        options = dict(request.data['options'])
+        ratio = request.data['reward']
         for x in options.keys():
             if CoinValue.objects.filter(coin_id=coin, value_index=x).exists():
                 return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},
@@ -332,12 +332,12 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
                                 status=status.HTTP_400_BAD_REQUEST)
         for x in request.data.items():
             if x[0] == 'options':
-                values = eval(x[1])
+                values = dict(x[1])
                 for vv in values.keys():
                     coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
                     coin_value.value = values[vv]
                     coin_value.save()
-            if x[0] == 'ratio':
+            if x[0] == 'value_ratio':
                 reward = RewardCoin.objects.get(coin_id=coin)
                 reward.value_ratio = int(x[1])
                 reward.save()

@@ -41,6 +41,7 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_create_at(obj):
+        create_at = obj.create_at.strftime("%Y-%m-%d %H:%M:%S")
         # create_time = timezone.localtime(obj.create_at)
         create_time = obj.create_at
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -51,9 +52,7 @@ class DailySettingSerializer(serializers.ModelSerializer):
     """
     每日签到设置
     """
-    coin_name = serializers.CharField(source="coin.name")
-    coin_id = serializers.CharField(source="coin.id")
 
     class Meta:
         model = DailySettings
-        fields = ("days", "coin_id", "coin_name", "rewards", "days_delta")
+        fields = ("days", "rewards", "days_delta")
