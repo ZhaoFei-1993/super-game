@@ -18,11 +18,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     degree = serializers.SerializerMethodField()  # 参与竞猜数
     created_at = serializers.SerializerMethodField()  # 创建时间
     assets = serializers.SerializerMethodField()  # 创建时间
+    is_robot = serializers.SerializerMethodField()  # 是否为机器人
 
     class Meta:
         model = User
         fields = (
-            "id", "username", "avatar", "nickname", "source", "telephone", "created_at", "status", "pass_code",
+            "id", "username", "avatar", "nickname", "source", "integral", "telephone", "is_robot", "created_at",
+            "status", "pass_code",
             "degree",
             "assets", "url")
 
@@ -38,13 +40,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         data = str(register_type) + "-" + str(source)
         return data
 
-    # @staticmethod
-    # def get_status(obj):
-    #     if int(obj.status) == 1:
-    #         data = "启用"
-    #     elif int(obj.status) == 0:
-    #         data = "禁用"
-    #     return data
+    @staticmethod
+    def get_is_robot(obj):
+        if obj.is_robot == False:
+            data = "0"
+        elif obj.is_robot == True:
+            data = "1"
+        return data
 
     @staticmethod
     def get_pass_code(obj):

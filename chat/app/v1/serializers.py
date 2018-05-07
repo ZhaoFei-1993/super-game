@@ -13,7 +13,7 @@ class ClubListSerialize(serializers.ModelSerializer):
     coin_name = serializers.SerializerMethodField()  # 货币名称
     coin_key = serializers.SerializerMethodField()  # 货币ID
     user_number = serializers.SerializerMethodField()  # 总下注数
-    coin_icon = serializers.SerializerMethodField()  # 总下注数
+    coin_icon = serializers.SerializerMethodField()  # 货币头像
 
     class Meta:
         model = Club
@@ -35,6 +35,7 @@ class ClubListSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_user_number(obj):
         record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
+        record_number += 10000
         return record_number
 
     @staticmethod
