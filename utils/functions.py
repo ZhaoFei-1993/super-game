@@ -114,7 +114,11 @@ def value_judge(request, *args):
 
 def sign_confirmation(user_id):
     # 是否签到
-    user_sign = DailyLog.objects.get(user_id=user_id)
+    try:
+        user_sign = DailyLog.objects.get(user_id=user_id)
+    except DailyLog.DoesNotExist:
+        return 0
+
     sign_date = user_sign.sign_date.strftime("%Y%m%d%H%M%S")
     today = datetime.date.today()
     today_time = today.strftime("%Y%m%d%H%M%S")
