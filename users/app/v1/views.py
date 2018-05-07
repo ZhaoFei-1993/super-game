@@ -288,6 +288,7 @@ class InfoView(ListAPIView):
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         user_coin = usercoin.balance
         usercoin_avatar = clubinfo.coin.icon
+        recharge_address = usercoin.address
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
@@ -295,6 +296,7 @@ class InfoView(ListAPIView):
             'avatar': items[0]["avatar"],
             'usercoin': user_coin,
             'usercoin_avatar': usercoin_avatar,
+            'recharge_address': recharge_address,
             'integral': items[0]["integral"],
             # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
@@ -870,9 +872,12 @@ class UserPresentationView(CreateAPIView):
 
         # if int(passcode) != int(userinfo.pass_code):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
+        if coin.name.upper() == 'HAND' and p_amount < 5000:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_amount > user_coin.balance or p_amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
 
         if p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -1358,14 +1363,13 @@ class ImageUpdateView(CreateAPIView):
             if form.is_valid():
                 new_doc = Image(image=request.FILES['image'])
                 new_doc.save()
-        image_name = request.FILES['image'].name
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        date = datetime.now().strftime('%Y%m%d')
-        avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/images/', date, '/', image_name])
+        image_name = new_doc.image.name
+        avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/',  image_name])
         user.avatar = avatar_url
         user.save()
-        return self.response({'code': 0, 'url': avatar_url})
+        return self.response({'code': 0, 'data': avatar_url})

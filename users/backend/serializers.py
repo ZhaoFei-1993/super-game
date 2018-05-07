@@ -186,19 +186,28 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_icon(obj):
-        list = Coin.objects.get(pk=obj.coin_id)
+        try:
+            list = Coin.objects.get(pk=obj.coin_id)
+        except list.DoesNotExist:
+            return ''
         data = list.icon
         return data
 
     @staticmethod
     def get_coin(obj):
-        coin = Coin.objects.get(pk=obj.coin_id)
-        data = str(obj.balance) + " " + str(coin.name)
+        try:
+            coin = Coin.objects.get(pk=obj.coin_id)
+        except coin.DoesNotExist:
+            return ''
+        data = str(obj.balance)+" "+str(coin.name)
         return data
 
     @staticmethod
     def get_username(obj):
-        list = User.objects.get(pk=obj.user_id)
+        try:
+            list = User.objects.get(pk=obj.user_id)
+        except list.DoesNotExist:
+            return ''
         data = list.username
         return data
 
@@ -216,9 +225,7 @@ class CoinDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):
-        # local_time = timezone.localtime(obj.created_at)
-        local_time = obj.created_at
-        created_time = datetime.strftime(local_time, "%Y-%m-%d %H:%M:%S")
+        created_time = obj.created_at.strftime("%Y-%m-%d %H:%M:%S")
         return created_time
 
 
@@ -234,5 +241,8 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_reward(obj):
-        reward = RewardCoin.objects.get(coin__name=obj.coin.name)
+        try:
+            reward = RewardCoin.objects.get(coin__name=obj.coin.name)
+        except reward.DoesNotExist:
+            return ''
         return reward.value_ratio
