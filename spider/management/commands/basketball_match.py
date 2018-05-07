@@ -54,8 +54,8 @@ def get_data_info(url):
             option_data_mnl = data[1].get('mnl')
             result_mnl = []
             if option_data_mnl:
-                title_a_mnl = '负'
-                title_h_mnl = '胜'
+                title_a_mnl = '主负'
+                title_h_mnl = '主胜'
                 odd_a_mnl = option_data_mnl['a']
                 odd_h_mnl = option_data_mnl['h']
                 flag_a_mnl = 'a'
@@ -254,7 +254,7 @@ def get_data_info(url):
                         for dt in result_hilo:
                             option = Option()
                             option.rule = rule
-                            option.option = dt[1]
+                            option.option = dt[1].replace('+', '')
                             option.odds = dt[3]
                             option.flag = dt[0]
                             num = num + 1

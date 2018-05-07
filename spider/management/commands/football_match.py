@@ -54,9 +54,9 @@ def get_data_info(url):
             option_data_had = data[1].get('had')
             result_had = []
             if option_data_had:
-                title_a_had = '负'
-                title_d_had = '平'
-                title_h_had = '胜'
+                title_a_had = '主负'
+                title_d_had = '平局'
+                title_h_had = '主胜'
                 odd_a_had = option_data_had['a']
                 odd_d_had = option_data_had['d']
                 odd_h_had = option_data_had['h']
@@ -69,7 +69,7 @@ def get_data_info(url):
             result_hhad = []
             if option_data_hhad:
                 title_a_hhad = option_data_hhad['fixedodds'] + '主负'
-                title_d_hhad = option_data_hhad['fixedodds'] + '打平'
+                title_d_hhad = option_data_hhad['fixedodds'] + '平局'
                 title_h_hhad = option_data_hhad['fixedodds'] + '主胜'
                 odd_a_hhad = option_data_hhad['a']
                 odd_d_hhad = option_data_hhad['d']
