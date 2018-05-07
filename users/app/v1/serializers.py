@@ -152,7 +152,10 @@ class DailySerialize(serializers.ModelSerializer):
     def get_is_sign(self, obj):  # 消息类型
         user = self.context['request'].user.id
         sign = sign_confirmation(user)  # 判断是否签到
-        daily = DailyLog.objects.get(user_id=user)
+        try:
+            daily = DailyLog.objects.get(user_id=user)
+        except DailyLog.DoesNotExist:
+            return 0
         is_sign = 0
         if sign == 1 and daily.number == 0:
             is_sign = 1
