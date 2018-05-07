@@ -170,7 +170,10 @@ class DailySerialize(serializers.ModelSerializer):
         yesterday_format = str(yesterday_format) + "000000"
         user = self.context['request'].user.id
         sign = sign_confirmation(user)  # 判断是否签到
-        daily = DailyLog.objects.get(user_id=user)
+        try:
+            daily = DailyLog.objects.get(user_id=user)
+        except DailyLog.DoesNotExist:
+            return 0
         is_selected = 0
         sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
         if sign_date < yesterday_format:  # 判断昨天签到没有
