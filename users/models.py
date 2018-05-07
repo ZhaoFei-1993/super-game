@@ -331,3 +331,19 @@ class UserSettingOthors(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "用户设置其他"
+
+
+@reversion.register()
+class UserInvitation(models.Model):
+    inviter = models.ForeignKey(User, related_name='邀请人id',
+                                on_delete=models.CASCADE)
+    invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
+    invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
+    money = models.IntegerField(verbose_name="奖励金额", default=0)
+    is_effective = models.BooleanField(verbose_name="是否有效", default=False)
+    is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
+    created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户邀请表"
+

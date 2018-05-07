@@ -8,7 +8,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
     CoinLock, UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserCoinLock, UserSettingOthors
+    UserCoinLock, UserSettingOthors, UserInvitation
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
@@ -32,6 +32,7 @@ from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
 from utils.models import Image
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
+from django.db.models import Sum
 
 
 class UserRegister(object):
@@ -1369,3 +1370,88 @@ class ImageUpdateView(CreateAPIView):
         user.avatar = avatar_url
         user.save()
         return self.response({'code': 0, 'url': avatar_url})
+
+
+class InvitationRegisterView(CreateAPIView):
+    """
+    用户邀请注册
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        source = request.META.get('HTTP_X_API_KEY')
+        invitation_id = request.data.get('invitation_id')
+        telephone = request.data.get('username')
+        code = request.data.get('code')
+        password = request.data.get('password')
+
+        # 校验手机短信验证码
+        message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
+        if len(message) == 0:
+            return self.response({
+                'code': error_code.API_20402_INVALID_SMS_CODE
+            })
+
+        # 判断该手机号码是否已经注册
+        user = User.objects.filter(username=telephone)
+        if len(user) > 0:
+            return self.response({
+                'code': error_code.API_20102_TELEPHONE_REGISTERED
+            })
+
+        # 用户注册
+        ur = UserRegister()
+        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
+        invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
+        if invitee_one > 0:
+            invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
+            on_line = invitee.inviter
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=int(on_line)).count()
+            user_on_line = UserInvitation()
+            if invitee_number < 100:
+                user_on_line.is_effective = 1
+                user_on_line.money = 50
+            user_on_line.inviter = on_line
+            user_on_line.invitee_two = telephone
+            user_on_line.save()
+        user_go_line = UserInvitation()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id)).count()
+        if invitee_number < 10:
+            user_go_line.is_effective = 1
+            user_go_line.money = 200
+        user_go_line.inviter = invitation_id
+        user_go_line.invitee_one = telephone
+        user_go_line.save()
+        return self.response({
+            'code': error_code.API_0_SUCCESS,
+            'data': {
+                'access_token': token
+            }
+        })
+
+
+class InvitationInfoView(ListAPIView):
+    """
+    用户邀请信息
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        invitation_one_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id).count()  # T1总人数
+        invitation_two_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id).count()  # T2总人数
+        user_invitation_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id).aggregate(
+            Sum('money'))
+        user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id).aggregate(
+            Sum('money'))
+        user_invitation_ones = user_invitation_one['money__sum']  # T1获得总钱数
+        user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
+        moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
+        return self.response(
+            {'code': 0, 'invitation_one_number': invitation_one_number, 'invitation_two_number': invitation_two_number,
+             'user_invitation_one': user_invitation_ones, 'user_invitation_twos': user_invitation_twos,
+             'moneys': moneys})
