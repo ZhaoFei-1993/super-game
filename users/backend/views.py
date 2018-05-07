@@ -337,7 +337,7 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
                     coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
                     coin_value.value = values[vv]
                     coin_value.save()
-            if x[0] == 'reward':
+            if x[0] == 'value_ratio':
                 reward = RewardCoin.objects.get(coin_id=coin)
                 reward.value_ratio = int(x[1])
                 reward.save()

@@ -233,13 +233,16 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
     """
     币允许投注值及兑换积分比例
     """
-    reward = serializers.SerializerMethodField()
+    value_ratio = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinValue
-        fields = ("id", "coin", "value_index", "value", "reward")
+        fields = ("id", "coin", "value_index", "value", "value_ratio")
 
     @staticmethod
     def get_reward(obj):
-        rewards = RewardCoin.objects.get(coin__name=obj.coin.name)
+        try:
+            rewards = RewardCoin.objects.get(coin__name=obj.coin.name)
+        except Exception:
+            return ''
         return rewards.value_ratio
