@@ -231,11 +231,7 @@ class DailySettingView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        list_t = Coin.objects.filter(admin=1).values('id', 'name').distinct()
-        coin_list = {}
-        for x in list_t:
-            coin_list[x['name']] = x['id']
-        return JsonResponse({"results": items, "coin_list": coin_list}, status=status.HTTP_200_OK)
+        return JsonResponse({"results": items}, status=status.HTTP_200_OK)
         # return self.response({"status":status.HTTP_200_OK,"results":data})
 
     @reversion_Decorator
@@ -243,15 +239,15 @@ class DailySettingView(ListCreateAPIView):
         if request.data:
             items = []
             for index, x in enumerate(request.data):
-                for y in ['coin_id', 'days', 'rewards', 'days_delta']:
+                for y in ['days', 'rewards', 'days_delta']:
                     value = (True if (y not in x) else False)
                 if value:
                     return JsonResponse({"Error": "%d Item ParamError" % (index + 1)},
                                         status=status.HTTP_400_BAD_REQUEST)
-                x.pop('coin_name')
-                x['admin_id'] = 1
+                x['admin_id'] = request.user.id
+                x['coin_id'] = 1
                 items.append(x)
-            DailySettings.objects.filter(coin_id=int(items[0]['coin_id'])).delete()
+            DailySettings.objects.all().delete()
             for item in items:
                 new_item = DailySettings(**item)
                 new_item.save()
