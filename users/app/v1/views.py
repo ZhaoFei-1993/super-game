@@ -285,6 +285,7 @@ class InfoView(ListAPIView):
         is_message = message_hints(user_id)  # 是否有未读消息
         # ggtc_locked = amount(user_id)  # 该用户锁定的金额
         clubinfo = Club.objects.get(pk=roomquiz_id)
+        coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         user_coin = usercoin.balance
@@ -296,6 +297,7 @@ class InfoView(ListAPIView):
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
             'usercoin': user_coin,
+            'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
             'integral': items[0]["integral"],
@@ -444,7 +446,7 @@ class RankingView(ListAPIView):
         #     win_ratio = 0
         # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=1)
         my_ranking = {
-            "id": user.id,
+            "user_id": user.id,
             "avatar": avatar,
             "nickname": nickname,
             "win_ratio": user.integral,
