@@ -643,11 +643,11 @@ class DailySignListView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_30201_ALREADY_SING)
         try:
             user = User.objects.get(pk=user_id)
-        except Exception:
+        except User.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         try:
             daily = DailyLog.objects.get(user_id=user_id)
-        except Exception:
+        except DailyLog.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
         if sign_date < yesterday_format:  # 判断昨天签到没有
@@ -662,7 +662,7 @@ class DailySignListView(ListCreateAPIView):
                 daily.number += 1
         try:
             dailysettings = DailySettings.objects.get(days=fate)
-        except Exception:
+        except DailySettings.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
         # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
