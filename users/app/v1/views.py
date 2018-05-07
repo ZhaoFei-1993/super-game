@@ -872,10 +872,8 @@ class UserPresentationView(CreateAPIView):
 
         # if int(passcode) != int(userinfo.pass_code):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
-        if coin.name.upper() == 'HAND' and p_amount < 5000:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if p_amount > user_coin.balance or p_amount <= 0:
+        if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
 
