@@ -85,8 +85,7 @@ class Command(BaseCommand):
                 continue
 
             max_coin = int(max_coin_bet.value)
-            balance = random.randint(max_coin * 1000, max_coin * 10000)
-            print('balance = ', balance, ' and balance type is ', type(balance))
+            balance = float(random.randint(max_coin * 1000, max_coin * 10000))
 
             user_coin = UserCoin()
             user_coin.user = user
