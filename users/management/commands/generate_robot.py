@@ -85,11 +85,13 @@ class Command(BaseCommand):
                 continue
 
             max_coin = int(max_coin_bet.value)
+            balance = random.randint(max_coin * 1000, max_coin * 10000)
+            print('balance = ', balance, ' and balance type is ', type(balance))
 
             user_coin = UserCoin()
             user_coin.user = user
             user_coin.coin = coin
-            user_coin.balance = random.randint(max_coin * 1000, max_coin * 10000)
+            user_coin.balance = balance
             user_coin.save()
 
         user_generated_datetime.append(current_generate_time)
