@@ -63,6 +63,7 @@ class User(AbstractBaseUser):
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
     integral = models.IntegerField(verbose_name='积分', default=0)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
+    is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -342,8 +343,7 @@ class UserSettingOthors(models.Model):
 
 @reversion.register()
 class UserInvitation(models.Model):
-    inviter = models.ForeignKey(User, related_name='邀请人id',
-                                on_delete=models.CASCADE)
+    inviter = models.ForeignKey(User, related_name='邀请人id', on_delete=models.CASCADE)
     invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
     invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
     money = models.IntegerField(verbose_name="奖励金额", default=0)
@@ -353,4 +353,3 @@ class UserInvitation(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "用户邀请表"
-

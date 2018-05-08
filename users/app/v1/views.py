@@ -5,6 +5,7 @@ from .serializers import UserInfoSerializer, UserSerializer, \
     CoinOperateSerializer
 from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
+from django.core.cache import caches
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
     CoinLock, UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
@@ -39,6 +40,13 @@ class UserRegister(object):
     """
     用户公共处理类
     """
+    cache = caches['memcached']
+
+    def set_user_cache(self, key, value):
+        self.cache.set(key, value)
+
+    def get_user_cache(self, key):
+        return self.cache.get(key)
 
     def delete_user_cache(self, key):
         return self.cache.delete(key)
@@ -111,6 +119,7 @@ class UserRegister(object):
                     usermessage.message = i
                     usermessage.save()
 
+            #  生成货币余额表
             coin = Coin.objects.all()
             for i in coin:
                 userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
@@ -120,6 +129,47 @@ class UserRegister(object):
                     usercoin.coin_id = i.id
                     usercoin.is_opt = False
                     usercoin.save()
+            #   邀请送HAND币
+            user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                                   is_effective=1).count()
+            if user_invitation_number > 0:
+                user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                                     is_effective=1)
+                try:
+                    userbalance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+                except Exception:
+                    return 0
+                for a in user_invitation_info:
+                    coin_detail = CoinDetail()
+                    coin_detail.user = user
+                    coin_detail.coin_name = 'HAND'
+                    coin_detail.amount = '+' + str(a.money)
+                    coin_detail.rest = userbalance.balance
+                    coin_detail.sources = 4
+                    coin_detail.save()
+                    a.is_deleted = 1
+                    a.save()
+                    userbalance.balance += a.money
+                    userbalance.save()
+
+            # 注册送HAND币
+            if user.is_money == 0:
+                user_money = 2000
+                try:
+                    user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+                except Exception:
+                    return 0
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = 'HAND'
+                coin_detail.amount = '+' + str(user_money)
+                coin_detail.rest = user_balance.balance
+                coin_detail.sources = 4
+                coin_detail.save()
+                user_balance.balance += user_money
+                user_balance.save()
+                user.is_money = 1
+                user.save()
         return token
 
     @transaction.atomic()
@@ -1375,7 +1425,7 @@ class ImageUpdateView(CreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         image_name = new_doc.image.name
-        avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/',  image_name])
+        avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
         user.avatar = avatar_url
         user.save()
         return self.response({'code': 0, 'data': avatar_url})
@@ -1407,16 +1457,24 @@ class InvitationRegisterView(CreateAPIView):
             return self.response({
                 'code': error_code.API_20102_TELEPHONE_REGISTERED
             })
-
+        all_money = UserInvitation.objects.filter(is_deleted=1).aggregate(Sum('money'))
+        all_money = all_money['money__sum']  # 获得总钱数
+        all_money += 100
+        if all_money > 200000000:
+            raise ParamErrorException(error_code.API_60101_USER_INVITATION_MONEY)
         # 用户注册
         ur = UserRegister()
         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         if invitee_one > 0:
-            invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
+            try:
+                invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
+            except DailyLog.DoesNotExist:
+                return 0
             on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=int(on_line)).count()
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=int(on_line),
+                                                           is_deleted=1).count()
             user_on_line = UserInvitation()
             if invitee_number < 100:
                 user_on_line.is_effective = 1
@@ -1425,7 +1483,8 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line.invitee_two = telephone
             user_on_line.save()
         user_go_line = UserInvitation()
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id)).count()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
+                                                       is_deleted=1).count()
         if invitee_number < 10:
             user_go_line.is_effective = 1
             user_go_line.money = 200
@@ -1453,9 +1512,9 @@ class InvitationInfoView(ListAPIView):
         user_id = self.request.user.id
         invitation_one_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id).count()  # T1总人数
         invitation_two_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id).count()  # T2总人数
-        user_invitation_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id).aggregate(
+        user_invitation_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id, is_deleted=1).aggregate(
             Sum('money'))
-        user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id).aggregate(
+        user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id, is_deleted=1).aggregate(
             Sum('money'))
         user_invitation_ones = user_invitation_one['money__sum']  # T1获得总钱数
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
@@ -1464,3 +1523,23 @@ class InvitationInfoView(ListAPIView):
             {'code': 0, 'invitation_one_number': invitation_one_number, 'invitation_two_number': invitation_two_number,
              'user_invitation_one': user_invitation_ones, 'user_invitation_twos': user_invitation_twos,
              'moneys': moneys})
+
+
+class InvitationUserView(ListAPIView):
+    """
+    扫描二维码拿用户消息
+    """
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.GET.get('user_id')
+        try:
+            user_info = User.objects.get(pk=user_id)
+        except DailyLog.DoesNotExist:
+            return 0
+        nickname = user_info.nickname
+        avatar = user_info.avatar
+        username = user_info.username
+        return self.response({'code': 0, "nickname": nickname, "avatar": avatar, "username": username})

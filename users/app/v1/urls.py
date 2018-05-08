@@ -14,10 +14,6 @@ urlpatterns = [
     path('forgetpassword/', views.ForgetPasswordView.as_view(), name="app-v1-forget_password"),
     # 用户注册，手机号码注册
     path('register/', views.RegisterView.as_view(), name="app-v1-user-register"),
-    # 用户接受邀请并注册
-    path('invitation/register/', views.InvitationRegisterView.as_view(), name="app-v1-user-invitation-register"),
-    # 用户邀请信息界面
-    path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
     #  修改用户昵称
     path('nickname/', views.NicknameView.as_view(), name="app-v1-user-nickname"),
     # 手机号绑定
@@ -61,6 +57,16 @@ urlpatterns = [
     # 操作记录明细
     path('asset/coin_operate/<int:coin>/<int:pk>/', views.CoinOperateDetailView.as_view(),
          name='app-v1-user-asset-coin_operate-detail'),
+    # 安卓版本控制
+    path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
+    # 更换头像
+    path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
+    # 用户接受邀请并注册
+    path('invitation/register/', views.InvitationRegisterView.as_view(), name="app-v1-user-invitation-register"),
+    # 用户邀请信息界面
+    path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
+    # 扫描二维码拿用户消息
+    path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定
@@ -71,9 +77,4 @@ urlpatterns = [
     # path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
     # # GGTC分红表
     # path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
-    # 安卓版本控制
-    path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
-    # 更换头像
-    path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
-
 ]
