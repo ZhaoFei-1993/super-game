@@ -651,6 +651,7 @@ class DailySignListView(ListCreateAPIView):
             sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
         except DailyLog.DoesNotExist:
             # raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            daily = DailyLog()
             sign_date = str(0)
 
         # sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
