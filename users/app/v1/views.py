@@ -645,11 +645,15 @@ class DailySignListView(ListCreateAPIView):
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         try:
             daily = DailyLog.objects.get(user_id=user_id)
+            sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
         except DailyLog.DoesNotExist:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
+            # raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            sign_date = 0
+
+        # sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
         if sign_date < yesterday_format:  # 判断昨天签到没有
             fate = 1
             daily.number = 1
