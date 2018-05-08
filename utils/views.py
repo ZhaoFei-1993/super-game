@@ -102,7 +102,7 @@ def upload(request):
                 print('new_doc.file.url值:' + new_doc.image.url)
 
                 if not settings.DEBUG:
-                    url = url.replace('uploads/images', '')
+                    url = url.replace('/images', '')
                 else:
                     url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url
 
@@ -128,7 +128,7 @@ def upload_file(request):
         if not file_type:
             return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
         date = datetime.now().strftime('%Y%m%d')
-        save_file = os.path.join(BASE_DIR, 'uploads/files', date + '_' + files.name)
+        save_file = os.path.join(BASE_DIR, '/files', date + '_' + files.name)
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)
