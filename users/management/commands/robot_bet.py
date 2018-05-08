@@ -72,7 +72,7 @@ class Command(BaseCommand):
             # 随机获取俱乐部
             club = self.get_bet_club()
             if club is False:
-                continue;
+                continue
 
             # 随机抽取玩法
             rule = self.get_bet_rule(quiz.id)
