@@ -674,6 +674,7 @@ class DailySignListView(ListCreateAPIView):
         user.integral += rewards
         user.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
+        daily.user_id = user_id
         daily.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
