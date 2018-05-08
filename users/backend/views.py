@@ -304,7 +304,7 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
     def post(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
         options = dict(request.data['options'])
-        ratio = request.data['reward']
+        ratio = request.data['value']
         for x in options.keys():
             if CoinValue.objects.filter(coin_id=coin, value_index=x).exists():
                 return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},
