@@ -66,7 +66,9 @@ urlpatterns = [
     # 用户邀请信息界面
     path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
     # 扫描二维码拿用户消息
-    path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
+    path('invitation/user/<int:user_id>/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
+    # 扫描二维码拿用户消息
+    path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

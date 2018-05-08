@@ -27,6 +27,8 @@ SECRET_KEY = local_settings.SECRET_KEY
 
 CACHE_DIR = os.path.join(BASE_DIR, 'cache')
 
+SITE_DOMAIN = local_settings.SITE_DOMAIN
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.DEBUG
 
@@ -198,7 +200,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
+MEDIA_ROOT = os.path.join(BASE_DIR, "uploads/")
 MEDIA_URL = "/uploads/"
 
 FILE_UPLOAD_PERMISSIONS = 0o0664

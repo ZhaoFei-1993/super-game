@@ -3,6 +3,8 @@ from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, \
     DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize, \
     CoinOperateSerializer
+import qrcode
+from ast import literal_eval
 from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from django.core.cache import caches
@@ -34,6 +36,7 @@ from utils.forms import ImageForm
 from utils.models import Image
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
+from PIL import Image
 
 
 class UserRegister(object):
@@ -1517,7 +1520,11 @@ class InvitationInfoView(ListAPIView):
         user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id, is_deleted=1).aggregate(
             Sum('money'))
         user_invitation_ones = user_invitation_one['money__sum']  # T1获得总钱数
+        if user_invitation_ones == None:
+            user_invitation_ones = 0
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
+        if user_invitation_twos == None:
+            user_invitation_twos = 0
         moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
         return self.response(
             {'code': 0, 'invitation_one_number': invitation_one_number, 'invitation_two_number': invitation_two_number,
@@ -1529,12 +1536,13 @@ class InvitationUserView(ListAPIView):
     """
     扫描二维码拿用户消息
     """
+    permission_classes = (LoginRequired,)
 
     def get_queryset(self):
         return
 
     def list(self, request, *args, **kwargs):
-        user_id = self.request.GET.get('user_id')
+        user_id = self.kwargs['user_id']
         try:
             user_info = User.objects.get(pk=user_id)
         except DailyLog.DoesNotExist:
@@ -1543,3 +1551,50 @@ class InvitationUserView(ListAPIView):
         avatar = user_info.avatar
         username = user_info.username
         return self.response({'code': 0, "nickname": nickname, "avatar": avatar, "username": username})
+
+
+class InvitationMergeView(ListAPIView):
+    """
+    生成用户推广页面
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        sub_path = str(user_id % 10000)
+        # print("sub_path========================", sub_path)
+        # print("settings.BASE_DIR===================", settings.BASE_DIR)
+        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
+        # print("base_img=======================", base_img)
+        qr_data = settings.SITE_DOMAIN + '/invitation/user/' + str(user_id) + '/'
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=8,
+            border=4,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        qr_img = qr.make_image()
+        base_img.paste(qr_img, (226, 770))
+
+        spread_path = settings.MEDIA_ROOT + 'spread/'
+        if not os.path.exists(spread_path):
+            os.mkdir(spread_path)
+
+        save_path = spread_path + sub_path
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+
+        # 保存二维码图片
+        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
+        qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+
+        # 保存推广图片
+        base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
+        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+
+        return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img})
