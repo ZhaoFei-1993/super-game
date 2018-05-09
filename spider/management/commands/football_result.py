@@ -88,7 +88,7 @@ def get_data_info(url, match_flag):
                         except UserCoin.DoesNotExist:
                             user_coin = UserCoin()
                         user_coin.coin_id = club.coin_id
-                        user_coin.user = record.user_id
+                        user_coin.user_id = record.user_id
                         user_coin.balance += earn_coin
                         user_coin.save()
 
