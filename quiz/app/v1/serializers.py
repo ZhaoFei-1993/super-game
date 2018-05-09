@@ -42,8 +42,11 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_win_rate(obj):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
-            option = Option.objects.get(rule_id=rule.pk, option="胜")
-            odds = option.odds
+            try:
+                option = Option.objects.get(rule_id=rule.pk, option="胜")
+                odds = option.odds
+            except Option.DoesNotExist:
+                odds = 0
         return odds
 
     @staticmethod
@@ -55,16 +58,22 @@ class QuizSerialize(serializers.ModelSerializer):
             return ''
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
-            option = Option.objects.get(rule_id=rule.pk, option="平")
-            odds = option.odds
+            try:
+                option = Option.objects.get(rule_id=rule.pk, option="平")
+                odds = option.odds
+            except Option.DoesNotExist:
+                odds = 0
         return odds
 
     @staticmethod
     def get_lose_rate(obj):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
-            option = Option.objects.get(rule_id=rule.pk, option="负")
-            odds = option.odds
+            try:
+                option = Option.objects.get(rule_id=rule.pk, option="负")
+                odds = option.odds
+            except Option.DoesNotExist:
+                odds = 0
         return odds
 
     @staticmethod
