@@ -240,7 +240,7 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
         fields = ("id", "coin", "value_index", "value", "value_ratio")
 
     @staticmethod
-    def get_reward(obj):
+    def get_value_ratio(obj):
         try:
             rewards = RewardCoin.objects.get(coin__name=obj.coin.name)
         except Exception:

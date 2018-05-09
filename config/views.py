@@ -97,19 +97,21 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             return self.response({'status': 200, 'results': {'id': item.id,
                                                              'version': item.version,
-                                                             'is_update': item.is_update
+                                                             'is_update': item.is_update,
+                                                             'comment':item.comment
                                                              }})
         else:
             return super().list(request, *args, **kwargs)
 
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
-        values = value_judge(request, 'files', 'is_update', 'version')
+        values = value_judge(request, 'files', 'is_update', 'version','comment')
         if values == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         files = request.data.get('files').split('\\')[-1]
         is_update = request.data.get('is_update')
         version = request.data.get('version')
+        comment = request.data.get('comment')
         config = AndroidVersion()
         version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)
         if version_exist:
@@ -117,6 +119,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         else:
             config.version = version
         config.is_update = is_update
+        config.comment=comment
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
         config.save()
@@ -146,6 +149,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
                 item.version = version
         if "is_update" in request.data:
             item.is_update = int(request.data.get('is_update'))
+        if "comment" in request.data:
+            item.comment = request.data.get('comment')
         item.save()
         return self.response({"code": 0})
 

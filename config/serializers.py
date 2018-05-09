@@ -37,7 +37,7 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = AndroidVersion
-        fields = ("id", "version", "upload_url", "is_update", "is_delete", "create_at")
+        fields = ("id", "version", "comment", "upload_url", "is_update", "is_delete", "create_at")
 
     @staticmethod
     def get_create_at(obj):

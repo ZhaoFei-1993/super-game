@@ -293,7 +293,7 @@ class UserRecharge(models.Model):
     amount = models.DecimalField(verbose_name='充值数量', max_digits=15, decimal_places=8, default=0)
     confirmations = models.IntegerField(verbose_name='确认数', default=0)
     txid = models.CharField(verbose_name='所在区块Hash', max_length=255, default=' ')
-    trade_at = models.DateTimeField(verbose_name='交易时间')
+    trade_at = models.DateTimeField(verbose_name='交易时间', auto_now_add=True)
 
     class Meta:
         ordering = ['-id']

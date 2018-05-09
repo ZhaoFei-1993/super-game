@@ -25,7 +25,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge
+    message_sign, amount, value_judge, resize_img
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
@@ -1326,7 +1326,7 @@ class UserRechargeView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = request.user.id
         try:
-            user_coin = UserCoin.objects.get(id=index, user_id=uuid)
+            user_coin = UserCoin.objects.filter(id=index, user_id=uuid)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance += Decimal(recharge)
@@ -1416,12 +1416,18 @@ class ImageUpdateView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        upload_size = request.FILES['image'].size/(1024*1024)
+        if upload_size > 5:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         form = ImageForm(request.POST, request.FILES)
         safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
         if safe_image_type:
             if form.is_valid():
                 new_doc = Image(image=request.FILES['image'])
                 new_doc.save()
+        image_path=new_doc.image.path
+        # path2=path1.split('.')[0]+'-z.'+path1.split('.')[1]
+        resize_img(image_path,300,300) #图片等比压缩
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
