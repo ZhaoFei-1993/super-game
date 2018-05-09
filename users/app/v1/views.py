@@ -938,7 +938,9 @@ class UserPresentationView(CreateAPIView):
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if p_address == '':
+        address_check = UserPresentation.objects.filter(address=p_address, coin_id=coin.id).order_by('user').values(
+            'user').distinct()
+        if len(address_check > 1) and address_check[0]['user'] != userid and p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_address_name == '' and UserPresentation.objects.filter(user_id=userid,
@@ -1416,7 +1418,7 @@ class ImageUpdateView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        upload_size = request.FILES['image'].size/(1024*1024)
+        upload_size = request.FILES['image'].size / (1024 * 1024)
         if upload_size > 5:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         form = ImageForm(request.POST, request.FILES)
@@ -1425,9 +1427,9 @@ class ImageUpdateView(CreateAPIView):
             if form.is_valid():
                 new_doc = Image(image=request.FILES['image'])
                 new_doc.save()
-        image_path=new_doc.image.path
+        image_path = new_doc.image.path
         # path2=path1.split('.')[0]+'-z.'+path1.split('.')[1]
-        resize_img(image_path,300,300) #图片等比压缩
+        resize_img(image_path, 300, 300)  # 图片等比压缩
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
