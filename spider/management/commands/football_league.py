@@ -14,6 +14,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 img_dir = BASE_DIR+'/uploads/images/spider/football/league_icon'
+cache_dir = BASE_DIR + '/cache'
 
 
 def get_league_url():
@@ -32,16 +33,23 @@ def get_league_url():
 
 
 def get_league_info(leagua_list=[]):
+    os.chdir(cache_dir)
+    files = []
+    for root, sub_dirs, files in os.walk(cache_dir):
+        files = files
+    if 'league_cache.txt' not in files:
+        with open('football_league_cache.txt', 'a+') as f:
+            pass
+
     base_url = 'http://info.sporttery.cn/football/history/'
     if len(leagua_list) > 0:
         for league in leagua_list:
 
-            os.chdir(BASE_DIR + '/cache')
-            with open('league_cache.txt', 'r+') as f:
+            with open('football_league_cache.txt', 'r+') as f:
                 data = f.read()
             data_list = data.split(',')
             if base_url + league not in data_list:
-                with open('league_cache.txt', 'a+') as f:
+                with open('football_league_cache.txt', 'a+') as f:
                     f.write(base_url + league + ',')
 
                 response = requests.get(base_url + league, headers=headers)

@@ -15,6 +15,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 img_dir = BASE_DIR+'/uploads/images/spider/basketball/league_icon'
+cache_dir = BASE_DIR + '/cache'
 
 
 def get_league_url():
@@ -33,46 +34,64 @@ def get_league_url():
 
 
 def get_league_info(leagua_list=[]):
+    os.chdir(cache_dir)
+    files = []
+    for root, sub_dirs, files in os.walk(cache_dir):
+        files = files
+    if 'league_cache.txt' not in files:
+        with open('basketball_league_cache.txt', 'a+') as f:
+            pass
+
     base_url = 'http://i.sporttery.cn/api/bk_match_info/get_comp_seasons/?f_callback=cInfo&c_id='
     if len(leagua_list) > 0:
         for league in leagua_list:
             id = league[23:]
-            response = requests.get(base_url + id)
-            dt = response.text.encode("utf-8").decode('unicode_escape')
-            json_dt = json.loads(dt[6:-2])
 
-            # name = json_dt['result']['comp_name']
-            name = json_dt['result']['comp_abbr']
-            icon = json_dt['result']['comp_pic']
+            with open('basketball_league_cache.txt', 'r+') as f:
+                data = f.read()
+            data_list = data.split(',')
+            if base_url + id not in data_list:
+                with open('basketball_league_cache.txt', 'a+') as f:
+                    f.write(base_url + id + ',')
 
-            icon_name = re.findall('http://static.sporttery.cn/sinaimg/basketball/competitionpic/(.*)', icon)[0]
+                response = requests.get(base_url + id)
+                dt = response.text.encode("utf-8").decode('unicode_escape')
+                json_dt = json.loads(dt[6:-2])
 
-            files = []
-            source_dir = img_dir
-            for root, sub_dirs, files in os.walk(source_dir):
-                files = files
-            if icon_name not in files:
-                response_img = requests.get(icon, headers=headers)
-                img = response_img.content
-                os.chdir(img_dir)
-                with open(icon_name, 'wb') as f:
-                    f.write(img)
+                # name = json_dt['result']['comp_name']
+                name = json_dt['result']['comp_abbr']
+                icon = json_dt['result']['comp_pic']
+
+                icon_name = re.findall('http://static.sporttery.cn/sinaimg/basketball/competitionpic/(.*)', icon)[0]
+
+                files = []
+                source_dir = img_dir
+                for root, sub_dirs, files in os.walk(source_dir):
+                    files = files
+                if icon_name not in files:
+                    response_img = requests.get(icon, headers=headers)
+                    img = response_img.content
+                    os.chdir(img_dir)
+                    with open(icon_name, 'wb') as f:
+                        f.write(img)
+                else:
+                    print('图片已经存在')
+
+                if Category.objects.filter(name=name).first() is not None:
+                    print('联赛已存在')
+                else:
+                    category = Category()
+                    category.name = name
+                    category.icon = MEDIA_DOMAIN_HOST + '/images/spider/basketball/league_icon/' + icon_name
+                    category.admin = Admin.objects.filter(id=1).first()
+                    category.parent = Category.objects.filter(id=1).first()
+                    category.save()
+
+                print(name)
+                print(icon)
+                print('----------------------------------------------------')
             else:
-                print('图片已经存在')
-
-            if Category.objects.filter(name=name).first() is not None:
-                print('联赛已存在')
-            else:
-                category = Category()
-                category.name = name
-                category.icon = MEDIA_DOMAIN_HOST + '/images/spider/basketball/league_icon/' + icon_name
-                category.admin = Admin.objects.filter(id=1).first()
-                category.parent = Category.objects.filter(id=1).first()
-                category.save()
-
-            print(name)
-            print(icon)
-            print('----------------------------------------------------')
+                print('已经存在，跳过')
     else:
         print('无内容')
 
@@ -81,6 +100,7 @@ class Command(BaseCommand):
     help = "爬取篮球联赛"
 
     def handle(self, *args, **options):
+        print(os.getcwd())
         league_list = get_league_url()
         print(league_list)
         get_league_info(league_list)
