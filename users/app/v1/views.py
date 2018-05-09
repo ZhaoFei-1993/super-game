@@ -940,10 +940,10 @@ class UserPresentationView(CreateAPIView):
 
         address_check = UserPresentation.objects.filter(address=p_address, coin_id=coin.id).order_by('user').values(
             'user').distinct()
-        if len(address_check) > 1 and address_check[0]['user'] != userid and p_address == '':
+        if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if p_address_name == '' and UserPresentation.objects.filter(user_id=userid,
+        if p_address_name == '' or UserPresentation.objects.filter(user_id=userid,
                                                                     address_name=p_address_name).exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
@@ -1318,7 +1318,7 @@ class UserRechargeView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         index = kwargs.get('index')
-        if 'recharge' not in request.data and 'r_address' not in request.data:
+        if 'recharge' not in request.data or 'r_address' not in request.data:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         recharge = int(request.data.get('recharge'))
         r_address = request.data.get('r_address')
