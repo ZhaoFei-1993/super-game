@@ -164,6 +164,7 @@ class AndroidVersion(models.Model):
     """
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
+    comment = models.CharField("版本说明", max_length=100, default='')
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
     is_delete = models.BooleanField("是否已删除", max_length=2, default=False)
     create_at = models.DateTimeField("发布时间", auto_now=True)

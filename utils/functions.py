@@ -9,6 +9,7 @@ from random import Random
 import time
 import pytz
 import datetime
+from PIL import Image
 from decimal import Decimal
 from django.conf import settings
 from django.db.models import Sum
@@ -225,3 +226,39 @@ def amount_presentation(user, coin):
     else:
         rest = coin['amount__sum']
     return rest
+
+
+def resize_img(image, dst_w=0, dst_h=0, qua=95):
+    """
+    :param file1: 图像文件
+    :param file2: 保存文件
+    :param dst_w: 需生成的图像宽(默认则不改变)
+    :param dst_h: 需生成的图像高(默认则不改变)
+    :param qua: 图片生成质量
+    :return:
+    """
+
+    img = Image.open(image)
+    ori_w, ori_h = img.size
+    widthRatio = heightRatio = None
+    ratio = 1
+    if (ori_w and ori_w > dst_w) or (ori_h and ori_h > dst_h):
+        if dst_w and ori_w > dst_w:
+            widthRatio = float(dst_w) / ori_w  # 正确获取小数的方式
+        if dst_h and ori_h > dst_h:
+            heightRatio = float(dst_h) / ori_h
+        if widthRatio and heightRatio:
+            if widthRatio < heightRatio:
+                ratio = widthRatio
+            else:
+                ratio = heightRatio
+        if widthRatio and not heightRatio:
+            ratio = widthRatio
+        if heightRatio and not widthRatio:
+            ratio = heightRatio
+        newWidth = int(ori_w * ratio)
+        newHeight = int(ori_h * ratio)
+    else:
+        newWidth = ori_w
+        newHeight = ori_h
+    img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image,quality=qua)
