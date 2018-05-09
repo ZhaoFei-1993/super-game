@@ -28,10 +28,11 @@ class Category(MPTTModel):
 class Quiz(models.Model):
     PUBLISHING = 0  # 已发布
     REPEALED = 1  # 比赛中
-    ENDED = 2  # 已结束
-    PUBLISHING_ANSWER = 3  # 已发布答案
-    BONUS_DISTRIBUTION = 4  # 已分配奖金
-    HALF_TIME = 5  # 中场休息
+    HALF_TIME = 2  # 中场休息
+    ENDED = 3  # 已结束
+    PUBLISHING_ANSWER = 4  # 已发布答案
+    BONUS_DISTRIBUTION = 5  # 已分配奖金
+
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
     OPTION_FIRST_AUDIT = 13  # 答案初审
@@ -44,6 +45,7 @@ class Quiz(models.Model):
     STATUS_CHOICE = (
         (PUBLISHING, "已发布"),
         (REPEALED, "比赛中"),
+        (HALF_TIME, "中场休息"),
         (ENDED, "已结束"),
         (PUBLISHING_ANSWER, "已发布答案"),
         (BONUS_DISTRIBUTION, "已分配奖金"),
