@@ -44,7 +44,7 @@ class SmsView(ListCreateAPIView):
 
         code = sms.code()
         model = Sms()
-        model.telephone = telephone
+        model.telephone = '86' + telephone
         model.code = code
         model.message = sms_message.replace('{code}', code)
         model.type = code_type
