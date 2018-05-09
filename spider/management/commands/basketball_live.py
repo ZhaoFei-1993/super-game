@@ -15,7 +15,7 @@ live_url = 'http://info.sporttery.cn/livescore/iframe/bk_realtime.php?type=bkdat
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-cache_dir = BASE_DIR + '/spider/live_cache/basketball'
+cache_dir = BASE_DIR + '/cache/live_cache/basketball'
 
 
 def perform_command(fun, inc):
