@@ -10,6 +10,10 @@ import pytz
 from django.conf import settings
 from base.exceptions import ParamErrorException
 
+from rq import Queue
+from redis import Redis
+from sms.consumers import send_sms
+
 
 class SmsView(ListCreateAPIView):
     """
@@ -36,15 +40,21 @@ class SmsView(ListCreateAPIView):
             if current_time - time.mktime(last_sent_time.timetuple()) <= settings.SMS_PERIOD_TIME:
                 return self.response({'code': error_code.API_40104_SMS_PERIOD_INVALID})
 
+        sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_REGISTER
+
         code = sms.code()
         model = Sms()
         model.telephone = telephone
         model.code = code
-        model.message = '你好，你的验证码为：' + code + '，10分钟内有效。'
+        model.message = sms_message.replace('{code}', code)
         model.type = code_type
         model.status = Sms.READY
         model.save()
-        print("code==============", code)
+
+        # 消息队列
+        redis_conn = Redis()
+        q = Queue(connection=redis_conn)
+        q.enqueue(send_sms, sms.id)
 
         return self.response({'code': error_code.API_0_SUCCESS, 'data': code})
 

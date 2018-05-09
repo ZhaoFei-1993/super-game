@@ -107,3 +107,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+SMS_CL_SIGN_NAME = '【超级游戏】'
+SMS_CL_TEMPLATE_REGISTER = '您的注册短信验证码为：{code}'
+SMS_CL_TEMPLATE_RESET_PASSWORD = '您的短信验证码为：{code}'
+SMS_CL_TEMPLATE_SET_PASSCODE = '当前设置密保，验证码为：{code}'
