@@ -31,7 +31,9 @@ def send_sms(sms_id):
 
     sms = Sms.objects.get(pk=sms_id)
 
-    params = {'account': account, 'password': password, 'msg': sms.message, 'mobile': sms.telephone, 'report': 'false'}
+    telephone = '86' + sms.telephone
+
+    params = {'account': account, 'password': password, 'msg': sms.message, 'mobile': telephone, 'report': 'false'}
     params = json.dumps(params)
 
     headers = {"Content-type": "application/json"}
