@@ -4,6 +4,8 @@ from django.core.management.base import BaseCommand
 import requests
 import json
 from quiz.models import Quiz, Rule, Option, Record
+from users.models import UserCoin, CoinDetail, Coin
+from chat.models import Club
 from django.db import transaction
 import datetime
 
@@ -75,8 +77,32 @@ def get_data_info(url, match_flag):
                 records = Record.objects.filter(quiz=quiz)
                 if len(records) > 0:
                     for record in records:
-                        record.earn_coin = record.bet * record.odds
+                        earn_coin = record.bet * record.odds
+                        record.earn_coin = earn_coin
                         record.save()
+
+                        # 用户增加对应币金额
+                        club = Club.objects.get(record.roomquiz_id)
+                        try:
+                            user_coin = UserCoin.objects.get(user_id=record.user_id)
+                        except UserCoin.DoesNotExist:
+                            user_coin = UserCoin()
+                        user_coin.coin_id = club.coin_id
+                        user_coin.user = record.user_id
+                        user_coin.balance += earn_coin
+                        user_coin.save()
+
+                        # 获取币信息
+                        coin = Coin.objects.get(pk=club.coin_id)
+
+                        # 用户资金明细表
+                        coin_detail = CoinDetail()
+                        coin_detail.user_id = record.user_id
+                        coin_detail.coin_name = coin.name
+                        coin_detail.amount = earn_coin
+                        coin_detail.rest = user_coin.balance
+                        coin_detail.sources = CoinDetail.BETS
+                        coin_detail.save()
                 quiz.status = Quiz.BONUS_DISTRIBUTION
             else:
                 print('该比赛不存在')
