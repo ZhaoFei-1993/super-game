@@ -35,40 +35,51 @@ def get_league_info(leagua_list=[]):
     base_url = 'http://info.sporttery.cn/football/history/'
     if len(leagua_list) > 0:
         for league in leagua_list:
-            response = requests.get(base_url + league, headers=headers)
-            soup = BeautifulSoup(response.text, 'lxml')
 
-            name = soup.select('h2[class="title"]')[0].string
-            icon = soup.select('div[class="badge"]')[0].img['src']
+            os.chdir(BASE_DIR + '/cache')
+            with open('league_cache.txt', 'r+') as f:
+                data = f.read()
+            data_list = data.split(',')
+            if base_url + league not in data_list:
+                with open('league_cache.txt', 'a+') as f:
+                    f.write(base_url + league + ',')
 
-            icon_name = re.findall('http://static.sporttery.cn/sinaimg/football/competitionpic/(.*)', icon)[0]
+                response = requests.get(base_url + league, headers=headers)
+                soup = BeautifulSoup(response.text, 'lxml')
 
-            files = []
-            source_dir = img_dir
-            for root, sub_dirs, files in os.walk(source_dir):
-                files = files
-            if icon_name not in files:
-                response_img = requests.get(icon, headers=headers)
-                img = response_img.content
-                os.chdir(img_dir)
-                with open(icon_name, 'wb') as f:
-                    f.write(img)
+                name = soup.select('h2[class="title"]')[0].string
+                icon = soup.select('div[class="badge"]')[0].img['src']
+
+                icon_name = re.findall('http://static.sporttery.cn/sinaimg/football/competitionpic/(.*)', icon)[0]
+
+                files = []
+                source_dir = img_dir
+                for root, sub_dirs, files in os.walk(source_dir):
+                    files = files
+                if icon_name not in files:
+                    response_img = requests.get(icon, headers=headers)
+                    img = response_img.content
+                    os.chdir(img_dir)
+                    with open(icon_name, 'wb') as f:
+                        f.write(img)
+                else:
+                    print('图片已经存在')
+
+                if Category.objects.filter(name=name).first() is not None:
+                    print('联赛已存在')
+                else:
+                    category = Category()
+                    category.name = name
+                    category.icon = MEDIA_DOMAIN_HOST + '/images/spider/football/league_icon/' + icon_name
+                    category.admin = Admin.objects.filter(id=1).first()
+                    category.parent = Category.objects.filter(id=2).first()
+                    category.save()
+
+                print(name)
+                print(icon)
+                print('----------------------------------------------------')
             else:
-                print('图片已经存在')
-
-            if Category.objects.filter(name=name).first() is not None:
-                print('联赛已存在')
-            else:
-                category = Category()
-                category.name = name
-                category.icon = MEDIA_DOMAIN_HOST + '/images/spider/football/league_icon/' + icon_name
-                category.admin = Admin.objects.filter(id=1).first()
-                category.parent = Category.objects.filter(id=2).first()
-                category.save()
-
-            print(name)
-            print(icon)
-            print('----------------------------------------------------')
+                print('已经存在，跳过')
     else:
         print('无内容')
 
