@@ -46,7 +46,7 @@ urlpatterns = [
     path('asset/', views.AssetView.as_view(), name="app-v1-user-asset"),
     # 提交提现申请
     path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),
-    # ETH提现记录表
+    # 提现记录表
     path('asset/list_pre/<int:c_id>/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
     # 用户设置其他(index支持1-5)
     path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
@@ -67,7 +67,7 @@ urlpatterns = [
     path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
     # 扫描二维码拿用户消息
     path('invitation/user/<int:user_id>/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
-    # 扫描二维码拿用户消息
+    # 用户生成带二维码邀请界面
     path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),

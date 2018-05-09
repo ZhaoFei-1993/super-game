@@ -31,6 +31,7 @@ class Quiz(models.Model):
     ENDED = 2  # 已结束
     PUBLISHING_ANSWER = 3  # 已发布答案
     BONUS_DISTRIBUTION = 4  # 已分配奖金
+    HALF_TIME = 5  # 中场休息
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
     OPTION_FIRST_AUDIT = 13  # 答案初审
@@ -70,6 +71,7 @@ class Quiz(models.Model):
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    gaming_time = models.IntegerField(verbose_name="比赛进行时间", default=0)
     match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
 
     class Meta:

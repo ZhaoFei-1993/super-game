@@ -253,7 +253,7 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         register_type = ur.get_register_type(username)
 
-        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+        avatar = settings.MEDIA_DOMAIN_HOST + "/images/avatar.png"
         if 'avatar' in request.data:
             avatar = request.data.get('avatar')
         type = request.data.get('type')  # 1 注册          2 登录

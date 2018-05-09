@@ -35,7 +35,7 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_begin_at(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
-        start = int(begin_at) - 28800
+        start = int(begin_at)
         return start
 
     @staticmethod
@@ -205,7 +205,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     def get_start(obj):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         start = time.mktime(begin_at.timetuple())
-        start = int(start) - 28800
+        start = int(start)
         return start
 
     @staticmethod
