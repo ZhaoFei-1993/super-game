@@ -4,7 +4,8 @@ from django.core.management.base import BaseCommand
 import re
 import requests
 from bs4 import BeautifulSoup
-from quiz.models import Quiz, Rule, Option
+from quiz.models import Quiz, Rule, Option, Record
+from django.db import transaction
 
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
@@ -133,6 +134,14 @@ def get_data_info(url, match_flag):
         option = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
         option.is_right = 1
         option.save()
+
+        # 分配奖金
+        records = Record.objects.filter(quiz=quiz)
+        if len(records) > 0:
+            for record in records:
+                record.earn_coin = record.bet * record.odds
+                record.save()
+        quiz.status = Quiz.BONUS_DISTRIBUTION
     else:
         print('该比赛不存在')
 

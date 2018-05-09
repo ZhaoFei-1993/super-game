@@ -3,7 +3,9 @@
 from django.core.management.base import BaseCommand
 import requests
 import json
-from quiz.models import Quiz, Rule, Option
+from quiz.models import Quiz, Rule, Option, Record
+from django.db import transaction
+import datetime
 
 
 base_url = 'http://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
@@ -23,6 +25,7 @@ def get_data(url):
         print('Error', e.args)
 
 
+@transaction.atomic()
 def get_data_info(url, match_flag):
     datas = get_data(url + match_flag)
     if datas['status']['code'] == 0:
@@ -34,15 +37,10 @@ def get_data_info(url, match_flag):
             # result_hafu = datas['result']['pool_rs']['hafu']
 
             score = result_crs['prs_name'].split(':')
-            host_team_score = score[0]
-            guest_team_score = score[1]
+            if len(score) < 2:
+                return True
 
-            print(score)
-            print(match_flag)
-            print(result_had)
-            print(result_hhad)
-            print(result_ttg)
-            print(result_crs)
+            host_team_score, guest_team_score = score
 
             if Quiz.objects.filter(match_flag=match_flag).first() is not None:
                 quiz = Quiz.objects.filter(match_flag=match_flag).first()
@@ -72,6 +70,14 @@ def get_data_info(url, match_flag):
                 option = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
                 option.is_right = 1
                 option.save()
+
+                # 分配奖金
+                records = Record.objects.filter(quiz=quiz)
+                if len(records) > 0:
+                    for record in records:
+                        record.earn_coin = record.bet * record.odds
+                        record.save()
+                quiz.status = Quiz.BONUS_DISTRIBUTION
             else:
                 print('该比赛不存在')
 
@@ -85,9 +91,16 @@ def get_data_info(url, match_flag):
 class Command(BaseCommand):
     help = "爬取足球开奖结果"
 
-    def add_arguments(self, parser):
-        parser.add_argument('match_flag', type=str)
+    # def add_arguments(self, parser):
+    #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
-        get_data_info(base_url, match_flag=options['match_flag'])
+        # 在此基础上增加2小时
+        after_2_hours = datetime.datetime.now() + datetime.timedelta(hours=2)
+
+        quizs = Quiz.objects.filter(begin_at__lt=after_2_hours)
+        for quiz in quizs:
+            get_data_info(base_url, quiz.match_flag)
+
+        # get_data_info(base_url, match_flag=options['match_flag'])
 
