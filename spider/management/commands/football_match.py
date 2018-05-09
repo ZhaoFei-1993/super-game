@@ -329,7 +329,6 @@ def get_data_info(url):
                 quiz.begin_at = time
                 quiz.updated_at = created_at
                 quiz.admin = Admin.objects.filter(id=1).first()
-                quiz.created_at = created_at
                 quiz.save()
 
                 for i in range(0, 4):

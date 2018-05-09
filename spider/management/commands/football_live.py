@@ -14,7 +14,7 @@ base_url = 'http://i.sporttery.cn/api/match_live_2/get_match_updated?callback=?'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-cache_dir = BASE_DIR + '/spider/live_cache/football'
+cache_dir = BASE_DIR + '/cache/live_cache/football'
 
 
 def perform_command(fun, inc):
@@ -60,7 +60,9 @@ def get_live_data():
                 files = files
             if cache_name not in files:
                 with open(cache_name, 'w+') as f:
-                    f.write(data_list['fs_h'] + ':' + data_list['fs_a'])
+                    f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
+                    f.write(data_list['status'] + ',')
+                    f.write(data_list['match_period'])
                 if data_list['fs_h'] == '':
                     print('warming')
                 else:
@@ -75,12 +77,16 @@ def get_live_data():
                             quiz.host_team_score = host_team_score
                             quiz.guest_team_score = guest_team_score
                             quiz.status = quiz.ENDED
+                            quiz.gaming_time = -1
                         elif data_list['status'] == 'Fixture':
                             quiz.status = quiz.PUBLISHING
                         elif data_list['status'] == 'Playing':
                             quiz.host_team_score = host_team_score
                             quiz.guest_team_score = guest_team_score
                             quiz.status = quiz.REPEALED
+                            quiz.gaming_time = int(data_list['minute']) * 60
+                            if data_list['match_period'] == 'HT':
+                                quiz.status = quiz.HALF_TIME
                         quiz.save()
 
                         print(quiz.host_team)
@@ -93,18 +99,22 @@ def get_live_data():
                 with open(cache_name, 'r') as f:
                     score = f.readline()
 
-                if score == data_list['fs_h'] + ':' + data_list['fs_a'] or data_list['fs_h'] == '':
+                if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a']  \
+                        and score.split(',')[1] == data_list['status'] \
+                        and score.split(',')[2] == data_list['match_period']:
+
                     print('不需要更新')
                     print('--------------------------')
                 else:
                     with open(cache_name, 'w+') as f:
-                        f.write(data_list['fs_h'] + ':' + data_list['fs_a'])
+                        f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
+                        f.write(data_list['status'] + ',')
+                        f.write(data_list['match_period'])
 
                     if Quiz.objects.filter(match_flag=match_id).first() is not None:
                         quiz = Quiz.objects.filter(match_flag=match_id).first()
 
                         # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
-                        # score = str(data_list['fs_h']) + ':' + str(data_list['fs_a'])
                         host_team_score = data_list['fs_h']
                         guest_team_score = data_list['fs_a']
 
@@ -112,12 +122,16 @@ def get_live_data():
                             quiz.host_team_score = host_team_score
                             quiz.guest_team_score = guest_team_score
                             quiz.status = quiz.ENDED
+                            quiz.gaming_time = -1
                         elif data_list['status'] == 'Fixture':
                             quiz.status = quiz.PUBLISHING
                         elif data_list['status'] == 'Playing':
                             quiz.host_team_score = host_team_score
                             quiz.guest_team_score = guest_team_score
                             quiz.status = quiz.REPEALED
+                            quiz.gaming_time = int(data_list['minute']) * 60
+                            if data_list['match_period'] == 'HT':
+                                quiz.status = quiz.HALF_TIME
                         quiz.save()
 
                         print(quiz.host_team)
