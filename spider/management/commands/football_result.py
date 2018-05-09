@@ -82,7 +82,7 @@ def get_data_info(url, match_flag):
                         record.save()
 
                         # 用户增加对应币金额
-                        club = Club.objects.get(record.roomquiz_id)
+                        club = Club.objects.get(pk=record.roomquiz_id)
                         try:
                             user_coin = UserCoin.objects.get(user_id=record.user_id)
                         except UserCoin.DoesNotExist:
