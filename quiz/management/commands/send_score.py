@@ -10,6 +10,10 @@ class Command(BaseCommand):
     help = "推送竞猜比分"
 
     def handle(self, *args, **options):
+        quiz_id = 385
+        host = 1
+        guest = 2
+
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
-        q.enqueue(quiz_send_score, 712)
+        q.enqueue(quiz_send_score, quiz_id, host, guest)
