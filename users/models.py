@@ -343,7 +343,7 @@ class UserSettingOthors(models.Model):
 
 @reversion.register()
 class UserInvitation(models.Model):
-    inviter = models.ForeignKey(User, related_name='邀请人id', on_delete=models.CASCADE)
+    inviter = models.ForeignKey(User, on_delete=models.CASCADE)
     invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
     invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
     money = models.IntegerField(verbose_name="奖励金额", default=0)
@@ -360,6 +360,7 @@ class IntegralPrize(models.Model):
     prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
     icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
     prize_number = models.IntegerField(verbose_name="奖品奖励数量", default=1)
+    prize_consume = models.IntegerField(verbose_name="抽奖消耗", default=20)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)

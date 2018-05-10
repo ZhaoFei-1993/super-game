@@ -71,7 +71,8 @@ urlpatterns = [
     path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
     # 抽奖列表
     path('luck_draw_list/', views.LuckDrawListView.as_view(), name="app-v1-user-luck-draw-list"),
-
+    # 点击抽奖
+    path('click_luck_draw/', views.ClickLuckDrawView.as_view(), name="app-v1-user-click_luck_draw")
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

@@ -6,3 +6,4 @@ all_settings.py
 *.djcache
 uploads
 images
+authentication.py

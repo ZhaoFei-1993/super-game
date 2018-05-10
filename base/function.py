@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from .exceptions import NotLoginException
 from .code import API_403_ACCESS_DENY
 import random
+import bisect
 
 
 class LoginRequired(IsAuthenticated):
@@ -73,3 +74,17 @@ def randomnickname():
     X = random.choice(xing)
     M = "".join(random.choice(ming) for i in range(2))
     return X + M
+
+
+def weight_choice(weight):
+    """
+    :param weight: prize对应的权重序列
+    :return:选取的值在原列表里的索引
+    """
+    weight_sum = []
+    sum = 0
+    for a in weight:
+        sum += a
+        weight_sum.append(sum)
+    t = random.randint(0, sum - 1)
+    return bisect.bisect_right(weight_sum, t)

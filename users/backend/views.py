@@ -108,6 +108,10 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         admin = self.request.user
         exchange_rate = request.data['exchange_rate']
         cash_control = request.data['cash_control']
+        betting_value_one = request.data['betting_value_one']
+        betting_value_two = request.data['betting_value_two']
+        betting_value_three = request.data['betting_value_three']
+        Integral_proportion = request.data['Integral_proportion']
 
         coin = Coin()
         coin.icon = request.data['icon']
@@ -122,6 +126,26 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         # coin.is_lock = request.data['is_lock']
         coin.admin = admin
         coin.save()
+        coin_value = CoinValue()
+        coin_value.coin = coin
+        coin_value.value_index = 1
+        coin_value.value = float(betting_value_one)
+        coin_value.save()
+        coin_value = CoinValue()
+        coin_value.coin = coin
+        coin_value.value_index = 2
+        coin_value.value = float(betting_value_two)
+        coin_value.save()
+        coin_value = CoinValue()
+        coin_value.coin = coin
+        coin_value.value_index = 3
+        coin_value.value = float(betting_value_three)
+        coin_value.save()
+        reward_coin = RewardCoin()
+        reward_coin.coin = coin
+        reward_coin.value_ratio = Integral_proportion
+        reward_coin.admin = admin
+        reward_coin.save()
 
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
@@ -133,6 +157,20 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     def get(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
         coin = Coin.objects.get(pk=id)
+        coinvalue_list = CoinValue.objects.filter(coin_id=coin.id).order_by("value_index")
+        value_ratio = RewardCoin.objects.filter(coin_id=coin.id)
+        if len(value_ratio) == 0:
+            Integral_proportion = ""
+        else:
+            Integral_proportion = value_ratio[0].value_ratio
+        if len(coinvalue_list) != 3:
+            betting_value_one = ""
+            betting_value_two = ""
+            betting_value_three = ""
+        else:
+            betting_value_one = coinvalue_list[0].value
+            betting_value_two = coinvalue_list[1].value
+            betting_value_three = coinvalue_list[2].value
         # is_lock = coin.is_lock
         # if is_lock == False:
         #     is_lock = 0
@@ -144,9 +182,14 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
             # "type": coin.type,
             "exchange_rate": coin.exchange_rate,
             "cash_control": coin.cash_control,
+            "betting_value_one": str(betting_value_one),
+            "betting_value_two": str(betting_value_two),
+            "betting_value_three": str(betting_value_three),
+            "Integral_proportion": Integral_proportion,
             # "is_lock": str(is_lock),
             "url": ''
         }
+        print("data============================", data)
         return HttpResponse(json.dumps(data), content_type='text/json')
 
     @reversion_Decorator
@@ -169,6 +212,18 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coin.cash_control = request.data['cash_control']
         # coin.is_lock = request.data['is_lock']
         coin.save()
+        coin_value_one = CoinValue.objects.get(coin_id=coin.pk, value_index=1)
+        coin_value_one.value = request.data['betting_value_one']
+        coin_value_one.save()
+        coin_value_two = CoinValue.objects.get(coin_id=coin.pk, value_index=2)
+        coin_value_two.value = request.data['betting_value_two']
+        coin_value_two.save()
+        coin_value_three = CoinValue.objects.get(coin_id=coin.pk, value_index=3)
+        coin_value_three.value = request.data['betting_value_three']
+        coin_value_three.save()
+        reward_coin = RewardCoin.objects.get(coin_id=coin.pk)
+        reward_coin.value_ratio = request.data['Integral_proportion']
+        reward_coin.save()
         content = {'status': status.HTTP_200_OK}
         return HttpResponse(json.dumps(content), content_type='text/json')
 

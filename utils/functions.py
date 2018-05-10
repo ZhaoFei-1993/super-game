@@ -23,6 +23,7 @@ import reversion
 from wc_auth.functions import save_operation
 
 
+
 def random_string(length=16):
     """
     生成指定长度随机字符串
@@ -261,4 +262,4 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
     else:
         newWidth = ori_w
         newHeight = ori_h
-    img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image,quality=qua)
+    img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image, quality=qua)

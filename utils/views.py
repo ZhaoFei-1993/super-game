@@ -104,7 +104,7 @@ def upload(request):
                 if not settings.DEBUG:
                     url = url.replace('/images', '')
                 else:
-                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url
+                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/', '')
 
                 print("上传的图片地址：" + url)
 

@@ -9,13 +9,13 @@ from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from django.core.cache import caches
 from quiz.models import Quiz
-from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
-    CoinLock, UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserCoinLock, UserSettingOthors, UserInvitation, IntegralPrize
+from ...models import User, DailyLog, DailySettings, UserMessage, Message,\
+    UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
+    UserSettingOthors, UserInvitation, IntegralPrize
 from chat.models import Club
-from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
+from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
-from base.function import randomnickname
+from base.function import randomnickname, weight_choice
 from sms.models import Sms
 from datetime import timedelta, datetime
 import time
@@ -945,7 +945,7 @@ class UserPresentationView(CreateAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_address_name == '' or UserPresentation.objects.filter(user_id=userid,
-                                                                    address_name=p_address_name).exists():
+                                                                   address_name=p_address_name).exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         user_coin.balance -= Decimal(p_amount)
@@ -1469,28 +1469,34 @@ class InvitationRegisterView(CreateAPIView):
             })
         all_money = UserInvitation.objects.filter(is_deleted=1).aggregate(Sum('money'))
         all_money = all_money['money__sum']  # 获得总钱数
-        all_money += 100
-        if all_money > 200000000:
-            raise ParamErrorException(error_code.API_60101_USER_INVITATION_MONEY)
+        if all_money is not None:
+            all_money += 100
+            if all_money > 200000000:
+                raise ParamErrorException(error_code.API_60101_USER_INVITATION_MONEY)
+
         # 用户注册
         ur = UserRegister()
         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
+        try:
+            user_info = User.objects.get(pk=invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
         if invitee_one > 0:
             try:
                 invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=int(on_line),
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
                                                            is_deleted=1).count()
             user_on_line = UserInvitation()
             if invitee_number < 100:
                 user_on_line.is_effective = 1
                 user_on_line.money = 50
             user_on_line.inviter = on_line
-            user_on_line.invitee_two = telephone
+            user_on_line.invitee_two = user_info.id
             user_on_line.save()
         user_go_line = UserInvitation()
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
@@ -1498,8 +1504,9 @@ class InvitationRegisterView(CreateAPIView):
         if invitee_number < 10:
             user_go_line.is_effective = 1
             user_go_line.money = 200
-        user_go_line.inviter = invitation_id
-        user_go_line.invitee_one = telephone
+
+        user_go_line.inviter = user_info
+        user_go_line.invitee_one = user_info.id
         user_go_line.save()
         return self.response({
             'code': error_code.API_0_SUCCESS,
@@ -1612,37 +1619,82 @@ class LuckDrawListView(ListAPIView):
     serializer_class = LuckDrawSerializer
 
     def get_queryset(self):
-        cache = caches['memcached']
-        chat_id = "1232"
-        cache.set("chat", chat_id)
-        if not cache.get("chat"):
-            chat_id = 2
-            cache.set("chat", chat_id)
-        abc = cache.get("chat")
-        print("abc==========================", abc)
-        # uuid = self.request.user.id
-        # print("uuid=======================", uuid)
-        # cache = caches['memcached']  # 初始化
-        # LUCK_DRAW_FREQUENCY = 'luck_draw_'
-        # LUCK_DRAW = 'luck_draw_'
-        # print("LUCK_DRAW_FREQUENCY===================", LUCK_DRAW_FREQUENCY)
-        # cache.set(LUCK_DRAW_FREQUENCY, LUCK_DRAW)
-        # if not cache.get(LUCK_DRAW_FREQUENCY):  # 拿数据
-        #     luck_draw_frequency = cache.get(LUCK_DRAW_FREQUENCY)
-        #     print("44444444444444444444444444", luck_draw_frequency)
         prize_list = IntegralPrize.objects.filter(is_delete=0)
         return prize_list
 
     def list(self, request, *args, **kwargs):
-        cache = caches['memcached']
-        chat_id = "1232"
-        cache.set("chat", chat_id)
-        if not cache.get("chat"):
-            chat_id = 2
-            cache.set("chat", chat_id)
-        abc = cache.get("chat")
-        print("abc==========================", abc)
-        user = request.user.id
+        cache = caches['redis']
+        # chat_id = "1232"
+        # cache.set("chat", chat_id)
+        # if not cache.get("chat"):
+        #     chat_id = 2
+        #     cache.set("chat", chat_id)
+        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards"  # 再来一次次数
+        awards_number = cache.get(NUMBER_OF_LOTTERY_AWARDS)
+        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day"  # 每天抽奖次数
+        number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+        if number == None:
+            number = 6
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, number)
+            number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+        is_gratis = 0
+        if awards_number > 0:
+            is_gratis = 1
+        if number == 6:
+            is_gratis = 1
+        if number == 0 and is_gratis == 0:
+            number = "抽奖次数不足"
+        user_id = request.user.id
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
+        data = []
+        for x in list:
+            data.append(
+                {
+                    'user_id': user_id,
+                    'id': x['id'],
+                    'prize_name': x['prize_name'],
+                    'icon': x['icon'],
+                    'prize_number': x['prize_number'],
+                    'prize_consume': x['prize_consume'],
+                    'created_at': x['created_at'],
+                    'prize_weight': x['prize_weight']
+                }
+            )
+        return self.response({'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number})
+
+
+class ClickLuckDrawView(CreateAPIView):
+    """
+    点击抽奖
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        user_id = request.user.id
+        # is_gratis = request.data.get('is_gratis')
+        # number = request.data.get('number')
+        prize = IntegralPrize.objects.filter(is_delete=0).values_list('pk')
+        print("prize==============================", prize)
         return self.response({'code': 0})
+
+# class Command(BaseCommand):
+#     """
+#     带权重的随机数
+#     """
+#     help = "带权重的随机数"
+#
+#     prize = ['A', 'B', 'C', 'D']
+#
+#     def handle(self, *args, **options):
+#         choices = {
+#             'A': 0,
+#             'B': 0,
+#             'C': 0,
+#             'D': 0,
+#         }
+#         for i in range(1, 100000):
+#             choice = self.prize[self.weight_choice([50000, 30000, 19999, 1])]
+#             choices[choice] += 1
+#
+#         print('choices = ', choices)
