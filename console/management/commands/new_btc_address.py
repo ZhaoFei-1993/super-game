@@ -34,20 +34,29 @@ class Command(BaseCommand):
     help = "分配BTC地址"
 
     def handle(self, *args, **options):
-        json_data = created_address()
-        print(json_data)
+        # json_data = created_address()
+        # print(json_data)
 
-        if Address.objects.filter(user=User.objects.filter(id=user_id).first()).\
-                filter(coin=Coin.objects.filter(name='BTC').first()).first() is None:
+        # if Address.objects.filter(user=User.objects.filter(id=user_id).first()).\
+        #         filter(coin=Coin.objects.filter(name='BTC').first()).first() is None:
+        #     address_query = Address()
+        #     address_query.coin = Coin.objects.filter(name='BTC').first()
+        #     address_query.address = json_data['address']
+        #     address_query.passphrase = main_password
+        #     address_query.user = User.objects.filter(id=user_id).first()
+        #     address_query.save()
+        #     print('分配成功')
+        # else:
+        #     print('用户已分配地址')
+
+        for i in range(0, 10):
+            json_data = created_address()
             address_query = Address()
             address_query.coin = Coin.objects.filter(name='BTC').first()
             address_query.address = json_data['address']
             address_query.passphrase = main_password
-            address_query.user = User.objects.filter(id=user_id).first()
             address_query.save()
             print('分配成功')
-        else:
-            print('用户已分配地址')
 
 
 

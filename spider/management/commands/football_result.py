@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 import requests
 import json
 from quiz.models import Quiz, Rule, Option, Record
@@ -29,23 +30,23 @@ def get_data(url):
 
 
 @transaction.atomic()
-def get_data_info(url, match_flag):
-    datas = get_data(url + match_flag)
-    if datas['status']['code'] == 0:
-        if len(datas['result']['pool_rs']) > 0:
-            result_had = datas['result']['pool_rs']['had']
-            result_hhad = datas['result']['pool_rs']['hhad']
-            result_ttg = datas['result']['pool_rs']['ttg']
-            result_crs = datas['result']['pool_rs']['crs']
-            # result_hafu = datas['result']['pool_rs']['hafu']
+def get_data_info(url, match_flag, quiz):
+    if quiz.category.parent_id == 2:
+        datas = get_data(url + match_flag)
+        if datas['status']['code'] == 0:
+            if len(datas['result']['pool_rs']) > 0:
+                result_had = datas['result']['pool_rs']['had']
+                result_hhad = datas['result']['pool_rs']['hhad']
+                result_ttg = datas['result']['pool_rs']['ttg']
+                result_crs = datas['result']['pool_rs']['crs']
+                # result_hafu = datas['result']['pool_rs']['hafu']
 
-            score = result_crs['prs_name'].split(':')
-            if len(score) < 2:
-                return True
+                score = result_crs['prs_name'].split(':')
+                if len(score) < 2:
+                    return True
 
-            host_team_score, guest_team_score = score
+                host_team_score, guest_team_score = score
 
-            if Quiz.objects.filter(match_flag=match_flag).first() is not None:
                 quiz = Quiz.objects.filter(match_flag=match_flag).first()
                 quiz.host_team_score = host_team_score
                 quiz.guest_team_score = guest_team_score
@@ -131,14 +132,11 @@ def get_data_info(url, match_flag):
                             coin_detail.save()
                 quiz.status = Quiz.BONUS_DISTRIBUTION
                 print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+
             else:
-                print('该比赛不存在')
-
-
+                print(match_flag + ',' + '未有开奖信息')
         else:
-            print('未有开奖信息')
-    else:
-        print('未请求到任务数据')
+            print(match_flag + ',' + '未请求到任务数据')
 
 
 class Command(BaseCommand):
@@ -149,11 +147,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # 在此基础上增加2小时
-        after_2_hours = datetime.datetime.now() + datetime.timedelta(hours=2)
-
-        quizs = Quiz.objects.filter(begin_at__lt=after_2_hours, status=Quiz.PUBLISHING)
+        quizs = Quiz.objects.filter(Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED))
         for quiz in quizs:
-            get_data_info(base_url, quiz.match_flag)
+            after_2_hours = quiz.begin_at + datetime.timedelta(hours=2)
+            time_now = datetime.datetime.now()
+            if time_now > after_2_hours:
+                get_data_info(base_url, quiz.match_flag, quiz)
 
-        # get_data_info(base_url, match_flag=options['match_flag'])
 

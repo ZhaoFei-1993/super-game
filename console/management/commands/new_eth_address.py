@@ -19,16 +19,25 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         eth_wallet = Wallet()
-        json_data = eth_wallet.post(url='v1/account/new', data=None)
+        # json_data = eth_wallet.post(url='v1/account/new', data=None)
 
-        if Address.objects.filter(user=User.objects.filter(id=user_id).first()). \
-                filter(coin=Coin.objects.filter(name='ETH').first()).first() is None:
+        # if Address.objects.filter(user=User.objects.filter(id=user_id).first()). \
+        #         filter(coin=Coin.objects.filter(name='ETH').first()).first() is None:
+        #     address_query = Address()
+        #     address_query.coin = Coin.objects.filter(name='ETH').first()
+        #     address_query.address = json_data['data']['account']
+        #     address_query.passphrase = json_data['data']['password']
+        #     address_query.user = User.objects.filter(id=user_id).first()
+        #     address_query.save()
+        #     print('分配成功')
+        # else:
+        #     print('用户已分配地址')
+
+        for i in range(0, 10):
+            json_data = eth_wallet.post(url='v1/account/new', data=None)
             address_query = Address()
             address_query.coin = Coin.objects.filter(name='ETH').first()
             address_query.address = json_data['data']['account']
             address_query.passphrase = json_data['data']['password']
-            address_query.user = User.objects.filter(id=user_id).first()
             address_query.save()
             print('分配成功')
-        else:
-            print('用户已分配地址')
