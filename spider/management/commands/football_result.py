@@ -8,6 +8,7 @@ from users.models import UserCoin, CoinDetail, Coin
 from chat.models import Club
 from django.db import transaction
 import datetime
+from decimal import Decimal
 
 
 base_url = 'http://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
@@ -57,53 +58,75 @@ def get_data_info(url, match_flag):
                 rule_ttg = rule_all.filter(type=3).first()
                 rule_crs = rule_all.filter(type=2).first()
 
-                option = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
-                option.is_right = 1
-                option.save()
+                option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+                option_had.is_right = 1
+                option_had.save()
 
-                option = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
-                option.is_right = 1
-                option.save()
+                option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+                option_hhad.is_right = 1
+                option_hhad.save()
 
-                option = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
-                option.is_right = 1
-                option.save()
+                option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+                option_ttg.is_right = 1
+                option_ttg.save()
 
-                option = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
-                option.is_right = 1
-                option.save()
+                option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+                option_crs.is_right = 1
+                option_crs.save()
 
                 # 分配奖金
                 records = Record.objects.filter(quiz=quiz)
                 if len(records) > 0:
                     for record in records:
+                        # 判断是否回答正确
+                        is_right = False
+                        if record.rule_id == rule_had.id:
+                            if record.option_id == option_had.id:
+                                is_right = True
+                        if record.rule_id == rule_hhad.id:
+                            if record.option_id == option_hhad.id:
+                                is_right = True
+                        if record.rule_id == rule_ttg.id:
+                            if record.option_id == option_ttg.id:
+                                is_right = True
+                        if record.rule_id == rule_crs.id:
+                            if record.option_id == option_crs.id:
+                                is_right = True
+
                         earn_coin = record.bet * record.odds
+                        # 对于用户来说，答错只是记录下注的金额
+                        if is_right is False:
+                            earn_coin = '-' + str(record.bet)
                         record.earn_coin = earn_coin
                         record.save()
 
-                        # 用户增加对应币金额
-                        club = Club.objects.get(pk=record.roomquiz_id)
-                        try:
-                            user_coin = UserCoin.objects.get(user_id=record.user_id)
-                        except UserCoin.DoesNotExist:
-                            user_coin = UserCoin()
-                        user_coin.coin_id = club.coin_id
-                        user_coin.user_id = record.user_id
-                        user_coin.balance += earn_coin
-                        user_coin.save()
+                        if is_right is True:
+                            # 用户增加对应币金额
+                            club = Club.objects.get(pk=record.roomquiz_id)
 
-                        # 获取币信息
-                        coin = Coin.objects.get(pk=club.coin_id)
+                            # 获取币信息
+                            coin = Coin.objects.get(pk=club.coin_id)
 
-                        # 用户资金明细表
-                        coin_detail = CoinDetail()
-                        coin_detail.user_id = record.user_id
-                        coin_detail.coin_name = coin.name
-                        coin_detail.amount = earn_coin
-                        coin_detail.rest = user_coin.balance
-                        coin_detail.sources = CoinDetail.BETS
-                        coin_detail.save()
+                            try:
+                                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                            except UserCoin.DoesNotExist:
+                                user_coin = UserCoin()
+                            
+                            user_coin.coin_id = club.coin_id
+                            user_coin.user_id = record.user_id
+                            user_coin.balance += Decimal(earn_coin)
+                            user_coin.save()
+
+                            # 用户资金明细表
+                            coin_detail = CoinDetail()
+                            coin_detail.user_id = record.user_id
+                            coin_detail.coin_name = coin.name
+                            coin_detail.amount = Decimal(earn_coin)
+                            coin_detail.rest = user_coin.balance
+                            coin_detail.sources = CoinDetail.BETS
+                            coin_detail.save()
                 quiz.status = Quiz.BONUS_DISTRIBUTION
+                print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
             else:
                 print('该比赛不存在')
 
