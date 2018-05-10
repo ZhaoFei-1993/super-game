@@ -33,7 +33,7 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取当天随机注册用户量
-        random_total = self.cache.get(self.get_key(self.key_today_random))
+        random_total = self.cache.get(self.get_key(self.key_today_random))                    # 拿数据
         random_datetime = self.cache.get(self.get_key(self.key_today_random_datetime))
         if random_total is None or random_datetime is None:
             self.set_today_random()

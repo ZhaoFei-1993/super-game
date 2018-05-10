@@ -4,12 +4,13 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize
 from quiz.models import Record, Quiz
 from utils.functions import amount, sign_confirmation, amount_presentation
 from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
+from django.core.cache import caches
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -442,3 +443,24 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     def get_icon(obj):
         icons = Coin.objects.get(name=obj.coin_name)
         return icons.icon
+
+
+class LuckDrawSerializer(serializers.ModelSerializer):
+    """
+    奖品列表序列化
+    """
+
+    address = serializers.SerializerMethodField()
+
+    class Meta:
+        model = IntegralPrize
+        fields = ('id', 'prize_name', 'icon', 'prize_number', 'prize_weight', 'created_at', 'address')
+
+    def get_address(self, obj):
+        user = self.context['request'].user.id
+        cache = caches['memcached']  # 初始化
+        LUCK_DRAW_FREQUENCY = 'luck_draw' + str(user)
+        cache.set(LUCK_DRAW_FREQUENCY, 14)
+        luck_draw_frequency = cache.get(LUCK_DRAW_FREQUENCY)
+        print("44444444444444444444444444", luck_draw_frequency)
+        return luck_draw_frequency

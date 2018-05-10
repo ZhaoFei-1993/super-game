@@ -353,3 +353,27 @@ class UserInvitation(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "用户邀请表"
+
+
+@reversion.register()
+class IntegralPrize(models.Model):
+    prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
+    icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
+    prize_number = models.IntegerField(verbose_name="奖品奖励数量", default=1)
+    prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
+    is_delete = models.BooleanField(verbose_name="是否删除", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "积分奖品表"
+
+
+@reversion.register()
+class IntegralPrizeRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    prize_id = models.ForeignKey(IntegralPrize, on_delete=models.CASCADE)
+    is_receive = models.BooleanField(verbose_name="是否已领取奖励", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "积分奖品记录表"

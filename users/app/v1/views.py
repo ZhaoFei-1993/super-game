@@ -2,7 +2,7 @@
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, \
     DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize, \
-    CoinOperateSerializer
+    CoinOperateSerializer, LuckDrawSerializer
 import qrcode
 from ast import literal_eval
 from quiz.app.v1.serializers import QuizSerialize
@@ -11,7 +11,7 @@ from django.core.cache import caches
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, UserCoinLock, \
     CoinLock, UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserCoinLock, UserSettingOthors, UserInvitation
+    UserCoinLock, UserSettingOthors, UserInvitation, IntegralPrize
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, FormatListAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
@@ -1428,7 +1428,6 @@ class ImageUpdateView(CreateAPIView):
                 new_doc = Image(image=request.FILES['image'])
                 new_doc.save()
         image_path = new_doc.image.path
-        # path2=path1.split('.')[0]+'-z.'+path1.split('.')[1]
         resize_img(image_path, 300, 300)  # 图片等比压缩
         uuid = request.user.id
         try:
@@ -1446,12 +1445,11 @@ class InvitationRegisterView(CreateAPIView):
     """
     用户邀请注册
     """
-    permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         invitation_id = request.data.get('invitation_id')
-        telephone = request.data.get('username')
+        telephone = request.data.get('telephone')
         code = request.data.get('code')
         password = request.data.get('password')
 
@@ -1550,7 +1548,7 @@ class InvitationUserView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        user_id = self.kwargs['user_id']
+        user_id = request.GET.get('user_id')
         try:
             user_info = User.objects.get(pk=user_id)
         except DailyLog.DoesNotExist:
@@ -1573,11 +1571,8 @@ class InvitationMergeView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
         sub_path = str(user_id % 10000)
-        # print("sub_path========================", sub_path)
-        # print("settings.BASE_DIR===================", settings.BASE_DIR)
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
-        # print("base_img=======================", base_img)
-        qr_data = settings.SITE_DOMAIN + '/invitation/user/' + str(user_id) + '/'
+        qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -1606,3 +1601,47 @@ class InvitationMergeView(ListAPIView):
         base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
 
         return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img})
+
+
+class LuckDrawListView(ListAPIView):
+    """
+    奖品列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = LuckDrawSerializer
+
+    def get_queryset(self):
+        cache = caches['memcached']
+        chat_id = "1232"
+        cache.set("chat", chat_id)
+        if not cache.get("chat"):
+            chat_id = 2
+            cache.set("chat", chat_id)
+        abc = cache.get("chat")
+        print("abc==========================", abc)
+        # uuid = self.request.user.id
+        # print("uuid=======================", uuid)
+        # cache = caches['memcached']  # 初始化
+        # LUCK_DRAW_FREQUENCY = 'luck_draw_'
+        # LUCK_DRAW = 'luck_draw_'
+        # print("LUCK_DRAW_FREQUENCY===================", LUCK_DRAW_FREQUENCY)
+        # cache.set(LUCK_DRAW_FREQUENCY, LUCK_DRAW)
+        # if not cache.get(LUCK_DRAW_FREQUENCY):  # 拿数据
+        #     luck_draw_frequency = cache.get(LUCK_DRAW_FREQUENCY)
+        #     print("44444444444444444444444444", luck_draw_frequency)
+        prize_list = IntegralPrize.objects.filter(is_delete=0)
+        return prize_list
+
+    def list(self, request, *args, **kwargs):
+        cache = caches['memcached']
+        chat_id = "1232"
+        cache.set("chat", chat_id)
+        if not cache.get("chat"):
+            chat_id = 2
+            cache.set("chat", chat_id)
+        abc = cache.get("chat")
+        print("abc==========================", abc)
+        user = request.user.id
+        results = super().list(request, *args, **kwargs)
+        list = results.data.get('results')
+        return self.response({'code': 0})
