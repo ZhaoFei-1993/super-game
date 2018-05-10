@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
+import datetime
 import re
 import requests
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record
 from django.db import transaction
-
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -44,69 +45,53 @@ def get_data(url):
         print('Error', e.args)
 
 
-def get_data_info(url, match_flag):
-    datas = get_data(url+match_flag)
-    soup = BeautifulSoup(datas, 'lxml')
+def get_data_info(url, match_flag, quiz):
+    if quiz.category.parent_id == 1:
+        datas = get_data(url + match_flag)
+        soup = BeautifulSoup(datas, 'lxml')
 
-    result_score = soup.select('span[class="k_bt"]')[0].string
-    if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0 :
-        host_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][1]
-        guest_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][0]
+        result_score = soup.select('span[class="k_bt"]')[0].string
+        if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0:
+            host_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][1]
+            guest_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][0]
 
-        print(result_score)
-        print(guest_team_score + ':' + host_team_score)
+            # print(result_score)
+            # print(guest_team_score + ':' + host_team_score)
 
-        result_list = soup.select('table[class="kj-table"]')
-        try:
-            result_mnl = result_list[0].select('span[class="win"]')[0].string.replace(' ', '')
-            result_mnl_flag = result_match['result_mnl'][result_mnl]
-            print(result_mnl)
-            print(result_mnl_flag)
-            print('----------------------------------------')
-        except:
-            print('未捕抓到数据')
-            print(result_match['未捕抓到数据'])
-            print('----------------------------------------')
+            result_list = soup.select('table[class="kj-table"]')
+            try:
+                result_mnl = result_list[0].select('span[class="win"]')[0].string.replace(' ', '')
+                result_mnl_flag = result_match['result_mnl'][result_mnl]
+            except:
+                print(match_flag + ',' + result_match['未捕抓到数据'])
+                print('----------------------------------------')
 
-        try:
-            result_hdc = result_list[1].select('span[class="win"]')[0].string
-            result_hdc_flag = result_match['result_hdc'][result_hdc]
-            print(result_hdc)
-            print(result_hdc_flag)
-            print('----------------------------------------')
-        except:
-            print('未捕抓到数据')
-            print(result_match['未捕抓到数据'])
-            print('----------------------------------------')
+            try:
+                result_hdc = result_list[1].select('span[class="win"]')[0].string
+                result_hdc_flag = result_match['result_hdc'][result_hdc]
+            except:
+                print(match_flag + ',' + result_match['未捕抓到数据'])
+                print('----------------------------------------')
 
-        try:
-            result_hilo = result_list[2].select('span[class="win"]')[0].string
-            result_hilo_flag = result_match['result_hilo'][result_hilo]
-            print(result_hilo)
-            print(result_hilo_flag)
-            print('----------------------------------------')
-        except:
-            print('未捕抓到数据')
-            print(result_match['未捕抓到数据'])
-            print('----------------------------------------')
+            try:
+                result_hilo = result_list[2].select('span[class="win"]')[0].string
+                result_hilo_flag = result_match['result_hilo'][result_hilo]
+            except:
+                print(match_flag + ',' + result_match['未捕抓到数据'])
+                print('----------------------------------------')
 
-        try:
-            result_wnm = result_list[3].select('span[class="win"]')[0].string
-            result_wnm_flag = result_match['result_wnm'][result_wnm]
-            print(result_wnm)
-            print(result_wnm_flag)
-            print('----------------------------------------')
-        except:
-            print('未捕抓到数据')
-            print(result_match['未捕抓到数据'])
-            print('----------------------------------------')
+            try:
+                result_wnm = result_list[3].select('span[class="win"]')[0].string
+                result_wnm_flag = result_match['result_wnm'][result_wnm]
+            except:
+                print(match_flag + ',' + result_match['未捕抓到数据'])
+                print('----------------------------------------')
 
-    else:
-        print('未有开奖信息')
+        else:
+            print('未有开奖信息')
 
-# ------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------
 
-    if Quiz.objects.filter(match_flag=match_flag).first() is not None:
         quiz = Quiz.objects.filter(match_flag=match_flag).first()
         quiz.host_team_score = host_team_score
         quiz.guest_team_score = guest_team_score
@@ -142,15 +127,18 @@ def get_data_info(url, match_flag):
                 record.earn_coin = record.bet * record.odds
                 record.save()
         quiz.status = Quiz.BONUS_DISTRIBUTION
-    else:
-        print('该比赛不存在')
+        print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
 
 class Command(BaseCommand):
     help = "爬取篮球开奖结果"
 
-    def add_arguments(self, parser):
-        parser.add_argument('match_flag', type=str)
+    # def add_arguments(self, parser):
+    #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
-        get_data_info(base_url, match_flag=options['match_flag'])
+        # 在此基础上增加2小时
+        after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
+        quizs = Quiz.objects.filter((Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours))
+        for quiz in quizs:
+            get_data_info(base_url, quiz.match_flag, quiz)

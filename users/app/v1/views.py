@@ -33,7 +33,7 @@ import os
 from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
-from utils.models import Image
+import utils.models.Image as Im
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
@@ -1425,7 +1425,7 @@ class ImageUpdateView(CreateAPIView):
         safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
         if safe_image_type:
             if form.is_valid():
-                new_doc = Image(image=request.FILES['image'])
+                new_doc = Im(image=request.FILES['image'])
                 new_doc.save()
         image_path = new_doc.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩

@@ -11,7 +11,6 @@ from django.db import transaction
 import datetime
 from decimal import Decimal
 
-
 base_url = 'http://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
@@ -147,11 +146,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # 在此基础上增加2小时
-        quizs = Quiz.objects.filter(Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED))
+        after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
+        quizs = Quiz.objects.filter((Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours))
         for quiz in quizs:
-            after_2_hours = quiz.begin_at + datetime.timedelta(hours=2)
-            time_now = datetime.datetime.now()
-            if time_now > after_2_hours:
-                get_data_info(base_url, quiz.match_flag, quiz)
-
-
+            get_data_info(base_url, quiz.match_flag, quiz)
