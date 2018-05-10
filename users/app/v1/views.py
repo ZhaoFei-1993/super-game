@@ -33,7 +33,7 @@ import os
 from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
-import utils.models.Image as Im
+from utils.models import Image as Im
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
