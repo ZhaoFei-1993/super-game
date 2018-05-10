@@ -6,6 +6,9 @@ import re
 import time, sched
 from quiz.models import Quiz
 import os
+from rq import Queue
+from redis import Redis
+from quiz.consumers import quiz_send_score
 from api.settings import BASE_DIR
 from .get_time import get_time
 
@@ -56,15 +59,18 @@ def get_live_data():
                     files = []
                     for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
                         files = files
+                    host_team_score = data_list[13]
+                    guest_team_score = data_list[12]
                     if cache_name not in files:
                         with open(cache_name, 'w+') as f:
-                            f.write(data_list[13] + ':' + data_list[12])
+                            f.write(data_list[13] + ':' + data_list[12], + ',')
+                            f.write(data_list[28])
 
                             if Quiz.objects.filter(match_flag=match_id).first() is not None:
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
-                                    quiz.host_team_score = data_list[13]
-                                    quiz.guest_team_score = data_list[12]
+                                    quiz.host_team_score = host_team_score
+                                    quiz.guest_team_score = guest_team_score
                                     quiz.status = quiz.ENDED
                                 elif data_list[28] == '0':
                                     quiz.status = quiz.PUBLISHING
@@ -73,6 +79,11 @@ def get_live_data():
                                     quiz.guest_team_score = data_list[12]
                                     quiz.status = quiz.REPEALED
                                 quiz.save()
+
+                                # 比分推送
+                                redis_conn = Redis()
+                                q = Queue(connection=redis_conn)
+                                q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)
                                 print(quiz.guest_team)
@@ -83,19 +94,22 @@ def get_live_data():
                     else:
                         with open(cache_name, 'r') as f:
                             score = f.readline()
-                        if score == data_list[13] + ':' + data_list[12]:
+                        if score.split(',')[0] == data_list[13] + ':' + data_list[12] and \
+                                score.split(',')[1] == data_list[28]:
                             print('不需要更新')
                             print('--------------------------')
                         else:
                             with open(cache_name, 'w+') as f:
-                                f.write(data_list[13] + ':' + data_list[12])
+                                f.write(data_list[13] + ':' + data_list[12] + ',')
+                                f.write(data_list[28])
 
                             if Quiz.objects.filter(match_flag=match_id).first() is not None:
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
-                                    quiz.host_team_score = data_list[13]
-                                    quiz.guest_team_score = data_list[12]
+                                    quiz.host_team_score = host_team_score
+                                    quiz.guest_team_score = guest_team_score
                                     quiz.status = quiz.ENDED
+                                    quiz.gaming_time = -1
                                 elif data_list[28] == '0':
                                     quiz.status = quiz.PUBLISHING
                                 else:
@@ -103,6 +117,11 @@ def get_live_data():
                                     quiz.guest_team_score = data_list[12]
                                     quiz.status = quiz.REPEALED
                                 quiz.save()
+
+                                # 比分推送
+                                redis_conn = Redis()
+                                q = Queue(connection=redis_conn)
+                                q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)
                                 print(quiz.guest_team)
@@ -120,6 +139,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            timming_exe(get_live_data, inc=2)
+            timming_exe(get_live_data, inc=10)
         except KeyboardInterrupt as e:
             pass

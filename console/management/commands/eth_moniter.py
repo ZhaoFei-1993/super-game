@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-
 import time
 from users.models import User, UserCoin, UserRecharge, Coin
 from base.eth import *
 
 user_id = 43
 addresses = ['0xf8158a2823bdd6b0b3a3a987cde8cfa308506abc']
-
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-}
 
 
 def addtwodimdict(thedict, key_a, key_b, val):
@@ -64,7 +58,7 @@ class Command(BaseCommand):
                         userrecharge.trade_at = value['time']
                         userrecharge.save()
 
-                        usercoin = UserCoin.objects.filter(user_id=user_id).\
+                        usercoin = UserCoin.objects.filter(user_id=user_id). \
                             filter(coin=Coin.objects.filter(name='ETH').first()).first()
                         usercoin.balance = usercoin.balance + UserRecharge.objects.filter(txid=key).first().amount
                         usercoin.save()
@@ -75,5 +69,3 @@ class Command(BaseCommand):
                         print('----------------')
         else:
             print('无数据')
-
-

@@ -9,9 +9,6 @@ from users.models import UserCoin, UserRecharge, Coin
 user_id = 43
 addresses = ['14rE7Jqy4a6P27qWCCsngkUfBxtevZhPHB', '1Ez69SnzzmePmZX3WpEzMKTrcBF2gpNQ55']
 base_url = 'https://blockchain.info/multiaddr?active='
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-}
 
 
 def addtwodimdict(thedict, key_a, key_b, val):

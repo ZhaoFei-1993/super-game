@@ -7,6 +7,9 @@ import json
 from api.settings import BASE_DIR
 import time, sched
 from quiz.models import Quiz
+from rq import Queue
+from redis import Redis
+from quiz.consumers import quiz_send_score
 from .get_time import get_time
 
 schedule = sched.scheduler(time.time, time.sleep)
@@ -54,9 +57,9 @@ def get_live_data():
             if time not in dir:
                 os.mkdir(time)
 
-            os.chdir(cache_dir+'/'+time)
+            os.chdir(cache_dir + '/' + time)
             files = []
-            for root, sub_dirs, files in os.walk(cache_dir+'/'+time):
+            for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
                 files = files
             if cache_name not in files:
                 with open(cache_name, 'w+') as f:
@@ -89,6 +92,11 @@ def get_live_data():
                                 quiz.status = quiz.HALF_TIME
                         quiz.save()
 
+                        # 比分推送
+                        redis_conn = Redis()
+                        q = Queue(connection=redis_conn)
+                        q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+
                         print(quiz.host_team)
                         print(quiz.guest_team)
                         print(host_team_score + ':' + guest_team_score)
@@ -99,7 +107,7 @@ def get_live_data():
                 with open(cache_name, 'r') as f:
                     score = f.readline()
 
-                if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a']  \
+                if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a'] \
                         and score.split(',')[1] == data_list['status'] \
                         and score.split(',')[2] == data_list['match_period']:
 
@@ -134,6 +142,11 @@ def get_live_data():
                                 quiz.status = quiz.HALF_TIME
                         quiz.save()
 
+                        # 比分推送
+                        redis_conn = Redis()
+                        q = Queue(connection=redis_conn)
+                        q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+
                         print(quiz.host_team)
                         print(quiz.guest_team)
                         print(host_team_score + ':' + guest_team_score)
@@ -149,6 +162,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            timming_exe(get_live_data, inc=2)
+            timming_exe(get_live_data, inc=10)
         except KeyboardInterrupt as e:
             pass
