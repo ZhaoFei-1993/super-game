@@ -59,20 +59,24 @@ def get_data_info(url, match_flag):
                 rule_crs = rule_all.filter(type=2).first()
 
                 option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
-                option_had.is_right = 1
-                option_had.save()
+                if option_had is not None:
+                    option_had.is_right = 1
+                    option_had.save()
 
                 option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
-                option_hhad.is_right = 1
-                option_hhad.save()
+                if option_hhad is not None:
+                    option_hhad.is_right = 1
+                    option_hhad.save()
 
                 option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
-                option_ttg.is_right = 1
-                option_ttg.save()
+                if option_ttg is not None:
+                    option_ttg.is_right = 1
+                    option_ttg.save()
 
                 option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
-                option_crs.is_right = 1
-                option_crs.save()
+                if option_crs is not None:
+                    option_crs.is_right = 1
+                    option_crs.save()
 
                 # 分配奖金
                 records = Record.objects.filter(quiz=quiz)
@@ -111,7 +115,7 @@ def get_data_info(url, match_flag):
                                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
                             except UserCoin.DoesNotExist:
                                 user_coin = UserCoin()
-                            
+
                             user_coin.coin_id = club.coin_id
                             user_coin.user_id = record.user_id
                             user_coin.balance += Decimal(earn_coin)
@@ -147,7 +151,7 @@ class Command(BaseCommand):
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() + datetime.timedelta(hours=2)
 
-        quizs = Quiz.objects.filter(begin_at__lt=after_2_hours)
+        quizs = Quiz.objects.filter(begin_at__lt=after_2_hours, status=Quiz.PUBLISHING)
         for quiz in quizs:
             get_data_info(base_url, quiz.match_flag)
 
