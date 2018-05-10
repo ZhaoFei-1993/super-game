@@ -940,8 +940,9 @@ class UserPresentationView(CreateAPIView):
 
         address_check = UserPresentation.objects.filter(address=p_address, coin_id=coin.id).order_by('user').values(
             'user').distinct()
-        if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if len(address_check) > 0:
+            if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         if p_address_name == '' or UserPresentation.objects.filter(user_id=userid,
                                                                     address_name=p_address_name).exists():
