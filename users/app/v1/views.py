@@ -1642,7 +1642,7 @@ class LuckDrawListView(ListAPIView):
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, number)
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, number, 24 * 3600)
             number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = 0
         if awards_number == None:
@@ -1665,13 +1665,13 @@ class LuckDrawListView(ListAPIView):
                     'prize_name': x['prize_name'],
                     'icon': x['icon'],
                     'prize_number': x['prize_number'],
-                    'prize_consume': x['prize_consume'],
                     'created_at': x['created_at'],
                     'prize_weight': x['prize_weight']
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': user.integral})
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': user.integral,
+             'prize_consume': list[0]['prize_consume']})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1719,7 +1719,7 @@ class ClickLuckDrawView(CreateAPIView):
             user_info.save()
         integral_prize = IntegralPrize.objects.get(prize_name=choice)
         if choice == "再来一次":
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, 1)
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, 1, 24 * 3600)
         if choice == "积分":
             user_info = User.objects.get(pk=user_id)
             user_info.integral += int(integral_prize.prize_number)
