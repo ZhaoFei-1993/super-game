@@ -1430,10 +1430,11 @@ class ImageUpdateView(CreateAPIView):
         upload_size = request.FILES['image'].size / (1024 * 1024)
         if upload_size > 5:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        form = ImageForm(request.POST, request.FILES)
+        # form = ImageForm(request.POST, request.FILES)
         safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
+        new_doc = Im(image=request.FILES['image'])
+        print(safe_image_type)
         if safe_image_type:
-            new_doc = Im(image=request.FILES['image'])
             new_doc.save()
         else:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
