@@ -44,116 +44,116 @@ def get_data_info(url):
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
+            league = data[1].get('l_cn')
+            league_abbr = data[1].get('l_cn_abbr')
+            guest_team = data[1].get('a_cn')
+            guest_team_abbr = data[1].get('a_cn_abbr')
+            host_team = data[1].get('h_cn')
+            host_team_abbr = data[1].get('h_cn_abbr')
+            host_team_order = data[1].get('h_order')
+            guest_team_order = data[1].get('a_order')
+            if len(host_team_order) == 0 and len(guest_team_order) == 0:
+                host_team_order = ' '
+                guest_team_order = ' '
+            else:
+                pass
+            time = data[1].get('date') + ' ' + data[1].get('time')
+            created_at = get_time()
 
+            option_data_mnl = data[1].get('mnl')
+            result_mnl = []
+            if option_data_mnl:
+                title_a_mnl = '主负'
+                title_h_mnl = '主胜'
+                odd_a_mnl = option_data_mnl['a']
+                odd_h_mnl = option_data_mnl['h']
+                flag_a_mnl = 'a'
+                flag_h_mnl = 'h'
+                result_mnl = [(flag_h_mnl, title_h_mnl, odd_h_mnl), (flag_a_mnl, title_a_mnl, odd_a_mnl)]
+
+            option_data_hdc = data[1].get('hdc')
+            result_hdc = []
+            if option_data_hdc:
+                let_socre = option_data_hdc['fixedodds']
+                title_a_hdc = '让分主负'
+                title_h_hdc = '让分主胜'
+                odd_a_hdc = option_data_hdc['a']
+                odd_h_hdc = option_data_hdc['h']
+                flag_a_hdc = 'a'
+                flag_h_hdc = 'h'
+                result_hdc = [(flag_h_hdc, title_h_hdc, let_socre, odd_h_hdc), (flag_a_hdc, title_a_hdc, let_socre, odd_a_hdc)]
+
+            option_data_hilo = data[1].get('hilo')
+            result_hilo = []
+            if option_data_hilo:
+                total_socre = option_data_hilo['fixedodds']
+                title_h_hilo = '总分大于' + option_data_hilo['fixedodds']
+                title_l_hilo = '总分小于' + option_data_hilo['fixedodds']
+                odd_h_holi = option_data_hilo['h']
+                odd_l_holi = option_data_hilo['l']
+                flag_h_holi = 'h'
+                flag_l_holi = 'l'
+                result_hilo = [(flag_h_holi, title_h_hilo, total_socre, odd_h_holi), (flag_l_holi, title_l_hilo, total_socre, odd_l_holi)]
+
+            option_data_wnm = data[1].get('wnm')
+            result_wnm = []
+            if option_data_wnm:
+                title_w1 = '主胜' + '1-5'
+                title_w2 = '主胜' + '6-10'
+                title_w3 = '主胜' + '11-15'
+                title_w4 = '主胜' + '16-20'
+                title_w5 = '主胜' + '21-25'
+                title_w6 = '主胜' + '26+'
+
+                title_l1 = '客胜' + '1-5'
+                title_l2 = '客胜' + '6-10'
+                title_l3 = '客胜' + '11-15'
+                title_l4 = '客胜' + '16-20'
+                title_l5 = '客胜' + '21-25'
+                title_l6 = '客胜' + '26+'
+
+                odd_w1 = option_data_wnm['w1']
+                odd_w2 = option_data_wnm['w2']
+                odd_w3 = option_data_wnm['w3']
+                odd_w4 = option_data_wnm['w4']
+                odd_w5 = option_data_wnm['w5']
+                odd_w6 = option_data_wnm['w6']
+
+                odd_l1 = option_data_wnm['l1']
+                odd_l2 = option_data_wnm['l2']
+                odd_l3 = option_data_wnm['l3']
+                odd_l4 = option_data_wnm['l4']
+                odd_l5 = option_data_wnm['l5']
+                odd_l6 = option_data_wnm['l6']
+
+                flag_w1 = 'w1'
+                flag_w2 = 'w2'
+                flag_w3 = 'w3'
+                flag_w4 = 'w4'
+                flag_w5 = 'w5'
+                flag_w6 = 'w6'
+
+                flag_l1 = 'l1'
+                flag_l2 = 'l2'
+                flag_l3 = 'l3'
+                flag_l4 = 'l4'
+                flag_l5 = 'l5'
+                flag_l6 = 'l6'
+
+                result_wnm = [(flag_w1, title_w1, odd_w1), (flag_w2, title_w2, odd_w2), (flag_w3, title_w3, odd_w3),
+                              (flag_w4, title_w4, odd_w4), (flag_w5, title_w5, odd_w5), (flag_w6, title_w6, odd_w6),
+                              (flag_l1, title_l1, odd_l1), (flag_l2, title_l2, odd_l2), (flag_l3, title_l3, odd_l3),
+                              (flag_l4, title_l4, odd_l4), (flag_l5, title_l5, odd_l5), (flag_l6, title_l6, odd_l6)]
+
+            # ------------------------------------------------------------------------------------------------------
             with open('match_cache.txt', 'r+') as f:
                 dt = f.read()
             match_id_list = dt.split(',')
-            if match_id not in match_id_list:
+            if match_id not in match_id_list and \
+                    (len(result_mnl) > 0 and len(result_hdc) > 0 and len(result_hilo) > 0 and len(result_wnm) > 0):
                 with open('match_cache.txt', 'a+') as f:
                     f.write(match_id + ',')
 
-                league = data[1].get('l_cn')
-                league_abbr = data[1].get('l_cn_abbr')
-                guest_team = data[1].get('a_cn')
-                guest_team_abbr = data[1].get('a_cn_abbr')
-                host_team = data[1].get('h_cn')
-                host_team_abbr = data[1].get('h_cn_abbr')
-                host_team_order = data[1].get('h_order')
-                guest_team_order = data[1].get('a_order')
-                if len(host_team_order) == 0 and len(guest_team_order) == 0:
-                    host_team_order = ' '
-                    guest_team_order = ' '
-                else:
-                    pass
-                time = data[1].get('date') + ' ' + data[1].get('time')
-                created_at = get_time()
-
-                option_data_mnl = data[1].get('mnl')
-                result_mnl = []
-                if option_data_mnl:
-                    title_a_mnl = '主负'
-                    title_h_mnl = '主胜'
-                    odd_a_mnl = option_data_mnl['a']
-                    odd_h_mnl = option_data_mnl['h']
-                    flag_a_mnl = 'a'
-                    flag_h_mnl = 'h'
-                    result_mnl = [(flag_h_mnl, title_h_mnl, odd_h_mnl), (flag_a_mnl, title_a_mnl, odd_a_mnl)]
-
-                option_data_hdc = data[1].get('hdc')
-                result_hdc = []
-                if option_data_hdc:
-                    let_socre = option_data_hdc['fixedodds']
-                    title_a_hdc = '让分主负'
-                    title_h_hdc = '让分主胜'
-                    odd_a_hdc = option_data_hdc['a']
-                    odd_h_hdc = option_data_hdc['h']
-                    flag_a_hdc = 'a'
-                    flag_h_hdc = 'h'
-                    result_hdc = [(flag_h_hdc, title_h_hdc, let_socre, odd_h_hdc), (flag_a_hdc, title_a_hdc, let_socre, odd_a_hdc)]
-
-                option_data_hilo = data[1].get('hilo')
-                result_hilo = []
-                if option_data_hilo:
-                    total_socre = option_data_hilo['fixedodds']
-                    title_h_hilo = '总分大于' + option_data_hilo['fixedodds']
-                    title_l_hilo = '总分小于' + option_data_hilo['fixedodds']
-                    odd_h_holi = option_data_hilo['h']
-                    odd_l_holi = option_data_hilo['l']
-                    flag_h_holi = 'h'
-                    flag_l_holi = 'l'
-                    result_hilo = [(flag_h_holi, title_h_hilo, total_socre, odd_h_holi), (flag_l_holi, title_l_hilo, total_socre, odd_l_holi)]
-
-                option_data_wnm = data[1].get('wnm')
-                result_wnm = []
-                if option_data_wnm:
-                    title_w1 = '主胜' + '1-5'
-                    title_w2 = '主胜' + '6-10'
-                    title_w3 = '主胜' + '11-15'
-                    title_w4 = '主胜' + '16-20'
-                    title_w5 = '主胜' + '21-25'
-                    title_w6 = '主胜' + '26+'
-
-                    title_l1 = '客胜' + '1-5'
-                    title_l2 = '客胜' + '6-10'
-                    title_l3 = '客胜' + '11-15'
-                    title_l4 = '客胜' + '16-20'
-                    title_l5 = '客胜' + '21-25'
-                    title_l6 = '客胜' + '26+'
-
-                    odd_w1 = option_data_wnm['w1']
-                    odd_w2 = option_data_wnm['w2']
-                    odd_w3 = option_data_wnm['w3']
-                    odd_w4 = option_data_wnm['w4']
-                    odd_w5 = option_data_wnm['w5']
-                    odd_w6 = option_data_wnm['w6']
-
-                    odd_l1 = option_data_wnm['l1']
-                    odd_l2 = option_data_wnm['l2']
-                    odd_l3 = option_data_wnm['l3']
-                    odd_l4 = option_data_wnm['l4']
-                    odd_l5 = option_data_wnm['l5']
-                    odd_l6 = option_data_wnm['l6']
-
-                    flag_w1 = 'w1'
-                    flag_w2 = 'w2'
-                    flag_w3 = 'w3'
-                    flag_w4 = 'w4'
-                    flag_w5 = 'w5'
-                    flag_w6 = 'w6'
-
-                    flag_l1 = 'l1'
-                    flag_l2 = 'l2'
-                    flag_l3 = 'l3'
-                    flag_l4 = 'l4'
-                    flag_l5 = 'l5'
-                    flag_l6 = 'l6'
-
-                    result_wnm = [(flag_w1, title_w1, odd_w1), (flag_w2, title_w2, odd_w2), (flag_w3, title_w3, odd_w3),
-                                  (flag_w4, title_w4, odd_w4), (flag_w5, title_w5, odd_w5), (flag_w6, title_w6, odd_w6),
-                                  (flag_l1, title_l1, odd_l1), (flag_l2, title_l2, odd_l2), (flag_l3, title_l3, odd_l3),
-                                  (flag_l4, title_l4, odd_l4), (flag_l5, title_l5, odd_l5), (flag_l6, title_l6, odd_l6)]
-
-                # ------------------------------------------------------------------------------------------------------
                 host_team_avatar = ''
                 guest_team_avatar = ''
 
@@ -201,7 +201,7 @@ def get_data_info(url):
                 except requests.ConnectionError as e:
                     print('Error', e.args)
 
-                # ------------------------------------------------------------------------------------------------------
+            # ------------------------------------------------------------------------------------------------------
                 if Quiz.objects.filter(match_flag=match_id).first() is None and \
                         (len(result_hilo) > 0 and len(result_wnm) > 0 and len(result_hdc) > 0 and len(result_mnl) > 0):
                     quiz = Quiz()
@@ -319,7 +319,7 @@ def get_data_info(url):
                 print(result_hilo)
                 print('-----------------------------------------------------------------------------------------------')
             else:
-                print('已经存在，跳过')
+                print('已经存在，跳过或者还没开售')
     else:
         print('未请求到任何数据')
 

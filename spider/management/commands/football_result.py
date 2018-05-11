@@ -12,6 +12,7 @@ import datetime
 from decimal import Decimal
 
 base_url = 'http://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
+live_url = 'http://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
@@ -40,11 +41,9 @@ def get_data_info(url, match_flag, quiz):
                 result_crs = datas['result']['pool_rs']['crs']
                 # result_hafu = datas['result']['pool_rs']['hafu']
 
-                score = result_crs['prs_name'].split(':')
-                if len(score) < 2:
-                    return True
-
-                host_team_score, guest_team_score = score
+                score_data = requests.get(live_url + match_flag).json()['data']
+                host_team_score = score_data['fs_h']
+                guest_team_score = score_data['fs_a']
 
                 quiz = Quiz.objects.filter(match_flag=match_flag).first()
                 quiz.host_team_score = host_team_score
