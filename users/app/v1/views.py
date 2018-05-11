@@ -931,7 +931,7 @@ class UserPresentationView(CreateAPIView):
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        p_amount = eval(request.data.get('p_amount')) * coin.exchange_rate
+        p_amount = eval(request.data.get('p_amount'))
 
         # if int(passcode) != int(userinfo.pass_code):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
@@ -963,7 +963,7 @@ class UserPresentationView(CreateAPIView):
         presentation.coin = coin
         presentation.amount = p_amount
         try:
-            presentation.rest = user_coin.balance / coin.exchange_rate
+            presentation.rest = user_coin.balance
         except Exception:
             raise
         presentation.address = p_address
@@ -1332,9 +1332,9 @@ class UserRechargeView(ListCreateAPIView):
         recharge = int(request.data.get('recharge'))
         r_address = request.data.get('r_address')
         if not r_address:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
         if recharge <= 0:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
         uuid = request.user.id
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
@@ -1433,9 +1433,10 @@ class ImageUpdateView(CreateAPIView):
         form = ImageForm(request.POST, request.FILES)
         safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
         if safe_image_type:
-            if form.is_valid():
-                new_doc = Im(image=request.FILES['image'])
-                new_doc.save()
+            new_doc = Im(image=request.FILES['image'])
+            new_doc.save()
+        else:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         image_path = new_doc.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩
         uuid = request.user.id
