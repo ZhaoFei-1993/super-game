@@ -1749,4 +1749,15 @@ class ClickLuckDrawView(CreateAPIView):
         integral_prize_record.prize = integral_prize
         integral_prize_record.is_receive = 1
         integral_prize_record.save()
-        return self.response({'code': 0, "choice": choice})
+        prize_number = integral_prize.prize_number
+        if int(integral_prize.prize_number) == 0:
+            prize_number = ""
+        return self.response({
+            'code': 0,
+            'data': {
+                'id': integral_prize.id,
+                'icon': integral_prize.icon,
+                'prize_name': integral_prize.prize_name,
+                'prize_number': prize_number
+            }
+        })

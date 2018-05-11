@@ -359,7 +359,7 @@ class UserInvitation(models.Model):
 class IntegralPrize(models.Model):
     prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
     icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
-    prize_number = models.IntegerField(verbose_name="奖品奖励数量", default=1)
+    prize_number = models.IntegerField(verbose_name="奖品奖励数量", default=0)
     prize_consume = models.IntegerField(verbose_name="抽奖消耗", default=20)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
