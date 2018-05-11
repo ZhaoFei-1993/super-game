@@ -936,17 +936,17 @@ class UserPresentationView(CreateAPIView):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT)
 
         address_check = UserPresentation.objects.filter(address=p_address, coin_id=coin.id).order_by('user').values(
             'user').distinct()
         if len(address_check) > 0:
             if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                raise ParamErrorException(error_code.API_70102_USER_PRESENT_ADDRESS)
 
         if p_address_name == '' or UserPresentation.objects.filter(user_id=userid,
-                                                                   address_name=p_address_name).exists():
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                                                                   address_name=p_address_name, coin_id=c_id).exists():
+            raise ParamErrorException(error_code.API_70103_USER_PRESENT_ADDRESS_NAME)
 
         user_coin.balance -= Decimal(p_amount)
         user_coin.save()
@@ -1329,9 +1329,9 @@ class UserRechargeView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         uuid = request.user.id
         try:
-            user_coin = UserCoin.objects.filter(id=index, user_id=uuid)
+            user_coin = UserCoin.objects.get(id=index, user_id=uuid)
         except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            raise 0
         user_coin.balance += Decimal(recharge)
         user_coin.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)

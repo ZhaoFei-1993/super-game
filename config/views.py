@@ -177,21 +177,20 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
         if "reg_type" not in request.query_params:
             return JsonResponse({"Error": "ParamError"}, status=status.HTTP_400_BAD_REQUEST)
         r_type = int(request.query_params.get('reg_type'))
-        try:
-            others = UserSettingOthors.objects.get(reg_type=r_type)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        seletions = dict()
+        others = UserSettingOthors.objects.filter(reg_type=r_type)
+        if not others.exists():
+            JsonResponse({'results':''},status=status.HTTP_200_OK)
+        seletions = {}
         for v in User.REGISTER_TYPE:
             seletions[str(v[0])] = v[1]
         data = {
             "seletions": seletions,
             "results": {
                 "system_maintenance": Config.objects.filter(key="system_maintenance")[0].configs,
-                "about": others.about,
-                "helps": others.helps,
-                "sv_contractus": others.sv_contractus,
-                "pv_contractus": others.pv_contractus
+                "about": others[0].about,
+                "helps": others[0].helps,
+                "sv_contractus": others[0].sv_contractus,
+                "pv_contractus": others[0].pv_contractus
             }
         }
         return JsonResponse(data, status=status.HTTP_200_OK)
