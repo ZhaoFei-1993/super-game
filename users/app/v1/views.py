@@ -1688,6 +1688,7 @@ class ClickLuckDrawView(CreateAPIView):
         is_gratis = request.data.get('is_gratis')
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day" + str(user_id) + str(date)  # 每天抽奖次数
         number = request.data.get('number')
+        number = int(number)
         if int(number) <= 0:
             raise ParamErrorException(error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
         prize = []
@@ -1701,25 +1702,29 @@ class ClickLuckDrawView(CreateAPIView):
         if int(is_gratis) == 1 and int(number) == 6:
             print("第一次")
             choice = prize[weight_choice(prize_weight)]
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
-            numbers = cache.get(NUMBER_OF_PRIZES_PER_DAY)
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(numbers) - 1)
+            is_gratis = 0
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
+            number -= 1
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
         elif int(is_gratis) == 1:
             print("再来一次")
             choice = prize[weight_choice(prize_weight)]
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
+            is_gratis = 0
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
         elif int(is_gratis) != 1 and int(number) != 6:
             print("继续抽奖")
+            number -= 1
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
             choice = prize[weight_choice(prize_weight)]
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
-            numbers = cache.get(NUMBER_OF_PRIZES_PER_DAY)
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(numbers) - 1)
+            is_gratis = 0
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
             user_info = User.objects.get(pk=user_id)
             user_info.integral -= 20
             user_info.save()
         integral_prize = IntegralPrize.objects.get(prize_name=choice)
         if choice == "再来一次":
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, 1, 24 * 3600)
+            is_gratis = 1
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
         if choice == "积分":
             user_info = User.objects.get(pk=user_id)
             user_info.integral += int(integral_prize.prize_number)
@@ -1750,6 +1755,7 @@ class ClickLuckDrawView(CreateAPIView):
         integral_prize_record.is_receive = 1
         integral_prize_record.save()
         prize_number = integral_prize.prize_number
+        print("cache.get(NUMBER_OF_PRIZES_PER_DAY)===================", cache.get(NUMBER_OF_PRIZES_PER_DAY))
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
         return self.response({
@@ -1758,6 +1764,8 @@ class ClickLuckDrawView(CreateAPIView):
                 'id': integral_prize.id,
                 'icon': integral_prize.icon,
                 'prize_name': integral_prize.prize_name,
-                'prize_number': prize_number
+                'prize_number': prize_number,
+                'number': cache.get(NUMBER_OF_PRIZES_PER_DAY),
+                'is_gratis': cache.get(NUMBER_OF_LOTTERY_AWARDS)
             }
         })
