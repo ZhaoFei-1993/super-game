@@ -450,8 +450,17 @@ class LuckDrawSerializer(serializers.ModelSerializer):
     """
     奖品列表序列化
     """
+    prize_number = serializers.SerializerMethodField()
 
     class Meta:
         model = IntegralPrize
         fields = ('id', 'prize_name', 'icon', 'prize_number', 'prize_consume', 'prize_weight', 'created_at')
+
+    @staticmethod
+    def get_prize_number(obj):
+        # time_time = timezone.localtime(obj.created_at)
+        prize_number = obj.prize_number
+        if prize_number == 0:
+            prize_number = ""
+        return prize_number
 

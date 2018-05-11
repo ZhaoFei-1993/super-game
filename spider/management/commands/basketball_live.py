@@ -139,6 +139,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            timming_exe(get_live_data, inc=10)
+            timming_exe(get_live_data, inc=2)
         except KeyboardInterrupt as e:
             pass
