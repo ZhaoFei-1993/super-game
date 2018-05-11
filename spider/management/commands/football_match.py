@@ -277,6 +277,7 @@ def get_data_info(url):
                 #                    (flag_ah, title_ah, odd_ah), (flag_ad, title_ad, odd_ad), (flag_aa, title_aa, odd_aa)]
 
                 # ------------------------------------------------------------------------------------------------------
+                os.chdir(cache_dir)
                 with open('match_cache.txt', 'r+') as f:
                     dt = f.read()
                 match_id_list = dt.split(',')

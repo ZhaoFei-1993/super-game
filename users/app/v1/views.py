@@ -1339,7 +1339,7 @@ class UserRechargeView(ListCreateAPIView):
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
         except Exception:
-            raise 0
+            raise
         user_coin.balance += Decimal(recharge)
         user_coin.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
@@ -1427,25 +1427,28 @@ class ImageUpdateView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        upload_size = request.FILES['image'].size / (1024 * 1024)
-        if upload_size > 5:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        # form = ImageForm(request.POST, request.FILES)
-        safe_image_type = request.FILES['image'].name.split('.', 1)[1] in ('jpg', 'png', 'jpeg')
-        new_doc = Im(image=request.FILES['image'])
-        print(safe_image_type)
+        form = ImageForm(request.POST, request.FILES)
+        safe_image_type = request.FILES['image'].name.strip().split('.')[-1] in ('jpg', 'png', 'jpeg')
+        # temp_img = None
         if safe_image_type:
-            new_doc.save()
+            if form.is_valid():
+                new_doc = Im(image=request.FILES['image'])
+                new_doc.save()
+                temp_img = new_doc
+            else:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         else:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        image_path = new_doc.image.path
+        if temp_img == None:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        image_path = temp_img.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
         except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        image_name = new_doc.image.name
+            raise
+        image_name = temp_img.image.name
         avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
         user.avatar = avatar_url
         user.save()
