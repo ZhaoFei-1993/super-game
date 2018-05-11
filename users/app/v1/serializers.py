@@ -304,11 +304,12 @@ class UserCoinSerialize(serializers.ModelSerializer):
     locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
     # service_charge = serializers.CharField(source='coin.service_charge')
     recent_address = serializers.SerializerMethodField()
+    min_present = serializers.CharField(source='coin.cash_control') #提现限制最小金额
 
     class Meta:
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
-                  "exchange_rate", "address", "coin_value", "locked_coin", "recent_address")
+                  "exchange_rate", "address", "coin_value", "locked_coin", "min_present", "recent_address")
 
     @staticmethod
     def get_coin_value(obj):

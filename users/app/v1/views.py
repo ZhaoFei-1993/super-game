@@ -850,6 +850,7 @@ class AssetView(ListAPIView):
                 'recharge_address': list['address'],
                 'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
+                'min_present': list['min_present'],
                 'recent_address': list['recent_address']
             })
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
@@ -936,16 +937,24 @@ class UserPresentationView(CreateAPIView):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
 
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
-            raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT)
+            if p_amount > user_coin.balance:
+                raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
+            elif p_amount < coin.cash_control:
+                raise ParamErrorException(error_code.API_70103_USER_PRESENT_AMOUNT_LC)
+            else:
+                raise ParamErrorException(error_code.API_70102_USER_PRESENT_AMOUNT_EZ)
 
         address_check = UserPresentation.objects.filter(address=p_address, coin_id=coin.id).order_by('user').values(
             'user').distinct()
         if len(address_check) > 0:
             if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
-                raise ParamErrorException(error_code.API_70102_USER_PRESENT_ADDRESS)
+                if len(address_check) > 1 or address_check[0]['user'] != userid:
+                    raise ParamErrorException(error_code.API_70104_USER_PRESENT_ADDRESS_EX)
+                else:
+                    raise ParamErrorException(error_code.API_70105_USER_PRESENT_ADDRESS_EY)
 
         if p_address_name == '':
-            raise ParamErrorException(error_code.API_70103_USER_PRESENT_ADDRESS_NAME)
+            raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
 
         user_coin.balance -= Decimal(p_amount)
         user_coin.save()
