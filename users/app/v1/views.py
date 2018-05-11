@@ -944,8 +944,7 @@ class UserPresentationView(CreateAPIView):
             if len(address_check) > 1 or address_check[0]['user'] != userid or p_address == '':
                 raise ParamErrorException(error_code.API_70102_USER_PRESENT_ADDRESS)
 
-        if p_address_name == '' or UserPresentation.objects.filter(user_id=userid,
-                                                                   address_name=p_address_name, coin_id=c_id).exists():
+        if p_address_name == '':
             raise ParamErrorException(error_code.API_70103_USER_PRESENT_ADDRESS_NAME)
 
         user_coin.balance -= Decimal(p_amount)
