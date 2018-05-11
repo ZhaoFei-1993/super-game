@@ -9,9 +9,9 @@ from quiz.app.v1.serializers import QuizSerialize
 from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from django.core.cache import caches
 from quiz.models import Quiz
-from ...models import User, DailyLog, DailySettings, UserMessage, Message,\
+from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserSettingOthors, UserInvitation, IntegralPrize
+    UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
@@ -1633,28 +1633,27 @@ class LuckDrawListView(ListAPIView):
         return prize_list
 
     def list(self, request, *args, **kwargs):
+        user_id = request.user.id
         cache = caches['redis']
-        # chat_id = "1232"
-        # cache.set("chat", chat_id)
-        # if not cache.get("chat"):
-        #     chat_id = 2
-        #     cache.set("chat", chat_id)
-        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards"  # 再来一次次数
+        date = datetime.now().strftime('%Y%m%d')
+        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards" + str(user_id) + str(date)  # 再来一次次数
         awards_number = cache.get(NUMBER_OF_LOTTERY_AWARDS)
-        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day"  # 每天抽奖次数
+        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day" + str(user_id) + str(date)  # 每天抽奖次数
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
             cache.set(NUMBER_OF_PRIZES_PER_DAY, number)
             number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = 0
-        if awards_number > 0:
+        if awards_number == None:
+            is_gratis = 0
+        elif awards_number > 0:
             is_gratis = 1
         if number == 6:
             is_gratis = 1
         if number == 0 and is_gratis == 0:
             number = "抽奖次数不足"
-        user_id = request.user.id
+        user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
         data = []
@@ -1671,7 +1670,8 @@ class LuckDrawListView(ListAPIView):
                     'prize_weight': x['prize_weight']
                 }
             )
-        return self.response({'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number})
+        return self.response(
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': user.integral})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1681,30 +1681,72 @@ class ClickLuckDrawView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
+        cache = caches['redis']
         user_id = request.user.id
-        # is_gratis = request.data.get('is_gratis')
-        # number = request.data.get('number')
-        prize = IntegralPrize.objects.filter(is_delete=0).values_list('pk')
-        print("prize==============================", prize)
-        return self.response({'code': 0})
+        date = datetime.now().strftime('%Y%m%d')
+        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards" + str(user_id) + str(date)  # 再来一次次数
+        is_gratis = request.data.get('is_gratis')
+        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day" + str(user_id) + str(date)  # 每天抽奖次数
+        number = request.data.get('number')
+        if int(number) <= 0:
+            raise ParamErrorException(error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
+        prize = []
+        prize_weight = []
+        prize_name_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_name')
+        prize_weight_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_weight')
+        for s in prize_weight_list:
+            prize_weight.append(int(s[0]) * 1000)
+        for i in prize_name_list:
+            prize.append(i[0])
+        if int(is_gratis) == 1 and int(number) == 6:
+            print("第一次")
+            choice = prize[weight_choice(prize_weight)]
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
+            numbers = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(numbers) - 1)
+        elif int(is_gratis) == 1:
+            print("再来一次")
+            choice = prize[weight_choice(prize_weight)]
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
+        elif int(is_gratis) != 1 and int(number) != 6:
+            print("继续抽奖")
+            choice = prize[weight_choice(prize_weight)]
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, 0)
+            numbers = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(numbers) - 1)
+            user_info = User.objects.get(pk=user_id)
+            user_info.integral -= 20
+            user_info.save()
+        integral_prize = IntegralPrize.objects.get(prize_name=choice)
+        if choice == "再来一次":
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, 1)
+        if choice == "积分":
+            user_info = User.objects.get(pk=user_id)
+            user_info.integral += int(integral_prize.prize_number)
+            user_info.save()
+        fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
+            'prize_name')
+        fictitious_prize_name = []
+        for a in fictitious_prize_name_list:
+            fictitious_prize_name.append(a[0])
+        user_info = User.objects.get(pk=user_id)
+        if choice in fictitious_prize_name:
+            coin = Coin.objects.filter(name=choice)
+            coin = coin[0]
+            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
+            coin_detail = CoinDetail()
+            coin_detail.user = user_info
+            coin_detail.coin_name = choice
+            coin_detail.amount = int(integral_prize.prize_number)
+            coin_detail.rest = int(user_coin.balance)
+            coin_detail.sources = 4
+            coin_detail.save()
+            user_coin.balance += int(integral_prize.prize_number)
+            user_coin.save()
 
-# class Command(BaseCommand):
-#     """
-#     带权重的随机数
-#     """
-#     help = "带权重的随机数"
-#
-#     prize = ['A', 'B', 'C', 'D']
-#
-#     def handle(self, *args, **options):
-#         choices = {
-#             'A': 0,
-#             'B': 0,
-#             'C': 0,
-#             'D': 0,
-#         }
-#         for i in range(1, 100000):
-#             choice = self.prize[self.weight_choice([50000, 30000, 19999, 1])]
-#             choices[choice] += 1
-#
-#         print('choices = ', choices)
+        integral_prize_record = IntegralPrizeRecord()
+        integral_prize_record.user = user_info
+        integral_prize_record.prize = integral_prize
+        integral_prize_record.is_receive = 1
+        integral_prize_record.save()
+        return self.response({'code': 0, "choice": choice})

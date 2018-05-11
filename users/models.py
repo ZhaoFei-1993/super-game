@@ -363,6 +363,7 @@ class IntegralPrize(models.Model):
     prize_consume = models.IntegerField(verbose_name="抽奖消耗", default=20)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
+    is_fictitious = models.BooleanField(verbose_name="是否虚拟", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -372,7 +373,7 @@ class IntegralPrize(models.Model):
 @reversion.register()
 class IntegralPrizeRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    prize_id = models.ForeignKey(IntegralPrize, on_delete=models.CASCADE)
+    prize = models.ForeignKey(IntegralPrize, on_delete=models.CASCADE)
     is_receive = models.BooleanField(verbose_name="是否已领取奖励", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
