@@ -34,7 +34,7 @@ def get_data(url):
 def get_data_info(url):
     os.chdir(cache_dir)
     files = []
-    for root, sub_dirs, files in os.walk(cache_dir):
+    for root, sub_dirs, files in list(os.walk(cache_dir))[0:1]:
         files = files
     if 'match_cache.txt' not in files:
         with open('match_cache.txt', 'a+') as f:
@@ -153,7 +153,7 @@ def get_data_info(url):
                                   (flag_l1, title_l1, odd_l1), (flag_l2, title_l2, odd_l2), (flag_l3, title_l3, odd_l3),
                                   (flag_l4, title_l4, odd_l4), (flag_l5, title_l5, odd_l5), (flag_l6, title_l6, odd_l6)]
 
-                # ---------------------------------------------------------------------------------------------------------
+                # ------------------------------------------------------------------------------------------------------
                 host_team_avatar = ''
                 guest_team_avatar = ''
 
@@ -201,7 +201,7 @@ def get_data_info(url):
                 except requests.ConnectionError as e:
                     print('Error', e.args)
 
-                # ---------------------------------------------------------------------------------------------------------
+                # ------------------------------------------------------------------------------------------------------
                 if Quiz.objects.filter(match_flag=match_id).first() is None and \
                         (len(result_hilo) > 0 and len(result_wnm) > 0 and len(result_hdc) > 0 and len(result_mnl) > 0):
                     quiz = Quiz()
@@ -305,7 +305,7 @@ def get_data_info(url):
                                 option.save()
                 else:
                     print('已经存在')
-                # ---------------------------------------------------------------------------------------------------------
+                # ------------------------------------------------------------------------------------------------------
                 print(match_id)
                 print(league)
                 print(league_abbr)
@@ -317,7 +317,7 @@ def get_data_info(url):
                 print(result_hdc)
                 print(result_wnm)
                 print(result_hilo)
-                print('---------------------------------------------------------------------------------------------------')
+                print('-----------------------------------------------------------------------------------------------')
             else:
                 print('已经存在，跳过')
     else:
