@@ -111,4 +111,7 @@ CHANNEL_LAYERS = {
 SMS_CL_SIGN_NAME = '【超级游戏】'
 SMS_CL_TEMPLATE_REGISTER = '尊敬的用户您好！感谢您注册GSG.one！验证码：{code}'
 SMS_CL_TEMPLATE_RESET_PASSWORD = '尊敬的用户您好！您正在找回密码。验证码：{code}，如不是您本人的操作，请忽略。'
-SMS_CL_TEMPLATE_SET_PASSCODE = '尊敬的用户您好！您正在设置密保。验证码：{code}，如不是您本人的操作，请忽略。'
+SMS_CL_TEMPLATE_SET_PASSCODE = '尊敬的用户您好！您正在重置密保。验证码：{code}，如不是您本人的操作，请忽略。'
+SMS_CL_BINDING_CELL_PHONE = '尊敬的用户您好！您绑定手机号码。验证码：{code}，如不是您本人的操作，请忽略。'
+SMS_CL_RELIEVE_BINDING_CELL_PHONE = '尊敬的用户您好！您正在解除手机绑定。验证码：{code}，如不是您本人的操作，请忽略。'
+
