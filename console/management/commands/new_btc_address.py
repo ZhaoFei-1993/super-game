@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 import requests
 import json
 from console.models import Address
-from users.models import Coin, User
+from users.models import Coin
 
 user_id = 42
 
@@ -13,10 +13,6 @@ localhost = '127.0.0.1'
 base_url = 'http://' + localhost + ':3000'
 guid = '887c59bc-4895-415b-a090-98b0a1710837'
 main_password = 'wecom$888'
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-}
 
 
 def created_address():
@@ -57,6 +53,3 @@ class Command(BaseCommand):
             address_query.passphrase = main_password
             address_query.save()
             print('分配成功')
-
-
-

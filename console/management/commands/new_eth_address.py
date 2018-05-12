@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-import json
 from console.models import Address
-from users.models import Coin, User
+from users.models import Coin
 from base.eth import *
 
-
 user_id = 43
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-}
 
 
 class Command(BaseCommand):

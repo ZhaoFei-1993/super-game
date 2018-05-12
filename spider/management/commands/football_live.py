@@ -48,27 +48,25 @@ def get_live_data():
         finall_dt = json.loads('{' + str_list[1:] + '}')
         for key in finall_dt:
             data_list = finall_dt[key]
+            if data_list['fs_h'] is not None and data_list['fs_a'] is not None:
+                match_id = data_list['m_id']
 
-            match_id = data_list['m_id']
+                cache_name = 'cache_' + match_id
+                os.chdir(cache_dir)
+                dir = list(os.walk(cache_dir))[0][1]
+                if time not in dir:
+                    os.mkdir(time)
 
-            cache_name = 'cache_' + match_id
-            os.chdir(cache_dir)
-            dir = list(os.walk(cache_dir))[0][1]
-            if time not in dir:
-                os.mkdir(time)
+                os.chdir(cache_dir + '/' + time)
+                files = []
+                for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
+                    files = files
+                if cache_name not in files:
+                    with open(cache_name, 'w+') as f:
+                        f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
+                        f.write(data_list['status'] + ',')
+                        f.write(data_list['match_period'] + ',')
 
-            os.chdir(cache_dir + '/' + time)
-            files = []
-            for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
-                files = files
-            if cache_name not in files:
-                with open(cache_name, 'w+') as f:
-                    f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
-                    f.write(data_list['status'] + ',')
-                    f.write(data_list['match_period'] + ',')
-                if data_list['fs_h'] == '':
-                    print('warming')
-                else:
                     if Quiz.objects.filter(match_flag=match_id).first() is not None:
                         quiz = Quiz.objects.filter(match_flag=match_id).first()
 
@@ -106,7 +104,7 @@ def get_live_data():
                                     f.write(str(game_status))
                                 redis_conn = Redis()
                                 q = Queue(connection=redis_conn)
-                                q.enqueue(quiz_send_time, game_status, int(data_list['minute']) * 60)
+                                q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
 
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
@@ -128,7 +126,7 @@ def get_live_data():
                                         f.write(str(game_status))
                                     redis_conn = Redis()
                                     q = Queue(connection=redis_conn)
-                                    q.enqueue(quiz_send_time, game_status, int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
                         quiz.save()
 
                         # 比分推送
@@ -142,72 +140,53 @@ def get_live_data():
                         print('--------------------------')
                     else:
                         print('不存在该比赛')
-            else:
-                with open(cache_name, 'r') as f:
-                    score = f.readline()
-
-                if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a'] \
-                        and score.split(',')[1] == data_list['status'] \
-                        and score.split(',')[2] == data_list['match_period']:
-
-                    print('不需要更新')
-                    print('--------------------------')
                 else:
-                    with open(cache_name, 'r+') as f:
-                        data = f.readline()
-                    game_status = data.split(',')[3]
-                    with open(cache_name, 'w+') as f:
-                        f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
-                        f.write(data_list['status'] + ',')
-                        f.write(data_list['match_period'] + ',')
-                        f.write(game_status)
+                    with open(cache_name, 'r') as f:
+                        score = f.readline()
 
-                    if Quiz.objects.filter(match_flag=match_id).first() is not None:
-                        quiz = Quiz.objects.filter(match_flag=match_id).first()
+                    print(match_id)
+                    if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a'] \
+                            and score.split(',')[1] == data_list['status'] \
+                            and score.split(',')[2] == data_list['match_period']:
 
-                        # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
-                        host_team_score = data_list['fs_h']
-                        guest_team_score = data_list['fs_a']
+                        print(get_time())
+                        print('不需要更新')
+                        print('--------------------------')
+                    else:
+                        with open(cache_name, 'r+') as f:
+                            data = f.readline()
+                        game_status = data.split(',')[3]
+                        with open(cache_name, 'w+') as f:
+                            f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
+                            f.write(data_list['status'] + ',')
+                            f.write(data_list['match_period'] + ',')
+                            f.write(game_status)
 
-                        if data_list['status'] == 'Played':
-                            game_status = 2
-                            quiz.host_team_score = host_team_score
-                            quiz.guest_team_score = guest_team_score
-                            quiz.status = quiz.ENDED
-                            quiz.gaming_time = -1
-                            with open(cache_name, 'r+') as f:
-                                data = f.readline()
-                            if game_status != data.split(',')[3]:
-                                with open(cache_name, 'w+') as f:
-                                    f.write(data.split(',')[0] + ',')
-                                    f.write(data.split(',')[1] + ',')
-                                    f.write(data.split(',')[2] + ',')
-                                    f.write(str(game_status))
-                        elif data_list['status'] == 'Fixture':
-                            quiz.status = quiz.PUBLISHING
-                        elif data_list['status'] == 'Playing':
-                            game_status = 0
+                        if Quiz.objects.filter(match_flag=match_id).first() is not None:
+                            quiz = Quiz.objects.filter(match_flag=match_id).first()
 
-                            # 推送比赛时间
-                            with open(cache_name, 'r+') as f:
-                                data = f.readline()
-                            if game_status != data.split(',')[3]:
-                                with open(cache_name, 'w+') as f:
-                                    f.write(data.split(',')[0] + ',')
-                                    f.write(data.split(',')[1] + ',')
-                                    f.write(data.split(',')[2] + ',')
-                                    f.write(str(game_status))
-                                redis_conn = Redis()
-                                q = Queue(connection=redis_conn)
-                                q.enqueue(quiz_send_time, game_status, int(data_list['minute']) * 60)
+                            # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
+                            host_team_score = data_list['fs_h']
+                            guest_team_score = data_list['fs_a']
 
+                            if data_list['status'] == 'Played':
+                                game_status = 2
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
-                                quiz.status = quiz.REPEALED
-                                quiz.gaming_time = int(data_list['minute']) * 60
-
-                            if data_list['match_period'] == 'HT':
-                                game_status = 1
+                                quiz.status = quiz.ENDED
+                                quiz.gaming_time = -1
+                                with open(cache_name, 'r+') as f:
+                                    data = f.readline()
+                                if game_status != data.split(',')[3]:
+                                    with open(cache_name, 'w+') as f:
+                                        f.write(data.split(',')[0] + ',')
+                                        f.write(data.split(',')[1] + ',')
+                                        f.write(data.split(',')[2] + ',')
+                                        f.write(str(game_status))
+                            elif data_list['status'] == 'Fixture':
+                                quiz.status = quiz.PUBLISHING
+                            elif data_list['status'] == 'Playing':
+                                game_status = 0
 
                                 # 推送比赛时间
                                 with open(cache_name, 'r+') as f:
@@ -220,21 +199,45 @@ def get_live_data():
                                         f.write(str(game_status))
                                     redis_conn = Redis()
                                     q = Queue(connection=redis_conn)
-                                    q.enqueue(quiz_send_time, game_status, int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
 
-                        quiz.save()
+                                    quiz.host_team_score = host_team_score
+                                    quiz.guest_team_score = guest_team_score
+                                    quiz.status = quiz.REPEALED
+                                    quiz.gaming_time = int(data_list['minute']) * 60
 
-                        # 比分推送
-                        redis_conn = Redis()
-                        q = Queue(connection=redis_conn)
-                        q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                                if data_list['match_period'] == 'HT':
+                                    game_status = 1
 
-                        print(quiz.host_team)
-                        print(quiz.guest_team)
-                        print(host_team_score + ':' + guest_team_score)
-                        print('--------------------------')
-                    else:
-                        print('不存在该比赛')
+                                    # 推送比赛时间
+                                    with open(cache_name, 'r+') as f:
+                                        data = f.readline()
+                                    if game_status != data.split(',')[3]:
+                                        with open(cache_name, 'w+') as f:
+                                            f.write(data.split(',')[0] + ',')
+                                            f.write(data.split(',')[1] + ',')
+                                            f.write(data.split(',')[2] + ',')
+                                            f.write(str(game_status))
+                                        redis_conn = Redis()
+                                        q = Queue(connection=redis_conn)
+                                        q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
+
+                            quiz.save()
+
+                            # 比分推送
+                            redis_conn = Redis()
+                            q = Queue(connection=redis_conn)
+                            q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+
+                            print(quiz.host_team)
+                            print(quiz.guest_team)
+                            print(host_team_score + ':' + guest_team_score)
+                            print('--------------------------')
+                        else:
+                            print('不存在该比赛')
+            else:
+                print('warming')
+                print('-----------------------------')
     except requests.ConnectionError as e:
         print('Error', e.args)
 
@@ -244,6 +247,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            timming_exe(get_live_data, inc=2)
+            timming_exe(get_live_data, inc=30)
         except KeyboardInterrupt as e:
             pass

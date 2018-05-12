@@ -9,6 +9,7 @@ import dateutil.parser as dateparser
 import time
 
 from django.core.cache import caches
+from django.core.management import call_command
 
 
 class QuizConsumer(AsyncJsonWebsocketConsumer):
@@ -110,6 +111,14 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
 
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)
+        elif command == 'send':
+            await self.channel_layer.group_send(group_name, {
+                "type": "quiz.action",
+                "action": content.get("action"),
+                "quiz_id": content.get("quiz_id"),
+                "match_flag": content.get("match_flag")
+            })
+
         # elif command == 'send':
         #     await self.channel_layer.group_send(group_name, {
         #         "type": "quiz.message",
@@ -118,7 +127,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
 
     async def command_message(self, event):
         """
-        推送数据至客户端
+        推送比分数据至客户端
         :param event:
         :return:
         """
@@ -129,3 +138,22 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
                 "guest": event['guest'],
             }
         )
+
+    async def synctime_message(self, event):
+        """
+        推送比赛时间数据至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "time",
+                "host": event["status"],
+                "guest": event['quiz_time'],
+            }
+        )
+
+    async def quiz_action(self, event):
+        if event['action'] == 'synctime':
+            match_msg = dict(quiz_id=event['quiz_id'], match_flag=event['match_flag'])
+            call_command('football_synctime', match_msg)
