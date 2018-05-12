@@ -1762,6 +1762,7 @@ class ClickLuckDrawView(CreateAPIView):
                 'icon': integral_prize.icon,
                 'prize_name': integral_prize.prize_name,
                 'prize_number': prize_number,
+                'integral': user_info.integral,
                 'number': cache.get(NUMBER_OF_PRIZES_PER_DAY),
                 'is_gratis': cache.get(NUMBER_OF_LOTTERY_AWARDS)
             }
