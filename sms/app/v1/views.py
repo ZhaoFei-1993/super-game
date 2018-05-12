@@ -56,7 +56,7 @@ class SmsView(ListCreateAPIView):
         q = Queue(connection=redis_conn)
         q.enqueue(send_sms, model.id)
 
-        return self.response({'code': error_code.API_0_SUCCESS, 'data': code})
+        return self.response({'code': error_code.API_0_SUCCESS})
 
 
 class SmsVerifyView(ListCreateAPIView):

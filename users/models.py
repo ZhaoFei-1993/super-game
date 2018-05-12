@@ -192,7 +192,7 @@ class CoinLock(models.Model):
     limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
     limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    Coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
