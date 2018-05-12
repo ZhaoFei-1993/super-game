@@ -1692,9 +1692,9 @@ class ClickLuckDrawView(CreateAPIView):
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         number = int(number)
         if is_gratis != 1 and user_info.integral < 20:
-            raise ParamErrorException(error_code.API_60103_INTEGRAL_INSUFFICIENT)
+            raise ParamErrorException(error_code=error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
-            raise ParamErrorException(error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
+            raise ParamErrorException(error_code=error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
         prize = []
         prize_weight = []
         prize_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_name', 'prize_weight')
