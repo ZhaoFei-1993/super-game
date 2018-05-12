@@ -1654,8 +1654,6 @@ class LuckDrawListView(ListAPIView):
             is_gratis = 1
         if number == 6:
             is_gratis = 1
-        if number == 0 and is_gratis == 0:
-            number = "抽奖次数不足"
         cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
         user = request.user
         results = super().list(request, *args, **kwargs)
@@ -1693,7 +1691,6 @@ class ClickLuckDrawView(CreateAPIView):
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_info.pk) + str(date)  # 每天抽奖次数
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         number = int(number)
-        # user_info = User.objects.get(pk=user_info.pk)
         if is_gratis != 1 and user_info.integral < 20:
             raise ParamErrorException(error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
