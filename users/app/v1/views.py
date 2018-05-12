@@ -1686,23 +1686,24 @@ class ClickLuckDrawView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         cache = caches['redis']
-        user_id = request.user.id
+        user_info = request.user
         date = datetime.now().strftime('%Y%m%d')
-        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_id) + str(date)  # 再来一次次数
+        NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_info.pk) + str(date)  # 再来一次次数
         is_gratis = cache.get(NUMBER_OF_LOTTERY_AWARDS)
-        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
+        NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_info.pk) + str(date)  # 每天抽奖次数
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         number = int(number)
+        # user_info = User.objects.get(pk=user_info.pk)
+        if is_gratis != 1 and user_info.integral < 20:
+            raise ParamErrorException(error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
             raise ParamErrorException(error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
         prize = []
         prize_weight = []
-        prize_name_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_name')
-        prize_weight_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_weight')
-        for s in prize_weight_list:
-            prize_weight.append(int(s[0]) * 1000)
-        for i in prize_name_list:
-            prize.append(i[0])
+        prize_list = IntegralPrize.objects.filter(is_delete=0).values_list('prize_name', 'prize_weight')
+        for list in prize_list:
+            prize_weight.append(int(list[1]) * 1000)
+            prize.append(list[0])
         choice = prize[weight_choice(prize_weight)]
         if int(is_gratis) == 1 and int(number) == 6:
             print("第一次")
@@ -1720,7 +1721,6 @@ class ClickLuckDrawView(CreateAPIView):
             cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
             is_gratis = 0
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
-            user_info = User.objects.get(pk=user_id)
             user_info.integral -= 20
             user_info.save()
         integral_prize = IntegralPrize.objects.get(prize_name=choice)
@@ -1728,7 +1728,6 @@ class ClickLuckDrawView(CreateAPIView):
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
         if choice == "积分":
-            user_info = User.objects.get(pk=user_id)
             user_info.integral += int(integral_prize.prize_number)
             user_info.save()
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
@@ -1736,11 +1735,11 @@ class ClickLuckDrawView(CreateAPIView):
         fictitious_prize_name = []
         for a in fictitious_prize_name_list:
             fictitious_prize_name.append(a[0])
-        user_info = User.objects.get(pk=user_id)
+
         if choice in fictitious_prize_name:
             coin = Coin.objects.filter(name=choice)
             coin = coin[0]
-            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
+            user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=coin.id)
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice

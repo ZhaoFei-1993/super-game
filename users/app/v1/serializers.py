@@ -458,7 +458,6 @@ class LuckDrawSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_prize_number(obj):
-        # time_time = timezone.localtime(obj.created_at)
         prize_number = obj.prize_number
         if prize_number == 0:
             prize_number = ""
