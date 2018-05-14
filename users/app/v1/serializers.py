@@ -302,9 +302,8 @@ class UserCoinSerialize(serializers.ModelSerializer):
     exchange_rate = serializers.SerializerMethodField()  # 代币数
     coin_value = serializers.SerializerMethodField()  # 投注值
     locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
-    # service_charge = serializers.CharField(source='coin.service_charge')
     recent_address = serializers.SerializerMethodField()
-    min_present = serializers.CharField(source='coin.cash_control') #提现限制最小金额
+    min_present = serializers.CharField(source='coin.cash_control')  # 提现限制最小金额
 
     class Meta:
         model = UserCoin
@@ -371,6 +370,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     icon = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
@@ -389,6 +389,11 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
+
+    @staticmethod
+    def get_amount(obj):
+        amount = [str(obj.amount), int(obj.amount)][int(obj.amount) == obj.amount]
+        return amount
 
     @staticmethod
     def get_address_name(obj):
@@ -462,4 +467,3 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         if prize_number == 0:
             prize_number = ""
         return prize_number
-

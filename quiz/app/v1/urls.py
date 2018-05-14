@@ -7,9 +7,9 @@ urlpatterns = [
     #  竞猜分类
     path('category/', views.CategoryView.as_view(), name="app-v1-quiz-category"),
     #  热门比赛
-    path('hotest/', views.HotestView.as_view(), name="app-v1-quiz-hotest"),
+    path('hotest/<int:roomquiz_id>/', views.HotestView.as_view(), name="app-v1-quiz-hotest"),
     # 竞猜列表
-    path('list/', views.QuizListView.as_view(), name="app-v1-quiz-list"),
+    path('list/<int:roomquiz_id>/', views.QuizListView.as_view(), name="app-v1-quiz-list"),
     # 我的竞猜记录             ***
     path('records/<int:roomquiz_id>/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
     # 他人的竞猜记录

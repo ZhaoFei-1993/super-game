@@ -17,6 +17,7 @@ class QuizSerialize(serializers.ModelSerializer):
     """
 
     total_coin = serializers.SerializerMethodField()  # 投注总金额
+    total_coin_avatar = serializers.SerializerMethodField()  # 投注总金额图标
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
     category = serializers.SerializerMethodField()
@@ -29,7 +30,7 @@ class QuizSerialize(serializers.ModelSerializer):
         model = Quiz
         fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team", "guest_team_avatar",
                   "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate", "planish_rate",
-                  "lose_rate")
+                  "lose_rate", "total_coin_avatar")
 
     @staticmethod
     def get_begin_at(obj):
@@ -37,6 +38,12 @@ class QuizSerialize(serializers.ModelSerializer):
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
         return start
+
+    def get_total_coin_avatar(self, obj):
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        club_info = Club.objects.get(pk=roomquiz_id)
+        total_coin_avatar = club_info.coin.icon
+        return total_coin_avatar
 
     @staticmethod
     def get_win_rate(obj):
@@ -85,17 +92,19 @@ class QuizSerialize(serializers.ModelSerializer):
 
         return is_end
 
-    @staticmethod
-    def get_total_coin(obj):  # 投注总金额
-        record = Record.objects.filter(quiz_id=obj.pk)
+    def get_total_coin(self, obj):  # 投注总金额
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
         total_coin = 0
         for coin in record:
             total_coin = total_coin + coin.bet
+        total_coin = [str(total_coin), int(total_coin)][int(total_coin) == total_coin]
         return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
         user = self.context['request'].user.id
-        record_count = Record.objects.filter(user_id=user, quiz_id=obj.pk).count()
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        record_count = Record.objects.filter(user_id=user, quiz_id=obj.pk, roomquiz_id=roomquiz_id).count()
         is_vote = 0
         if record_count > 0:
             is_vote = 1
@@ -271,6 +280,7 @@ class QuizPushSerializer(serializers.ModelSerializer):
     my_rule = serializers.SerializerMethodField()  # 比赛状态
     my_option = serializers.SerializerMethodField()  # 比赛状态
     username = serializers.SerializerMethodField()  # 比赛状态
+    bet = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Record
@@ -281,6 +291,11 @@ class QuizPushSerializer(serializers.ModelSerializer):
         rule = Rule.objects.get(pk=obj.rule_id)
         my_rule = rule.TYPE_CHOICE[int(rule.type)][1]
         return my_rule
+
+    @staticmethod
+    def get_bet(obj):
+        bet = [str(obj.bet), int(obj.bet)][int(obj.bet) == obj.bet]
+        return bet
 
     @staticmethod
     def get_my_option(obj):

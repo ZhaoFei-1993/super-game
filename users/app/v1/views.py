@@ -349,7 +349,7 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': user_coin,
+            'usercoin': [str(user_coin), int(user_coin)][int(user_coin) == user_coin],
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
@@ -848,7 +848,7 @@ class AssetView(ListAPIView):
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
                 'recharge_address': list['address'],
-                'balance': list['balance'],
+                'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
                 'locked_coin': list['locked_coin'],
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
@@ -1006,8 +1006,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': x['amount'],
-                    'rest': x['rest'],
+                    'amount': [str(x['amount']), int(x['amount'])][int(x['amount']) == x['amount']],
+                    'rest': [str(x['rest']), int(x['rest'])][int(x['rest']) == x['rest']],
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
@@ -1720,7 +1720,10 @@ class ClickLuckDrawView(CreateAPIView):
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
             user_info.integral -= 20
             user_info.save()
-        integral_prize = IntegralPrize.objects.get(prize_name=choice)
+        try:
+            integral_prize = IntegralPrize.objects.get(prize_name=choice)
+        except DailyLog.DoesNotExist:
+            return 0
         if choice == "再来一次":
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
@@ -1736,7 +1739,10 @@ class ClickLuckDrawView(CreateAPIView):
         if choice in fictitious_prize_name:
             coin = Coin.objects.filter(name=choice)
             coin = coin[0]
-            user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=coin.id)
+            try:
+                user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=coin.id)
+            except DailyLog.DoesNotExist:
+                return 0
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice

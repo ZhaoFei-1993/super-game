@@ -130,7 +130,7 @@ class RewardCoin(models.Model):
 class CoinValue(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     value_index = models.IntegerField(verbose_name='投注值序号', default=1)
-    value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=1, default=0.0)
+    value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=3, default=0.000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -143,7 +143,7 @@ class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
-    balance = models.DecimalField(verbose_name='金额', max_digits=15, decimal_places=2, default=0)
+    balance = models.DecimalField(verbose_name='金额', max_digits=15, decimal_places=3, default=0.000)
 
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
