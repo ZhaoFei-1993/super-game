@@ -16,7 +16,6 @@ class LoginView(CreateAPIView):
     """
     serializer_class = InfoSerialize
 
-
     def post(self, request, *args, **kwargs):
         return self.response({
             'code': 0

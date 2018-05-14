@@ -8,6 +8,7 @@ from reversion.models import Version, Revision
 import reversion
 from wc_auth.models import Admin
 
+
 class ConfigManager(models.Manager):
     """
     配置数据缓存操作
@@ -169,7 +170,7 @@ class AndroidVersion(models.Model):
 
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
-    mobile_type = models.IntegerField("手机类型",choices=TYPE_CHOICE)
+    mobile_type = models.IntegerField("手机类型", choices=TYPE_CHOICE, max_length=1, default=ANDROID)
     comment = models.CharField("版本说明", max_length=100, default='')
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
     is_delete = models.BooleanField("是否已删除", max_length=2, default=False)
@@ -222,5 +223,6 @@ class Admin_Operation(models.Model):
     mod_version = models.ForeignKey(Version, related_name='mod_version', on_delete=models.CASCADE)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
+
     class Meta:
         verbose_name = verbose_name_plural = "管理员操作记录"
