@@ -193,7 +193,7 @@ class RecordSerialize(serializers.ModelSerializer):
         elif int(obj.quiz.status) == 4 and int(obj.earn_coin) == 0:
             earn_coin = "猜错"
         else:
-            earn_coin = obj.earn_coin
+            earn_coin = [str(obj.earn_coin), int(obj.earn_coin)][int(obj.earn_coin) == obj.earn_coin]
         return earn_coin
 
     @staticmethod
