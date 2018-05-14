@@ -298,10 +298,9 @@ class RuleView(ListAPIView):
             total = Record.objects.filter(rule_id=i.pk).count()
             for s in option:
                 is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
+                is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
-                else:
-                    is_choice = 0
                 odds = [str(s.odds), int(s.odds)][int(s.odds) == s.odds]
                 number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:

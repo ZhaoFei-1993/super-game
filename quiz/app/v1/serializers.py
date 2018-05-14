@@ -22,9 +22,9 @@ class QuizSerialize(serializers.ModelSerializer):
     begin_at = serializers.SerializerMethodField()  # 是否已投注
     category = serializers.SerializerMethodField()
     is_end = serializers.SerializerMethodField()  # 是否已结束
-    win_rate = serializers.SerializerMethodField()  # 是否已结束
-    planish_rate = serializers.SerializerMethodField()  # 是否已结束
-    lose_rate = serializers.SerializerMethodField()  # 是否已结束
+    win_rate = serializers.SerializerMethodField()  # 胜
+    planish_rate = serializers.SerializerMethodField()  # 平
+    lose_rate = serializers.SerializerMethodField()  # 负
     total_people = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
@@ -38,6 +38,7 @@ class QuizSerialize(serializers.ModelSerializer):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
+        # ok = int(time.time())-900
         return start
 
     def get_total_people(self, obj):
@@ -54,12 +55,14 @@ class QuizSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_win_rate(obj):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+        odds = 0
         for rule in rule_obj:
             try:
                 option = Option.objects.get(rule_id=rule.pk, option="胜")
                 odds = option.odds
             except Option.DoesNotExist:
                 odds = 0
+
         return odds
 
     @staticmethod
@@ -67,8 +70,10 @@ class QuizSerialize(serializers.ModelSerializer):
         vv = Category.objects.get(pk=obj.category_id)
         type_id = vv.parent_id
         quiz_type = Category.objects.get(pk=type_id)
+        odds = 0
         if quiz_type.name == "篮球":
-            return ''
+            odds = ''
+            return odds
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
             try:
@@ -81,6 +86,7 @@ class QuizSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_lose_rate(obj):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+        odds = 0
         for rule in rule_obj:
             try:
                 option = Option.objects.get(rule_id=rule.pk, option="负")
