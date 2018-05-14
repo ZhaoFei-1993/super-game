@@ -34,10 +34,11 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
     安卓版本信息
     """
     create_at = serializers.SerializerMethodField()
+    mobile_type = serializers.SerializerMethodField()
 
     class Meta:
         model = AndroidVersion
-        fields = ("id", "version", "comment", "upload_url", "is_update", "is_delete", "create_at")
+        fields = ("id", "version", "comment", "upload_url", "mobile_type", "is_update", "is_delete", "create_at")
 
     @staticmethod
     def get_create_at(obj):
@@ -46,6 +47,11 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
         create_time = obj.create_at
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
         return create_at
+
+    @staticmethod
+    def get_mobile_type(obj):
+        mobile_type = AndroidVersion.TYPE_CHOICE[obj.mobile_type][1]
+        return mobile_type
 
 
 class DailySettingSerializer(serializers.ModelSerializer):

@@ -17,7 +17,7 @@ from django.conf import settings
 from wc_auth.models import Permission
 from .models import Image
 from .forms import ImageForm
-from api.settings import BASE_DIR
+from api.settings import MEDIA_ROOT
 from datetime import datetime
 
 
@@ -124,12 +124,25 @@ def upload_file(request):
         files = request.FILES.get('files')
         if not files.chunks():
             return JsonResponse({"Error": "Empty File!"}, status=status.HTTP_400_BAD_REQUEST)
-        file_type = files.name.split('.')[-1] in ['apk']
-        if not file_type:
-            return JsonResponse({"Error": "Upload File Error!"}, status=status.HTTP_400_BAD_REQUEST)
+        file_type = files.name.split('.')[-1]
+        if file_type == 'ipa':
+            type  = 'IOS'
+        else:
+            type = 'Android'
+        if file_type not in ['apk','ipa']:
+            return JsonResponse({"Error": "Upload File Type Error!"}, status=status.HTTP_400_BAD_REQUEST)
         date = datetime.now().strftime('%Y%m%d')
-        save_file = os.path.join(BASE_DIR, '/files', date + '_' + files.name)
+        media_android = MEDIA_ROOT + 'apps/Android'
+        media_ios = MEDIA_ROOT + 'apps/IOS'
+        if not os.path.exists(media_android):
+            os.makedirs(media_android)
+        if not os.path.exists(media_ios):
+            os.makedirs(media_ios)
+        if type == 'IOS':
+            save_file = os.path.join(media_ios, date + '_' + files.name)
+        else:
+            save_file = os.path.join(media_android, date + '_' + files.name)
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)
-        return JsonResponse({}, status=201)
+        return JsonResponse({'m_type':type}, status=201)

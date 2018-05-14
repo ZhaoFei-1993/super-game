@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
-from reversion.models import Version, Revision
 import reversion
 
 
@@ -79,7 +78,6 @@ class AdminManager(BaseUserManager):
         return user
 
 
-@reversion.register()
 class Admin(AbstractBaseUser):
     """
     后台管理员
@@ -96,11 +94,3 @@ class Admin(AbstractBaseUser):
         return self.username
 
 
-class Admin_Operation(models.Model):
-    pre_version = models.ForeignKey(Version, related_name='pre_version', on_delete=models.CASCADE, default='')
-    mod_version = models.ForeignKey(Version, related_name='mod_version', on_delete=models.CASCADE)
-    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name = verbose_name_plural = "管理员操作记录"

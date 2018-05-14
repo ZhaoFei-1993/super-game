@@ -94,34 +94,37 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             try:
                 item = AndroidVersion.objects.get(id=id_x)
             except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-            return self.response({'status': 200, 'results': {'id': item.id,
-                                                             'version': item.version,
-                                                             'is_update': item.is_update,
-                                                             'comment':item.comment
-                                                             }})
+                JsonResponse({'Error':'Instance Not Exist!'}, status=status.HTTP_400_BAD_REQUEST)
+            serialize = AndroidSerializer(item)
+            return self.response({'status': 200, 'results': serialize.data})
         else:
             return super().list(request, *args, **kwargs)
 
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
-        values = value_judge(request, 'files', 'is_update', 'version','comment')
+        values = value_judge(request, 'files', 'is_update', 'version','comment','mobile_type')
         if values == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         files = request.data.get('files').split('\\')[-1]
         is_update = request.data.get('is_update')
         version = request.data.get('version')
         comment = request.data.get('comment')
+        mobile_type = request.data.get('mobile_type')
         config = AndroidVersion()
-        version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)
+        if str(mobile_type).upper() == 'IOS':
+            type = 1
+        else:
+            type = 0
+        version_exist = AndroidVersion.objects.filter(version=version, is_delete=0, mobile_type=type).exists()
         if version_exist:
             return JsonResponse({"Error": "Version Existed!"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             config.version = version
         config.is_update = is_update
         config.comment=comment
+        config.mobile_type=type
         date = datetime.now().strftime('%Y%m%d')
-        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
+        config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
         config.save()
         return self.response({"code": 0})
 
@@ -133,16 +136,21 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         try:
             item = AndroidVersion.objects.get(id=index)
         except item.DoesNotExist:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            JsonResponse({'Error':'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+        mobile_type = request.data.get('mobile_type')
+        if str(mobile_type).upper()=="IOS":
+            type=1
+        else:
+            type=0
         if "files" in request.data:
             files = request.data.get("files")
             if files:
                 files = files.split('\\')[-1]
                 date = datetime.now().strftime('%Y%m%d')
-                item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/files/", date + '_' + files])
+                item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
         if "version" in request.data:
             version = request.data.get('version')
-            version_exist = AndroidVersion.objects.filter(version=version, is_delete=0)
+            version_exist = AndroidVersion.objects.filter(version=version, is_delete=0, mobile_type=type)
             if version_exist:
                 return JsonResponse({'Error': "Version Exist!"}, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -183,10 +191,16 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
         seletions = {}
         for v in User.REGISTER_TYPE:
             seletions[str(v[0])] = v[1]
+        system_m = Config.objects.filter(key="system_maintenance")
+        if not system_m.exists():
+            config = Config()
+            config.key = "system_maintenance"
+            config.configs = 0
+            config.save()
         data = {
             "seletions": seletions,
             "results": {
-                "system_maintenance": Config.objects.filter(key="system_maintenance")[0].configs,
+                "system_maintenance": config.configs,
                 "about": others[0].about,
                 "helps": others[0].helps,
                 "sv_contractus": others[0].sv_contractus,

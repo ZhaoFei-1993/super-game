@@ -4,8 +4,9 @@ from django.conf import settings
 import json
 import os
 from django.core import serializers
+from reversion.models import Version, Revision
 import reversion
-
+from wc_auth.models import Admin
 
 class ConfigManager(models.Manager):
     """
@@ -159,15 +160,21 @@ class Config(models.Model):
 
 @reversion.register()
 class AndroidVersion(models.Model):
-    """
-    安卓版本管理
-    """
+    ANDROID = 0
+    IOS = 1
+    TYPE_CHOICE = (
+        (ANDROID, "Android"),
+        (IOS, "IOS")
+    )
+
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
+    mobile_type = models.IntegerField("手机类型",choices=TYPE_CHOICE)
     comment = models.CharField("版本说明", max_length=100, default='')
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
     is_delete = models.BooleanField("是否已删除", max_length=2, default=False)
-    create_at = models.DateTimeField("发布时间", auto_now=True)
+    update_at = models.DateTimeField("更新时间", auto_now=True)
+    create_at = models.DateTimeField("发布时间", auto_now_add=True)
 
     class Meta:
         ordering = ['-id']
@@ -208,3 +215,12 @@ class Article(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "文章-关于我们-公告"
+
+
+class Admin_Operation(models.Model):
+    pre_version = models.ForeignKey(Version, related_name='pre_version', on_delete=models.CASCADE, default='')
+    mod_version = models.ForeignKey(Version, related_name='mod_version', on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
+    class Meta:
+        verbose_name = verbose_name_plural = "管理员操作记录"

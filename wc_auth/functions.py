@@ -1,5 +1,5 @@
 from reversion.models import Revision, Version
-from .models import Admin_Operation
+from config.models import Admin_Operation
 
 """
 保存用户操作记录
