@@ -15,7 +15,7 @@ from django.conf import settings
 from django.db.models import Sum
 from base.exceptions import ParamErrorException
 from django.db.models import Q
-from wc_auth.models import Admin_Operation
+from config.models import Admin_Operation
 from quiz.models import Record
 from base import code
 from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation

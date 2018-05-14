@@ -3,7 +3,8 @@ import rest_framework_filters as filters
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, ListAPIView
 
 from .serializers import InfoSerialize, RoleListSerialize, QuizSerialize, AdminOperationSerialize
-from .models import Role, Admin, Admin_Operation
+from .models import Role, Admin
+from config.models import Admin_Operation
 from quiz.models import Quiz
 from url_filter.integrations.drf import DjangoFilterBackend
 from utils.functions import reversion_Decorator
@@ -15,7 +16,7 @@ class LoginView(CreateAPIView):
     """
     serializer_class = InfoSerialize
 
-    @reversion_Decorator
+
     def post(self, request, *args, **kwargs):
         return self.response({
             'code': 0

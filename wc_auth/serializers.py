@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from .models import Admin, Role, Admin_Operation
+from .models import Admin, Role
+from config.models import Admin_Operation
 from quiz.models import Quiz
 from django.utils import timezone
 from datetime import datetime
