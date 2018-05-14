@@ -6,10 +6,10 @@ from users.models import User, Coin
 # Create your models here.
 
 class Club(models.Model):
-    PENDING = 0     # 人气
-    PUBLISHING = 1  # 热门
-    CLOSE = 2  # 未开启
-    NIL = 3
+    PENDING = 2     # 人气
+    PUBLISHING = 3  # 热门
+    CLOSE = 0  # 未开启
+    NIL = 1
 
     STATUS_CHOICE = (
         (PENDING, "人气"),

@@ -34,12 +34,20 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_user_number(obj):
-        if int(obj.is_recommend) == 2:
+        if int(obj.is_recommend) == 0:
             record_number = 0
             return record_number
-        else:
-            record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
+        elif int(obj.is_recommend) == 3:
+            record_number = 0
             record_number += 10000
+            return record_number
+        elif int(obj.is_recommend) == 2:
+            record_number = 0
+            record_number += 6000
+            return record_number
+        elif int(obj.is_recommend) == 1:
+            record_number = 0
+            record_number += 4000
             return record_number
 
     @staticmethod

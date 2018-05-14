@@ -115,6 +115,17 @@ class Coin(models.Model):
 
 
 @reversion.register()
+class CoinOutServiceCharge(models.Model):
+    value = models.DecimalField(verbose_name="比例", max_digits=5, decimal_places=3, default=0.000)
+    coin_out = models.IntegerField(verbose_name="提现货币(coin表ID外键)", default=0)
+    coin_payment = models.IntegerField(verbose_name="手续费支付货币(coin表ID外键)", default=0)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "提现手续费表"
+
+
+@reversion.register()
 class RewardCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     value_ratio = models.IntegerField(verbose_name="兑换多少积分", default=0)

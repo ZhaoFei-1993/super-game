@@ -22,7 +22,7 @@ class ClublistView(ListAPIView):
     serializer_class = ClubListSerialize
 
     def get_queryset(self):
-        chat_list = Club.objects.filter(is_dissolve=0).order_by('-is_recommend')
+        chat_list = Club.objects.filter(is_dissolve=0).order_by('-is_recommend').order_by("-is_recommend")
         return chat_list
 
     def list(self, request, *args, **kwargs):

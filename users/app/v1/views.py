@@ -843,8 +843,6 @@ class AssetView(ListAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         for list in Progress:
-            print("list['balance']============================", list['balance'])
-            print("list['balance']============================", type(list['balance']))
             data.append({
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
