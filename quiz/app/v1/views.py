@@ -178,8 +178,7 @@ class RecordsListView(ListCreateAPIView):
                 "quiz_id": fav.get('quiz_id'),
                 'host_team': fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
-                'earn_coin': [str(fav.get('earn_coin')), int(fav.get('earn_coin'))][
-                    int(fav.get('earn_coin')) == fav.get('earn_coin')],
+                'earn_coin': fav.get('earn_coin'),
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),

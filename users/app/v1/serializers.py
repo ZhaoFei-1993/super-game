@@ -298,7 +298,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
     # name = serializers.SerializerMethodField()  # 代币名
     coin_name = serializers.SerializerMethodField()  # 交易所币名
     icon = serializers.SerializerMethodField()  # 代币头像
-    # total = serializers.SerializerMethodField()  # 总金额
+    balance = serializers.SerializerMethodField()
     exchange_rate = serializers.SerializerMethodField()  # 代币数
     coin_value = serializers.SerializerMethodField()  # 投注值
     locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
@@ -309,6 +309,11 @@ class UserCoinSerialize(serializers.ModelSerializer):
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "min_present", "recent_address")
+
+    @staticmethod
+    def get_balance(obj):
+        balance = [str(obj.balance), int(obj.balance)][int(obj.balance) == obj.balance]
+        return balance
 
     @staticmethod
     def get_coin_value(obj):

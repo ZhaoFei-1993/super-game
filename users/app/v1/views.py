@@ -843,12 +843,15 @@ class AssetView(ListAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         for list in Progress:
+            print("list['balance']============================", list['balance'])
+            print("list['balance']============================", type(list['balance']))
             data.append({
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
                 'recharge_address': list['address'],
-                'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
+                # 'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
+                'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
@@ -1578,6 +1581,21 @@ class InvitationUserView(ListAPIView):
         avatar = user_info.avatar
         username = user_info.username
         return self.response({'code': 0, "nickname": nickname, "avatar": avatar, "username": username})
+
+
+class InvitationUrlMergeView(ListAPIView):
+    """
+    生成用户推广URL
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
+        return self.response({'code': 0, "qr_data": qr_data})
 
 
 class InvitationMergeView(ListAPIView):
