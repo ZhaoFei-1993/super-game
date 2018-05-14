@@ -1592,7 +1592,7 @@ class InvitationUrlMergeView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
         qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
-        return qr_data
+        return self.response({'code': 0, "qr_data": qr_data})
 
 
 class InvitationMergeView(ListAPIView):
