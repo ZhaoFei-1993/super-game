@@ -23,6 +23,6 @@ urlpatterns = [
     # 竞猜下注
     path('bet/', views.BetView.as_view(), name="app-v1-quiz-bet"),
     # 竞猜推荐
-    path('recommend/', views.RecommendView.as_view(), name="app-v1-quiz-recommend")
+    path('recommend/<int:roomquiz_id>/', views.RecommendView.as_view(), name="app-v1-quiz-recommend")
 
 ]
