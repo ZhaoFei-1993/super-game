@@ -88,7 +88,8 @@ class QuizListView(ListCreateAPIView):
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-            quiz_id = list(set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
+            quiz_id = list(
+                set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
             my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
             return my_quiz
 
@@ -125,7 +126,6 @@ class RecordsListView(ListCreateAPIView):
         else:
             user_id = self.request.GET.get('user_id')
             return Record.objects.filter(user_id=user_id).order_by('-created_at')
-
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)

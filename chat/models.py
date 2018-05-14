@@ -15,7 +15,7 @@ class Club(models.Model):
         (PENDING, "人气"),
         (PUBLISHING, "热门"),
         (CLOSE, "未开启"),
-        (NIL, "未开启"),
+        (NIL, "无角标"),
     )
 
     room_title = models.CharField(verbose_name="俱乐部名", max_length=100)
