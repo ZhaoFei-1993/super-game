@@ -6,12 +6,16 @@ from users.models import User, Coin
 # Create your models here.
 
 class Club(models.Model):
-    PENDING = 0     # 审核中
-    PUBLISHING = 1  # 已发布
+    PENDING = 0     # 人气
+    PUBLISHING = 1  # 热门
+    CLOSE = 2  # 未开启
+    NIL = 3
 
     STATUS_CHOICE = (
-        (PENDING, "审核中"),
-        (PUBLISHING, "已发布"),
+        (PENDING, "人气"),
+        (PUBLISHING, "热门"),
+        (CLOSE, "未开启"),
+        (NIL, "未开启"),
     )
 
     room_title = models.CharField(verbose_name="俱乐部名", max_length=100)
@@ -22,8 +26,7 @@ class Club(models.Model):
     room_number = models.IntegerField(verbose_name="俱乐部编号", default=0)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(verbose_name="状态", choices=STATUS_CHOICE, max_length=1, default=PENDING)
-    is_recommend = models.BooleanField(verbose_name="是否推荐", default=False)
+    is_recommend = models.CharField(verbose_name="", choices=STATUS_CHOICE, max_length=1, default=PENDING)
     is_dissolve = models.BooleanField(verbose_name="是否删除俱乐部", default=False)
 
     class Meta:
