@@ -34,9 +34,13 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_user_number(obj):
-        record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
-        record_number += 10000
-        return record_number
+        if int(obj.is_recommend) == 2:
+            record_number = 0
+            return record_number
+        else:
+            record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
+            record_number += 10000
+            return record_number
 
     @staticmethod
     def get_coin_icon(obj):  # 货币头像
