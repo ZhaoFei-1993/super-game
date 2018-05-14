@@ -25,6 +25,7 @@ class QuizSerialize(serializers.ModelSerializer):
     win_rate = serializers.SerializerMethodField()  # 是否已结束
     planish_rate = serializers.SerializerMethodField()  # 是否已结束
     lose_rate = serializers.SerializerMethodField()  # 是否已结束
+    total_people = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
         model = Quiz
@@ -38,6 +39,11 @@ class QuizSerialize(serializers.ModelSerializer):
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
         return start
+
+    def get_total_people(self, obj):
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        total_people = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id).count()
+        return total_people
 
     def get_total_coin_avatar(self, obj):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']

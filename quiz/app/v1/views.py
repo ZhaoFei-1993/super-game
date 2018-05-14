@@ -72,25 +72,23 @@ class QuizListView(ListCreateAPIView):
     def get_queryset(self):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET:
-                if int(self.request.GET.get('type')) == 1:  # 未开始
-                    return Quiz.objects.filter(status=0, is_delete=False).order_by('begin_at')
-                elif int(self.request.GET.get('type')) == 2:  # 进行中
-                    return Quiz.objects.filter(Q(status=1) | Q(status=2), is_delete=False).order_by('begin_at')
-                elif int(self.request.GET.get('type')) == 3:  # 已结束
+                if int(self.request.GET.get('type')) == 1:  # 未结束
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
+                        'begin_at')
+                elif int(self.request.GET.get('type')) == 2:  # 已结束
                     return Quiz.objects.filter(Q(status=3), is_delete=False).order_by('-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(status=0, is_delete=False, category__in=category_arr).order_by('begin_at')
-            elif int(self.request.GET.get('type')) == 2:  # 进行中
-                return Quiz.objects.filter(Q(status=1) | Q(status=2), is_delete=False,
+                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
                                            category__in=category_arr).order_by('begin_at')
-            elif int(self.request.GET.get('type')) == 3:  # 已结束
+            elif int(self.request.GET.get('type')) == 2:  # 已结束
                 return Quiz.objects.filter(Q(status=3), is_delete=False, category__in=category_arr).order_by(
                     '-begin_at')
         else:
-            userid = self.request.user.id
-            quiz_id = list(set(Record.objects.filter(user_id=userid).values_list('quiz_id', flat=True)))
+            user_id = self.request.user.id
+            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+            quiz_id = list(set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
             my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
             return my_quiz
 
@@ -128,9 +126,6 @@ class RecordsListView(ListCreateAPIView):
             user_id = self.request.GET.get('user_id')
             return Record.objects.filter(user_id=user_id).order_by('-created_at')
 
-        # if 'roomquiz_id' not in self.request.parser_context['kwargs']:
-        #     return Record.objects.filter(user_id=user_id).order_by('created_at')
-        # else:
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
