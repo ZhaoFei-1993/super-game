@@ -1580,6 +1580,21 @@ class InvitationUserView(ListAPIView):
         return self.response({'code': 0, "nickname": nickname, "avatar": avatar, "username": username})
 
 
+class InvitationUrlMergeView(ListAPIView):
+    """
+    生成用户推广URL
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
+        return qr_data
+
+
 class InvitationMergeView(ListAPIView):
     """
     生成用户推广页面
