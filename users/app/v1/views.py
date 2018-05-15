@@ -1364,18 +1364,18 @@ class UserRechargeView(ListCreateAPIView):
         index = kwargs.get('index')
         if 'recharge' not in request.data or 'r_address' not in request.data:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        recharge = int(request.data.get('recharge'))
         r_address = request.data.get('r_address')
         if not r_address:
             raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
-        if recharge <= 0:
-            raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
         uuid = request.user.id
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
         except user_coin.DoesNotExist:
             return 0
-        user_coin.balance += Decimal(recharge)
+        recharge = Decimal(request.data.get('recharge'))
+        if recharge <= 0:
+            raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
+        user_coin.balance += recharge
         user_coin.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
