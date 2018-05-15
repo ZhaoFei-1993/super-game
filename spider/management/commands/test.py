@@ -22,6 +22,8 @@ class Command(BaseCommand):
             i = 0
             for user_coin in user_coin_list:
                 user_coin.address = address_list[i].address
+                user_coin.save()
+                address_list[i].user = user_coin.user.pk
+                address_list[i].save()
                 print("来来来，老夫来给你一个坑钱地址====================", i)
                 i += 1
-                user_coin.save()
