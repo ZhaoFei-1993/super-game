@@ -26,8 +26,8 @@ class Command(BaseCommand):
                 user_coin.address = address_list[i].address
                 user_coin.save()
                 print("user_coin============", user_coin.pk)
-                address_list[i].user = str(user_coin.user.pk)
-                address_list[i].save()
-                print("address_list[i]==============",address_list[i].pk)
+                address_info = Address.objects.get(address=address_list[i].address, user='')
+                address_info.user = str(user_coin.user.pk)
+                address_info.save()
+                print("address_list[i]==============", address_info.pk)
                 i += 1
-
