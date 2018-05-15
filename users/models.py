@@ -119,8 +119,8 @@ class Coin(models.Model):
 @reversion.register()
 class CoinOutServiceCharge(models.Model):
     value = models.DecimalField(verbose_name="比例", max_digits=5, decimal_places=3, default=0.000)
-    coin_out = models.IntegerField(verbose_name="提现货币(coin表ID外键)", default=0)
-    coin_payment = models.IntegerField(verbose_name="手续费支付货币(coin表ID外键)", default=0)
+    coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out', verbose_name="提现货币(coin表ID外键)")
+    coin_payment = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_payment', verbose_name="手续费支付货币(coin表ID外键)")
 
     class Meta:
         ordering = ['-id']
@@ -392,3 +392,10 @@ class IntegralPrizeRecord(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "积分奖品记录表"
+
+
+@reversion.register()
+class LoginRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip = models.CharField(verbose_name='登录ip', max_length=48)
+    login_time = models.DateTimeField(verbose_name='登录时间',auto_now=True)

@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
-from .serializers import UserInfoSerializer, UserSerializer, \
-    DailySerialize, MessageListSerialize, PresentationSerialize, AssetSerialize, UserCoinSerialize, \
-    CoinOperateSerializer, LuckDrawSerializer
+from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
+    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
 import qrcode
 from ast import literal_eval
 from quiz.app.v1.serializers import QuizSerialize
@@ -11,7 +10,8 @@ from django.core.cache import caches
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord
+    UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
+    CoinOutServiceCharge
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
@@ -297,6 +297,14 @@ class LoginView(CreateAPIView):
             else:
                 password = request.data.get('password')
                 token = ur.login(source=source, username=username, password=password)
+        try:
+            user_now = User.objects.get(username=username)
+        except Exception:
+            return 0
+        lr = LoginRecord()
+        lr.user = user_now
+        lr.ip = request.META.get("REMOTE_ADDR", '')
+        lr.save()
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -840,8 +848,8 @@ class AssetView(ListAPIView):
         data = []
         try:
             user_info = User.objects.get(id=user)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        except user_info.DoesNotExist:
+            return 0
         for list in Progress:
             data.append({
                 'icon': list["icon"],
@@ -851,6 +859,8 @@ class AssetView(ListAPIView):
                 # 'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
                 'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
+                "service_charge": list['service_charge'],
+                "service_coin": list['service_coin'],
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
             })
@@ -931,8 +941,23 @@ class UserPresentationView(CreateAPIView):
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
         except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            return 0
         p_amount = eval(request.data.get('p_amount'))
+
+        try:
+            coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
+        except Exception:
+            return 0
+        if coin.name != 'HAND':
+            if user_coin.balance < coin_out.value:
+                raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+        else:
+            try:
+                coin_eth = UserCoin.objects.get(coin=coin_out.coin_payment)
+            except Exception:
+                return 0
+            if coin_eth.balance < coin_out.value:
+                raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
 
         # if int(passcode) != int(userinfo.pass_code):
         #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
@@ -957,7 +982,16 @@ class UserPresentationView(CreateAPIView):
         if p_address_name == '':
             raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
 
-        user_coin.balance -= Decimal(p_amount)
+        if coin.name != 'HAND':
+            if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
+                user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
+            else:
+                user_coin.balance = 0
+        else:
+            user_coin.balance -= Decimal(p_amount)
+            if coin_eth.balance >= coin_out.value:
+                coin_eth.balance -= coin_out.value
+                coin_eth.save()
         user_coin.save()
         presentation = UserPresentation()
         presentation.user = userinfo
@@ -993,8 +1027,8 @@ class PresentationListView(ListAPIView):
         c_id = int(self.kwargs['c_id'])
         try:
             coin = Coin.objects.get(id=c_id)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        except coin.DoesNotExist:
+            return 0
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
 
@@ -1137,8 +1171,8 @@ class SettingOthersView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         try:
             data = UserSettingOthors.objects.get(reg_type=r_type)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        except data.DoesNotExist:
+            return 0
         if index == 1:
             return self.response({'code': 0, 'data': data.about})
         elif index == 2:
@@ -1339,8 +1373,8 @@ class UserRechargeView(ListCreateAPIView):
         uuid = request.user.id
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        except Exception:
-            raise
+        except user_coin.DoesNotExist:
+            return 0
         user_coin.balance += Decimal(recharge)
         user_coin.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
@@ -1361,8 +1395,8 @@ class CoinOperateView(ListAPIView):
     def get_queryset(self):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        except coin.DoesNotExist:
+            return 0
         uuid = self.request.user.id
         query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1, 2], coin_name=coin.name).order_by(
             '-created_at')
@@ -1397,8 +1431,8 @@ class CoinOperateDetailView(RetrieveAPIView):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
-        except Exception:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        except coin.DoesNotExist or item.DoesNotExist:
+            return 0
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
 
@@ -1410,10 +1444,15 @@ class VersionUpdateView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
+        mobile_type = request.META.get('HTTP_X_API_KEY')
+        if str(mobile_type).upper() == "IOS":
+            type = 1
+        else:
+            type = 0
         try:
-            last_version = AndroidVersion.objects.filter(is_delete=0).order_by('-create_at')[0]
+            last_version = AndroidVersion.objects.filter(is_delete=0, mobile_type=type).order_by('-create_at')[0]
         except last_version.DoesNotExist:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            return 0
         if last_version.version == version:
             return self.response({'code': 0, 'is_new': 0})
         else:
@@ -1447,8 +1486,8 @@ class ImageUpdateView(CreateAPIView):
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
-        except Exception:
-            raise
+        except user.DoesNotExist:
+            return 0
         image_name = temp_img.image.name
         avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
         user.avatar = avatar_url

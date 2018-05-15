@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, RewardCoin, CoinValue
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, RewardCoin, CoinValue, LoginRecord
 from quiz.models import Record
 from datetime import datetime
 
@@ -247,3 +247,27 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
         except Exception:
             return ''
         return rewards.value_ratio
+
+class InviterInfoSerializer(serializers.ModelSerializer):
+
+    source = serializers.CharField(source='user.source')
+    telephone = serializers.CharField(source='user.telephone')
+    nickname = serializers.CharField(source = 'user.nickname')
+    login_time = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    class Meta:
+        model = LoginRecord
+        fields = ("id", "user", "login_time", "ip", "source", "telephone", "nickname", "created_at")
+
+    @staticmethod
+    def get_login_time(obj):
+        if obj.login_time != None or obj.login_time=='':
+            login_t = obj.login_time.strftime('%Y-%m-%d %H:%M')
+            return login_t
+        else:
+            return ''
+
+    @staticmethod
+    def get_created_at(obj):
+        created_at = obj.user.created_at.strftime('%Y-%m-%d %H:%M')
+        return created_at
