@@ -58,7 +58,7 @@ class QuizSerialize(serializers.ModelSerializer):
         odds = 0
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, option="胜")
+                option = Option.objects.get(rule_id=rule.pk, flag="h")
                 odds = option.odds
             except Option.DoesNotExist:
                 odds = 0
@@ -77,7 +77,7 @@ class QuizSerialize(serializers.ModelSerializer):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, option="平")
+                option = Option.objects.get(rule_id=rule.pk, flag="d")
                 odds = option.odds
             except Option.DoesNotExist:
                 odds = 0
@@ -89,7 +89,7 @@ class QuizSerialize(serializers.ModelSerializer):
         odds = 0
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, option="负")
+                option = Option.objects.get(rule_id=rule.pk, flag="a")
                 odds = option.odds
             except Option.DoesNotExist:
                 odds = 0
