@@ -15,3 +15,4 @@ class Command(BaseCommand):
             icon = cate.icon.replace('http:', 'https:')
             cate.icon = icon
             cate.save()
+            self.stdout.write(self.style.SUCCESS('ICON修改地址成功 ' + cate.name))
