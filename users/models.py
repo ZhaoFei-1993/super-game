@@ -160,7 +160,7 @@ class UserCoin(models.Model):
 
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
-    address = models.CharField(verbose_name="充值地址", max_length=32, default='')
+    address = models.CharField(verbose_name="充值地址", max_length=50, default='')
 
     class Meta:
         ordering = ['-id']
