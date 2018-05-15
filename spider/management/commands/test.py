@@ -12,6 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # UserCoin.objects.filter(~Q(address='')).update(address='')
         UserCoin.objects.all().update(address='')
+        Address.objects.all().update(user='')
         coins = Coin.objects.filter(~Q(pk=8))
         for coin in coins:
             # user_coin_number = UserCoin.objects.filter(~Q(address=''), coin_id=coin.pk).count()
@@ -25,7 +26,7 @@ class Command(BaseCommand):
                 user_coin.address = address_list[i].address
                 user_coin.save()
                 print("user_coin============", user_coin.pk)
-                address_list[i].user = user_coin.user.pk
+                address_list[i].user = str(user_coin.user.pk)
                 address_list[i].save()
                 print("address_list[i]==============",address_list[i].pk)
                 i += 1
