@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
@@ -74,7 +73,7 @@ urlpatterns = [
     # 抽奖列表
     path('luck_draw_list/', views.LuckDrawListView.as_view(), name="app-v1-user-luck-draw-list"),
     # 点击抽奖
-    path('click_luck_draw/', views.ClickLuckDrawView.as_view(), name="app-v1-user-click_luck_draw")
+    path('click_luck_draw/', views.ClickLuckDrawView.as_view(), name="app-v1-user-click_luck_draw"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

@@ -23,7 +23,6 @@ import reversion
 from wc_auth.functions import save_operation
 
 
-
 def random_string(length=16):
     """
     生成指定长度随机字符串

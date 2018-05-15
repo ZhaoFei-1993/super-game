@@ -357,7 +357,7 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': [str(user_coin), int(user_coin)][int(user_coin) == user_coin],
+            'usercoin': round(float(user_coin), 3),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
@@ -1041,8 +1041,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': [str(x['amount']), int(x['amount'])][int(x['amount']) == x['amount']],
-                    'rest': [str(x['rest']), int(x['rest'])][int(x['rest']) == x['rest']],
+                    'amount': round(float(x['amount']), 3),
+                    'rest': round(float(x['rest']), 3),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }

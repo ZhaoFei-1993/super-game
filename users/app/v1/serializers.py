@@ -316,7 +316,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_balance(obj):
-        balance = [str(obj.balance), int(obj.balance)][int(obj.balance) == obj.balance]
+        balance = round(float(obj.balance), 3)
         return balance
 
     @staticmethod
@@ -327,7 +327,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': [str(s), int(s)][int(s) == s]
+                    'value': round(float(s), 3)
                 }
             )
         return data
@@ -416,6 +416,11 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
+
+    # @staticmethod
+    # def get_amount(obj):
+    #     amount = round(float(obj.amount), 3)
+    #     return amount
 
     @staticmethod
     def get_address_name(obj):
