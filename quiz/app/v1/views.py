@@ -263,6 +263,8 @@ class RuleView(ListAPIView):
         rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
+        coin_betting_control = clubinfo.coin.betting_control
+        coin_betting_toplimit = clubinfo.coin.betting_toplimit
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
         balance = [str(usercoin.balance), int(usercoin.balance)][int(usercoin.balance) == usercoin.balance]
@@ -374,7 +376,9 @@ class RuleView(ListAPIView):
                 })
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
-                                       'coin_icon': coin_icon, 'value1': value1, 'value2': value2, 'value3': value3}})
+                                       'coin_icon': coin_icon, 'coin_betting_control': coin_betting_control,
+                                       'coin_betting_toplimit': coin_betting_toplimit, 'value1': value1,
+                                       'value2': value2, 'value3': value3}})
 
 
 class BetView(ListCreateAPIView):
@@ -419,6 +423,11 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        coin_betting_control = float(clubinfo.coin.betting_control)
+        coin_betting_toplimit = float(clubinfo.coin.betting_toplimit)
+        if coin_betting_control > coins or coin_betting_toplimit < coins:
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
