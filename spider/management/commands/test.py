@@ -21,9 +21,12 @@ class Command(BaseCommand):
             user_coin_list = UserCoin.objects.filter(coin_id=coin.pk)
             i = 0
             for user_coin in user_coin_list:
+                print("来来来，老夫来给你一个坑钱地址====================", i)
                 user_coin.address = address_list[i].address
                 user_coin.save()
+                print("user_coin============", user_coin.pk)
                 address_list[i].user = user_coin.user.pk
                 address_list[i].save()
-                print("来来来，老夫来给你一个坑钱地址====================", i)
+                print("address_list[i]==============",address_list[i].pk)
                 i += 1
+
