@@ -9,26 +9,29 @@ class Command(BaseCommand):
     help = "Test"
 
     def handle(self, *args, **options):
-        integralprizes = IntegralPrize.objects.all()
+        # integralprizes = IntegralPrize.objects.all()
+        # i = 1
+        # for integralprize in integralprizes:
+        #     dt = integralprize.icon.split(':')
+        #     if dt[0] == 'https':
+        #         continue
+        #     else:
+        #         integralprize.icon = dt[0] + 's:' + dt[1]
+        #         i += 1
+        #         print("i============================", i)
+        #         integralprize.save()
+        categorys = Category.objects.all()
         i = 1
-        for integralprize in integralprizes:
-            dt = integralprize.icon.split(':')
-            if dt[0] == 'https':
-                continue
-            else:
-                integralprize.icon = dt[0] + 's:' + dt[1]
-                i += 1
-                print("i============================", i)
-                integralprize.save()
-    #     categorys = Category.objects.all()
-    #     for category in categorys:
-    #         if len(category.icon) > 0:
-    #             dt = category.icon.split(':')
-    #             if dt[0] == 'https':
-    #                 continue
-    #             else:
-    #                 category.icon = dt[0] + 's:' + dt[1]
-    #                 category.save()
+        for category in categorys:
+            if len(category.icon) > 0:
+                dt = category.icon.split(':')
+                if dt[0] == 'https':
+                    continue
+                else:
+                    category.icon = dt[0] + 's:' + dt[1]
+                    i += 1
+                    print("i============================", i)
+                    category.save()
 
     # quizs = Quiz.objects.all()
     # for quiz in quizs:
