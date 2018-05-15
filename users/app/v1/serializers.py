@@ -4,7 +4,7 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge
 from quiz.models import Record, Quiz
 from utils.functions import amount, sign_confirmation, amount_presentation
 from api import settings
@@ -304,11 +304,12 @@ class UserCoinSerialize(serializers.ModelSerializer):
     locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
     recent_address = serializers.SerializerMethodField()
     min_present = serializers.CharField(source='coin.cash_control')  # 提现限制最小金额
+    service_charge = serializers.SerializerMethodField() #提现手续费
 
     class Meta:
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
-                  "exchange_rate", "address", "coin_value", "locked_coin", "min_present", "recent_address")
+                  "exchange_rate", "address", "coin_value", "locked_coin","service_charge", "min_present", "recent_address")
 
     @staticmethod
     def get_balance(obj):
@@ -361,6 +362,17 @@ class UserCoinSerialize(serializers.ModelSerializer):
         recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[
                  :2].values('address', 'address_name')
         return list(recent)
+
+    @staticmethod
+    def get_service_charge(obj):
+        try:
+            coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
+        except Exception:
+            return 0
+        fee = coin_out.value
+        name = coin_out.coin_payment.name
+        return str(fee)+' '+name
+
 
 
 class CoinOperateSerializer(serializers.ModelSerializer):

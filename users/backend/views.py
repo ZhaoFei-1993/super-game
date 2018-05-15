@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, \
-    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
+    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin
+from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, LoginRecord
 from rest_framework import status
 import jsonfield
 from base import code as error_code
@@ -368,7 +368,7 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
     def post(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
         options = dict(request.data['options'])
-        ratio = request.data['value']
+        ratio = request.data['value_ratio']
         for x in options.keys():
             if CoinValue.objects.filter(coin_id=coin, value_index=x).exists():
                 return JsonResponse({"ERROR": "CoinValue Index %d Object Exist,You Can Modify It" % x},
@@ -398,11 +398,32 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
             if x[0] == 'options':
                 values = dict(x[1])
                 for vv in values.keys():
-                    coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
+                    try:
+                        coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
+                    except Exception:
+                        return JsonResponse({"Error":'CoinValue对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
                     coin_value.value = values[vv]
                     coin_value.save()
             if x[0] == 'value_ratio':
-                reward = RewardCoin.objects.get(coin_id=coin)
+                try:
+                    reward = RewardCoin.objects.get(coin_id=coin)
+                except Exception:
+                    return JsonResponse({"Error": 'RewardCoin对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
                 reward.value_ratio = int(x[1])
                 reward.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class InviterInfo(RetrieveAPIView):
+    """
+    推荐人信息
+    """
+    def retrieve(self, request, *args, **kwargs):
+        username = request.query_params.get('username')
+        try:
+            record = LoginRecord.objects.filter(user__username=username).order_by('-login_time')[0]
+        except Exception:
+            return JsonResponse({'Error':'用户不存在或参数username未提供'}, status=status.HTTP_400_BAD_REQUEST)
+        rc = serializers.InviterInfoSerializer(record)
+        return JsonResponse({'results': rc.data}, status=status.HTTP_200_OK)
+
