@@ -11,6 +11,7 @@ from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
 from django.core.cache import caches
+from decimal import Decimal
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -396,7 +397,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     icon = serializers.SerializerMethodField()
-    amount = serializers.SerializerMethodField()
+    # amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
@@ -415,11 +416,6 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
-
-    @staticmethod
-    def get_amount(obj):
-        amount = [str(obj.amount), int(obj.amount)][int(obj.amount) == obj.amount]
-        return amount
 
     @staticmethod
     def get_address_name(obj):
