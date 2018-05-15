@@ -154,6 +154,15 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = (
     '*'
 )
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+    'VIEW',
+)
 CORS_ALLOW_HEADERS = default_headers + (
     'x-date',
     'X-Api-Key',
