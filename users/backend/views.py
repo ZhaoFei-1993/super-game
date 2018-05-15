@@ -108,6 +108,8 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         admin = self.request.user
         exchange_rate = request.data['exchange_rate']
         cash_control = request.data['cash_control']
+        betting_toplimit = request.data['betting_toplimit']
+        betting_control = request.data['betting_control']
         betting_value_one = request.data['betting_value_one']
         betting_value_two = request.data['betting_value_two']
         betting_value_three = request.data['betting_value_three']
@@ -119,8 +121,9 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
             coin.exchange_rate = 1
         else:
             coin.exchange_rate = exchange_rate
-        if int(cash_control) != cash_control:
-            coin.cash_control = 0
+        coin.cash_control = cash_control
+        coin.betting_toplimit = betting_toplimit
+        coin.betting_control = betting_control
         coin.name = request.data['name']
         # coin.type = request.data['type']
         # coin.is_lock = request.data['is_lock']
@@ -181,7 +184,9 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
             "name": coin.name,
             # "type": coin.type,
             "exchange_rate": coin.exchange_rate,
-            "cash_control": coin.cash_control,
+            "cash_control": str(coin.cash_control),
+            "betting_toplimit": str(coin.betting_toplimit),
+            "betting_control": str(coin.betting_control),
             "betting_value_one": str(betting_value_one),
             "betting_value_two": str(betting_value_two),
             "betting_value_three": str(betting_value_three),
@@ -189,7 +194,6 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
             # "is_lock": str(is_lock),
             "url": ''
         }
-        print("data============================", data)
         return HttpResponse(json.dumps(data), content_type='text/json')
 
     @reversion_Decorator
@@ -204,12 +208,17 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
     @reversion_Decorator
     def update(self, request, *args, **kwargs):
         id = int(kwargs['pk'])
+        cash_control = request.data['cash_control']
+        betting_toplimit = request.data['betting_toplimit']
+        betting_control = request.data['betting_control']
         coin = Coin.objects.get(pk=id)
         coin.icon = request.data['icon']
         coin.name = request.data['name']
         # coin.type = request.data['type']
         coin.exchange_rate = request.data['exchange_rate']
-        coin.cash_control = request.data['cash_control']
+        coin.cash_control = cash_control
+        coin.betting_toplimit = betting_toplimit
+        coin.betting_control = betting_control
         # coin.is_lock = request.data['is_lock']
         coin.save()
         coin_value_one = CoinValue.objects.get(coin_id=coin.pk, value_index=1)

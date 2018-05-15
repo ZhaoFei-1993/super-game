@@ -114,7 +114,8 @@ class CurrencySerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Coin
-        fields = ("id", "icon", "name", "exchange_rate", "admin", "created_at", "cash_control", "url")
+        fields = ("id", "icon", "name", "exchange_rate", "admin", "created_at", "cash_control", "betting_toplimit",
+                  "betting_control", "url")
 
     @staticmethod
     def get_created_at(obj):  # 时间
@@ -199,7 +200,7 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
             coin = Coin.objects.get(pk=obj.coin_id)
         except coin.DoesNotExist:
             return ''
-        data = str(obj.balance)+" "+str(coin.name)
+        data = str(obj.balance) + " " + str(coin.name)
         return data
 
     @staticmethod
