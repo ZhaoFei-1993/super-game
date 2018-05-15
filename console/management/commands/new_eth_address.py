@@ -29,6 +29,10 @@ class Command(BaseCommand):
 
         for i in range(0, 10):
             json_data = eth_wallet.post(url='v1/account/new', data=None)
+            if json_data['code'] != 0:
+                print(json_data['message'])
+                return False
+
             address_query = Address()
             address_query.coin = Coin.objects.filter(name='ETH').first()
             address_query.address = json_data['data']['account']
