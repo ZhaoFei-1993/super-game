@@ -38,7 +38,7 @@ def quiz_send_time(quiz_id, status, quiz_time):
     async_to_sync(channel_layer.group_send)(
         group,
         {
-            "type": "command.message",
+            "type": "synctime.message",
             'status': status,
             "quiz_time": quiz_time,
         },

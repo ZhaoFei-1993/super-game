@@ -81,9 +81,9 @@ def get_live_data():
                                 quiz.save()
 
                                 # 比分推送
-                                redis_conn = Redis()
-                                q = Queue(connection=redis_conn)
-                                q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                                # redis_conn = Redis()
+                                # q = Queue(connection=redis_conn)
+                                # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)
                                 print(quiz.guest_team)
@@ -116,12 +116,13 @@ def get_live_data():
                                     quiz.host_team_score = data_list[13]
                                     quiz.guest_team_score = data_list[12]
                                     quiz.status = quiz.REPEALED
+                                # 1,2,3,4:第一二三四节，50中场休息
                                 quiz.save()
 
                                 # 比分推送
-                                redis_conn = Redis()
-                                q = Queue(connection=redis_conn)
-                                q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                                # redis_conn = Redis()
+                                # q = Queue(connection=redis_conn)
+                                # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)
                                 print(quiz.guest_team)

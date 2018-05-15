@@ -13,25 +13,43 @@ class Command(BaseCommand):
         for category in categorys:
             if len(category.icon) > 0:
                 dt = category.icon.split(':')
-                category.icon = dt[0] + 's:' + dt[1]
-                category.save()
+                if dt[0] == 'https':
+                    continue
+                else:
+                    category.icon = dt[0] + 's:' + dt[1]
+                    category.save()
 
         quizs = Quiz.objects.all()
         for quiz in quizs:
             dt_host = quiz.host_team_avatar.split(':')
+            if dt_host[0] == 'https':
+                continue
+            else:
+                quiz.host_team_avatar = dt_host[0] + 's:' + dt_host[1]
+
             dt_guest = quiz.guest_team_avatar.split(':')
-            quiz.host_team_avatar = dt_host[0] + 's:' + dt_host[1]
-            quiz.guest_team_avatar = dt_guest[0] + 's:' + dt_guest[1]
+            if dt_guest[0] == 'https':
+                continue
+            else:
+                quiz.guest_team_avatar = dt_guest[0] + 's:' + dt_guest[1]
+
             quiz.save()
 
         integralprizes = IntegralPrize.objects.all()
         for integralprize in integralprizes:
             dt = integralprize.icon.split(':')
-            integralprize.icon = dt[0] + 's:' + dt[1]
-            integralprize.save()
+            if dt[0] == 'https':
+                continue
+            else:
+                integralprize.icon = dt[0] + 's:' + dt[1]
+                integralprize.save()
 
         users = User.objects.all()
         for user in users:
             dt = user.avatar.split(':')
-            user.avatar = dt[0] + 's:' + dt[1]
-            user.save()
+            if dt[0] == 'https':
+                continue
+            else:
+                user.avatar = dt[0] + 's:' + dt[1]
+                user.save()
+

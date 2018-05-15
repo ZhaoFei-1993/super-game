@@ -7,7 +7,9 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record
-from django.db import transaction
+from users.models import UserCoin, CoinDetail, Coin
+from chat.models import Club
+from decimal import Decimal
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -95,7 +97,6 @@ def get_data_info(url, match_flag, quiz):
         quiz = Quiz.objects.filter(match_flag=match_flag).first()
         quiz.host_team_score = host_team_score
         quiz.guest_team_score = guest_team_score
-        quiz.status = quiz.PUBLISHING_ANSWER
         quiz.save()
 
         rule_all = Rule.objects.filter(quiz=quiz).all()
@@ -104,29 +105,75 @@ def get_data_info(url, match_flag, quiz):
         rule_hilo = rule_all.filter(type=6).first()
         rule_wnm = rule_all.filter(type=7).first()
 
-        option = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
-        option.is_right = 1
-        option.save()
+        option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
+        option_mnl.is_right = 1
+        option_mnl.save()
 
-        option = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
-        option.is_right = 1
-        option.save()
+        option_hdc = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
+        option_hdc.is_right = 1
+        option_hdc.save()
 
-        option = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
-        option.is_right = 1
-        option.save()
+        option_hilo = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
+        option_hilo.is_right = 1
+        option_hilo.save()
 
-        option = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
-        option.is_right = 1
-        option.save()
+        option_wnm = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
+        option_wnm.is_right = 1
+        option_wnm.save()
 
         # 分配奖金
         records = Record.objects.filter(quiz=quiz)
         if len(records) > 0:
             for record in records:
-                record.earn_coin = record.bet * record.odds
+                # 判断是否回答正确
+                is_right = False
+                if record.rule_id == rule_mnl.id:
+                    if record.option_id == option_mnl.id:
+                        is_right = True
+                if record.rule_id == rule_hdc.id:
+                    if record.option_id == option_hdc.id:
+                        is_right = True
+                if record.rule_id == rule_hilo.id:
+                    if record.option_id == option_hilo.id:
+                        is_right = True
+                if record.rule_id == rule_wnm.id:
+                    if record.option_id == option_wnm.id:
+                        is_right = True
+
+                earn_coin = record.bet * record.odds
+                # 对于用户来说，答错只是记录下注的金额
+                if is_right is False:
+                    earn_coin = '-' + str(record.bet)
+                record.earn_coin = earn_coin
                 record.save()
+
+                if is_right is True:
+                    # 用户增加对应币金额
+                    club = Club.objects.get(pk=record.roomquiz_id)
+
+                    # 获取币信息
+                    coin = Coin.objects.get(pk=club.coin_id)
+
+                    try:
+                        user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                    except UserCoin.DoesNotExist:
+                        user_coin = UserCoin()
+
+                    user_coin.coin_id = club.coin_id
+                    user_coin.user_id = record.user_id
+                    user_coin.balance += Decimal(earn_coin)
+                    user_coin.save()
+
+                    # 用户资金明细表
+                    coin_detail = CoinDetail()
+                    coin_detail.user_id = record.user_id
+                    coin_detail.coin_name = coin.name
+                    coin_detail.amount = Decimal(earn_coin)
+                    coin_detail.rest = user_coin.balance
+                    coin_detail.sources = CoinDetail.BETS
+                    coin_detail.save()
         quiz.status = Quiz.BONUS_DISTRIBUTION
+        quiz.save()
         print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
 
