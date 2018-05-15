@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         category = Category.objects.all()
         for cate in category:
-            if 'https:' in cate.icon:
+            if 'https:' in cate.icon or cate.icon == '':
                 self.stdout.write(self.style.SUCCESS('ICON修改地址跳过 ' + cate.name))
                 continue
             icon = cate.icon.replace('http:', 'https:')
