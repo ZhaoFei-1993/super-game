@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
-from .serializers import UserInfoSerializer, UserSerializer,DailySerialize, MessageListSerialize, \
+from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
 import qrcode
 from ast import literal_eval
@@ -10,7 +10,7 @@ from django.core.cache import caches
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
-    UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord,\
+    UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
@@ -303,7 +303,7 @@ class LoginView(CreateAPIView):
             return 0
         lr = LoginRecord()
         lr.user = user_now
-        lr.ip = request.META.get("REMOTE_ADDR",'')
+        lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
         return self.response({
             'code': 0,
@@ -859,7 +859,8 @@ class AssetView(ListAPIView):
                 # 'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
                 'balance': list['balance'],
                 'locked_coin': list['locked_coin'],
-                "service_charge" : list['service_charge'],
+                "service_charge": list['service_charge'],
+                "service_coin": list['service_coin'],
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
             })
@@ -981,10 +982,9 @@ class UserPresentationView(CreateAPIView):
         if p_address_name == '':
             raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
 
-
         if coin.name != 'HAND':
-            if user_coin.balance >= (Decimal(p_amount)-coin_out.value):
-                user_coin.balance = user_coin.balance-Decimal(p_amount)-coin_out.value
+            if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
+                user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
             else:
                 user_coin.balance = 0
         else:
@@ -1445,12 +1445,12 @@ class VersionUpdateView(RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
-        if str(mobile_type).upper() =="IOS":
-            type=1
+        if str(mobile_type).upper() == "IOS":
+            type = 1
         else:
-            type=0
+            type = 0
         try:
-            last_version = AndroidVersion.objects.filter(is_delete=0,mobile_type=type).order_by('-create_at')[0]
+            last_version = AndroidVersion.objects.filter(is_delete=0, mobile_type=type).order_by('-create_at')[0]
         except last_version.DoesNotExist:
             return 0
         if last_version.version == version:
