@@ -63,7 +63,7 @@ def get_live_data():
                     guest_team_score = data_list[12]
                     if cache_name not in files:
                         with open(cache_name, 'w+') as f:
-                            f.write(data_list[13] + ':' + data_list[12], + ',')
+                            f.write(data_list[13] + ':' + data_list[12] + ',')
                             f.write(data_list[28])
 
                             if Quiz.objects.filter(match_flag=match_id).first() is not None:
@@ -112,10 +112,16 @@ def get_live_data():
                                     quiz.gaming_time = -1
                                 elif data_list[28] == '0':
                                     quiz.status = quiz.PUBLISHING
-                                else:
-                                    quiz.host_team_score = data_list[13]
-                                    quiz.guest_team_score = data_list[12]
-                                    quiz.status = quiz.REPEALED
+                                elif data_list[28] == '1':
+                                    quiz.status = quiz.PUBLISHING
+                                elif data_list[28] == '2':
+                                    quiz.status = quiz.PUBLISHING
+                                elif data_list[28] == '50':
+                                    quiz.status = quiz.HALF_TIME
+                                elif data_list[28] == '3':
+                                    quiz.status = quiz.PUBLISHING
+                                elif data_list[28] == '4':
+                                    quiz.status = quiz.PUBLISHING
                                 # 1,2,3,4:第一二三四节，50中场休息
                                 quiz.save()
 

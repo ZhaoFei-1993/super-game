@@ -111,12 +111,15 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
 
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)
-        elif command == 'send':
+        elif command == 'football_synctime':
             await self.channel_layer.group_send(group_name, {
-                "type": "quiz.action",
-                "action": content.get("action"),
+                "type": "football_time.message",
                 "quiz_id": content.get("quiz_id"),
-                "match_flag": content.get("match_flag")
+            })
+        elif command == 'basketball_synctime':
+            await self.channel_layer.group_send(group_name, {
+                "type": "basketball_time.message",
+                "quiz_id": content.get("quiz_id"),
             })
 
         # elif command == 'send':
@@ -139,7 +142,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
-    async def synctime_message(self, event):
+    async def footballsynctime_message(self, event):
         """
         推送比赛时间数据至客户端
         :param event:
@@ -147,13 +150,35 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         """
         await self.send_json(
             {
-                "msg_type": "time",
+                "msg_type": "football_time",
                 "status": event["status"],
                 "quiz_time": event['quiz_time'],
             }
         )
 
-    async def quiz_action(self, event):
-        if event['action'] == 'synctime':
-            match_msg = dict(quiz_id=event['quiz_id'], match_flag=event['match_flag'])
-            call_command('football_synctime', match_msg)
+    async def basketballsynctime_message(self, event):
+        """
+        推送比赛时间数据至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "basketball_time",
+                "status": event["status"],
+            }
+        )
+
+    async def football_time_message(self, event):
+        with open('/tmp/debug_mseeage', 'a+') as f:
+            f.write(str(event))
+            f.write("\n")
+        quiz_id = event['quiz_id']
+        call_command('football_synctime', quiz_id)
+
+    async def basketball_time_message(self, event):
+        with open('/tmp/debug_mseeage', 'a+') as f:
+            f.write(str(event))
+            f.write("\n")
+        quiz_id = event['quiz_id']
+        call_command('basketball_synctime', quiz_id)
