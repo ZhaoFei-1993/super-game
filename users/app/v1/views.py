@@ -1715,7 +1715,7 @@ class LuckDrawListView(ListAPIView):
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, number, 24 * 3600)
+            cache.set(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = 0
         if awards_number == None:
@@ -1724,7 +1724,7 @@ class LuckDrawListView(ListAPIView):
             is_gratis = 1
         if number == 6:
             is_gratis = 1
-        cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
+        cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
@@ -1796,7 +1796,7 @@ class ClickLuckDrawView(CreateAPIView):
             return 0
         if choice == "再来一次":
             is_gratis = 1
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 24 * 3600)
+            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         if choice == "积分":
             user_info.integral += int(integral_prize.prize_number)
             user_info.save()
