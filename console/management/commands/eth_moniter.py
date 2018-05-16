@@ -13,6 +13,7 @@ def get_transactions(address):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
+    print('json_data = ', json_data)
     if len(json_data['data']) == 0:
         return []
 
