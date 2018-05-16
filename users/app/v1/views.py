@@ -884,6 +884,7 @@ class AssetView(ListAPIView):
             }
             if temp_dict['coin_name']=='HAND':
                 temp_dict['eth_balance']=normalize_fraction(eth.balance)
+                temp_dict['eth_address']=eth.address
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
