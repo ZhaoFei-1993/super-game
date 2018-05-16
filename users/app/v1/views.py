@@ -26,7 +26,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge, resize_img
+    message_sign, amount, value_judge, resize_img, normalize_fraction
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
@@ -864,10 +864,12 @@ class AssetView(ListAPIView):
         data = []
         try:
             user_info = User.objects.get(id=user)
-        except user_info.DoesNotExist:
+            eth = UserCoin.objects.get(user_id=user, coin__name='ETH')
+        except Exception:
             return 0
+
         for list in Progress:
-            data.append({
+            temp_dict={
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
@@ -879,7 +881,11 @@ class AssetView(ListAPIView):
                 "service_coin": list['service_coin'],
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
-            })
+            }
+            if temp_dict['coin_name']=='HAND':
+                temp_dict['eth_balance']=normalize_fraction(eth.balance)
+            data.append(temp_dict)
+
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
                               'user_integral': user_info.integral, 'data': data})
 
