@@ -28,6 +28,8 @@ SECRET_KEY = local_settings.SECRET_KEY
 CACHE_DIR = os.path.join(BASE_DIR, 'cache')
 
 SITE_DOMAIN = local_settings.SITE_DOMAIN
+SUBDOMAIN_NAME = local_settings.SUPER_GAME_SUBDOMAIN_NAME
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.DEBUG
@@ -223,6 +225,7 @@ STATICFILES_DIRS = ['static']
 
 MEDIA_DOMAIN_HOST = local_settings.MEDIA_DOMAIN_HOST
 STATIC_DOMAIN_HOST = local_settings.STATIC_DOMAIN_HOST
+SUPER_GAME_SUBDOMAIN = local_settings.SUPER_GAME_SUBDOMAIN_NAME
 
 SMS_APP_KEY = local_settings.SMS_APP_KEY
 SMS_APP_SECRET = local_settings.SMS_APP_SECRET

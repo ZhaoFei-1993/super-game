@@ -869,7 +869,7 @@ class AssetView(ListAPIView):
             return 0
 
         for list in Progress:
-            temp_dict={
+            temp_dict = {
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
@@ -882,10 +882,10 @@ class AssetView(ListAPIView):
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
             }
-            if temp_dict['coin_name']=='HAND':
-                temp_dict['eth_balance']=normalize_fraction(eth.balance)
-                temp_dict['eth_address']=eth.address
-                temp_dict['eth_coin_id']=eth.coin_id
+            if temp_dict['coin_name'] == 'HAND':
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance)
+                temp_dict['eth_address'] = eth.address
+                temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
@@ -1632,30 +1632,31 @@ class InvitationUserView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        user_id = request.GET.get('user_id')
+        user_id = request.GET.get('from_id')
         try:
             user_info = User.objects.get(pk=user_id)
         except DailyLog.DoesNotExist:
             return 0
+        pk = user_info.pk
         nickname = user_info.nickname
         avatar = user_info.avatar
         username = user_info.username
-        return self.response({'code': 0, "nickname": nickname, "avatar": avatar, "username": username})
+        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username})
 
 
-class InvitationUrlMergeView(ListAPIView):
-    """
-    生成用户推广URL
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        return
-
-    def list(self, request, *args, **kwargs):
-        user_id = self.request.user.id
-        qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
-        return self.response({'code': 0, "qr_data": qr_data})
+# class InvitationUrlMergeView(ListAPIView):
+#     """
+#     生成用户推广URL
+#     """
+#     permission_classes = (LoginRequired,)
+#
+#     def get_queryset(self):
+#         return
+#
+#     def list(self, request, *args, **kwargs):
+#         user_id = self.request.user.id
+#         qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+#         return self.response({'code': 0, "qr_data": qr_data})
 
 
 class InvitationMergeView(ListAPIView):
@@ -1670,8 +1671,24 @@ class InvitationMergeView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
         sub_path = str(user_id % 10000)
+
+        spread_path = settings.MEDIA_ROOT + 'spread/'
+        if not os.path.exists(spread_path):
+            os.mkdir(spread_path)
+
+        save_path = spread_path + sub_path
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+
+        if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
+            qr_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+            base_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+            qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+
+            return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
+
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
-        qr_data = settings.SITE_DOMAIN + '/invitation/user/?user_id=' + str(user_id)
+        qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -1683,23 +1700,17 @@ class InvitationMergeView(ListAPIView):
         qr_img = qr.make_image()
         base_img.paste(qr_img, (226, 770))
 
-        spread_path = settings.MEDIA_ROOT + 'spread/'
-        if not os.path.exists(spread_path):
-            os.mkdir(spread_path)
-
-        save_path = spread_path + sub_path
-        if not os.path.exists(save_path):
-            os.mkdir(save_path)
-
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
-        qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+        qr_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
 
         # 保存推广图片
         base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+        base_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
 
-        return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img})
+        qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+
+        return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
 
 
 class LuckDrawListView(ListAPIView):
