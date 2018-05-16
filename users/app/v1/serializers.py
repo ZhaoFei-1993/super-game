@@ -316,7 +316,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_balance(obj):
-        balance = normalize_fraction(Decimal(obj.balance))
+        balance = normalize_fraction(obj.balance)
         return balance
 
     @staticmethod
@@ -353,7 +353,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_min_present(obj):
-        min_present = normalize_fraction(Decimal(obj.coin.cash_control))
+        min_present = normalize_fraction(obj.coin.cash_control)
         return min_present
 
     @staticmethod
@@ -378,7 +378,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
             return 0
-        fee = normalize_fraction(Decimal(coin_out.value))
+        fee = normalize_fraction(coin_out.value)
         return fee
 
     @staticmethod
@@ -414,7 +414,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_amount(obj):
-        amount = normalize_fraction(Decimal(obj.amount))
+        amount = normalize_fraction(obj.amount)
         return amount
 
     @staticmethod

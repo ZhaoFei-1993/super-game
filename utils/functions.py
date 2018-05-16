@@ -266,6 +266,7 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
 
 #去掉decimal类型数值后面的0
 def normalize_fraction(d):
-    normalized = d.normalize()
+    dd = Decimal(str(d))
+    normalized = dd.normalize()
     sign, digit, exponent = normalized.as_tuple()
     return normalized if exponent <= 0 else normalized.quantize(1)
