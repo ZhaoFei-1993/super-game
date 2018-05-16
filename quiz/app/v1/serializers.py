@@ -3,6 +3,7 @@ import time
 from rest_framework import serializers
 from ...models import Quiz, Record, Option, Rule, Category
 from time import strftime, gmtime
+from decimal import Decimal
 from datetime import timedelta, datetime
 from users.models import User
 from chat.models import Club
@@ -32,7 +33,7 @@ class QuizSerialize(serializers.ModelSerializer):
         fields = (
             "id", "match_name", "host_team", "host_team_avatar", "host_team_score", "guest_team", "guest_team_avatar",
             "guest_team_score", "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate",
-            "planish_rate", "lose_rate", "total_coin_avatar")
+            "planish_rate", "lose_rate", "total_coin_avatar", "status")
 
     @staticmethod
     def get_begin_at(obj):
@@ -203,7 +204,7 @@ class RecordSerialize(serializers.ModelSerializer):
     def get_earn_coin(obj):
         if int(obj.quiz.status) != 3:
             earn_coin = "待开奖"
-        elif int(obj.quiz.status) == 4 and int(obj.earn_coin) == 0:
+        elif int(obj.quiz.status) == 4 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
             earn_coin = round(float(obj.earn_coin), 3)
