@@ -148,8 +148,8 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(
             {
                 "msg_type": "time",
-                "host": event["status"],
-                "guest": event['quiz_time'],
+                "status": event["status"],
+                "quiz_time": event['quiz_time'],
             }
         )
 

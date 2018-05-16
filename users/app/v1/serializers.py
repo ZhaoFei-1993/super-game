@@ -6,7 +6,7 @@ from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge
 from quiz.models import Record, Quiz
-from utils.functions import amount, sign_confirmation, amount_presentation
+from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction
 from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -304,7 +304,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
     coin_value = serializers.SerializerMethodField()  # 投注值
     locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
     recent_address = serializers.SerializerMethodField()
-    min_present = serializers.CharField(source='coin.cash_control')  # 提现限制最小金额
+    min_present = serializers.SerializerMethodField()  # 提现限制最小金额
     service_charge = serializers.SerializerMethodField()  # 提现手续费
     service_coin = serializers.SerializerMethodField()  # 用于提现的币种
 
@@ -316,7 +316,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_balance(obj):
-        balance = [str(obj.balance), int(obj.balance)][int(obj.balance) == obj.balance]
+        balance = normalize_fraction(obj.balance)
         return balance
 
     @staticmethod
@@ -327,7 +327,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': [str(s), int(s)][int(s) == s]
+                    'value': round(float(s), 3)
                 }
             )
         return data
@@ -352,13 +352,19 @@ class UserCoinSerialize(serializers.ModelSerializer):
     #     return list
 
     @staticmethod
+    def get_min_present(obj):
+        min_present = normalize_fraction(obj.coin.cash_control)
+        return min_present
+
+    @staticmethod
     def get_exchange_rate(obj):  # 币种交换汇率
         list = obj.coin.exchange_rate
         return list
 
     @staticmethod
     def get_locked_coin(obj):  # 提现申请期间锁定币数
-        return amount_presentation(obj.user.id, obj.coin.id)
+        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id))
+        return lock_coin
 
     @staticmethod
     def get_recent_address(obj):  # 最近使用地址
@@ -372,7 +378,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
             return 0
-        fee = coin_out.value
+        fee = normalize_fraction(coin_out.value)
         return fee
 
     @staticmethod
@@ -397,7 +403,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     icon = serializers.SerializerMethodField()
-    # amount = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
@@ -405,6 +411,11 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             'id', 'amount', 'coin_name', 'icon', 'address', 'address_name', 'status', 'status_code', 'created_at',
             'month',
             'time')
+
+    @staticmethod
+    def get_amount(obj):
+        amount = normalize_fraction(obj.amount)
+        return amount
 
     @staticmethod
     def get_address(obj):
@@ -416,6 +427,11 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
                                                coin__name=obj.coin_name).order_by('-created_at')[0]
             return item.address
+
+    # @staticmethod
+    # def get_amount(obj):
+    #     amount = round(float(obj.amount), 3)
+    #     return amount
 
     @staticmethod
     def get_address_name(obj):

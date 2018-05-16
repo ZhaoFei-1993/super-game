@@ -48,7 +48,6 @@ def get_data_info(url, match_flag, quiz):
                 quiz = Quiz.objects.filter(match_flag=match_flag).first()
                 quiz.host_team_score = host_team_score
                 quiz.guest_team_score = guest_team_score
-                quiz.status = quiz.PUBLISHING_ANSWER
                 quiz.save()
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
@@ -129,6 +128,7 @@ def get_data_info(url, match_flag, quiz):
                             coin_detail.sources = CoinDetail.BETS
                             coin_detail.save()
                 quiz.status = Quiz.BONUS_DISTRIBUTION
+                quiz.save()
                 print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
             else:

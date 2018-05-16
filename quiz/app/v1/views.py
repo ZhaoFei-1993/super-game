@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from django.db import transaction
-from decimal import Decimal
 from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
@@ -34,6 +33,9 @@ class CategoryView(ListAPIView):
             children = []
             categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("order")
             for categorylist in categoryslist:
+                number = Quiz.objects.filter(category_id=categorylist.id).count()
+                if number <= 0:
+                    continue
                 children.append({
                     "category_id": categorylist.id,
                     "category_name": categorylist.name,
@@ -76,14 +78,16 @@ class QuizListView(ListCreateAPIView):
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
                         'begin_at')
                 elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(Q(status=3), is_delete=False).order_by('-begin_at')
+                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
+                        '-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if int(self.request.GET.get('type')) == 1:  # 未开始
                 return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
                                            category__in=category_arr).order_by('begin_at')
             elif int(self.request.GET.get('type')) == 2:  # 已结束
-                return Quiz.objects.filter(Q(status=3), is_delete=False, category__in=category_arr).order_by(
+                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False,
+                                           category__in=category_arr).order_by(
                     '-begin_at')
         else:
             user_id = self.request.user.id
@@ -116,11 +120,11 @@ class RecordsListView(ListCreateAPIView):
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Record.objects.filter(Q(quiz__status=2) | Q(quiz__status=3),
+                    return Record.objects.filter(Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2),
                                                  user_id=user_id,
                                                  roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(quiz__status=4,
+                    return Record.objects.filter(Q(quiz__status=3) | Q(quiz__status=4) | Q(quiz__status=5),
                                                  user_id=user_id,
                                                  roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
@@ -261,6 +265,8 @@ class RuleView(ListAPIView):
         rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
+        coin_betting_control = clubinfo.coin.betting_control
+        coin_betting_toplimit = clubinfo.coin.betting_toplimit
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
         balance = [str(usercoin.balance), int(usercoin.balance)][int(usercoin.balance) == usercoin.balance]
@@ -286,11 +292,11 @@ class RuleView(ListAPIView):
         #     coin_id = usercoin.coin.pk
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
-        value1 = [str(value1), int(value1)][int(value1) == value1]
+        value1 = round(float(value1), 3)
         value2 = coinvalue[1].value
-        value2 = [str(value2), int(value2)][int(value2) == value2]
+        value2 = round(float(value2), 3)
         value3 = coinvalue[2].value
-        value3 = [str(value3), int(value3)][int(value3) == value3]
+        value3 = round(float(value3), 3)
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk).order_by('order')
@@ -334,12 +340,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": [str(i.home_let_score), int(i.home_let_score)][
-                        int(i.home_let_score) == i.home_let_score],
-                    "guest_let_score": [str(i.guest_let_score), int(i.guest_let_score)][
-                        int(i.guest_let_score) == i.guest_let_score],
-                    "estimate_score": [str(i.estimate_score), int(i.estimate_score)][
-                        int(i.estimate_score) == i.estimate_score],
+                    "home_let_score": round(float(i.home_let_score), 3),
+                    "guest_let_score": round(float(i.guest_let_score), 3),
+                    "estimate_score": round(float(i.estimate_score), 3),
                     "list_win": win,
                     "list_flat": flat,
                     "list_loss": loss
@@ -357,12 +360,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": [str(i.home_let_score), int(i.home_let_score)][
-                        int(i.home_let_score) == i.home_let_score],
-                    "guest_let_score": [str(i.guest_let_score), int(i.guest_let_score)][
-                        int(i.guest_let_score) == i.guest_let_score],
-                    "estimate_score": [str(i.estimate_score), int(i.estimate_score)][
-                        int(i.estimate_score) == i.estimate_score],
+                    "home_let_score": round(float(i.home_let_score), 3),
+                    "guest_let_score": round(float(i.guest_let_score), 3),
+                    "estimate_score": round(float(i.estimate_score), 3),
                     "list_win": win,
                     "list_loss": loss,
                 })
@@ -371,17 +371,16 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": [str(i.home_let_score), int(i.home_let_score)][
-                        int(i.home_let_score) == i.home_let_score],
-                    "guest_let_score": [str(i.guest_let_score), int(i.guest_let_score)][
-                        int(i.guest_let_score) == i.guest_let_score],
-                    "estimate_score": [str(i.estimate_score), int(i.estimate_score)][
-                        int(i.estimate_score) == i.estimate_score],
+                    "home_let_score": round(float(i.home_let_score), 3),
+                    "guest_let_score": round(float(i.guest_let_score), 3),
+                    "estimate_score": round(float(i.estimate_score), 3),
                     "list": list
                 })
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
-                                       'coin_icon': coin_icon, 'value1': value1, 'value2': value2, 'value3': value3}})
+                                       'coin_icon': coin_icon, 'coin_betting_control': coin_betting_control,
+                                       'coin_betting_toplimit': coin_betting_toplimit, 'value1': value1,
+                                       'value2': value2, 'value3': value3}})
 
 
 class BetView(ListCreateAPIView):
@@ -422,10 +421,15 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
-        if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
+        if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
 
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
+        coin_betting_control = float(clubinfo.coin.betting_control)
+        coin_betting_toplimit = float(clubinfo.coin.betting_toplimit)
+        if coin_betting_control > coins or coin_betting_toplimit < coins:
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+
         coin_id = clubinfo.coin.pk
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
@@ -524,9 +528,9 @@ class BetView(ListCreateAPIView):
         response = {
             'code': 0,
             'data': {
-                'message': '下注成功，金额总数为 ' + str([str(coins), int(coins)][int(coins) == coins]) + '，预计可得猜币 ' + str(
-                    [str(earn_coins), int(earn_coins)][int(earn_coins) == earn_coins]),
-                'balance': [str(usercoin.balance), int(usercoin.balance)][int(usercoin.balance) == usercoin.balance]
+                'message': '下注成功，金额总数为 ' + str(round(float(coins), 3)) + '，预计可得猜币 ' + str(
+                    round(float(earn_coins), 3)),
+                'balance': round(float(usercoin.balance), 3)
             }
         }
         return self.response(response)

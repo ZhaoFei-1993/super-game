@@ -23,7 +23,6 @@ import reversion
 from wc_auth.functions import save_operation
 
 
-
 def random_string(length=16):
     """
     生成指定长度随机字符串
@@ -263,3 +262,11 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
         newWidth = ori_w
         newHeight = ori_h
     img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image, quality=qua)
+
+
+#去掉decimal类型数值后面的0
+def normalize_fraction(d):
+    dd = Decimal(str(d))
+    normalized = dd.normalize()
+    sign, digit, exponent = normalized.as_tuple()
+    return normalized if exponent <= 0 else normalized.quantize(1)

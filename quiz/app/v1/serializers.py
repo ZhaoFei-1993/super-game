@@ -3,6 +3,7 @@ import time
 from rest_framework import serializers
 from ...models import Quiz, Record, Option, Rule, Category
 from time import strftime, gmtime
+from decimal import Decimal
 from datetime import timedelta, datetime
 from users.models import User
 from chat.models import Club
@@ -29,9 +30,10 @@ class QuizSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ("id", "match_name", "host_team", "host_team_avatar", "guest_team", "guest_team_avatar",
-                  "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate", "planish_rate",
-                  "lose_rate", "total_coin_avatar")
+        fields = (
+            "id", "match_name", "host_team", "host_team_avatar", "host_team_score", "guest_team", "guest_team_avatar",
+            "guest_team_score", "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate",
+            "planish_rate", "lose_rate", "total_coin_avatar", "status")
 
     @staticmethod
     def get_begin_at(obj):
@@ -110,7 +112,7 @@ class QuizSerialize(serializers.ModelSerializer):
         total_coin = 0
         for coin in record:
             total_coin = total_coin + coin.bet
-        total_coin = [str(total_coin), int(total_coin)][int(total_coin) == total_coin]
+        total_coin = round(float(total_coin), 3)
         return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
@@ -202,10 +204,10 @@ class RecordSerialize(serializers.ModelSerializer):
     def get_earn_coin(obj):
         if int(obj.quiz.status) != 3:
             earn_coin = "待开奖"
-        elif int(obj.quiz.status) == 4 and int(obj.earn_coin) == 0:
+        elif int(obj.quiz.status) == 4 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
-            earn_coin = [str(obj.earn_coin), int(obj.earn_coin)][int(obj.earn_coin) == obj.earn_coin]
+            earn_coin = round(float(obj.earn_coin), 3)
         return earn_coin
 
     @staticmethod
@@ -240,7 +242,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_status(obj):
-        status = obj.STATUS_CHOICE[int(obj.status)][1]
+        status = obj.status
         return status
 
     @staticmethod
@@ -306,7 +308,7 @@ class QuizPushSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_bet(obj):
-        bet = [str(obj.bet), int(obj.bet)][int(obj.bet) == obj.bet]
+        bet = round(float(obj.bet), 3)
         return bet
 
     @staticmethod

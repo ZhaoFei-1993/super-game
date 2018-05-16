@@ -13,6 +13,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge
 from chat.models import Club
+from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
 from base.function import randomnickname, weight_choice
@@ -125,13 +126,21 @@ class UserRegister(object):
             #  生成货币余额表
             coin = Coin.objects.all()
             for i in coin:
+                if i.name != 'EOS':
+                    addresss = Address.objects.filter(user='', coin_id=i.id)
+                    address = addresss[0]
                 userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
                 if userbalance == 0:
                     usercoin = UserCoin()
                     usercoin.user_id = user.id
                     usercoin.coin_id = i.id
-                    usercoin.is_opt = False
+                    # usercoin.is_opt = False
+                    if i.name != 'EOS':
+                        usercoin.address = address.address
                     usercoin.save()
+                    if i.name != 'EOS':
+                        address.user = usercoin.id
+                        address.save()
             #   邀请送HAND币
             user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
                                                                    is_effective=1).count()
@@ -217,6 +226,9 @@ class UserRegister(object):
         # 生成代币余额
         coin = Coin.objects.all()
         for i in coin:
+            if i.name != 'EOS':
+                addresss = Address.objects.filter(user='', coin_id=i.id)
+                address = addresss[0]
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
@@ -228,8 +240,12 @@ class UserRegister(object):
             # if i.name == gsg:
             #     usercoin.is_bet =True
             #     usercoin.address = 0
-            usercoin.address = 10086
+            if i.name != 'EOS':
+                usercoin.address = address.address
             usercoin.save()
+            if i.name != 'EOS':
+                address.user = userinfo.id
+                address.save()
 
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
@@ -357,7 +373,7 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': [str(user_coin), int(user_coin)][int(user_coin) == user_coin],
+            'usercoin': round(float(user_coin), 3),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
@@ -1041,8 +1057,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': [str(x['amount']), int(x['amount'])][int(x['amount']) == x['amount']],
-                    'rest': [str(x['rest']), int(x['rest'])][int(x['rest']) == x['rest']],
+                    'amount': round(float(x['amount']), 3),
+                    'rest': round(float(x['rest']), 3),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
@@ -1469,7 +1485,6 @@ class ImageUpdateView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         form = ImageForm(request.POST, request.FILES)
         safe_image_type = request.FILES['image'].name.strip().split('.')[-1] in ('jpg', 'png', 'jpeg')
-        # temp_img = None
         if safe_image_type:
             if form.is_valid():
                 new_doc = Im(image=request.FILES['image'])
@@ -1479,7 +1494,7 @@ class ImageUpdateView(CreateAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         else:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if temp_img == None:
+        if temp_img:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         image_path = temp_img.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩

@@ -1,6 +1,7 @@
 __pycache__/
 */migrations/0*.py
 .idea/
+cache/
 all_settings.py
 *.pyc
 *.djcache
