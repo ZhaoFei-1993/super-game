@@ -1,55 +1,33 @@
-# -*- coding: utf-8 -*-
-
 from django.core.management.base import BaseCommand
-from quiz.models import Category, Quiz
-from users.models import IntegralPrize, User
+from django.db.models import Q
+
+from users.models import UserCoin, Coin
+
+from console.models import Address
 
 
 class Command(BaseCommand):
     help = "Test"
 
     def handle(self, *args, **options):
-        categorys = Category.objects.all()
-        for category in categorys:
-            if len(category.icon) > 0:
-                dt = category.icon.split(':')
-                if dt[0] == 'https':
-                    continue
-                else:
-                    category.icon = dt[0] + 's:' + dt[1]
-                    category.save()
-
-        quizs = Quiz.objects.all()
-        for quiz in quizs:
-            dt_host = quiz.host_team_avatar.split(':')
-            if dt_host[0] == 'https':
-                continue
-            else:
-                quiz.host_team_avatar = dt_host[0] + 's:' + dt_host[1]
-
-            dt_guest = quiz.guest_team_avatar.split(':')
-            if dt_guest[0] == 'https':
-                continue
-            else:
-                quiz.guest_team_avatar = dt_guest[0] + 's:' + dt_guest[1]
-
-            quiz.save()
-
-        integralprizes = IntegralPrize.objects.all()
-        for integralprize in integralprizes:
-            dt = integralprize.icon.split(':')
-            if dt[0] == 'https':
-                continue
-            else:
-                integralprize.icon = dt[0] + 's:' + dt[1]
-                integralprize.save()
-
-        users = User.objects.all()
-        for user in users:
-            dt = user.avatar.split(':')
-            if dt[0] == 'https':
-                continue
-            else:
-                user.avatar = dt[0] + 's:' + dt[1]
-                user.save()
-
+        # UserCoin.objects.filter(~Q(address='')).update(address='')
+        UserCoin.objects.all().update(address='')
+        Address.objects.all().update(user='')
+        coins = Coin.objects.filter(~Q(pk=8))
+        for coin in coins:
+            # user_coin_number = UserCoin.objects.filter(~Q(address=''), coin_id=coin.pk).count()
+            user_coin_number = UserCoin.objects.filter(coin_id=coin.pk).count()
+            address_list = Address.objects.filter(coin_id=coin.pk, user="")[:int(user_coin_number)]
+            # user_coin_list = UserCoin.objects.filter(~Q(address=''), coin_id=coin.pk)
+            user_coin_list = UserCoin.objects.filter(coin_id=coin.pk)
+            i = 0
+            for user_coin in user_coin_list:
+                print("来来来，老夫来给你一个坑钱地址====================", i)
+                user_coin.address = address_list[i].address
+                user_coin.save()
+                print("user_coin============", user_coin.pk)
+                address_info = Address.objects.get(address=address_list[i].address, user='')
+                address_info.user = str(user_coin.user.pk)
+                address_info.save()
+                print("address_list[i]==============", address_info.pk)
+                i += 1
