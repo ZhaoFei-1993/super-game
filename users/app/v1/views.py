@@ -1485,7 +1485,6 @@ class ImageUpdateView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         form = ImageForm(request.POST, request.FILES)
         safe_image_type = request.FILES['image'].name.strip().split('.')[-1] in ('jpg', 'png', 'jpeg')
-        # temp_img = None
         if safe_image_type:
             if form.is_valid():
                 new_doc = Im(image=request.FILES['image'])
@@ -1495,7 +1494,7 @@ class ImageUpdateView(CreateAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         else:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if temp_img == None:
+        if temp_img:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         image_path = temp_img.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩
