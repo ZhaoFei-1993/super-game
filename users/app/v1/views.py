@@ -13,6 +13,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge
 from chat.models import Club
+from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
 from base.function import randomnickname, weight_choice
@@ -217,6 +218,9 @@ class UserRegister(object):
         # 生成代币余额
         coin = Coin.objects.all()
         for i in coin:
+            if i.name != 'EOS':
+                addresss = Address.objects.filter(user='', coin_id=i.id)
+                address = addresss[0]
             usercoin = UserCoin()
             usercoin.user_id = userinfo.id
             usercoin.coin_id = i.id
@@ -228,8 +232,12 @@ class UserRegister(object):
             # if i.name == gsg:
             #     usercoin.is_bet =True
             #     usercoin.address = 0
-            usercoin.address = 10086
+            if i.name != 'EOS':
+                usercoin.address = address.address
             usercoin.save()
+            if i.name != 'EOS':
+                address.user = userinfo.id
+                address.save()
 
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
