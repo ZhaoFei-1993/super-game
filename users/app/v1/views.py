@@ -1831,7 +1831,7 @@ class ClickLuckDrawView(CreateAPIView):
         if choice == "再来一次":
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
-        if choice == "积分":
+        if choice == "GSG":
             user_info.integral += int(integral_prize.prize_number)
             user_info.save()
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
