@@ -52,11 +52,13 @@ class Command(BaseCommand):
                 continue
 
             # 根据address获取交易信息
-            self.stdout.write(self.style.SUCCESS('正在获取地址为 ' + str(address) + ' 交易记录'))
+            self.stdout.write(self.style.SUCCESS('正在获取地址为 ' + str(address) + ' 的交易记录'))
             transactions = get_transactions(address)
             if len(transactions) == 0:
                 self.stdout.write(self.style.SUCCESS('用户' + str(user_id) + '无充值记录'))
                 continue
+
+            self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
 
             for transaction in transactions:
                 txid = transaction['txid']
