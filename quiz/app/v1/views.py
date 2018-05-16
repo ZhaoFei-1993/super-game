@@ -266,7 +266,9 @@ class RuleView(ListAPIView):
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
         coin_betting_control = clubinfo.coin.betting_control
+        coin_betting_control = round(float(coin_betting_control), 3)
         coin_betting_toplimit = clubinfo.coin.betting_toplimit
+        coin_betting_toplimit = round(float(coin_betting_toplimit), 3)
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
         balance = [str(usercoin.balance), int(usercoin.balance)][int(usercoin.balance) == usercoin.balance]
