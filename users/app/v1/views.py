@@ -1402,7 +1402,7 @@ class UserRechargeView(ListCreateAPIView):
         user_coin.balance += recharge
         user_coin.save()
         form_recharge = UserRecharge.objects.filter(user_id=uuid)
-        if not form_recharge.exists(): #活动送Hand币,活动时间在2018年6月1日-2018年7月13日
+        if not form_recharge.exists():  # 活动送Hand币,活动时间在2018年6月1日-2018年7月13日
             start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
             end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
             now_time = time.mktime(datetime.now().timetuple())
@@ -1832,7 +1832,8 @@ class ClickLuckDrawView(CreateAPIView):
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         if choice == "GSG":
-            user_info.integral += int(integral_prize.prize_number)
+            integral = int(integral_prize.prize_number) - 20
+            user_info.integral += integral
             user_info.save()
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
             'prize_name')
