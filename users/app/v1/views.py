@@ -377,7 +377,7 @@ class InfoView(ListAPIView):
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
-            'integral': items[0]["integral"],
+            'integral': round(float(items[0]["integral"]), 3),
             # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],

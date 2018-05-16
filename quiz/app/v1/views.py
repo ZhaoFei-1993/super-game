@@ -271,7 +271,7 @@ class RuleView(ListAPIView):
         coin_betting_toplimit = round(float(coin_betting_toplimit), 3)
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
-        balance = [str(usercoin.balance), int(usercoin.balance)][int(usercoin.balance) == usercoin.balance]
+        balance = round(float(usercoin.balance), 3)
         coin_name = usercoin.coin.name
         coin_icon = usercoin.coin.icon
         # type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
