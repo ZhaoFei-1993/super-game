@@ -866,10 +866,10 @@ class AssetView(ListAPIView):
             user_info = User.objects.get(id=user)
             eth = UserCoin.objects.get(user_id=user, coin__name='ETH')
         except Exception:
-            return 0
+            raise
 
         for list in Progress:
-            temp_dict={
+            temp_dict = {
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
@@ -882,10 +882,10 @@ class AssetView(ListAPIView):
                 'min_present': list['min_present'],
                 'recent_address': list['recent_address']
             }
-            if temp_dict['coin_name']=='HAND':
-                temp_dict['eth_balance']=normalize_fraction(eth.balance)
-                temp_dict['eth_address']=eth.address
-                temp_dict['eth_coin_id']=eth.coin_id
+            if temp_dict['coin_name'] == 'HAND':
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance)
+                temp_dict['eth_address'] = eth.address
+                temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
@@ -965,13 +965,13 @@ class UserPresentationView(CreateAPIView):
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
         except Exception:
-            return 0
+            raise
         p_amount = eval(request.data.get('p_amount'))
 
         try:
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
-            return 0
+            raise
         if coin.name != 'HAND':
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
@@ -979,7 +979,7 @@ class UserPresentationView(CreateAPIView):
             try:
                 coin_eth = UserCoin.objects.get(coin=coin_out.coin_payment)
             except Exception:
-                return 0
+                raise
             if coin_eth.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
 
@@ -1052,7 +1052,7 @@ class PresentationListView(ListAPIView):
         try:
             coin = Coin.objects.get(id=c_id)
         except coin.DoesNotExist:
-            return 0
+            raise
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
 
@@ -1196,7 +1196,7 @@ class SettingOthersView(ListAPIView):
         try:
             data = UserSettingOthors.objects.get(reg_type=r_type)
         except data.DoesNotExist:
-            return 0
+            raise
         if index == 1:
             return self.response({'code': 0, 'data': data.about})
         elif index == 2:
@@ -1395,12 +1395,27 @@ class UserRechargeView(ListCreateAPIView):
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
         except user_coin.DoesNotExist:
-            return 0
+            raise
         recharge = Decimal(request.data.get('recharge'))
         if recharge <= 0:
             raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
         user_coin.balance += recharge
         user_coin.save()
+        form_recharge = UserRecharge.objects.filter(user_id=uuid)
+        if not form_recharge.exists(): #活动送Hand币,活动时间在2018年6月1日-2018年7月13日
+            start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+            end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+            now_time = time.mktime(datetime.now().timetuple())
+            if now_time >= start_time and now_time <= end_time:
+                try:
+                    user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
+                except Exception:
+                    raise
+                user_reward.balance += Decimal('2888')
+                user_reward.save()
+                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
+                                           rest=user_reward.balance, sources=4)
+                reward_detail.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
@@ -1420,7 +1435,7 @@ class CoinOperateView(ListAPIView):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
         except coin.DoesNotExist:
-            return 0
+            raise
         uuid = self.request.user.id
         query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1, 2], coin_name=coin.name).order_by(
             '-created_at')
@@ -1456,7 +1471,7 @@ class CoinOperateDetailView(RetrieveAPIView):
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
         except coin.DoesNotExist or item.DoesNotExist:
-            return 0
+            raise
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
 
@@ -1475,8 +1490,8 @@ class VersionUpdateView(RetrieveAPIView):
             type = 0
         try:
             last_version = AndroidVersion.objects.filter(is_delete=0, mobile_type=type).order_by('-create_at')[0]
-        except last_version.DoesNotExist:
-            return 0
+        except Exception:
+            raise
         if last_version.version == version:
             return self.response({'code': 0, 'is_new': 0})
         else:
@@ -1502,7 +1517,7 @@ class ImageUpdateView(CreateAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         else:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if temp_img:
+        if not temp_img:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         image_path = temp_img.image.path
         resize_img(image_path, 300, 300)  # 图片等比压缩
@@ -1510,7 +1525,7 @@ class ImageUpdateView(CreateAPIView):
         try:
             user = User.objects.get(pk=uuid)
         except user.DoesNotExist:
-            return 0
+            raise
         image_name = temp_img.image.name
         avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
         user.avatar = avatar_url

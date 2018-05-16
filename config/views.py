@@ -18,6 +18,7 @@ import reversion
 from django.contrib import admin
 from utils.functions import reversion_Decorator
 from datetime import datetime
+from url_filter.integrations.drf import DjangoFilterBackend
 
 admin.autodiscover()
 
@@ -87,6 +88,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
     """
     queryset = AndroidVersion.objects.filter(is_delete=False).order_by('-create_at')
     serializer_class = AndroidSerializer
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['mobile_type']
 
     def list(self, request, *args, **kwargs):
         if "id" in request.GET:
