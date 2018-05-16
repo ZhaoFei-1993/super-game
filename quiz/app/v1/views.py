@@ -33,6 +33,9 @@ class CategoryView(ListAPIView):
             children = []
             categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("order")
             for categorylist in categoryslist:
+                number = Quiz.objects.filter(category_id=categorylist.id).count()
+                if number <= 0:
+                    continue
                 children.append({
                     "category_id": categorylist.id,
                     "category_name": categorylist.name,
