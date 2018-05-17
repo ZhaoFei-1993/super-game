@@ -516,4 +516,6 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         prize_number = obj.prize_number
         if prize_number == 0:
             prize_number = ""
+        else:
+            prize_number =round(float(prize_number), 3)
         return prize_number

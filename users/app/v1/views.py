@@ -1758,7 +1758,7 @@ class LuckDrawListView(ListAPIView):
                     'id': x['id'],
                     'prize_name': x['prize_name'],
                     'icon': x['icon'],
-                    'prize_number': round(float(x['prize_number']), 3),
+                    'prize_number': x['prize_number'],
                     'created_at': x['created_at'],
                     'prize_weight': x['prize_weight']
                 }
