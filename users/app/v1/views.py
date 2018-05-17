@@ -1708,7 +1708,7 @@ class InvitationMergeView(ListAPIView):
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=8,
-            border=4,
+            border=2.5,
         )
         qr.add_data(qr_data)
         qr.make(fit=True)
