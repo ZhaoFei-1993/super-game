@@ -137,6 +137,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(
             {
                 "msg_type": "score",
+                "quiz_id": event["quiz_id"],
                 "host": event["host"],
                 "guest": event['guest'],
             }
@@ -151,6 +152,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(
             {
                 "msg_type": "football_time",
+                "quiz_id": event["quiz_id"],
                 "status": event["status"],
                 "quiz_time": event['quiz_time'],
             }
@@ -165,6 +167,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(
             {
                 "msg_type": "basketball_time",
+                "quiz_id": event["quiz_id"],
                 "status": event["status"],
             }
         )
