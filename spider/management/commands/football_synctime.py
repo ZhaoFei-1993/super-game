@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import requests
 import json
 from .get_time import get_time
@@ -24,7 +24,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         quiz_id = options['quiz_id']
-        quiz = Quiz.objects.filter(pk=quiz_id).first()
+        try:
+            quiz = Quiz.objects.get(pk=quiz_id)
+        except Quiz.DoesNotExist:
+            raise CommandError('quiz_id无效')
         match_flag = quiz.match_flag
 
         # url = base_url
