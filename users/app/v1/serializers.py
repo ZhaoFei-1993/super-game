@@ -81,7 +81,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # 电话号码
-        integral = round(float(obj.telephone), 3)
+        integral = round(float(obj.integral), 3)
         return integral
 
     def get_is_user(self, obj):  # 电话号码
