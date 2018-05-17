@@ -1489,7 +1489,7 @@ class VersionUpdateView(RetrieveAPIView):
         else:
             type = 0
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
-        if not versions.exists():
+        if len(versions)==0:
             return self.response({'code': 0, 'is_new': 0})
         else:
             last_version = versions.order_by('-create_at')[0]
