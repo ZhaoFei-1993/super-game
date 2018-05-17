@@ -30,7 +30,6 @@ CACHE_DIR = os.path.join(BASE_DIR, 'cache')
 SITE_DOMAIN = local_settings.SITE_DOMAIN
 SUBDOMAIN_NAME = local_settings.SUPER_GAME_SUBDOMAIN_NAME
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local_settings.DEBUG
 

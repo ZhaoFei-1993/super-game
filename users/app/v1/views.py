@@ -1696,19 +1696,19 @@ class InvitationMergeView(ListAPIView):
             os.mkdir(save_path)
 
         if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
-            qr_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-            base_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
-            qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+            qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
 
             return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
 
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
-        qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=8,
-            border=4,
+            border=2,
         )
         qr.add_data(qr_data)
         qr.make(fit=True)
@@ -1717,13 +1717,13 @@ class InvitationMergeView(ListAPIView):
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
-        qr_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+        qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
 
         # 保存推广图片
         base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
-        base_img = settings.SUPER_GAME_SUBDOMAIN + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
 
-        qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
 
         return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
 
