@@ -953,15 +953,20 @@ class UserPresentationView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'p_address', 'p_address_name', 'p_amount', 'c_id')
+        value = value_judge(request, 'p_address', 'passcode', 'p_address_name', 'p_amount', 'c_id')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
-        userinfo = User.objects.get(pk=userid)
-        # passcode = request.data.get('passcode')
+        try:
+            userinfo = User.objects.get(pk=userid)
+        except Exception:
+            raise
+        passcode = request.data.get('passcode')
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
+        if str(passcode) != str(userinfo.pass_code):
+            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
@@ -983,10 +988,6 @@ class UserPresentationView(CreateAPIView):
                 raise
             if coin_eth.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
-
-        # if int(passcode) != int(userinfo.pass_code):
-        #     raise ParamErrorException(error_code.API_21401_USER_PASS_CODE_ERROR)
-
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             if p_amount > user_coin.balance:
                 raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
@@ -1489,11 +1490,11 @@ class VersionUpdateView(RetrieveAPIView):
             type = 1
         else:
             type = 0
-        versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type).order_by('-create_at')
-        if not versions.exists():
+        versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
+        if len(versions)==0:
             return self.response({'code': 0, 'is_new': 0})
         else:
-            last_version = versions[0]
+            last_version = versions.order_by('-create_at')[0]
         if last_version.version == version:
             return self.response({'code': 0, 'is_new': 0})
         else:

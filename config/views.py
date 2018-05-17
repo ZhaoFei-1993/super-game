@@ -12,7 +12,7 @@ from api.settings import MEDIA_DOMAIN_HOST
 from utils.functions import value_judge
 from base.exceptions import ParamErrorException
 import base.code as error_code
-from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from users.models import UserSettingOthors, User, DailySettings, Coin
 import reversion
 from django.contrib import admin
@@ -179,10 +179,11 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
-class AppSetting(RetrieveUpdateDestroyAPIView):
+class AppSetting(RetrieveUpdateDestroyAPIView, ):
     """
     系统设置->App设置
     """
+
 
     def retrieve(self, request, *args, **kwargs):
         if "reg_type" not in request.query_params:
@@ -196,6 +197,7 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
                 "sv_contractus": '',
                 "pv_contractus": ''
             }
+            exist=0
         else:
             other_data={
                 "about": others[0].about,
@@ -203,20 +205,49 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
                 "sv_contractus": others[0].sv_contractus,
                 "pv_contractus": others[0].pv_contractus
             }
+            exist=1
         seletions = {}
         for v in User.REGISTER_TYPE:
-            seletions[str[v[0]]] = v[1]
+            x = str(v[0])
+            seletions[x] = v[1]
         system_m = Config.objects.filter(key="system_maintenance")
         if not system_m.exists():
-            config_data = ''
+            config_data = 0
         else:
-            config_data={"system_maintenance": system_m[0].configs,}
-        results = {}.update(config_data.update(other_data))
+            config_data={"system_maintenance": system_m[0].configs}
+        results = dict(**config_data,**other_data)
         data = {
             "seletions": seletions,
+            'is_exist': exist,
             "results": results
         }
         return JsonResponse(data, status=status.HTTP_200_OK)
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        fields_in = ('reg_type', 'system_maintenance', 'about', 'helps', 'sv_contractus', 'pv_contractus')
+        value =[x for x in request.data.keys() if x in fields_in]
+        if len(value) != len(fields_in):
+            lost_fields = list(set(fields_in)-set(value))
+            losts = ','.join(lost_fields)
+            return JsonResponse({'Error':'Lost Fields: %s' % losts}, status=status.HTTP_400_BAD_REQUEST)
+        values = dict(request.data)
+        config = Config.objects.filter(key="system_maintenance")
+        if config.exists():
+            if config[0].configs!=int(values["system_maintenance"]):
+                config[0].configs = int(values["system_maintenance"])
+        values.pop("system_maintenance")
+        reg_type = int(values['reg_type'])
+        values['reg_type'] = reg_type
+        others = UserSettingOthors(**values)
+        others.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+
+
+
+
 
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
