@@ -180,6 +180,7 @@ class CoinDetail(models.Model):
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
         (BETS, "下注"),
+        (BETS, "下注"),
         (ACTIVITY, "活动"),
         (OPEB_PRIZE, "开奖"),
         (LOCK, "锁定"),
@@ -373,7 +374,7 @@ class IntegralPrize(models.Model):
     prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
     icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
     prize_number = models.DecimalField(verbose_name="奖品奖励数量", max_digits=10, decimal_places=3, default=0.000)
-    prize_consume = models.IntegerField(verbose_name="抽奖消耗", default=20)
+    prize_consume = models.DecimalField(verbose_name="抽奖消耗", max_digits=10, decimal_places=3, default=0.000)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     is_fictitious = models.BooleanField(verbose_name="是否虚拟", default=False)

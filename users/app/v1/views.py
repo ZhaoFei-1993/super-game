@@ -756,9 +756,7 @@ class DailySignListView(ListCreateAPIView):
         daily.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin_name = "积分"
-        coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = user.integral
+        coin_detail.coin_name = "GSG"
         coin_detail.amount = '+' + str(rewards)
         coin_detail.rest = user.integral
         coin_detail.sources = 7
@@ -1491,7 +1489,7 @@ class VersionUpdateView(RetrieveAPIView):
         else:
             type = 0
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
-        if len(versions)==0:
+        if len(versions) == 0:
             return self.response({'code': 0, 'is_new': 0})
         else:
             last_version = versions.order_by('-create_at')[0]
@@ -1783,7 +1781,9 @@ class ClickLuckDrawView(CreateAPIView):
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_info.pk) + str(date)  # 每天抽奖次数
         number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
         number = int(number)
-        if is_gratis != 1 and user_info.integral < 20:
+        integral_all = IntegralPrize.objects.filter()
+        prize_consume = integral_all[0].prize_consume
+        if is_gratis != 1 and Decimal(user_info.integral) < Decimal(prize_consume):
             raise ParamErrorException(error_code=error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
             raise ParamErrorException(error_code=error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
@@ -1810,8 +1810,15 @@ class ClickLuckDrawView(CreateAPIView):
             cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
             is_gratis = 0
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
-            user_info.integral -= 20
+            user_info.integral -= Decimal(prize_consume)
             user_info.save()
+            coin_detail = CoinDetail()
+            coin_detail.user = user_info
+            coin_detail.coin_name = "GSG"
+            coin_detail.amount = '-' + str(prize_consume)
+            coin_detail.rest = user_info.integral
+            coin_detail.sources = 4
+            coin_detail.save()
         try:
             integral_prize = IntegralPrize.objects.get(prize_name=choice)
         except DailyLog.DoesNotExist:
@@ -1819,12 +1826,19 @@ class ClickLuckDrawView(CreateAPIView):
         if choice == "再来一次":
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
+
         if choice == "GSG":
             integral = Decimal(integral_prize.prize_number)
-
-
             user_info.integral += integral
             user_info.save()
+            coin_detail = CoinDetail()
+            coin_detail.user = user_info
+            coin_detail.coin_name = "GSG"
+            coin_detail.amount = '+' + str(integral)
+            coin_detail.rest = user_info.integral
+            coin_detail.sources = 4
+            coin_detail.save()
+
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
             'prize_name')
         fictitious_prize_name = []
@@ -1841,8 +1855,8 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice
-            coin_detail.amount = int(integral_prize.prize_number)
-            coin_detail.rest = int(user_coin.balance)
+            coin_detail.amount = Decimal(integral_prize.prize_number)
+            coin_detail.rest = Decimal(user_coin.balance)
             coin_detail.sources = 4
             coin_detail.save()
             user_coin.balance += Decimal(integral_prize.prize_number)
