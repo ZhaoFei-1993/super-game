@@ -2,7 +2,8 @@
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, \
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from django.db import transaction
-from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, LoginRecord
+from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
+    LoginRecord
 from rest_framework import status
 import jsonfield
 from base import code as error_code
@@ -113,7 +114,7 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         betting_value_one = request.data['betting_value_one']
         betting_value_two = request.data['betting_value_two']
         betting_value_three = request.data['betting_value_three']
-        Integral_proportion = request.data['Integral_proportion']
+        # Integral_proportion = request.data['Integral_proportion']
 
         coin = Coin()
         coin.icon = request.data['icon']
@@ -144,11 +145,11 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         coin_value.value_index = 3
         coin_value.value = float(betting_value_three)
         coin_value.save()
-        reward_coin = RewardCoin()
-        reward_coin.coin = coin
-        reward_coin.value_ratio = Integral_proportion
-        reward_coin.admin = admin
-        reward_coin.save()
+        # reward_coin = RewardCoin()
+        # reward_coin.coin = coin
+        # reward_coin.value_ratio = Integral_proportion
+        # reward_coin.admin = admin
+        # reward_coin.save()
 
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
@@ -347,23 +348,6 @@ class CoinDetailView(ListAPIView, DestroyAPIView):
             coin_list[x['name']] = x['id']
         return JsonResponse({"results": items, "choice": coin_list, "count": count_item}, status=status.HTTP_200_OK)
 
-
-class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
-    """
-    币允许投注额及积分兑换比例
-    """
-    queryset = CoinValue.objects.all().order_by('coin_id', 'value_index')
-    serializer_class = serializers.CoinValueRewardSerializer
-
-    def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        items = results.data.get('results')
-        list_t = Coin.objects.all().values('id', 'name').distinct()
-        coin_list = {}
-        for x in list_t:
-            coin_list[x['name']] = x['id']
-        return JsonResponse({"results": items, "choice": coin_list}, status=status.HTTP_200_OK)
-
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         coin = int(request.data['coin'])
@@ -401,7 +385,7 @@ class CoinRewardAndValueView(ListCreateAPIView, RetrieveUpdateAPIView):
                     try:
                         coin_value = CoinValue.objects.get(coin_id=coin, value_index=int(vv))
                     except Exception:
-                        return JsonResponse({"Error":'CoinValue对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
+                        return JsonResponse({"Error": 'CoinValue对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
                     coin_value.value = values[vv]
                     coin_value.save()
             if x[0] == 'value_ratio':
@@ -418,12 +402,12 @@ class InviterInfo(RetrieveAPIView):
     """
     推荐人信息
     """
+
     def retrieve(self, request, *args, **kwargs):
         username = request.query_params.get('username')
         try:
             record = LoginRecord.objects.filter(user__username=username).order_by('-login_time')[0]
         except Exception:
-            return JsonResponse({'Error':'用户不存在或参数username未提供'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'Error': '用户不存在或参数username未提供'}, status=status.HTTP_400_BAD_REQUEST)
         rc = serializers.InviterInfoSerializer(record)
         return JsonResponse({'results': rc.data}, status=status.HTTP_200_OK)
-

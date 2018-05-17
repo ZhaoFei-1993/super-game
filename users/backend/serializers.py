@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, RewardCoin, CoinValue, LoginRecord
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord
 from quiz.models import Record
 from datetime import datetime
 
@@ -228,25 +228,6 @@ class CoinDetailSerializer(serializers.ModelSerializer):
     def get_created_at(obj):
         created_time = obj.created_at.strftime("%Y-%m-%d %H:%M:%S")
         return created_time
-
-
-class CoinValueRewardSerializer(serializers.ModelSerializer):
-    """
-    币允许投注值及兑换积分比例
-    """
-    value_ratio = serializers.SerializerMethodField()
-
-    class Meta:
-        model = CoinValue
-        fields = ("id", "coin", "value_index", "value", "value_ratio")
-
-    @staticmethod
-    def get_value_ratio(obj):
-        try:
-            rewards = RewardCoin.objects.get(coin__name=obj.coin.name)
-        except Exception:
-            return ''
-        return rewards.value_ratio
 
 
 class InviterInfoSerializer(serializers.ModelSerializer):

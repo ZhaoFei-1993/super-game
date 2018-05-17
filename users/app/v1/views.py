@@ -887,7 +887,7 @@ class AssetView(ListAPIView):
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
 
-        return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
+        return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
                               'user_integral': round(float(integral), 3), 'data': data})
 
 
