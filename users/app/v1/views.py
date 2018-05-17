@@ -518,6 +518,7 @@ class RankingView(ListAPIView):
                 my_ran = index
         avatar = user.avatar
         nickname = user.nickname
+        integral = user.integral
         # win_ratio = user.victory
         # if user.victory == 0:
         #     win_ratio = 0
@@ -526,7 +527,7 @@ class RankingView(ListAPIView):
             "user_id": user.id,
             "avatar": avatar,
             "nickname": nickname,
-            "win_ratio": user.integral,
+            "win_ratio": round(float(integral), 3),
             "ranking": my_ran
         }
         list = []
@@ -543,7 +544,7 @@ class RankingView(ListAPIView):
                 'avatar': fav.get('avatar'),
                 'nickname': fav.get('nickname'),
                 'is_user': fav.get('is_user'),
-                'win_ratio': int(fav.get('integral')),
+                'win_ratio': fav.get('integral'),
                 'ranking': i,
             })
             list.sort(key=lambda x: x["ranking"])
@@ -748,7 +749,7 @@ class DailySignListView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
         # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=dailysettings.coin)
-        user.integral += rewards
+        user.integral += Decimal(rewards)
         user.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.user_id = user_id
@@ -762,10 +763,9 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.rest = user.integral
         coin_detail.sources = 7
         coin_detail.save()
-        print("daily===================", daily.number)
 
         content = {'code': 0,
-                   'data': rewards
+                   'data': round(float(rewards), 3)
                    }
         return self.response(content)
 
@@ -865,6 +865,7 @@ class AssetView(ListAPIView):
         try:
             user_info = User.objects.get(id=user)
             eth = UserCoin.objects.get(user_id=user, coin__name='ETH')
+            integral = user_info.integral
         except Exception:
             raise
 
@@ -889,7 +890,7 @@ class AssetView(ListAPIView):
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.username, 'user_avatar': user_info.avatar,
-                              'user_integral': user_info.integral, 'data': data})
+                              'user_integral': round(float(integral), 3), 'data': data})
 
 
 # class AssetLockView(CreateAPIView):
@@ -1660,21 +1661,6 @@ class InvitationUserView(ListAPIView):
         return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username})
 
 
-# class InvitationUrlMergeView(ListAPIView):
-#     """
-#     生成用户推广URL
-#     """
-#     permission_classes = (LoginRequired,)
-#
-#     def get_queryset(self):
-#         return
-#
-#     def list(self, request, *args, **kwargs):
-#         user_id = self.request.user.id
-#         qr_data = settings.SUBDOMAIN_NAME + '/invitation/user/?from_id=' + str(user_id)
-#         return self.response({'code': 0, "qr_data": qr_data})
-
-
 class InvitationMergeView(ListAPIView):
     """
     生成用户推广页面
@@ -1697,11 +1683,11 @@ class InvitationMergeView(ListAPIView):
             os.mkdir(save_path)
 
         if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
-            qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+            # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
             base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
             qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
-            return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
+            return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
@@ -1718,7 +1704,7 @@ class InvitationMergeView(ListAPIView):
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
-        qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
+        # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
 
         # 保存推广图片
         base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
@@ -1726,7 +1712,7 @@ class InvitationMergeView(ListAPIView):
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
-        return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
+        return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
 
 class LuckDrawListView(ListAPIView):
@@ -1771,13 +1757,13 @@ class LuckDrawListView(ListAPIView):
                     'id': x['id'],
                     'prize_name': x['prize_name'],
                     'icon': x['icon'],
-                    'prize_number': x['prize_number'],
+                    'prize_number': round(float(x['prize_number']), 3),
                     'created_at': x['created_at'],
                     'prize_weight': x['prize_weight']
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': user.integral,
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': round(float(user.integral)),
              'prize_consume': list[0]['prize_consume']})
 
 
@@ -1833,7 +1819,9 @@ class ClickLuckDrawView(CreateAPIView):
             is_gratis = 1
             cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         if choice == "GSG":
-            integral = int(integral_prize.prize_number)
+            integral = Decimal(integral_prize.prize_number)
+
+
             user_info.integral += integral
             user_info.save()
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
@@ -1856,7 +1844,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.rest = int(user_coin.balance)
             coin_detail.sources = 4
             coin_detail.save()
-            user_coin.balance += int(integral_prize.prize_number)
+            user_coin.balance += Decimal(integral_prize.prize_number)
             user_coin.save()
 
         integral_prize_record = IntegralPrizeRecord()
@@ -1874,7 +1862,7 @@ class ClickLuckDrawView(CreateAPIView):
                 'icon': integral_prize.icon,
                 'prize_name': integral_prize.prize_name,
                 'prize_number': prize_number,
-                'integral': user_info.integral,
+                'integral': round(float(user_info.integral), 3),
                 'number': cache.get(NUMBER_OF_PRIZES_PER_DAY),
                 'is_gratis': cache.get(NUMBER_OF_LOTTERY_AWARDS)
             }

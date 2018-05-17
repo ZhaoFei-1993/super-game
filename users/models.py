@@ -61,7 +61,7 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
-    integral = models.IntegerField(verbose_name='积分', default=0)
+    integral = models.DecimalField(verbose_name='积分', max_digits=15, decimal_places=3, default=0.000)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
 
@@ -372,7 +372,7 @@ class UserInvitation(models.Model):
 class IntegralPrize(models.Model):
     prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
     icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
-    prize_number = models.IntegerField(verbose_name="奖品奖励数量", default=0)
+    prize_number = models.DecimalField(verbose_name="奖品奖励数量", max_digits=10, decimal_places=3, default=0.000)
     prize_consume = models.IntegerField(verbose_name="抽奖消耗", default=20)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)

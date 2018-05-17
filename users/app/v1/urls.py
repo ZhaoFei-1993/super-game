@@ -68,8 +68,6 @@ urlpatterns = [
     path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
     # 用户生成带二维码邀请界面
     path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
-    # # 用户推广链接URL
-    # path('invitation/url/', views.InvitationUrlMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
     # 抽奖列表
     path('luck_draw_list/', views.LuckDrawListView.as_view(), name="app-v1-user-luck-draw-list"),
     # 点击抽奖

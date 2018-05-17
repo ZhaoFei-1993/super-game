@@ -248,20 +248,21 @@ class CoinValueRewardSerializer(serializers.ModelSerializer):
             return ''
         return rewards.value_ratio
 
-class InviterInfoSerializer(serializers.ModelSerializer):
 
+class InviterInfoSerializer(serializers.ModelSerializer):
     source = serializers.CharField(source='user.source')
     telephone = serializers.CharField(source='user.telephone')
-    nickname = serializers.CharField(source = 'user.nickname')
+    nickname = serializers.CharField(source='user.nickname')
     login_time = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
+
     class Meta:
         model = LoginRecord
         fields = ("id", "user", "login_time", "ip", "source", "telephone", "nickname", "created_at")
 
     @staticmethod
     def get_login_time(obj):
-        if obj.login_time != None or obj.login_time=='':
+        if obj.login_time != None or obj.login_time == '':
             login_t = obj.login_time.strftime('%Y-%m-%d %H:%M')
             return login_t
         else:

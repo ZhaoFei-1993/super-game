@@ -59,6 +59,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     win_ratio = serializers.SerializerMethodField()
     quiz_push = serializers.SerializerMethodField()
     is_user = serializers.SerializerMethodField()
+    integral = serializers.SerializerMethodField()
 
     # usercoin = serializers.SerializerMethodField()
     # usercoin_avatar = serializers.SerializerMethodField()
@@ -77,6 +78,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return ""
         else:
             return obj.telephone
+
+    @staticmethod
+    def get_integral(obj):  # 电话号码
+        integral = round(float(obj.telephone), 3)
+        return integral
 
     def get_is_user(self, obj):  # 电话号码
         user = self.context['request'].user.id
@@ -146,10 +152,16 @@ class DailySerialize(serializers.ModelSerializer):
     """
     is_sign = serializers.SerializerMethodField()  # 消息类型
     is_selected = serializers.SerializerMethodField()  # 消息类型
+    rewards = serializers.SerializerMethodField()  # 消息类型
 
     class Meta:
         model = DailySettings
         fields = ("id", "days", "rewards", "is_sign", "is_selected")
+
+    @staticmethod
+    def get_rewards(obj):  # 电话号码
+        rewards = round(float(obj.rewards), 3)
+        return rewards
 
     def get_is_sign(self, obj):  # 消息类型
         user = self.context['request'].user.id
