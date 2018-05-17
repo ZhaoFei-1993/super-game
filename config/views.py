@@ -184,31 +184,37 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
     系统设置->App设置
     """
 
-    def get(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         if "reg_type" not in request.query_params:
             return JsonResponse({"Error": "ParamError"}, status=status.HTTP_400_BAD_REQUEST)
         r_type = int(request.query_params.get('reg_type'))
         others = UserSettingOthors.objects.filter(reg_type=r_type)
         if not others.exists():
-            JsonResponse({'results':''},status=status.HTTP_200_OK)
-        seletions = {}
-        for v in User.REGISTER_TYPE:
-            seletions[str(v[0])] = v[1]
-        system_m = Config.objects.filter(key="system_maintenance")
-        if not system_m.exists():
-            config = Config()
-            config.key = "system_maintenance"
-            config.configs = 0
-            config.save()
-        data = {
-            "seletions": seletions,
-            "results": {
-                "system_maintenance": config.configs,
+            other_data={
+                "about": '',
+                "helps": '',
+                "sv_contractus": '',
+                "pv_contractus": ''
+            }
+        else:
+            other_data={
                 "about": others[0].about,
                 "helps": others[0].helps,
                 "sv_contractus": others[0].sv_contractus,
                 "pv_contractus": others[0].pv_contractus
             }
+        seletions = {}
+        for v in User.REGISTER_TYPE:
+            seletions[str[v[0]]] = v[1]
+        system_m = Config.objects.filter(key="system_maintenance")
+        if not system_m.exists():
+            config_data = ''
+        else:
+            config_data={"system_maintenance": system_m[0].configs,}
+        results = {}.update(config_data.update(other_data))
+        data = {
+            "seletions": seletions,
+            "results": results
         }
         return JsonResponse(data, status=status.HTTP_200_OK)
 
@@ -220,13 +226,16 @@ class AppSetting(RetrieveUpdateDestroyAPIView):
         try:
             others = UserSettingOthors.objects.get(reg_type=r_type)
         except Exception:
-            raise ParamErrorException
-        fileds = ["system_maintenance", "about", "helps", "sv_contractus", "pv_contractus"]
+            return JsonResponse({'Error':'No UserSettingOthors data'}, status=status.HTTP_400_BAD_REQUEST)
+        filed_s = ["system_maintenance", "about", "helps", "sv_contractus", "pv_contractus"]
         for key, value in request.data.items():
-            if key not in fileds:
+            if key not in filed_s:
                 return JsonResponse({"Error": "Not Allow Field"}, status=status.HTTP_400_BAD_REQUEST)
             if key == "system_maintenance":
-                sm = Config.objects.get(key='system_maintenance')
+                try:
+                    sm = Config.objects.get(key='system_maintenance')
+                except Exception:
+                    return JsonResponse({'Error':'No Config data'}, status=status.HTTP_400_BAD_REQUEST)
                 sm.configs = int(value)
                 sm.save()
             else:
