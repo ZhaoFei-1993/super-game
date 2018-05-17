@@ -1698,12 +1698,12 @@ class InvitationMergeView(ListAPIView):
         if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
             qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
             base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
-            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
+            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
             return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
 
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -1723,7 +1723,7 @@ class InvitationMergeView(ListAPIView):
         base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
         base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
 
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/app/v1/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
         return self.response({'code': 0, "qr_img": qr_img, "base_img": base_img, "qr_data": qr_data})
 
