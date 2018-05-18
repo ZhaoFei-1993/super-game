@@ -13,7 +13,6 @@ def get_transactions(address):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
-    print('json_data = ', json_data)
     if len(json_data['data']) == 0:
         return []
 
@@ -37,7 +36,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # 获取所有用户ETH地址
-        user_eth_address = UserCoin.objects.filter(coin_id=2)
+        user_eth_address = UserCoin.objects.filter(coin_id=2, user__is_robot=False)
         if len(user_eth_address) == 0:
             self.stdout.write(self.style.SUCCESS('无地址信息'))
             return True
