@@ -118,7 +118,7 @@ class Coin(models.Model):
 
 @reversion.register()
 class CoinOutServiceCharge(models.Model):
-    value = models.DecimalField(verbose_name="比例", max_digits=5, decimal_places=3, default=0.000)
+    value = models.DecimalField(verbose_name="比例", max_digits=5, decimal_places=4, default=0.0000)
     coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out', verbose_name="提现货币(coin表ID外键)")
     coin_payment = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_payment', verbose_name="手续费支付货币(coin表ID外键)")
 
