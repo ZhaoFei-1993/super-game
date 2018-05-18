@@ -156,7 +156,7 @@ class UserRegister(object):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
+                    coin_detail.rest = Decimal(userbalance.balance)
                     coin_detail.sources = 4
                     coin_detail.save()
                     a.is_deleted = 1
@@ -175,7 +175,7 @@ class UserRegister(object):
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
                 coin_detail.amount = '+' + str(user_money)
-                coin_detail.rest = user_balance.balance
+                coin_detail.rest = Decimal(user_balance.balance)
                 coin_detail.sources = 4
                 coin_detail.save()
                 user_balance.balance += user_money
@@ -758,7 +758,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = "GSG"
         coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = user.integral
+        coin_detail.rest = Decimal(user.integral)
         coin_detail.sources = 7
         coin_detail.save()
 
@@ -1032,7 +1032,7 @@ class UserPresentationView(CreateAPIView):
         coin_detail.user = userinfo
         coin_detail.coin_name = user_coin.coin.name
         coin_detail.amount = '-' + str(p_amount)
-        coin_detail.rest = user_coin.balance
+        coin_detail.rest = Decimal(user_coin.balance)
         coin_detail.sources = 2
         coin_detail.save()
         content = {'code': 0}
@@ -1836,7 +1836,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.user = user_info
             coin_detail.coin_name = "GSG"
             coin_detail.amount = '+' + str(integral)
-            coin_detail.rest = user_info.integral
+            coin_detail.rest = Decimal(user_info.integral)
             coin_detail.sources = 4
             coin_detail.save()
 
