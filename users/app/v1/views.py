@@ -1683,12 +1683,12 @@ class InvitationMergeView(ListAPIView):
 
         if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
             # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.j'
             qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
             return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
-        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
+        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
