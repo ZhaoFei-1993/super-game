@@ -31,6 +31,7 @@ class ClublistView(ListAPIView):
         items = results.data.get('results')
         data = []
         int_ban = '/'.join([MEDIA_DOMAIN_HOST, "INT_BAN.jpg"])
+        banner = {"img_url": int_ban, "action": 'Invite_New'} #活动轮播图
         for item in items:
             data.append(
                 {
@@ -43,11 +44,7 @@ class ClublistView(ListAPIView):
                     "coin_key": item['coin_key'],
                     "icon": item['icon'],
                     "coin_icon": item['coin_icon'],
-                    "is_recommend": item['is_recommend'],
-                    "banner":{
-                        "img_url": int_ban,
-                        "action": 'Invite_New'
-                    }
+                    "is_recommend": item['is_recommend']
                 }
             )
-        return self.response({"code": 0, "data": data})
+        return self.response({"code": 0, "banner": banner, "data": data})
