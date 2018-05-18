@@ -46,7 +46,7 @@ class ClublistView(ListAPIView):
                     "is_recommend": item['is_recommend'],
                     "banner":{
                         "img_url": int_ban,
-                        "action": '邀新活动'
+                        "action": 'Invite_New'
                     }
                 }
             )
