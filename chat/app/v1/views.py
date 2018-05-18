@@ -5,6 +5,7 @@ from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize
 from chat.models import Club
+from api.settings import MEDIA_DOMAIN_HOST
 from wsms import sms
 from base import code as error_code
 from datetime import datetime
@@ -29,6 +30,7 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
+        int_ban = '/'.join([MEDIA_DOMAIN_HOST, "INT_BAN.jpg"])
         for item in items:
             data.append(
                 {
@@ -41,7 +43,11 @@ class ClublistView(ListAPIView):
                     "coin_key": item['coin_key'],
                     "icon": item['icon'],
                     "coin_icon": item['coin_icon'],
-                    "is_recommend": item['is_recommend']
+                    "is_recommend": item['is_recommend'],
+                    "banner":{
+                        "img_url": int_ban,
+                        "action": '邀新活动'
+                    }
                 }
             )
         return self.response({"code": 0, "data": data})

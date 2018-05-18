@@ -958,7 +958,7 @@ class UserPresentationView(CreateAPIView):
         try:
             userinfo = User.objects.get(pk=userid)
         except Exception:
-            raise
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         passcode = request.data.get('passcode')
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
@@ -1882,3 +1882,12 @@ class ClickLuckDrawView(CreateAPIView):
                 'is_gratis': cache.get(NUMBER_OF_LOTTERY_AWARDS)
             }
         })
+
+
+class ActivityImageView(ListAPIView):
+    """
+    活动图片
+    """
+    def get(self, request, *args, **kwargs):
+        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
+        return self.response({'code': 0, 'data': {'img_url': activity_img, 'action': '充值活动送HAND币'}})
