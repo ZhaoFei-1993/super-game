@@ -75,6 +75,7 @@ class Quiz(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     gaming_time = models.IntegerField(verbose_name="比赛进行时间", default=0)
     match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
+    is_reappearance = models.BooleanField(verbose_name="是否已返现", default=False)
 
     class Meta:
         ordering = ['-id']

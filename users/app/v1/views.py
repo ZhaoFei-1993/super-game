@@ -156,7 +156,7 @@ class UserRegister(object):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
+                    coin_detail.rest = Decimal(userbalance.balance)
                     coin_detail.sources = 4
                     coin_detail.save()
                     a.is_deleted = 1
@@ -175,7 +175,7 @@ class UserRegister(object):
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
                 coin_detail.amount = '+' + str(user_money)
-                coin_detail.rest = user_balance.balance
+                coin_detail.rest = Decimal(user_balance.balance)
                 coin_detail.sources = 4
                 coin_detail.save()
                 user_balance.balance += user_money
@@ -758,7 +758,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = "GSG"
         coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = user.integral
+        coin_detail.rest = Decimal(user.integral)
         coin_detail.sources = 7
         coin_detail.save()
 
@@ -1032,7 +1032,7 @@ class UserPresentationView(CreateAPIView):
         coin_detail.user = userinfo
         coin_detail.coin_name = user_coin.coin.name
         coin_detail.amount = '-' + str(p_amount)
-        coin_detail.rest = user_coin.balance
+        coin_detail.rest = Decimal(user_coin.balance)
         coin_detail.sources = 2
         coin_detail.save()
         content = {'code': 0}
@@ -1681,14 +1681,14 @@ class InvitationMergeView(ListAPIView):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
-        if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
+        if os.access(save_path + '/qrcode_' + str(user_id) + '.jpg', os.F_OK):
             # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
             qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
             return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
-        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
+        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
@@ -1699,15 +1699,15 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (226, 770))
+        base_img.paste(qr_img, (225, 720))
 
         # 保存二维码图片
-        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
+        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.jpg')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
 
         # 保存推广图片
-        base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+        base_img.save(save_path + '/spread_' + str(user_id) + '.jpg', quality=90)
+        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
@@ -1748,6 +1748,7 @@ class LuckDrawListView(ListAPIView):
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
+        prize_consume = list[0]['prize_consume']
         data = []
         for x in list:
             data.append(
@@ -1763,7 +1764,7 @@ class LuckDrawListView(ListAPIView):
             )
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': round(float(user.integral)),
-             'prize_consume': list[0]['prize_consume']})
+             'prize_consume': round(float(prize_consume))})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1816,7 +1817,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.user = user_info
             coin_detail.coin_name = "GSG"
             coin_detail.amount = '-' + str(prize_consume)
-            coin_detail.rest = user_info.integral
+            coin_detail.rest = Decimal(user_info.integral)
             coin_detail.sources = 4
             coin_detail.save()
         try:
@@ -1835,7 +1836,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.user = user_info
             coin_detail.coin_name = "GSG"
             coin_detail.amount = '+' + str(integral)
-            coin_detail.rest = user_info.integral
+            coin_detail.rest = Decimal(user_info.integral)
             coin_detail.sources = 4
             coin_detail.save()
 
