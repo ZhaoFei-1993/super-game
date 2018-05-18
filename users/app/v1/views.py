@@ -1681,9 +1681,9 @@ class InvitationMergeView(ListAPIView):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
-        if os.access(save_path + '/qrcode_' + str(user_id) + '.png', os.F_OK):
+        if os.access(save_path + '/qrcode_' + str(user_id) + '.jpg', os.F_OK):
             # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.j'
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
             qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
             return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
@@ -1699,15 +1699,15 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (226, 770))
+        base_img.paste(qr_img, (225, 720))
 
         # 保存二维码图片
-        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.png', 'PNG')
+        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.jpg')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
 
         # 保存推广图片
-        base_img.save(save_path + '/spread_' + str(user_id) + '.png', 'PNG', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.png'
+        base_img.save(save_path + '/spread_' + str(user_id) + '.jpg', quality=90)
+        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
 
