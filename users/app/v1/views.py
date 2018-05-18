@@ -1748,6 +1748,7 @@ class LuckDrawListView(ListAPIView):
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
+        prize_consume = list[0]['prize_consume']
         data = []
         for x in list:
             data.append(
@@ -1763,7 +1764,7 @@ class LuckDrawListView(ListAPIView):
             )
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': round(float(user.integral)),
-             'prize_consume': list[0]['prize_consume']})
+             'prize_consume': round(float(prize_consume))})
 
 
 class ClickLuckDrawView(CreateAPIView):
