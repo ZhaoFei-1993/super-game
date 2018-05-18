@@ -1817,7 +1817,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.user = user_info
             coin_detail.coin_name = "GSG"
             coin_detail.amount = '-' + str(prize_consume)
-            coin_detail.rest = user_info.integral
+            coin_detail.rest = Decimal(user_info.integral)
             coin_detail.sources = 4
             coin_detail.save()
         try:
