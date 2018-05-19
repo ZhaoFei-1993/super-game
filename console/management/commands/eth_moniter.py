@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
+from django.db import transaction
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
@@ -34,6 +35,7 @@ def get_transactions(address):
 class Command(BaseCommand):
     help = "ETH监视器"
 
+    @transaction.atomic()
     def handle(self, *args, **options):
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=2, user__is_robot=False)
@@ -81,7 +83,7 @@ class Command(BaseCommand):
                 userrecharge.trade_at = transaction['time']
                 userrecharge.save()
 
-                user_coin.balance += tx_value
+                user_coin.balance += float(tx_value)
                 user_coin.save()
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
