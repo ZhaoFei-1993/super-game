@@ -149,3 +149,7 @@ class Command(BaseCommand):
         quizs = Quiz.objects.filter((Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours))
         for quiz in quizs:
             get_data_info(base_url, quiz.match_flag, quiz)
+
+        # quiz = Quiz.objects.filter(match_flag=options['match_flag']).first()
+        # get_data_info(base_url, options['match_flag'], quiz)
+
