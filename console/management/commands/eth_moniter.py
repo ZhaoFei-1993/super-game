@@ -60,14 +60,16 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
-            self.stdout.write(self.style.SUCCESS(''))
 
+            valid_trans = 0
             for transaction in transactions:
                 txid = transaction['txid']
                 tx_value = transaction['value']
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
+
+                valid_trans += 1
 
                 userrecharge = UserRecharge()
                 userrecharge.user_id = user_id
@@ -81,5 +83,8 @@ class Command(BaseCommand):
 
                 user_coin.balance += tx_value
                 user_coin.save()
+
+            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
+            self.stdout.write(self.style.SUCCESS(''))
         else:
             print('无数据')
