@@ -1007,10 +1007,9 @@ class UserPresentationView(CreateAPIView):
             raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
 
         if coin.name != 'HAND':
-            if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
-                user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
-            else:
-                user_coin.balance = 0
+            # if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
+            #     user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
+            user_coin.balance = user_coin.balance - Decimal(p_amount)
         else:
             user_coin.balance -= Decimal(p_amount)
             if coin_eth.balance >= coin_out.value:
