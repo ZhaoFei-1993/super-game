@@ -141,13 +141,14 @@ class RecordSerialize(serializers.ModelSerializer):
     created_at = serializers.SerializerMethodField()  # 竞猜时间
     my_option = serializers.SerializerMethodField()  # 投注选项
     coin_avatar = serializers.SerializerMethodField()  # 投注选项
+    coin_name = serializers.SerializerMethodField()  # 投注选项
     earn_coin = serializers.SerializerMethodField()  # 竞猜结果
     quiz_category = serializers.SerializerMethodField()  # 竞猜结果
 
     class Meta:
         model = Record
         fields = ("id", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
-                  "quiz_category")
+                  "quiz_category", "bet", "coin_name")
 
     @staticmethod
     def get_host_team(obj):  # 主队
@@ -193,12 +194,15 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_coin_avatar(obj):
-        if int(obj.roomquiz_id) != 0:
-            club_info = Club.objects.get(pk=int(obj.roomquiz_id))
-            coin_avatar = club_info.coin.icon
-        else:
-            coin_avatar = ''
+        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        coin_avatar = club_info.coin.icon
         return coin_avatar
+
+    @staticmethod
+    def get_coin_name(obj):
+        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        coin_name = club_info.coin.name
+        return coin_name
 
     @staticmethod
     def get_earn_coin(obj):
