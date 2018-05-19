@@ -118,7 +118,7 @@ class Coin(models.Model):
 
 @reversion.register()
 class CoinOutServiceCharge(models.Model):
-    value = models.DecimalField(verbose_name="比例", max_digits=5, decimal_places=3, default=0.000)
+    value = models.DecimalField(verbose_name="比例", max_digits=6, decimal_places=4, default=0.0000)
     coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out', verbose_name="提现货币(coin表ID外键)")
     coin_payment = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_payment', verbose_name="手续费支付货币(coin表ID外键)")
 
@@ -189,7 +189,7 @@ class CoinDetail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
-    rest = models.DecimalField(verbose_name="余额", max_digits=10, decimal_places=3, default=0.000)
+    rest = models.DecimalField(verbose_name="余额", max_digits=15, decimal_places=3, default=0.000)
     sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
