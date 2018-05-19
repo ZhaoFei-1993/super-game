@@ -184,7 +184,8 @@ class RecordsListView(ListCreateAPIView):
                 'my_option': fav.get('my_option')[0].get('my_option'),
                 'is_right': fav.get('my_option')[0].get('is_right'),
                 'coin_avatar': fav.get('coin_avatar'),
-                'category_name': fav.get('quiz_category')
+                'category_name': fav.get('quiz_category'),
+                'bet': fav.get('bet')
             })
 
         return self.response({'code': 0, 'data': data})
