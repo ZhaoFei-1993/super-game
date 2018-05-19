@@ -141,6 +141,7 @@ class RecordSerialize(serializers.ModelSerializer):
     created_at = serializers.SerializerMethodField()  # 竞猜时间
     my_option = serializers.SerializerMethodField()  # 投注选项
     coin_avatar = serializers.SerializerMethodField()  # 投注选项
+    coin_name = serializers.SerializerMethodField()  # 投注选项
     earn_coin = serializers.SerializerMethodField()  # 竞猜结果
     quiz_category = serializers.SerializerMethodField()  # 竞猜结果
 
