@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
@@ -83,7 +84,7 @@ class Command(BaseCommand):
                 userrecharge.trade_at = transaction['time']
                 userrecharge.save()
 
-                user_coin.balance += float(tx_value)
+                user_coin.balance += Decimal(tx_value)
                 user_coin.save()
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
