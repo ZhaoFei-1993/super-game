@@ -147,7 +147,7 @@ class RecordSerialize(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = ("id", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
-                  "quiz_category", "bet")
+                  "quiz_category", "bet", "coin_name")
 
     @staticmethod
     def get_host_team(obj):  # 主队
@@ -196,6 +196,12 @@ class RecordSerialize(serializers.ModelSerializer):
         club_info = Club.objects.get(pk=int(obj.roomquiz_id))
         coin_avatar = club_info.coin.icon
         return coin_avatar
+
+    @staticmethod
+    def get_coin_name(obj):
+        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        coin_name = club_info.coin.name
+        return coin_name
 
     @staticmethod
     def get_earn_coin(obj):
