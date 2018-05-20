@@ -65,24 +65,24 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
 
             valid_trans = 0
-            for transaction in transactions:
-                txid = transaction['txid']
-                tx_value = transaction['value']
+            for trans in transactions:
+                txid = trans['txid']
+                tx_value = trans['value']
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
 
                 valid_trans += 1
 
-                userrecharge = UserRecharge()
-                userrecharge.user_id = user_id
-                userrecharge.coin = Coin.objects.filter(name='ETH').first()
-                userrecharge.address = address
-                userrecharge.amount = tx_value
-                userrecharge.confirmations = transaction['confirmations']
-                userrecharge.txid = txid
-                userrecharge.trade_at = transaction['time']
-                userrecharge.save()
+                user_recharge = UserRecharge()
+                user_recharge.user_id = user_id
+                user_recharge.coin = Coin.objects.filter(name='ETH').first()
+                user_recharge.address = address
+                user_recharge.amount = tx_value
+                user_recharge.confirmations = trans['confirmations']
+                user_recharge.txid = txid
+                user_recharge.trade_at = trans['time']
+                user_recharge.save()
 
                 user_coin.balance += Decimal(tx_value)
                 user_coin.save()
