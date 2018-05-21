@@ -124,23 +124,23 @@ class UserRegister(object):
                     usermessage.save()
 
             #  生成货币余额表
-            coin = Coin.objects.all()
-            for i in coin:
-                if i.name != 'EOS':
-                    addresss = Address.objects.filter(user=0, coin_id=i.id)
-                    address = addresss[0]
-                userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
-                if userbalance == 0:
-                    usercoin = UserCoin()
-                    usercoin.user_id = user.id
-                    usercoin.coin_id = i.id
-                    # usercoin.is_opt = False
-                    if i.name != 'EOS':
-                        usercoin.address = address.address
-                    usercoin.save()
-                    if i.name != 'EOS':
-                        address.user = usercoin.id
-                        address.save()
+            # coin = Coin.objects.all()
+            # for i in coin:
+            #     if i.name != 'EOS':
+            #         addresss = Address.objects.filter(user=0, coin_id=i.id)
+            #         address = addresss[0]
+            #     userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
+            #     if userbalance == 0:
+            #         usercoin = UserCoin()
+            #         usercoin.user_id = user.id
+            #         usercoin.coin_id = i.id
+            #         # usercoin.is_opt = False
+            #         if i.name != 'EOS':
+            #             usercoin.address = address.address
+            #         usercoin.save()
+            #         if i.name != 'EOS':
+            #             address.user = usercoin.id
+            #             address.save()
             #   邀请送HAND币
             user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
                                                                    is_effective=1).count()
