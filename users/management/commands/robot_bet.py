@@ -6,6 +6,7 @@ from utils.cache import get_cache, set_cache
 import random
 from django.db.models import Sum, F, FloatField
 from django.db import transaction
+from django.db.models import Q
 
 from quiz.models import Quiz, Option, Record, Rule
 from users.models import User, UserCoin, CoinValue
@@ -196,12 +197,14 @@ class Command(BaseCommand):
         获取下注的俱乐部
         :return:
         """
-        club = Club.objects.filter(status=Club.PUBLISHING)
+        club = Club.objects.filter(~Q(is_recommend=Club.CLOSE))
         if len(club) == 0:
             return False
 
         secure_random = random.SystemRandom()
-        return secure_random.choice(club)
+        choice_club = secure_random.choice(club)
+        print('choice_club = ', choice_club)
+        return choice_club
 
     @staticmethod
     def get_bet_rule(quiz_id):
