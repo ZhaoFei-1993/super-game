@@ -29,7 +29,7 @@ def quiz_send_football_time(quiz_id, status, quiz_time):
     """
     推送足球比赛时间
     :param quiz_id:
-    :param status      比赛状态： 0:进行中，1:中场休息，2:结束
+    :param status: 比赛状态： 0 => 进行中，1 => 中场休息，2 => 结束, 3 => 未开始
     :param quiz_time    比赛进行了多少时间（单位：秒）
     :return:
     """
@@ -51,8 +51,7 @@ def quiz_send_basketball_time(quiz_id, status):
     """
     推送篮球比赛时间
     :param quiz_id:
-    :param status      比赛状态： 1:第一节，2:第二节，3:第三节，4:第四节，50:中场休息
-    :param quiz_time    比赛进行了多少时间（单位：秒）
+    :param status:    比赛状态： 1:第一节，2:第二节，3:第三节，4:第四节，50:中场休息
     :return:
     """
     group = 'quiz_' + str(quiz_id)

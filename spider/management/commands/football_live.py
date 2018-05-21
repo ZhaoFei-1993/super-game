@@ -9,7 +9,7 @@ import time, sched
 from quiz.models import Quiz
 from rq import Queue
 from redis import Redis
-from quiz.consumers import quiz_send_score, quiz_send_time
+from quiz.consumers import quiz_send_score, quiz_send_football_time
 from .get_time import get_time
 
 schedule = sched.scheduler(time.time, time.sleep)
@@ -61,6 +61,10 @@ def get_live_data():
                 files = []
                 for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
                     files = files
+
+                redis_conn = Redis()
+                q = Queue(connection=redis_conn)
+
                 if cache_name not in files:
                     with open(cache_name, 'w+') as f:
                         f.write(data_list['fs_h'] + ':' + data_list['fs_a'] + ',')
@@ -88,8 +92,15 @@ def get_live_data():
                                     f.write(data.split(',')[1] + ',')
                                     f.write(data.split(',')[2] + ',')
                                     f.write(str(game_status))
+
+                            q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+
                         elif data_list['status'] == 'Fixture':
+                            game_status = 3
                             quiz.status = quiz.PUBLISHING
+
+                            q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+
                         elif data_list['status'] == 'Playing':
                             game_status = 0
 
@@ -102,9 +113,7 @@ def get_live_data():
                                     f.write(data.split(',')[1] + ',')
                                     f.write(data.split(',')[2] + ',')
                                     f.write(str(game_status))
-                                # redis_conn = Redis()
-                                # q = Queue(connection=redis_conn)
-                                # q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
 
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
@@ -124,15 +133,11 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    # redis_conn = Redis()
-                                    # q = Queue(connection=redis_conn)
-                                    # q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
                         quiz.save()
 
                         # 比分推送
-                        # redis_conn = Redis()
-                        # q = Queue(connection=redis_conn)
-                        # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                        q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                         print(quiz.host_team)
                         print(quiz.guest_team)
@@ -147,7 +152,7 @@ def get_live_data():
                     print(match_id)
                     if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a'] \
                             and score.split(',')[1] == data_list['status'] \
-                            and score.split(',')[2] == data_list['match_period']\
+                            and score.split(',')[2] == data_list['match_period'] \
                             or (data_list['match_period'] == 'HT' and score.split(',')[3] == 1):
                         print(get_time())
                         print('不需要更新')
@@ -183,8 +188,15 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
+
+                                q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+
                             elif data_list['status'] == 'Fixture':
+                                game_status = 3
                                 quiz.status = quiz.PUBLISHING
+
+                                q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+
                             elif data_list['status'] == 'Playing':
                                 game_status = 0
 
@@ -197,9 +209,8 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    # redis_conn = Redis()
-                                    # q = Queue(connection=redis_conn)
-                                    # q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_football_time, quiz.id, game_status,
+                                              int(data_list['minute']) * 60)
 
                                     quiz.host_team_score = host_team_score
                                     quiz.guest_team_score = guest_team_score
@@ -207,8 +218,8 @@ def get_live_data():
                                     quiz.gaming_time = int(data_list['minute']) * 60
 
                                 if data_list['match_period'] == 'HT':
-                                    quiz.status = quiz.HALF_TIME
                                     game_status = 1
+                                    quiz.status = quiz.HALF_TIME
 
                                     # 推送比赛时间
                                     with open(cache_name, 'r+') as f:
@@ -219,16 +230,12 @@ def get_live_data():
                                             f.write(data.split(',')[1] + ',')
                                             f.write(data.split(',')[2] + ',')
                                             f.write(str(game_status))
-                                        # redis_conn = Redis()
-                                        # q = Queue(connection=redis_conn)
-                                        # q.enqueue(quiz_send_time, quiz.id, game_status, int(data_list['minute']) * 60)
-
+                                        q.enqueue(quiz_send_football_time, quiz.id, game_status,
+                                                  int(data_list['minute']) * 60)
                             quiz.save()
 
                             # 比分推送
-                            # redis_conn = Redis()
-                            # q = Queue(connection=redis_conn)
-                            # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                            q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                             print(quiz.host_team)
                             print(quiz.guest_team)
