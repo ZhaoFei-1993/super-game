@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 import time
-from django.core.cache import caches
+from utils.cache import get_cache, set_cache
 import random
 from django.db.models import Sum, F, FloatField
 from django.db import transaction
@@ -33,21 +33,19 @@ class Command(BaseCommand):
     # 本日已生成的系统用户时间
     key_today_generated = 'robot_bet_quiz_datetime'
 
-    cache = caches['redis']
-
     bet_times = 20
 
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取当天随机注册用户量
-        random_total = self.cache.get(self.get_key(self.key_today_random))
-        random_datetime = self.cache.get(self.get_key(self.key_today_random_datetime))
+        random_total = get_cache(self.get_key(self.key_today_random))
+        random_datetime = get_cache(self.get_key(self.key_today_random_datetime))
         if random_total is None or random_datetime is None:
             self.set_today_random()
             raise CommandError('已生成随机下注时间')
 
         random_datetime.sort()
-        user_generated_datetime = self.cache.get(self.get_key(self.key_today_generated))
+        user_generated_datetime = get_cache(self.get_key(self.key_today_generated))
         if user_generated_datetime is None:
             user_generated_datetime = []
 
@@ -189,8 +187,8 @@ class Command(BaseCommand):
         for i in range(0, user_total):
             random_datetime.append(random.randint(start_date, end_date))
 
-        self.cache.set(self.get_key(self.key_today_random), user_total, 24 * 3600)
-        self.cache.set(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
+        set_cache(self.get_key(self.key_today_random), user_total, 24 * 3600)
+        set_cache(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
 
     @staticmethod
     def get_bet_club():
