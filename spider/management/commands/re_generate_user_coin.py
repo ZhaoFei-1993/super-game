@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         UserCoin.objects.all().update(address='')
 
-        users = User.objects.all()
+        users = User.objects.filter(is_robot=False)
         if len(users) == 0:
             raise CommandError('当前无用户数据')
 
