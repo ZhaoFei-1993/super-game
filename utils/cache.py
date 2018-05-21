@@ -4,7 +4,6 @@
 """
 from django.core.cache import caches
 
-
 cache = caches['redis']
 
 
@@ -32,6 +31,24 @@ def get_cache(key):
     return cache.get(key)
 
 
+def decr_cache(key):
+    """
+    通过键获取数值
+    :param key:
+    :return:
+    """
+    return cache.decr(key)
+
+
+def incr_cache(key):
+    """
+    通过键获取数值
+    :param key:
+    :return:
+    """
+    return cache.incr(key)
+
+
 def delete_cache(key):
     """
     删除数值
@@ -39,4 +56,3 @@ def delete_cache(key):
     :return:
     """
     return cache.delete(key)
-
