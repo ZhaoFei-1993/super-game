@@ -107,6 +107,7 @@ class Coin(models.Model):
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
+    is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
     # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
