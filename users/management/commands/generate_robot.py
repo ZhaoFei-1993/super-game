@@ -6,9 +6,9 @@ from django.conf import settings
 from django.db import transaction
 import time
 import random
-from django.core.cache import caches
 from django.contrib.auth.hashers import make_password
 import linecache
+from utils.cache import get_cache, set_cache
 
 
 class Command(BaseCommand):
@@ -28,20 +28,18 @@ class Command(BaseCommand):
     # 本日已生成的系统用户时间
     key_today_generated = 'robot_generate_user_datetime'
 
-    cache = caches['redis']
-
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取当天随机注册用户量
-        random_total = self.cache.get(self.get_key(self.key_today_random))                    # 拿数据
-        random_datetime = self.cache.get(self.get_key(self.key_today_random_datetime))
+        random_total = get_cache(self.get_key(self.key_today_random))                    # 拿数据
+        random_datetime = get_cache(self.get_key(self.key_today_random_datetime))
         if random_total is None or random_datetime is None:
             self.set_today_random()
             self.stdout.write(self.style.SUCCESS('已生成随机注册时间'))
             raise CommandError('...')
 
         random_datetime.sort()
-        user_generated_datetime = self.cache.get(self.get_key(self.key_today_generated))
+        user_generated_datetime = get_cache(self.get_key(self.key_today_generated))
         if user_generated_datetime is None:
             user_generated_datetime = []
 
@@ -94,7 +92,7 @@ class Command(BaseCommand):
             user_coin.save()
 
         user_generated_datetime.append(current_generate_time)
-        self.cache.set(self.get_key(self.key_today_generated), user_generated_datetime)
+        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
 
         self.stdout.write(self.style.SUCCESS('生成系统用户成功'))
         self.stdout.write(self.style.SUCCESS('账号为：' + username))
@@ -121,7 +119,7 @@ class Command(BaseCommand):
         avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
 
         line_number += 1
-        self.cache.set(key_name_avatar, line_number)
+        set_cache(key_name_avatar, line_number)
 
         return nickname, avatar_url
 
@@ -166,5 +164,5 @@ class Command(BaseCommand):
         for i in range(0, user_total):
             random_datetime.append(random.randint(start_date, end_date))
 
-        self.cache.set(self.get_key(self.key_today_random), user_total, 24 * 3600)
-        self.cache.set(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
+        set_cache(self.get_key(self.key_today_random), user_total, 24 * 3600)
+        set_cache(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
