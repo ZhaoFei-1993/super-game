@@ -127,7 +127,7 @@ class UserRegister(object):
             coin = Coin.objects.all()
             for i in coin:
                 if i.name != 'EOS':
-                    addresss = Address.objects.filter(user='', coin_id=i.id)
+                    addresss = Address.objects.filter(user=0, coin_id=i.id)
                     address = addresss[0]
                 userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
                 if userbalance == 0:
