@@ -172,17 +172,18 @@ class CoinDetail(models.Model):
     BETS = 3
     ACTIVITY = 4
     OPEB_PRIZE = 5
-    LOCK = 6
+    REGISTER = 6
     OTHER = 7
+    INVITE = 8
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
         (BETS, "下注"),
-        (BETS, "下注"),
         (ACTIVITY, "活动"),
         (OPEB_PRIZE, "开奖"),
-        (LOCK, "锁定"),
+        (REGISTER, "注册"),
         (OTHER, "系统增加"),
+        (INVITE, "邀请好友")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
@@ -398,3 +399,4 @@ class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ip = models.CharField(verbose_name='登录ip', max_length=48)
     login_time = models.DateTimeField(verbose_name='登录时间',auto_now=True)
+
