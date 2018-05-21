@@ -105,7 +105,7 @@ class Command(BaseCommand):
         """
         key_name_avatar = 'key_name_avatar'
 
-        line_number = self.cache.get(key_name_avatar)
+        line_number = get_cache(key_name_avatar)
         if line_number is None:
             line_number = 1
 
