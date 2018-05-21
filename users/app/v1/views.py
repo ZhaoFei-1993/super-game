@@ -214,7 +214,7 @@ class UserRegister(object):
         # 生成签到记录
         try:
             userinfo = User.objects.get(username=username)
-        except Exception:
+        except User.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         daily = DailyLog()
         daily.user_id = userinfo.id
@@ -223,29 +223,27 @@ class UserRegister(object):
         daily.sign_date = yesterday.strftime("%Y-%m-%d %H:%M:%S")
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
+
         # 生成代币余额
-        coin = Coin.objects.all()
-        for i in coin:
-            if i.name != 'EOS':
-                addresss = Address.objects.filter(user='', coin_id=i.id)
-                address = addresss[0]
-            usercoin = UserCoin()
-            usercoin.user_id = userinfo.id
-            usercoin.coin_id = i.id
-            # gsg = Coin.TYPE_CHOICE[0][1]
-            # is_coin = Coin.TYPE_CHOICE[1][1]
-            # if i.name == is_coin:
-            #     usercoin.is_opt = True
-            #     usercoin.address = 1008611
-            # if i.name == gsg:
-            #     usercoin.is_bet =True
-            #     usercoin.address = 0
-            if i.name != 'EOS':
-                usercoin.address = address.address
-            usercoin.save()
-            if i.name != 'EOS':
-                address.user = userinfo.id
-                address.save()
+        btc_address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+        btc_address.user = userinfo.id
+        btc_address.save()
+
+        eth_address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+        eth_address.user = userinfo.id
+        eth_address.save()
+
+        coins = Coin.objects.filter(is_disabled=False)
+        for coin in coins:
+            user_coin = UserCoin()
+            user_coin.user_id = userinfo.id
+            user_coin.coin_id = coin.id
+            # 以太坟代币均使用同一个ETH地址
+            if coin.is_eth_erc20:
+                user_coin.address = eth_address.address
+            else:
+                user_coin.address = btc_address.address
+            user_coin.save()
 
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
@@ -315,7 +313,7 @@ class LoginView(CreateAPIView):
                 token = ur.login(source=source, username=username, password=password)
         try:
             user_now = User.objects.get(username=username)
-        except Exception:
+        except User.DoesNotExist:
             return 0
         lr = LoginRecord()
         lr.user = user_now
