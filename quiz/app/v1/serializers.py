@@ -212,7 +212,7 @@ class RecordSerialize(serializers.ModelSerializer):
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
-            earn_coin = round(float(obj.earn_coin), 3)
+            earn_coin = "+" + str(round(float(obj.earn_coin), 3))
         return earn_coin
 
     @staticmethod

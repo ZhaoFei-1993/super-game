@@ -173,6 +173,7 @@ class RecordsListView(ListCreateAPIView):
             #     pass
             # else:
             #     quiz_id=quiz
+            bet = fav.get('bet')
             data.append({
                 "quiz_id": fav.get('quiz_id'),
                 'host_team': fav.get('host_team'),
@@ -186,7 +187,7 @@ class RecordsListView(ListCreateAPIView):
                 'coin_avatar': fav.get('coin_avatar'),
                 'category_name': fav.get('quiz_category'),
                 'coin_name': fav.get('coin_name'),
-                'bet': fav.get('bet')
+                'bet': round(float(bet), 3)
             })
 
         return self.response({'code': 0, 'data': data})
