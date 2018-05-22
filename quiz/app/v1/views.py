@@ -326,6 +326,7 @@ class RuleView(ListAPIView):
                     "odds": odds,
                     "option_type": s.option_type,
                     "is_right": s.is_right,
+                    "number": number,
                     "accuracy": accuracy,
                     "is_choice": is_choice,
                     "order": s.order
