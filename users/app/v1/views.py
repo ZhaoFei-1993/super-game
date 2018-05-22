@@ -3,9 +3,6 @@ from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
 import qrcode
-from ast import literal_eval
-from quiz.app.v1.serializers import QuizSerialize
-from ...models import User, DailyLog, DailySettings, UserMessage, Message
 from django.core.cache import caches
 from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
@@ -38,6 +35,7 @@ from utils.models import Image as Im
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
+from utils.cache import set_cache, get_cache, decr_cache, incr_cache
 
 
 class UserRegister(object):
@@ -1724,24 +1722,18 @@ class LuckDrawListView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = request.user.id
-        cache = caches['redis']
         date = datetime.now().strftime('%Y%m%d')
         NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_id) + str(date)  # 再来一次次数
-        awards_number = cache.get(NUMBER_OF_LOTTERY_AWARDS)
+        is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
-        number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+        number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
-            number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
-        is_gratis = 0
-        if awards_number == None:
-            is_gratis = 0
-        elif awards_number > 0:
             is_gratis = 1
-        if number == 6:
-            is_gratis = 1
-        cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
+            set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
+            set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
+            number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
+            is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
@@ -1771,13 +1763,12 @@ class ClickLuckDrawView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        cache = caches['redis']
         user_info = request.user
         date = datetime.now().strftime('%Y%m%d')
         NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_info.pk) + str(date)  # 再来一次次数
-        is_gratis = cache.get(NUMBER_OF_LOTTERY_AWARDS)
+        is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_info.pk) + str(date)  # 每天抽奖次数
-        number = cache.get(NUMBER_OF_PRIZES_PER_DAY)
+        number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         number = int(number)
         integral_all = IntegralPrize.objects.filter()
         prize_consume = integral_all[0].prize_consume
@@ -1794,20 +1785,14 @@ class ClickLuckDrawView(CreateAPIView):
         choice = prize[weight_choice(prize_weight)]
         if int(is_gratis) == 1 and int(number) == 6:
             print("第一次")
-            is_gratis = 0
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
-            number -= 1
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
+            decr_cache(NUMBER_OF_LOTTERY_AWARDS)
+            decr_cache(NUMBER_OF_PRIZES_PER_DAY)
         elif int(is_gratis) == 1:
             print("再来一次")
-            is_gratis = 0
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
+            decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1 and int(number) != 6:
             print("继续抽奖")
-            number -= 1
-            cache.set(NUMBER_OF_PRIZES_PER_DAY, int(number))
-            is_gratis = 0
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis)
+            decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_info.integral -= Decimal(prize_consume)
             user_info.save()
             coin_detail = CoinDetail()
@@ -1822,8 +1807,7 @@ class ClickLuckDrawView(CreateAPIView):
         except DailyLog.DoesNotExist:
             return 0
         if choice == "再来一次":
-            is_gratis = 1
-            cache.set(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
+            incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
             integral = Decimal(integral_prize.prize_number)
@@ -1843,11 +1827,10 @@ class ClickLuckDrawView(CreateAPIView):
         for a in fictitious_prize_name_list:
             fictitious_prize_name.append(a[0])
 
+        print("choice=============================", choice)
         if choice in fictitious_prize_name:
-            coin = Coin.objects.filter(name=choice)
-            coin = coin[0]
             try:
-                user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=coin.id)
+                user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)
             except DailyLog.DoesNotExist:
                 return 0
             coin_detail = CoinDetail()
@@ -1876,8 +1859,8 @@ class ClickLuckDrawView(CreateAPIView):
                 'prize_name': integral_prize.prize_name,
                 'prize_number': prize_number,
                 'integral': round(float(user_info.integral), 3),
-                'number': cache.get(NUMBER_OF_PRIZES_PER_DAY),
-                'is_gratis': cache.get(NUMBER_OF_LOTTERY_AWARDS)
+                'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
+                'is_gratis': get_cache(NUMBER_OF_LOTTERY_AWARDS)
             }
         })
 
