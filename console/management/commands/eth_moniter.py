@@ -39,7 +39,7 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取所有用户ETH地址
-        user_eth_address = UserCoin.objects.filter(coin_id=2, user__is_robot=False)
+        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
         if len(user_eth_address) == 0:
             self.stdout.write(self.style.SUCCESS('无地址信息'))
             return True
@@ -68,12 +68,15 @@ class Command(BaseCommand):
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = trans['value']
+
+                # 判断交易hash是否已经存在，存在则忽略该条交易
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
 
                 valid_trans += 1
 
+                # 插入充值记录表
                 user_recharge = UserRecharge()
                 user_recharge.user_id = user_id
                 user_recharge.coin = Coin.objects.filter(name='ETH').first()
@@ -84,6 +87,7 @@ class Command(BaseCommand):
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()
 
+                # 变更用户余额
                 user_coin.balance += Decimal(tx_value)
                 user_coin.save()
 
