@@ -188,7 +188,7 @@ class RecordSerialize(serializers.ModelSerializer):
         data = []
         data.append({
             'my_option': my_option,  # 我的选项
-            'is_right': option_info.is_right,  # 是否为正确答案
+            'is_right': obj.odds,  # 是否为正确答案
         })
         return data
 
