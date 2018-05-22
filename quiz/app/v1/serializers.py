@@ -184,11 +184,11 @@ class RecordSerialize(serializers.ModelSerializer):
         option_info = Option.objects.get(pk=obj.option_id)
         rule_list = Rule.objects.get(pk=option_info.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-        my_option = my_rule + ":" + option_info.option + "/" + str(option_info.odds)
+        my_option = my_rule + ":" + option_info.option + "/" + str(obj.odds)
         data = []
         data.append({
             'my_option': my_option,  # 我的选项
-            'is_right': obj.odds,  # 是否为正确答案
+            'is_right': option_info.is_right,  # 是否为正确答案
         })
         return data
 
