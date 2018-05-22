@@ -1,35 +1,26 @@
 # -*- coding: utf-8 -*-
-
 from django.core.management.base import BaseCommand
 import requests
 import json
 import time
 from users.models import UserCoin, UserRecharge, Coin
+from decimal import Decimal
 
-user_id = 43
-addresses = ['14rE7Jqy4a6P27qWCCsngkUfBxtevZhPHB', '1Ez69SnzzmePmZX3WpEzMKTrcBF2gpNQ55']
 base_url = 'https://blockchain.info/multiaddr?active='
+coin_name = 'BTC'
 
 
-def addtwodimdict(thedict, key_a, key_b, val):
-    if key_a in thedict:
-        thedict[key_a].update({key_b: val})
-    else:
-        thedict.update({key_a: {key_b: val}})
-
-
-def get_txs():
-    user_addr = ''
-    for address in addresses:
-        user_addr = user_addr + address + '|'
-
-    txs = dict()
-    response = requests.get(base_url + user_addr, headers=headers)
+def get_transactions(addresses):
+    transactions = {}
+    response = requests.get(base_url + addresses)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
             addr = out['addr']
             txid = item['hash']
+
+            if addr not in transactions:
+                transactions[addr] = []
 
             # 计算确认数
             confirmations = 0
@@ -40,40 +31,67 @@ def get_txs():
             time_local = time.localtime(item['time'])
             time_dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
-            data = {
-                        'time': time_dt,
-                        'value': out['value'] / datas['info']['conversion'],
-                        'confirmations': confirmations
-                    }
-            addtwodimdict(txs, addr, txid, data)
-    return txs
+            transactions[addr].append({
+                'txid': txid,
+                'time': time_dt,
+                'value': out['value'] / datas['info']['conversion'],
+                'confirmations': confirmations
+            })
+    return transactions
 
 
 class Command(BaseCommand):
     help = "BTC监视器"
 
     def handle(self, *args, **options):
-        txs_list = get_txs()
-        for address in addresses[0:]:
-            for key, value in txs_list[address].items():
-                print(key, value)
-                if UserRecharge.objects.filter(txid=key).first() is None:
-                    userrecharge = UserRecharge()
-                    userrecharge.user_id = user_id
-                    userrecharge.coin = Coin.objects.filter(name='BTC').first()
-                    userrecharge.address = address
-                    userrecharge.amount = value['value']
-                    userrecharge.confirmations = value['confirmations']
-                    userrecharge.txid = key
-                    userrecharge.trade_at = value['time']
-                    userrecharge.save()
+        # 获取所有用户ETH地址
+        user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False)
+        if len(user_btc_address) == 0:
+            self.stdout.write(self.style.SUCCESS('无' + coin_name + '地址信息'))
+            return True
 
-                    usercoin = UserCoin.objects.filter(user_id=user_id).\
-                        filter(coin=Coin.objects.filter(name='BTC').first()).first()
-                    usercoin.balance = usercoin.balance + UserRecharge.objects.filter(txid=key).first().amount
-                    usercoin.save()
+        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_btc_address)) + '条用户' + coin_name + '地址信息'))
 
-                    print('----------------')
-                else:
-                    print('已经存在')
-                    print('----------------')
+        btc_addresses = []
+        address_map_uid = {}
+        for user_coin in user_btc_address:
+            btc_addresses.append(user_coin.address)
+            # map address to userid
+            address_map_uid[user_coin.address] = user_coin.user_id
+        addresses = '|'.join(btc_addresses)
+
+        self.stdout.write(self.style.SUCCESS('正在获取所有用户' + coin_name + '地址交易记录'))
+        transactions = get_transactions(addresses)
+        for address in transactions:
+            if len(transactions[address]) == 0:
+                continue
+
+            valid_trans = 0
+            for transaction in transactions[address]:
+                tx_id = transaction.txid
+                tx_value = transaction.value
+
+                # 判断交易hash是否已经存在，存在则忽略该条交易
+                is_exists = UserRecharge.objects.filter(txid=tx_id).count()
+                if is_exists > 0:
+                    continue
+
+                valid_trans += 1
+
+                # 插入充值记录表
+                user_recharge = UserRecharge()
+                user_recharge.user_id = address_map_uid[address]
+                user_recharge.coin_id = Coin.BTC
+                user_recharge.address = address
+                user_recharge.amount = tx_value
+                user_recharge.confirmations = transaction.confirmations
+                user_recharge.txid = tx_id
+                user_recharge.trade_at = transaction.time
+                user_recharge.save()
+
+                # 变更用户余额
+                user_coin.balance += Decimal(tx_value)
+                user_coin.save()
+
+            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
+            self.stdout.write(self.style.SUCCESS(''))
