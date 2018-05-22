@@ -10,6 +10,7 @@ from chat.models import Club
 from api import settings
 from django.db.models import Q
 import pytz
+from utils.functions import normalize_fraction
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -212,7 +213,7 @@ class RecordSerialize(serializers.ModelSerializer):
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
-            earn_coin = "+" + str(round(float(obj.earn_coin), 3))
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin))
         return earn_coin
 
     @staticmethod
