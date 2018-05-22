@@ -15,6 +15,7 @@ from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, Q
 from utils.functions import value_judge
 from datetime import datetime
 import re
+from utils.functions import normalize_fraction
 
 
 class CategoryView(ListAPIView):
@@ -187,7 +188,7 @@ class RecordsListView(ListCreateAPIView):
                 'coin_avatar': fav.get('coin_avatar'),
                 'category_name': fav.get('quiz_category'),
                 'coin_name': fav.get('coin_name'),
-                'bet': round(float(bet), 3)
+                'bet': normalize_fraction(bet)
             })
 
         return self.response({'code': 0, 'data': data})
@@ -269,12 +270,12 @@ class RuleView(ListAPIView):
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
         coin_betting_control = clubinfo.coin.betting_control
-        coin_betting_control = round(float(coin_betting_control), 3)
+        coin_betting_control = normalize_fraction(coin_betting_control)
         coin_betting_toplimit = clubinfo.coin.betting_toplimit
-        coin_betting_toplimit = round(float(coin_betting_toplimit), 3)
+        coin_betting_toplimit = normalize_fraction(coin_betting_toplimit)
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
-        balance = round(float(usercoin.balance), 3)
+        balance = normalize_fraction(usercoin.balance)
         coin_name = usercoin.coin.name
         coin_icon = usercoin.coin.icon
         # type = UserCoin.objects.filter(user_id=user, is_bet=1).count()
@@ -297,11 +298,11 @@ class RuleView(ListAPIView):
         #     coin_id = usercoin.coin.pk
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
-        value1 = round(float(value1), 3)
+        value1 = normalize_fraction(value1)
         value2 = coinvalue[1].value
-        value2 = round(float(value2), 3)
+        value2 = normalize_fraction(value2)
         value3 = coinvalue[2].value
-        value3 = round(float(value3), 3)
+        value3 = normalize_fraction(value3)
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk).order_by('order')
@@ -312,7 +313,7 @@ class RuleView(ListAPIView):
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
-                odds = [str(s.odds), int(s.odds)][int(s.odds) == s.odds]
+                odds = normalize_fraction(s.odds)
                 number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:
                     accuracy = "0"
@@ -345,9 +346,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": round(float(i.home_let_score), 3),
-                    "guest_let_score": round(float(i.guest_let_score), 3),
-                    "estimate_score": round(float(i.estimate_score), 3),
+                    "home_let_score": normalize_fraction(i.home_let_score),
+                    "guest_let_score": normalize_fraction(i.guest_let_score),
+                    "estimate_score": normalize_fraction(i.estimate_score),
                     "list_win": win,
                     "list_flat": flat,
                     "list_loss": loss
@@ -365,9 +366,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": round(float(i.home_let_score), 3),
-                    "guest_let_score": round(float(i.guest_let_score), 3),
-                    "estimate_score": round(float(i.estimate_score), 3),
+                    "home_let_score": normalize_fraction(i.home_let_score),
+                    "guest_let_score": normalize_fraction(i.guest_let_score),
+                    "estimate_score": normalize_fraction(i.estimate_score),
                     "list_win": win,
                     "list_loss": loss,
                 })
@@ -376,9 +377,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": i.tips,
-                    "home_let_score": round(float(i.home_let_score), 3),
-                    "guest_let_score": round(float(i.guest_let_score), 3),
-                    "estimate_score": round(float(i.estimate_score), 3),
+                    "home_let_score": normalize_fraction(i.home_let_score),
+                    "guest_let_score": normalize_fraction(i.guest_let_score),
+                    "estimate_score": normalize_fraction(i.estimate_score),
                     "list": list
                 })
         return self.response({'code': 0, 'data': data,
@@ -533,9 +534,9 @@ class BetView(ListCreateAPIView):
         response = {
             'code': 0,
             'data': {
-                'message': '下注成功，金额总数为 ' + str(round(float(coins), 3)) + '，预计可得猜币 ' + str(
-                    round(float(earn_coins), 3)),
-                'balance': round(float(usercoin.balance), 3)
+                'message': '下注成功，金额总数为 ' + str(normalize_fraction(coins)) + '，预计可得猜币 ' + str(
+                    normalize_fraction(earn_coins)),
+                'balance': normalize_fraction(usercoin.balance)
             }
         }
         return self.response(response)

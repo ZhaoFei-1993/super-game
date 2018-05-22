@@ -369,11 +369,11 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': round(float(user_coin), 3),
+            'usercoin': normalize_fraction(user_coin),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
-            'integral': round(float(items[0]["integral"]), 3),
+            'integral': normalize_fraction(items[0]["integral"]),
             # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
@@ -523,7 +523,7 @@ class RankingView(ListAPIView):
             "user_id": user.id,
             "avatar": avatar,
             "nickname": nickname,
-            "win_ratio": round(float(integral), 3),
+            "win_ratio": normalize_fraction(integral),
             "ranking": my_ran
         }
         list = []
@@ -759,7 +759,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.save()
 
         content = {'code': 0,
-                   'data': round(float(rewards), 3)
+                   'data': normalize_fraction(rewards)
                    }
         return self.response(content)
 
@@ -884,7 +884,7 @@ class AssetView(ListAPIView):
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': round(float(integral), 3), 'data': data})
+                              'user_integral': normalize_fraction(integral), 'data': data})
 
 
 # class AssetLockView(CreateAPIView):
@@ -1060,8 +1060,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': round(float(x['amount']), 3),
-                    'rest': round(float(x['rest']), 3),
+                    'amount': normalize_fraction(x['amount']),
+                    'rest': normalize_fraction(x['rest']),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
@@ -1752,8 +1752,8 @@ class LuckDrawListView(ListAPIView):
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': round(float(user.integral)),
-             'prize_consume': round(float(prize_consume))})
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': normalize_fraction(user.integral),
+             'prize_consume': normalize_fraction(prize_consume)})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1858,7 +1858,7 @@ class ClickLuckDrawView(CreateAPIView):
                 'icon': integral_prize.icon,
                 'prize_name': integral_prize.prize_name,
                 'prize_number': prize_number,
-                'integral': round(float(user_info.integral), 3),
+                'integral': normalize_fraction(user_info.integral),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
                 'is_gratis': get_cache(NUMBER_OF_LOTTERY_AWARDS)
             }

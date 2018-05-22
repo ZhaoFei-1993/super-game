@@ -81,7 +81,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # 电话号码
-        integral = round(float(obj.integral), 3)
+        integral = normalize_fraction(obj.integral)
         return integral
 
     def get_is_user(self, obj):  # 电话号码
@@ -160,7 +160,7 @@ class DailySerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_rewards(obj):  # 电话号码
-        rewards = round(float(obj.rewards), 3)
+        rewards = normalize_fraction(obj.rewards)
         return rewards
 
     def get_is_sign(self, obj):  # 消息类型
@@ -339,7 +339,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': round(float(s), 3)
+                    'value': normalize_fraction(s)
                 }
             )
         return data
@@ -517,5 +517,5 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         if prize_number == 0:
             prize_number = ""
         else:
-            prize_number =round(float(prize_number), 3)
+            prize_number = normalize_fraction(prize_number)
         return prize_number
