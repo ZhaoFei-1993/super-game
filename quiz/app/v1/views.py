@@ -175,6 +175,7 @@ class RecordsListView(ListCreateAPIView):
             # else:
             #     quiz_id=quiz
             bet = fav.get('bet')
+            print("bet==========================", bet)
             data.append({
                 "quiz_id": fav.get('quiz_id'),
                 'host_team': fav.get('host_team'),
@@ -455,12 +456,12 @@ class BetView(ListCreateAPIView):
         record.roomquiz_id = roomquiz_id
         record.rule = options.rule
         record.option = options
-        record.bet = round(Decimal(coins), 2)
+        record.bet = round(Decimal(coins), 3)
         record.odds = round(Decimal(options.odds), 2)
         # record.earn_coin = int(coins) * int(options.odds)
         record.save()
         earn_coins = Decimal(coins) * options.odds
-        earn_coins = round(earn_coins, 2)
+        earn_coins = round(earn_coins, 3)
         # print("earn_coins==============", earn_coins)
         # 用户减少金币
 
