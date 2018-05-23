@@ -139,8 +139,9 @@ class OptionManager(models.Manager):
         :return: require_coin: float, max_wager: float
         """
         bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
+        max_bet_value = float(bet_max.value)
 
-        return bet_max * self.require_coin_times, bet_max
+        return max_bet_value * self.require_coin_times, max_bet_value
 
     def change_odds(self, rule_id, coin_id):
         """
