@@ -155,7 +155,7 @@ class UserRegister(object):
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
                     coin_detail.rest = Decimal(userbalance.balance)
-                    coin_detail.sources = 4
+                    coin_detail.sources = 8
                     coin_detail.save()
                     a.is_deleted = 1
                     a.save()
@@ -174,7 +174,7 @@ class UserRegister(object):
                 coin_detail.coin_name = 'HAND'
                 coin_detail.amount = '+' + str(user_money)
                 coin_detail.rest = Decimal(user_balance.balance)
-                coin_detail.sources = 4
+                coin_detail.sources = 6
                 coin_detail.save()
                 user_balance.balance += user_money
                 user_balance.save()
@@ -848,7 +848,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user)
+        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
@@ -865,17 +865,18 @@ class AssetView(ListAPIView):
 
         for list in Progress:
             temp_dict = {
+                'coin_order': list["coin_order"],
                 'icon': list["icon"],
                 'coin_name': list["coin_name"],
                 'coin': list["coin"],
-                'recharge_address': list['address'],
+                'recharge_address': list["address"],
                 # 'balance': [str(list['balance']), int(list['balance'])][int(list['balance']) == list['balance']],
-                'balance': list['balance'],
-                'locked_coin': list['locked_coin'],
-                "service_charge": list['service_charge'],
-                "service_coin": list['service_coin'],
-                'min_present': list['min_present'],
-                'recent_address': list['recent_address']
+                'balance': list["balance"],
+                'locked_coin': list["locked_coin"],
+                'service_charge': list["service_charge"],
+                'service_coin': list["service_coin"],
+                'min_present': list["min_present"],
+                'recent_address': list["recent_address"]
             }
             if temp_dict['coin_name'] == 'HAND':
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance)
@@ -1429,7 +1430,7 @@ class CoinOperateView(ListAPIView):
     def get_queryset(self):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
-        except coin.DoesNotExist:
+        except Exception:
             raise
         uuid = self.request.user.id
         query_s = CoinDetail.objects.filter(user_id=uuid, sources__in=[1, 2], coin_name=coin.name).order_by(
