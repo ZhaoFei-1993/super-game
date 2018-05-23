@@ -161,13 +161,13 @@ class UserRegister(object):
                     a.save()
                     userbalance.balance += a.money
                     userbalance.save()
-                    u_mes= UserMessage() #邀请注册成功后消息
-                    u_mes.status=0
-                    u_mes.user=user
+                    u_mes = UserMessage()  # 邀请注册成功后消息
+                    u_mes.status = 0
+                    u_mes.user = user
                     if a.invitee_one != 0:
-                        u_mes.message_id = 1 #邀请t1消息
+                        u_mes.message_id = 1  # 邀请t1消息
                     else:
-                        u_mes.message_id = 2 #邀请t2消息
+                        u_mes.message_id = 2  # 邀请t2消息
                     u_mes.save()
 
             # 注册送HAND币
@@ -358,13 +358,11 @@ class InfoView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user
         roomquiz_id = kwargs['roomquiz_id']
-        # roomquiz_id = request.GET.get('roomquiz_id')
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        # ggtc_locked = amount(user_id)  # 该用户锁定的金额
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
@@ -382,10 +380,8 @@ class InfoView(ListAPIView):
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"]),
-            # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
-            # 'ggtc_locked': ggtc_locked,
             'is_message': is_message,
             'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
@@ -1420,10 +1416,10 @@ class UserRechargeView(ListCreateAPIView):
                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
                                            rest=user_reward.balance, sources=4)
                 reward_detail.save()
-                u_ms = UserMessage() #活动消息通知
+                u_ms = UserMessage()  # 活动消息通知
                 u_ms.status = 0
                 u_ms.user_id = uuid
-                u_ms.message_id = 3 #消息3 充值活动奖励情况
+                u_ms.message_id = 3  # 消息3 充值活动奖励情况
                 u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
@@ -1651,7 +1647,6 @@ class InvitationUserView(ListAPIView):
     """
     扫描二维码拿用户消息
     """
-    permission_classes = (LoginRequired,)
 
     def get_queryset(self):
         return
@@ -1766,7 +1761,8 @@ class LuckDrawListView(ListAPIView):
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': normalize_fraction(user.integral),
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
+             'integral': normalize_fraction(user.integral),
              'prize_consume': normalize_fraction(prize_consume)})
 
 
