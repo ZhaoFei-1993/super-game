@@ -1708,7 +1708,7 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (225, 720))
+        base_img.paste(qr_img, (243, 735))
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user_id) + '.jpg')
