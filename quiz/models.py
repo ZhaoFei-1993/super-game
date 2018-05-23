@@ -220,7 +220,7 @@ class Record(models.Model):
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
     # bet = models.IntegerField(verbose_name="下注金额", default=0)
-    odds = models.DecimalField(verbose_name="下注赔率", max_digits=10, decimal_places=2, default=0.00)
+    odds = models.DecimalField(verbose_name="下注赔率", max_digits=10, decimal_places=3, default=0.000)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=10, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=10, decimal_places=3, default=0.000)
     source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
