@@ -103,7 +103,8 @@ class Coin(models.Model):
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
-    coin_order=models.IntegerField(verbose_name="币种顺序", default=0)
+    coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
+    coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
     # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
@@ -118,8 +119,10 @@ class Coin(models.Model):
 @reversion.register()
 class CoinOutServiceCharge(models.Model):
     value = models.DecimalField(verbose_name="比例", max_digits=6, decimal_places=4, default=0.0000)
-    coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out', verbose_name="提现货币(coin表ID外键)")
-    coin_payment = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_payment', verbose_name="手续费支付货币(coin表ID外键)")
+    coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out',
+                                 verbose_name="提现货币(coin表ID外键)")
+    coin_payment = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_payment',
+                                     verbose_name="手续费支付货币(coin表ID外键)")
 
     class Meta:
         ordering = ['-id']
@@ -399,5 +402,4 @@ class IntegralPrizeRecord(models.Model):
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ip = models.CharField(verbose_name='登录ip', max_length=48)
-    login_time = models.DateTimeField(verbose_name='登录时间',auto_now=True)
-
+    login_time = models.DateTimeField(verbose_name='登录时间', auto_now=True)
