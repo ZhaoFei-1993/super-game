@@ -161,6 +161,14 @@ class UserRegister(object):
                     a.save()
                     userbalance.balance += a.money
                     userbalance.save()
+                    u_mes = UserMessage()  # 邀请注册成功后消息
+                    u_mes.status = 0
+                    u_mes.user = user
+                    if a.invitee_one != 0:
+                        u_mes.message_id = 1  # 邀请t1消息
+                    else:
+                        u_mes.message_id = 2  # 邀请t2消息
+                    u_mes.save()
 
             # 注册送HAND币
             if user.is_money == 0:
@@ -180,6 +188,11 @@ class UserRegister(object):
                 user_balance.save()
                 user.is_money = 1
                 user.save()
+                r_msg = UserMessage()  # 注册送hand消息
+                r_msg.status = 0
+                r_msg.user = user
+                r_msg.message_id = 5
+                r_msg.save()
         return token
 
     @transaction.atomic()
@@ -350,13 +363,11 @@ class InfoView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user
         roomquiz_id = kwargs['roomquiz_id']
-        # roomquiz_id = request.GET.get('roomquiz_id')
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        # ggtc_locked = amount(user_id)  # 该用户锁定的金额
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
@@ -374,10 +385,8 @@ class InfoView(ListAPIView):
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"]),
-            # 'ggtc_avatar': items[0]["ggtc_avatar"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
-            # 'ggtc_locked': ggtc_locked,
             'is_message': is_message,
             'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
@@ -1390,7 +1399,7 @@ class UserRechargeView(ListCreateAPIView):
         uuid = request.user.id
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        except user_coin.DoesNotExist:
+        except Exception:
             raise
         recharge = Decimal(request.data.get('recharge'))
         if recharge <= 0:
@@ -1412,6 +1421,11 @@ class UserRechargeView(ListCreateAPIView):
                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
                                            rest=user_reward.balance, sources=4)
                 reward_detail.save()
+                u_ms = UserMessage()  # 活动消息通知
+                u_ms.status = 0
+                u_ms.user_id = uuid
+                u_ms.message_id = 3  # 消息3 充值活动奖励情况
+                u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
@@ -1466,7 +1480,7 @@ class CoinOperateDetailView(RetrieveAPIView):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
-        except coin.DoesNotExist or item.DoesNotExist:
+        except Exception:
             raise
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
@@ -1485,7 +1499,7 @@ class VersionUpdateView(RetrieveAPIView):
         else:
             type = 0
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
-        if len(versions) == 0:
+        if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
         else:
             last_version = versions.order_by('-create_at')[0]
@@ -1521,7 +1535,7 @@ class ImageUpdateView(CreateAPIView):
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
-        except user.DoesNotExist:
+        except Exception:
             raise
         image_name = temp_img.image.name
         avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
@@ -1638,7 +1652,6 @@ class InvitationUserView(ListAPIView):
     """
     扫描二维码拿用户消息
     """
-    permission_classes = (LoginRequired,)
 
     def get_queryset(self):
         return
@@ -1680,12 +1693,12 @@ class InvitationMergeView(ListAPIView):
         if os.access(save_path + '/qrcode_' + str(user_id) + '.jpg', os.F_OK):
             # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
             base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
-            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
+            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
 
             return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -1695,7 +1708,7 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (225, 720))
+        base_img.paste(qr_img, (243, 735))
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user_id) + '.jpg')
@@ -1705,7 +1718,7 @@ class InvitationMergeView(ListAPIView):
         base_img.save(save_path + '/spread_' + str(user_id) + '.jpg', quality=90)
         base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
 
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/user/invitation/user/?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
 
         return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
@@ -1753,7 +1766,8 @@ class LuckDrawListView(ListAPIView):
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number, 'integral': normalize_fraction(user.integral),
+            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
+             'integral': normalize_fraction(user.integral),
              'prize_consume': normalize_fraction(prize_consume)})
 
 
