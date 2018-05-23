@@ -158,7 +158,7 @@ class OptionManager(models.Manager):
             rates.append(float(o.odds))
 
         # 获取奖池总数
-        pool_sum = Record.objects.filter(quiz_id=rule.quiz_id).aggregate(Sum('bet'))
+        pool_sum = Record.objects.filter(rule_id=rule_id).aggregate(Sum('bet'))
         pool = pool_sum['bet__sum']
         if pool is None:
             pool = 0
@@ -166,7 +166,7 @@ class OptionManager(models.Manager):
             pool = float(pool)
 
         # 获取各选项产出猜币数
-        option_pays = Record.objects.filter(quiz_id=rule.quiz_id).values('option_id').annotate(
+        option_pays = Record.objects.filter(rule_id=rule_id).values('option_id').annotate(
             pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
         pays = []
         tmp_idx = 0
