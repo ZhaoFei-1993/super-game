@@ -40,8 +40,6 @@ class Game(object):
             # 庄家赔钱的选项，通过减少赔率让大家少买
             if supple > self._max_wager:
                 odds = self._oddses[i] - delta
-                if odds <= 1:
-                    odds = 1.01
             # 反之
             elif -supple > self._max_wager:
                 odds = self._oddses[i] + delta
@@ -49,7 +47,7 @@ class Game(object):
                 odds = self._oddses[i]
 
             # 避免赔率出现负数
-            odds = odds if odds > 0.1 else 0.1
+            odds = odds if odds > 1 else 1.01
             new_oddses.append(odds)
         self._oddses = new_oddses
 

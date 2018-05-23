@@ -150,8 +150,6 @@ class OptionManager(models.Manager):
         :param coin_id
         :return:
         """
-        rule = Rule.objects.get(pk=rule_id)
-
         options = Option.objects.filter(rule_id=rule_id).order_by('order')
         rates = []
         for o in options:
