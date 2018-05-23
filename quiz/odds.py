@@ -30,6 +30,8 @@ class Game(object):
         myprint('-' * 30, 'init end')
 
     def bet(self, pool, pays):
+        print('pool = ', pool)
+        print('pays = ', pays)
         new_oddses = []
         max_odds = max(self._oddses)
         min_odds = min(self._oddses)
