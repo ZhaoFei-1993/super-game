@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import os
 import requests
 import json
 from api.settings import BASE_DIR
 import time, sched
 from quiz.models import Quiz
+import datetime
 from rq import Queue
 from redis import Redis
 from quiz.consumers import quiz_send_score, quiz_send_football_time
@@ -250,11 +251,25 @@ def get_live_data():
         print('Error', e.args)
 
 
+def live_football():
+    quiz_list = Quiz.objects.filter(
+        status__in=[Quiz.PUBLISHING], category__parent_id=2).order_by('begin_at')
+    if Quiz.objects.filter(category__parent_id=2,
+                           status__in=[Quiz.REPEALED, Quiz.HALF_TIME]).exists() or quiz_list.filter(
+            begin_at__lt=datetime.datetime.now()).exists():
+        get_live_data()
+    else:
+        print('no match！！！')
+        raise CommandError('no match！！！')
+
+
 class Command(BaseCommand):
     help = "爬取足球直播"
 
     def handle(self, *args, **options):
-        try:
-            timming_exe(get_live_data, inc=2)
-        except KeyboardInterrupt as e:
-            pass
+        # try:
+        #     timming_exe(get_live_data, inc=2)
+        # except KeyboardInterrupt as e:
+        #     pass
+
+        live_football()

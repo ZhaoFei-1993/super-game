@@ -30,111 +30,145 @@ def get_data(url):
 
 
 @transaction.atomic()
-def get_data_info(url, match_flag, quiz):
-    if quiz.category.parent_id == 2:
-        datas = get_data(url + match_flag)
-        if datas['status']['code'] == 0:
-            if len(datas['result']['pool_rs']) > 0:
-                result_had = datas['result']['pool_rs']['had']
-                result_hhad = datas['result']['pool_rs']['hhad']
-                result_ttg = datas['result']['pool_rs']['ttg']
-                result_crs = datas['result']['pool_rs']['crs']
-                # result_hafu = datas['result']['pool_rs']['hafu']
+def get_data_info(url, match_flag):
+    datas = get_data(url + match_flag)
+    if datas['status']['code'] == 0:
+        if len(datas['result']['pool_rs']) > 0:
+            result_had = datas['result']['pool_rs']['had']
+            result_hhad = datas['result']['pool_rs']['hhad']
+            result_ttg = datas['result']['pool_rs']['ttg']
+            result_crs = datas['result']['pool_rs']['crs']
+            # result_hafu = datas['result']['pool_rs']['hafu']
 
-                score_data = requests.get(live_url + match_flag).json()['data']
-                host_team_score = score_data['fs_h']
-                guest_team_score = score_data['fs_a']
+            score_data = requests.get(live_url + match_flag).json()['data']
+            host_team_score = score_data['fs_h']
+            guest_team_score = score_data['fs_a']
 
-                quiz = Quiz.objects.filter(match_flag=match_flag).first()
-                quiz.host_team_score = host_team_score
-                quiz.guest_team_score = guest_team_score
-                quiz.save()
+            quiz = Quiz.objects.filter(match_flag=match_flag).first()
+            quiz.host_team_score = host_team_score
+            quiz.guest_team_score = guest_team_score
+            quiz.save()
 
-                rule_all = Rule.objects.filter(quiz=quiz).all()
-                rule_had = rule_all.filter(type=0).first()
-                rule_hhad = rule_all.filter(type=1).first()
-                rule_ttg = rule_all.filter(type=3).first()
-                rule_crs = rule_all.filter(type=2).first()
+            rule_all = Rule.objects.filter(quiz=quiz).all()
+            rule_had = rule_all.filter(type=0).first()
+            rule_hhad = rule_all.filter(type=1).first()
+            rule_ttg = rule_all.filter(type=3).first()
+            rule_crs = rule_all.filter(type=2).first()
 
-                option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
-                if option_had is not None:
-                    option_had.is_right = 1
-                    option_had.save()
+            option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+            if option_had is not None:
+                option_had.is_right = 1
+                option_had.save()
 
-                option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
-                if option_hhad is not None:
-                    option_hhad.is_right = 1
-                    option_hhad.save()
+            option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+            if option_hhad is not None:
+                option_hhad.is_right = 1
+                option_hhad.save()
 
-                option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
-                if option_ttg is not None:
-                    option_ttg.is_right = 1
-                    option_ttg.save()
+            option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+            if option_ttg is not None:
+                option_ttg.is_right = 1
+                option_ttg.save()
 
-                option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
-                if option_crs is not None:
-                    option_crs.is_right = 1
-                    option_crs.save()
+            option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+            if option_crs is not None:
+                option_crs.is_right = 1
+                option_crs.save()
 
-                # 分配奖金
-                records = Record.objects.filter(quiz=quiz)
-                if len(records) > 0:
-                    for record in records:
-                        # 判断是否回答正确
-                        is_right = False
-                        if record.rule_id == rule_had.id:
-                            if record.option_id == option_had.id:
-                                is_right = True
-                        if record.rule_id == rule_hhad.id:
-                            if record.option_id == option_hhad.id:
-                                is_right = True
-                        if record.rule_id == rule_ttg.id:
-                            if record.option_id == option_ttg.id:
-                                is_right = True
-                        if record.rule_id == rule_crs.id:
-                            if record.option_id == option_crs.id:
-                                is_right = True
+            # 分配奖金
+            records = Record.objects.filter(quiz=quiz)
+            if len(records) > 0:
+                for record in records:
+                    # 判断是否回答正确
+                    is_right = False
+                    if record.rule_id == rule_had.id:
+                        if record.option_id == option_had.id:
+                            is_right = True
+                    if record.rule_id == rule_hhad.id:
+                        if record.option_id == option_hhad.id:
+                            is_right = True
+                    if record.rule_id == rule_ttg.id:
+                        if record.option_id == option_ttg.id:
+                            is_right = True
+                    if record.rule_id == rule_crs.id:
+                        if record.option_id == option_crs.id:
+                            is_right = True
 
-                        earn_coin = record.bet * record.odds
-                        # 对于用户来说，答错只是记录下注的金额
-                        if is_right is False:
-                            earn_coin = '-' + str(record.bet)
-                        record.earn_coin = earn_coin
-                        record.save()
+                    earn_coin = record.bet * record.odds
+                    # 对于用户来说，答错只是记录下注的金额
+                    if is_right is False:
+                        earn_coin = '-' + str(record.bet)
+                    record.earn_coin = earn_coin
+                    record.save()
 
-                        if is_right is True:
-                            # 用户增加对应币金额
-                            club = Club.objects.get(pk=record.roomquiz_id)
+                    if is_right is True:
+                        # 用户增加对应币金额
+                        club = Club.objects.get(pk=record.roomquiz_id)
 
-                            # 获取币信息
-                            coin = Coin.objects.get(pk=club.coin_id)
+                        # 获取币信息
+                        coin = Coin.objects.get(pk=club.coin_id)
 
-                            try:
-                                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
-                            except UserCoin.DoesNotExist:
-                                user_coin = UserCoin()
+                        try:
+                            user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                        except UserCoin.DoesNotExist:
+                            user_coin = UserCoin()
 
-                            user_coin.coin_id = club.coin_id
-                            user_coin.user_id = record.user_id
-                            user_coin.balance += Decimal(earn_coin)
-                            user_coin.save()
+                        user_coin.coin_id = club.coin_id
+                        user_coin.user_id = record.user_id
+                        user_coin.balance += Decimal(earn_coin)
+                        user_coin.save()
 
-                            # 用户资金明细表
-                            coin_detail = CoinDetail()
-                            coin_detail.user_id = record.user_id
-                            coin_detail.coin_name = coin.name
-                            coin_detail.amount = Decimal(earn_coin)
-                            coin_detail.rest = user_coin.balance
-                            coin_detail.sources = CoinDetail.BETS
-                            coin_detail.save()
-                quiz.status = Quiz.BONUS_DISTRIBUTION
-                quiz.save()
-                print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+                        # 用户资金明细表
+                        coin_detail = CoinDetail()
+                        coin_detail.user_id = record.user_id
+                        coin_detail.coin_name = coin.name
+                        coin_detail.amount = Decimal(earn_coin)
+                        coin_detail.rest = user_coin.balance
+                        coin_detail.sources = CoinDetail.BETS
+                        coin_detail.save()
+            quiz.status = Quiz.BONUS_DISTRIBUTION
+            quiz.save()
+            print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
-            else:
-                print(match_flag + ',' + '未有开奖信息')
         else:
-            print(match_flag + ',' + '未请求到任务数据')
+            print(match_flag + ',' + '未有开奖信息')
+    else:
+        print(match_flag + ',' + '未请求到任务数据')
+
+
+def handle_delay_game(delay_quiz):
+    records = Record.objects.filter(quiz=delay_quiz)
+    if len(records) > 0:
+        for record in records:
+            # 延迟比赛，返回用户投注的钱
+            return_coin = record.bet
+            record.earn_coin = return_coin
+            record.save()
+
+            # 用户增加回退还金额
+            club = Club.objects.get(pk=record.roomquiz_id)
+
+            # 获取币信息
+            coin = Coin.objects.get(pk=club.coin_id)
+
+            try:
+                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+            except UserCoin.DoesNotExist:
+                user_coin = UserCoin()
+
+            user_coin.coin_id = club.coin_id
+            user_coin.user_id = record.user_id
+            user_coin.balance += Decimal(return_coin)
+            user_coin.save()
+
+            # 用户资金明细表
+            coin_detail = CoinDetail()
+            coin_detail.user_id = record.user_id
+            coin_detail.coin_name = coin.name
+            coin_detail.amount = Decimal(return_coin)
+            coin_detail.rest = user_coin.balance
+            coin_detail.sources = CoinDetail.RETURN
+            coin_detail.save()
 
 
 class Command(BaseCommand):
@@ -144,12 +178,22 @@ class Command(BaseCommand):
     #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
+        after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
+        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=Quiz.PUBLISHING, category__parent_id=2).exists():
+            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=Quiz.PUBLISHING,
+                                                  category__parent_id=2):
+                delay_quiz.status = Quiz.DELAY
+                handle_delay_game(delay_quiz)
+                delay_quiz.save()
+
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
-        quizs = Quiz.objects.filter((Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours))
-        for quiz in quizs:
-            get_data_info(base_url, quiz.match_flag, quiz)
+        quizs = Quiz.objects.filter(
+            (Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours) & Q(
+                category__parent_id=2))
+        if quizs.exists():
+            for quiz in quizs:
+                get_data_info(base_url, quiz.match_flag)
 
         # quiz = Quiz.objects.filter(match_flag=options['match_flag']).first()
-        # get_data_info(base_url, options['match_flag'], quiz)
-
+        # get_data_info(base_url, options['match_flag'])
