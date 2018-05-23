@@ -35,6 +35,8 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
     """
     create_at = serializers.SerializerMethodField()
     mobile_type = serializers.SerializerMethodField()
+    is_update = serializers.SerializerMethodField()
+    is_delete = serializers.SerializerMethodField()
 
     class Meta:
         model = AndroidVersion
@@ -42,7 +44,7 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_create_at(obj):
-        create_at = obj.create_at.strftime("%Y-%m-%d %H:%M:%S")
+        # create_at = obj.create_at.strftime("%Y-%m-%d %H:%M:%S")
         # create_time = timezone.localtime(obj.create_at)
         create_time = obj.create_at
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -52,6 +54,23 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
     def get_mobile_type(obj):
         mobile_type = AndroidVersion.TYPE_CHOICE[obj.mobile_type][1]
         return mobile_type
+
+
+    @staticmethod
+    def get_is_update(obj):
+        if obj.is_update:
+            is_update = 1
+        else:
+            is_update = 0
+        return is_update
+
+    @staticmethod
+    def get_is_delete(obj):
+        if obj.is_delete:
+            is_delete = 1
+        else:
+            is_delete = 0
+        return is_delete
 
 
 class DailySettingSerializer(serializers.ModelSerializer):
