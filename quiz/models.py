@@ -2,7 +2,7 @@
 from django.db import models
 from wc_auth.models import Admin
 from mptt.models import MPTTModel, TreeForeignKey
-from users.models import Coin, User
+from users.models import Coin, User, CoinValue
 import reversion
 from django.conf import settings
 from django.db.models import Sum, F, FloatField
@@ -129,21 +129,24 @@ class Rule(models.Model):
 class OptionManager(models.Manager):
     """
     选项操作
-    TODO: 不同币的俱乐部不同的配置值
     """
-    require_coin = 1
-    max_wager = 0.03
+    require_coin_times = 1000   # 最大可赔倍数
 
-    def get_odds_config(self, coin):
+    def get_odds_config(self, coin_id):
         """
         不同币种不同配置：最大可赔、最大下注数
-        :return:
+        :param  coin_id 货币ID
+        :return: require_coin: float, max_wager: float
         """
+        bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
 
-    def change_odds(self, rule_id):
+        return bet_max * self.require_coin_times, bet_max
+
+    def change_odds(self, rule_id, coin_id):
         """
         变更赔率
         :param rule_id
+        :param coin_id
         :return:
         """
         rule = Rule.objects.get(pk=rule_id)
@@ -173,10 +176,11 @@ class OptionManager(models.Manager):
                     pays[tmp_idx] = op['pool_sum']
             tmp_idx += 1
 
-        g = Game(settings.BET_FACTOR, self.require_coin, self.max_wager, rates)
+        require_coin, max_wager = self.get_odds_config(coin_id)
+
+        g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
         g.bet(pool, pays)
         odds = g.get_oddses()
-        print('odds = ', odds)
 
         # 更新选项赔率
         idx = 0
