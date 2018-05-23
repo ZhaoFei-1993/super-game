@@ -1423,7 +1423,7 @@ class UserRechargeView(ListCreateAPIView):
                 u_ms = UserMessage() #活动消息通知
                 u_ms.status = 0
                 u_ms.user_id = uuid
-                u_ms.message = 3 #消息3 充值活动奖励情况
+                u_ms.message_id = 3 #消息3 充值活动奖励情况
                 u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
