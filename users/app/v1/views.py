@@ -161,6 +161,14 @@ class UserRegister(object):
                     a.save()
                     userbalance.balance += a.money
                     userbalance.save()
+                    u_mes= UserMessage() #邀请注册成功后消息
+                    u_mes.status=0
+                    u_mes.user=user
+                    if a.invitee_one != 0:
+                        u_mes.message_id = 1 #邀请t1消息
+                    else:
+                        u_mes.message_id = 2 #邀请t2消息
+                    u_mes.save()
 
             # 注册送HAND币
             if user.is_money == 0:
@@ -1412,6 +1420,11 @@ class UserRechargeView(ListCreateAPIView):
                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
                                            rest=user_reward.balance, sources=4)
                 reward_detail.save()
+                u_ms = UserMessage() #活动消息通知
+                u_ms.status = 0
+                u_ms.user_id = uuid
+                u_ms.message = 3 #消息3 充值活动奖励情况
+                u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
@@ -1466,7 +1479,7 @@ class CoinOperateDetailView(RetrieveAPIView):
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
-        except coin.DoesNotExist or item.DoesNotExist:
+        except Exception:
             raise
         serialize = CoinOperateSerializer(item)
         return self.response({'code': 0, 'data': serialize.data})
@@ -1485,7 +1498,7 @@ class VersionUpdateView(RetrieveAPIView):
         else:
             type = 0
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
-        if len(versions) == 0:
+        if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
         else:
             last_version = versions.order_by('-create_at')[0]
@@ -1521,7 +1534,7 @@ class ImageUpdateView(CreateAPIView):
         uuid = request.user.id
         try:
             user = User.objects.get(pk=uuid)
-        except user.DoesNotExist:
+        except Exception:
             raise
         image_name = temp_img.image.name
         avatar_url = ''.join([MEDIA_DOMAIN_HOST, '/', image_name])
