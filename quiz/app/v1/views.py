@@ -130,7 +130,8 @@ class RecordsListView(ListCreateAPIView):
                                                  roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            return Record.objects.filter(user_id=user_id).order_by('-created_at')
+            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+            return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -448,7 +449,7 @@ class BetView(ListCreateAPIView):
         # print("coins====================", type(round(Decimal(coins), 2)))
 
         # 调整赔率
-        Option.objects.change_odds(options.rule_id)
+        Option.objects.change_odds(options.rule_id, coin_id)
 
         record = Record()
         record.user = user

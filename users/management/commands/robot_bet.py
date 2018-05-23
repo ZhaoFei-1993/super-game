@@ -36,6 +36,8 @@ class Command(BaseCommand):
 
     bet_times = 20
 
+    robot_bet_change_odds = False
+
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取当天随机注册用户量
@@ -109,36 +111,37 @@ class Command(BaseCommand):
             record.source = Record.CONSOLE
             record.save()
 
-            # 获取奖池总数
-            pool_sum = Record.objects.filter(rule=rule).aggregate(Sum('bet'))
-            pool = float(pool_sum['bet__sum'])
+            if self.robot_bet_change_odds is False:
+                # 获取奖池总数
+                pool_sum = Record.objects.filter(rule=rule).aggregate(Sum('bet'))
+                pool = float(pool_sum['bet__sum'])
 
-            # 获取各选项产出猜币数
-            option_pays = Record.objects.filter(rule=rule).values('option_id').annotate(
-                pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
-            pays = []
-            tmp_idx = 0
-            for opt in options:
-                pays.append(0)
-                for op in option_pays:
-                    if opt.id == op['option_id']:
-                        pays[tmp_idx] = op['pool_sum']
-                tmp_idx += 1
+                # 获取各选项产出猜币数
+                option_pays = Record.objects.filter(rule=rule).values('option_id').annotate(
+                    pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
+                pays = []
+                tmp_idx = 0
+                for opt in options:
+                    pays.append(0)
+                    for op in option_pays:
+                        if opt.id == op['option_id']:
+                            pays[tmp_idx] = op['pool_sum']
+                    tmp_idx += 1
 
-            coin_value = CoinValue.objects.filter(coin_id=club.coin_id).order_by('-value')
-            max_wager = int(coin_value[0].value)
-            require_coin = max_wager * self.bet_times
-            g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
-            g.bet(pool, pays)
-            odds = g.get_oddses()
+                coin_value = CoinValue.objects.filter(coin_id=club.coin_id).order_by('-value')
+                max_wager = int(coin_value[0].value)
+                require_coin = max_wager * self.bet_times
+                g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
+                g.bet(pool, pays)
+                odds = g.get_oddses()
 
-            # 更新选项赔率
-            idx = 0
-            for option in options:
-                option.odds = odds[idx]
-                option.save()
+                # 更新选项赔率
+                idx = 0
+                for option in options:
+                    option.odds = odds[idx]
+                    option.save()
 
-                idx += 1
+                    idx += 1
 
             # 用户减少对应币持有数
             user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
