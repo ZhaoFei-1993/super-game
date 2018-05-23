@@ -44,7 +44,7 @@ class AndroidSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_create_at(obj):
-        create_at = obj.create_at.strftime("%Y-%m-%d %H:%M:%S")
+        # create_at = obj.create_at.strftime("%Y-%m-%d %H:%M:%S")
         # create_time = timezone.localtime(obj.create_at)
         create_time = obj.create_at
         create_at = create_time.strftime("%Y-%m-%d %H:%M:%S")
