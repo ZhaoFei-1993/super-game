@@ -35,8 +35,11 @@ class Game(object):
         min_odds = min(self._oddses)
         for i, pay in enumerate(pays):
             supple = pay - self._release_factor * pool
+            print('supple = ', supple)
 
             delta = .01 * max_odds / min_odds
+            print('delta = ', delta)
+
             # 庄家赔钱的选项，通过减少赔率让大家少买
             if supple > self._max_wager:
                 odds = self._oddses[i] - delta
