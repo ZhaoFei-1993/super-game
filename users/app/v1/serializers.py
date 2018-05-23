@@ -81,7 +81,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # 电话号码
-        integral = round(float(obj.integral), 3)
+        integral = normalize_fraction(obj.integral)
         return integral
 
     def get_is_user(self, obj):  # 电话号码
@@ -160,7 +160,7 @@ class DailySerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_rewards(obj):  # 电话号码
-        rewards = round(float(obj.rewards), 3)
+        rewards = normalize_fraction(obj.rewards)
         return rewards
 
     def get_is_sign(self, obj):  # 消息类型
@@ -319,12 +319,13 @@ class UserCoinSerialize(serializers.ModelSerializer):
     min_present = serializers.SerializerMethodField()  # 提现限制最小金额
     service_charge = serializers.SerializerMethodField()  # 提现手续费
     service_coin = serializers.SerializerMethodField()  # 用于提现的币种
+    coin_order = serializers.IntegerField(source='coin.coin_order') #币种顺序
 
     class Meta:
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "service_charge", "service_coin",
-                  "min_present", "recent_address")
+                  "min_present", "coin_order", "recent_address")
 
     @staticmethod
     def get_balance(obj):
@@ -339,20 +340,26 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': round(float(s), 3)
+                    'value': normalize_fraction(s)
                 }
             )
         return data
 
     @staticmethod
     def get_coin_name(obj):  # 交易所币名
-        list = Coin.objects.get(pk=obj.coin.id)
+        try:
+            list = Coin.objects.get(pk=obj.coin.id)
+        except Exception:
+            return ''
         # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
         return list.name
 
     @staticmethod
     def get_icon(obj):  # 代币头像
-        list = Coin.objects.get(pk=obj.coin.id)
+        try:
+            list = Coin.objects.get(pk=obj.coin.id)
+        except Exception:
+            return ''
         title = list.icon
         return title
 
@@ -389,7 +396,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         try:
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
-            return 0
+            return ''
         fee = normalize_fraction(coin_out.value)
         return fee
 
@@ -398,7 +405,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         try:
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
-            return 0
+            return ''
         name = coin_out.coin_payment.name
         return name
 
@@ -448,29 +455,41 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_address_name(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
-            return item.address_name
+            items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')
+            if items.exists():
+                item = items[0]
+                return item.address_name
+            else:
+                return ''
         else:
             return ''
 
     @staticmethod
     def get_status(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
-            status = item.TYPE_CHOICE[int(item.status)][1]
-            return status
+            items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')
+            if items.exists():
+                item = items[0]
+                status = item.TYPE_CHOICE[int(item.status)][1]
+                return status
+            else:
+                return ''
         else:
             return '充值成功'
 
     @staticmethod
     def get_status_code(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
-            status = item.TYPE_CHOICE[int(item.status)][0]
-            return status
+            items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')
+            if items.exists():
+                item = items[0]
+                status = item.TYPE_CHOICE[int(item.status)][0]
+                return status
+            else:
+                return ''
         else:
             return ''
 
@@ -497,7 +516,10 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_icon(obj):
-        icons = Coin.objects.get(name=obj.coin_name)
+        try:
+            icons = Coin.objects.get(name=obj.coin_name)
+        except Exception:
+            return ''
         return icons.icon
 
 
@@ -517,5 +539,5 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         if prize_number == 0:
             prize_number = ""
         else:
-            prize_number =round(float(prize_number), 3)
+            prize_number = normalize_fraction(prize_number)
         return prize_number

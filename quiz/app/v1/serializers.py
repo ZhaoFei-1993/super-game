@@ -10,6 +10,7 @@ from chat.models import Club
 from api import settings
 from django.db.models import Q
 import pytz
+from utils.functions import normalize_fraction
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -112,7 +113,7 @@ class QuizSerialize(serializers.ModelSerializer):
         total_coin = 0
         for coin in record:
             total_coin = total_coin + coin.bet
-        total_coin = round(float(total_coin), 3)
+        total_coin = normalize_fraction(total_coin)
         return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
@@ -184,7 +185,7 @@ class RecordSerialize(serializers.ModelSerializer):
         option_info = Option.objects.get(pk=obj.option_id)
         rule_list = Rule.objects.get(pk=option_info.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-        my_option = my_rule + ":" + option_info.option + "/" + str(option_info.odds)
+        my_option = my_rule + ":" + option_info.option + "/" + str(normalize_fraction(obj.odds))
         data = []
         data.append({
             'my_option': my_option,  # 我的选项
@@ -212,7 +213,7 @@ class RecordSerialize(serializers.ModelSerializer):
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
-            earn_coin = round(float(obj.earn_coin), 3)
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin))
         return earn_coin
 
     @staticmethod
