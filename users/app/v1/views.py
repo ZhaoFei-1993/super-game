@@ -188,6 +188,11 @@ class UserRegister(object):
                 user_balance.save()
                 user.is_money = 1
                 user.save()
+                r_msg = UserMessage()  # 注册送hand消息
+                r_msg.status = 0
+                r_msg.user = user
+                r_msg.message_id = 5
+                r_msg.save()
         return token
 
     @transaction.atomic()
@@ -1394,7 +1399,7 @@ class UserRechargeView(ListCreateAPIView):
         uuid = request.user.id
         try:
             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        except user_coin.DoesNotExist:
+        except Exception:
             raise
         recharge = Decimal(request.data.get('recharge'))
         if recharge <= 0:
