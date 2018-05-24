@@ -23,7 +23,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction
+    message_sign, amount, value_judge, resize_img, normalize_fraction, genarate_plist
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import re
@@ -1056,7 +1056,7 @@ class PresentationListView(ListAPIView):
         c_id = int(self.kwargs['c_id'])
         try:
             coin = Coin.objects.get(id=c_id)
-        except coin.DoesNotExist:
+        except Exception:
             raise
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
@@ -1507,7 +1507,13 @@ class VersionUpdateView(RetrieveAPIView):
             return self.response({'code': 0, 'is_new': 0})
         else:
             serialize = AndroidSerializer(last_version)
-            return self.response({'code': 0, 'is_new': 1, 'data': serialize.data})
+            if type == 1:
+                data = serialize.data
+                ul_url = data['upload_url'].rsplit('/', 1)[0] + '/version_%s_IOS.plist' % last_version.version
+                data['upload_url'] = ul_url
+            else:
+                data = serialize.data
+            return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
 class ImageUpdateView(CreateAPIView):

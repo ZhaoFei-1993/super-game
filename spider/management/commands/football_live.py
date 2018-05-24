@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import os
 import requests
 import json
 from api.settings import BASE_DIR
 import time, sched
 from quiz.models import Quiz
+import datetime
 from rq import Queue
 from redis import Redis
 from quiz.consumers import quiz_send_score, quiz_send_football_time
@@ -62,8 +63,8 @@ def get_live_data():
                 for root, sub_dirs, files in os.walk(cache_dir + '/' + time):
                     files = files
 
-                redis_conn = Redis()
-                q = Queue(connection=redis_conn)
+                # redis_conn = Redis()
+                # q = Queue(connection=redis_conn)
 
                 if cache_name not in files:
                     with open(cache_name, 'w+') as f:
@@ -93,13 +94,13 @@ def get_live_data():
                                     f.write(data.split(',')[2] + ',')
                                     f.write(str(game_status))
 
-                            q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+                            # q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                         elif data_list['status'] == 'Fixture':
                             game_status = 3
                             quiz.status = quiz.PUBLISHING
 
-                            q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+                            # q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                         elif data_list['status'] == 'Playing':
                             game_status = 0
@@ -113,7 +114,7 @@ def get_live_data():
                                     f.write(data.split(',')[1] + ',')
                                     f.write(data.split(',')[2] + ',')
                                     f.write(str(game_status))
-                                q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                # q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
 
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
@@ -133,11 +134,11 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                    # q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
                         quiz.save()
 
                         # 比分推送
-                        q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                        # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                         print(quiz.host_team)
                         print(quiz.guest_team)
@@ -189,13 +190,13 @@ def get_live_data():
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
 
-                                q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+                                # q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                             elif data_list['status'] == 'Fixture':
                                 game_status = 3
                                 quiz.status = quiz.PUBLISHING
 
-                                q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
+                                # q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                             elif data_list['status'] == 'Playing':
                                 game_status = 0
@@ -209,8 +210,8 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    q.enqueue(quiz_send_football_time, quiz.id, game_status,
-                                              int(data_list['minute']) * 60)
+                                    # q.enqueue(quiz_send_football_time, quiz.id, game_status,
+                                    #           int(data_list['minute']) * 60)
 
                                     quiz.host_team_score = host_team_score
                                     quiz.guest_team_score = guest_team_score
@@ -230,12 +231,12 @@ def get_live_data():
                                             f.write(data.split(',')[1] + ',')
                                             f.write(data.split(',')[2] + ',')
                                             f.write(str(game_status))
-                                        q.enqueue(quiz_send_football_time, quiz.id, game_status,
-                                                  int(data_list['minute']) * 60)
+                                        # q.enqueue(quiz_send_football_time, quiz.id, game_status,
+                                        #           int(data_list['minute']) * 60)
                             quiz.save()
 
                             # 比分推送
-                            q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
+                            # q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                             print(quiz.host_team)
                             print(quiz.guest_team)
@@ -250,11 +251,26 @@ def get_live_data():
         print('Error', e.args)
 
 
+def live_football():
+    quiz_list = Quiz.objects.filter(
+        status__in=[Quiz.PUBLISHING], category__parent_id=2).order_by('begin_at')
+    # print(Quiz.objects.filter(category__parent_id=2, status__in=[Quiz.REPEALED, Quiz.HALF_TIME]))
+    if Quiz.objects.filter(category__parent_id=2,
+                           status__in=[Quiz.REPEALED, Quiz.HALF_TIME]).exists() or quiz_list.filter(
+            begin_at__lt=datetime.datetime.now()).exists():
+        get_live_data()
+    else:
+        print('no match！！！')
+        raise CommandError('no match！！！')
+
+
 class Command(BaseCommand):
     help = "爬取足球直播"
 
     def handle(self, *args, **options):
-        try:
-            timming_exe(get_live_data, inc=2)
-        except KeyboardInterrupt as e:
-            pass
+        # try:
+        #     timming_exe(get_live_data, inc=2)
+        # except KeyboardInterrupt as e:
+        #     pass
+
+        live_football()

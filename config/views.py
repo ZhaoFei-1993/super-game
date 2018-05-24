@@ -9,7 +9,7 @@ from rest_framework import status
 from django.http import JsonResponse
 
 from api.settings import MEDIA_DOMAIN_HOST
-from utils.functions import value_judge
+from utils.functions import value_judge, genarate_plist
 from base.exceptions import ParamErrorException
 import base.code as error_code
 from base.backend import ListCreateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
@@ -97,7 +97,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             try:
                 item = AndroidVersion.objects.get(id=id_x)
             except Exception:
-                JsonResponse({'Error':'Instance Not Exist!'}, status=status.HTTP_400_BAD_REQUEST)
+                JsonResponse({'Error': 'Instance Not Exist!'}, status=status.HTTP_400_BAD_REQUEST)
             serialize = AndroidSerializer(item)
             return self.response({'status': 200, 'results': serialize.data})
         else:
@@ -105,7 +105,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
 
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
-        values = value_judge(request, 'files', 'is_update', 'version','comment','mobile_type')
+        values = value_judge(request, 'files', 'is_update', 'version', 'comment', 'mobile_type')
         if values == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         files = request.data.get('files').split('\\')[-1]
@@ -124,10 +124,12 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         else:
             config.version = version
         config.is_update = is_update
-        config.comment=comment
-        config.mobile_type=type
+        config.comment = comment
+        config.mobile_type = type
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
+        if type ==1:
+            genarate_plist(version, config.upload_url)
         config.save()
         return self.response({"code": 0})
 
@@ -139,12 +141,12 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         try:
             item = AndroidVersion.objects.get(id=index)
         except item.DoesNotExist:
-            JsonResponse({'Error':'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+            JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
         mobile_type = request.data.get('mobile_type')
-        if str(mobile_type).upper()=="IOS":
-            type=1
+        if str(mobile_type).upper() == "IOS":
+            type = 1
         else:
-            type=0
+            type = 0
         if "files" in request.data:
             files = request.data.get("files")
             if files:
@@ -184,28 +186,27 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
     系统设置->App设置
     """
 
-
     def retrieve(self, request, *args, **kwargs):
         if "reg_type" not in request.query_params:
             return JsonResponse({"Error": "ParamError"}, status=status.HTTP_400_BAD_REQUEST)
         r_type = int(request.query_params.get('reg_type'))
         others = UserSettingOthors.objects.filter(reg_type=r_type)
         if not others.exists():
-            other_data={
+            other_data = {
                 "about": '',
                 "helps": '',
                 "sv_contractus": '',
                 "pv_contractus": ''
             }
-            exist=0
+            exist = 0
         else:
-            other_data={
+            other_data = {
                 "about": others[0].about,
                 "helps": others[0].helps,
                 "sv_contractus": others[0].sv_contractus,
                 "pv_contractus": others[0].pv_contractus
             }
-            exist=1
+            exist = 1
         seletions = {}
         for v in User.REGISTER_TYPE:
             x = str(v[0])
@@ -214,8 +215,8 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
         if not system_m.exists():
             config_data = 0
         else:
-            config_data={"system_maintenance": system_m[0].configs}
-        results = dict(**config_data,**other_data)
+            config_data = {"system_maintenance": system_m[0].configs}
+        results = dict(**config_data, **other_data)
         data = {
             "seletions": seletions,
             'is_exist': exist,
@@ -226,15 +227,15 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         fields_in = ('reg_type', 'system_maintenance', 'about', 'helps', 'sv_contractus', 'pv_contractus')
-        value =[x for x in request.data.keys() if x in fields_in]
+        value = [x for x in request.data.keys() if x in fields_in]
         if len(value) != len(fields_in):
-            lost_fields = list(set(fields_in)-set(value))
+            lost_fields = list(set(fields_in) - set(value))
             losts = ','.join(lost_fields)
-            return JsonResponse({'Error':'Lost Fields: %s' % losts}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'Error': 'Lost Fields: %s' % losts}, status=status.HTTP_400_BAD_REQUEST)
         values = dict(request.data)
         config = Config.objects.filter(key="system_maintenance")
         if config.exists():
-            if config[0].configs!=int(values["system_maintenance"]):
+            if config[0].configs != int(values["system_maintenance"]):
                 config[0].configs = int(values["system_maintenance"])
         values.pop("system_maintenance")
         reg_type = int(values['reg_type'])
@@ -242,12 +243,6 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
         others = UserSettingOthors(**values)
         others.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
-
-
-
-
-
-
 
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
@@ -257,7 +252,7 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
         try:
             others = UserSettingOthors.objects.get(reg_type=r_type)
         except Exception:
-            return JsonResponse({'Error':'No UserSettingOthors data'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'Error': 'No UserSettingOthors data'}, status=status.HTTP_400_BAD_REQUEST)
         filed_s = ["system_maintenance", "about", "helps", "sv_contractus", "pv_contractus"]
         for key, value in request.data.items():
             if key not in filed_s:
@@ -266,7 +261,7 @@ class AppSetting(RetrieveUpdateDestroyAPIView, ):
                 try:
                     sm = Config.objects.get(key='system_maintenance')
                 except Exception:
-                    return JsonResponse({'Error':'No Config data'}, status=status.HTTP_400_BAD_REQUEST)
+                    return JsonResponse({'Error': 'No Config data'}, status=status.HTTP_400_BAD_REQUEST)
                 sm.configs = int(value)
                 sm.save()
             else:

@@ -303,11 +303,15 @@ class PresentationSerialize(serializers.ModelSerializer):
     提现记录
     """
     created_at = serializers.SerializerMethodField()
+    coin_name = serializers.CharField(source="coin.name")
+    user_name = serializers.CharField(source="user.username")
+    telephone = serializers.CharField(source="user.telephone")
 
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user", "coin", "amount", "address", "address_name", "rest", "created_at", "updated_at", "status")
+            "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
+            "created_at", "feedback", "status")
 
     @staticmethod
     def get_created_at(obj):

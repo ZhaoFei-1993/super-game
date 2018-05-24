@@ -32,6 +32,7 @@ class Quiz(models.Model):
     ENDED = 3  # 已结束
     PUBLISHING_ANSWER = 4  # 已发布答案
     BONUS_DISTRIBUTION = 5  # 已分配奖金
+    DELAY = 6  # 推迟比赛
 
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
@@ -47,6 +48,7 @@ class Quiz(models.Model):
         (REPEALED, "比赛中"),
         (HALF_TIME, "中场休息"),
         (ENDED, "已结束"),
+        (DELAY, "比赛推迟"),
         (PUBLISHING_ANSWER, "已发布答案"),
         (BONUS_DISTRIBUTION, "已分配奖金"),
         (TITLE_FIRST_AUDIT, "题目初审"),
@@ -120,6 +122,8 @@ class Rule(models.Model):
     guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
                                           default=0.00)
     estimate_score = models.DecimalField(verbose_name="预估分数，大小分玩法适用", max_digits=10, decimal_places=2, default=0.00)
+    max_odd = models.DecimalField(verbose_name="最大赔率", max_digits=10, decimal_places=2, default=0.00)
+    min_odd = models.DecimalField(verbose_name="最小赔率", max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
         ordering = ['-id']
