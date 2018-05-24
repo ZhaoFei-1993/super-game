@@ -1056,7 +1056,7 @@ class PresentationListView(ListAPIView):
         c_id = int(self.kwargs['c_id'])
         try:
             coin = Coin.objects.get(id=c_id)
-        except coin.DoesNotExist:
+        except Exception:
             raise
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
@@ -1511,6 +1511,10 @@ class VersionUpdateView(RetrieveAPIView):
                 data = serialize.data
                 ul_url = data['upload_url'].rsplit('/', 1)[0] + '/version_%s_IOS.plist' % last_version.version
                 data['upload_url'] = ul_url
+                if data['is_update']:
+                    data['is_update']='1'
+                else:
+                    data['is_update'] = '0'
             else:
                 data = serialize.data
             return self.response({'code': 0, 'is_new': 1, 'data': data})

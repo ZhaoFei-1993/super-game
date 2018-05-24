@@ -290,11 +290,15 @@ class PresentationSerialize(serializers.ModelSerializer):
     提现记录
     """
     created_at = serializers.SerializerMethodField()
+    coin_name = serializers.CharField(source="coin.name")
+    user_name = serializers.CharField(source="user.username")
+    telephone = serializers.CharField(source="user.telephone")
 
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user", "coin", "amount", "address", "address_name", "rest", "created_at", "updated_at", "status")
+            "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
+            "created_at", "feedback", "status")
 
     @staticmethod
     def get_created_at(obj):
@@ -319,7 +323,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
     min_present = serializers.SerializerMethodField()  # 提现限制最小金额
     service_charge = serializers.SerializerMethodField()  # 提现手续费
     service_coin = serializers.SerializerMethodField()  # 用于提现的币种
-    coin_order = serializers.IntegerField(source='coin.coin_order') #币种顺序
+    coin_order = serializers.IntegerField(source='coin.coin_order')  # 币种顺序
 
     class Meta:
         model = UserCoin
@@ -456,7 +460,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     def get_address_name(obj):
         if int(obj.sources) == 2:
             items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')
+                                                    coin__name=obj.coin_name).order_by('-created_at')
             if items.exists():
                 item = items[0]
                 return item.address_name
@@ -469,7 +473,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     def get_status(obj):
         if int(obj.sources) == 2:
             items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')
+                                                    coin__name=obj.coin_name).order_by('-created_at')
             if items.exists():
                 item = items[0]
                 status = item.TYPE_CHOICE[int(item.status)][1]
@@ -483,7 +487,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     def get_status_code(obj):
         if int(obj.sources) == 2:
             items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')
+                                                    coin__name=obj.coin_name).order_by('-created_at')
             if items.exists():
                 item = items[0]
                 status = item.TYPE_CHOICE[int(item.status)][0]
