@@ -221,6 +221,7 @@ def get_data_info(url):
                     for i in range(4, 8):
                         # 胜负
                         if i == 4:
+                            odds_pool_mnl = []
                             num = 0
                             rule = Rule()
                             rule.quiz = quiz
@@ -232,12 +233,19 @@ def get_data_info(url):
                                 option.rule = rule
                                 option.option = dt[1]
                                 option.odds = dt[2]
+                                odds_pool_mnl.append(float(dt[2]))
                                 option.flag = dt[0]
                                 num = num + 1
                                 option.order = num
                                 option.save()
+                            rule.max_odd = max(odds_pool_mnl)
+                            rule.min_odd = min(odds_pool_mnl)
+                            rule.save()
+                            odds_pool_mnl.clear()
+
                         # 让分胜负
                         elif i == 5:
+                            odds_pool_hdc = []
                             num = 0
                             rule = Rule()
                             rule.quiz = quiz
@@ -248,6 +256,7 @@ def get_data_info(url):
                                 option.rule = rule
                                 option.option = dt[1]
                                 option.odds = dt[3]
+                                odds_pool_hdc.append(float(dt[3]))
                                 option.flag = dt[0]
                                 num = num + 1
                                 option.order = num
@@ -259,9 +268,14 @@ def get_data_info(url):
                                     rule.home_let_score = dt[2][1:]
                                 rule.tips = '让分胜负'
                                 rule.save()
+                            rule.max_odd = max(odds_pool_hdc)
+                            rule.min_odd = min(odds_pool_hdc)
+                            rule.save()
+                            odds_pool_hdc.clear()
 
                         # 大小分
                         elif i == 6:
+                            odds_pool_hilo = []
                             num = 0
                             rule = Rule()
                             rule.quiz = quiz
@@ -273,6 +287,7 @@ def get_data_info(url):
                                 option.rule = rule
                                 option.option = dt[1].replace('+', '')
                                 option.odds = dt[3]
+                                odds_pool_hilo.append(float(dt[3]))
                                 option.flag = dt[0]
                                 num = num + 1
                                 option.order = num
@@ -280,8 +295,14 @@ def get_data_info(url):
 
                                 rule.estimate_score = dt[2]
                                 rule.save()
+                            rule.max_odd = max(odds_pool_hilo)
+                            rule.min_odd = min(odds_pool_hilo)
+                            rule.save()
+                            odds_pool_hilo.clear()
+
                         # 胜分差
                         elif i == 7:
+                            odds_pool_wnm = []
                             num_h = 0
                             num_a = 0
                             rule = Rule()
@@ -294,6 +315,7 @@ def get_data_info(url):
                                 option.rule = rule
                                 option.option = dt[1][2:]
                                 option.odds = dt[2]
+                                odds_pool_wnm.append(float(dt[2]))
                                 option.option_type = dt[1][0:2]
                                 option.flag = dt[0]
                                 if dt[1][0:2] == '主胜':
@@ -303,6 +325,10 @@ def get_data_info(url):
                                     num_a = num_a + 1
                                     option.order = num_a
                                 option.save()
+                            rule.max_odd = max(odds_pool_wnm)
+                            rule.min_odd = min(odds_pool_wnm)
+                            rule.save()
+                            odds_pool_wnm.clear()
                 else:
                     print('已经存在')
                 # ------------------------------------------------------------------------------------------------------
