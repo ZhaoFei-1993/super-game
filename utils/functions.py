@@ -9,11 +9,14 @@ from random import Random
 import time
 import pytz
 import datetime
+import plistlib
 from PIL import Image
 from decimal import Decimal
 from django.conf import settings
 from django.db.models import Sum
 from base.exceptions import ParamErrorException
+from api.settings import  MEDIA_ROOT
+import os
 from django.db.models import Q
 from config.models import Admin_Operation
 from quiz.models import Record
@@ -270,3 +273,24 @@ def normalize_fraction(d):
     normalized = dd.normalize()
     sign, digit, exponent = normalized.as_tuple()
     return normalized if exponent <= 0 else normalized.quantize(1)
+
+
+
+def genarate_plist(version, filepath):
+    """
+    生成IOS plist文件
+    :param version: 版本号
+    :param filepath: ipa文件保存路径
+    :return:
+    """
+    temp_x ={'items': [{'assets': [{'kind': 'software-package',
+                            'url': filepath}],
+                'metadata': {'bundle-identifier': 'iPhone Developer: shenghong liu (K7AC5W2PGD)',
+                             'bundle-version': version,
+                             'kind': 'software',
+                             'title': u'\u8d85\u7ea7\u6e38\u620f'}}]}
+    save_file = os.path.join(MEDIA_ROOT ,'apps/IOS', 'version_%s_IOS.plist' % version)
+    with open(save_file, 'wb') as fp:
+        plistlib.dump(temp_x, fp)
+
+
