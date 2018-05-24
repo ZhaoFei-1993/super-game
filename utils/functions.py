@@ -123,9 +123,7 @@ def sign_confirmation(user_id):
     sign_date = user_sign.sign_date.strftime("%Y%m%d%H%M%S")
     today = datetime.date.today()
     today_time = today.strftime("%Y%m%d%H%M%S")
-    if int(sign_date) > int(today_time):
-        is_sign = 1
-    elif int(sign_date) == int(today_time):
+    if int(sign_date) >= int(today_time):
         is_sign = 1
     else:
         is_sign = 0

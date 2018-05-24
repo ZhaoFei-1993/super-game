@@ -782,11 +782,17 @@ class MessageListView(ListAPIView, DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserMessage.objects.filter(Q(user_id=user), Q(status=1) | Q(status=0)).order_by("-created_at")
+        type = self.request.parser_context['kwargs']['type']
+        list = ""
+        if int(type) == 1:
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1) | Q(message__type=3),
+                                              Q(status=1) | Q(status=0)).order_by("-created_at")
+        elif int(type) == 2:
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2),
+                                              Q(status=1) | Q(status=0)).order_by("-created_at")
         return list
 
     def list(self, request, *args, **kwargs):
-        type = kwargs['type']
         user = self.request.user.id
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
@@ -794,12 +800,6 @@ class MessageListView(ListAPIView, DestroyAPIView):
         system_sign = message_sign(user, 1)
         public_sign = message_sign(user, 2)
         for list in items:
-            try:
-                types = Message.objects.get(pk=list["message"])
-            except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-            if int(types.type) != int(type):
-                continue
             data.append({
                 "message_id": list["message"],
                 'type': list["type"],
