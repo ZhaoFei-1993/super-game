@@ -2,7 +2,7 @@
 from django.db import models
 from wc_auth.models import Admin
 from mptt.models import MPTTModel, TreeForeignKey
-from users.models import Coin, User
+from users.models import Coin, User, CoinValue
 import reversion
 from django.conf import settings
 from django.db.models import Sum, F, FloatField
@@ -32,6 +32,7 @@ class Quiz(models.Model):
     ENDED = 3  # 已结束
     PUBLISHING_ANSWER = 4  # 已发布答案
     BONUS_DISTRIBUTION = 5  # 已分配奖金
+    DELAY = 6  # 推迟比赛
 
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
@@ -47,6 +48,7 @@ class Quiz(models.Model):
         (REPEALED, "比赛中"),
         (HALF_TIME, "中场休息"),
         (ENDED, "已结束"),
+        (DELAY, "比赛推迟"),
         (PUBLISHING_ANSWER, "已发布答案"),
         (BONUS_DISTRIBUTION, "已分配奖金"),
         (TITLE_FIRST_AUDIT, "题目初审"),
@@ -129,32 +131,34 @@ class Rule(models.Model):
 class OptionManager(models.Manager):
     """
     选项操作
-    TODO: 不同币的俱乐部不同的配置值
     """
-    require_coin = 1
-    max_wager = 0.03
+    require_coin_times = 1000   # 最大可赔倍数
 
-    def get_odds_config(self, coin):
+    def get_odds_config(self, coin_id):
         """
         不同币种不同配置：最大可赔、最大下注数
-        :return:
+        :param  coin_id 货币ID
+        :return: require_coin: float, max_wager: float
         """
+        bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
+        max_bet_value = float(bet_max.value)
 
-    def change_odds(self, rule_id):
+        return max_bet_value * self.require_coin_times, max_bet_value
+
+    def change_odds(self, rule_id, coin_id):
         """
         变更赔率
         :param rule_id
+        :param coin_id
         :return:
         """
-        rule = Rule.objects.get(pk=rule_id)
-
         options = Option.objects.filter(rule_id=rule_id).order_by('order')
         rates = []
         for o in options:
             rates.append(float(o.odds))
 
         # 获取奖池总数
-        pool_sum = Record.objects.filter(quiz_id=rule.quiz_id).aggregate(Sum('bet'))
+        pool_sum = Record.objects.filter(rule_id=rule_id).aggregate(Sum('bet'))
         pool = pool_sum['bet__sum']
         if pool is None:
             pool = 0
@@ -162,7 +166,7 @@ class OptionManager(models.Manager):
             pool = float(pool)
 
         # 获取各选项产出猜币数
-        option_pays = Record.objects.filter(quiz_id=rule.quiz_id).values('option_id').annotate(
+        option_pays = Record.objects.filter(rule_id=rule_id).values('option_id').annotate(
             pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
         pays = []
         tmp_idx = 0
@@ -173,10 +177,11 @@ class OptionManager(models.Manager):
                     pays[tmp_idx] = op['pool_sum']
             tmp_idx += 1
 
-        g = Game(settings.BET_FACTOR, self.require_coin, self.max_wager, rates)
+        require_coin, max_wager = self.get_odds_config(coin_id)
+
+        g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
         g.bet(pool, pays)
         odds = g.get_oddses()
-        print('odds = ', odds)
 
         # 更新选项赔率
         idx = 0
