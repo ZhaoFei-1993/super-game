@@ -178,12 +178,14 @@ class DailySerialize(serializers.ModelSerializer):
             daily = DailyLog()
             sign_date = str(0)
 
+        is_sign = 0
         if sign_date < yesterday_format:  # 判断昨天签到没有
             is_sign = 0
             daily.number = 1
-        else:
+            daily.save()
+        elif daily.number >= obj. days:
             is_sign = 1
-        daily.save()
+
         return is_sign
 
     def get_is_selected(self, obj):
