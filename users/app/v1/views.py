@@ -1016,9 +1016,9 @@ class UserPresentationView(CreateAPIView):
         if coin.name != 'HAND':
             # if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
             #     user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
-            user_coin.balance = user_coin.balance - Decimal(p_amount)
+            user_coin.balance = user_coin.balance - Decimal(str(p_amount))
         else:
-            user_coin.balance -= Decimal(p_amount)
+            user_coin.balance -= Decimal(str(p_amount))
             if coin_eth.balance >= coin_out.value:
                 coin_eth.balance -= coin_out.value
                 coin_eth.save()
