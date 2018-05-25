@@ -2,9 +2,11 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation
 from quiz.models import Record
 from datetime import datetime
+from django.db.models import Q
+from utils.functions import normalize_fraction
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -189,7 +191,7 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
     def get_icon(obj):
         try:
             list = Coin.objects.get(pk=obj.coin_id)
-        except list.DoesNotExist:
+        except Exception:
             return ''
         data = list.icon
         return data
@@ -198,7 +200,7 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
     def get_coin(obj):
         try:
             coin = Coin.objects.get(pk=obj.coin_id)
-        except coin.DoesNotExist:
+        except Exception:
             return ''
         data = str(obj.balance) + " " + str(coin.name)
         return data
@@ -207,7 +209,7 @@ class UserCoinSerializer(serializers.HyperlinkedModelSerializer):
     def get_username(obj):
         try:
             list = User.objects.get(pk=obj.user_id)
-        except list.DoesNotExist:
+        except Exception:
             return ''
         data = list.username
         return data
@@ -230,26 +232,94 @@ class CoinDetailSerializer(serializers.ModelSerializer):
         return created_time
 
 
-class InviterInfoSerializer(serializers.ModelSerializer):
-    source = serializers.CharField(source='user.source')
-    telephone = serializers.CharField(source='user.telephone')
-    nickname = serializers.CharField(source='user.nickname')
-    login_time = serializers.SerializerMethodField()
+# class InviterInfoSerializer(serializers.ModelSerializer):
+#     source = serializers.CharField(source='user.source')
+#     telephone = serializers.CharField(source='user.telephone')
+#     nickname = serializers.CharField(source='user.nickname')
+#     login_time = serializers.SerializerMethodField()
+#     created_at = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = LoginRecord
+#         fields = ("id", "user", "login_time", "ip", "source", "telephone", "nickname", "created_at")
+#
+#     @staticmethod
+#     def get_login_time(obj):
+#         if obj.login_time != None or obj.login_time == '':
+#             login_t = obj.login_time.strftime('%Y-%m-%d %H:%M')
+#             return login_t
+#         else:
+#             return ''
+#
+#     @staticmethod
+#     def get_created_at(obj):
+#         created_at = obj.user.created_at.strftime('%Y-%m-%d %H:%M')
+#         return created_at
+
+
+class UserAllSerializer(serializers.ModelSerializer):
     created_at = serializers.SerializerMethodField()
+    login_time = serializers.SerializerMethodField()
+    ip_address = serializers.SerializerMethodField()
+    inviter = serializers.SerializerMethodField()
+    inviter_id = serializers.SerializerMethodField()
+    invite_new = serializers.SerializerMethodField()
+    integral = serializers.SerializerMethodField()
 
     class Meta:
-        model = LoginRecord
-        fields = ("id", "user", "login_time", "ip", "source", "telephone", "nickname", "created_at")
-
-    @staticmethod
-    def get_login_time(obj):
-        if obj.login_time != None or obj.login_time == '':
-            login_t = obj.login_time.strftime('%Y-%m-%d %H:%M')
-            return login_t
-        else:
-            return ''
+        model = User
+        fields = (
+        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'integral', 'inviter', 'inviter_id',
+        'invite_new', 'status')
 
     @staticmethod
     def get_created_at(obj):
-        created_at = obj.user.created_at.strftime('%Y-%m-%d %H:%M')
-        return created_at
+        value = obj.created_at.strftime('%Y-%m-%d %H:%M')
+        return value
+
+    @staticmethod
+    def get_login_time(obj):
+        login_time = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        if not login_time.exists():
+            return ''
+        else:
+            return datetime.strftime(login_time[0].login_time, '%Y-%m-%d %H:%M')
+
+    @staticmethod
+    def get_ip_address(obj):
+        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        if not ip_address.exists():
+            return ''
+        else:
+            return ip_address[0].ip
+
+    @staticmethod
+    def get_inviter(obj):
+        try:
+            inv = UserInvitation.objects.get(invitee_one=obj.id)
+        except Exception:
+            return ''
+        try:
+            user = User.objects.get(id=inv.inviter_id)
+        except Exception:
+            return ''
+        return user.nickname
+
+    @staticmethod
+    def get_inviter_id(obj):
+        try:
+            inv = UserInvitation.objects.get(invitee_one=obj.id)
+        except Exception:
+            return ''
+        return inv.inviter_id
+
+    @staticmethod
+    def get_invite_new(obj):
+        invitee_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=obj).count()
+        invitee_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=obj).count()
+        return invitee_one + invitee_two
+
+    @staticmethod
+    def get_integral(obj):
+        integral = normalize_fraction(obj.integral)
+        return integral

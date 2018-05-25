@@ -66,6 +66,9 @@ class Command(BaseCommand):
             if len(transactions[address]) == 0:
                 continue
 
+            # 首次充值获得奖励
+            UserRecharge.objects.first_price(address_map_uid[address])
+
             valid_trans = 0
             for transaction in transactions[address]:
                 tx_id = transaction.txid

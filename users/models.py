@@ -3,6 +3,10 @@ from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
+from sms.models import Sms
+from datetime import datetime
+import time
+from decimal import Decimal
 
 
 class UserManager(BaseUserManager):
@@ -302,6 +306,51 @@ class UserMessage(models.Model):
         verbose_name = verbose_name_plural = "用户消息表"
 
 
+class UserRechargeManager(models.Manager):
+    """
+    用户充值操作
+    """
+
+    @staticmethod
+    def first_price(user_id):
+        """
+        首次充值奖励2888HAND币
+        活动送Hand币,活动时间在2018年6月1日-2018年7月13日
+        :return:
+        """
+        # 是否首次充值，根据user recharge表有无记录判断
+        is_first_recharge = UserRecharge.objects.filter(user_id=user_id).count()
+        if is_first_recharge > 0:
+            return True
+
+        # 判断是否在活动时间
+        start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+        end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+        now_time = time.mktime(datetime.now().timetuple())
+
+        coin_reward = 2888
+        if start_time <= now_time < end_time:
+            user_reward = UserCoin.objects.get(user_id=user_id, coin__name=Coin.HAND)
+            user_reward.balance += Decimal(coin_reward)
+            user_reward.save()
+
+            # 插入用户余额变更记录表
+            coin_detail = CoinDetail()
+            coin_detail.user_id = user_id
+            coin_detail.coin_name = 'HAND'
+            coin_detail.amount = '+' + str(coin_reward)
+            coin_detail.rest = user_reward.balance
+            coin_detail.sources = CoinDetail.ACTIVITY
+            coin_detail.save()
+
+            # 发送充值活动奖励消息
+            user_message = UserMessage()
+            user_message.status = UserMessage.UNREAD
+            user_message.user_id = user_id
+            user_message.message_id = 3
+            user_message.save()
+
+
 @reversion.register()
 class UserRecharge(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -315,6 +364,8 @@ class UserRecharge(models.Model):
     confirmations = models.IntegerField(verbose_name='确认数', default=0)
     txid = models.CharField(verbose_name='所在区块Hash', max_length=255, default=' ')
     trade_at = models.DateTimeField(verbose_name='交易时间', auto_now_add=True)
+
+    objects = UserRechargeManager()
 
     class Meta:
         ordering = ['-id']
@@ -342,6 +393,7 @@ class UserPresentation(models.Model):
     feedback = models.CharField(verbose_name="拒绝提现理由", max_length=255, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+    is_bill = models.BooleanField(verbose_name="是否已打款", default=False)
 
     class Meta:
         ordering = ['-id']
