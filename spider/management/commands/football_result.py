@@ -234,6 +234,33 @@ def handle_unusual_game(quiz_list):
             get_data_info(base_url, quiz.match_flag, result_data, host_team_score, guest_team_score)
 
 
+def cash_back(quiz):
+    # int_record = Record.objects.filter(quiz=quiz, roomquiz_id=1)
+    # platform_sum = 0
+    # personal_sum = 0
+    # profit = 0
+    # user_list = []
+    # for record in int_record:
+    #     platform_sum = platform_sum + record.bet
+    #     profit = profit + record.earn_coin
+    #     if record.user_id not in user_list:
+    #         user_list.append(record.user_id)
+    # if profit > 0:
+    #     for user in user_list:
+    #         gsg_back = profit * 0.02
+    #
+    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=2):
+    #     pass
+    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=3):
+    #     pass
+    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=4):
+    #     pass
+    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=5):
+    #     pass
+    pass
+
+
+
 class Command(BaseCommand):
     help = "爬取足球开奖结果"
 
@@ -264,6 +291,9 @@ class Command(BaseCommand):
                                                          guest_team=quiz.guest_team))
                     else:
                         get_data_info(base_url, quiz.match_flag)
+                        print(Quiz.objects.get(match_flag=quiz.match_flag).status)
+                        if Quiz.objects.get(match_flag=quiz.match_flag).status == Quiz.BONUS_DISTRIBUTION:
+                            cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
         else:
             print('暂无比赛需要开奖')
 

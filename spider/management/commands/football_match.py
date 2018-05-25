@@ -6,7 +6,7 @@ import re
 import requests
 import json
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Quiz, Rule, Option
+from quiz.models import Quiz, Rule, Option, Quiz_Odds_Log
 from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
@@ -336,7 +336,7 @@ def get_data_info(url):
                     except requests.ConnectionError as e:
                         print('Error', e.args)
                     # ------------------------------------------------------------------------------------------------------
-                    if Quiz.objects.filter(match_flag=match_id).first() is None:
+                    if Quiz.objects.filter(match_flag=match_id).exists() is not True:
                         quiz = Quiz()
                         quiz.match_flag = match_id
                         quiz.category = Category.objects.filter(name=league_abbr).first()
@@ -353,7 +353,6 @@ def get_data_info(url):
                         else:
                             pass
                         quiz.save()
-
                         for i in range(0, 4):
                             # 赛果
                             if i == 0:
@@ -483,6 +482,17 @@ def get_data_info(url):
                                 rule.min_odd = min(odds_pool_ttg)
                                 rule.save()
                                 odds_pool_ttg.clear()
+
+                        # 记录初始赔率
+                        quiz = Quiz.objects.get(match_flag=match_id)
+                        for rule in Rule.objects.filter(quiz=quiz):
+                            for option in Option.objects.filter(rule=rule):
+                                quiz_odds_log = Quiz_Odds_Log()
+                                quiz_odds_log.quiz = quiz
+                                quiz_odds_log.rule = rule
+                                quiz_odds_log.option = option.option
+                                quiz_odds_log.odds = option.odds
+                                quiz_odds_log.save()
                     else:
                         print('已经存在')
                     # --------------------------------------------------------------------------------------------------

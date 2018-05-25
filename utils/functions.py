@@ -265,25 +265,16 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
     img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image, quality=qua)
 
 
-def trunc(f, n):
-    s1, s2 = str(f).split('.')
-    if n == 0:
-        return s1
-    if n <= len(s2):
-        return s1 + '.' + s2[:n]
-    return s1 + '.' + s2 + '0' * (n - len(s2))
-
-
 # 去掉decimal类型数值后面的0
 def normalize_fraction(d, b):
-    d = trunc(d, b)
+    d = round(d, b)
     dd = Decimal(str(d))
     normalized = dd.normalize()
     sign, digit, exponent = normalized.as_tuple()
     return normalized if exponent <= 0 else normalized.quantize(1)
 
 
-def genarate_plist(version, filepath):
+def genarate_plist(version, file_path):
     """
     生成IOS plist文件
     :param version: 版本号
@@ -291,7 +282,7 @@ def genarate_plist(version, filepath):
     :return:
     """
     temp_x = {'items': [{'assets': [{'kind': 'software-package',
-                                     'url': filepath}],
+                                     'url': file_path}],
                          'metadata': {'bundle-identifier': 'iPhone Developer: shenghong liu (K7AC5W2PGD)',
                                       'bundle-version': version,
                                       'kind': 'software',

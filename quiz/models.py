@@ -244,3 +244,14 @@ class Record(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户下注表"
+
+
+class Quiz_Odds_Log(models.Model):
+    rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    option = models.CharField(verbose_name="选项值", max_length=20, default="")
+    odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "竞猜选项赔率记录表"
