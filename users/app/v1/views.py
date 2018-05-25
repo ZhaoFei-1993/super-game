@@ -900,7 +900,7 @@ class AssetView(ListAPIView):
                 'recent_address': list["recent_address"]
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 0)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 4)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
