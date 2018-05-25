@@ -144,7 +144,7 @@ class OptionManager(models.Manager):
         不同币种不同配置：最大可赔、最大下注数
         :param  coin_id 货币ID
         :param  max_rate 当前最大赔率
-        :return: require_coin: float, max_wager: float
+        :return: require_coin: Decimal, max_wager: float
         """
         bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
         max_bet_value = Decimal(bet_max.value)
