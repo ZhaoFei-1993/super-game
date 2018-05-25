@@ -342,8 +342,12 @@ class UserRechargeManager(models.Manager):
             coin_detail.sources = CoinDetail.ACTIVITY
             coin_detail.save()
 
-            # 发送用户消息
+            # 发送充值活动奖励消息
             user_message = UserMessage()
+            user_message.status = UserMessage.UNREAD
+            user_message.user_id = user_id
+            user_message.message_id = 3
+            user_message.save()
 
 
 @reversion.register()

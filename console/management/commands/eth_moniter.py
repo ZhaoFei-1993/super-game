@@ -64,6 +64,9 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
 
+            # 首次充值获得奖励
+            UserRecharge.objects.first_price(user_id)
+
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
