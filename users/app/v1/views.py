@@ -140,35 +140,6 @@ class UserRegister(object):
             #             address.user = usercoin.id
             #             address.save()
             #   邀请送HAND币
-            user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
-                                                                   is_effective=1).count()
-            if user_invitation_number > 0:
-                user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
-                                                                     is_effective=1)
-                try:
-                    userbalance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
-                except Exception:
-                    return 0
-                for a in user_invitation_info:
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    a.is_deleted = 1
-                    a.save()
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    u_mes = UserMessage()  # 邀请注册成功后消息
-                    u_mes.status = 0
-                    u_mes.user = user
-                    if a.invitee_one != 0:
-                        u_mes.message_id = 1  # 邀请t1消息
-                    else:
-                        u_mes.message_id = 2  # 邀请t2消息
-                    u_mes.save()
 
             # 注册送HAND币
             if user.is_money == 0:
@@ -375,6 +346,36 @@ class InfoView(ListAPIView):
         user_coin = usercoin.balance
         usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
+
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                               is_effective=1).count()
+        if user_invitation_number > 0:
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                                 is_effective=1)
+            try:
+                userbalance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+            except Exception:
+                return 0
+            for a in user_invitation_info:
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = 'HAND'
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = Decimal(userbalance.balance)
+                coin_detail.sources = 8
+                coin_detail.save()
+                a.is_deleted = 1
+                a.save()
+                userbalance.balance += a.money
+                userbalance.save()
+                u_mes = UserMessage()  # 邀请注册成功后消息
+                u_mes.status = 0
+                u_mes.user = user
+                if a.invitee_one != 0:
+                    u_mes.message_id = 1  # 邀请t1消息
+                else:
+                    u_mes.message_id = 2  # 邀请t2消息
+                u_mes.save()
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
