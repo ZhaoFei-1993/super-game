@@ -1799,7 +1799,7 @@ class LuckDrawListView(ListAPIView):
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
              'integral': normalize_fraction(user.integral, 2),
-             'prize_consume': normalize_fraction(prize_consume, 2)})
+             'prize_consume': normalize_fraction(float(prize_consume), 2)})
 
 
 class ClickLuckDrawView(CreateAPIView):

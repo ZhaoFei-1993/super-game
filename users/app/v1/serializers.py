@@ -571,7 +571,7 @@ class LuckDrawSerializer(serializers.ModelSerializer):
             prize_number = ""
         else:
             if obj.prize_name == "GSG":
-                prize_number = normalize_fraction(float(prize_number), int(2))
+                prize_number = normalize_fraction(float(prize_number), 2)
             else:
                 coin = Coin.objects.filter(name=obj.prize_name)
                 prize_number = normalize_fraction(float(prize_number), int(coin[0].coin_accuracy))
