@@ -299,11 +299,11 @@ class RuleView(ListAPIView):
         #     coin_id = usercoin.coin.pk
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
-        value1 = normalize_fraction(value1, int(coinvalue[0].coin.coin_accuracy))
+        value1 = normalize_fraction(value1, 4)
         value2 = coinvalue[1].value
-        value2 = normalize_fraction(value2, int(coinvalue[1].coin.coin_accuracy))
+        value2 = normalize_fraction(value2, 4)
         value3 = coinvalue[2].value
-        value3 = normalize_fraction(value3, int(coinvalue[2].coin.coin_accuracy))
+        value3 = normalize_fraction(value3, 4)
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk).order_by('order')
