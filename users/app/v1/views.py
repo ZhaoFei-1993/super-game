@@ -377,7 +377,7 @@ class InfoView(ListAPIView):
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
         print("=================================", int(usercoin.coin.coin_accuracy))
-        print("=================================", int(usercoin.coin))
+        print("=================================", usercoin.coin)
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
