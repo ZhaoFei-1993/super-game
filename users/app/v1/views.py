@@ -899,13 +899,13 @@ class AssetView(ListAPIView):
                 'recent_address': list["recent_address"]
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance,6)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': normalize_fraction(integral), 'data': data})
+                              'user_integral': normalize_fraction(integral, 6), 'data': data})
 
 
 # class AssetLockView(CreateAPIView):
@@ -1087,8 +1087,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': normalize_fraction(x['amount']),
-                    'rest': normalize_fraction(x['rest']),
+                    'amount': normalize_fraction(x['amount'], 5),
+                    'rest': normalize_fraction(x['rest'],5),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }

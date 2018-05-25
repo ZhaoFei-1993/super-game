@@ -348,7 +348,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_balance(obj):
-        balance = normalize_fraction(obj.balance)
+        balance = normalize_fraction(obj.balance, 4)
         return balance
 
     @staticmethod
@@ -359,7 +359,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': normalize_fraction(s)
+                    'value': normalize_fraction(s, 4)
                 }
             )
         return data
@@ -391,7 +391,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_min_present(obj):
-        min_present = normalize_fraction(obj.coin.cash_control)
+        min_present = normalize_fraction(obj.coin.cash_control, 6)
         return min_present
 
     @staticmethod
@@ -401,7 +401,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_locked_coin(obj):  # 提现申请期间锁定币数
-        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id))
+        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id), 6)
         return lock_coin
 
     @staticmethod
@@ -416,7 +416,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
             return ''
-        fee = normalize_fraction(coin_out.value)
+        fee = normalize_fraction(coin_out.value, 4)
         return fee
 
     @staticmethod
@@ -452,7 +452,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_amount(obj):
-        amount = normalize_fraction(obj.amount)
+        amount = normalize_fraction(obj.amount, 6)
         return amount
 
     @staticmethod

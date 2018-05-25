@@ -321,5 +321,5 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):
-        integral = normalize_fraction(obj.integral, )
+        integral = normalize_fraction(obj.integral, 6)
         return integral
