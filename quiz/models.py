@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db.models import Sum, F, FloatField
 
 from .odds import Game
+from decimal import Decimal
 
 
 @reversion.register()
@@ -146,9 +147,10 @@ class OptionManager(models.Manager):
         :return: require_coin: float, max_wager: float
         """
         bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
-        max_bet_value = float(bet_max.value)
+        max_bet_value = Decimal(bet_max.value)
+        require_coin_times = Decimal(self.require_coin_times)
 
-        return max_bet_value * self.require_coin_times * max_rate, max_bet_value
+        return max_bet_value * require_coin_times * max_rate, max_bet_value
 
     def change_odds(self, rule_id, coin_id):
         """
