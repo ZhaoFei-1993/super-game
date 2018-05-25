@@ -140,35 +140,6 @@ class UserRegister(object):
             #             address.user = usercoin.id
             #             address.save()
             #   邀请送HAND币
-            user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
-                                                                   is_effective=1).count()
-            if user_invitation_number > 0:
-                user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
-                                                                     is_effective=1)
-                try:
-                    userbalance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
-                except Exception:
-                    return 0
-                for a in user_invitation_info:
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    a.is_deleted = 1
-                    a.save()
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    u_mes = UserMessage()  # 邀请注册成功后消息
-                    u_mes.status = 0
-                    u_mes.user = user
-                    if a.invitee_one != 0:
-                        u_mes.message_id = 1  # 邀请t1消息
-                    else:
-                        u_mes.message_id = 2  # 邀请t2消息
-                    u_mes.save()
 
             # 注册送HAND币
             if user.is_money == 0:
@@ -375,6 +346,36 @@ class InfoView(ListAPIView):
         user_coin = usercoin.balance
         usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
+
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                               is_effective=1).count()
+        if user_invitation_number > 0:
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+                                                                 is_effective=1)
+            try:
+                userbalance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+            except Exception:
+                return 0
+            for a in user_invitation_info:
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = 'HAND'
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = Decimal(userbalance.balance)
+                coin_detail.sources = 8
+                coin_detail.save()
+                a.is_deleted = 1
+                a.save()
+                userbalance.balance += a.money
+                userbalance.save()
+                u_mes = UserMessage()  # 邀请注册成功后消息
+                u_mes.status = 0
+                u_mes.user = user
+                if a.invitee_one != 0:
+                    u_mes.message_id = 1  # 邀请t1消息
+                else:
+                    u_mes.message_id = 2  # 邀请t2消息
+                u_mes.save()
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
@@ -782,11 +783,17 @@ class MessageListView(ListAPIView, DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserMessage.objects.filter(Q(user_id=user), Q(status=1) | Q(status=0)).order_by("-created_at")
+        type = self.request.parser_context['kwargs']['type']
+        list = ""
+        if int(type) == 1:
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1) | Q(message__type=3),
+                                              Q(status=1) | Q(status=0)).order_by("-created_at")
+        elif int(type) == 2:
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2),
+                                              Q(status=1) | Q(status=0)).order_by("-created_at")
         return list
 
     def list(self, request, *args, **kwargs):
-        type = kwargs['type']
         user = self.request.user.id
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
@@ -794,12 +801,6 @@ class MessageListView(ListAPIView, DestroyAPIView):
         system_sign = message_sign(user, 1)
         public_sign = message_sign(user, 2)
         for list in items:
-            try:
-                types = Message.objects.get(pk=list["message"])
-            except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-            if int(types.type) != int(type):
-                continue
             data.append({
                 "message_id": list["message"],
                 'type': list["type"],
@@ -1015,9 +1016,9 @@ class UserPresentationView(CreateAPIView):
         if coin.name != 'HAND':
             # if user_coin.balance >= (Decimal(p_amount) - coin_out.value):
             #     user_coin.balance = user_coin.balance - Decimal(p_amount) - coin_out.value
-            user_coin.balance = user_coin.balance - Decimal(p_amount)
+            user_coin.balance = user_coin.balance - Decimal(str(p_amount))
         else:
-            user_coin.balance -= Decimal(p_amount)
+            user_coin.balance -= Decimal(str(p_amount))
             if coin_eth.balance >= coin_out.value:
                 coin_eth.balance -= coin_out.value
                 coin_eth.save()
@@ -1025,7 +1026,10 @@ class UserPresentationView(CreateAPIView):
         presentation = UserPresentation()
         presentation.user = userinfo
         presentation.coin = coin
-        presentation.amount = p_amount
+        if coin.name == 'HAND':
+            presentation.amount = Decimal(str(p_amount))
+        else:
+            presentation.amount = Decimal(str(p_amount)) - coin_out.value
         try:
             presentation.rest = user_coin.balance
         except Exception:
@@ -1036,7 +1040,10 @@ class UserPresentationView(CreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
         coin_detail.coin_name = user_coin.coin.name
-        coin_detail.amount = '-' + str(p_amount)
+        if coin.name == 'HAND':
+            coin_detail.amount = Decimal(str(p_amount))
+        else:
+            coin_detail.amount = Decimal(str(p_amount)) - coin_out.value
         coin_detail.rest = Decimal(user_coin.balance)
         coin_detail.sources = 2
         coin_detail.save()
@@ -1056,7 +1063,7 @@ class PresentationListView(ListAPIView):
         c_id = int(self.kwargs['c_id'])
         try:
             coin = Coin.objects.get(id=c_id)
-        except coin.DoesNotExist:
+        except Exception:
             raise
         query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
         return query
@@ -1345,9 +1352,8 @@ class ForgetPasswordView(ListAPIView):
     """
     修改密码
     """
-    permission_classes = (LoginRequired,)
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         value = value_judge(request, "password", "code", "username")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -1418,7 +1424,7 @@ class UserRechargeView(ListCreateAPIView):
                     raise
                 user_reward.balance += Decimal('2888')
                 user_reward.save()
-                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
+                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
                                            rest=user_reward.balance, sources=4)
                 reward_detail.save()
                 u_ms = UserMessage()  # 活动消息通知
@@ -1428,7 +1434,7 @@ class UserRechargeView(ListCreateAPIView):
                 u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
-        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
+        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
                                  rest=user_coin.balance, sources=1)
         coin_detail.save()
         return self.response({'code': 0})

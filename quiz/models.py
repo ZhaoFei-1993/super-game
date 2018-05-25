@@ -33,6 +33,7 @@ class Quiz(models.Model):
     PUBLISHING_ANSWER = 4  # 已发布答案
     BONUS_DISTRIBUTION = 5  # 已分配奖金
     DELAY = 6  # 推迟比赛
+    REPEAT_GAME = 7  # 重复比赛
 
     TITLE_FIRST_AUDIT = 11  # 题目初审
     TITLE_FINAL_AUDIT = 12  # 题目终审
@@ -49,6 +50,7 @@ class Quiz(models.Model):
         (HALF_TIME, "中场休息"),
         (ENDED, "已结束"),
         (DELAY, "比赛推迟"),
+        (REPEAT_GAME, "重复比赛"),
         (PUBLISHING_ANSWER, "已发布答案"),
         (BONUS_DISTRIBUTION, "已分配奖金"),
         (TITLE_FIRST_AUDIT, "题目初审"),
