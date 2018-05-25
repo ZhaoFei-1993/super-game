@@ -805,7 +805,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
                 "user_message_id": list["id"],
                 "message_id": list["message"],
                 'type': list["type"],
-                'message_title': list["title"],
+                'message_title': list["titles"],
                 'is_read': list["status"],
                 'message_date': list["created_at"],
             })
@@ -832,11 +832,14 @@ class DetailView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
         user_message.save()
+        print("user_message_id=====================", user_message_id)
         if int(user_message.message.type) == 3:
+            print("1111111111111111111", user_message.content)
             content = {'code': 0,
                        'data': user_message.content,
                        'status': user_message.status}
         else:
+            print("2222222222222222222222", user_message.message.content)
             content = {'code': 0,
                        'data': user_message.message.content,
                        'status': user_message.status}
