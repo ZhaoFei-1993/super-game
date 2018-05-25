@@ -184,6 +184,7 @@ class CoinDetail(models.Model):
     OTHER = 7
     INVITE = 8
     RETURN = 9
+    CASHBACK = 10
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
@@ -193,7 +194,8 @@ class CoinDetail(models.Model):
         (REGISTER, "注册"),
         (OTHER, "系统增加"),
         (INVITE, "邀请好友"),
-        (RETURN, "返还")
+        (RETURN, "返还"),
+        (CASHBACK, "返现"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
