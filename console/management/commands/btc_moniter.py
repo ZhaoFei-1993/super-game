@@ -94,9 +94,11 @@ class Command(BaseCommand):
 
                 valid_trans += 1
 
+                self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 增加 ' + str(tx_value) + ' 个' + coin_name))
+
                 # 插入充值记录表
                 user_recharge = UserRecharge()
-                user_recharge.user_id = address_map_uid[address]
+                user_recharge.user_id = user_id
                 user_recharge.coin_id = Coin.BTC
                 user_recharge.address = address
                 user_recharge.amount = tx_value

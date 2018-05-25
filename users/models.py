@@ -318,11 +318,6 @@ class UserRechargeManager(models.Manager):
         活动送Hand币,活动时间在2018年6月1日-2018年7月13日
         :return:
         """
-        # 是否首次充值，根据user recharge表有无充值记录判断
-        is_first_recharge = UserRecharge.objects.filter(user_id=user_id).count()
-        if is_first_recharge > 0:
-            return True
-
         # 判断是否在活动时间
         start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
         end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
@@ -330,6 +325,11 @@ class UserRechargeManager(models.Manager):
 
         coin_reward = 2888
         if start_time <= now_time < end_time:
+            # 是否首次充值，根据user recharge表有无充值记录判断
+            recharge_count = UserRecharge.objects.filter(user_id=user_id).count()
+            if recharge_count > 0:
+                return True
+
             user_reward = UserCoin.objects.get(user_id=user_id, coin_id=Coin.HAND)
             user_reward.balance += Decimal(coin_reward)
             user_reward.save()
