@@ -458,13 +458,22 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_address(obj):
         if int(obj.sources) == 2:
-            item = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')[0]
-            return item.address
+            items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                                   coin__name=obj.coin_name).order_by('-created_at')
+            if items.exists():
+                item = items[0]
+                return item.address
+            else:
+                return ''
         else:
-            item = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                               coin__name=obj.coin_name).order_by('-created_at')[0]
-            return item.address
+            items = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
+                                               coin__name=obj.coin_name).order_by('-created_at')
+            if items.exists():
+                item = items[0]
+                return item.address
+            else:
+                return ''
+
 
     # @staticmethod
     # def get_amount(obj):

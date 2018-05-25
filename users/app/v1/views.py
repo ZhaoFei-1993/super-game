@@ -1025,7 +1025,10 @@ class UserPresentationView(CreateAPIView):
         presentation = UserPresentation()
         presentation.user = userinfo
         presentation.coin = coin
-        presentation.amount = p_amount
+        if coin.name == 'HAND':
+            presentation.amount = Decimal(str(p_amount))
+        else:
+            presentation.amount = Decimal(str(p_amount)) - coin_out.value
         try:
             presentation.rest = user_coin.balance
         except Exception:
@@ -1036,7 +1039,10 @@ class UserPresentationView(CreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
         coin_detail.coin_name = user_coin.coin.name
-        coin_detail.amount = '-' + str(p_amount)
+        if coin.name == 'HAND':
+            coin_detail.amount = Decimal(str(p_amount))
+        else:
+            coin_detail.amount = Decimal(str(p_amount)) - coin_out.value
         coin_detail.rest = Decimal(user_coin.balance)
         coin_detail.sources = 2
         coin_detail.save()
@@ -1417,7 +1423,7 @@ class UserRechargeView(ListCreateAPIView):
                     raise
                 user_reward.balance += Decimal('2888')
                 user_reward.save()
-                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='+' + '2888',
+                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
                                            rest=user_reward.balance, sources=4)
                 reward_detail.save()
                 u_ms = UserMessage()  # 活动消息通知
@@ -1427,7 +1433,7 @@ class UserRechargeView(ListCreateAPIView):
                 u_ms.save()
         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
         user_recharge.save()
-        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount='+' + str(recharge),
+        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
                                  rest=user_coin.balance, sources=1)
         coin_detail.save()
         return self.response({'code': 0})

@@ -185,6 +185,8 @@ def handle_delay_game(delay_quiz):
             coin_detail.sources = CoinDetail.RETURN
             coin_detail.save()
 
+            print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
+
 
 def handle_unusual_game(quiz_list):
     result_data = ''
@@ -231,15 +233,16 @@ class Command(BaseCommand):
                 category__parent_id=2))
         if quizs.exists():
             for quiz in quizs:
-                if quiz.status != Quiz.BONUS_DISTRIBUTION:
-                    print(Quiz.objects.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
-                                              guest_team=quiz.guest_team).count())
-                    if Quiz.objects.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
-                                           guest_team=quiz.guest_team).count() >= 2:
-                        handle_unusual_game(Quiz.objects.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
-                                                                guest_team=quiz.guest_team))
+                # print(quiz.match_flag)
+                if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
+                    if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
+                                    guest_team=quiz.guest_team).count() >= 2:
+                        handle_unusual_game(quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
+                                                         guest_team=quiz.guest_team))
                     else:
                         get_data_info(base_url, quiz.match_flag)
+        else:
+            print('暂无比赛需要开奖')
 
         # quiz = Quiz.objects.filter(match_flag=options['match_flag']).first()
         # get_data_info(base_url, options['match_flag'])

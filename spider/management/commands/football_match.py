@@ -348,6 +348,10 @@ def get_data_info(url):
                         quiz.begin_at = time
                         quiz.updated_at = created_at
                         quiz.admin = Admin.objects.filter(id=1).first()
+                        if Quiz.objects.filter(host_team=host_team_abbr, guest_team=guest_team_abbr, begin_at=time).exists():
+                            quiz.status = Quiz.REPEAT_GAME
+                        else:
+                            pass
                         quiz.save()
 
                         for i in range(0, 4):
