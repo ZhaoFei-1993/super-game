@@ -786,10 +786,10 @@ class MessageListView(ListAPIView, DestroyAPIView):
         type = self.request.parser_context['kwargs']['type']
         list = ""
         if int(type) == 1:
-            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1) | Q(message__type=3),
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
                                               Q(status=1) | Q(status=0)).order_by("-created_at")
         elif int(type) == 2:
-            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2),
+            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
                                               Q(status=1) | Q(status=0)).order_by("-created_at")
         return list
 
@@ -802,6 +802,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
         public_sign = message_sign(user, 2)
         for list in items:
             data.append({
+                "user_message_id": list["id"],
                 "message_id": list["message"],
                 'type': list["type"],
                 'message_title': list["title"],
@@ -824,15 +825,20 @@ class DetailView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        message_id = kwargs['message_id']
+        user_message_id = kwargs['user_message_id']
         try:
-            message = Message.objects.get(id=message_id)
+            user_message = UserMessage.objects.get(pk=user_message_id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        user = self.request.user.id
-        UserMessage.objects.filter(user_id=user, message_id=message_id).update(status=1)
-        content = {'code': 0,
-                   'data': message.content}
+        UserMessage.objects.get(pk=user_message_id).update(status=1)
+        if int(user_message.message.type) == 3:
+            content = {'code': 0,
+                       'data': user_message.content,
+                       'status': user_message.status}
+        else:
+            content = {'code': 0,
+                       'data': user_message.message.content,
+                       'status': user_message.status}
         return self.response(content)
 
 
@@ -1385,6 +1391,13 @@ class ForgetPasswordView(ListAPIView):
 
         userinfo.set_password(password)
         userinfo.save()
+
+        u_mes = UserMessage()  # 修改密码后消息
+        u_mes.status = 0
+        u_mes.user = userinfo
+        u_mes.message_id = 7  # 修改密码
+        u_mes.save()
+
         content = {'code': 0}
         return self.response(content)
 

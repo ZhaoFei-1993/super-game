@@ -170,10 +170,10 @@ class DailySerialize(serializers.ModelSerializer):
         # sign = sign_confirmation(user)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime("%Y%m%d")
-        yesterday_format = str(yesterday_format) + "000000"     # 今天凌晨00.00时间
+        yesterday_format = str(yesterday_format) + "000000"  # 今天凌晨00.00时间
         try:
             daily = DailyLog.objects.get(user_id=user)
-            sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")      # 上次签到时间
+            sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")  # 上次签到时间
         except DailyLog.DoesNotExist:
             daily = DailyLog()
             sign_date = str(0)
@@ -183,7 +183,7 @@ class DailySerialize(serializers.ModelSerializer):
             is_sign = 0
             daily.number = 1
             daily.save()
-        elif daily.number >= obj. days:
+        elif daily.number >= obj.days:
             is_sign = 1
 
         return is_sign
@@ -313,7 +313,7 @@ class PresentationSerialize(serializers.ModelSerializer):
         model = UserPresentation
         fields = (
             "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status")
+            "created_at", "feedback", "status", "is_bill")
 
     @staticmethod
     def get_created_at(obj):
@@ -459,7 +459,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     def get_address(obj):
         if int(obj.sources) == 2:
             items = UserPresentation.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                                   coin__name=obj.coin_name).order_by('-created_at')
+                                                    coin__name=obj.coin_name).order_by('-created_at')
             if items.exists():
                 item = items[0]
                 return item.address
@@ -467,13 +467,12 @@ class CoinOperateSerializer(serializers.ModelSerializer):
                 return ''
         else:
             items = UserRecharge.objects.filter(user_id=obj.user.id, created_at__lte=obj.created_at,
-                                               coin__name=obj.coin_name).order_by('-created_at')
+                                                coin__name=obj.coin_name).order_by('-created_at')
             if items.exists():
                 item = items[0]
                 return item.address
             else:
                 return ''
-
 
     # @staticmethod
     # def get_amount(obj):

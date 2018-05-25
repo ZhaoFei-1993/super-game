@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db.models import Sum, F, FloatField
 
 from .odds import Game
+from decimal import Decimal
 
 
 @reversion.register()
@@ -136,18 +137,20 @@ class OptionManager(models.Manager):
     """
     选项操作
     """
-    require_coin_times = 1000   # 最大可赔倍数
+    require_coin_times = 100   # 最大可赔倍数
 
-    def get_odds_config(self, coin_id):
+    def get_odds_config(self, coin_id, max_rate):
         """
         不同币种不同配置：最大可赔、最大下注数
         :param  coin_id 货币ID
+        :param  max_rate 当前最大赔率
         :return: require_coin: float, max_wager: float
         """
         bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
-        max_bet_value = float(bet_max.value)
+        max_bet_value = Decimal(bet_max.value)
+        require_coin_times = Decimal(self.require_coin_times)
 
-        return max_bet_value * self.require_coin_times, max_bet_value
+        return max_bet_value * require_coin_times * max_rate, max_bet_value
 
     def change_odds(self, rule_id, coin_id):
         """
@@ -156,6 +159,8 @@ class OptionManager(models.Manager):
         :param coin_id
         :return:
         """
+        rule = Rule.objects.get(pk=rule_id)
+
         options = Option.objects.filter(rule_id=rule_id).order_by('order')
         rates = []
         for o in options:
@@ -181,7 +186,7 @@ class OptionManager(models.Manager):
                     pays[tmp_idx] = op['pool_sum']
             tmp_idx += 1
 
-        require_coin, max_wager = self.get_odds_config(coin_id)
+        require_coin, max_wager = self.get_odds_config(coin_id, rule.max_odd)
 
         g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
         g.bet(pool, pays)

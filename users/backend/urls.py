@@ -20,6 +20,12 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserListDetailView.as_view(), name="user-detail"),
     # 用户资产明细
     path('coin/detail/', views.CoinDetailView.as_view(), name="coin-detail"),
+    # 用户列表
+    path('user_all/', views.UserAllView.as_view(), name="backend-user-all"),
     # 推荐人信息
-    path('inviter_info/', views.InviterInfo.as_view(), name= "user-inviter_info")
+    path('user_all/<int:pk>/', views.InviterDetailView.as_view(), name="backend-user-all-detail"),
+    # 提现列表
+    path('coin_present/', views.CoinPresentView.as_view(), name="backend-present"),
+    # 提现审核
+    path('coin_present_check/<int:pk>/', views.CoinPresentCheckView.as_view(), name="backend-present_check"),
 ]

@@ -3,7 +3,8 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from django.db import transaction
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
-    LoginRecord
+    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge
+from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
 from base import code as error_code
@@ -114,10 +115,12 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         betting_value_one = request.data['betting_value_one']
         betting_value_two = request.data['betting_value_two']
         betting_value_three = request.data['betting_value_three']
+        coin_order = request.data['coin_order']
         # Integral_proportion = request.data['Integral_proportion']
 
         coin = Coin()
         coin.icon = request.data['icon']
+        coin.coin_order = coin_order
         if int(exchange_rate) != 1:
             coin.exchange_rate = 1
         else:
@@ -221,6 +224,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coin.betting_toplimit = betting_toplimit
         coin.betting_control = betting_control
         # coin.is_lock = request.data['is_lock']
+        coin.coin_order = request.data['coin_order']
         coin.save()
         coin_value_one = CoinValue.objects.get(coin_id=coin.pk, value_index=1)
         coin_value_one.value = request.data['betting_value_one']
@@ -398,16 +402,104 @@ class CoinDetailView(ListAPIView, DestroyAPIView):
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
-class InviterInfo(RetrieveAPIView):
+# class InviterInfo(RetrieveAPIView):
+#     """
+#     推荐人信息
+#     """
+#
+#     def retrieve(self, request, *args, **kwargs):
+#         username = request.query_params.get('username')
+#         try:
+#             record = LoginRecord.objects.filter(user__username=username).order_by('-login_time')[0]
+#         except Exception:
+#             return JsonResponse({'Error': '用户不存在或参数username未提供'}, status=status.HTTP_400_BAD_REQUEST)
+#         rc = serializers.InviterInfoSerializer(record)
+#         return JsonResponse({'results': rc.data}, status=status.HTTP_200_OK)
+
+
+class UserAllView(ListAPIView):
+    """
+    所有用户资产表
+    """
+    queryset = User.objects.all()
+    serializer_class = serializers.UserAllSerializer
+
+
+class InviterDetailView(RetrieveAPIView):
     """
     推荐人信息
     """
 
     def retrieve(self, request, *args, **kwargs):
-        username = request.query_params.get('username')
+        uuid = self.kwargs['pk']
         try:
-            record = LoginRecord.objects.filter(user__username=username).order_by('-login_time')[0]
+            user = User.objects.get(pk=uuid)
         except Exception:
-            return JsonResponse({'Error': '用户不存在或参数username未提供'}, status=status.HTTP_400_BAD_REQUEST)
-        rc = serializers.InviterInfoSerializer(record)
-        return JsonResponse({'results': rc.data}, status=status.HTTP_200_OK)
+            return JsonResponse({'Error': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        rc = serializers.UserAllSerializer(user)
+        return JsonResponse({'results': [rc.data]}, status=status.HTTP_200_OK)
+
+
+class InviteNewView(ListAPIView):
+    """
+    邀请好友数
+    """
+    serializer_class = serializers.UserAllSerializer
+
+    def get_queryset(self, **kwargs):
+        uuid = kwargs['pk']
+        inviter = UserInvitation.objects.filter(inviter_id=uuid)
+        user_id1 = inviter.values_list('invitee_one')
+        user_id2 = inviter.values_list('invitee_two')
+        user_ids = user_id1 + user_id2
+        users = []
+        for x in user_ids:
+            users.append(x[0])
+        if len(users) == 0:
+            return JsonResponse({"Error:No data"}, status=status.HTTP_400_BAD_REQUEST)
+        user_group = User.objects.filter(user_id__in=users)
+        return user_group
+
+
+class CoinPresentView(ListAPIView):
+    """
+    提现记录表
+    """
+    queryset = UserPresentation.objects.all().order_by('-created_at', '-status')
+    serializer_class = PresentationSerialize
+
+
+class CoinPresentCheckView(RetrieveUpdateAPIView):
+    """
+    提现审核
+    """
+
+    def patch(self, request, *args, **kwargs):
+        id = kwargs['pk']
+        if 'status' not in request.data and 'text' not in request.data and 'is_bill' not in request.data:
+            return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            item = UserPresentation.objects.get(pk=id)
+        except Exception:
+            return JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'status' in request.data:
+            sts = int(request.data.get('status'))
+            item.status = sts
+            if sts == 2:
+                try:
+                    user_coin = UserCoin.objects.get(user=item.user, coin=item.coin)
+                    coin_out = CoinOutServiceCharge.objects.get(coin_out=user_coin.coin)
+                except Exception:
+                    raise
+                user_coin.balance = user_coin.balance + item.amount + coin_out.value
+                user_coin.save()
+        if 'text' in request.data:
+            text = request.data.get('text')
+            item.feedback = text
+
+        if 'is_bill' in request.data:
+            bill = request.data.get('is_bill')
+            item.is_bill = bill
+        item.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
