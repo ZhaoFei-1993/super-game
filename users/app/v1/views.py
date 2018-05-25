@@ -904,6 +904,7 @@ class AssetView(ListAPIView):
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
+        print("现金==================", data)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
                               'user_integral': normalize_fraction(integral, 2), 'data': data})
