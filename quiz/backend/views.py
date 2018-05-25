@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
-from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from .serializers import CategorySerializer, UserQuizSerializer
 from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
+from django.db.models import Count, Sum
 
 from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
@@ -14,6 +15,7 @@ from rest_framework.reverse import reverse
 from django.http import HttpResponse
 import json
 from utils.functions import reversion_Decorator
+from django.http import JsonResponse
 
 
 class RecurseTreeNode(object):
@@ -286,3 +288,41 @@ class UserQuizView(ListCreateAPIView):
     serializer_class = UserQuizSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'bet', 'earn_coin', 'option']
+
+
+class QuizListBackEndView(ListAPIView):
+    """
+    后台竞猜列表
+    """
+
+    def list(self, request, *args, **kwargs):
+        values = Record.objects.all().values("quiz","coin").annotate(total_coin=Count('coin'),
+                                                                      sum_bet=Sum('bet')).order_by('-total_coin')
+        data = []
+        for x in values:
+            q_id = int(x['quiz'])
+            c_id = int(x['coin'])
+            try:
+                quiz = Quiz.objects.get(id=q_id)
+                coin = Coin.objects.get(id=c_id)
+            except Exception:
+                return JsonResponse({'ERROR': '比赛不存在或币种不存在'}, status=status.HTTP_400_BAD_REQUEST)
+            state = ''
+            for i in quiz.STATUS_CHOICE:
+                if quiz.status == i[0]:
+                    state = i[1]
+            match_time = quiz.begin_at.strftime('%Y年%m月%d %H%M')
+            temp_dict = {
+                'match_name': quiz.match_name,
+                'host_team': quiz.host_team,
+                'guest_team': quiz.guest_team,
+                'match_time': match_time,
+                'coin': coin.name,
+                'total_coin': x['total_coin'],
+                'sum_bet': x['sum_bet'],
+                'status': state
+            }
+            data.append(temp_dict)
+        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+

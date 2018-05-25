@@ -469,11 +469,12 @@ class CoinPresentView(ListAPIView):
     serializer_class = PresentationSerialize
 
 
+
 class CoinPresentCheckView(RetrieveUpdateAPIView):
     """
     提现审核
     """
-
+    @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']
         if 'status' not in request.data and 'text' not in request.data and 'is_bill' not in request.data:

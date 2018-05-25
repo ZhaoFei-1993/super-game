@@ -15,7 +15,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db.models import Sum
 from base.exceptions import ParamErrorException
-from api.settings import  MEDIA_ROOT
+from api.settings import MEDIA_ROOT
 import os
 from django.db.models import Q
 from config.models import Admin_Operation
@@ -222,10 +222,10 @@ def reversion_Decorator(func):
 def amount_presentation(user, coin):
     item = UserPresentation.objects.filter(user_id=user, coin_id=coin, status=0).aggregate(Sum('amount'))
     rest = item['amount__sum']
-    # if rest == None:
-    #     rest = 0
-    # else:
-    #     rest = coin['amount__sum']
+    if rest == None:
+        rest = 0
+    else:
+        rest = item['amount__sum']
     return rest
 
 
@@ -265,13 +265,13 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
     img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image, quality=qua)
 
 
-#去掉decimal类型数值后面的0
-def normalize_fraction(d):
+# 去掉decimal类型数值后面的0
+def normalize_fraction(d, b):
+    d = round(d, b)
     dd = Decimal(str(d))
     normalized = dd.normalize()
     sign, digit, exponent = normalized.as_tuple()
     return normalized if exponent <= 0 else normalized.quantize(1)
-
 
 
 def genarate_plist(version, filepath):
@@ -281,13 +281,12 @@ def genarate_plist(version, filepath):
     :param filepath: ipa文件保存路径
     :return:
     """
-    temp_x ={'items': [{'assets': [{'kind': 'software-package',
-                            'url': filepath}],
-                'metadata': {'bundle-identifier': 'iPhone Developer: shenghong liu (K7AC5W2PGD)',
-                             'bundle-version': version,
-                             'kind': 'software',
-                             'title': u'\u8d85\u7ea7\u6e38\u620f'}}]}
-    save_file = os.path.join(MEDIA_ROOT ,'apps/IOS', 'version_%s_IOS.plist' % version)
+    temp_x = {'items': [{'assets': [{'kind': 'software-package',
+                                     'url': filepath}],
+                         'metadata': {'bundle-identifier': 'iPhone Developer: shenghong liu (K7AC5W2PGD)',
+                                      'bundle-version': version,
+                                      'kind': 'software',
+                                      'title': u'\u8d85\u7ea7\u6e38\u620f'}}]}
+    save_file = os.path.join(MEDIA_ROOT, 'apps/IOS', 'version_%s_IOS.plist' % version)
     with open(save_file, 'wb') as fp:
         plistlib.dump(temp_x, fp)
-
