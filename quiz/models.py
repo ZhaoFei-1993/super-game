@@ -184,7 +184,7 @@ class OptionManager(models.Manager):
                     pays[tmp_idx] = op['pool_sum']
             tmp_idx += 1
 
-        require_coin, max_wager = self.get_odds_config(coin_id, rule.max_odds)
+        require_coin, max_wager = self.get_odds_config(coin_id, rule.max_odd)
 
         g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
         g.bet(pool, pays)
