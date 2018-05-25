@@ -6,7 +6,7 @@ import re
 import requests
 import json
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Quiz, Rule, Option, Quiz_Backup, Rule_Backup, Option_Backup
+from quiz.models import Quiz, Rule, Option, Quiz_Odds_Log
 from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
@@ -485,34 +485,14 @@ def get_data_info(url):
 
                         # 记录初始赔率
                         quiz = Quiz.objects.get(match_flag=match_id)
-                        quiz_backup = Quiz_Backup()
-                        quiz_backup.host_team = quiz.host_team
-                        quiz_backup.guest_team = quiz.guest_team
-                        quiz_backup.begin_at = quiz.begin_at
-                        quiz_backup.match_flag = quiz.match_flag
-                        quiz_backup.save()
-
                         for rule in Rule.objects.filter(quiz=quiz):
-                            rule_backup = Rule_Backup()
-                            rule_backup.quiz = quiz_backup
-                            rule_backup.tips = rule.tips
-                            rule_backup.home_let_score = rule.home_let_score
-                            rule_backup.guest_let_score = rule.guest_let_score
-                            rule_backup.estimate_score = rule.estimate_score
-                            rule_backup.max_odd = rule.max_odd
-                            rule_backup.min_odd = rule_backup.min_odd
-                            rule_backup.save()
-
                             for option in Option.objects.filter(rule=rule):
-                                option_backup = Option_Backup()
-                                option_backup.rule = rule_backup
-                                option_backup.option = option.option
-                                option_backup.option_type = option.option_type
-                                option_backup.order = option.order
-                                option_backup.odds = option.odds
-                                option_backup.flag = option.flag
-                                option_backup.save()
-
+                                quiz_odds_log = Quiz_Odds_Log()
+                                quiz_odds_log.quiz = quiz
+                                quiz_odds_log.rule = rule
+                                quiz_odds_log.option = option.option
+                                quiz_odds_log.odds = option.odds
+                                quiz_odds_log.save()
                     else:
                         print('已经存在')
                     # --------------------------------------------------------------------------------------------------

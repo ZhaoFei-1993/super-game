@@ -246,46 +246,12 @@ class Record(models.Model):
         verbose_name = verbose_name_plural = "用户下注表"
 
 
-class Quiz_Backup(models.Model):
-    host_team = models.CharField(verbose_name="主队", max_length=255)
-    guest_team = models.CharField(verbose_name="客队", max_length=255)
-    begin_at = models.DateTimeField(verbose_name="比赛开始时间/截止日期")
-    updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
-    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
-
-    class Meta:
-        ordering = ['-id']
-        verbose_name = verbose_name_plural = "备用竞猜表"
-
-
-class Rule_Backup(models.Model):
-    quiz = models.ForeignKey(Quiz_Backup, on_delete=models.CASCADE)
-    tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
-    home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
-                                         default=0.00)
-    guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
-                                          default=0.00)
-    estimate_score = models.DecimalField(verbose_name="预估分数，大小分玩法适用", max_digits=10, decimal_places=2, default=0.00)
-    max_odd = models.DecimalField(verbose_name="最大赔率", max_digits=10, decimal_places=2, default=0.00)
-    min_odd = models.DecimalField(verbose_name="最小赔率", max_digits=10, decimal_places=2, default=0.00)
-
-    class Meta:
-        ordering = ['-id']
-        verbose_name = verbose_name_plural = "备用竞猜规则表"
-
-
-class Option_Backup(models.Model):
-    rule = models.ForeignKey(Rule_Backup, on_delete=models.CASCADE)
+class Quiz_Odds_Log(models.Model):
+    rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     option = models.CharField(verbose_name="选项值", max_length=20, default="")
-    option_type = models.CharField(verbose_name="选项分类", max_length=20, default="")
-    order = models.IntegerField(verbose_name="排序", default=0)
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
-    flag = models.CharField(verbose_name='开奖标记', max_length=8, default="")
-
-    objects = OptionManager()
 
     class Meta:
         ordering = ['-id']
-        verbose_name = verbose_name_plural = "备用竞猜选项表"
-
+        verbose_name = verbose_name_plural = "竞猜选项赔率记录表"
