@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import Q
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
-from ...models import Category, Quiz, Record, Rule, Option
+from ...models import Category, Quiz, Record, Rule, Option, OptionOdds
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
 from users.models import UserCoin, CoinValue
@@ -73,6 +73,7 @@ class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
+        quiz_list = []
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET:
                 if int(self.request.GET.get('type')) == 1:  # 未结束
@@ -84,19 +85,21 @@ class QuizListView(ListCreateAPIView):
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
-                                           category__in=category_arr).order_by('begin_at')
+                quiz_list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
+                    category__in=category_arr).order_by('begin_at')
             elif int(self.request.GET.get('type')) == 2:  # 已结束
-                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False,
-                                           category__in=category_arr).order_by(
-                    '-begin_at')
+                quiz_list = Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False,
+                    category__in=category_arr).order_by('-begin_at')
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             quiz_id = list(
                 set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
-            my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
-            return my_quiz
+            quiz_list = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
+
+        # 填充赔率
+        OptionOdds.objects.fill_odds(quiz_list)
+        return quiz_list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
