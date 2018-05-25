@@ -349,6 +349,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_balance(obj):
         balance = normalize_fraction(obj.balance, 6)
+        print("balance==================", balance)
         return balance
 
     @staticmethod
