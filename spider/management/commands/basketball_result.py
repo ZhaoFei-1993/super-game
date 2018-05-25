@@ -7,7 +7,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record
-from users.models import UserCoin, CoinDetail, Coin
+from users.models import UserCoin, CoinDetail, Coin, UserMessage
 from chat.models import Club
 from decimal import Decimal
 
@@ -171,6 +171,21 @@ def get_data_info(url, match_flag):
                 coin_detail.rest = user_coin.balance
                 coin_detail.sources = CoinDetail.BETS
                 coin_detail.save()
+
+            # 发送信息
+            u_mes = UserMessage()
+            u_mes.status = 0
+            u_mes.user_id = record.user_id
+            u_mes.message_id = 6  # 私人信息
+            u_mes.title = '开奖公告'
+            option_right = Option.objects.get(rule=record.rule, is_right=True)
+            if is_right is False:
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您答错了。'
+            elif is_right is True:
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您的奖金是:' + str(
+                    round(earn_coin, 3))
+            u_mes.save()
+
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
