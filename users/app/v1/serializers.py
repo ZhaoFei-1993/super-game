@@ -570,6 +570,7 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         if prize_number == 0:
             prize_number = ""
         else:
-            coin = Coin.objects.get(name=obj.prize_name)
-            prize_number = normalize_fraction(prize_number, int(coin.coin_accuracy))
+            print("obj.prize_name==================", obj.prize_name)
+            coin = Coin.objects.filter(name=obj.prize_name)
+            prize_number = normalize_fraction(prize_number, int(coin[0].coin_accuracy))
         return prize_number
