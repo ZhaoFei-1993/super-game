@@ -376,8 +376,7 @@ class InfoView(ListAPIView):
                 else:
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
-        print("=================================", int(usercoin.coin.coin_accuracy))
-        print("=================================", usercoin.coin)
+
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
@@ -834,14 +833,11 @@ class DetailView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
         user_message.save()
-        print("user_message_id=====================", user_message_id)
         if int(user_message.message.type) == 3:
-            print("1111111111111111111", user_message.content)
             content = {'code': 0,
                        'data': user_message.content,
                        'status': user_message.status}
         else:
-            print("2222222222222222222222", user_message.message.content)
             content = {'code': 0,
                        'data': user_message.message.content,
                        'status': user_message.status}
@@ -901,11 +897,10 @@ class AssetView(ListAPIView):
                 'recent_address': list["recent_address"]
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 4)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 0)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
-        print("现金==================", data)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
                               'user_integral': normalize_fraction(integral, 2), 'data': data})
@@ -1091,8 +1086,8 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': normalize_fraction(x['amount'], int(coin.coin_accuracy)),
-                    'rest': normalize_fraction(x['rest'], int(coin.coin_accuracy)),
+                    'amount': normalize_fraction(x['amount'], coin.coin_accuracy),
+                    'rest': normalize_fraction(x['rest'], coin.coin_accuracy),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
@@ -1801,7 +1796,7 @@ class LuckDrawListView(ListAPIView):
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
              'integral': normalize_fraction(user.integral, 2),
-             'prize_consume': normalize_fraction(float(prize_consume), 2)})
+             'prize_consume': normalize_fraction(prize_consume, 2)})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1875,7 +1870,6 @@ class ClickLuckDrawView(CreateAPIView):
         for a in fictitious_prize_name_list:
             fictitious_prize_name.append(a[0])
 
-        print("choice=============================", choice)
         if choice in fictitious_prize_name:
             try:
                 user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)

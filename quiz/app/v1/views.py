@@ -271,9 +271,9 @@ class RuleView(ListAPIView):
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
         coin_betting_control = clubinfo.coin.betting_control
-        coin_betting_control = normalize_fraction(coin_betting_control, 4)
+        coin_betting_control = normalize_fraction(coin_betting_control, int(clubinfo.coin.coin_accuracy))
         coin_betting_toplimit = clubinfo.coin.betting_toplimit
-        coin_betting_toplimit = normalize_fraction(coin_betting_toplimit, 4)
+        coin_betting_toplimit = normalize_fraction(coin_betting_toplimit, int(clubinfo.coin.coin_accuracy))
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
         balance = normalize_fraction(usercoin.balance, int(clubinfo.coin.coin_accuracy))
@@ -299,11 +299,11 @@ class RuleView(ListAPIView):
         #     coin_id = usercoin.coin.pk
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
         value1 = coinvalue[0].value
-        value1 = normalize_fraction(value1, 4)
+        value1 = normalize_fraction(value1, coinvalue[0].coin.coin_accuracy)
         value2 = coinvalue[1].value
-        value2 = normalize_fraction(value2, 4)
+        value2 = normalize_fraction(value2, coinvalue[0].coin.coin_accuracy)
         value3 = coinvalue[2].value
-        value3 = normalize_fraction(value3, 4)
+        value3 = normalize_fraction(value3, coinvalue[0].coin.coin_accuracy)
         data = []
         for i in rule:
             option = Option.objects.filter(rule_id=i.pk).order_by('order')
