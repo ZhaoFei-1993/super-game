@@ -805,7 +805,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
                 "user_message_id": list["id"],
                 "message_id": list["message"],
                 'type': list["type"],
-                'message_title': list["title"],
+                'message_title': list["titles"],
                 'is_read': list["status"],
                 'message_date': list["created_at"],
             })
