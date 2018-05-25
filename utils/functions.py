@@ -220,12 +220,12 @@ def reversion_Decorator(func):
 
 
 def amount_presentation(user, coin):
-    coin = UserPresentation.objects.filter(user_id=user, coin_id=coin, status=0).aggregate(Sum('amount'))
-    rest = coin['amount__sum']
-    if rest == None:
-        rest = 0
-    else:
-        rest = coin['amount__sum']
+    item = UserPresentation.objects.filter(user_id=user, coin_id=coin, status=0).aggregate(Sum('amount'))
+    rest = item['amount__sum']
+    # if rest == None:
+    #     rest = 0
+    # else:
+    #     rest = coin['amount__sum']
     return rest
 
 
@@ -290,5 +290,4 @@ def genarate_plist(version, filepath):
     save_file = os.path.join(MEDIA_ROOT ,'apps/IOS', 'version_%s_IOS.plist' % version)
     with open(save_file, 'wb') as fp:
         plistlib.dump(temp_x, fp)
-
 

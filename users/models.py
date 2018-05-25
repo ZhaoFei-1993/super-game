@@ -310,6 +310,7 @@ class UserRechargeManager(models.Manager):
     """
     用户充值操作
     """
+
     @staticmethod
     def first_price(user_id):
         """
@@ -392,6 +393,7 @@ class UserPresentation(models.Model):
     feedback = models.CharField(verbose_name="拒绝提现理由", max_length=255, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+    is_bill = models.BooleanField(verbose_name="是否已打款", default=False)
 
     class Meta:
         ordering = ['-id']
