@@ -152,11 +152,12 @@ class OptionManager(models.Manager):
 
         return max_bet_value * require_coin_times * max_rate, max_bet_value
 
-    def change_odds(self, rule_id, coin_id):
+    def change_odds(self, rule_id, coin_id, roomquiz_id):
         """
         变更赔率
-        :param rule_id
-        :param coin_id
+        :param rule_id          玩法ID
+        :param coin_id          货币ID
+        :param roomquiz_id      俱乐部ID
         :return:
         """
         rule = Rule.objects.get(pk=rule_id)
@@ -167,7 +168,7 @@ class OptionManager(models.Manager):
             rates.append(float(o.odds))
 
         # 获取奖池总数
-        pool_sum = Record.objects.filter(rule_id=rule_id).aggregate(Sum('bet'))
+        pool_sum = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id).aggregate(Sum('bet'))
         pool = pool_sum['bet__sum']
         if pool is None:
             pool = 0
@@ -175,7 +176,7 @@ class OptionManager(models.Manager):
             pool = float(pool)
 
         # 获取各选项产出猜币数
-        option_pays = Record.objects.filter(rule_id=rule_id).values('option_id').annotate(
+        option_pays = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id).values('option_id').annotate(
             pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
         pays = []
         tmp_idx = 0

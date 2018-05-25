@@ -449,7 +449,7 @@ class BetView(ListCreateAPIView):
         # print("coins====================", type(round(Decimal(coins), 2)))
 
         # 调整赔率
-        Option.objects.change_odds(options.rule_id, coin_id)
+        Option.objects.change_odds(options.rule_id, coin_id, roomquiz_id)
 
         record = Record()
         record.user = user
