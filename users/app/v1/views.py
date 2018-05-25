@@ -830,7 +830,8 @@ class DetailView(ListAPIView):
             user_message = UserMessage.objects.get(pk=user_message_id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        UserMessage.objects.get(pk=user_message_id).update(status=1)
+        user_message.status = 1
+        user_message.save()
         if int(user_message.message.type) == 3:
             content = {'code': 0,
                        'data': user_message.content,
