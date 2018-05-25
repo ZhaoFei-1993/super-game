@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import requests
 import json
 import time
+from django.db import transaction
 from users.models import UserCoin, UserRecharge, Coin
 from decimal import Decimal
 
@@ -25,7 +26,7 @@ def get_transactions(addresses):
             # 计算确认数
             confirmations = 0
             if item['double_spend'] is False:
-                if item['block_height']:
+                if 'block_height' in item:
                     confirmations = datas['info']['latest_block']['height'] - item['block_height'] + 1
 
             time_local = time.localtime(item['time'])
@@ -43,6 +44,7 @@ def get_transactions(addresses):
 class Command(BaseCommand):
     help = "BTC监视器"
 
+    @transaction.atomic()
     def handle(self, *args, **options):
         # 获取所有用户ETH地址
         user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False)
@@ -66,17 +68,28 @@ class Command(BaseCommand):
             if len(transactions[address]) == 0:
                 continue
 
+            user_id = address_map_uid[address]
+            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.BTC)
+
             # 首次充值获得奖励
-            UserRecharge.objects.first_price(address_map_uid[address])
+            UserRecharge.objects.first_price(user_id)
 
             valid_trans = 0
-            for transaction in transactions[address]:
-                tx_id = transaction.txid
-                tx_value = transaction.value
+            for trans in transactions[address]:
+                tx_id = trans['txid']
+                tx_value = trans['value']
+                confirmations = trans['confirmations']
 
-                # 判断交易hash是否已经存在，存在则忽略该条交易
+                # 确认数为0暂时不处理
+                if confirmations < 1:
+                    continue
+
+                # 判断交易hash是否已经存在，存在则忽略该条交易，更新确认数
                 is_exists = UserRecharge.objects.filter(txid=tx_id).count()
                 if is_exists > 0:
+                    user_recharge = UserRecharge.objects.get(txid=tx_id)
+                    user_recharge.confirmations = confirmations
+                    user_recharge.save()
                     continue
 
                 valid_trans += 1
@@ -87,9 +100,9 @@ class Command(BaseCommand):
                 user_recharge.coin_id = Coin.BTC
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = transaction.confirmations
+                user_recharge.confirmations = confirmations
                 user_recharge.txid = tx_id
-                user_recharge.trade_at = transaction.time
+                user_recharge.trade_at = trans['time']
                 user_recharge.save()
 
                 # 变更用户余额
