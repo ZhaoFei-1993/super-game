@@ -110,10 +110,11 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_total_coin(self, obj):  # 投注总金额
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
         record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
+        club = Club.objects.get(pk=roomquiz_id)
         total_coin = 0
         for coin in record:
             total_coin = total_coin + coin.bet
-        total_coin = normalize_fraction(total_coin)
+        total_coin = normalize_fraction(total_coin, int(club.coin.coin_accuracy))
         return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
@@ -145,11 +146,19 @@ class RecordSerialize(serializers.ModelSerializer):
     coin_name = serializers.SerializerMethodField()  # 投注选项
     earn_coin = serializers.SerializerMethodField()  # 竞猜结果
     quiz_category = serializers.SerializerMethodField()  # 竞猜结果
+    bets = serializers.SerializerMethodField()  # 竞猜结果
 
     class Meta:
         model = Record
         fields = ("id", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
-                  "quiz_category", "bet", "coin_name")
+                  "quiz_category", "bets", "coin_name")
+
+    @staticmethod
+    def get_bets(obj):  # 主队
+        club = Club.objects.get(pk=obj.roomquiz_id)
+        coin_accuracy = club.coin.coin_accuracy
+        bet = normalize_fraction(obj.bet, int(coin_accuracy))
+        return bet
 
     @staticmethod
     def get_host_team(obj):  # 主队
@@ -185,7 +194,9 @@ class RecordSerialize(serializers.ModelSerializer):
         option_info = Option.objects.get(pk=obj.option_id)
         rule_list = Rule.objects.get(pk=option_info.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-        my_option = my_rule + ":" + option_info.option + "/" + str(normalize_fraction(obj.odds))
+        club = Club.objects.get(pk=obj.roomquiz_id)
+        my_option = my_rule + ":" + option_info.option + "/" + str(
+            normalize_fraction(obj.odds, int(club.coin.coin_accuracy)))
         data = []
         data.append({
             'my_option': my_option,  # 我的选项
@@ -207,13 +218,14 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_earn_coin(obj):
+        club = Club.objects.get(pk=obj.roomquiz_id)
         i = [0, 1, 2, 3]
         if int(obj.quiz.status) in i:
             earn_coin = "待开奖"
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
         else:
-            earn_coin = "+" + str(normalize_fraction(obj.earn_coin))
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(club.coin.coin_accuracy)))
         return earn_coin
 
     @staticmethod

@@ -83,7 +83,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # 电话号码
-        integral = normalize_fraction(obj.integral)
+        integral = normalize_fraction(obj.integral, 2)
         return integral
 
     def get_is_user(self, obj):  # 电话号码
@@ -162,7 +162,7 @@ class DailySerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_rewards(obj):  # 电话号码
-        rewards = normalize_fraction(obj.rewards)
+        rewards = normalize_fraction(obj.rewards, 2)
         return rewards
 
     def get_is_sign(self, obj):  # 是否已签到
@@ -348,7 +348,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_balance(obj):
-        balance = normalize_fraction(obj.balance)
+        balance = normalize_fraction(obj.balance, int(obj.coin.coin_accuracy))
         return balance
 
     @staticmethod
@@ -359,7 +359,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             s = i.value
             data.append(
                 {
-                    'value': normalize_fraction(s)
+                    'value': normalize_fraction(s, int(obj.coin.coin_accuracy))
                 }
             )
         return data
@@ -391,7 +391,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_min_present(obj):
-        min_present = normalize_fraction(obj.coin.cash_control)
+        min_present = normalize_fraction(obj.coin.cash_control, int(obj.coin.coin_accuracy))
         return min_present
 
     @staticmethod
@@ -401,7 +401,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_locked_coin(obj):  # 提现申请期间锁定币数
-        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id))
+        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id), int(obj.coin.coin_accuracy))
         return lock_coin
 
     @staticmethod
@@ -416,7 +416,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
             return ''
-        fee = normalize_fraction(coin_out.value)
+        fee = normalize_fraction(coin_out.value, int(obj.coin.coin_accuracy))
         return fee
 
     @staticmethod
@@ -452,7 +452,11 @@ class CoinOperateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_amount(obj):
-        amount = normalize_fraction(obj.amount)
+        try:
+            icons = Coin.objects.get(name=obj.coin_name)
+        except Exception:
+            return ''
+        amount = normalize_fraction(obj.amount, int(icons.coin_accuracy))
         return amount
 
     @staticmethod
@@ -566,5 +570,6 @@ class LuckDrawSerializer(serializers.ModelSerializer):
         if prize_number == 0:
             prize_number = ""
         else:
-            prize_number = normalize_fraction(prize_number)
+            coin = Coin.objects.get(name=obj.prize_name)
+            prize_number = normalize_fraction(prize_number, int(coin.coin_accuracy))
         return prize_number

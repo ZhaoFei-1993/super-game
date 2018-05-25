@@ -265,9 +265,18 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
     img.resize((newWidth, newHeight), Image.ANTIALIAS).save(image, quality=qua)
 
 
+def trunc(f, n):
+    s1, s2 = str(f).split('.')
+    if n == 0:
+        return s1
+    if n <= len(s2):
+        return s1 + '.' + s2[:n]
+    return s1 + '.' + s2 + '0' * (n - len(s2))
+
+
 # 去掉decimal类型数值后面的0
 def normalize_fraction(d, b):
-    d = round(d, b)
+    d = trunc(d, b)
     dd = Decimal(str(d))
     normalized = dd.normalize()
     sign, digit, exponent = normalized.as_tuple()
