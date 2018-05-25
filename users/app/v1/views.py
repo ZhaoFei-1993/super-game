@@ -1345,9 +1345,8 @@ class ForgetPasswordView(ListAPIView):
     """
     修改密码
     """
-    permission_classes = (LoginRequired,)
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         value = value_judge(request, "password", "code", "username")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
