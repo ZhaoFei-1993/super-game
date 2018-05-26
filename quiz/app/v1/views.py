@@ -16,13 +16,17 @@ from utils.functions import value_judge
 from datetime import datetime
 import re
 from utils.functions import normalize_fraction
+
+
 class CategoryView(ListAPIView):
     """
     竞猜分类
     """
     permission_classes = (LoginRequired,)
+
     def get_queryset(self):
         return
+
     def list(self, request, *args, **kwargs):
         categorys = Category.objects.filter(parent_id=None)
         data = []
@@ -43,24 +47,31 @@ class CategoryView(ListAPIView):
                 "children": children
             })
         return self.response({'code': 0, 'data': data})
+
+
 class HotestView(ListAPIView):
     """
     热门比赛
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizSerialize
+
     def get_queryset(self):
         return Quiz.objects.filter(status=0, is_delete=False).order_by('-total_people')[:10]
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         return self.response({'code': 0, 'data': items})
+
+
 class QuizListView(ListCreateAPIView):
     """
     获取竞猜列表
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizSerialize
+
     def get_queryset(self):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET:
@@ -86,16 +97,20 @@ class QuizListView(ListCreateAPIView):
                 set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
             my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
             return my_quiz
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
         return self.response({"code": 0, "data": value})
+
+
 class RecordsListView(ListCreateAPIView):
     """
     竞猜记录
     """
     permission_classes = (LoginRequired,)
     serializer_class = RecordSerialize
+
     def get_queryset(self):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
@@ -117,6 +132,7 @@ class RecordsListView(ListCreateAPIView):
             user_id = self.request.GET.get('user_id')
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
@@ -174,16 +190,20 @@ class RecordsListView(ListCreateAPIView):
                 'bet': fav.get('bets')
             })
         return self.response({'code': 0, 'data': data})
+
+
 class QuizDetailView(ListAPIView):
     """
     竞猜详情
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizDetailSerializer
+
     def get_queryset(self):
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
         quiz = Quiz.objects.filter(pk=quiz_id)
         return quiz
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
@@ -199,17 +219,21 @@ class QuizDetailView(ListAPIView):
             "time": item['time'],
             "status": item['status']
         }})
+
+
 class QuizPushView(ListAPIView):
     """
     下注页面推送
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizPushSerializer
+
     def get_queryset(self):
         roomquiz_id = self.request.GET.get('roomquiz_id')
         quiz_id = self.request.parser_context['kwargs']['quiz_id']
         record = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=roomquiz_id)
         return record
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
@@ -225,13 +249,17 @@ class QuizPushView(ListAPIView):
                 }
             )
         return self.response({"code": 0, "data": data})
+
+
 class RuleView(ListAPIView):
     """
     竞猜选项
     """
     permission_classes = (LoginRequired,)
+
     def get_queryset(self):
         return
+
     def list(self, request, *args, **kwargs):
         user = request.user.id
         roomquiz_id = self.request.GET.get('roomquiz_id')
@@ -358,13 +386,17 @@ class RuleView(ListAPIView):
                                        'coin_icon': coin_icon, 'coin_betting_control': coin_betting_control,
                                        'coin_betting_toplimit': coin_betting_toplimit, 'value1': value1,
                                        'value2': value2, 'value3': value3}})
+
+
 class BetView(ListCreateAPIView):
     """
     竞猜下注
     """
+
     # max_wager = 10000
     def get_queryset(self):
         pass
+
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
         value = value_judge(request, "quiz_id", "option", "wager", "roomquiz_id")
@@ -502,8 +534,10 @@ class RecommendView(ListAPIView):
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizSerialize
+
     def get_queryset(self):
         return Quiz.objects.filter(status__lt=2, is_delete=False).order_by('-total_people')[:20]
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
