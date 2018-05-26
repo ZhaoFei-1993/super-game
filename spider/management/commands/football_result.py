@@ -5,7 +5,7 @@ from django.db.models import Q
 import requests
 import json
 from quiz.models import Quiz, Rule, Option, Record
-from users.models import UserCoin, CoinDetail, Coin, UserMessage
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User
 from chat.models import Club
 from django.db import transaction
 import datetime
@@ -157,7 +157,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if is_right is False:
                 u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您答错了。'
             elif is_right is True:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您的奖金是:' + str(round(earn_coin, 3))
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您的奖金是:' + str(
+                    round(earn_coin, 3))
             u_mes.save()
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
@@ -235,30 +236,56 @@ def handle_unusual_game(quiz_list):
 
 
 def cash_back(quiz):
-    # int_record = Record.objects.filter(quiz=quiz, roomquiz_id=1)
-    # platform_sum = 0
-    # personal_sum = 0
-    # profit = 0
-    # user_list = []
-    # for record in int_record:
-    #     platform_sum = platform_sum + record.bet
-    #     profit = profit + record.earn_coin
-    #     if record.user_id not in user_list:
-    #         user_list.append(record.user_id)
-    # if profit > 0:
-    #     for user in user_list:
-    #         gsg_back = profit * 0.02
-    #
-    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=2):
-    #     pass
-    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=3):
-    #     pass
-    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=4):
-    #     pass
-    # for record in Record.objects.filter(quiz=quiz, roomquiz_id=5):
-    #     pass
-    pass
+    club_rate = {
+        "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
+    }
+    for club in Club.objects.all():
+        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id)
+        platform_sum = 0
+        profit = 0
+        user_list = []
+        for record in records:
+            platform_sum = platform_sum + record.bet
+            profit = profit + record.earn_coin
+            if record.user_id not in user_list:
+                user_list.append(record.user_id)
 
+        print('club====>' + club.room_title)
+        print('profit====>' + str(profit))
+        print('platform_sum====>' + str(platform_sum))
+
+        if profit < 0:
+            profit = abs(profit)
+            for user_id in user_list:
+                personal_sum = 0
+                for record_personal in records.filter(user_id=user_id):
+                    personal_sum = personal_sum + record_personal.bet
+                gsg_cash_back = float(profit) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
+                    club.room_title]
+                user = User.objects.get(pk=user_id)
+                user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
+                user.save()
+
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = "GSG"
+                coin_detail.amount = float(str(gsg_cash_back)[0:4])
+                coin_detail.rest = user.integral
+                coin_detail.sources = CoinDetail.CASHBACK
+                coin_detail.save()
+
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = record.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = '返现公告'
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back)[0:4] + '个GSG'
+                u_mes.save()
+
+                print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
+        print('---------------------------')
 
 
 class Command(BaseCommand):
@@ -292,7 +319,7 @@ class Command(BaseCommand):
                     else:
                         get_data_info(base_url, quiz.match_flag)
                         print(Quiz.objects.get(match_flag=quiz.match_flag).status)
-                        if Quiz.objects.get(match_flag=quiz.match_flag).status == Quiz.BONUS_DISTRIBUTION:
+                        if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION:
                             cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
         else:
             print('暂无比赛需要开奖')
