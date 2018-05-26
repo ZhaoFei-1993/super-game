@@ -1002,7 +1002,7 @@ class UserPresentationView(CreateAPIView):
         else:
             try:
                 print("coin_out.coin_payment===============================", coin_out.coin_payment)
-                coin_eth = UserCoin.objects.get(coin=coin_out.coin_payment)
+                coin_eth = UserCoin.objects.get(coin_id=2)
                 print("coin_eth======================", coin_eth)
             except Exception:
                 raise
