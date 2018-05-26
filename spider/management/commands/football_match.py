@@ -6,7 +6,7 @@ import re
 import requests
 import json
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Quiz, Rule, Option, Quiz_Odds_Log
+from quiz.models import Quiz, Rule, Option, Quiz_Odds_Log, OptionOdds, Club
 from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
@@ -493,6 +493,16 @@ def get_data_info(url):
                                 quiz_odds_log.option = option.option
                                 quiz_odds_log.odds = option.odds
                                 quiz_odds_log.save()
+
+                                # 生成俱乐部选项赔率表
+                                clubs = Club.objects.all()
+                                for club in clubs:
+                                    option_odds = OptionOdds()
+                                    option_odds.club = club
+                                    option_odds.quiz = quiz
+                                    option_odds.option = option
+                                    option_odds.odds = option.odds
+                                    option_odds.save()
                     else:
                         print('已经存在')
                     # --------------------------------------------------------------------------------------------------
