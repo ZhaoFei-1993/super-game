@@ -339,6 +339,7 @@ class InfoView(ListAPIView):
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
+        print("is_message===========================", is_message)
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
@@ -798,8 +799,12 @@ class MessageListView(ListAPIView, DestroyAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
+        public_sign = 0
+        if message_sign(user, 2) or message_sign(user, 3):
+            public_sign = 1
+        print("system_sign================", public_sign)
         system_sign = message_sign(user, 1)
-        public_sign = message_sign(user, 2)
+        print("public_sign====================", public_sign)
         for list in items:
             data.append({
                 "user_message_id": list["id"],
@@ -1669,7 +1674,7 @@ class InvitationInfoView(ListAPIView):
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
-        user_invitation_number = int(invitation_one_number)+int(invitation_two_number)
+        user_invitation_number = int(invitation_one_number) + int(invitation_two_number)
         moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
         return self.response(
             {'code': 0, 'user_invitation_number': user_invitation_number, 'moneys': moneys})

@@ -147,8 +147,10 @@ def message_hints(user_id):
 def message_sign(user_id, type):
     #  公共消息标记
     usermessage = UserMessage.objects.filter(user_id=user_id, status=0)
+    print("usermessage=====================", usermessage)
     sign = 0
     for list in usermessage:
+        print("list=====================", list.message.type)
         if int(list.message.type) == type:
             sign = 1
     return sign
