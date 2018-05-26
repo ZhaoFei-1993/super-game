@@ -318,7 +318,7 @@ class Command(BaseCommand):
                                                          guest_team=quiz.guest_team))
                     else:
                         get_data_info(base_url, quiz.match_flag)
-                        print(Quiz.objects.get(match_flag=quiz.match_flag).status)
+                        # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                         if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION:
                             cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
         else:
