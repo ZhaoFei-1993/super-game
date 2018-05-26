@@ -1669,11 +1669,10 @@ class InvitationInfoView(ListAPIView):
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
+        user_invitation_number = int(invitation_one_number)+int(invitation_two_number)
         moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
         return self.response(
-            {'code': 0, 'invitation_one_number': invitation_one_number, 'invitation_two_number': invitation_two_number,
-             'user_invitation_one': user_invitation_ones, 'user_invitation_twos': user_invitation_twos,
-             'moneys': moneys})
+            {'code': 0, 'user_invitation_number': user_invitation_number, 'moneys': moneys})
 
 
 class InvitationUserView(ListAPIView):
