@@ -56,7 +56,7 @@ class User(AbstractBaseUser):
     username = models.CharField(verbose_name="用户账号", max_length=32)
     nickname = models.CharField(verbose_name="用户昵称", max_length=20)
     register_type = models.CharField(verbose_name="注册类型", choices=REGISTER_TYPE, max_length=1, default=REGISTER_UNKNOWN)
-    source = models.CharField(verbose_name="用户来源", choices=SOURCE_CHOICE, max_length=1, default=IOS)
+    source = models.CharField(verbose_name="用户来源", choices=SOURCE_CHOICE, max_length=2, default=IOS)
     avatar = models.CharField(verbose_name="头像", max_length=255, default='')
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
     pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
@@ -185,6 +185,7 @@ class CoinDetail(models.Model):
     INVITE = 8
     RETURN = 9
     CASHBACK = 10
+
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
@@ -201,7 +202,7 @@ class CoinDetail(models.Model):
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
     rest = models.DecimalField(verbose_name="余额", max_digits=20, decimal_places=8, default=0.00000000)
-    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=1, default=BETS)
+    sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=2, default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
 
