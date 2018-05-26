@@ -7,7 +7,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Category, Quiz, Rule, Option
+from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, Quiz_Odds_Log
 from wc_auth.models import Admin
 from .get_time import get_time
 
@@ -329,6 +329,27 @@ def get_data_info(url):
                             rule.min_odd = min(odds_pool_wnm)
                             rule.save()
                             odds_pool_wnm.clear()
+
+                    # 记录初始赔率
+                    quiz = Quiz.objects.get(match_flag=match_id)
+                    for rule in Rule.objects.filter(quiz=quiz):
+                        for option in Option.objects.filter(rule=rule):
+                            quiz_odds_log = Quiz_Odds_Log()
+                            quiz_odds_log.quiz = quiz
+                            quiz_odds_log.rule = rule
+                            quiz_odds_log.option = option.option
+                            quiz_odds_log.odds = option.odds
+                            quiz_odds_log.save()
+
+                            # 生成俱乐部选项赔率表
+                            clubs = Club.objects.all()
+                            for club in clubs:
+                                option_odds = OptionOdds()
+                                option_odds.club = club
+                                option_odds.quiz = quiz
+                                option_odds.option = option
+                                option_odds.odds = option.odds
+                                option_odds.save()
                 else:
                     print('已经存在')
                 # ------------------------------------------------------------------------------------------------------

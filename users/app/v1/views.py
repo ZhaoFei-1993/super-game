@@ -339,7 +339,6 @@ class InfoView(ListAPIView):
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        print("is_message===========================", is_message)
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
@@ -788,10 +787,10 @@ class MessageListView(ListAPIView, DestroyAPIView):
         list = ""
         if int(type) == 1:
             list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
-                                              Q(status=1) | Q(status=0)).order_by("-created_at")
+                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         elif int(type) == 2:
             list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
-                                              Q(status=1) | Q(status=0)).order_by("-created_at")
+                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         return list
 
     def list(self, request, *args, **kwargs):
@@ -802,9 +801,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
         public_sign = 0
         if message_sign(user, 2) or message_sign(user, 3):
             public_sign = 1
-        print("system_sign================", public_sign)
         system_sign = message_sign(user, 1)
-        print("public_sign====================", public_sign)
         for list in items:
             data.append({
                 "user_message_id": list["id"],
