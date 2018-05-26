@@ -1001,7 +1001,7 @@ class UserPresentationView(CreateAPIView):
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
         else:
             try:
-                coin_eth = UserCoin.objects.get(coin=coin_out.coin_payment)
+                coin_eth = UserCoin.objects.get(user_id=userid, coin_id=coin_out.coin_payment)
             except Exception:
                 raise
             if coin_eth.balance < coin_out.value:

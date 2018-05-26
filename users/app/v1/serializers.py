@@ -442,13 +442,13 @@ class CoinOperateSerializer(serializers.ModelSerializer):
     created_at = serializers.SerializerMethodField()
     icon = serializers.SerializerMethodField()
     amount = serializers.SerializerMethodField()
+    service_charge = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
         fields = (
             'id', 'amount', 'coin_name', 'icon', 'address', 'address_name', 'status', 'status_code', 'created_at',
-            'month',
-            'time')
+            'month', 'time', 'service_charge')
 
     @staticmethod
     def get_amount(obj):
@@ -456,8 +456,20 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             icons = Coin.objects.get(name=obj.coin_name)
         except Exception:
             return ''
-        amount = normalize_fraction(obj.amount, int(icons.coin_accuracy))
+        amount = normalize_fraction(obj.amount, 6)
         return amount
+
+    @staticmethod
+    def get_service_charge(obj):
+        try:
+            icons = Coin.objects.get(name=obj.coin_name)
+            coin_out = CoinOutServiceCharge.objects.get(coin_out=icons)
+        except Exception:
+            return ''
+        coin_name = str(coin_out.coin_payment.name)
+        coin_value = normalize_fraction(float(coin_out.value), int(coin_out.coin_payment.coin_accuracy))
+        service_charge = "-" + str(coin_value) + str(coin_name)
+        return service_charge
 
     @staticmethod
     def get_address(obj):
