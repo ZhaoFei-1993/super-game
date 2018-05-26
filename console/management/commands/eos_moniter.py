@@ -82,6 +82,7 @@ class Command(BaseCommand):
                     continue
 
                 valid_trans += 1
+                self.stdout.write(self.style.SUCCESS('tx_value = ' + str(tx_value)))
 
                 user_recharge = UserRecharge()
                 user_recharge.user_id = user_id
