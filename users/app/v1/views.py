@@ -799,11 +799,11 @@ class MessageListView(ListAPIView, DestroyAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
-        system_sign = 0
+        public_sign = 0
         if message_sign(user, 2) or message_sign(user, 3):
-            system_sign = 1
-        print("system_sign================", system_sign)
-        public_sign = message_sign(user, 1)
+            public_sign = 1
+        print("system_sign================", public_sign)
+        system_sign = message_sign(user, 1)
         print("public_sign====================", public_sign)
         for list in items:
             data.append({
