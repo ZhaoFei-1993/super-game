@@ -76,12 +76,13 @@ class Command(BaseCommand):
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
-                tx_value = trans['value']
+                tx_value = int(trans['value']) / 1000000000000000000
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
 
                 valid_trans += 1
+                self.stdout.write(self.style.SUCCESS('tx_value = ' + str(tx_value)))
 
                 user_recharge = UserRecharge()
                 user_recharge.user_id = user_id

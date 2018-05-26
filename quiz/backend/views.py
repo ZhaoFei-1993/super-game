@@ -2,6 +2,7 @@
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from .serializers import CategorySerializer, UserQuizSerializer
 from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
+from chat.models import  Club
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
@@ -296,15 +297,15 @@ class QuizListBackEndView(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        values = Record.objects.all().values("quiz","coin").annotate(total_coin=Count('coin'),
+        values = Record.objects.all().values("quiz", "roomquiz_id").annotate(total_coin=Count('roomquiz_id'),
                                                                       sum_bet=Sum('bet')).order_by('-total_coin')
         data = []
         for x in values:
             q_id = int(x['quiz'])
-            c_id = int(x['coin'])
+            r_id = int(x['roomquiz_id'])
             try:
                 quiz = Quiz.objects.get(id=q_id)
-                coin = Coin.objects.get(id=c_id)
+                room = Club.objects.get(id=r_id)
             except Exception:
                 return JsonResponse({'ERROR': '比赛不存在或币种不存在'}, status=status.HTTP_400_BAD_REQUEST)
             state = ''
@@ -317,7 +318,7 @@ class QuizListBackEndView(ListAPIView):
                 'host_team': quiz.host_team,
                 'guest_team': quiz.guest_team,
                 'match_time': match_time,
-                'coin': coin.name,
+                'coin': room.coin.name,
                 'total_coin': x['total_coin'],
                 'sum_bet': x['sum_bet'],
                 'status': state

@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
-from django.db import models
+from django.db import models, transaction
 from wc_auth.models import Admin
 from mptt.models import MPTTModel, TreeForeignKey
 from users.models import Coin, User, CoinValue
+from chat.models import Club
 import reversion
 from django.conf import settings
 from django.db.models import Sum, F, FloatField
@@ -144,7 +145,7 @@ class OptionManager(models.Manager):
         不同币种不同配置：最大可赔、最大下注数
         :param  coin_id 货币ID
         :param  max_rate 当前最大赔率
-        :return: require_coin: float, max_wager: float
+        :return: require_coin: Decimal, max_wager: float
         """
         bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
         max_bet_value = Decimal(bet_max.value)
@@ -217,6 +218,56 @@ class Option(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项表"
+
+
+class OptionOddsManager(models.Manager):
+    """
+    竞猜选项赔率
+    """
+    @staticmethod
+    @transaction.atomic()
+    def fill_odds(quiz_list):
+        """
+        填充赔率
+        :param quiz_list    竞猜列表
+        :return:
+        """
+        if len(quiz_list) == 0:
+            return True
+
+        clubs = Club.objects.all()
+
+        for club in clubs:
+            for quiz in quiz_list:
+                has_odds = OptionOdds.objects.filter(quiz=quiz, club_id=club.id).count()
+                if has_odds > 0:
+                    continue
+                # 获取所有rule
+                rules = Rule.objects.filter(quiz=quiz)
+                if len(rules) == 0:
+                    continue
+                for rule in rules:
+                    options = Option.objects.filter(rule=rule)
+                    for option in options:
+                        option_odds = OptionOdds()
+                        option_odds.club_id = club.id
+                        option_odds.quiz = quiz
+                        option_odds.option_id = option.id
+                        option_odds.odds = option.odds
+                        option_odds.save()
+
+
+class OptionOdds(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.DO_NOTHING)
+    quiz = models.ForeignKey(Quiz, on_delete=models.DO_NOTHING)
+    option = models.ForeignKey(Option, on_delete=models.DO_NOTHING)
+    odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=1.95)
+
+    objects = OptionOddsManager()
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "竞猜选项赔率表"
 
 
 @reversion.register()

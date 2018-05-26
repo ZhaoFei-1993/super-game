@@ -381,11 +381,11 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': normalize_fraction(user_coin),
+            'usercoin': normalize_fraction(user_coin, int(usercoin.coin.coin_accuracy)),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
-            'integral': normalize_fraction(items[0]["integral"]),
+            'integral': normalize_fraction(items[0]["integral"], 2),
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'is_message': is_message,
@@ -533,7 +533,7 @@ class RankingView(ListAPIView):
             "user_id": user.id,
             "avatar": avatar,
             "nickname": nickname,
-            "win_ratio": normalize_fraction(integral),
+            "win_ratio": normalize_fraction(integral, 2),
             "ranking": my_ran
         }
         list = []
@@ -769,7 +769,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.save()
 
         content = {'code': 0,
-                   'data': normalize_fraction(rewards)
+                   'data': normalize_fraction(rewards, 2)
                    }
         return self.response(content)
 
@@ -828,18 +828,16 @@ class DetailView(ListAPIView):
         user_message_id = kwargs['user_message_id']
         try:
             user_message = UserMessage.objects.get(pk=user_message_id)
+            print("user_message")
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
         user_message.save()
-        print("user_message_id=====================", user_message_id)
         if int(user_message.message.type) == 3:
-            print("1111111111111111111", user_message.content)
             content = {'code': 0,
                        'data': user_message.content,
                        'status': user_message.status}
         else:
-            print("2222222222222222222222", user_message.message.content)
             content = {'code': 0,
                        'data': user_message.message.content,
                        'status': user_message.status}
@@ -899,13 +897,13 @@ class AssetView(ListAPIView):
                 'recent_address': list["recent_address"]
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 0)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': normalize_fraction(integral), 'data': data})
+                              'user_integral': normalize_fraction(integral, 2), 'data': data})
 
 
 # class AssetLockView(CreateAPIView):
@@ -1083,12 +1081,13 @@ class PresentationListView(ListAPIView):
         items = results.data.get('results')
         data = []
         for x in items:
+            coin = Coin.objects.get(pk=x['coin'])
             data.append(
                 {
                     'id': x['id'],
                     'coin_id': x['coin'],
-                    'amount': normalize_fraction(x['amount']),
-                    'rest': normalize_fraction(x['rest']),
+                    'amount': normalize_fraction(x['amount'], coin.coin_accuracy),
+                    'rest': normalize_fraction(x['rest'], coin.coin_accuracy),
                     'address': x['address'],
                     'created_at': x['created_at'].split(' ')[0].replace('-', '/')
                 }
@@ -1670,11 +1669,10 @@ class InvitationInfoView(ListAPIView):
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
+        user_invitation_number = int(invitation_one_number)+int(invitation_two_number)
         moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
         return self.response(
-            {'code': 0, 'invitation_one_number': invitation_one_number, 'invitation_two_number': invitation_two_number,
-             'user_invitation_one': user_invitation_ones, 'user_invitation_twos': user_invitation_twos,
-             'moneys': moneys})
+            {'code': 0, 'user_invitation_number': user_invitation_number, 'moneys': moneys})
 
 
 class InvitationUserView(ListAPIView):
@@ -1796,8 +1794,8 @@ class LuckDrawListView(ListAPIView):
             )
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
-             'integral': normalize_fraction(user.integral),
-             'prize_consume': normalize_fraction(prize_consume)})
+             'integral': normalize_fraction(user.integral, 2),
+             'prize_consume': normalize_fraction(prize_consume, 2)})
 
 
 class ClickLuckDrawView(CreateAPIView):
@@ -1871,7 +1869,6 @@ class ClickLuckDrawView(CreateAPIView):
         for a in fictitious_prize_name_list:
             fictitious_prize_name.append(a[0])
 
-        print("choice=============================", choice)
         if choice in fictitious_prize_name:
             try:
                 user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)
@@ -1902,7 +1899,7 @@ class ClickLuckDrawView(CreateAPIView):
                 'icon': integral_prize.icon,
                 'prize_name': integral_prize.prize_name,
                 'prize_number': prize_number,
-                'integral': normalize_fraction(user_info.integral),
+                'integral': normalize_fraction(user_info.integral, 2),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
                 'is_gratis': get_cache(NUMBER_OF_LOTTERY_AWARDS)
             }
