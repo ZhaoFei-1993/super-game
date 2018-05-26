@@ -76,7 +76,7 @@ class Command(BaseCommand):
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
-                tx_value = trans['value']
+                tx_value = int(trans['value'])
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
