@@ -456,7 +456,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
             icons = Coin.objects.get(name=obj.coin_name)
         except Exception:
             return ''
-        amount = normalize_fraction(obj.amount, int(icons.coin_accuracy))
+        amount = normalize_fraction(obj.amount, 6)
         return amount
 
     @staticmethod
@@ -467,7 +467,7 @@ class CoinOperateSerializer(serializers.ModelSerializer):
         except Exception:
             return ''
         coin_name = str(coin_out.coin_payment.name)
-        coin_value = normalize_fraction(float(coin_out.value), int(icons.coin_accuracy))
+        coin_value = normalize_fraction(float(coin_out.value), int(coin_out.coin_payment.coin_accuracy))
         service_charge = "-" + str(coin_value) + str(coin_name)
         return service_charge
 
