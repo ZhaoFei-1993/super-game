@@ -138,7 +138,7 @@ class OptionManager(models.Manager):
     """
     选项操作
     """
-    require_coin_times = 100   # 最大可赔倍数
+    require_coin_times = 100  # 最大可赔倍数
 
     def get_odds_config(self, coin_id, max_rate):
         """
@@ -163,13 +163,15 @@ class OptionManager(models.Manager):
         """
         rule = Rule.objects.get(pk=rule_id)
 
-        options = Option.objects.filter(rule_id=rule_id).order_by('order')
+        options = OptionOdds.objects.select_for_update().filter(option__rule_id=rule_id, club_id=roomquiz_id).order_by(
+            'option__order')
         rates = []
         for o in options:
             rates.append(float(o.odds))
 
         # 获取奖池总数
-        pool_sum = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id).aggregate(Sum('bet'))
+        pool_sum = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id, source=Record.NORMAL).aggregate(
+            Sum('bet'))
         pool = pool_sum['bet__sum']
         if pool is None:
             pool = 0
@@ -177,7 +179,8 @@ class OptionManager(models.Manager):
             pool = float(pool)
 
         # 获取各选项产出猜币数
-        option_pays = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id).values('option_id').annotate(
+        option_pays = Record.objects.filter(rule_id=rule_id, roomquiz_id=roomquiz_id, source=Record.NORMAL).values(
+            'option_id').annotate(
             pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
         pays = []
         tmp_idx = 0
@@ -224,6 +227,7 @@ class OptionOddsManager(models.Manager):
     """
     竞猜选项赔率
     """
+
     @staticmethod
     @transaction.atomic()
     def fill_odds(quiz_list):
@@ -283,7 +287,7 @@ class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
-    option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    option = models.ForeignKey(OptionOdds, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
     # bet = models.IntegerField(verbose_name="下注金额", default=0)
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)

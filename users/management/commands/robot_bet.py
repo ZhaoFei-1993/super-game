@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 import time
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
-from django.db.models import Sum, F, FloatField
 from django.db import transaction
 from django.db.models import Q
 
-from quiz.models import Quiz, Option, Record, Rule
+from quiz.models import Quiz, Option, Record, Rule, OptionOdds
 from users.models import User, UserCoin, CoinValue
 from chat.models import Club
-from quiz.odds import Game
 
 
 class Command(BaseCommand):
@@ -33,8 +31,6 @@ class Command(BaseCommand):
 
     # 本日已生成的系统用户时间
     key_today_generated = 'robot_bet_quiz_datetime'
-
-    bet_times = 20
 
     robot_bet_change_odds = False
 
@@ -65,7 +61,7 @@ class Command(BaseCommand):
             raise CommandError('非自动下注时间')
 
         # 获取所有进行中的竞猜
-        quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False)
+        quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False, begin_at__gt=datetime.now())
         if len(quizs) == 0:
             raise CommandError('当前无进行中的竞猜')
 
@@ -91,13 +87,6 @@ class Command(BaseCommand):
             # 随机下注币、赌注
             wager = self.get_bet_wager(club.coin_id)
 
-            options = Option.objects.select_for_update().filter(rule=rule).order_by('order')
-            rates = []
-            idx_option = 0
-            for o in options:
-                rates.append(float(o.odds))
-                idx_option += 1
-
             current_odds = option.odds
 
             record = Record()
@@ -111,37 +100,8 @@ class Command(BaseCommand):
             record.source = Record.CONSOLE
             record.save()
 
-            if self.robot_bet_change_odds is False:
-                # 获取奖池总数
-                pool_sum = Record.objects.filter(rule=rule).aggregate(Sum('bet'))
-                pool = float(pool_sum['bet__sum'])
-
-                # 获取各选项产出猜币数
-                option_pays = Record.objects.filter(rule=rule).values('option_id').annotate(
-                    pool_sum=Sum(F('bet') * F('odds'), output_field=FloatField())).order_by('-pool_sum')
-                pays = []
-                tmp_idx = 0
-                for opt in options:
-                    pays.append(0)
-                    for op in option_pays:
-                        if opt.id == op['option_id']:
-                            pays[tmp_idx] = op['pool_sum']
-                    tmp_idx += 1
-
-                coin_value = CoinValue.objects.filter(coin_id=club.coin_id).order_by('-value')
-                max_wager = int(coin_value[0].value)
-                require_coin = max_wager * self.bet_times
-                g = Game(settings.BET_FACTOR, require_coin, max_wager, rates)
-                g.bet(pool, pays)
-                odds = g.get_oddses()
-
-                # 更新选项赔率
-                idx = 0
-                for option in options:
-                    option.odds = odds[idx]
-                    option.save()
-
-                    idx += 1
+            if self.robot_bet_change_odds is True:
+                Option.objects.change_odds(rule.id, club.coin_id, club.id)
 
             # 用户减少对应币持有数
             user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
@@ -230,7 +190,7 @@ class Command(BaseCommand):
         :param rule_id 玩法ID
         :return:
         """
-        options = Option.objects.filter(rule_id=rule_id)
+        options = OptionOdds.objects.filter(option__rule_id=rule_id)
         if len(options) == 0:
             return False
 

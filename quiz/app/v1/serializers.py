@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import time
 from rest_framework import serializers
-from ...models import Quiz, Record, Option, Rule, Category
+from ...models import Quiz, Record, Option, Rule, Category, OptionOdds
 from time import strftime, gmtime
 from decimal import Decimal
 from datetime import timedelta, datetime
@@ -55,21 +55,24 @@ class QuizSerialize(serializers.ModelSerializer):
         total_coin_avatar = club_info.coin.icon
         return total_coin_avatar
 
-    @staticmethod
-    def get_win_rate(obj):
+    def get_win_rate(self, obj):
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         odds = 0
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, flag="h")
+                # option = Option.objects.get(rule_id=rule.pk, flag="h")
+                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="h", club_id=roomquiz_id)
                 odds = option.odds
-            except Option.DoesNotExist:
+            except OptionOdds.DoesNotExist:
                 odds = 0
 
         return odds
 
-    @staticmethod
-    def get_planish_rate(obj):
+    def get_planish_rate(self, obj):
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+
         vv = Category.objects.get(pk=obj.category_id)
         type_id = vv.parent_id
         quiz_type = Category.objects.get(pk=type_id)
@@ -80,21 +83,22 @@ class QuizSerialize(serializers.ModelSerializer):
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, flag="d")
+                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="d", club_id=roomquiz_id)
                 odds = option.odds
-            except Option.DoesNotExist:
+            except OptionOdds.DoesNotExist:
                 odds = 0
         return odds
 
-    @staticmethod
-    def get_lose_rate(obj):
+    def get_lose_rate(self, obj):
+        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         odds = 0
         for rule in rule_obj:
             try:
-                option = Option.objects.get(rule_id=rule.pk, flag="a")
+                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="a", club_id=roomquiz_id)
                 odds = option.odds
-            except Option.DoesNotExist:
+            except OptionOdds.DoesNotExist:
                 odds = 0
         return odds
 
@@ -181,27 +185,28 @@ class RecordSerialize(serializers.ModelSerializer):
         years = obj.created_at.strftime('%Y')
         year = obj.created_at.strftime('%m/%d')
         time = obj.created_at.strftime('%H:%M')
-        data = []
-        data.append({
+        data = [{
             'years': years,
             'year': year,
             'time': time,
-        })
+        }]
         return data
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        option_info = Option.objects.get(pk=obj.option_id)
-        rule_list = Rule.objects.get(pk=option_info.rule_id)
+        # option_info = Option.objects.get(pk=obj.option_id)
+        option = OptionOdds.objects.get(pk=obj.option_id)
+
+        rule_list = Rule.objects.get(pk=option.option.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
         club = Club.objects.get(pk=obj.roomquiz_id)
-        my_option = my_rule + ":" + option_info.option + "/" + str(
+        my_option = my_rule + ":" + option.option.option + "/" + str(
             normalize_fraction(obj.odds, int(club.coin.coin_accuracy)))
-        data = []
-        data.append({
+
+        data = [{
             'my_option': my_option,  # 我的选项
-            'is_right': option_info.is_right,  # 是否为正确答案
-        })
+            'is_right': option.option.is_right,  # 是否为正确答案
+        }]
         return data
 
     @staticmethod
@@ -331,8 +336,10 @@ class QuizPushSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_my_option(obj):
-        option = Option.objects.get(pk=obj.option_id)
-        my_option = option.option
+        # option = Option.objects.get(pk=obj.option_id)
+        option = OptionOdds.objects.get(pk=obj.option_id)
+
+        my_option = option.option.option
         return my_option
 
     @staticmethod
