@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction
@@ -60,7 +61,7 @@ class Command(BaseCommand):
             raise CommandError('非自动下注时间')
 
         # 获取所有进行中的竞猜
-        quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False)
+        quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False, begin_at__gt=datetime.now())
         if len(quizs) == 0:
             raise CommandError('当前无进行中的竞猜')
 
