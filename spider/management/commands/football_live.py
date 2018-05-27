@@ -153,8 +153,7 @@ def get_live_data():
                     print(match_id)
                     if score.split(',')[0] == data_list['fs_h'] + ':' + data_list['fs_a'] \
                             and score.split(',')[1] == data_list['status'] \
-                            and score.split(',')[2] == data_list['match_period'] \
-                            or (data_list['match_period'] == 'HT' and score.split(',')[3] == 1):
+                            and score.split(',')[2] == data_list['match_period']:
                         print(get_time())
                         print('不需要更新')
                         print('--------------------------')
