@@ -38,4 +38,4 @@ class Command(BaseCommand):
             address_query.address = json_data['data']['account']
             address_query.passphrase = json_data['data']['password']
             address_query.save()
-            print('分配成功')
+            print('分配成功 ' + str(i))
