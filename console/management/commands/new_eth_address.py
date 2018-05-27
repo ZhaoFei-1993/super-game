@@ -27,7 +27,7 @@ class Command(BaseCommand):
         # else:
         #     print('用户已分配地址')
 
-        for i in range(0, 10):
+        for i in range(0, 500):
             json_data = eth_wallet.post(url='v1/account/new', data=None)
             if json_data['code'] != 0:
                 print(json_data['message'])
