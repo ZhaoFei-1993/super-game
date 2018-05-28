@@ -1635,10 +1635,14 @@ class InvitationRegisterView(CreateAPIView):
         user_go_line = UserInvitation()  # 邀请T2是否已达上限
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
                                                        is_deleted=1).count()
+        try:
+            invitation = User.objects.get(invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
         if invitee_number < 10:
             user_go_line.is_effective = 1
             user_go_line.money = 200
-        user_go_line.inviter = invitation_id
+        user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
         return self.response({
