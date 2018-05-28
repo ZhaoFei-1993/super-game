@@ -23,6 +23,7 @@ def get_transactions(address):
     txs = []
     items = json_data['data']
     for item in items:
+        print('item = ', item)
         time_local = time.localtime(item['received_time'])
         time_dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
         data = {
