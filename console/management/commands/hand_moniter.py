@@ -71,24 +71,15 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
 
-            # 首次充值获得奖励
-            UserRecharge.objects.first_price(user_id)
-
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = int(trans['value'])
+                confirmations = trans['confirmations']
+
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
-
-                confirmations = trans['confirmations']
-
-                # 确认数 >= 15 才处理
-                if confirmations < settings.ETH_CONFIRMATIONS:
-                    continue
-
-                valid_trans += 1
 
                 user_recharge = UserRecharge()
                 user_recharge.user_id = user_id
@@ -100,8 +91,7 @@ class Command(BaseCommand):
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()
 
-                user_coin.balance += Decimal(tx_value)
-                user_coin.save()
+                valid_trans += 1
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
             self.stdout.write(self.style.SUCCESS(''))
