@@ -272,17 +272,21 @@ class LoginView(CreateAPIView):
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
         avatar_nickname = avatar_nickname.strip('\n')
         nickname, avatar = avatar_nickname.split(',')
+        a = avatar.split('_')
+        if len(a) > 2:
+            pass
+            print('----------Error------------', a)
+        else:
+            print("nickname==========================", nickname)
+            print("avatar==========================", avatar)
+            folder, suffix = avatar.split('_')
 
-        print("nickname==========================", nickname)
-        print("avatar==========================", avatar)
-        folder, suffix = avatar.split('_')
+            avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
-
-        line_number += 1
-        set_cache(key_name_avatar, line_number)
-        print("avatar_url====================================", avatar_url)
-        return nickname, avatar_url
+            line_number += 1
+            set_cache(key_name_avatar, line_number)
+            print("avatar_url====================================", avatar_url)
+            return nickname, avatar_url
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
