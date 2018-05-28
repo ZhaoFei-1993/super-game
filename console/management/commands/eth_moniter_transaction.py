@@ -15,7 +15,6 @@ def get_transaction(transaction_hash):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/transaction/' + transaction_hash)
-    print('json_data = ', json_data)
     if json_data['code'] > 0:
         raise CommandError(json_data['message'] + ' tx = ' + transaction_hash)
 
