@@ -68,6 +68,22 @@ class UserRegister(object):
             register_type = User.REGISTER_WECHAT
         return register_type
 
+    @staticmethod
+    def get_user(username):
+        """
+        获取用户对象
+        :param username:
+        :return:
+        """
+        user = None
+        user_name_exists = User.objects.filter(username=username).count()
+        if user_name_exists > 0:
+            user = User.objects.get(username=username)
+        else:
+            user = User.objects.get(telephone=username)
+
+        return user
+
     def get_access_token(self, source, user):
         """
         获取access_token
@@ -827,6 +843,7 @@ class DetailView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
+        user = self.request.user.id
         user_message_id = kwargs['user_message_id']
         try:
             user_message = UserMessage.objects.get(pk=user_message_id)
@@ -835,14 +852,24 @@ class DetailView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
         user_message.save()
+        public_sign = 0
+        if message_sign(user, 2) or message_sign(user, 3):
+            public_sign = 1
+        system_sign = message_sign(user, 1)
         if int(user_message.message.type) == 3:
             content = {'code': 0,
                        'data': user_message.content,
-                       'status': user_message.status}
+                       'status': user_message.status,
+                       'system_sign': system_sign,
+                       'public_sign': public_sign
+                       }
         else:
             content = {'code': 0,
                        'data': user_message.message.content,
-                       'status': user_message.status}
+                       'status': user_message.status,
+                       'system_sign': system_sign,
+                       'public_sign': public_sign
+                       }
         return self.response(content)
 
 
@@ -1612,7 +1639,8 @@ class InvitationRegisterView(CreateAPIView):
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
-            user_info = User.objects.get(pk=invitation_id)
+            user = ur.get_user(telephone)
+            user_info = User.objects.get(pk=user.id)
         except DailyLog.DoesNotExist:
             return 0
 
