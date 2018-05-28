@@ -147,8 +147,9 @@ class OptionManager(models.Manager):
         :param  max_rate 当前最大赔率
         :return: require_coin: Decimal, max_wager: float
         """
-        bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
-        max_bet_value = Decimal(bet_max.value)
+        # bet_max = CoinValue.objects.filter(coin_id=coin_id).order_by('-value').first()
+        bet_max = Coin.objects.get(pk=coin_id)
+        max_bet_value = Decimal(bet_max.betting_toplimit)
         require_coin_times = Decimal(self.require_coin_times)
 
         return max_bet_value * require_coin_times * max_rate, max_bet_value
