@@ -41,6 +41,7 @@ class Command(BaseCommand):
 
             trans = get_transaction(txid)
             if trans['confirmations'] < settings.ETH_CONFIRMATIONS:
+                self.stdout.write(self.style.SUCCESS(txid + ' 确认数未达标'))
                 continue
 
             recharge.confirmations = trans['confirmations']
