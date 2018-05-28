@@ -9,7 +9,7 @@ import os
 import datetime
 from rq import Queue
 from redis import Redis
-from quiz.consumers import quiz_send_score
+from quiz.consumers import quiz_send_score, quiz_send_basketball_time
 from api.settings import BASE_DIR
 from .get_time import get_time
 
@@ -62,6 +62,10 @@ def get_live_data():
                         files = files
                     host_team_score = data_list[13]
                     guest_team_score = data_list[12]
+
+                    redis_conn = Redis()
+                    q = Queue(connection=redis_conn)
+
                     if cache_name not in files:
                         with open(cache_name, 'w+') as f:
                             f.write(data_list[13] + ':' + data_list[12] + ',')
@@ -107,28 +111,40 @@ def get_live_data():
                             if Quiz.objects.filter(match_flag=match_id).first() is not None:
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
-                                    quiz.host_team_score = host_team_score
-                                    quiz.guest_team_score = guest_team_score
                                     quiz.status = quiz.ENDED
                                     quiz.gaming_time = -1
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
                                     quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 0)
                                 elif data_list[28] == '1':
                                     quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 1)
                                 elif data_list[28] == '2':
                                     quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 2)
                                 elif data_list[28] == '50':
                                     quiz.status = quiz.HALF_TIME
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 50)
                                 elif data_list[28] == '3':
                                     quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 3)
                                 elif data_list[28] == '4':
                                     quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 4)
                                 # 1,2,3,4:第一二三四节，50中场休息
+                                quiz.host_team_score = host_team_score
+                                quiz.guest_team_score = guest_team_score
                                 quiz.save()
 
                                 # 比分推送
-                                redis_conn = Redis()
-                                q = Queue(connection=redis_conn)
                                 q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)

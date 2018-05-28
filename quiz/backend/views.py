@@ -297,8 +297,9 @@ class QuizListBackEndView(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        values = Record.objects.all().values("quiz", "roomquiz_id").annotate(total_coin=Count('roomquiz_id'),
-                                                                      sum_bet=Sum('bet')).order_by('-total_coin')
+        category = kwargs['type']
+        values = Record.objects.filter(source = 0, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
+                                                                      sum_bet=Sum('bet')).order_by('-total_bet')
         data = []
         for x in values:
             q_id = int(x['quiz'])
@@ -310,20 +311,25 @@ class QuizListBackEndView(ListAPIView):
                 return JsonResponse({'ERROR': '比赛不存在或币种不存在'}, status=status.HTTP_400_BAD_REQUEST)
             state = ''
             for i in quiz.STATUS_CHOICE:
-                if quiz.status == i[0]:
+                if int(quiz.status) == i[0]:
                     state = i[1]
-            match_time = quiz.begin_at.strftime('%Y年%m月%d %H%M')
+                    print(state)
+            match_time = quiz.begin_at.strftime('%Y-%m-%d %H:%M')
             temp_dict = {
+                'quiz_id': quiz.id,
                 'match_name': quiz.match_name,
                 'host_team': quiz.host_team,
                 'guest_team': quiz.guest_team,
                 'match_time': match_time,
-                'coin': room.coin.name,
-                'total_coin': x['total_coin'],
+                'room': room.room_title,
+                'room_id': room.id,
+                'total_bet': x['total_bet'],
                 'sum_bet': x['sum_bet'],
                 'status': state
             }
             data.append(temp_dict)
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+
 
 
