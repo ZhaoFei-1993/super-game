@@ -102,16 +102,16 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # 判断是否回答正确
             is_right = False
             if record.rule_id == rule_had.id:
-                if record.option_id == option_had.id:
+                if record.option.option_id == option_had.id:
                     is_right = True
             if record.rule_id == rule_hhad.id:
-                if record.option_id == option_hhad.id:
+                if record.option.option_id == option_hhad.id:
                     is_right = True
             if record.rule_id == rule_ttg.id:
-                if record.option_id == option_ttg.id:
+                if record.option.option_id == option_ttg.id:
                     is_right = True
             if record.rule_id == rule_crs.id:
-                if record.option_id == option_crs.id:
+                if record.option.option_id == option_crs.id:
                     is_right = True
 
             earn_coin = record.bet * record.odds
@@ -155,9 +155,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             u_mes.title = '开奖公告'
             option_right = Option.objects.get(rule=record.rule, is_right=True)
             if is_right is False:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您答错了。'
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您答错了。'
             elif is_right is True:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您的奖金是:' + str(
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您的奖金是:' + str(
                     round(earn_coin, 3))
             u_mes.save()
 

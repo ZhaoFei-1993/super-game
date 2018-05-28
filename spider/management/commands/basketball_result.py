@@ -7,7 +7,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record
-from users.models import UserCoin, CoinDetail, Coin, UserMessage
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User
 from chat.models import Club
 from decimal import Decimal
 
@@ -127,16 +127,16 @@ def get_data_info(url, match_flag):
             # 判断是否回答正确
             is_right = False
             if record.rule_id == rule_mnl.id:
-                if record.option_id == option_mnl.id:
+                if record.option.option_id == option_mnl.id:
                     is_right = True
             if record.rule_id == rule_hdc.id:
-                if record.option_id == option_hdc.id:
+                if record.option.option_id == option_hdc.id:
                     is_right = True
             if record.rule_id == rule_hilo.id:
-                if record.option_id == option_hilo.id:
+                if record.option.option_id == option_hilo.id:
                     is_right = True
             if record.rule_id == rule_wnm.id:
-                if record.option_id == option_wnm.id:
+                if record.option.option_id == option_wnm.id:
                     is_right = True
 
             earn_coin = record.bet * record.odds
@@ -180,9 +180,9 @@ def get_data_info(url, match_flag):
             u_mes.title = '开奖公告'
             option_right = Option.objects.get(rule=record.rule, is_right=True)
             if is_right is False:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您答错了。'
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您答错了。'
             elif is_right is True:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option + '，您的奖金是:' + str(
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您的奖金是:' + str(
                     round(earn_coin, 3))
             u_mes.save()
 
@@ -190,6 +190,59 @@ def get_data_info(url, match_flag):
     # quiz.is_reappearance = 1
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+
+
+def cash_back(quiz):
+    club_rate = {
+        "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
+    }
+    for club in Club.objects.all():
+        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id)
+        platform_sum = 0
+        profit = 0
+        user_list = []
+        for record in records:
+            platform_sum = platform_sum + record.bet
+            profit = profit + record.earn_coin
+            if record.user_id not in user_list:
+                user_list.append(record.user_id)
+
+        print('club====>' + club.room_title)
+        print('profit====>' + str(profit))
+        print('platform_sum====>' + str(platform_sum))
+
+        if profit < 0:
+            profit = abs(profit)
+            for user_id in user_list:
+                personal_sum = 0
+                for record_personal in records.filter(user_id=user_id):
+                    personal_sum = personal_sum + record_personal.bet
+                gsg_cash_back = float(profit) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
+                    club.room_title]
+                user = User.objects.get(pk=user_id)
+                user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
+                user.save()
+
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = "GSG"
+                coin_detail.amount = float(str(gsg_cash_back)[0:4])
+                coin_detail.rest = user.integral
+                coin_detail.sources = CoinDetail.CASHBACK
+                coin_detail.save()
+
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = record.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = '返现公告'
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back)[0:4] + '个GSG'
+                u_mes.save()
+
+                print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
+        print('---------------------------')
 
 
 class Command(BaseCommand):
@@ -207,3 +260,8 @@ class Command(BaseCommand):
         if quizs.exists():
             for quiz in quizs:
                 get_data_info(base_url, quiz.match_flag)
+                # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
+                if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION:
+                    cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
+        else:
+            print('暂无比赛需要开奖')
