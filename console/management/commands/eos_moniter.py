@@ -81,6 +81,12 @@ class Command(BaseCommand):
                 if is_exists > 0:
                     continue
 
+                confirmations = trans['confirmations']
+
+                # 确认数 > 1 才处理
+                if confirmations < 1:
+                    continue
+
                 valid_trans += 1
                 self.stdout.write(self.style.SUCCESS('tx_value = ' + str(tx_value)))
 
@@ -89,7 +95,7 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name=coin_type).first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = trans['confirmations']
+                user_recharge.confirmations = confirmations
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()

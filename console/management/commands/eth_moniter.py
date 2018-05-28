@@ -71,6 +71,11 @@ class Command(BaseCommand):
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = trans['value']
+                confirmations = trans['confirmations']
+
+                # 确认数 > 1 才处理
+                if confirmations < 1:
+                    continue
 
                 # 判断交易hash是否已经存在，存在则忽略该条交易
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
