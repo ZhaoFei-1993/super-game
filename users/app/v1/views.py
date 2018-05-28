@@ -1615,7 +1615,8 @@ class InvitationRegisterView(CreateAPIView):
             user_info = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
-        if invitee_one > 0:
+
+        if invitee_one > 0:  # 邀请人为他人T1.
             try:
                 invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
             except DailyLog.DoesNotExist:
@@ -1623,21 +1624,21 @@ class InvitationRegisterView(CreateAPIView):
             on_line = invitee.inviter
             invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
                                                            is_deleted=1).count()
-            user_on_line = UserInvitation()
+            user_on_line = UserInvitation()  # 邀请T2是否已达上限
             if invitee_number < 100:
                 user_on_line.is_effective = 1
                 user_on_line.money = 50
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
-        user_go_line = UserInvitation()
+
+        user_go_line = UserInvitation()  # 邀请T2是否已达上限
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
                                                        is_deleted=1).count()
         if invitee_number < 10:
             user_go_line.is_effective = 1
             user_go_line.money = 200
-
-        user_go_line.inviter = user_info
+        user_go_line.inviter = invitation_id
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
         return self.response({
@@ -1659,22 +1660,14 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        invitation_one_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id).count()  # T1总人数
-        invitation_two_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id).count()  # T2总人数
-        user_invitation_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user_id, is_deleted=1).aggregate(
+        invitation_number = UserInvitation.objects.filter(inviter=user_id).count()  # T1总人数
+        user_invitation_two = UserInvitation.objects.filter(inviter=user_id, is_deleted=1).aggregate(
             Sum('money'))
-        user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user_id, is_deleted=1).aggregate(
-            Sum('money'))
-        user_invitation_ones = user_invitation_one['money__sum']  # T1获得总钱数
-        if user_invitation_ones == None:
-            user_invitation_ones = 0
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
-        user_invitation_number = int(invitation_one_number) + int(invitation_two_number)
-        moneys = int(user_invitation_ones) + int(user_invitation_twos)  # 获得总钱数
         return self.response(
-            {'code': 0, 'user_invitation_number': user_invitation_number, 'moneys': moneys})
+            {'code': 0, 'user_invitation_number': invitation_number, 'moneys': user_invitation_twos})
 
 
 class InvitationUserView(ListAPIView):
