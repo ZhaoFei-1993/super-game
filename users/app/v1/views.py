@@ -1636,7 +1636,7 @@ class InvitationRegisterView(CreateAPIView):
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
                                                        is_deleted=1).count()
         try:
-            invitation = User.objects.get(invitation_id)
+            invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
         if invitee_number < 10:
