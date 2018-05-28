@@ -10,7 +10,8 @@ def get_transactions():
     :return:
     """
     eth_wallet = Wallet()
-    json_data = eth_wallet.get(url='v1/transaction/0x6e6c7198662a2a783bd1a85f2b61ca07f15289b93a6a59ac2a5cb3758a09425c')
+    json_data = eth_wallet.get(url='v1/chain/transactions/0x7Bf63274053EA2fDDF44405DED73320B0b0D3418')
+    print(json_data)
     if len(json_data['data']) == 0:
         return []
 
