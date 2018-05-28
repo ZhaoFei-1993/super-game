@@ -273,13 +273,15 @@ class LoginView(CreateAPIView):
         avatar_nickname = avatar_nickname.strip('\n')
         nickname, avatar = avatar_nickname.split(',')
 
+        print("nickname==========================", nickname)
+        print("avatar==========================", avatar)
         folder, suffix = avatar.split('_')
 
         avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-
+        print("avatar_url====================================", avatar_url)
         return nickname, avatar_url
 
     def post(self, request, *args, **kwargs):
