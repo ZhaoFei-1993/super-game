@@ -86,7 +86,7 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name=coin_type).first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = confirmations
+                user_recharge.confirmations = 0
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()
