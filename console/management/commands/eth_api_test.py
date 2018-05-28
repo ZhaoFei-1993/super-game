@@ -10,12 +10,12 @@ def get_transactions():
     :return:
     """
     eth_wallet = Wallet()
-    json_data = eth_wallet.get(url='v1/chain/transactions/0x7Bf63274053EA2fDDF44405DED73320B0b0D3418')
+    json_data = eth_wallet.get(url='v1/transaction/0xe88cac9002416252431dc995d5e3db1fb0e891635b6798c8ff3b6e0ea0125f7f')
     print(json_data)
     if len(json_data['data']) == 0:
         return []
 
-    print(json_data)
+    # print(json_data)
 
 
 class Command(BaseCommand):
