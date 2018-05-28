@@ -138,7 +138,7 @@ class OptionManager(models.Manager):
     """
     选项操作
     """
-    require_coin_times = 100  # 最大可赔倍数
+    require_coin_times = 20  # 最大可赔倍数
 
     def get_odds_config(self, coin_id, max_rate):
         """
