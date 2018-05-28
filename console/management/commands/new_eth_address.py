@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from console.models import Address
 from users.models import Coin
 from base.eth import *
+from time import time
 
 
 class Command(BaseCommand):
@@ -11,6 +12,8 @@ class Command(BaseCommand):
     max_address = 1000
 
     def handle(self, *args, **options):
+        start = time()
+
         eth_wallet = Wallet()
 
         self.stdout.write(self.style.SUCCESS('****************正在获取ETH地址******************'))
@@ -31,4 +34,6 @@ class Command(BaseCommand):
             print('分配成功 ' + str(idx))
             idx += 1
 
-        self.stdout.write(self.style.SUCCESS('成功生成 ' + str(self.max_address) + ' 条ETH地址'))
+        stop = time()
+
+        self.stdout.write(self.style.SUCCESS('成功生成 ' + str(self.max_address) + ' 条ETH地址，耗时：' + str(stop - start) + '秒'))
