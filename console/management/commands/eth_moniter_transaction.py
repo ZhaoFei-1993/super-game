@@ -15,7 +15,6 @@ def get_transaction(transaction_hash):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/transaction/' + transaction_hash)
-    print('json_data = ', json_data)
     if json_data['code'] > 0:
         raise CommandError(json_data['message'] + ' tx = ' + transaction_hash)
 
@@ -40,11 +39,13 @@ class Command(BaseCommand):
             user_id = recharge.user_id
 
             trans = get_transaction(txid)
-            if trans['confirmations'] < settings.ETH_CONFIRMATIONS:
+            confirmations = trans['confirmations']
+
+            if confirmations < settings.ETH_CONFIRMATIONS:
                 self.stdout.write(self.style.SUCCESS(txid + ' 确认数未达标'))
                 continue
 
-            recharge.confirmations = trans['confirmations']
+            recharge.confirmations = confirmations
             recharge.save()
 
             # 首次充值获得奖励
@@ -55,10 +56,12 @@ class Command(BaseCommand):
             user_coin.balance += Decimal(recharge.amount)
             user_coin.save()
 
+            coin = Coin.objects.get(pk=recharge.coin_id)
+
             # 用户余额变更记录
             coin_detail = CoinDetail()
             coin_detail.user_id = user_id
-            coin_detail.coin_name = 'ETH'
+            coin_detail.coin_name = coin.name
             coin_detail.amount = recharge.amount
             coin_detail.rest = user_coin.balance
             coin_detail.sources = CoinDetail.RECHARGE
