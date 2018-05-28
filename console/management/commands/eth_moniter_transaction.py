@@ -2,8 +2,9 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.conf import settings
-from users.models import UserRecharge, Coin
+from users.models import UserRecharge, Coin, UserCoin, CoinDetail
 from base.eth import *
+from decimal import Decimal
 
 
 def get_transaction(transaction_hash):
@@ -18,7 +19,7 @@ def get_transaction(transaction_hash):
     if json_data['code'] > 0:
         raise CommandError(json_data['message'] + ' tx = ' + transaction_hash)
 
-    return json_data
+    return json_data['data']
 
 
 class Command(BaseCommand):
@@ -47,6 +48,20 @@ class Command(BaseCommand):
 
             # 首次充值获得奖励
             UserRecharge.objects.first_price(user_id)
+
+            # 用户充值成功
+            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
+            user_coin.balance += Decimal(recharge.amount)
+            user_coin.save()
+
+            # 用户余额变更记录
+            coin_detail = CoinDetail()
+            coin_detail.user_id = user_id
+            coin_detail.coin_name = 'ETH'
+            coin_detail.amount = recharge.amount
+            coin_detail.rest = user_coin.balance
+            coin_detail.sources = CoinDetail.RECHARGE
+            coin_detail.save()
 
             cnt_confirm += 1
 
