@@ -286,6 +286,7 @@ def cash_back(quiz):
                 u_mes.save()
 
                 print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
+        print('\n')
         print('---------------------------')
 
 
