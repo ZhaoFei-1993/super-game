@@ -26,6 +26,7 @@ from utils.functions import random_salt, sign_confirmation, message_hints, \
     message_sign, amount, value_judge, resize_img, normalize_fraction, genarate_plist
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
+import linecache
 import re
 import os
 from config.models import AndroidVersion
@@ -256,6 +257,31 @@ class LoginView(CreateAPIView):
     新用户---------》注册----》登录
     """
 
+    def get_name_avatar(self):
+        """
+        获取已经下载的用户昵称和头像
+        :return:
+        """
+        key_name_avatar = 'key_name_avatar'
+
+        line_number = get_cache(key_name_avatar)
+        if line_number is None:
+            line_number = 1
+
+        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
+        avatar_nickname = avatar_nickname.strip('\n')
+        nickname, avatar = avatar_nickname.split(',')
+
+        folder, suffix = avatar.split('_')
+
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+
+        line_number += 1
+        set_cache(key_name_avatar, line_number)
+
+        return nickname, avatar_url
+
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         ur = UserRegister()
@@ -265,7 +291,7 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         register_type = ur.get_register_type(username)
 
-        avatar = settings.MEDIA_DOMAIN_HOST + "/images/avatar.png"
+        nickname_one, avatar = self.get_name_avatar()
         if 'avatar' in request.data:
             avatar = request.data.get('avatar')
         type = request.data.get('type')  # 1 注册          2 登录
@@ -290,9 +316,8 @@ class LoginView(CreateAPIView):
                     return self.response({
                         'code': error_code.API_20402_INVALID_SMS_CODE
                     })
-                nickname = randomnickname()
+                nickname = nickname_one
                 password = request.data.get('password')
-                print('password = ', password)
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
         else:
@@ -1605,6 +1630,31 @@ class InvitationRegisterView(CreateAPIView):
     用户邀请注册
     """
 
+    def get_name_avatar(self):
+        """
+        获取已经下载的用户昵称和头像
+        :return:
+        """
+        key_name_avatar = 'key_name_avatar'
+
+        line_number = get_cache(key_name_avatar)
+        if line_number is None:
+            line_number = 1
+
+        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
+        avatar_nickname = avatar_nickname.strip('\n')
+        nickname, avatar = avatar_nickname.split(',')
+
+        folder, suffix = avatar.split('_')
+
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+
+        line_number += 1
+        set_cache(key_name_avatar, line_number)
+
+        return nickname, avatar_url
+
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
         invitation_id = request.data.get('invitation_id')
@@ -1634,8 +1684,8 @@ class InvitationRegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
-        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
-        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
+        nickname, avatar = self.get_name_avatar()
+        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
