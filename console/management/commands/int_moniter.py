@@ -2,6 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.conf import settings
 from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
@@ -83,8 +84,8 @@ class Command(BaseCommand):
 
                 confirmations = trans['confirmations']
 
-                # 确认数 > 1 才处理
-                if confirmations < 1:
+                # 确认数 >= 15 才处理
+                if confirmations < settings.ETH_CONFIRMATIONS:
                     continue
 
                 valid_trans += 1
