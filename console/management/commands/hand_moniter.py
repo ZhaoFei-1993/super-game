@@ -2,6 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.conf import settings
 from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
@@ -81,6 +82,12 @@ class Command(BaseCommand):
                 if is_exists > 0:
                     continue
 
+                confirmations = trans['confirmations']
+
+                # 确认数 >= 15 才处理
+                if confirmations < settings.ETH_CONFIRMATIONS:
+                    continue
+
                 valid_trans += 1
 
                 user_recharge = UserRecharge()
@@ -88,7 +95,7 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name=coin_type).first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = trans['confirmations']
+                user_recharge.confirmations = confirmations
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()

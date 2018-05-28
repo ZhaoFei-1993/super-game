@@ -74,7 +74,7 @@ class QuizListView(ListCreateAPIView):
 
     def get_queryset(self):
         if 'is_user' not in self.request.GET:
-            if 'category' not in self.request.GET:
+            if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
                         'begin_at')
