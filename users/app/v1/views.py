@@ -77,17 +77,10 @@ class UserRegister(object):
         """
         user = None
         user_name_exists = User.objects.filter(username=username).count()
-        union_id_exists = User.objects.filter(unionid=username).count()
-        if user_name_exists == 0 and union_id_exists == 0:
-            # 绑定了手机的用户使用telephone字段判断
-            telephone_exists = User.objects.filter(telephone=username).count()
-            if telephone_exists > 0:
-                user = User.objects.get(telephone=username)
+        if user_name_exists > 0:
+            user = User.objects.get(username=username)
         else:
-            if user_name_exists > 0:
-                user = User.objects.get(username=username)
-            else:
-                user = User.objects.get(unionid=username)
+            user = User.objects.get(telephone=username)
 
         return user
 
