@@ -339,7 +339,15 @@ def get_data_info(url):
                     if Quiz.objects.filter(match_flag=match_id).exists() is not True:
                         quiz = Quiz()
                         quiz.match_flag = match_id
+
+                        if Category.objects.filter(name=league_abbr).first() is None:
+                            category = Category()
+                            category.name = league_abbr
+                            category.admin = Admin.objects.filter(id=1).first()
+                            category.parent = Category.objects.filter(id=2).first()
+                            category.save()
                         quiz.category = Category.objects.filter(name=league_abbr).first()
+
                         quiz.host_team = host_team_abbr
                         quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + host_team_avatar
                         quiz.guest_team = guest_team_abbr

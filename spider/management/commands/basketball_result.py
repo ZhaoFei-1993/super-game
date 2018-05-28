@@ -192,6 +192,52 @@ def get_data_info(url, match_flag):
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
 
+def handle_delay_game(delay_quiz):
+    records = Record.objects.filter(quiz=delay_quiz)
+    if len(records) > 0:
+        for record in records:
+            # 延迟比赛，返回用户投注的钱
+            return_coin = record.bet
+            record.earn_coin = return_coin
+            record.save()
+
+            # 用户增加回退还金额
+            club = Club.objects.get(pk=record.roomquiz_id)
+
+            # 获取币信息
+            coin = Coin.objects.get(pk=club.coin_id)
+
+            try:
+                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+            except UserCoin.DoesNotExist:
+                user_coin = UserCoin()
+
+            user_coin.coin_id = club.coin_id
+            user_coin.user_id = record.user_id
+            user_coin.balance += Decimal(return_coin)
+            user_coin.save()
+
+            # 用户资金明细表
+            coin_detail = CoinDetail()
+            coin_detail.user_id = record.user_id
+            coin_detail.coin_name = coin.name
+            coin_detail.amount = Decimal(return_coin)
+            coin_detail.rest = user_coin.balance
+            coin_detail.sources = CoinDetail.RETURN
+            coin_detail.save()
+
+            # 发送信息
+            u_mes = UserMessage()
+            u_mes.status = 0
+            u_mes.user_id = record.user_id
+            u_mes.message_id = 6  # 私人信息
+            u_mes.title = '退回公告'
+            u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + '赛事延期或已中断(您的下注已全额退回)'
+            u_mes.save()
+
+            print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
+
+
 def cash_back(quiz):
     club_rate = {
         "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
@@ -252,6 +298,15 @@ class Command(BaseCommand):
     #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
+        after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
+        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                               category__parent_id=2).exists():
+            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                                                  category__parent_id=2):
+                delay_quiz.status = Quiz.DELAY
+                handle_delay_game(delay_quiz)
+                delay_quiz.save()
+
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
