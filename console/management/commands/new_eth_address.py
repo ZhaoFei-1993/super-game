@@ -35,5 +35,6 @@ class Command(BaseCommand):
             idx += 1
 
         stop = time()
+        cost = str(stop - start) + '秒'
 
-        self.stdout.write(self.style.SUCCESS('成功生成 ' + str(self.max_address) + ' 条ETH地址，耗时：' + str(stop - start) + '秒'))
+        self.stdout.write(self.style.SUCCESS('成功生成 ' + str(self.max_address) + ' 条ETH地址。耗时：' + cost))
