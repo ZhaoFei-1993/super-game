@@ -28,7 +28,7 @@ def get_transactions(address):
             'time': time_dt,
             'value': item['ether'],
             'confirmations': json_data['block_number'] - item['blockNumber'],
-            'txid': item['blockHash'],
+            'txid': item['hash'],
         }
         txs.append(data)
     return txs
