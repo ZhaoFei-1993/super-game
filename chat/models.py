@@ -25,7 +25,7 @@ class Club(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     room_number = models.IntegerField(verbose_name="俱乐部编号", default=0)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.IntegerField(verbose_name="俱乐部创始人", default=0)
     is_recommend = models.CharField(verbose_name="", choices=STATUS_CHOICE, max_length=1, default=PENDING)
     is_dissolve = models.BooleanField(verbose_name="是否删除俱乐部", default=False)
 
