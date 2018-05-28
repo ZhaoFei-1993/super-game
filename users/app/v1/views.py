@@ -283,7 +283,6 @@ class LoginView(CreateAPIView):
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-        print("avatar_url====================================", avatar_url)
         return nickname, avatar_url
 
     def post(self, request, *args, **kwargs):
@@ -1649,8 +1648,12 @@ class InvitationRegisterView(CreateAPIView):
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
         avatar_nickname = avatar_nickname.strip('\n')
         nickname, avatar = avatar_nickname.split(',')
-
-        folder, suffix = avatar.split('_')
+        a = avatar.split('_')
+        if len(a) > 2:
+            folder = str(a[0])
+            suffix = str(a[1]) + "_" + str(a[2])
+        else:
+            folder, suffix = avatar.split('_')
 
         avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
 
