@@ -7,6 +7,7 @@ from sms.models import Sms
 from datetime import datetime
 import time
 from decimal import Decimal
+import django.utils.timezone as timezone
 
 
 class UserManager(BaseUserManager):
@@ -366,7 +367,8 @@ class UserRecharge(models.Model):
     amount = models.DecimalField(verbose_name='充值数量', max_digits=20, decimal_places=8, default=0)
     confirmations = models.IntegerField(verbose_name='确认数', default=0)
     txid = models.CharField(verbose_name='所在区块Hash', max_length=255, default=' ')
-    trade_at = models.DateTimeField(verbose_name='交易时间', auto_now_add=True)
+    trade_at = models.DateTimeField(verbose_name='交易时间', default=timezone.now)
+    confirm_at = models.DateTimeField(verbose_name='确认时间', auto_now=True)
 
     objects = UserRechargeManager()
 
