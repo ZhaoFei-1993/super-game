@@ -52,6 +52,12 @@ def get_live_data():
             if data_list['fs_h'] is not None and data_list['fs_a'] is not None:
                 match_id = data_list['m_id']
 
+                for root, sub_dirs, files in list(os.walk(BASE_DIR + '/cache/live_cache'))[0: 1]:
+                    sub_dirs = sub_dirs
+                if 'football' not in sub_dirs:
+                    os.chdir(BASE_DIR + '/cache/live_cache')
+                    os.mkdir('football')
+
                 cache_name = 'cache_' + match_id
                 os.chdir(cache_dir)
                 dir = list(os.walk(cache_dir))[0][1]
@@ -255,7 +261,7 @@ def live_football():
         status__in=[Quiz.PUBLISHING], category__parent_id=2).order_by('begin_at')
     # print(Quiz.objects.filter(category__parent_id=2, status__in=[Quiz.REPEALED, Quiz.HALF_TIME]))
     if Quiz.objects.filter(category__parent_id=2,
-                           status__in=[Quiz.REPEALED, Quiz.HALF_TIME]).exists() or quiz_list.filter(
+                           status__in=[str(Quiz.REPEALED), str(Quiz.HALF_TIME)]).exists() or quiz_list.filter(
             begin_at__lt=datetime.datetime.now()).exists():
         get_live_data()
     else:

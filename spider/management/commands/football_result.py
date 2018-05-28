@@ -297,8 +297,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
-        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=Quiz.PUBLISHING, category__parent_id=2).exists():
-            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=Quiz.PUBLISHING,
+        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING), category__parent_id=2).exists():
+            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                                   category__parent_id=2):
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
@@ -307,7 +307,7 @@ class Command(BaseCommand):
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
-            (Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours) & Q(
+            (Q(status=str(Quiz.PUBLISHING)) | Q(status=str(Quiz.ENDED))) & Q(begin_at__lt=after_2_hours) & Q(
                 category__parent_id=2))
         if quizs.exists():
             for quiz in quizs:

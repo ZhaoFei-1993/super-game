@@ -202,7 +202,7 @@ class Command(BaseCommand):
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
-            (Q(status=Quiz.PUBLISHING) | Q(status=Quiz.ENDED)) & Q(begin_at__lt=after_2_hours) & Q(
+            (Q(status=str(Quiz.PUBLISHING)) | Q(status=str(Quiz.ENDED))) & Q(begin_at__lt=after_2_hours) & Q(
                 category__parent_id=1))
         if quizs.exists():
             for quiz in quizs:

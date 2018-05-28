@@ -50,6 +50,12 @@ def get_live_data():
                 else:
                     match_id = data_list[0]
 
+                    for root, sub_dirs, files in list(os.walk(BASE_DIR + '/cache/live_cache'))[0: 1]:
+                        sub_dirs = sub_dirs
+                    if 'basketball' not in sub_dirs:
+                        os.chdir(BASE_DIR + '/cache/live_cache')
+                        os.mkdir('basketball')
+
                     os.chdir(cache_dir)
                     dir = list(os.walk(cache_dir))[0][1]
                     if time not in dir:
@@ -74,20 +80,40 @@ def get_live_data():
                             if Quiz.objects.filter(match_flag=match_id).first() is not None:
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
-                                    quiz.host_team_score = host_team_score
-                                    quiz.guest_team_score = guest_team_score
                                     quiz.status = quiz.ENDED
+                                    quiz.gaming_time = -1
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
                                     quiz.status = quiz.PUBLISHING
-                                else:
-                                    quiz.host_team_score = data_list[13]
-                                    quiz.guest_team_score = data_list[12]
-                                    quiz.status = quiz.REPEALED
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 0)
+                                elif data_list[28] == '1':
+                                    quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 1)
+                                elif data_list[28] == '2':
+                                    quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 2)
+                                elif data_list[28] == '50':
+                                    quiz.status = quiz.HALF_TIME
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 50)
+                                elif data_list[28] == '3':
+                                    quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 3)
+                                elif data_list[28] == '4':
+                                    quiz.status = quiz.PUBLISHING
+                                    # 推送比赛时间
+                                    q.enqueue(quiz_send_basketball_time, quiz.id, 4)
+                                # 1,2,3,4:第一二三四节，50中场休息
+                                quiz.host_team_score = host_team_score
+                                quiz.guest_team_score = guest_team_score
                                 quiz.save()
 
                                 # 比分推送
-                                redis_conn = Redis()
-                                q = Queue(connection=redis_conn)
                                 q.enqueue(quiz_send_score, quiz.id, host_team_score, guest_team_score)
 
                                 print(quiz.host_team)
@@ -160,9 +186,9 @@ def get_live_data():
 
 def live_basketball():
     quiz_list = Quiz.objects.filter(
-        status__in=[Quiz.PUBLISHING], category__parent_id=1).order_by('begin_at')
+        status__in=[str(Quiz.PUBLISHING)], category__parent_id=1).order_by('begin_at')
     if Quiz.objects.filter(category__parent_id=1,
-                           status__in=[Quiz.REPEALED, Quiz.HALF_TIME]).exists() or quiz_list.filter(
+                           status__in=[str(Quiz.REPEALED), str(Quiz.HALF_TIME)]).exists() or quiz_list.filter(
             begin_at__lt=datetime.datetime.now()).exists():
         get_live_data()
     else:
