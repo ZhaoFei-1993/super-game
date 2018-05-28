@@ -8,7 +8,7 @@ from base.eth import *
 
 class Command(BaseCommand):
     help = "分配ETH地址"
-    max_address = 500
+    max_address = 1000
 
     def handle(self, *args, **options):
         eth_wallet = Wallet()
