@@ -847,7 +847,6 @@ class DetailView(ListAPIView):
         user_message_id = kwargs['user_message_id']
         try:
             user_message = UserMessage.objects.get(pk=user_message_id)
-            print("user_message")
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
@@ -1853,14 +1852,11 @@ class ClickLuckDrawView(CreateAPIView):
             prize.append(list[0])
         choice = prize[weight_choice(prize_weight)]
         if int(is_gratis) == 1 and int(number) == 6:
-            print("第一次")
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
         elif int(is_gratis) == 1:
-            print("再来一次")
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1 and int(number) != 6:
-            print("继续抽奖")
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_info.integral -= Decimal(prize_consume)
             user_info.save()

@@ -72,7 +72,7 @@ def captcha_generate(request):
     response = {
         "key": CaptchaStore.generate_key(),
     }
-    response["url"] = "http://" + request.get_host() + captcha_image_url(response["key"])
+    response["url"] = "https://" + request.get_host() + captcha_image_url(response["key"])
     return Response(response)
 
 
