@@ -187,6 +187,7 @@ def get_data_info(url, match_flag):
             u_mes.save()
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
+    # quiz.is_reappearance = 1
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
