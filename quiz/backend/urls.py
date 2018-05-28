@@ -8,5 +8,5 @@ urlpatterns = [
     path('category/<int:pk>/', views.CategoryDetailView.as_view(), name="quiz-category-detail"),
     path('quizs/', views.QuizListView.as_view(), name="quiz-list"),
     path('user_quiz/', views.UserQuizView.as_view(), name="quiz-user_quiz"),
-    path('quiz_list_backend/', views.QuizListBackEndView, name='quiz_list_backend'),
+    path('quiz_list_backend/<int:type>/', views.QuizListBackEndView.as_view(), name='quiz_list_backend'),
 ]

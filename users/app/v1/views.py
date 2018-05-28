@@ -68,6 +68,22 @@ class UserRegister(object):
             register_type = User.REGISTER_WECHAT
         return register_type
 
+    @staticmethod
+    def get_user(username):
+        """
+        获取用户对象
+        :param username:
+        :return:
+        """
+        user = None
+        user_name_exists = User.objects.filter(username=username).count()
+        if user_name_exists > 0:
+            user = User.objects.get(username=username)
+        else:
+            user = User.objects.get(telephone=username)
+
+        return user
+
     def get_access_token(self, source, user):
         """
         获取access_token
@@ -1612,7 +1628,8 @@ class InvitationRegisterView(CreateAPIView):
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
-            user_info = User.objects.get(pk=invitation_id)
+            user = ur.get_user(telephone)
+            user_info = User.objects.get(pk=user.id)
         except DailyLog.DoesNotExist:
             return 0
 

@@ -52,38 +52,27 @@ class Command(BaseCommand):
                             if data_list[28] == '-1':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, -1)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '0':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 0)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '1':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 1)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '2':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 2)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '50':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 50)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '3':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 3)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                             elif data_list[28] == '4':
                                 # 推送比赛时间
                                 q.enqueue(quiz_send_basketball_time, quiz_id, 4)
-                                # 推送比分
-                                q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
+
+                            # 推送比分
+                            q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                         else:
                             print('查找失败')
         except requests.ConnectionError as e:
