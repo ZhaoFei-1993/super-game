@@ -8,12 +8,11 @@ from base.eth import *
 
 class Command(BaseCommand):
     help = "分配ETH地址"
-    max_address = 500
+    max_address = 1000
 
     def handle(self, *args, **options):
         eth_wallet = Wallet()
 
-        print('****************正在获取ETH地址******************')
         self.stdout.write(self.style.SUCCESS('****************正在获取ETH地址******************'))
 
         idx = 1
@@ -29,8 +28,7 @@ class Command(BaseCommand):
             address_query.passphrase = json_data['data']['password']
             address_query.save()
 
-            idx += 1
             print('分配成功 ' + str(idx))
+            idx += 1
 
-        print('成功生成 ' + str(self.max_address) + ' 条ETH地址')
         self.stdout.write(self.style.SUCCESS('成功生成 ' + str(self.max_address) + ' 条ETH地址'))
