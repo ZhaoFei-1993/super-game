@@ -499,7 +499,7 @@ class BetView(ListCreateAPIView):
         #     quiz.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin = usercoin.coin
+        coin_detail.coin_name = usercoin.coin.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = Decimal(usercoin.balance)
         coin_detail.sources = 3

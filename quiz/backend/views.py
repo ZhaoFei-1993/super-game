@@ -297,7 +297,7 @@ class QuizListBackEndView(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        category = kwargs['type']
+        category = kwargs['category']
         values = Record.objects.filter(source = 0, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
                                                                       sum_bet=Sum('bet')).order_by('-total_bet')
         data = []
@@ -321,15 +321,34 @@ class QuizListBackEndView(ListAPIView):
                 'host_team': quiz.host_team,
                 'guest_team': quiz.guest_team,
                 'match_time': match_time,
+                'score': str(quiz.host_team_score)+":"+str(quiz.guest_team_score),
                 'room': room.room_title,
                 'room_id': room.id,
                 'total_bet': x['total_bet'],
                 'sum_bet': x['sum_bet'],
-                'status': state
+                'status': state,
             }
             data.append(temp_dict)
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
 
-
+class QuizListBackEndDetailView(ListAPIView):
+    """
+    比赛赛果
+    """
+    def list(self, request, *args, **kwargs):
+        quiz_id = kwargs['quiz_id']
+        room = kwargs['room']
+        type = kwargs['type']
+        values = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
+        data = []
+        for x in values:
+            temp_dict={
+                'quiz_id':x.quiz_id,
+                'room_id':x.roomquiz_id,
+                'type': x.rule.type,
+                'option':x.option_id,
+            }
+            data.append(temp_dict)
+        return JsonResponse({'results':data})
