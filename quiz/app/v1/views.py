@@ -303,7 +303,9 @@ class RuleView(ListAPIView):
                     accuracy = "0"
                 else:
                     accuracy = number / total
+                    print("accuracy=============================", accuracy)
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                    print("accuracy======================================", accuracy)
                 list.append({
                     "option_id": s.pk,
                     "option": s.option.option,
