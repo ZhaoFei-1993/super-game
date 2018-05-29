@@ -34,7 +34,7 @@ class Command(BaseCommand):
         try:
             coin = Coin.objects.get(name=coin_name)
         except Coin.DoesNotExist:
-            raise CommandError('coin名称无效')
+            raise CommandError(coin_name + '无效')
 
         # 获取所有用户ETH交易hash，只获取交易确认数小于指定值的数据
         user_recharges = UserRecharge.objects.filter(coin_id=coin.id, confirmations__lt=settings.ETH_CONFIRMATIONS)
