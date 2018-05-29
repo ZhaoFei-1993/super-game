@@ -291,9 +291,9 @@ class RuleView(ListAPIView):
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
             option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order').values('pk')
             list = []
-            total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id, source=1).count()
+            total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
             for s in option:
-                is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
+                is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk, ).count()
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
