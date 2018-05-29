@@ -96,7 +96,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         option_crs.save()
 
     # 分配奖金
-    records = Record.objects.filter(quiz=quiz)
+    records = Record.objects.filter(quiz=quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
             # 判断是否回答正确
@@ -168,7 +168,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
 
 def handle_delay_game(delay_quiz):
-    records = Record.objects.filter(quiz=delay_quiz)
+    records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
             # 延迟比赛，返回用户投注的钱
@@ -241,53 +241,54 @@ def cash_back(quiz):
         "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
     }
     for club in Club.objects.all():
-        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id)
-        platform_sum = 0
-        profit = 0
-        user_list = []
-        for record in records:
-            platform_sum = platform_sum + record.bet
-            profit = profit + record.earn_coin
-            if record.user_id not in user_list:
-                user_list.append(record.user_id)
+        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, is_distribution=False)
+        if len(records) > 0:
+            platform_sum = 0
+            profit = 0
+            user_list = []
+            for record in records:
+                platform_sum = platform_sum + record.bet
+                profit = profit + record.earn_coin
+                if record.user_id not in user_list:
+                    user_list.append(record.user_id)
 
-        print('club====>' + club.room_title)
-        print('profit====>' + str(profit))
-        print('platform_sum====>' + str(platform_sum))
+            print('club====>' + club.room_title)
+            print('profit====>' + str(profit))
+            print('platform_sum====>' + str(platform_sum))
 
-        if profit < 0:
-            profit = abs(profit)
-            for user_id in user_list:
-                personal_sum = 0
-                for record_personal in records.filter(user_id=user_id):
-                    personal_sum = personal_sum + record_personal.bet
-                gsg_cash_back = float(profit) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
-                    club.room_title]
-                user = User.objects.get(pk=user_id)
-                user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
-                user.save()
+            if profit < 0:
+                profit = abs(profit)
+                for user_id in user_list:
+                    personal_sum = 0
+                    for record_personal in records.filter(user_id=user_id):
+                        personal_sum = personal_sum + record_personal.bet
+                    gsg_cash_back = float(profit) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
+                        club.room_title]
+                    user = User.objects.get(pk=user_id)
+                    user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
+                    user.save()
 
-                # 用户资金明细表
-                coin_detail = CoinDetail()
-                coin_detail.user_id = record.user_id
-                coin_detail.coin_name = "GSG"
-                coin_detail.amount = float(str(gsg_cash_back)[0:4])
-                coin_detail.rest = user.integral
-                coin_detail.sources = CoinDetail.CASHBACK
-                coin_detail.save()
+                    # 用户资金明细表
+                    coin_detail = CoinDetail()
+                    coin_detail.user_id = record.user_id
+                    coin_detail.coin_name = "GSG"
+                    coin_detail.amount = float(str(gsg_cash_back)[0:4])
+                    coin_detail.rest = user.integral
+                    coin_detail.sources = CoinDetail.CASHBACK
+                    coin_detail.save()
 
-                # 发送信息
-                u_mes = UserMessage()
-                u_mes.status = 0
-                u_mes.user_id = record.user_id
-                u_mes.message_id = 6  # 私人信息
-                u_mes.title = '返现公告'
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back)[0:4] + '个GSG'
-                u_mes.save()
+                    # 发送信息
+                    u_mes = UserMessage()
+                    u_mes.status = 0
+                    u_mes.user_id = record.user_id
+                    u_mes.message_id = 6  # 私人信息
+                    u_mes.title = '返现公告'
+                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back)[0:4] + '个GSG'
+                    u_mes.save()
 
-                print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
-        print('\n')
-        print('---------------------------')
+                    print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
+            print('\n')
+            print('---------------------------')
 
 
 class Command(BaseCommand):

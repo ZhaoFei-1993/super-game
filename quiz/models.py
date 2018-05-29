@@ -296,6 +296,7 @@ class Record(models.Model):
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=15, decimal_places=3, default=0.000)
     source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
+    is_distribution = models.BooleanField(verbose_name="是否分配过奖金", default=False)
 
     class Meta:
         ordering = ['-id']

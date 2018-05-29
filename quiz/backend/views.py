@@ -313,7 +313,6 @@ class QuizListBackEndView(ListAPIView):
             for i in quiz.STATUS_CHOICE:
                 if int(quiz.status) == i[0]:
                     state = i[1]
-                    print(state)
             match_time = quiz.begin_at.strftime('%Y-%m-%d %H:%M')
             temp_dict = {
                 'quiz_id': quiz.id,
