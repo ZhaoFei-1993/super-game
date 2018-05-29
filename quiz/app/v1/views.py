@@ -315,6 +315,7 @@ class RuleView(ListAPIView):
                     "is_choice": is_choice,
                     "order": s.option.order
                 })
+            print("list===============================", list)
             # 比分
             win = []
             flat = []
