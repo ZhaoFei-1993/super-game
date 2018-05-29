@@ -24,8 +24,12 @@ urlpatterns = [
     path('user_all/', views.UserAllView.as_view(), name="backend-user-all"),
     # 推荐人信息
     path('user_all/<int:pk>/', views.InviterDetailView.as_view(), name="backend-user-all-detail"),
+    # 邀请好友数
+    path('invite_new/<int:pk>/', views.InviteNewView.as_view(), name="backend-invite_new"),
     # 提现列表
     path('coin_present/', views.CoinPresentView.as_view(), name="backend-present"),
     # 提现审核
     path('coin_present_check/<int:pk>/', views.CoinPresentCheckView.as_view(), name="backend-present_check"),
+    # 充值记录
+    path('recharge_list/', views.RechargeView.as_view(), name="backend-recharge"),
 ]

@@ -268,22 +268,20 @@ class LoginView(CreateAPIView):
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        avatar_nickname = avatar_nickname.strip('\n')
-        nickname, avatar = avatar_nickname.split(',')
-        a = avatar.split('_')
+        a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
         else:
-            folder, suffix = avatar.split('_')
+            folder, suffix = avatar_nickname.split('_')
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar_nickname
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-        return nickname, avatar_url
+        return avatar_url
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
@@ -294,7 +292,7 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         register_type = ur.get_register_type(username)
 
-        nickname_one, avatar = self.get_name_avatar()
+        avatar = self.get_name_avatar()
         if 'avatar' in request.data:
             avatar = request.data.get('avatar')
         type = request.data.get('type')  # 1 注册          2 登录
@@ -308,7 +306,7 @@ class LoginView(CreateAPIView):
 
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
-                nickname = request.data.get('nickname')
+                nickname = str(username[0:3]) + "***" + str(username[7:])
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
 
@@ -319,7 +317,7 @@ class LoginView(CreateAPIView):
                     return self.response({
                         'code': error_code.API_20402_INVALID_SMS_CODE
                     })
-                nickname = nickname_one
+                nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
@@ -553,13 +551,13 @@ class RankingView(ListAPIView):
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.all().order_by('-integral', 'id')
+        return User.objects.filter(is_robot=0).order_by('-integral', 'id')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_arr = User.objects.all().values_list('id').order_by('-integral', 'id')[:100]
+        user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         index = 0
         for i in user_arr:
@@ -1103,7 +1101,7 @@ class UserPresentationView(CreateAPIView):
         presentation.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
-        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.coin_name = coin.name
         if coin.name == 'HAND':
             coin_detail.amount = Decimal(str(p_amount))
         else:
@@ -1461,55 +1459,55 @@ class ForgetPasswordView(ListAPIView):
         return self.response(content)
 
 
-class UserRechargeView(ListCreateAPIView):
-    """
-    用户充值
-    """
-    permission_classes = (LoginRequired,)
-
-    def post(self, request, *args, **kwargs):
-        index = kwargs.get('index')
-        if 'recharge' not in request.data or 'r_address' not in request.data:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        r_address = request.data.get('r_address')
-        if not r_address:
-            raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
-        uuid = request.user.id
-        try:
-            user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        except Exception:
-            raise
-        recharge = Decimal(request.data.get('recharge'))
-        if recharge <= 0:
-            raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
-        user_coin.balance += recharge
-        user_coin.save()
-        form_recharge = UserRecharge.objects.filter(user_id=uuid)
-        if not form_recharge.exists():  # 活动送Hand币,活动时间在2018年6月1日-2018年7月13日
-            start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
-            end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
-            now_time = time.mktime(datetime.now().timetuple())
-            if now_time >= start_time and now_time <= end_time:
-                try:
-                    user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
-                except Exception:
-                    raise
-                user_reward.balance += Decimal('2888')
-                user_reward.save()
-                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
-                                           rest=user_reward.balance, sources=4)
-                reward_detail.save()
-                u_ms = UserMessage()  # 活动消息通知
-                u_ms.status = 0
-                u_ms.user_id = uuid
-                u_ms.message_id = 3  # 消息3 充值活动奖励情况
-                u_ms.save()
-        user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
-        user_recharge.save()
-        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
-                                 rest=user_coin.balance, sources=1)
-        coin_detail.save()
-        return self.response({'code': 0})
+# class UserRechargeView(ListCreateAPIView):
+#     """
+#     用户充值
+#     """
+#     permission_classes = (LoginRequired,)
+#
+#     def post(self, request, *args, **kwargs):
+#         index = kwargs.get('index')
+#         if 'recharge' not in request.data or 'r_address' not in request.data:
+#             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+#         r_address = request.data.get('r_address')
+#         if not r_address:
+#             raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
+#         uuid = request.user.id
+#         try:
+#             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
+#         except Exception:
+#             raise
+#         recharge = Decimal(request.data.get('recharge'))
+#         if recharge <= 0:
+#             raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
+#         user_coin.balance += recharge
+#         user_coin.save()
+#         form_recharge = UserRecharge.objects.filter(user_id=uuid)
+#         if not form_recharge.exists():  # 活动送Hand币,活动时间在2018年6月1日-2018年7月13日
+#             start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+#             end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+#             now_time = time.mktime(datetime.now().timetuple())
+#             if now_time >= start_time and now_time <= end_time:
+#                 try:
+#                     user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
+#                 except Exception:
+#                     raise
+#                 user_reward.balance += Decimal('2888')
+#                 user_reward.save()
+#                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
+#                                            rest=user_reward.balance, sources=4)
+#                 reward_detail.save()
+#                 u_ms = UserMessage()  # 活动消息通知
+#                 u_ms.status = 0
+#                 u_ms.user_id = uuid
+#                 u_ms.message_id = 3  # 消息3 充值活动奖励情况
+#                 u_ms.save()
+#         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
+#         user_recharge.save()
+#         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
+#                                  rest=user_coin.balance, sources=1)
+#         coin_detail.save()
+#         return self.response({'code': 0})
 
 
 class CoinOperateView(ListAPIView):
@@ -1644,23 +1642,20 @@ class InvitationRegisterView(CreateAPIView):
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        avatar_nickname = avatar_nickname.strip('\n')
-        nickname, avatar = avatar_nickname.split(',')
-        a = avatar.split('_')
+        a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
         else:
-            folder, suffix = avatar.split('_')
+            folder, suffix = avatar_nickname.split('_')
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar_nickname
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-
-        return nickname, avatar_url
+        return avatar_url
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
@@ -1691,7 +1686,8 @@ class InvitationRegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
-        nickname, avatar = self.get_name_avatar()
+        avatar = self.get_name_avatar()
+        nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
@@ -1711,7 +1707,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
             if invitee_number < 100:
                 user_on_line.is_effective = 1
-                user_on_line.money = 50
+                user_on_line.money = 100
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()

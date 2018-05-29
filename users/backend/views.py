@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
+from itertools import chain
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, \
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from django.db import transaction
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
-    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge
+    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -446,18 +447,21 @@ class InviteNewView(ListAPIView):
     """
     serializer_class = serializers.UserAllSerializer
 
-    def get_queryset(self, **kwargs):
-        uuid = kwargs['pk']
+    def get_queryset(self):
+        uuid = int(self.kwargs['pk'])
         inviter = UserInvitation.objects.filter(inviter_id=uuid)
         user_id1 = inviter.values_list('invitee_one')
         user_id2 = inviter.values_list('invitee_two')
-        user_ids = user_id1 + user_id2
         users = []
-        for x in user_ids:
-            users.append(x[0])
+        for x in list(user_id1):
+            if x[0]!=0:
+                users.append(int(x[0]))
+        for x in list(user_id2):
+            if x[0]!=0:
+                users.append(int(x[0]))
         if len(users) == 0:
             return JsonResponse({"Error:No data"}, status=status.HTTP_400_BAD_REQUEST)
-        user_group = User.objects.filter(user_id__in=users)
+        user_group = User.objects.filter(pk__in=users)
         return user_group
 
 
@@ -504,3 +508,13 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
         item.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class RechargeView(ListAPIView):
+    """
+    充值记录
+    """
+    #
+    queryset = CoinDetail.objects.filter(sources=CoinDetail.RECHARGE)
+    serializer_class = serializers.CoinDetailSerializer
+
