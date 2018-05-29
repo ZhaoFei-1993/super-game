@@ -85,7 +85,7 @@ def get_live_data():
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 0)
                                 elif data_list[28] == '1':
