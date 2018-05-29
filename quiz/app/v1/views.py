@@ -290,16 +290,17 @@ class RuleView(ListAPIView):
             # option = Option.objects.filter(rule_id=i.pk).order_by('order')
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
             option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order').values('pk')
+            print("option_id======================================================", option_id)
             list = []
             total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
             for s in option:
-                is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk, ).count()
+                is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
                 # odds = normalize_fraction(s.odds, int(coinvalue[0].coin.coin_accuracy))
                 odds = normalize_fraction(s.odds, 2)
-                number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
+                number = Record.objects.filter(club_id=roomquiz_id, rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:
                     accuracy = "0"
                 else:
