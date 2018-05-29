@@ -557,7 +557,7 @@ class RankingView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_arr = User.objects.all().values_list('id').order_by('-integral', 'id')[:100]
+        user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         index = 0
         for i in user_arr:

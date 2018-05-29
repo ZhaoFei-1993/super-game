@@ -14,6 +14,7 @@ from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
 from utils.functions import value_judge
 from datetime import datetime
+import time
 import re
 from utils.functions import normalize_fraction
 
@@ -389,7 +390,6 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = request.user
         quiz_id = self.request.data['quiz_id']  # 获取竞猜ID
-        # usercoin_id = self.request.data['usercoin_id']  # 获取货币类型
         roomquiz_id = self.request.data['roomquiz_id']  # 获取俱乐部ID
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
@@ -405,6 +405,9 @@ class BetView(ListCreateAPIView):
         if i >= Decimal(coins):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
+        nowtime = datetime.now()
+        if nowtime > quiz.begin_at:
+            raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
@@ -417,9 +420,6 @@ class BetView(ListCreateAPIView):
         # 判断用户金币是否足够
         if float(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
-        # options = Option.objects.get(pk=int(option_id))
-        # print("coins====================", round(Decimal(coins), 2))
-        # print("coins====================", type(round(Decimal(coins), 2)))
         rule_id = option_odds.option.rule_id
 
         # 调整赔率
@@ -433,70 +433,15 @@ class BetView(ListCreateAPIView):
         record.option = option_odds
         record.bet = round(Decimal(coins), 3)
         record.odds = round(Decimal(option_odds.odds), 2)
-        # record.earn_coin = int(coins) * int(options.odds)
         record.save()
         earn_coins = Decimal(coins) * option_odds.odds
         earn_coins = round(earn_coins, 3)
-        # print("earn_coins==============", earn_coins)
         # 用户减少金币
         usercoin.balance = float(usercoin.balance - Decimal(coins))
         usercoin.save()
         quiz.total_people += 1
         quiz.save()
-        #   多个一起下注(预留)
-        # option = str(self.request.data['option'])  # 获取选项ID(字符串)
-        # coins = str(self.request.data['wager'])  # 获取投注金额(字符串)
-        # option_arr = option.split(',')
-        # coins_arr = coins.split(',')
-        #
-        # coin = 0
-        # if len(option_arr) != len(coins_arr):
-        #     raise ParamErrorException(error_code.API_50106_PARAMETER_EXPIRED)
-        #
-        # for (option_id, wager) in zip(option_arr, coins_arr):
-        #     try:  # 判断选项ID是否有效
-        #         option_id = int(option_id)
-        #     except Exception:
-        #         raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
-        #
-        #     coin += int(wager)
-        #     try:  # 判断赌注是否有效
-        #         wager = int(wager)
-        #     except Exception:
-        #         raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
-        #     #     # 赌注是否超过上限
-        #     # if wager > self.max_wager:
-        #     #     raise ParamErrorException(error_code.API_50103_WAGER_LIMITED)
-        #
-        # quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛数学
-        # if int(quiz.status) != Quiz.PUBLISHING or quiz.is_delete is True:
-        #     raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
-        #
-        # usercoin = UserCoin.objects.get(pk=usercoin_id)
-        # # 判断用户金币是否足够
-        # if usercoin.balance < coin:
-        #     raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
-        #
-        # earn_coins = 0
-        # for (option_id, wager) in zip(option_arr, coins_arr):
-        #     # 获取选项赔率
-        #     options = Option.objects.get(pk=int(option_id))
-        #
-        #     record = Record()
-        #     record.user = user
-        #     record.quiz = quiz
-        #     record.rule = options.rule
-        #     record.option = options
-        #     record.bet = int(wager)
-        #     record.earn_coin = int(wager) * int(options.odds)
-        #     record.save()
-        #     earn_coins += int(wager) * options.odds
-        #     # 用户减少金币
-        #
-        #     usercoin.balance -= int(wager)
-        #     usercoin.save()
-        #     quiz.total_people += 1
-        #     quiz.save()
+
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = usercoin.coin.name
