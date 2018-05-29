@@ -290,9 +290,9 @@ class RuleView(ListAPIView):
             # option = Option.objects.filter(rule_id=i.pk).order_by('order')
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
             option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order').values('pk')
-            print("option_id======================================================", option_id)
             list = []
             total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
+            print("total========================================", total)
             for s in option:
                 is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
                 is_choice = 0
@@ -305,11 +305,7 @@ class RuleView(ListAPIView):
                     accuracy = "0"
                 else:
                     accuracy = number / total
-                    print("number=========================================", number)
-                    print("total=========================================", total)
-                    print("accuracy=========================================", accuracy)
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
-                    print("accuracy========================================10086===========", accuracy)
                 list.append({
                     "option_id": s.pk,
                     "option": s.option.option,
