@@ -416,7 +416,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
         except Exception:
             return ''
-        fee = normalize_fraction(coin_out.value, int(obj.coin.coin_accuracy))
+        fee = normalize_fraction(coin_out.value, 4)
         return fee
 
     @staticmethod

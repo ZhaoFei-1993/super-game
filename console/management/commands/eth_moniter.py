@@ -66,7 +66,6 @@ class Command(BaseCommand):
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = trans['value']
-                confirmations = trans['confirmations']
 
                 # 判断交易hash是否已经存在
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
@@ -79,7 +78,7 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name='ETH').first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = confirmations
+                user_recharge.confirmations = 0
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()

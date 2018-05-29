@@ -50,7 +50,7 @@ urlpatterns = [
     # 用户设置其他(index支持1-5)
     path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
     # 用户充值
-    path('recharge/<int:index>/', views.UserRechargeView.as_view(), name='app-v1-user-recharge'),
+    # path('recharge/<int:index>/', views.UserRechargeView.as_view(), name='app-v1-user-recharge'),
     # 用户币种充值和提现操作记录
     path('asset/coin_operate/<int:coin>/', views.CoinOperateView.as_view(), name='app-v1-usre-asset-coin_operate'),
     # 操作记录明细

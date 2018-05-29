@@ -24,10 +24,20 @@ def get_transaction(transaction_hash):
 class Command(BaseCommand):
     help = "ETH交易信息监视器"
 
+    def add_arguments(self, parser):
+        parser.add_argument('coin', type=str)
+
     @transaction.atomic()
     def handle(self, *args, **options):
+        coin_name = options['coin']
+
+        try:
+            coin = Coin.objects.get(name=coin_name)
+        except Coin.DoesNotExist:
+            raise CommandError(coin_name + '无效')
+
         # 获取所有用户ETH交易hash，只获取交易确认数小于指定值的数据
-        user_recharges = UserRecharge.objects.filter(coin_id=Coin.ETH, confirmations__lt=settings.ETH_CONFIRMATIONS)
+        user_recharges = UserRecharge.objects.filter(coin_id=coin.id, confirmations__lt=settings.ETH_CONFIRMATIONS)
         if len(user_recharges) == 0:
             raise CommandError('无交易信息')
 
@@ -52,11 +62,9 @@ class Command(BaseCommand):
             UserRecharge.objects.first_price(user_id)
 
             # 用户充值成功
-            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
+            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
             user_coin.balance += Decimal(recharge.amount)
             user_coin.save()
-
-            coin = Coin.objects.get(pk=recharge.coin_id)
 
             # 用户余额变更记录
             coin_detail = CoinDetail()

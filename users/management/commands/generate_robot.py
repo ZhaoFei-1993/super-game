@@ -109,22 +109,21 @@ class Command(BaseCommand):
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
+        file_nickname = settings.CACHE_DIR + '/new_name.lst'
+        nickname = linecache.getline(file_nickname, line_number)
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        avatar_nickname = avatar_nickname.strip('\n')
-        nickname, avatar = avatar_nickname.split(',')
-        a = avatar.split('_')
+        a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
         else:
-            folder, suffix = avatar.split('_')
+            folder, suffix = avatar_nickname.split('_')
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar_nickname
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-
         return nickname, avatar_url
 
     @staticmethod

@@ -2,8 +2,6 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.conf import settings
-from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
@@ -75,7 +73,6 @@ class Command(BaseCommand):
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = int(trans['value'])
-                confirmations = trans['confirmations']
 
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
@@ -86,7 +83,7 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name=coin_type).first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = confirmations
+                user_recharge.confirmations = 0
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()
