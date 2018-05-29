@@ -27,7 +27,7 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取所有用户ETH交易hash，只获取交易确认数小于指定值的数据
-        user_recharges = UserRecharge.objects.filter(coin_id=Coin.ETH, confirmations__lt=settings.ETH_CONFIRMATIONS)
+        user_recharges = UserRecharge.objects.filter(coin_id=Coin.HAND, confirmations__lt=settings.ETH_CONFIRMATIONS)
         if len(user_recharges) == 0:
             raise CommandError('无交易信息')
 

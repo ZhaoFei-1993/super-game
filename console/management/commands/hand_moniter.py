@@ -2,8 +2,6 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.conf import settings
-from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
@@ -23,7 +21,6 @@ def get_transactions(address):
     txs = []
     items = json_data['data']
     for item in items:
-        print('item = ', item)
         time_local = time.localtime(item['received_time'])
         time_dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
         data = {
@@ -76,7 +73,6 @@ class Command(BaseCommand):
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = int(trans['value'])
-                confirmations = trans['confirmations']
 
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
