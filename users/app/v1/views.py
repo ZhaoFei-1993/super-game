@@ -268,22 +268,20 @@ class LoginView(CreateAPIView):
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        avatar_nickname = avatar_nickname.strip('\n')
-        nickname, avatar = avatar_nickname.split(',')
-        a = avatar.split('_')
+        a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
         else:
-            folder, suffix = avatar.split('_')
+            folder, suffix = avatar_nickname.split('_')
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar_nickname
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-        return nickname, avatar_url
+        return avatar_url
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
@@ -294,7 +292,7 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         register_type = ur.get_register_type(username)
 
-        nickname_one, avatar = self.get_name_avatar()
+        avatar = self.get_name_avatar()
         if 'avatar' in request.data:
             avatar = request.data.get('avatar')
         type = request.data.get('type')  # 1 注册          2 登录
@@ -308,7 +306,7 @@ class LoginView(CreateAPIView):
 
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
-                nickname = request.data.get('nickname')
+                nickname = str(username[0:3]) + "***" + str(username[7:])
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
 
@@ -319,7 +317,7 @@ class LoginView(CreateAPIView):
                     return self.response({
                         'code': error_code.API_20402_INVALID_SMS_CODE
                     })
-                nickname = nickname_one
+                nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
@@ -1644,23 +1642,20 @@ class InvitationRegisterView(CreateAPIView):
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/name_avatar.lst'
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        avatar_nickname = avatar_nickname.strip('\n')
-        nickname, avatar = avatar_nickname.split(',')
-        a = avatar.split('_')
+        a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
         else:
-            folder, suffix = avatar.split('_')
+            folder, suffix = avatar_nickname.split('_')
 
-        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar
+        avatar_url = settings.MEDIA_DOMAIN_HOST + "/avatar/" + folder + '/' + avatar_nickname
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-
-        return nickname, avatar_url
+        return avatar_url
 
     def post(self, request, *args, **kwargs):
         source = request.META.get('HTTP_X_API_KEY')
@@ -1691,7 +1686,8 @@ class InvitationRegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
-        nickname, avatar = self.get_name_avatar()
+        avatar = self.get_name_avatar()
+        nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
@@ -1711,7 +1707,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
             if invitee_number < 100:
                 user_on_line.is_effective = 1
-                user_on_line.money = 50
+                user_on_line.money = 100
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
