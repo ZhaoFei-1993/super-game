@@ -199,9 +199,8 @@ class RecordSerialize(serializers.ModelSerializer):
 
         rule_list = Rule.objects.get(pk=option.option.rule_id)
         my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-        club = Club.objects.get(pk=obj.roomquiz_id)
         my_option = my_rule + ":" + option.option.option + "/" + str(
-            normalize_fraction(obj.odds, int(club.coin.coin_accuracy)))
+            normalize_fraction(obj.odds, 2))
 
         data = [{
             'my_option': my_option,  # 我的选项
