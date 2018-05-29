@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge
 from quiz.models import Record
 from datetime import datetime
 from django.db.models import Q
@@ -323,3 +323,22 @@ class UserAllSerializer(serializers.ModelSerializer):
     def get_integral(obj):
         integral = normalize_fraction(obj.integral, 2)
         return integral
+
+
+class CoinDetailSerializer(serializers.ModelSerializer):
+    """
+    充值记录
+    """
+    telephone = serializers.CharField(source='user.telephone')
+    user_name = serializers.CharField(source='user.username')
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CoinDetail
+        fields = ("user", "telephone", "user_name", "coin_name", "amount", "rest", "created_at")
+
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = obj.trade_at.strftime('%Y-%m-%d %H:%M:%S')
+        return created_time
