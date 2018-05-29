@@ -142,15 +142,15 @@ def get_live_data():
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 0)
                                 elif data_list[28] == '1':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 1)
                                 elif data_list[28] == '2':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 2)
                                 elif data_list[28] == '50':
@@ -158,11 +158,11 @@ def get_live_data():
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 50)
                                 elif data_list[28] == '3':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 3)
                                 elif data_list[28] == '4':
-                                    quiz.status = quiz.PUBLISHING
+                                    quiz.status = quiz.REPEALED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 4)
                                 # 1,2,3,4:第一二三四节，50中场休息
