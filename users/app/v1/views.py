@@ -1101,7 +1101,7 @@ class UserPresentationView(CreateAPIView):
         presentation.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
-        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.coin_name = coin.name
         if coin.name == 'HAND':
             coin_detail.amount = Decimal(str(p_amount))
         else:
@@ -1459,55 +1459,55 @@ class ForgetPasswordView(ListAPIView):
         return self.response(content)
 
 
-class UserRechargeView(ListCreateAPIView):
-    """
-    用户充值
-    """
-    permission_classes = (LoginRequired,)
-
-    def post(self, request, *args, **kwargs):
-        index = kwargs.get('index')
-        if 'recharge' not in request.data or 'r_address' not in request.data:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        r_address = request.data.get('r_address')
-        if not r_address:
-            raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
-        uuid = request.user.id
-        try:
-            user_coin = UserCoin.objects.get(id=index, user_id=uuid)
-        except Exception:
-            raise
-        recharge = Decimal(request.data.get('recharge'))
-        if recharge <= 0:
-            raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
-        user_coin.balance += recharge
-        user_coin.save()
-        form_recharge = UserRecharge.objects.filter(user_id=uuid)
-        if not form_recharge.exists():  # 活动送Hand币,活动时间在2018年6月1日-2018年7月13日
-            start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
-            end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
-            now_time = time.mktime(datetime.now().timetuple())
-            if now_time >= start_time and now_time <= end_time:
-                try:
-                    user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
-                except Exception:
-                    raise
-                user_reward.balance += Decimal('2888')
-                user_reward.save()
-                reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
-                                           rest=user_reward.balance, sources=4)
-                reward_detail.save()
-                u_ms = UserMessage()  # 活动消息通知
-                u_ms.status = 0
-                u_ms.user_id = uuid
-                u_ms.message_id = 3  # 消息3 充值活动奖励情况
-                u_ms.save()
-        user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
-        user_recharge.save()
-        coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
-                                 rest=user_coin.balance, sources=1)
-        coin_detail.save()
-        return self.response({'code': 0})
+# class UserRechargeView(ListCreateAPIView):
+#     """
+#     用户充值
+#     """
+#     permission_classes = (LoginRequired,)
+#
+#     def post(self, request, *args, **kwargs):
+#         index = kwargs.get('index')
+#         if 'recharge' not in request.data or 'r_address' not in request.data:
+#             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+#         r_address = request.data.get('r_address')
+#         if not r_address:
+#             raise ParamErrorException(error_code.API_70201_USER_RECHARGE_ADDRESS)
+#         uuid = request.user.id
+#         try:
+#             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
+#         except Exception:
+#             raise
+#         recharge = Decimal(request.data.get('recharge'))
+#         if recharge <= 0:
+#             raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
+#         user_coin.balance += recharge
+#         user_coin.save()
+#         form_recharge = UserRecharge.objects.filter(user_id=uuid)
+#         if not form_recharge.exists():  # 活动送Hand币,活动时间在2018年6月1日-2018年7月13日
+#             start_time = time.mktime(datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+#             end_time = time.mktime(datetime.strptime('2018-07-14 00:00:00', '%Y-%m-%d %H:%M:%S').timetuple())
+#             now_time = time.mktime(datetime.now().timetuple())
+#             if now_time >= start_time and now_time <= end_time:
+#                 try:
+#                     user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
+#                 except Exception:
+#                     raise
+#                 user_reward.balance += Decimal('2888')
+#                 user_reward.save()
+#                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
+#                                            rest=user_reward.balance, sources=4)
+#                 reward_detail.save()
+#                 u_ms = UserMessage()  # 活动消息通知
+#                 u_ms.status = 0
+#                 u_ms.user_id = uuid
+#                 u_ms.message_id = 3  # 消息3 充值活动奖励情况
+#                 u_ms.save()
+#         user_recharge = UserRecharge(user_id=uuid, coin_id=index, amount=recharge, address=r_address)
+#         user_recharge.save()
+#         coin_detail = CoinDetail(user_id=uuid, coin_name=user_coin.coin.name, amount=str(recharge),
+#                                  rest=user_coin.balance, sources=1)
+#         coin_detail.save()
+#         return self.response({'code': 0})
 
 
 class CoinOperateView(ListAPIView):
