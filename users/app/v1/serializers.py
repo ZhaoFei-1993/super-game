@@ -97,9 +97,9 @@ class UserInfoSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_passcode(obj):  # 密保
         if obj.pass_code == '' or obj.pass_code is None:
-            return "0"
+            return 0
         else:
-            return "1"
+            return 1
 
     @staticmethod
     def get_usercoin(obj):  # 代币余额

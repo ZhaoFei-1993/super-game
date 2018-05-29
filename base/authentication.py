@@ -9,7 +9,6 @@ import dateutil.parser as dateparser
 from rest_framework_jwt.settings import api_settings
 from .exceptions import SystemParamException, SignatureNotMatchException, NotLoginException
 
-from django.core.cache import caches
 from django.conf import settings
 
 from . import code
@@ -115,6 +114,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         path = request.get_full_path()
         signature_headers = self.get_headers_from_signature(request)
         unsigned = self.build_dict_to_sign(request, signature_headers)
+        print('unsigned = ', unsigned)
 
         # Sign string and compare.
         signer = HeaderSigner(
