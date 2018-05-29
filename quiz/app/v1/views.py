@@ -290,8 +290,7 @@ class RuleView(ListAPIView):
             # option = Option.objects.filter(rule_id=i.pk).order_by('order')
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
             list = []
-            total = Record.objects.filter(rule_id=i.pk).count()
-            print("total===================================", total)
+            total = Record.objects.filter(rule_id=i.pk, roomquiz_id=roomquiz_id).count()
             for s in option:
                 is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
                 is_choice = 0
@@ -300,14 +299,11 @@ class RuleView(ListAPIView):
                 # odds = normalize_fraction(s.odds, int(coinvalue[0].coin.coin_accuracy))
                 odds = normalize_fraction(s.odds, 2)
                 number = Record.objects.filter(rule_id=i.pk, option_id=s.pk).count()
-                print("number===================================", number)
                 if number == 0 or total == 0:
                     accuracy = "0"
                 else:
                     accuracy = number / total
-                    print("accuracy=============================", accuracy)
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
-                    print("accuracy======================================", accuracy)
                 list.append({
                     "option_id": s.pk,
                     "option": s.option.option,
@@ -319,7 +315,6 @@ class RuleView(ListAPIView):
                     "is_choice": is_choice,
                     "order": s.option.order
                 })
-            print("list===============================", list)
             # 比分
             win = []
             flat = []
