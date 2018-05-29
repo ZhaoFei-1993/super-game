@@ -264,6 +264,7 @@ class RuleView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user.id
         roomquiz_id = self.request.GET.get('roomquiz_id')
+        print("roomquiz_id=======================", roomquiz_id)
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
