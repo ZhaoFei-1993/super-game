@@ -160,7 +160,7 @@ class UserRegister(object):
 
             # 注册送HAND币
             if user.is_money == 0:
-                user_money = 2000
+                user_money = 10000
                 try:
                     user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
                 except Exception:
@@ -1680,7 +1680,7 @@ class InvitationRegisterView(CreateAPIView):
         all_money = UserInvitation.objects.filter(is_deleted=1).aggregate(Sum('money'))
         all_money = all_money['money__sum']  # 获得总钱数
         if all_money is not None:
-            all_money += 100
+            all_money += 2000
             if all_money > 200000000:
                 raise ParamErrorException(error_code.API_60101_USER_INVITATION_MONEY)
 
@@ -1707,7 +1707,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
             if invitee_number < 100:
                 user_on_line.is_effective = 1
-                user_on_line.money = 100
+                user_on_line.money = 1000
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
@@ -1721,7 +1721,7 @@ class InvitationRegisterView(CreateAPIView):
             return 0
         if invitee_number < 10:
             user_go_line.is_effective = 1
-            user_go_line.money = 200
+            user_go_line.money = 2000
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
