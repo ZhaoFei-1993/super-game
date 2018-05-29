@@ -312,3 +312,14 @@ class Quiz_Odds_Log(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项赔率记录表"
+
+
+class CashBack_Log(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
+    platform_sum = models.DecimalField(verbose_name="平台投注额", max_digits=15, decimal_places=3, default=0.000)
+    profit = models.DecimalField(verbose_name="盈利", max_digits=15, decimal_places=3, default=0.000)
+    cash_back_sum = models.DecimalField(verbose_name="返现总额", max_digits=15, decimal_places=3, default=0.000)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "返现记录表"
