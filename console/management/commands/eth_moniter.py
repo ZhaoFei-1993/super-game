@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.conf import settings
-from decimal import Decimal
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
@@ -64,25 +62,15 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
 
-            # 首次充值获得奖励
-            UserRecharge.objects.first_price(user_id)
-
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
                 tx_value = trans['value']
-                confirmations = trans['confirmations']
 
-                # 判断交易hash是否已经存在，存在则更新交易确认数，当确认数达到指定数目时，给用户增加指定余额
+                # 判断交易hash是否已经存在
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
-
-                # 确认数 >= 15 才处理
-                if confirmations < settings.ETH_CONFIRMATIONS:
-                    continue
-
-                valid_trans += 1
 
                 # 插入充值记录表
                 user_recharge = UserRecharge()
@@ -90,14 +78,12 @@ class Command(BaseCommand):
                 user_recharge.coin = Coin.objects.filter(name='ETH').first()
                 user_recharge.address = address
                 user_recharge.amount = tx_value
-                user_recharge.confirmations = trans['confirmations']
+                user_recharge.confirmations = 0
                 user_recharge.txid = txid
                 user_recharge.trade_at = trans['time']
                 user_recharge.save()
 
-                # 变更用户余额
-                user_coin.balance += Decimal(tx_value)
-                user_coin.save()
+                valid_trans += 1
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
             self.stdout.write(self.style.SUCCESS(''))
