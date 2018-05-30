@@ -29,3 +29,4 @@ rq==0.10.0
 qrcode==6.0
 redis==2.10.6
 python-memcached==1.58
+pygame==1.9.3

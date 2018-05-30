@@ -21,7 +21,7 @@ from django.db.models import Q
 from config.models import Admin_Operation
 from quiz.models import Record
 from base import code
-from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation
+from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation, User
 import reversion
 from wc_auth.functions import save_operation
 
@@ -40,6 +40,25 @@ def random_string(length=16):
     for i in range(length):
         random_str += chars[random.randint(0, char_length)]
     return random_str
+
+
+def random_invitation_code(length=5):
+    """
+    生成指定长度随机字符串
+    :param length: 随机数长度
+    :return:
+    """
+    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    char_length = len(chars) - 1
+    random = Random()
+
+    random_str = ''
+    for i in range(length):
+        random_str += chars[random.randint(0, char_length)]
+    user_list = User.objects.filter(invitation_code=random_str).count()
+    if user_list == 0:
+        return random_str
+    return random_invitation_code()
 
 
 def random_salt(length=12):
