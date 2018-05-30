@@ -33,7 +33,7 @@ class SmsView(ListCreateAPIView):
         code_type = request.data.get('code_type')
         if int(code_type) not in range(1, 6):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        if code_type == 5:
+        if int(code_type) == 5:
             user_list = User.objects.filter(username=telephone, telephone=telephone).count()
             if user_list == 0:
                 raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)

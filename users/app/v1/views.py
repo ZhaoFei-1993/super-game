@@ -1727,6 +1727,10 @@ class InvitationRegisterView(CreateAPIView):
         telephone = request.data.get('telephone')
         code = request.data.get('code')
         password = request.data.get('password')
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
+                                                       is_deleted=1).count()
+        if invitee_number >= 5:
+            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -1776,7 +1780,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
-        user_go_line = UserInvitation()  # 邀请T2是否已达上限
+        user_go_line = UserInvitation()  # 邀请T1是否已达上限
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
                                                        is_deleted=1).count()
         try:
@@ -1845,7 +1849,8 @@ class InvitationUserView(ListAPIView):
         nickname = user_info.nickname
         avatar = user_info.avatar
         username = user_info.username
-        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username, "invitation_code": invitation_code})
+        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username,
+                              "invitation_code": invitation_code})
 
 
 class InvitationMergeView(ListAPIView):
