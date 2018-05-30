@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
-from .serializers import CategorySerializer, UserQuizSerializer
+from .serializers import CategorySerializer, UserQuizSerializer, UserQuizListSerializer
 from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
 from chat.models import  Club
 from django.db import connection
@@ -351,3 +351,16 @@ class QuizListBackEndDetailView(ListAPIView):
             }
             data.append(temp_dict)
         return JsonResponse({'results':data})
+
+
+class UserQuizListView(ListAPIView):
+    """
+    用户竞猜列表详情
+    """
+
+    serializer_class = UserQuizListSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs['user_id']
+        rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL)
+        return rec_s
