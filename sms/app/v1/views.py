@@ -34,7 +34,7 @@ class SmsView(ListCreateAPIView):
         if int(code_type) not in range(1, 6):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         if code_type == 5:
-            user_list = User.objects.filter(telephone=telephone).count()
+            user_list = User.objects.filter(username=telephone, telephone=telephone).count()
             if user_list == 0:
                 raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)
         # 判断距离上次发送是否超过了60秒

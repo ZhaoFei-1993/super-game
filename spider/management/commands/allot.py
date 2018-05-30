@@ -10,14 +10,13 @@ class Command(BaseCommand):
     help = "发配HAND"
 
     def handle(self, *args, **options):
-        club = Club.objects.get(pk=4)
-        coin = Coin.objects.get(pk=club.coin_id)
+        coin = Coin.objects.get(pk=4)
         for user in User.objects.all():
             try:
                 user_coin = UserCoin.objects.get(user_id=user.id, coin=coin)
             except UserCoin.DoesNotExist:
                 user_coin = UserCoin()
-            user_coin.coin_id = club.coin_id
+            user_coin.coin_id = 4
             user_coin.user_id = user.id
             user_coin.balance = Decimal(user_coin.balance) + Decimal(8000)
             user_coin.save()
