@@ -1835,11 +1835,13 @@ class InvitationUserView(ListAPIView):
             user_info = User.objects.get(pk=user_id)
         except DailyLog.DoesNotExist:
             return 0
+
+        invitation_code = user_info.invitation_code
         pk = user_info.pk
         nickname = user_info.nickname
         avatar = user_info.avatar
         username = user_info.username
-        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username})
+        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username, "invitation_code": invitation_code})
 
 
 class InvitationMergeView(ListAPIView):
