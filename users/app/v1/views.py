@@ -1769,26 +1769,34 @@ class InvitationRegisterView(CreateAPIView):
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
-                                                           is_deleted=1).count()
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line.id).count()
+            try:
+                is_robot = User.objects.get(pk=on_line.id)
+            except DailyLog.DoesNotExist:
+                return 0
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 10:
+            if invitee_number < 10 and is_robot.is_robot == False:
                 user_on_line.is_effective = 1
                 user_on_line.money = 1000
+                user_on_line.is_robot = False
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-                                                       is_deleted=1).count()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id)).count()
         try:
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
-        if invitee_number < 5:
+        try:
+            is_robot = User.objects.get(pk=invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
+        if invitee_number < 5 and is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 2000
+            user_go_line.is_robot = False
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
