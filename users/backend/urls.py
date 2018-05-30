@@ -31,5 +31,7 @@ urlpatterns = [
     # 提现审核
     path('coin_present_check/<int:pk>/', views.CoinPresentCheckView.as_view(), name="backend-present_check"),
     # 充值记录
-    path('recharge_list/', views.RechargeView.as_view(), name="backend-recharge"),
+    path('recharge_list/<int:pk>/', views.RechargeView.as_view(), name="backend-recharge"),
+    # 积分(GSG)记录
+    path('gsg_backend_list/<int:pk>/', views.GSGBackendView.as_view(), name="backend-gsg_backend_list"),
 ]
