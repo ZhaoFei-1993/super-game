@@ -1849,6 +1849,12 @@ class InvitationUserView(ListAPIView):
         nickname = user_info.nickname
         avatar = user_info.avatar
         username = user_info.username
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(pk),
+                                                       is_effective=1).count()
+        if int(invitee_number) == 5 or int(invitee_number) > 5:
+            return self.response(
+                {'code': error_code.API_10107_INVITATION_CODE_INVALID, "pk": pk, "nickname": nickname, "avatar": avatar,
+                 "username": username, "invitation_code": invitation_code})
         return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username,
                               "invitation_code": invitation_code})
 

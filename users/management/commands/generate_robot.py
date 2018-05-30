@@ -7,6 +7,7 @@ from django.db import transaction
 import time
 import random
 from django.contrib.auth.hashers import make_password
+from utils.functions import random_invitation_code
 import linecache
 from utils.cache import get_cache, set_cache
 
@@ -71,6 +72,7 @@ class Command(BaseCommand):
         user.telephone = ''
         user.avatar = avatar
         user.nickname = nickname
+        user.invitation_code = random_invitation_code()
         user.is_robot = True
         user.save()
 
@@ -160,7 +162,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 10)
+        user_total = random.randint(500, 1000)
         start_date, end_date = self.get_date()
 
         random_datetime = []

@@ -116,7 +116,7 @@ class CurrencyListView(CreateAPIView, FormatListAPIView):
         betting_value_one = request.data['betting_value_one']
         betting_value_two = request.data['betting_value_two']
         betting_value_three = request.data['betting_value_three']
-        coin_order = request.data['coin_order']
+        coin_order = int(request.data['coin_order'])
         # Integral_proportion = request.data['Integral_proportion']
 
         coin = Coin()
@@ -196,6 +196,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
             "betting_value_two": str(betting_value_two),
             "betting_value_three": str(betting_value_three),
             "Integral_proportion": Integral_proportion,
+            "coin_order":coin.coin_order,
             # "is_lock": str(is_lock),
             "url": ''
         }
@@ -225,7 +226,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
         coin.betting_toplimit = betting_toplimit
         coin.betting_control = betting_control
         # coin.is_lock = request.data['is_lock']
-        coin.coin_order = request.data['coin_order']
+        coin.coin_order = int(request.data['coin_order'])
         coin.save()
         coin_value_one = CoinValue.objects.get(coin_id=coin.pk, value_index=1)
         coin_value_one.value = request.data['betting_value_one']
@@ -512,9 +513,26 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
 
 class RechargeView(ListAPIView):
     """
-    充值记录
+    用户充值记录
     """
     #
-    queryset = CoinDetail.objects.filter(sources=CoinDetail.RECHARGE)
     serializer_class = serializers.CoinDetailSerializer
+
+    def get_queryset(self):
+        pk = int(self.kwargs['pk'])
+        details = CoinDetail.objects.filter(user_id = pk, sources = CoinDetail.RECHARGE)
+        return details
+
+
+class GSGBackendView(ListAPIView):
+    """
+    用户GSG明细
+    """
+    serializer_class = serializers.CoinDetailSerializer
+
+    def get_queryset(self):
+        pk = int(self.kwargs['pk'])
+        details = CoinDetail.objects.filter(user_id = pk, coin_name='GSG')
+        return details
+
 

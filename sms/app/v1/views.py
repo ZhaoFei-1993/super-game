@@ -37,6 +37,10 @@ class SmsView(ListCreateAPIView):
             user_list = User.objects.filter(username=telephone, telephone=telephone).count()
             if user_list == 0:
                 raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)
+        if int(code_type) == 4:
+            user_list = User.objects.filter(username=telephone, telephone=telephone).count()
+            if user_list >= 1:
+                raise ParamErrorException(error_code.API_20102_TELEPHONE_REGISTERED)
         # 判断距离上次发送是否超过了60秒
         record = Sms.objects.filter(telephone=telephone).order_by('-id').first()
         if record is not None:
