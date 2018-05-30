@@ -1728,8 +1728,8 @@ class InvitationRegisterView(CreateAPIView):
         code = request.data.get('code')
         password = request.data.get('password')
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-                                                       is_deleted=1).count()
-        if invitee_number >= 5:
+                                                       is_effective=1).count()
+        if int(invitee_number) == 5 or int(invitee_number) > 5:
             raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
         # 校验手机短信验证码
