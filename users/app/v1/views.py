@@ -615,7 +615,7 @@ class RankingView(ListAPIView):
     serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.filter(is_robot=0).order_by('-integral', 'id')
+        return User.objects.filter(is_robot=0).order_by('-integral', 'id')[:100]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
