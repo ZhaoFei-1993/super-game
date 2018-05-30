@@ -424,7 +424,8 @@ class BetView(ListCreateAPIView):
 
         # HAND币单场比赛最大下注100W
         if coin_id == Coin.HAND:
-            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id).aggregate(Sum('bet'))
+            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(Sum('bet'))
+            print("bet_sum['bet__sum'] = ", bet_sum['bet__sum'])
             if bet_sum['bet__sum'] >= 1000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
