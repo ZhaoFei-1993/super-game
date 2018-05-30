@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 import time
 from users.models import UserCoin, UserRecharge, Coin
@@ -46,8 +46,7 @@ class Command(BaseCommand):
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=coin_id, user__is_robot=False)
         if len(user_eth_address) == 0:
-            self.stdout.write(self.style.SUCCESS('无地址信息'))
-            return True
+            raise CommandError('无地址信息')
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户' + coin_type + '地址信息'))
 
@@ -56,7 +55,7 @@ class Command(BaseCommand):
             user_id = user_coin.user_id
 
             if address == '':
-                self.stdout.write(self.style.SUCCESS('用户' + str(user_id) + '无分配' + coin_type + '地址'))
+                self.stdout.write(self.style.FAILURE('用户' + str(user_id) + '无分配' + coin_type + '地址'))
                 continue
 
             # 根据address获取交易信息
@@ -92,5 +91,3 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
             self.stdout.write(self.style.SUCCESS(''))
-        else:
-            print('无数据')

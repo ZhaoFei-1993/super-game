@@ -7,14 +7,15 @@ from base.eth import *
 from time import time
 
 
-def get_transactions(address):
+def get_transactions(coin, address):
     """
-    根据ETH地址获取交易数据
+    根据HAND地址获取交易数据
+    :param coin
     :param address:
     :return:
     """
     eth_wallet = Wallet()
-    json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
+    json_data = eth_wallet.get(url='v1/account/' + coin + '/transaction/' + address)
     if len(json_data['data']) == 0:
         return []
 
@@ -25,44 +26,56 @@ def get_transactions(address):
         time_dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
         data = {
             'time': time_dt,
-            'value': item['ether'],
-            'confirmations': json_data['block_number'] - item['blockNumber'],
-            'txid': item['hash'],
+            'value': item['value'],
+            'confirmations': item['confirmations'],
+            'txid': item['txid'],
         }
         txs.append(data)
     return txs
 
 
 class Command(BaseCommand):
-    help = "ETH监视器"
+    help = "ETH TOKEN监视器"
+
+    def add_arguments(self, parser):
+        parser.add_argument('coin', type=str)
 
     @transaction.atomic()
     def handle(self, *args, **options):
         start = time()
 
+        coin_name = options['coin'].upper()
+
+        try:
+            coin = Coin.objects.get(name=coin_name)
+        except Coin.DoesNotExist:
+            raise CommandError(coin_name + '无效')
+
+        coin_id = coin.id
+        coin_name = coin.name
+        self.stdout.write(self.style.SUCCESS('************正在获取' + coin_name + '交易数据***************'))
+        self.stdout.write(self.style.SUCCESS(''))
+
         # 获取所有用户ETH地址
-        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
-        eth_address_length = len(user_eth_address)
-        if eth_address_length == 0:
+        user_eth_address = UserCoin.objects.filter(coin_id=coin_id, user__is_robot=False)
+        if len(user_eth_address) == 0:
             raise CommandError('无地址信息')
 
-        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户ETH地址信息'))
+        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户' + coin_name + '地址信息'))
 
         for user_coin in user_eth_address:
             address = user_coin.address
             user_id = user_coin.user_id
 
             if address == '':
-                self.stdout.write(self.style.FAILURE('用户' + str(user_id) + '无分配ETH地址'))
+                self.stdout.write(self.style.FAILURE('用户' + str(user_id) + '无分配' + coin_name + '地址'))
                 continue
-
-            eth_address_length -= 1
 
             # 根据address获取交易信息
             self.stdout.write(self.style.SUCCESS('正在获取用户 ' + str(user_id) + ' 地址为 ' + str(address) + ' 的交易记录'))
             transactions = get_transactions(address)
             if len(transactions) == 0:
-                self.stdout.write(self.style.FAILURE('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
+                self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 无充值记录'))
                 continue
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
@@ -70,17 +83,15 @@ class Command(BaseCommand):
             valid_trans = 0
             for trans in transactions:
                 txid = trans['txid']
-                tx_value = trans['value']
+                tx_value = int(trans['value'])
 
-                # 判断交易hash是否已经存在
                 is_exists = UserRecharge.objects.filter(txid=txid).count()
                 if is_exists > 0:
                     continue
 
-                # 插入充值记录表
                 user_recharge = UserRecharge()
                 user_recharge.user_id = user_id
-                user_recharge.coin = Coin.objects.filter(name='ETH').first()
+                user_recharge.coin = coin
                 user_recharge.address = address
                 user_recharge.amount = tx_value
                 user_recharge.confirmations = 0
@@ -90,7 +101,7 @@ class Command(BaseCommand):
 
                 valid_trans += 1
 
-            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找'))
+            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
 
         stop = time()
         cost = str(round(stop - start)) + '秒'
