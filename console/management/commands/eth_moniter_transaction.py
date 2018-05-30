@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        coin_name = options['coin']
+        coin_name = options['coin'].upper()
 
         try:
             coin = Coin.objects.get(name=coin_name)
