@@ -4,7 +4,6 @@ from django.db import transaction
 import time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
-from time import time
 
 
 def get_transactions(coin, address):
