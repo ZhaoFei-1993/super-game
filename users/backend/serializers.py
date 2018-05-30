@@ -117,7 +117,7 @@ class CurrencySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Coin
         fields = ("id", "icon", "name", "exchange_rate", "admin", "created_at", "cash_control", "betting_toplimit",
-                  "betting_control", "url")
+                  "betting_control", "coin_order", "url")
 
     @staticmethod
     def get_created_at(obj):  # 时间
@@ -332,13 +332,21 @@ class CoinDetailSerializer(serializers.ModelSerializer):
     telephone = serializers.CharField(source='user.telephone')
     user_name = serializers.CharField(source='user.username')
     created_at = serializers.SerializerMethodField()
+    sources = serializers.SerializerMethodField()
 
     class Meta:
         model = CoinDetail
-        fields = ("user", "telephone", "user_name", "coin_name", "amount", "rest", "created_at")
+        fields = ("user", "telephone", "user_name", "coin_name", "amount", "rest", "created_at", "sources")
 
 
     @staticmethod
     def get_created_at(obj):
-        created_time = obj.trade_at.strftime('%Y-%m-%d %H:%M:%S')
+        created_time = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
         return created_time
+
+    @staticmethod
+    def get_sources(obj):
+        choice = CoinDetail.TYPE_CHOICE
+        for x in choice:
+            if int(obj.sources) == x[0]:
+                return x[1]

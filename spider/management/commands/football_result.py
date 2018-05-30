@@ -18,6 +18,15 @@ headers = {
 }
 
 
+def trunc(f, n):
+    s1, s2 = str(f).split('.')
+    if n == 0:
+        return s1
+    if n <= len(s2):
+        return s1 + '.' + s2[:n]
+    return s1 + '.' + s2 + '0' * (n - len(s2))
+
+
 def get_data(url):
     try:
         response = requests.get(url, headers=headers)
@@ -277,15 +286,16 @@ def cash_back(quiz):
                         personal_sum = personal_sum + record_personal.bet
                     gsg_cash_back = float(profit_abs) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
                         club.room_title]
+                    gsg_cash_back = trunc(gsg_cash_back, 2)
                     user = User.objects.get(pk=user_id)
-                    user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
+                    user.integral = float(user.integral) + float(gsg_cash_back)
                     user.save()
 
                     # 用户资金明细表
                     coin_detail = CoinDetail()
-                    coin_detail.user_id = record.user_id
+                    coin_detail.user_id = user_id
                     coin_detail.coin_name = "GSG"
-                    coin_detail.amount = float(str(gsg_cash_back)[0:4])
+                    coin_detail.amount = float(gsg_cash_back)
                     coin_detail.rest = user.integral
                     coin_detail.sources = CoinDetail.CASHBACK
                     coin_detail.save()
@@ -293,15 +303,15 @@ def cash_back(quiz):
                     # 发送信息
                     u_mes = UserMessage()
                     u_mes.status = 0
-                    u_mes.user_id = record.user_id
+                    u_mes.user_id = user_id
                     u_mes.message_id = 6  # 私人信息
                     u_mes.title = '返现公告'
-                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back)[0:4] + '个GSG'
+                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back) + '个GSG'
                     u_mes.save()
 
-                    print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
+                    print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
 
-                    cash_back_sum = cash_back_sum + float(str(gsg_cash_back)[0:4])
+                    cash_back_sum = cash_back_sum + float(gsg_cash_back)
 
             cash_back_log = CashBack_Log()
             cash_back_log.quiz = quiz
