@@ -383,7 +383,7 @@ class LoginView(CreateAPIView):
                 nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, invitation_cod=invitation_code)
+                                    password=password, invitation_code=invitation_code)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
