@@ -152,6 +152,9 @@ class OptionManager(models.Manager):
         max_bet_value = Decimal(bet_max.betting_toplimit)
         require_coin_times = Decimal(self.require_coin_times)
 
+        if coin_id == Coin.HAND:
+            require_coin_times = Decimal(100)
+
         return max_bet_value * require_coin_times * max_rate, max_bet_value
 
     def change_odds(self, rule_id, coin_id, roomquiz_id):

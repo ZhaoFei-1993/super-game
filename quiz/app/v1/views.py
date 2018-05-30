@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
-from users.models import UserCoin, CoinValue
+from users.models import UserCoin, CoinValue, Coin
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
@@ -421,6 +421,13 @@ class BetView(ListCreateAPIView):
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
         coin_id = clubinfo.coin.pk
+
+        # HAND币单场比赛最大下注100W
+        if coin_id == Coin.HAND:
+            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id).aggregate(Sum('bet'))
+            if bet_sum['bet__sum'] >= 1000000:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
         if float(usercoin.balance) < coins:
