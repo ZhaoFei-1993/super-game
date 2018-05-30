@@ -10,4 +10,5 @@ urlpatterns = [
     path('user_quiz/', views.UserQuizView.as_view(), name="quiz-user_quiz"),
     path('quiz_list_backend/<int:category>/', views.QuizListBackEndView.as_view(), name='quiz_list_backend'),
     path('quiz_list_backend/<int:quiz_id>/<int:room>/<int:type>/', views.QuizListBackEndDetailView.as_view(), name='quiz_list_backend_detail'),
+    path('quiz_user_list/<int:user_id>/',views.UserQuizListView.as_view(), name='quiz_user_list'),
 ]

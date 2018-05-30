@@ -409,6 +409,8 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         nowtime = datetime.now()
+        print("nowtime==========================", nowtime)
+        print("quiz.begin_at==========================", quiz.begin_at)
         if nowtime > quiz.begin_at:
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:

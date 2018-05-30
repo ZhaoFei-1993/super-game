@@ -23,12 +23,14 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction, genarate_plist
+    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
 import re
 import os
+import pygame
+from pygame.locals import *
 from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
@@ -184,7 +186,7 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, avatar='', nickname='', ):
+    def register(self, source, username, password, avatar='', nickname='', invitation_code=''):
         """
         用户注册
         :param source:      用户来源：ios、android
@@ -198,18 +200,68 @@ class UserRegister(object):
         # 11 telephone
         # 32 QQ
         # 28 微信
-        register_type = self.get_register_type(username)
-        user = User()
-        if len(username) == 11:
-            user.telephone = username
+        # 邀请码注册
 
-        user.username = username
-        user.source = user.__getattribute__(source.upper())
-        user.set_password(password)
-        user.register_type = register_type
-        user.avatar = avatar
-        user.nickname = nickname
-        user.save()
+        if invitation_code != '':  # 是否用邀请码注册
+            invitation_user = User.objects.get(invitation_code=invitation_code)
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
+                                                           is_deleted=1).count()
+            if invitee_number >= 5:  # 邀请T1是否已达上限
+                raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+
+            register_type = self.get_register_type(username)
+            user = User()
+            if len(username) == 11:
+                user.telephone = username
+
+            user.username = username
+            user.source = user.__getattribute__(source.upper())
+            user.set_password(password)
+            user.register_type = register_type
+            user.avatar = avatar
+            user.nickname = nickname
+            user.invitation_code = random_invitation_code()
+            user.save()
+
+            user_go_line = UserInvitation()
+            user_go_line.is_effective = 1
+            user_go_line.money = 2000
+            user_go_line.inviter = invitation_user
+            user_go_line.invitation_code = invitation_code
+            user_go_line.invitee_one = user.id
+            user_go_line.save()
+
+            invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).count()
+            if invitee_one > 0:  # 邀请人为他人T1.
+                try:
+                    invitee = UserInvitation.objects.get(invitee_one=int(invitation_user.pk))
+                except DailyLog.DoesNotExist:
+                    return 0
+                on_line = invitee.inviter
+                invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
+                                                               is_deleted=1).count()
+                user_on_line = UserInvitation()  # 邀请T2是否已达上限
+                if invitee_number < 10:
+                    user_on_line.is_effective = 1
+                    user_on_line.money = 1000
+                user_on_line.inviter = on_line
+                user_on_line.invitee_two = user.id
+                user_on_line.save()
+        else:
+            register_type = self.get_register_type(username)
+            user = User()
+            if len(username) == 11:
+                user.telephone = username
+
+            user.username = username
+            user.source = user.__getattribute__(source.upper())
+            user.set_password(password)
+            user.register_type = register_type
+            user.avatar = avatar
+            user.nickname = nickname
+            user.invitation_code = random_invitation_code()
+            user.save()
+
         # 生成签到记录
         try:
             userinfo = User.objects.get(username=username)
@@ -312,6 +364,18 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
+                # invitation_code = ''
+                # if 'invitation_code' in request.data:
+                #     invitation_code = request.data.get('invitation_code')
+                if 'invitation_code' not in request.data:
+                    raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
+                invitation_code = request.data.get('invitation_code')
+                invitation_code = invitation_code.upper()
+                try:
+                    invitation_user = User.objects.get(invitation_code=invitation_code)
+                except Exception:
+                    raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+
                 message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
                     return self.response({
@@ -320,7 +384,7 @@ class LoginView(CreateAPIView):
                 nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password)
+                                    password=password, invitation_cod=invitation_code)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -1282,41 +1346,41 @@ class SettingOthersView(ListAPIView):
             return self.response({'code': 0, 'data': data.sv_contractus})
 
 
-class RegisterView(CreateAPIView):
-    """
-    用户注册
-    """
-
-    def post(self, request, *args, **kwargs):
-        source = request.META.get('HTTP_X_API_KEY')
-        telephone = request.data.get('username')
-        code = request.data.get('code')
-        password = request.data.get('password')
-
-        # 校验手机短信验证码
-        message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
-        if len(message) == 0:
-            return self.response({
-                'code': error_code.API_20402_INVALID_SMS_CODE
-            })
-
-        # 判断该手机号码是否已经注册
-        user = User.objects.filter(username=telephone)
-        if len(user) > 0:
-            return self.response({
-                'code': error_code.API_20102_TELEPHONE_REGISTERED
-            })
-
-        # 用户注册
-        ur = UserRegister()
-        avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
-        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
-        return self.response({
-            'code': error_code.API_0_SUCCESS,
-            'data': {
-                'access_token': token
-            }
-        })
+# class RegisterView(CreateAPIView):
+#     """
+#     用户注册
+#     """
+#
+#     def post(self, request, *args, **kwargs):
+#         source = request.META.get('HTTP_X_API_KEY')
+#         telephone = request.data.get('username')
+#         code = request.data.get('code')
+#         password = request.data.get('password')
+#
+#         # 校验手机短信验证码
+#         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
+#         if len(message) == 0:
+#             return self.response({
+#                 'code': error_code.API_20402_INVALID_SMS_CODE
+#             })
+#
+#         # 判断该手机号码是否已经注册
+#         user = User.objects.filter(username=telephone)
+#         if len(user) > 0:
+#             return self.response({
+#                 'code': error_code.API_20102_TELEPHONE_REGISTERED
+#             })
+#
+#         # 用户注册
+#         ur = UserRegister()
+#         avatar = settings.STATIC_DOMAIN_HOST + "/images/avatar.png"
+#         token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=telephone)
+#         return self.response({
+#             'code': error_code.API_0_SUCCESS,
+#             'data': {
+#                 'access_token': token
+#             }
+#         })
 
 
 class CoinTypeView(CreateAPIView, ListAPIView):
@@ -1705,7 +1769,7 @@ class InvitationRegisterView(CreateAPIView):
             invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
                                                            is_deleted=1).count()
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 100:
+            if invitee_number < 10:
                 user_on_line.is_effective = 1
                 user_on_line.money = 1000
             user_on_line.inviter = on_line
@@ -1719,7 +1783,7 @@ class InvitationRegisterView(CreateAPIView):
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
-        if invitee_number < 10:
+        if invitee_number < 5:
             user_go_line.is_effective = 1
             user_go_line.money = 2000
         user_go_line.inviter = invitation
@@ -1743,15 +1807,22 @@ class InvitationInfoView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        user_id = self.request.user.id
-        invitation_number = UserInvitation.objects.filter(inviter=user_id).count()  # T1总人数
-        user_invitation_two = UserInvitation.objects.filter(inviter=user_id, is_deleted=1).aggregate(
+        user = self.request.user
+        if user.invitation_code == '':
+            invitation_code = random_invitation_code()
+            user.invitation_code = invitation_code
+            user.save()
+        else:
+            invitation_code = user.invitation_code
+        invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # T1总人数
+        user_invitation_two = UserInvitation.objects.filter(inviter=user.id, is_deleted=1).aggregate(
             Sum('money'))
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
         return self.response(
-            {'code': 0, 'user_invitation_number': invitation_number, 'moneys': user_invitation_twos})
+            {'code': 0, 'user_invitation_number': invitation_number, 'moneys': user_invitation_twos,
+             'invitation_code': invitation_code})
 
 
 class InvitationUserView(ListAPIView):
@@ -1768,11 +1839,13 @@ class InvitationUserView(ListAPIView):
             user_info = User.objects.get(pk=user_id)
         except DailyLog.DoesNotExist:
             return 0
+
+        invitation_code = user_info.invitation_code
         pk = user_info.pk
         nickname = user_info.nickname
         avatar = user_info.avatar
         username = user_info.username
-        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username})
+        return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username, "invitation_code": invitation_code})
 
 
 class InvitationMergeView(ListAPIView):
@@ -1785,8 +1858,9 @@ class InvitationMergeView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        user_id = self.request.user.id
-        sub_path = str(user_id % 10000)
+        user = self.request.user
+
+        sub_path = str(user.id % 10000)
 
         spread_path = settings.MEDIA_ROOT + 'spread/'
         if not os.path.exists(spread_path):
@@ -1796,15 +1870,30 @@ class InvitationMergeView(ListAPIView):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
-        if os.access(save_path + '/qrcode_' + str(user_id) + '.jpg', os.F_OK):
-            # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
-            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
+        if user.invitation_code == '':
+            invitation_code = random_invitation_code()
+            user.invitation_code = invitation_code
+            user.save()
+        else:
+            invitation_code = user.invitation_code
+
+        if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
             return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
+        pygame.init()
+        # 设置字体和字号
+        font = pygame.font.SysFont('Microsoft YaHei', 64)
+        # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
+        ftext = font.render(invitation_code, True, (255, 255, 255), (178, 34, 34))
+        # 保存图片
+        invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
+        pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
+        # qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
         base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -1814,19 +1903,21 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (243, 735))
+        base_img.paste(qr_img, (242, 721))
+        ftext = Image.open(
+            settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
+        base_img.paste(ftext, (302, 1040))  # 插入邀请码
 
         # 保存二维码图片
-        qr_img.save(save_path + '/qrcode_' + str(user_id) + '.jpg')
+        qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
-
         # 保存推广图片
-        base_img.save(save_path + '/spread_' + str(user_id) + '.jpg', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user_id) + '.jpg'
+        base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
+        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
 
-        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user_id)
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
-        return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
+        return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data, "invitation_code": invitation_code})
 
 
 class LuckDrawListView(ListAPIView):

@@ -9,6 +9,7 @@ import time
 import pytz
 from django.conf import settings
 from base.exceptions import ParamErrorException
+from users.models import User
 
 from rq import Queue
 from redis import Redis
@@ -32,6 +33,10 @@ class SmsView(ListCreateAPIView):
         code_type = request.data.get('code_type')
         if int(code_type) not in range(1, 6):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+        if code_type == 5:
+            user_list = User.objects.filter(telephone=telephone).count()
+            if user_list == 0:
+                raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)
         # 判断距离上次发送是否超过了60秒
         record = Sms.objects.filter(telephone=telephone).order_by('-id').first()
         if record is not None:
@@ -62,7 +67,6 @@ class SmsView(ListCreateAPIView):
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
         q.enqueue(send_sms, model.id)
-        print("code=================================================", code)
         return self.response({'code': error_code.API_0_SUCCESS})
 
 

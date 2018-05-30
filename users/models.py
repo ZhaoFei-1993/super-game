@@ -69,6 +69,7 @@ class User(AbstractBaseUser):
     integral = models.DecimalField(verbose_name='GSG', max_digits=15, decimal_places=3, default=0.000)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
+    invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -424,6 +425,7 @@ class UserInvitation(models.Model):
     inviter = models.ForeignKey(User, on_delete=models.CASCADE)
     invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
     invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
+    invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     money = models.IntegerField(verbose_name="奖励金额", default=0)
     is_effective = models.BooleanField(verbose_name="是否有效", default=False)
     is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
