@@ -6,7 +6,7 @@ import datetime
 import re
 import requests
 from bs4 import BeautifulSoup
-from quiz.models import Quiz, Rule, Option, Record
+from quiz.models import Quiz, Rule, Option, Record, CashBack_Log
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User
 from chat.models import Club
 from decimal import Decimal
@@ -120,10 +120,12 @@ def get_data_info(url, match_flag):
     option_wnm.is_right = 1
     option_wnm.save()
 
+    flag = False
     # 分配奖金
     records = Record.objects.filter(quiz=quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
+            flag = True
             # 判断是否回答正确
             is_right = False
             if record.rule_id == rule_mnl.id:
@@ -186,10 +188,14 @@ def get_data_info(url, match_flag):
                     round(earn_coin, 3))
             u_mes.save()
 
+            record.is_distribution = True
+            record.save()
+
     quiz.status = Quiz.BONUS_DISTRIBUTION
     # quiz.is_reappearance = 1
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+    return flag
 
 
 def handle_delay_game(delay_quiz):
@@ -235,6 +241,9 @@ def handle_delay_game(delay_quiz):
             u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + '赛事延期或已中断(您的下注已全额退回)'
             u_mes.save()
 
+            record.is_distribution = True
+            record.save()
+
             print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
 
@@ -243,10 +252,11 @@ def cash_back(quiz):
         "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
     }
     for club in Club.objects.all():
-        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, is_distribution=False)
+        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id)
         if len(records) > 0:
             platform_sum = 0
             profit = 0
+            cash_back_sum = 0
             user_list = []
             for record in records:
                 platform_sum = platform_sum + record.bet
@@ -255,16 +265,19 @@ def cash_back(quiz):
                     user_list.append(record.user_id)
 
             print('club====>' + club.room_title)
-            print('profit====>' + str(profit))
+            if profit <= 0:
+                print('profit====>' + str(abs(profit)))
+            elif profit > 0:
+                print('profit====>' + '-' + str(profit))
             print('platform_sum====>' + str(platform_sum))
 
             if profit < 0:
-                profit = abs(profit)
+                profit_abs = abs(profit)
                 for user_id in user_list:
                     personal_sum = 0
                     for record_personal in records.filter(user_id=user_id):
                         personal_sum = personal_sum + record_personal.bet
-                    gsg_cash_back = float(profit) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
+                    gsg_cash_back = float(profit_abs) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
                         club.room_title]
                     user = User.objects.get(pk=user_id)
                     user.integral = float(user.integral) + float(str(gsg_cash_back)[0:4])
@@ -289,8 +302,23 @@ def cash_back(quiz):
                     u_mes.save()
 
                     print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back)[0:4])
-            print('\n')
+
+                    cash_back_sum = cash_back_sum + float(str(gsg_cash_back)[0:4])
+
+            cash_back_log = CashBack_Log()
+            cash_back_log.quiz = quiz
+            cash_back_log.roomquiz_id = club.id
+            cash_back_log.platform_sum = platform_sum
+            if profit <= 0:
+                cash_back_log.profit = abs(profit)
+            elif profit > 0:
+                cash_back_log.profit = float('-' + str(profit))
+            cash_back_log.cash_back_sum = cash_back_sum
+            cash_back_log.save()
+
+            print('cash_back_sum====>' + str(cash_back_sum))
             print('---------------------------')
+    print('\n')
 
 
 class Command(BaseCommand):
@@ -316,9 +344,9 @@ class Command(BaseCommand):
                 category__parent_id=1))
         if quizs.exists():
             for quiz in quizs:
-                get_data_info(base_url, quiz.match_flag)
+                flag = get_data_info(base_url, quiz.match_flag)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
-                if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION:
+                if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
         else:
             print('暂无比赛需要开奖')
