@@ -372,7 +372,7 @@ class LoginView(CreateAPIView):
                 invitation_code = request.data.get('invitation_code')
                 invitation_code = invitation_code.upper()
                 invitation_user = User.objects.filter(invitation_code=invitation_code).count()
-                if len(invitation_user) == 0:
+                if invitation_user == 0:
                     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
                 message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
