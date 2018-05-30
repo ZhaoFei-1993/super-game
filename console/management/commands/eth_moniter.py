@@ -63,6 +63,7 @@ class Command(BaseCommand):
             transactions = get_transactions(address)
             if len(transactions) == 0:
                 self.stdout.write(self.style.NOTICE('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
+                self.stdout.write(self.style.SUCCESS(''))
                 continue
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
@@ -91,8 +92,8 @@ class Command(BaseCommand):
                 valid_trans += 1
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找'))
+            self.stdout.write(self.style.SUCCESS(''))
 
         stop = time()
         cost = str(round(stop - start)) + '秒'
         self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost))
-        self.stdout.write(self.style.SUCCESS(''))
