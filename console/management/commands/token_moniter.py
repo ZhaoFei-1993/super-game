@@ -42,8 +42,6 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        start = time()
-
         coin_name = options['coin'].upper()
 
         try:
@@ -102,8 +100,3 @@ class Command(BaseCommand):
                 valid_trans += 1
 
             self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
-
-        stop = time()
-        cost = str(round(stop - start)) + '秒'
-        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost))
-        self.stdout.write(self.style.SUCCESS(''))
