@@ -53,7 +53,7 @@ class Command(BaseCommand):
             user_id = user_coin.user_id
 
             if address == '':
-                self.stdout.write(self.style.FAILURE('用户' + str(user_id) + '无分配ETH地址'))
+                self.stdout.write(self.style.ERROR('用户' + str(user_id) + '无分配ETH地址'))
                 continue
 
             eth_address_length -= 1
@@ -62,7 +62,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('正在获取用户 ' + str(user_id) + ' 地址为 ' + str(address) + ' 的交易记录'))
             transactions = get_transactions(address)
             if len(transactions) == 0:
-                self.stdout.write(self.style.FAILURE('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
+                self.stdout.write(self.style.NOTICE('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
                 continue
 
             self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))

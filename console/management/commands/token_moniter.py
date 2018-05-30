@@ -68,7 +68,7 @@ class Command(BaseCommand):
             user_id = user_coin.user_id
 
             if address == '':
-                self.stdout.write(self.style.FAILURE('用户' + str(user_id) + '无分配' + coin_name + '地址'))
+                self.stdout.write(self.style.SUCCESS('用户' + str(user_id) + '无分配' + coin_name + '地址'))
                 continue
 
             # 根据address获取交易信息
