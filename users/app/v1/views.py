@@ -364,9 +364,13 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
-                invitation_code = ''
-                if 'invitation_code' in request.data:
-                    invitation_code = request.data.get('invitation_code')
+                # invitation_code = ''
+                # if 'invitation_code' in request.data:
+                #     invitation_code = request.data.get('invitation_code')
+                if 'invitation_code' not in request.data:
+                    raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
+                invitation_code = request.data.get('invitation_code')
+                invitation_code = invitation_code.upper()
                 try:
                     invitation_user = User.objects.get(invitation_code=invitation_code)
                 except Exception:
