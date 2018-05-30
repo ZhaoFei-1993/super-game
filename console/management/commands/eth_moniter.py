@@ -53,11 +53,13 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('用户' + str(user_id) + '无分配ETH地址'))
                 continue
 
+            eth_address_length -= 1
+
             # 根据address获取交易信息
             self.stdout.write(self.style.SUCCESS('正在获取用户 ' + str(user_id) + ' 地址为 ' + str(address) + ' 的交易记录'))
             transactions = get_transactions(address)
             if len(transactions) == 0:
-                self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 无充值记录'))
+                self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
                 self.stdout.write(self.style.SUCCESS(''))
                 continue
 
@@ -86,5 +88,5 @@ class Command(BaseCommand):
 
                 valid_trans += 1
 
-            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
+            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找'))
             self.stdout.write(self.style.SUCCESS(''))
