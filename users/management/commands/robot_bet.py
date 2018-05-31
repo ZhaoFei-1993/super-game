@@ -7,7 +7,7 @@ import random
 from django.db import transaction
 from django.db.models import Q
 
-from quiz.models import Quiz, Option, Record, Rule, OptionOdds
+from quiz.models import Quiz, Option, Record, Rule, OptionOdds, Category
 from users.models import User, UserCoin, CoinValue, Coin
 from chat.models import Club
 from utils.weight_choice import WeightChoice
@@ -202,17 +202,35 @@ class Command(BaseCommand):
         :param quiz_id:
         :return:
         """
+        # 判断是足球或者篮球
+        quiz = Quiz.objects.get(pk=quiz_id)
+        category = Category.objects.get(pk=quiz.category_id)
+
         rules = Rule.objects.filter(quiz_id=quiz_id)
         if len(rules) == 0:
             return False
 
         # 4种玩法设置权重，70:20:5:5
-        rules_weight = {
-            0: 70,      # 赛果
-            1: 20,      # 让分赛果
-            2: 5,       # 比分
-            3: 5,       # 总进球
-        }
+        if category.parent_id == 1:
+            """
+            篮球
+            """
+            rules_weight = {
+                4: 70,  # 胜负
+                5: 20,  # 让分胜负
+                6: 5,  # 大小分
+                7: 5,  # 胜分差
+            }
+        else:
+            """
+            足球
+            """
+            rules_weight = {
+                0: 70,      # 赛果
+                1: 20,      # 让分赛果
+                2: 5,       # 比分
+                3: 5,       # 总进球
+            }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
         rule_type = weight_choice.choice()
