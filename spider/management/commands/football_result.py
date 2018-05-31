@@ -259,7 +259,7 @@ def cash_back(quiz):
         "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
     }
     for club in Club.objects.all():
-        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id)
+        records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, user__is_robot=False)
         if len(records) > 0:
             platform_sum = 0
             profit = 0
@@ -287,31 +287,32 @@ def cash_back(quiz):
                     gsg_cash_back = float(profit_abs) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
                         club.room_title]
                     gsg_cash_back = trunc(gsg_cash_back, 2)
-                    user = User.objects.get(pk=user_id)
-                    user.integral = float(user.integral) + float(gsg_cash_back)
-                    user.save()
+                    if float(gsg_cash_back) > 0:
+                        user = User.objects.get(pk=user_id)
+                        user.integral = float(user.integral) + float(gsg_cash_back)
+                        user.save()
 
-                    # 用户资金明细表
-                    coin_detail = CoinDetail()
-                    coin_detail.user_id = user_id
-                    coin_detail.coin_name = "GSG"
-                    coin_detail.amount = float(gsg_cash_back)
-                    coin_detail.rest = user.integral
-                    coin_detail.sources = CoinDetail.CASHBACK
-                    coin_detail.save()
+                        # 用户资金明细表
+                        coin_detail = CoinDetail()
+                        coin_detail.user_id = user_id
+                        coin_detail.coin_name = "GSG"
+                        coin_detail.amount = float(gsg_cash_back)
+                        coin_detail.rest = user.integral
+                        coin_detail.sources = CoinDetail.CASHBACK
+                        coin_detail.save()
 
-                    # 发送信息
-                    u_mes = UserMessage()
-                    u_mes.status = 0
-                    u_mes.user_id = user_id
-                    u_mes.message_id = 6  # 私人信息
-                    u_mes.title = '返现公告'
-                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back) + '个GSG'
-                    u_mes.save()
+                        # 发送信息
+                        u_mes = UserMessage()
+                        u_mes.status = 0
+                        u_mes.user_id = user_id
+                        u_mes.message_id = 6  # 私人信息
+                        u_mes.title = '返现公告'
+                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back) + '个GSG'
+                        u_mes.save()
 
-                    print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
+                        print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
 
-                    cash_back_sum = cash_back_sum + float(gsg_cash_back)
+                        cash_back_sum = cash_back_sum + float(gsg_cash_back)
 
             cash_back_log = CashBack_Log()
             cash_back_log.quiz = quiz
