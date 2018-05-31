@@ -371,6 +371,7 @@ class LoginView(CreateAPIView):
                     raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
                 invitation_code = request.data.get('invitation_code')
                 invitation_code = invitation_code.upper()
+
                 invitation_user = User.objects.filter(invitation_code=invitation_code).count()
                 if invitation_user == 0:
                     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
@@ -2102,3 +2103,26 @@ class ActivityImageView(ListAPIView):
         activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
+
+
+class CheckInvitationCode(ListAPIView):
+    """
+    邀请码校验
+    """
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        invitation_code = request.GET.get('invitation_code')
+        invitation_code = invitation_code.upper()
+        invitation_user = User.objects.filter(invitation_code=invitation_code).count()
+        if invitation_user == 0:
+            raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
+
+        invitation_user = User.objects.get(invitation_code=invitation_code)
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
+                                                       is_deleted=1).count()
+        if invitee_number >= 5:  # 邀请T1是否已达上限
+            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        return self.response({'code': 0})
