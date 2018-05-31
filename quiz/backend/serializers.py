@@ -30,6 +30,7 @@ class UserQuizSerializer(serializers.ModelSerializer):
     # coin_icon = serializers.CharField(source='coin.icon')
     # option = serializers.CharField(source='option.option')
     created_at = serializers.SerializerMethodField()
+    earn_coin = serializers.SerializerMethodField()
 
     class Meta:
         model = Record
@@ -43,6 +44,11 @@ class UserQuizSerializer(serializers.ModelSerializer):
         create_time = obj.created_at
         created = create_time.strftime("%Y-%m-%d %H:%M:%S")
         return created
+
+    @staticmethod
+    def get_earn_coin(obj):
+        earn_coin = obj.bet * obj.odds
+        return earn_coin
 
 
 class UserQuizListSerializer(serializers.ModelSerializer):
