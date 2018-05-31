@@ -1652,6 +1652,8 @@ class VersionUpdateView(RetrieveAPIView):
                 data['upload_url'] = ul_url
             else:
                 data = serialize.data
+                data['is_update'] = True if data['is_update'] else False
+                data['is_delete'] = True if data['is_delete'] else False
             return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
