@@ -155,6 +155,10 @@ class OptionManager(models.Manager):
         if coin_id == Coin.HAND:
             require_coin_times = Decimal(100)
 
+        print('require_coin_times = ', require_coin_times)
+        print('max_bet_value = ', max_bet_value)
+        print('max_rate = ', max_rate)
+
         return max_bet_value * require_coin_times * max_rate, max_bet_value
 
     def change_odds(self, rule_id, coin_id, roomquiz_id):

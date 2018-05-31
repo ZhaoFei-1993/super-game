@@ -264,7 +264,6 @@ class RuleView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user.id
         roomquiz_id = self.request.GET.get('roomquiz_id')
-        print("roomquiz_id=======================", roomquiz_id)
         quiz_id = kwargs['quiz_id']
         rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
         clubinfo = Club.objects.get(pk=int(roomquiz_id))
@@ -293,7 +292,6 @@ class RuleView(ListAPIView):
             option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order').values('pk')
             list = []
             total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
-            print("total========================================", total)
             for s in option:
                 is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
                 is_choice = 0
@@ -409,8 +407,6 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         nowtime = datetime.now()
-        print("nowtime==========================", nowtime)
-        print("quiz.begin_at==========================", quiz.begin_at)
         if nowtime > quiz.begin_at:
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
@@ -424,8 +420,9 @@ class BetView(ListCreateAPIView):
 
         # HAND币单场比赛最大下注100W
         if coin_id == Coin.HAND:
-            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id).aggregate(Sum('bet'))
-            if bet_sum['bet__sum'] >= 1000000:
+            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(Sum('bet'))
+            print('bet_sum[\'bet__sum\'] = ', bet_sum['bet__sum'])
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 1000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)

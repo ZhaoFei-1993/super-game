@@ -167,6 +167,8 @@ class UserRegister(object):
                     user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
                 except Exception:
                     return 0
+                user_balance.balance += user_money
+                user_balance.save()
                 coin_detail = CoinDetail()
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
@@ -174,8 +176,6 @@ class UserRegister(object):
                 coin_detail.rest = Decimal(user_balance.balance)
                 coin_detail.sources = 6
                 coin_detail.save()
-                user_balance.balance += user_money
-                user_balance.save()
                 user.is_money = 1
                 user.save()
                 r_msg = UserMessage()  # 注册送hand消息
@@ -371,6 +371,7 @@ class LoginView(CreateAPIView):
                     raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
                 invitation_code = request.data.get('invitation_code')
                 invitation_code = invitation_code.upper()
+
                 invitation_user = User.objects.filter(invitation_code=invitation_code).count()
                 if invitation_user == 0:
                     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
@@ -383,7 +384,7 @@ class LoginView(CreateAPIView):
                 nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, invitation_cod=invitation_code)
+                                    password=password, invitation_code=invitation_code)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -462,6 +463,8 @@ class InfoView(ListAPIView):
             except Exception:
                 return 0
             for a in user_invitation_info:
+                userbalance.balance += a.money
+                userbalance.save()
                 coin_detail = CoinDetail()
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
@@ -471,8 +474,6 @@ class InfoView(ListAPIView):
                 coin_detail.save()
                 a.is_deleted = 1
                 a.save()
-                userbalance.balance += a.money
-                userbalance.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -1652,6 +1653,8 @@ class VersionUpdateView(RetrieveAPIView):
                 data['upload_url'] = ul_url
             else:
                 data = serialize.data
+                data['is_update'] = True if data['is_update'] else False
+                data['is_delete'] = True if data['is_delete'] else False
             return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
@@ -1769,26 +1772,34 @@ class InvitationRegisterView(CreateAPIView):
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
-                                                           is_deleted=1).count()
+            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line.id).count()
+            try:
+                is_robot = User.objects.get(pk=on_line.id)
+            except DailyLog.DoesNotExist:
+                return 0
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 10:
+            if invitee_number < 10 and is_robot.is_robot == False:
                 user_on_line.is_effective = 1
                 user_on_line.money = 1000
+                user_on_line.is_robot = False
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-                                                       is_deleted=1).count()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id)).count()
         try:
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
-        if invitee_number < 5:
+        try:
+            is_robot = User.objects.get(pk=invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
+        if invitee_number < 5 and is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 2000
+            user_go_line.is_robot = False
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
@@ -2051,6 +2062,8 @@ class ClickLuckDrawView(CreateAPIView):
                 user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)
             except DailyLog.DoesNotExist:
                 return 0
+            user_coin.balance += Decimal(integral_prize.prize_number)
+            user_coin.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice
@@ -2058,8 +2071,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.rest = Decimal(user_coin.balance)
             coin_detail.sources = 4
             coin_detail.save()
-            user_coin.balance += Decimal(integral_prize.prize_number)
-            user_coin.save()
+
 
         integral_prize_record = IntegralPrizeRecord()
         integral_prize_record.user = user_info
@@ -2092,3 +2104,26 @@ class ActivityImageView(ListAPIView):
         activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
+
+
+class CheckInvitationCode(ListAPIView):
+    """
+    邀请码校验
+    """
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        invitation_code = request.GET.get('invitation_code')
+        invitation_code = invitation_code.upper()
+        invitation_user = User.objects.filter(invitation_code=invitation_code).count()
+        if invitation_user == 0:
+            raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
+
+        invitation_user = User.objects.get(invitation_code=invitation_code)
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
+                                                       is_deleted=1).count()
+        if invitee_number >= 5:  # 邀请T1是否已达上限
+            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        return self.response({'code': 0})
