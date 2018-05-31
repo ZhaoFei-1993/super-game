@@ -11,4 +11,5 @@ urlpatterns = [
     path('quiz_list_backend/<int:category>/', views.QuizListBackEndView.as_view(), name='quiz_list_backend'),
     path('quiz_detail_backend/<int:type>/', views.QuizListBackEndDetailView.as_view(), name='quiz_list_backend_detail'),
     path('quiz_user_list/<int:user_id>/',views.UserQuizListView.as_view(), name='quiz_user_list'),
+    path('quiz_count_list/<int:room>/<int:pk>/', views.QuizCountListView.as_view(), name='quiz_count_list'),
 ]

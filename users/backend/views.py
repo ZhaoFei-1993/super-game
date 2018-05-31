@@ -3,6 +3,7 @@ from itertools import chain
 from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView, DestroyAPIView, UpdateAPIView, \
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView
 from django.db import transaction
+from django.db.models import Q
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge
 from users.app.v1.serializers import PresentationSerialize
@@ -196,7 +197,7 @@ class CurrencyDetailView(DestroyAPIView, FormatRetrieveAPIView, UpdateAPIView):
             "betting_value_two": str(betting_value_two),
             "betting_value_three": str(betting_value_three),
             "Integral_proportion": Integral_proportion,
-            "coin_order":coin.coin_order,
+            "coin_order": coin.coin_order,
             # "is_lock": str(is_lock),
             "url": ''
         }
@@ -454,14 +455,13 @@ class InviteNewView(ListAPIView):
         user_id1 = inviter.values_list('invitee_one')
         user_id2 = inviter.values_list('invitee_two')
         users = []
-        for x in list(user_id1):
-            if x[0]!=0:
-                users.append(int(x[0]))
-        for x in list(user_id2):
-            if x[0]!=0:
-                users.append(int(x[0]))
-        if len(users) == 0:
-            return JsonResponse({"Error:No data"}, status=status.HTTP_400_BAD_REQUEST)
+        if inviter.exists():
+            for x in list(user_id1):
+                if x[0] != 0:
+                    users.append(int(x[0]))
+            for x in list(user_id2):
+                if x[0] != 0:
+                    users.append(int(x[0]))
         user_group = User.objects.filter(pk__in=users)
         return user_group
 
@@ -474,11 +474,11 @@ class CoinPresentView(ListAPIView):
     serializer_class = PresentationSerialize
 
 
-
 class CoinPresentCheckView(RetrieveUpdateAPIView):
     """
     提现审核
     """
+
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']
@@ -520,7 +520,7 @@ class RechargeView(ListAPIView):
 
     def get_queryset(self):
         pk = int(self.kwargs['pk'])
-        details = CoinDetail.objects.filter(user_id = pk, sources = CoinDetail.RECHARGE)
+        details = CoinDetail.objects.filter(user_id=pk, sources=CoinDetail.RECHARGE)
         return details
 
 
@@ -532,7 +532,30 @@ class GSGBackendView(ListAPIView):
 
     def get_queryset(self):
         pk = int(self.kwargs['pk'])
-        details = CoinDetail.objects.filter(user_id = pk, coin_name='GSG')
+        details = CoinDetail.objects.filter(user_id=pk, coin_name='GSG')
         return details
 
 
+class CoinBackendDetail(ListAPIView):
+    """
+    用户资产情况
+    """
+    serializer_class = serializers.CoinBackendDetailSerializer
+
+    def get_queryset(self):
+        uuid = int(self.kwargs['pk'])
+        user_coin = UserCoin.objects.filter(user_id=uuid)
+        return user_coin
+
+
+class RewardBackendDetail(ListAPIView):
+    """
+    系统奖励页面
+    """
+    serializer_class = serializers.CoinDetailSerializer
+
+    def get_queryset(self):
+        pk = int(self.kwargs['pk'])
+        details = CoinDetail.objects.filter(~Q(coin_name='GSG'), ~Q(
+            sources__in=[CoinDetail.RECHARGE, CoinDetail.REALISATION, CoinDetail.BETS]), user_id=pk)
+        return details

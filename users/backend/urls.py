@@ -34,4 +34,8 @@ urlpatterns = [
     path('recharge_list/<int:pk>/', views.RechargeView.as_view(), name="backend-recharge"),
     # 积分(GSG)记录
     path('gsg_backend_list/<int:pk>/', views.GSGBackendView.as_view(), name="backend-gsg_backend_list"),
+    # 资金明细
+    path('coin_backend_detail/<int:pk>/', views.CoinBackendDetail.as_view(), name="backend-coin_backend_detail"),
+    # 系统奖励及其他
+    path('backend_coin_reward/<int:pk>/', views.RewardBackendDetail.as_view(), name="backend-backend_coin_reward"),
 ]

@@ -364,6 +364,7 @@ class QuizListBackEndDetailView(ListAPIView):
                 sum_t = records.filter(option__option=x.id).aggregate(Sum('bet'))
                 temp_dict = {
                     'item': x.option,
+                    'option_id': x.id,
                     'odds': x.odds,
                     'count': count_t,
                     'sum_bet': 0 if sum_t['bet__sum'] == None else sum_t['bet__sum']
@@ -390,3 +391,16 @@ class UserQuizListView(ListAPIView):
         pk = self.kwargs['user_id']
         rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL)
         return rec_s
+
+
+class QuizCountListView(ListAPIView):
+    """
+    下注人数
+    """
+    serializer_class = UserQuizSerializer
+
+    def get_queryset(self):
+        option_id = int(self.kwargs['pk'])
+        room = int(self.kwargs['room'])
+        records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=room, option__option_id=option_id)
+        return records

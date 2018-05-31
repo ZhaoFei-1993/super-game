@@ -327,7 +327,7 @@ class UserAllSerializer(serializers.ModelSerializer):
 
 class CoinDetailSerializer(serializers.ModelSerializer):
     """
-    充值记录
+    明细记录
     """
     telephone = serializers.CharField(source='user.telephone')
     user_name = serializers.CharField(source='user.username')
@@ -350,3 +350,15 @@ class CoinDetailSerializer(serializers.ModelSerializer):
         for x in choice:
             if int(obj.sources) == x[0]:
                 return x[1]
+
+
+class CoinBackendDetailSerializer(serializers.ModelSerializer):
+    """
+    后台资产明细页面
+    """
+    username = serializers.CharField(source='user.username')
+    coin_name = serializers.CharField(source='coin.name')
+
+    class Meta:
+        model = UserCoin
+        fields = ('username', 'coin_name', 'balance', 'coin', 'user')
