@@ -14,7 +14,6 @@ coin_name = 'BTC'
 def get_transactions(addresses):
     transactions = {}
     response = requests.get(base_url + addresses)
-    print('response = ', response.__dict__)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
@@ -61,56 +60,65 @@ class Command(BaseCommand):
             btc_addresses.append(user_coin.address)
             # map address to userid
             address_map_uid[user_coin.address] = user_coin.user_id
-        addresses = '|'.join(btc_addresses)
 
-        self.stdout.write(self.style.SUCCESS('正在获取所有用户' + coin_name + '地址交易记录'))
-        transactions = get_transactions(addresses)
-        for address in transactions:
-            if len(transactions[address]) == 0:
-                continue
+        # 因URL有长度限制，这里分页处理，每页50条
+        page_size = 50
+        page_total = round(len(btc_addresses) / page_size)
+        for i in range(1, page_total):
+            start = (i - 1) * page_size + 1
+            end = page_size * i
 
-            user_id = address_map_uid[address]
-            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.BTC)
+            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end)))
+            addresses = '|'.join(btc_addresses[start:end])
 
-            # 首次充值获得奖励
-            UserRecharge.objects.first_price(user_id)
-
-            valid_trans = 0
-            for trans in transactions[address]:
-                tx_id = trans['txid']
-                tx_value = trans['value']
-                confirmations = trans['confirmations']
-
-                # 确认数为0暂时不处理
-                if confirmations < 1:
+            self.stdout.write(self.style.SUCCESS('正在获取所有用户' + coin_name + '地址交易记录'))
+            transactions = get_transactions(addresses)
+            for address in transactions:
+                if len(transactions[address]) == 0:
                     continue
 
-                # 判断交易hash是否已经存在，存在则忽略该条交易，更新确认数
-                is_exists = UserRecharge.objects.filter(txid=tx_id).count()
-                if is_exists > 0:
-                    user_recharge = UserRecharge.objects.get(txid=tx_id)
+                user_id = address_map_uid[address]
+                user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.BTC)
+
+                # 首次充值获得奖励
+                UserRecharge.objects.first_price(user_id)
+
+                valid_trans = 0
+                for trans in transactions[address]:
+                    tx_id = trans['txid']
+                    tx_value = trans['value']
+                    confirmations = trans['confirmations']
+
+                    # 确认数为0暂时不处理
+                    if confirmations < 1:
+                        continue
+
+                    # 判断交易hash是否已经存在，存在则忽略该条交易，更新确认数
+                    is_exists = UserRecharge.objects.filter(txid=tx_id).count()
+                    if is_exists > 0:
+                        user_recharge = UserRecharge.objects.get(txid=tx_id)
+                        user_recharge.confirmations = confirmations
+                        user_recharge.save()
+                        continue
+
+                    valid_trans += 1
+
+                    self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 增加 ' + str(tx_value) + ' 个' + coin_name))
+
+                    # 插入充值记录表
+                    user_recharge = UserRecharge()
+                    user_recharge.user_id = user_id
+                    user_recharge.coin_id = Coin.BTC
+                    user_recharge.address = address
+                    user_recharge.amount = tx_value
                     user_recharge.confirmations = confirmations
+                    user_recharge.txid = tx_id
+                    user_recharge.trade_at = trans['time']
                     user_recharge.save()
-                    continue
 
-                valid_trans += 1
+                    # 变更用户余额
+                    user_coin.balance += Decimal(tx_value)
+                    user_coin.save()
 
-                self.stdout.write(self.style.SUCCESS('用户ID=' + str(user_id) + ' 增加 ' + str(tx_value) + ' 个' + coin_name))
-
-                # 插入充值记录表
-                user_recharge = UserRecharge()
-                user_recharge.user_id = user_id
-                user_recharge.coin_id = Coin.BTC
-                user_recharge.address = address
-                user_recharge.amount = tx_value
-                user_recharge.confirmations = confirmations
-                user_recharge.txid = tx_id
-                user_recharge.trade_at = trans['time']
-                user_recharge.save()
-
-                # 变更用户余额
-                user_coin.balance += Decimal(tx_value)
-                user_coin.save()
-
-            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
-            self.stdout.write(self.style.SUCCESS(''))
+                self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
