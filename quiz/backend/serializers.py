@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.utils import timezone
 # from datetime import datetime
 
-from ..models import Category, Record, Option, Quiz
+from ..models import Category, Record, Option, Quiz, OptionOdds
 from chat.models import Club
 from utils.functions import normalize_fraction
 
