@@ -423,7 +423,7 @@ class UserAllView(ListAPIView):
     """
     所有用户资产表
     """
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_robot=0).order_by('-created_at')
     serializer_class = serializers.UserAllSerializer
 
 
