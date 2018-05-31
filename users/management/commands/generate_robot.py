@@ -100,7 +100,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('账号为：' + username))
         self.stdout.write(self.style.SUCCESS('密码为：' + password))
 
-    def get_name_avatar(self):
+    @staticmethod
+    def get_name_avatar():
         """
         获取已经下载的用户昵称和头像
         :return:
