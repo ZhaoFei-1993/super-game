@@ -2102,7 +2102,6 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.sources = 4
             coin_detail.save()
 
-
         integral_prize_record = IntegralPrizeRecord()
         integral_prize_record.user = user_info
         integral_prize_record.prize = integral_prize
@@ -2156,4 +2155,4 @@ class CheckInvitationCode(ListAPIView):
                                                        is_deleted=1).count()
         if invitee_number >= 5:  # 邀请T1是否已达上限
             raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
-        return self.response({'code': 0})
+        return self.response({'code': 0, 'avatar': invitation_user.avatar, 'nickname': invitation_user.nickname})
