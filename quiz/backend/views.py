@@ -341,14 +341,22 @@ class QuizListBackEndDetailView(ListAPIView):
         for i in ['room', 'quiz_id']:
             if i not in request.query_params:
                 return JsonResponse({'Error:参数%s缺失'% i}, status=status.HTTP_400_BAD_REQUEST)
-        quiz_id = int(request.query_params.get('quiz_id'))
-        room = int(request.query_params.get('room'))
+        quiz_id = request.query_params.get('quiz_id')
+        room = request.query_params.get('room')
+        if quiz_id == '':
+            return JsonResponse({'Error:参数quiz_id不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            quiz_id = int(quiz_id)
+        if room == '':
+            return JsonResponse({'Error:参数room不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            room = int(room)
         records = Record.objects.filter(source=Record.NORMAL, quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
         if len(records) > 0:
             rule_id = records[0].rule_id
             options = Option.objects.filter(rule_id =rule_id).order_by('id')
         else:
-            return JsonResponse({'Error':'无投注数据'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'提示':'无投注数据'}, status=status.HTTP_200_OK)
         data = []
         if len(options) > 0:
             for x in options:
