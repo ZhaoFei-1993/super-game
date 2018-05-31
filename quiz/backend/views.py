@@ -291,14 +291,14 @@ class UserQuizView(ListCreateAPIView):
     filter_fields = ['user', 'bet', 'earn_coin', 'option']
 
 
-class QuizListBackEndView(ListAPIView):
+class QuizListBackEndView(FormatListAPIView):
     """
     后台竞猜列表
     """
 
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
-        values = Record.objects.filter(source = 0, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
+        values = Record.objects.filter(source = Record.NORMAL, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
                                                                       sum_bet=Sum('bet')).order_by('-total_bet')
         data = []
         for x in values:
@@ -337,20 +337,38 @@ class QuizListBackEndDetailView(ListAPIView):
     比赛赛果
     """
     def list(self, request, *args, **kwargs):
-        quiz_id = kwargs['quiz_id']
-        room = kwargs['room']
-        type = kwargs['type']
-        values = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
+        type = int(self.kwargs['type'])
+        for i in ['room', 'quiz_id']:
+            if i not in request.query_params:
+                return JsonResponse({'Error:参数%s缺失'% i}, status=status.HTTP_400_BAD_REQUEST)
+        quiz_id = int(request.query_params.get('quiz_id'))
+        room = int(request.query_params.get('room'))
+        records = Record.objects.filter(source=Record.NORMAL, quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
+        if len(records) > 0:
+            rule_id = records[0].rule_id
+            options = Option.objects.filter(rule_id =rule_id).order_by('id')
+        else:
+            return JsonResponse({'Error':'无投注数据'}, status=status.HTTP_400_BAD_REQUEST)
         data = []
-        for x in values:
-            temp_dict={
-                'quiz_id':x.quiz_id,
-                'room_id':x.roomquiz_id,
-                'type': x.rule.type,
-                'option':x.option_id,
-            }
-            data.append(temp_dict)
-        return JsonResponse({'results':data})
+        if len(options) > 0:
+            for x in options:
+                count_t = records.filter(option__option=x.id).count()
+                sum_t = records.filter(option__option=x.id).aggregate(Sum('bet'))
+                temp_dict = {
+                    'item': x.option,
+                    'odds': x.odds,
+                    'count': count_t,
+                    'sum_bet': 0 if sum_t['bet__sum'] == None else sum_t['bet__sum']
+                }
+                if type==0 or type==1:
+                    temp_dict['rate']=round((100*count_t)/ records.count(),0)
+                if type==2:
+                    temp_dict['option_type']= x.option_type
+                data.append(temp_dict)
+        else:
+            return JsonResponse({'Error':'无对应选项'},status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'results':data}, status=status.HTTP_200_OK)
+
 
 
 class UserQuizListView(ListAPIView):
