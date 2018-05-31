@@ -167,6 +167,8 @@ class UserRegister(object):
                     user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
                 except Exception:
                     return 0
+                user_balance.balance += user_money
+                user_balance.save()
                 coin_detail = CoinDetail()
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
@@ -174,8 +176,6 @@ class UserRegister(object):
                 coin_detail.rest = Decimal(user_balance.balance)
                 coin_detail.sources = 6
                 coin_detail.save()
-                user_balance.balance += user_money
-                user_balance.save()
                 user.is_money = 1
                 user.save()
                 r_msg = UserMessage()  # 注册送hand消息
@@ -463,6 +463,8 @@ class InfoView(ListAPIView):
             except Exception:
                 return 0
             for a in user_invitation_info:
+                userbalance.balance += a.money
+                userbalance.save()
                 coin_detail = CoinDetail()
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
@@ -472,8 +474,6 @@ class InfoView(ListAPIView):
                 coin_detail.save()
                 a.is_deleted = 1
                 a.save()
-                userbalance.balance += a.money
-                userbalance.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -2062,6 +2062,8 @@ class ClickLuckDrawView(CreateAPIView):
                 user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)
             except DailyLog.DoesNotExist:
                 return 0
+            user_coin.balance += Decimal(integral_prize.prize_number)
+            user_coin.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice
@@ -2069,8 +2071,7 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.rest = Decimal(user_coin.balance)
             coin_detail.sources = 4
             coin_detail.save()
-            user_coin.balance += Decimal(integral_prize.prize_number)
-            user_coin.save()
+
 
         integral_prize_record = IntegralPrizeRecord()
         integral_prize_record.user = user_info
