@@ -341,14 +341,22 @@ class QuizListBackEndDetailView(ListAPIView):
         for i in ['room', 'quiz_id']:
             if i not in request.query_params:
                 return JsonResponse({'Error:参数%s缺失'% i}, status=status.HTTP_400_BAD_REQUEST)
-        quiz_id = int(request.query_params.get('quiz_id'))
-        room = int(request.query_params.get('room'))
+        quiz_id = request.query_params.get('quiz_id')
+        room = request.query_params.get('room')
+        if quiz_id == '':
+            return JsonResponse({'Error:参数quiz_id不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            quiz_id = int(quiz_id)
+        if room == '':
+            return JsonResponse({'Error:参数room不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            room = int(room)
         records = Record.objects.filter(source=Record.NORMAL, quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
         if len(records) > 0:
             rule_id = records[0].rule_id
             options = Option.objects.filter(rule_id =rule_id).order_by('id')
         else:
-            return JsonResponse({'Error':'无投注数据'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'提示':'无投注数据'}, status=status.HTTP_200_OK)
         data = []
         if len(options) > 0:
             for x in options:
@@ -356,6 +364,7 @@ class QuizListBackEndDetailView(ListAPIView):
                 sum_t = records.filter(option__option=x.id).aggregate(Sum('bet'))
                 temp_dict = {
                     'item': x.option,
+                    'option_id': x.id,
                     'odds': x.odds,
                     'count': count_t,
                     'sum_bet': 0 if sum_t['bet__sum'] == None else sum_t['bet__sum']
@@ -382,3 +391,16 @@ class UserQuizListView(ListAPIView):
         pk = self.kwargs['user_id']
         rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL)
         return rec_s
+
+
+class QuizCountListView(ListAPIView):
+    """
+    下注人数
+    """
+    serializer_class = UserQuizSerializer
+
+    def get_queryset(self):
+        option_id = int(self.kwargs['pk'])
+        room = int(self.kwargs['room'])
+        records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=room, option__option_id=option_id)
+        return records

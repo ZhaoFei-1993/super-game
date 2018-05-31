@@ -46,6 +46,7 @@ class Command(BaseCommand):
 
         # 算出随机注册时间与已注册时间差集
         diff_random_datetime = list(set(random_datetime) - set(user_generated_datetime))
+        self.stdout.write(self.style.SUCCESS('仍有' + str(len(diff_random_datetime)) + '个时间点生成'))
 
         current_generate_time = ''
         for dt in diff_random_datetime:
@@ -100,7 +101,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('账号为：' + username))
         self.stdout.write(self.style.SUCCESS('密码为：' + password))
 
-    def get_name_avatar(self):
+    @staticmethod
+    def get_name_avatar():
         """
         获取已经下载的用户昵称和头像
         :return:
@@ -162,7 +164,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(500, 1000)
+        user_total = random.randint(800, 1000)
         start_date, end_date = self.get_date()
 
         random_datetime = []
