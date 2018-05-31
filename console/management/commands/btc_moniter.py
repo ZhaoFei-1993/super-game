@@ -15,6 +15,7 @@ def get_transactions(addresses):
     transactions = {}
     response = requests.get(base_url + addresses)
     datas = json.loads(response.text)
+    print('datas = ', datas)
     for item in datas['txs']:
         for out in item['out']:
             addr = out['addr']
@@ -64,15 +65,15 @@ class Command(BaseCommand):
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 50
         page_total = round(len(btc_addresses) / page_size)
-        for i in range(1, page_total):
+        for i in range(1, page_total + 1):
             start = (i - 1) * page_size + 1
             end = page_size * i
 
-            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end)))
+            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
             addresses = '|'.join(btc_addresses[start:end])
 
-            self.stdout.write(self.style.SUCCESS('正在获取所有用户' + coin_name + '地址交易记录'))
             transactions = get_transactions(addresses)
+            self.stdout.write(self.style.SUCCESS('获取到' + str(len(transactions)) + '条交易记录'))
             for address in transactions:
                 if len(transactions[address]) == 0:
                     continue
