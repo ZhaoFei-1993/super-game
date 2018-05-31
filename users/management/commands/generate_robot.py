@@ -46,6 +46,7 @@ class Command(BaseCommand):
 
         # 算出随机注册时间与已注册时间差集
         diff_random_datetime = list(set(random_datetime) - set(user_generated_datetime))
+        self.stdout.write(self.style.SUCCESS('仍有' + str(len(diff_random_datetime)) + '个时间点生成'))
 
         current_generate_time = ''
         for dt in diff_random_datetime:
