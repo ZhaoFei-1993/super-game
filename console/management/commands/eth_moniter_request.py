@@ -21,7 +21,6 @@ def get_transactions(address):
         txs[addr] = []
         transactions = items[addr]
         if len(transactions) == 0:
-            txs[addr].append([])
             continue
 
         for t in transactions:
@@ -44,7 +43,12 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         start = time()
-        transactions = get_transactions('0xD3A00383236bE67D62446621B3075b617b8AB694,0x8334a533F0c3f904cA59061faE649a8c596B09aC')
+        addresses = [
+            '0x2C10De6a62840504723A3913Da5FAb31E4a93824',
+            '0x4F238C80aCB41E2Eaa786408b98491eF7d40cbB6',
+            '0x8334a533F0c3f904cA59061faE649a8c596B09aC'
+        ]
+        transactions = get_transactions(','.join(addresses))
         print('transactions = ', transactions)
 
         stop = time()
