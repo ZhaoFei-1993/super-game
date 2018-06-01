@@ -327,6 +327,7 @@ class CashBack_Log(models.Model):
     platform_sum = models.DecimalField(verbose_name="平台投注额", max_digits=15, decimal_places=3, default=0.000)
     profit = models.DecimalField(verbose_name="盈利", max_digits=15, decimal_places=3, default=0.000)
     cash_back_sum = models.DecimalField(verbose_name="返现总额", max_digits=15, decimal_places=3, default=0.000)
+    coin_proportion = models.DecimalField(verbose_name="返现时比例", max_digits=15, decimal_places=2, default=0.00)
 
     class Meta:
         verbose_name = verbose_name_plural = "返现记录表"

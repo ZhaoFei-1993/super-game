@@ -5,6 +5,8 @@ import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
+import requests
+from bs4 import BeautifulSoup
 
 
 def get_transactions(address):
@@ -49,7 +51,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户ETH地址信息'))
 
         for user_coin in user_eth_address:
-            loop_start = time()
             address = user_coin.address
             user_id = user_coin.user_id
 
@@ -91,10 +92,8 @@ class Command(BaseCommand):
                 user_recharge.save()
 
                 valid_trans += 1
-            loop_end = time()
-            loop_cost = str(loop_end - loop_start) + '秒'
 
-            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找，耗时：' + loop_cost))
+            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找'))
             self.stdout.write(self.style.SUCCESS(''))
 
         stop = time()
