@@ -109,7 +109,7 @@ class Coin(models.Model):
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
-    coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.00)
+    coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.50)
     coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
     coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
