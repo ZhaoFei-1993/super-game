@@ -44,7 +44,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start = time()
         addresses = [
-            '0x2C10De6a62840504723A3913Da5FAb31E4a93824',
+            '0x5dF698D65baC2ea9FA8B13e4B0AAf5D881f33B02',
             '0x4F238C80aCB41E2Eaa786408b98491eF7d40cbB6',
             '0x8334a533F0c3f904cA59061faE649a8c596B09aC'
         ]
