@@ -23,8 +23,7 @@ def get_transactions(address):
         if len(transactions) == 0:
             continue
 
-        for t in transactions:
-            item = transactions[t]
+        for item in transactions:
             time_local = format_time.localtime(item['received_time'])
             time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
             data = {
