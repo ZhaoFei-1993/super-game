@@ -1864,9 +1864,12 @@ class InvitationInfoView(ListAPIView):
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(user.id),
+                                                       is_effective=1).count()
+        invitee_number = 5 - int(invitee_number)
         return self.response(
             {'code': 0, 'user_invitation_number': invitation_number, 'moneys': user_invitation_twos,
-             'invitation_code': invitation_code})
+             'invitation_code': invitation_code, 'invitee_number': invitee_number})
 
 
 class InvitationUserView(ListAPIView):
