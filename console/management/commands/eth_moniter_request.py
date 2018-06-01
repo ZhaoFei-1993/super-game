@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db import transaction
 import time as format_time
 from base.eth import *
@@ -14,21 +14,27 @@ def get_transactions(address):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
-    if len(json_data['data']) == 0:
-        return []
 
-    txs = []
+    txs = {}
     items = json_data['data']
-    for item in items:
-        time_local = format_time.localtime(item['received_time'])
-        time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-        data = {
-            'time': time_dt,
-            'value': item['ether'],
-            'confirmations': json_data['block_number'] - item['blockNumber'],
-            'txid': item['hash'],
-        }
-        txs.append(data)
+    for addr in items:
+        txs[addr] = []
+        transactions = items[addr]
+        if len(transactions) == 0:
+            txs[addr].append([])
+            continue
+
+        for t in transactions:
+            item = transactions[t]
+            time_local = format_time.localtime(item['received_time'])
+            time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+            data = {
+                'time': time_dt,
+                'value': item['ether'],
+                'confirmations': json_data['block_number'] - item['blockNumber'],
+                'txid': item['hash'],
+            }
+            txs[addr].append(data)
     return txs
 
 
