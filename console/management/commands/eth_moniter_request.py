@@ -50,7 +50,7 @@ class Command(BaseCommand):
         print('items = ', items)
 
         stop = time()
-        cost = str(round(stop - start)) + '秒'
+        cost = str(stop - start) + '秒'
         raise CommandError('耗时 ' + cost)
 
         # 获取所有用户ETH地址
