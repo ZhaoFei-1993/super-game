@@ -48,7 +48,10 @@ class Command(BaseCommand):
         soup = BeautifulSoup(response.text, 'lxml')
         items = soup.find('div', {'id': 'ContentPlaceHolder1_mainrow'}).find_all('tr')
         print('items = ', items)
-        raise CommandError('.....')
+
+        stop = time()
+        cost = str(round(stop - start)) + '秒'
+        raise CommandError('耗时 ' + cost)
 
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
