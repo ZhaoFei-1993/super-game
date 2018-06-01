@@ -38,4 +38,6 @@ urlpatterns = [
     path('coin_backend_detail/<int:pk>/', views.CoinBackendDetail.as_view(), name="backend-coin_backend_detail"),
     # 系统奖励及其他
     path('backend_coin_reward/<int:pk>/', views.RewardBackendDetail.as_view(), name="backend-backend_coin_reward"),
+    # 用户提现列表
+    path('coin_present/<int:pk>/', views.CoinPresentDetailView.as_view(), name="backend-present-detail"),
 ]

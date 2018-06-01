@@ -550,7 +550,7 @@ class CoinBackendDetail(ListAPIView):
 
 class RewardBackendDetail(ListAPIView):
     """
-    系统奖励页面
+    系统奖励及其他
     """
     serializer_class = serializers.CoinDetailSerializer
 
@@ -559,3 +559,14 @@ class RewardBackendDetail(ListAPIView):
         details = CoinDetail.objects.filter(~Q(coin_name='GSG'), ~Q(
             sources__in=[CoinDetail.RECHARGE, CoinDetail.REALISATION, CoinDetail.BETS]), user_id=pk)
         return details
+
+class CoinPresentDetailView(ListAPIView):
+    """
+    提现列表--用户管理内
+    """
+    serializer_class = PresentationSerialize
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        presents = UserPresentation.objects.filter(user_id=pk)
+        return presents
