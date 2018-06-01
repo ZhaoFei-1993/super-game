@@ -389,7 +389,8 @@ class UserQuizListView(ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['user_id']
-        rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL)
+        room_id = self.kwargs['room_id']
+        rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL, roomquiz_id=room_id)
         return rec_s
 
 

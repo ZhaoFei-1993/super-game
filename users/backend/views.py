@@ -470,7 +470,7 @@ class CoinPresentView(ListAPIView):
     """
     提现记录表
     """
-    queryset = UserPresentation.objects.all().order_by('-created_at', '-status')
+    queryset = UserPresentation.objects.all().order_by('-created_at', 'status')
     serializer_class = PresentationSerialize
 
 
@@ -481,7 +481,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
 
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
-        id = kwargs['pk']
+        id = kwargs['pk'] #提现记录id
         if 'status' not in request.data and 'text' not in request.data and 'is_bill' not in request.data:
             return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -497,7 +497,16 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                     coin_out = CoinOutServiceCharge.objects.get(coin_out=user_coin.coin)
                 except Exception:
                     raise
-                user_coin.balance = user_coin.balance + item.amount + coin_out.value
+                if user_coin.coin.name == 'HAND':
+                    try:
+                        eth_coin = UserCoin.objects.get(user=item.user, coin__name='ETH')
+                    except Exception:
+                        raise
+                    eth_coin.balance += coin_out.value
+                    eth_coin.save()
+                    user_coin.balance += item.amount
+                else:
+                    user_coin.balance = user_coin.balance + item.amount + coin_out.value
                 user_coin.save()
         if 'text' in request.data:
             text = request.data.get('text')
@@ -520,7 +529,8 @@ class RechargeView(ListAPIView):
 
     def get_queryset(self):
         pk = int(self.kwargs['pk'])
-        details = CoinDetail.objects.filter(user_id=pk, sources=CoinDetail.RECHARGE)
+        coin_name = self.kwargs['coin_name']
+        details = CoinDetail.objects.filter(user_id=pk, sources=CoinDetail.RECHARGE, coin_name=coin_name)
         return details
 
 
@@ -556,8 +566,9 @@ class RewardBackendDetail(ListAPIView):
 
     def get_queryset(self):
         pk = int(self.kwargs['pk'])
+        coin_name = self.kwargs['coin_name']
         details = CoinDetail.objects.filter(~Q(coin_name='GSG'), ~Q(
-            sources__in=[CoinDetail.RECHARGE, CoinDetail.REALISATION, CoinDetail.BETS]), user_id=pk)
+            sources__in=[CoinDetail.RECHARGE, CoinDetail.REALISATION, CoinDetail.BETS]), user_id=pk, coin_name=coin_name)
         return details
 
 class CoinPresentDetailView(ListAPIView):
@@ -568,5 +579,6 @@ class CoinPresentDetailView(ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs['pk']
-        presents = UserPresentation.objects.filter(user_id=pk)
+        coin = int(self.kwargs['coin'])
+        presents = UserPresentation.objects.filter(user_id=pk, coin_id=coin)
         return presents
