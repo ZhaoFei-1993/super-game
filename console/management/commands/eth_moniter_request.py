@@ -45,7 +45,7 @@ class Command(BaseCommand):
         start = time()
         addresses = [
             '0x5dF698D65baC2ea9FA8B13e4B0AAf5D881f33B02',
-            '0x4F238C80aCB41E2Eaa786408b98491eF7d40cbB6',
+            '0x416299AAde6443e6F6e8ab67126e65a7F606eeF5',
             '0x8334a533F0c3f904cA59061faE649a8c596B09aC'
         ]
         transactions = get_transactions(','.join(addresses))
