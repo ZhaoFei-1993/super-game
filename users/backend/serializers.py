@@ -3,6 +3,7 @@ from rest_framework import serializers
 from django.utils import timezone
 import time
 from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge
+from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
 from django.db.models import Q
@@ -358,7 +359,17 @@ class CoinBackendDetailSerializer(serializers.ModelSerializer):
     """
     username = serializers.CharField(source='user.username')
     coin_name = serializers.CharField(source='coin.name')
+    room_id = serializers.SerializerMethodField()
 
     class Meta:
         model = UserCoin
-        fields = ('username', 'coin_name', 'balance', 'coin', 'user')
+        fields = ('username', 'coin_name', 'room_id', 'balance', 'coin', 'user')
+
+
+    @staticmethod
+    def get_room_id(obj):
+        try:
+            room = Club.objects.get(coin_id=obj.coin.id)
+        except Exception:
+            return ''
+        return room.id
