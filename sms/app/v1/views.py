@@ -71,6 +71,7 @@ class SmsView(ListCreateAPIView):
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
         q.enqueue(send_sms, model.id)
+        print("code===============================", code)
         return self.response({'code': error_code.API_0_SUCCESS})
 
 
