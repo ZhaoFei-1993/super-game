@@ -374,7 +374,7 @@ class LoginView(CreateAPIView):
 
                 invitation_user = User.objects.filter(invitation_code=invitation_code).count()
                 if invitation_user == 0:
-                    raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+                    raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
                 message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
@@ -1864,9 +1864,12 @@ class InvitationInfoView(ListAPIView):
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
             user_invitation_twos = 0
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(user.id),
+                                                       is_effective=1).count()
+        invitee_number = 5 - int(invitee_number)
         return self.response(
             {'code': 0, 'user_invitation_number': invitation_number, 'moneys': user_invitation_twos,
-             'invitation_code': invitation_code})
+             'invitation_code': invitation_code, 'invitee_number': invitee_number})
 
 
 class InvitationUserView(ListAPIView):

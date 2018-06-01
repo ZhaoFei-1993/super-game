@@ -286,6 +286,7 @@ def cash_back(quiz):
                         personal_sum = personal_sum + record_personal.bet
                     gsg_cash_back = float(profit_abs) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
                         club.room_title]
+                    gsg_cash_back = float(gsg_cash_back/6)
                     gsg_cash_back = trunc(gsg_cash_back, 2)
                     if float(gsg_cash_back) > 0:
                         user = User.objects.get(pk=user_id)

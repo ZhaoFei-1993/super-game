@@ -109,6 +109,7 @@ class Coin(models.Model):
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
+    coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.50)
     coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
     coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
@@ -120,6 +121,18 @@ class Coin(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "货币种类表"
+
+
+@reversion.register()
+class CoinPrice(models.Model):
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255, default="")
+    platform_name = models.CharField(verbose_name="平台名称", max_length=20, default="")
+    price = models.DecimalField(verbose_name="平台价格", max_digits=15, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(verbose_name="最后更新时间", auto_now=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "货币平台价格表"
 
 
 @reversion.register()
