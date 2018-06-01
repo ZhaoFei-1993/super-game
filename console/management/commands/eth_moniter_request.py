@@ -5,6 +5,8 @@ import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
+import requests
+from bs4 import BeautifulSoup
 
 
 def get_transactions(address):
@@ -39,6 +41,17 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         start = time()
+
+        # 获取指定地址内容
+        request_url = 'https://etherscan.io/txs?a=0xab7f2baf977f02beb242af077a51ce9fa2cf83d2'
+        response = requests.get(request_url)
+        soup = BeautifulSoup(response.text, 'lxml')
+        items = soup.find('div', {'id': 'ContentPlaceHolder1_mainrow'}).find_all('tr')
+        print('items = ', items)
+
+        stop = time()
+        cost = str(stop - start) + '秒'
+        raise CommandError('耗时 ' + cost)
 
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
