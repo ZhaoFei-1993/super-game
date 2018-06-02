@@ -90,7 +90,7 @@ class QuizListView(ListCreateAPIView):
             elif int(self.request.GET.get('type')) == 2:  # 已结束
                 return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
                                            is_delete=False, category__in=category_arr).order_by('-begin_at')
-        elif int(self.request.GET.get('category_id')) == 873:
+        elif int(self.request.GET.get('world_cup')) == 873:
             if int(self.request.GET.get('type')) == 1:  # 未开始
                 return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
                                            is_delete=False).order_by('begin_at')
