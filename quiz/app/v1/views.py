@@ -91,12 +91,18 @@ class QuizListView(ListCreateAPIView):
                 return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
                                            is_delete=False, category__in=category_arr).order_by('-begin_at')
         elif int(self.request.GET.get('world_cup')) == 873:
+            world_cup = int(self.request.GET.get('world_cup'))
+            print("world_cup===============================", world_cup)
             if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
-                                           is_delete=False).order_by('begin_at')
+                list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
+                                    is_delete=False).order_by('begin_at')
+                print("list=======================1==============", list)
+                return list
             elif int(self.request.GET.get('type')) == 2:  # 已结束
-                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), category_id=873,
+                list = Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), category_id=873,
                                            is_delete=False).order_by('-begin_at')
+                print("list=========2====================================", list)
+                return list
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
