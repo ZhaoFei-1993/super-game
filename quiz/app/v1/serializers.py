@@ -264,7 +264,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_status(obj):
-        status = obj.status
+        status = int(obj.status)
         return status
 
     @staticmethod
