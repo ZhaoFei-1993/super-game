@@ -23,14 +23,12 @@ def get_transactions(address):
         if len(transactions) == 0:
             continue
 
-        for t in transactions:
-            item = transactions[t]
+        for item in transactions:
             time_local = format_time.localtime(item['received_time'])
             time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
             data = {
                 'time': time_dt,
                 'value': item['ether'],
-                'confirmations': json_data['block_number'] - item['blockNumber'],
                 'txid': item['hash'],
             }
             txs[addr].append(data)
@@ -44,9 +42,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start = time()
         addresses = [
-            '0x2C10De6a62840504723A3913Da5FAb31E4a93824',
-            '0x4F238C80aCB41E2Eaa786408b98491eF7d40cbB6',
-            '0x8334a533F0c3f904cA59061faE649a8c596B09aC'
+            '0x5dF698D65baC2ea9FA8B13e4B0AAf5D881f33B02',
+            '0x416299AAde6443e6F6e8ab67126e65a7F606eeF5',
+            '0x8334a533F0c3f904cA59061faE649a8c596B09aC',
+            '0x4bBa4237CA7Aa34161B3B25dC5f58920478F6516',
+            '0x97E12BD75bdee72d4975D6df410D2d145b3d8457',
         ]
         transactions = get_transactions(','.join(addresses))
         print('transactions = ', transactions)
