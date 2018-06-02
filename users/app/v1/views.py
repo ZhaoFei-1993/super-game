@@ -287,6 +287,8 @@ class UserRegister(object):
         coins = Coin.objects.filter(is_disabled=False)
         for coin in coins:
             user_coin = UserCoin()
+            # if coin.name == "EOS":
+
             user_coin.user_id = userinfo.id
             user_coin.coin_id = coin.id
             # 以太坟代币均使用同一个ETH地址

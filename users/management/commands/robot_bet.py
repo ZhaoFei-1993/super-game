@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 continue
 
             # 随机下注选项
-            option = self.get_bet_option(rule.id)
+            option = self.get_bet_option(club.id, rule.id)
             if option is False:
                 continue
 
@@ -246,13 +246,14 @@ class Command(BaseCommand):
         return choice
 
     @staticmethod
-    def get_bet_option(rule_id):
+    def get_bet_option(club_id, rule_id):
         """
         获取下注选项，目前随机获取
+        :param club_id 俱乐部ID
         :param rule_id 玩法ID
         :return:
         """
-        options = OptionOdds.objects.filter(option__rule_id=rule_id)
+        options = OptionOdds.objects.filter(club_id=club_id, option__rule_id=rule_id)
         if len(options) == 0:
             return False
 
@@ -285,7 +286,7 @@ class Command(BaseCommand):
         choices = {
             values[0]: 334,
             values[1]: 333,
-            values[1]: 333,
+            values[2]: 333,
         }
         if coin_id == Coin.BTC:
             """
@@ -294,7 +295,7 @@ class Command(BaseCommand):
             choices = {
                 values[0]: 70,
                 values[1]: 29,
-                values[1]: 1,
+                values[2]: 1,
             }
         elif coin_id == Coin.ETH:
             """
@@ -303,7 +304,7 @@ class Command(BaseCommand):
             choices = {
                 values[0]: 7,
                 values[1]: 2,
-                values[1]: 1,
+                values[2]: 1,
             }
 
         weight_choice = WeightChoice()
