@@ -75,7 +75,7 @@ class QuizListView(ListCreateAPIView):
 
     def get_queryset(self):
         if 'world_cup' not in self.request.GET:
-            world_cup = int(self.request.GET.get('world_cup'))
+            world_cup = self.request.GET.get('world_cup')
             print("world_cup===============================", world_cup)
             if int(self.request.GET.get('type')) == 1:  # 未开始
                 list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
