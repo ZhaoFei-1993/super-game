@@ -46,7 +46,7 @@ class Command(BaseCommand):
             '0x416299AAde6443e6F6e8ab67126e65a7F606eeF5',
             '0x8334a533F0c3f904cA59061faE649a8c596B09aC',
             '0x4bBa4237CA7Aa34161B3B25dC5f58920478F6516',
-            '0xa6e1d536cB632929BB993df104b5a0269099dF69',
+            '0xeaAb0555c385C4CA3358e7156B28970C2cfb727e',
         ]
         transactions = get_transactions(','.join(addresses))
         print('transactions = ', transactions)
