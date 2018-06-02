@@ -17,6 +17,7 @@ from django.http import HttpResponse
 import json
 from utils.functions import reversion_Decorator
 from django.http import JsonResponse
+from decimal import Decimal
 
 
 class RecurseTreeNode(object):
@@ -299,7 +300,7 @@ class QuizListBackEndView(FormatListAPIView):
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
         values = Record.objects.filter(source = Record.NORMAL, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
-                                                                      sum_bet=Sum('bet')).order_by('-total_bet')
+                                                                      sum_bet=Sum('bet'), sum_earn_coin=Sum('earn_coin')).order_by('-total_bet')
         data = []
         for x in values:
             q_id = int(x['quiz'])
@@ -325,6 +326,7 @@ class QuizListBackEndView(FormatListAPIView):
                 'room_id': room.id,
                 'total_bet': x['total_bet'],
                 'sum_bet': x['sum_bet'],
+                'sum_earn_coin': -Decimal(x['sum_earn_coin']),
                 'status': state,
             }
             data.append(temp_dict)
@@ -369,9 +371,9 @@ class QuizListBackEndDetailView(ListAPIView):
                     'count': count_t,
                     'sum_bet': 0 if sum_t['bet__sum'] == None else sum_t['bet__sum']
                 }
-                if type==0 or type==1:
+                if type in [0, 1, 4, 5]:
                     temp_dict['rate']=round((100*count_t)/ records.count(),0)
-                if type==2:
+                if type in [2, 7]:
                     temp_dict['option_type']= x.option_type
                 data.append(temp_dict)
         else:
