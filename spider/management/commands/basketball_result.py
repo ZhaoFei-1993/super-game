@@ -268,7 +268,10 @@ def cash_back(quiz):
             coin_price = CoinPrice.objects.get(coin_name=club.room_title[:-3])
             for record in records:
                 platform_sum = platform_sum + record.bet
-                profit = profit + record.earn_coin
+                if record.earn_coin > 0:
+                    profit = profit + (record.earn_coin - record.bet)
+                else:
+                    profit = profit + record.earn_coin
                 if record.user_id not in user_list:
                     user_list.append(record.user_id)
 
