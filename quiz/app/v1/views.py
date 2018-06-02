@@ -493,3 +493,30 @@ class RecommendView(ListAPIView):
                 }
             )
         return self.response({"code": 0, "data": data})
+
+
+class WorldCup(ListAPIView):
+    """
+    世界杯列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizSerialize
+
+    def get_queryset(self):
+        world_cup = self.request.GET.get('world_cup')
+        print("world_cup===============================", world_cup)
+        if int(self.request.GET.get('type')) == 1:  # 未开始
+            list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
+                                       is_delete=False).order_by('begin_at')
+            print("list=======================1==============", list)
+            return list
+        elif int(self.request.GET.get('type')) == 2:  # 已结束
+            list = Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), category_id=873,
+                                       is_delete=False).order_by('-begin_at')
+            print("list=========2====================================", list)
+            return list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        value = results.data.get('results')
+        return self.response({"code": 0, "data": value})
