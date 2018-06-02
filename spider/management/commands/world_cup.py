@@ -70,9 +70,9 @@ class Command(BaseCommand):
                         quiz = Quiz()
                         quiz.category = Category.objects.get(pk=873)
                         quiz.host_team = left_team
-                        quiz.host_team_avatar = MEDIA_DOMAIN_HOST + left_img_name
+                        quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/' + left_img_name
                         quiz.guest_team = right_team
-                        quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + right_img_name
+                        quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/' + right_img_name
                         quiz.match_name = '世界杯'
                         quiz.begin_at = time
                         quiz.admin = Admin.objects.filter(id=1).first()
