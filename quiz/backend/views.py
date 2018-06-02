@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
-from .serializers import CategorySerializer, UserQuizSerializer, UserQuizListSerializer
+from .serializers import CategorySerializer, UserQuizSerializer, UserQuizListSerializer, QuizBackendListAllSerializer
 from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
 from chat.models import  Club
 from django.db import connection
@@ -139,7 +139,7 @@ class QuizListView(ListCreateAPIView):
     post:
     添加一条竞猜数据
     """
-
+    #
     # serializer_class = serializers.QuizSerializer
     # filter_class = QuizFilter
 
@@ -405,3 +405,15 @@ class QuizCountListView(ListAPIView):
         room = int(self.kwargs['room'])
         records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=room, option__option_id=option_id)
         return records
+
+
+class QuizListAllView(ListAPIView):
+    """
+    竞猜比赛所有列表
+    """
+    serializer_class = QuizBackendListAllSerializer
+
+    def get_queryset(self):
+        category = self.kwargs['category'] #1为篮球, 2为足球
+        quiz_s = Quiz.objects.filter(category__parent_id=category)
+        return quiz_s
