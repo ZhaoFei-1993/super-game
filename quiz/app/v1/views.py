@@ -74,19 +74,6 @@ class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        if 'world_cup' not in self.request.GET:
-            world_cup = self.request.GET.get('world_cup')
-            print("world_cup===============================", world_cup)
-            if int(self.request.GET.get('type')) == 1:  # 未开始
-                list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
-                                           is_delete=False).order_by('begin_at')
-                print("list=======================1==============", list)
-                return list
-            elif int(self.request.GET.get('type')) == 2:  # 已结束
-                list = Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), category_id=873,
-                                           is_delete=False).order_by('-begin_at')
-                print("list=========2====================================", list)
-                return list
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
