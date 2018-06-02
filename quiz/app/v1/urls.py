@@ -6,6 +6,8 @@ from . import views
 urlpatterns = [
     #  竞猜分类
     path('category/', views.CategoryView.as_view(), name="app-v1-quiz-category"),
+    # 世界杯列表
+    path('world_cup/<int:roomquiz_id>/', views.WorldCup.as_view(), name="app-v1-quiz-worldcup"),
     #  热门比赛
     path('hotest/<int:roomquiz_id>/', views.HotestView.as_view(), name="app-v1-quiz-hotest"),
     # 竞猜列表

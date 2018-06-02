@@ -349,8 +349,10 @@ def get_data_info(url):
                         quiz.category = Category.objects.filter(name=league_abbr).first()
 
                         quiz.host_team = host_team_abbr
+                        quiz.host_team_fullname = host_team
                         quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + host_team_avatar
                         quiz.guest_team = guest_team_abbr
+                        quiz.guest_team_fullname = guest_team
                         quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + guest_team_avatar
                         quiz.match_name = league_abbr
                         quiz.begin_at = time

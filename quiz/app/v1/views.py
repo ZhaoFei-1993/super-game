@@ -85,12 +85,11 @@ class QuizListView(ListCreateAPIView):
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
-                                           category__in=category_arr).order_by('begin_at')
+                return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2),
+                                           is_delete=False, category__in=category_arr).order_by('begin_at')
             elif int(self.request.GET.get('type')) == 2:  # 已结束
-                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False,
-                                           category__in=category_arr).order_by(
-                    '-begin_at')
+                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
+                                           is_delete=False, category__in=category_arr).order_by('-begin_at')
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
@@ -289,7 +288,8 @@ class RuleView(ListAPIView):
         for i in rule:
             # option = Option.objects.filter(rule_id=i.pk).order_by('order')
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
-            option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order').values('pk')
+            option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by(
+                'option__order').values('pk')
             list = []
             total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
             for s in option:
@@ -420,7 +420,8 @@ class BetView(ListCreateAPIView):
 
         # HAND币单场比赛最大下注100W
         if coin_id == Coin.HAND:
-            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(Sum('bet'))
+            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
+                Sum('bet'))
             if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 1000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
@@ -492,3 +493,28 @@ class RecommendView(ListAPIView):
                 }
             )
         return self.response({"code": 0, "data": data})
+
+
+class WorldCup(ListAPIView):
+    """
+    世界杯列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizSerialize
+
+    def get_queryset(self):
+        world_cup = self.request.GET.get('world_cup')
+        if int(self.request.GET.get('type')) == 1:  # 未开始
+            list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
+                                       is_delete=False).order_by('begin_at')
+            return list
+        elif int(self.request.GET.get('type')) == 2:  # 已结束
+            list = Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), category_id=873,
+                                       is_delete=False).order_by('-begin_at')
+            return list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        value = results.data.get('results')
+        time = 1528732800
+        return self.response({"code": 0, "data": value, 'time': time})

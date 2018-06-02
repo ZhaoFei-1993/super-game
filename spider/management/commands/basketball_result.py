@@ -7,7 +7,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBack_Log
-from users.models import UserCoin, CoinDetail, Coin, UserMessage, User
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice
 from chat.models import Club
 from decimal import Decimal
 
@@ -257,19 +257,21 @@ def handle_delay_game(delay_quiz):
 
 
 def cash_back(quiz):
-    club_rate = {
-        "INT俱乐部": 4, "ETH俱乐部": 84, "BTC俱乐部": 106, "HAND俱乐部": 0.12, "EOS俱乐部": 180,
-    }
-    for club in Club.objects.all():
+    cash_back_rate = 0.5
+    for club in Club.objects.filter(~Q(room_title='HAND俱乐部')):
         records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, user__is_robot=False)
         if len(records) > 0:
             platform_sum = 0
             profit = 0
             cash_back_sum = 0
             user_list = []
+            coin_price = CoinPrice.objects.get(coin_name=club.room_title[:-3])
             for record in records:
                 platform_sum = platform_sum + record.bet
-                profit = profit + record.earn_coin
+                if record.earn_coin > 0:
+                    profit = profit + (record.earn_coin - record.bet)
+                else:
+                    profit = profit + record.earn_coin
                 if record.user_id not in user_list:
                     user_list.append(record.user_id)
 
@@ -286,8 +288,8 @@ def cash_back(quiz):
                     personal_sum = 0
                     for record_personal in records.filter(user_id=user_id):
                         personal_sum = personal_sum + record_personal.bet
-                    gsg_cash_back = float(profit_abs) * 0.02 * float(personal_sum) / float(platform_sum) * club_rate[
-                        club.room_title]
+                    gsg_cash_back = float(profit_abs) * cash_back_rate * (float(personal_sum) / float(platform_sum)) * (
+                            float(coin_price.price) / float(CoinPrice.objects.get(coin_name='GSG').price))
                     gsg_cash_back = trunc(gsg_cash_back, 2)
                     if float(gsg_cash_back) > 0:
                         user = User.objects.get(pk=user_id)
@@ -309,7 +311,8 @@ def cash_back(quiz):
                         u_mes.user_id = user_id
                         u_mes.message_id = 6  # 私人信息
                         u_mes.title = '返现公告'
-                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(gsg_cash_back) + '个GSG'
+                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(
+                            gsg_cash_back) + '个GSG'
                         u_mes.save()
 
                         print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
@@ -325,6 +328,7 @@ def cash_back(quiz):
             elif profit > 0:
                 cash_back_log.profit = float('-' + str(profit))
             cash_back_log.cash_back_sum = cash_back_sum
+            cash_back_log.coin_proportion = cash_back_rate
             cash_back_log.save()
 
             print('cash_back_sum====>' + str(cash_back_sum))
