@@ -16,4 +16,6 @@ urlpatterns = [
     path('quiz_user_list/<int:user_id>/<int:room_id>/',views.UserQuizListView.as_view(), name='quiz_user_list'),
     #下注人数
     path('quiz_count_list/<int:room>/<int:pk>/', views.QuizCountListView.as_view(), name='quiz_count_list'),
+    #比赛列表
+    path('quiz_all_list/<int:category>/', views.QuizListAllView.as_view(), name='quiz_all_list'),
 ]

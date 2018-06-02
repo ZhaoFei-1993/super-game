@@ -35,7 +35,7 @@ class UserQuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = (
-            "user_name", "nick_name",  "odds", "bet", "earn_coin",
+            "user_name", "nick_name", "odds", "bet", "earn_coin",
             "created_at")
 
     @staticmethod
@@ -60,20 +60,20 @@ class UserQuizListSerializer(serializers.ModelSerializer):
     match_name = serializers.CharField(source='quiz.match_name')
     host_team = serializers.CharField(source='quiz.host_team')
     guest_team = serializers.CharField(source='quiz.guest_team')
-    tips = serializers.CharField(source='rule.tips') #下注类型
-    option = serializers.CharField(source='option.option.option') #下注选项
+    tips = serializers.CharField(source='rule.tips')  # 下注类型
+    option = serializers.CharField(source='option.option.option')  # 下注选项
     estimate = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     begin_at = serializers.SerializerMethodField()
     result = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Record
         fields = (
-        'coin_name', 'category', 'match_name', 'host_team', 'guest_team', 'tips', 'option', 'odds', 'bet', 'estimate',
-        'created_at', 'begin_at', 'result', 'earn_coin', 'status')
+            'coin_name', 'category', 'match_name', 'host_team', 'guest_team', 'tips', 'option', 'odds', 'bet',
+            'estimate',
+            'created_at', 'begin_at', 'result', 'earn_coin', 'status')
 
     @staticmethod
     def get_coin_name(obj):
@@ -84,16 +84,15 @@ class UserQuizListSerializer(serializers.ModelSerializer):
         coin_name = room.coin.name
         return coin_name
 
-
     @staticmethod
     def get_estimate(obj):
         result = obj.odds * obj.bet
-        estimate=normalize_fraction(result, 8)
+        estimate = normalize_fraction(result, 8)
         return estimate
 
     @staticmethod
     def get_created_at(obj):
-        create_time= obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        create_time = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
         return create_time
 
     @staticmethod
@@ -109,9 +108,41 @@ class UserQuizListSerializer(serializers.ModelSerializer):
             return ''
         return option.option
 
+    @staticmethod
+    def get_status(obj):
+        for x in Quiz.STATUS_CHOICE:
+            if int(obj.quiz.status) == x[0]:
+                return x[1]
+
+
+class QuizBackendListAllSerializer(serializers.ModelSerializer):
+    """
+    比赛列表
+    """
+
+    category = serializers.CharField(source='category.name')
+    status = serializers.SerializerMethodField()
+    begin_at = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Quiz
+        fields = (
+        'category', 'host_team', 'guest_team', 'host_team_avatar', 'guest_team_avatar', 'status', 'total_people',
+        'begin_at', 'created_at', 'is_reappearance', 'is_delete')
 
     @staticmethod
     def get_status(obj):
         for x in Quiz.STATUS_CHOICE:
-            if int(obj.quiz.status)==x[0]:
+            if int(obj.status) == x[0]:
                 return x[1]
+
+    @staticmethod
+    def get_begin_at(obj):
+        begin_time = obj.begin_at.strftime('%Y-%m-%d %H:%M')
+        return begin_time
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = obj.created_at.strftime('%Y-%m-%d %H:%M')
+        return created_time
