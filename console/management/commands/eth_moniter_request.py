@@ -17,7 +17,9 @@ def get_transactions(address):
 
     txs = {}
     items = json_data['data']
+    print('items = ', items)
     for addr in items:
+        print('addr = ', addr)
         txs[addr] = []
         transactions = items[addr]
         if len(transactions) == 0:
