@@ -216,6 +216,9 @@ def get_data_info(url):
                         category.save()
                     quiz.category = Category.objects.filter(name=league_abbr).first()
 
+                    if quiz.category.name != '美职篮':
+                        return
+
                     quiz.host_team = host_team_abbr
                     quiz.host_team_fullname = host_team
                     quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + host_team_avatar
