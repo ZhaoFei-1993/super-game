@@ -18,7 +18,7 @@ class QuizSerialize(serializers.ModelSerializer):
     全民竞猜题目列表
     """
 
-    total_coin = serializers.SerializerMethodField()  # 投注总金额
+    total_coin = serializers.SerializerMethodField()  # 投注总人数
     total_coin_avatar = serializers.SerializerMethodField()  # 投注总金额图标
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
