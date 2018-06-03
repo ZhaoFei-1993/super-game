@@ -2160,4 +2160,5 @@ class CheckInvitationCode(ListAPIView):
                                                        is_deleted=1).count()
         if invitee_number >= 5:  # 邀请T1是否已达上限
             raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
-        return self.response({'code': 0, 'avatar': invitation_user.avatar, 'nickname': invitation_user.nickname})
+        return self.response({'code': 0, 'id': invitation_user.id, 'avatar': invitation_user.avatar,
+                              'nickname': invitation_user.nickname})
