@@ -62,7 +62,7 @@ class Command(BaseCommand):
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 50
         page_total = int(math.ceil(len(eth_address) / page_size))
-        for i in range(1, page_total):
+        for i in range(1, page_total + 1):
             start = (i - 1) * page_size
             end = page_size * i
 
