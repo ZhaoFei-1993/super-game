@@ -55,7 +55,7 @@ class Command(BaseCommand):
         address_map_uid = {}
         for user_addr in user_eth_address:
             eth_address.append(user_addr.address)
-            address_map_uid[user_addr.address] = user_addr.user_id
+            address_map_uid[user_addr.address.upper()] = user_addr.user_id
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
