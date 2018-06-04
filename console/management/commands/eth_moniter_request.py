@@ -46,7 +46,6 @@ class Command(BaseCommand):
 
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
-        print('user_eth_address = ', user_eth_address)
         eth_address_length = len(user_eth_address)
         if eth_address_length == 0:
             raise CommandError('无地址信息')
@@ -56,6 +55,8 @@ class Command(BaseCommand):
         for user_addr in user_eth_address:
             eth_address.append(user_addr.address)
             address_map_uid[user_addr.address] = user_addr.user_id
+
+        print('eth_address = ', ','.join(eth_address))
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
