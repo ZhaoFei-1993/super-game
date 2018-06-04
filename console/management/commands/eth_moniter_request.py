@@ -56,15 +56,13 @@ class Command(BaseCommand):
             eth_address.append(user_addr.address)
             address_map_uid[user_addr.address] = user_addr.user_id
 
-        print('eth_address = ', ','.join(eth_address))
-
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 50
         page_total = round(len(eth_address) / page_size)
         for i in range(1, page_total + 1):
-            start = (i - 1) * page_size + 1
+            start = (i - 1) * page_size
             end = page_size * i
 
             self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
