@@ -15,21 +15,24 @@ def get_transactions(address):
     """
     eth_wallet = Wallet()
     json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
-    if len(json_data['data']) == 0:
-        return []
 
-    txs = []
+    txs = {}
     items = json_data['data']
-    for item in items:
-        time_local = format_time.localtime(item['received_time'])
-        time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-        data = {
-            'time': time_dt,
-            'value': item['ether'],
-            'confirmations': json_data['block_number'] - item['blockNumber'],
-            'txid': item['hash'],
-        }
-        txs.append(data)
+    for addr in items:
+        txs[addr] = []
+        transactions = items[addr]
+        if len(transactions) == 0:
+            continue
+
+        for item in transactions:
+            time_local = format_time.localtime(item['received_time'])
+            time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+            data = {
+                'time': time_dt,
+                'value': item['ether'],
+                'txid': item['hash'],
+            }
+            txs[addr].append(data)
     return txs
 
 
@@ -46,56 +49,64 @@ class Command(BaseCommand):
         if eth_address_length == 0:
             raise CommandError('无地址信息')
 
-        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户ETH地址信息'))
+        eth_address = []
+        address_map_uid = {}
+        for user_addr in user_eth_address:
+            eth_address.append(user_addr.address)
+            address_map_uid[user_addr.address] = user_addr.user_id
 
-        for user_coin in user_eth_address:
-            loop_start = time()
-            address = user_coin.address
-            user_id = user_coin.user_id
+        self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
-            if address == '':
-                self.stdout.write(self.style.ERROR('用户' + str(user_id) + '无分配ETH地址'))
+        # 因URL有长度限制，这里分页处理，每页50条
+        page_size = 50
+        page_total = round(len(eth_address) / page_size)
+
+        for i in range(1, page_total + 1):
+            start = (i - 1) * page_size + 1
+            end = page_size * i
+
+            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
+            addresses = ','.join(eth_address[start:end])
+
+            transactions = get_transactions(addresses)
+            if not transactions:
                 continue
 
-            eth_address_length -= 1
-
-            # 根据address获取交易信息
-            self.stdout.write(self.style.SUCCESS('正在获取用户 ' + str(user_id) + ' 地址为 ' + str(address) + ' 的交易记录'))
-            transactions = get_transactions(address)
-            if len(transactions) == 0:
-                self.stdout.write(self.style.NOTICE('用户ID=' + str(user_id) + ' 无充值记录，仍有' + str(eth_address_length) + '条记录待查找'))
-                self.stdout.write(self.style.SUCCESS(''))
-                continue
-
-            self.stdout.write(self.style.SUCCESS('接收到 ' + str(len(transactions)) + ' 条交易记录'))
-
-            valid_trans = 0
-            for trans in transactions:
-                txid = trans['txid']
-                tx_value = trans['value']
-
-                # 判断交易hash是否已经存在
-                is_exists = UserRecharge.objects.filter(txid=txid).count()
-                if is_exists > 0:
+            for address in transactions:
+                if len(transactions[address]) == 0:
                     continue
 
-                # 插入充值记录表
-                user_recharge = UserRecharge()
-                user_recharge.user_id = user_id
-                user_recharge.coin = Coin.objects.filter(name='ETH').first()
-                user_recharge.address = address
-                user_recharge.amount = tx_value
-                user_recharge.confirmations = 0
-                user_recharge.txid = txid
-                user_recharge.trade_at = trans['time']
-                user_recharge.save()
+                user_id = address_map_uid[address]
+                user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
 
-                valid_trans += 1
-            loop_end = time()
-            loop_cost = str(loop_end - loop_start) + '秒'
+                # 首次充值获得奖励
+                UserRecharge.objects.first_price(user_id)
 
-            self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录，仍有' + str(eth_address_length) + '条记录待查找，耗时：' + loop_cost))
-            self.stdout.write(self.style.SUCCESS(''))
+                valid_trans = 0
+                for trans in transactions[address]:
+                    tx_id = trans['txid']
+                    tx_value = trans['value']
+
+                    # 判断交易hash是否已经存在
+                    is_exists = UserRecharge.objects.filter(txid=tx_id).count()
+                    if is_exists > 0:
+                        continue
+
+                    # 插入充值记录表
+                    user_recharge = UserRecharge()
+                    user_recharge.user_id = user_id
+                    user_recharge.coin_id = Coin.ETH
+                    user_recharge.address = address
+                    user_recharge.amount = tx_value
+                    user_recharge.confirmations = 0
+                    user_recharge.txid = tx_id
+                    user_recharge.trade_at = trans['time']
+                    user_recharge.save()
+
+                    user_coin.balance += tx_value
+                    user_coin.save()
+
+                    valid_trans += 1
 
         stop = time()
         cost = str(round(stop - start)) + '秒'
