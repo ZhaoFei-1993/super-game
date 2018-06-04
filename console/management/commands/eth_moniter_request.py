@@ -41,7 +41,7 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        start = time()
+        start_time = time()
 
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
@@ -69,12 +69,15 @@ class Command(BaseCommand):
 
             transactions = get_transactions(addresses)
             if not transactions:
+                self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
                 continue
 
             for address in transactions:
-                if len(transactions[address]) == 0:
+                len_trans = len(transactions[address])
+                if len_trans == 0:
                     continue
 
+                self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
                 user_id = address_map_uid[address]
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
 
@@ -107,6 +110,6 @@ class Command(BaseCommand):
 
                     valid_trans += 1
 
-        stop = time()
-        cost = str(round(stop - start)) + '秒'
-        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost))
+        stop_time = time()
+        cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
