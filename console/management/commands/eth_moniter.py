@@ -5,6 +5,8 @@ import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
+from decimal import Decimal
+import math
 
 
 def get_transactions(address):
@@ -41,7 +43,7 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        start = time()
+        start_time = time()
 
         # 获取所有用户ETH地址
         user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
@@ -53,16 +55,15 @@ class Command(BaseCommand):
         address_map_uid = {}
         for user_addr in user_eth_address:
             eth_address.append(user_addr.address)
-            address_map_uid[user_addr.address] = user_addr.user_id
+            address_map_uid[user_addr.address.upper()] = user_addr.user_id
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
         # 因URL有长度限制，这里分页处理，每页50条
-        page_size = 50
-        page_total = round(len(eth_address) / page_size)
-
+        page_size = 80
+        page_total = int(math.ceil(len(eth_address) / page_size))
         for i in range(1, page_total + 1):
-            start = (i - 1) * page_size + 1
+            start = (i - 1) * page_size
             end = page_size * i
 
             self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
@@ -70,12 +71,17 @@ class Command(BaseCommand):
 
             transactions = get_transactions(addresses)
             if not transactions:
+                self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
                 continue
 
             for address in transactions:
-                if len(transactions[address]) == 0:
+                len_trans = len(transactions[address])
+                if len_trans == 0:
                     continue
 
+                self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
                 user_id = address_map_uid[address]
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
 
@@ -103,11 +109,11 @@ class Command(BaseCommand):
                     user_recharge.trade_at = trans['time']
                     user_recharge.save()
 
-                    user_coin.balance += tx_value
+                    user_coin.balance += Decimal(tx_value)
                     user_coin.save()
 
                     valid_trans += 1
 
-        stop = time()
-        cost = str(round(stop - start)) + '秒'
-        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost))
+        stop_time = time()
+        cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))

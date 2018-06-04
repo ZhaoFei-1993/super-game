@@ -118,5 +118,4 @@ class Command(BaseCommand):
 
         stop_time = time()
         cost_time = str(round(stop_time - start_time)) + '秒'
-        self.stdout.write(self.style.SUCCESS(''))
         self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
