@@ -6,6 +6,7 @@ from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
 from decimal import Decimal
+import math
 
 
 def get_transactions(address):
@@ -60,8 +61,8 @@ class Command(BaseCommand):
 
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 50
-        page_total = round(len(eth_address) / page_size)
-        for i in range(1, page_total + 1):
+        page_total = int(math.ceil(len(eth_address) / page_size))
+        for i in range(1, page_total):
             start = (i - 1) * page_size
             end = page_size * i
 
@@ -69,7 +70,6 @@ class Command(BaseCommand):
             addresses = ','.join(eth_address[start:end])
 
             transactions = get_transactions(addresses)
-            print('transactions = ', transactions)
             if not transactions:
                 self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
