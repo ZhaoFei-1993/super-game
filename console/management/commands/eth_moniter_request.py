@@ -5,6 +5,7 @@ import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
+from decimal import Decimal
 
 
 def get_transactions(address):
@@ -67,7 +68,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
             addresses = ','.join(eth_address[start:end])
 
-            transactions = get_transactions(addresses + ',0xfE5B72fbAB2A4fec2Bb977a4ef51eB3DF3d816AC')
+            transactions = get_transactions(addresses)
             if not transactions:
                 self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
@@ -107,7 +108,7 @@ class Command(BaseCommand):
                     user_recharge.trade_at = trans['time']
                     # user_recharge.save()
 
-                    user_coin.balance += tx_value
+                    user_coin.balance += Decimal(tx_value)
                     # user_coin.save()
 
                     valid_trans += 1
