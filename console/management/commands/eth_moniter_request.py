@@ -98,6 +98,8 @@ class Command(BaseCommand):
                     if is_exists > 0:
                         continue
 
+                    print('trans = ', trans)
+
                     # 插入充值记录表
                     user_recharge = UserRecharge()
                     user_recharge.user_id = user_id
