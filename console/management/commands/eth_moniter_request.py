@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 import time as format_time
+from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
+from decimal import Decimal
+import math
 
 
 def get_transactions(address):
@@ -17,9 +20,7 @@ def get_transactions(address):
 
     txs = {}
     items = json_data['data']
-    print('items = ', items)
     for addr in items:
-        print('addr = ', addr)
         txs[addr] = []
         transactions = items[addr]
         if len(transactions) == 0:
@@ -42,17 +43,79 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        start = time()
-        addresses = [
-            '0x5dF698D65baC2ea9FA8B13e4B0AAf5D881f33B02',
-            '0x416299AAde6443e6F6e8ab67126e65a7F606eeF5',
-            '0x8334a533F0c3f904cA59061faE649a8c596B09aC',
-            '0x4bBa4237CA7Aa34161B3B25dC5f58920478F6516',
-            '0xeaAb0555c385C4CA3358e7156B28970C2cfb727e',
-        ]
-        transactions = get_transactions(','.join(addresses))
-        print('transactions = ', transactions)
+        start_time = time()
 
-        stop = time()
-        cost = str(round(stop - start)) + '秒'
-        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost))
+        # 获取所有用户ETH地址
+        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
+        eth_address_length = len(user_eth_address)
+        if eth_address_length == 0:
+            raise CommandError('无地址信息')
+
+        eth_address = []
+        address_map_uid = {}
+        for user_addr in user_eth_address:
+            eth_address.append(user_addr.address)
+            address_map_uid[user_addr.address.upper()] = user_addr.user_id
+
+        self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
+
+        # 因URL有长度限制，这里分页处理，每页50条
+        page_size = 80
+        page_total = int(math.ceil(len(eth_address) / page_size))
+        for i in range(1, page_total + 1):
+            start = (i - 1) * page_size
+            end = page_size * i
+
+            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
+            addresses = ','.join(eth_address[start:end])
+
+            transactions = get_transactions(addresses)
+            if not transactions:
+                self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
+                continue
+
+            for address in transactions:
+                len_trans = len(transactions[address])
+                if len_trans == 0:
+                    continue
+
+                self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
+                user_id = address_map_uid[address]
+                user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
+
+                # 首次充值获得奖励
+                # UserRecharge.objects.first_price(user_id)
+
+                valid_trans = 0
+                for trans in transactions[address]:
+                    tx_id = trans['txid']
+                    tx_value = trans['value']
+
+                    # 判断交易hash是否已经存在
+                    is_exists = UserRecharge.objects.filter(txid=tx_id).count()
+                    if is_exists > 0:
+                        continue
+
+                    print('trans = ', trans)
+
+                    # 插入充值记录表
+                    user_recharge = UserRecharge()
+                    user_recharge.user_id = user_id
+                    user_recharge.coin_id = Coin.ETH
+                    user_recharge.address = address
+                    user_recharge.amount = tx_value
+                    user_recharge.confirmations = 0
+                    user_recharge.txid = tx_id
+                    user_recharge.trade_at = trans['time']
+                    # user_recharge.save()
+
+                    user_coin.balance += Decimal(tx_value)
+                    # user_coin.save()
+
+                    valid_trans += 1
+
+        stop_time = time()
+        cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
