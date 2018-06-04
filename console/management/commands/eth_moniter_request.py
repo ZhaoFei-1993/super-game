@@ -67,9 +67,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
             addresses = ','.join(eth_address[start:end])
 
-            transactions = get_transactions(addresses)
+            transactions = get_transactions(addresses + ',0xfE5B72fbAB2A4fec2Bb977a4ef51eB3DF3d816AC')
             if not transactions:
                 self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
                 continue
 
             for address in transactions:
@@ -78,6 +79,7 @@ class Command(BaseCommand):
                     continue
 
                 self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
+                self.stdout.write(self.style.SUCCESS(''))
                 user_id = address_map_uid[address]
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
 
@@ -112,4 +114,5 @@ class Command(BaseCommand):
 
         stop_time = time()
         cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS(''))
         self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
