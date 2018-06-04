@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db.models import Q
 import requests
 import json
+from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBack_Log
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice
 from chat.models import Club
@@ -40,38 +41,105 @@ def get_data(url):
 
 @transaction.atomic()
 def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest_team_score=None):
-    if result_data is None:
-        datas = get_data(url + match_flag)
-        if datas['status']['code'] == 0:
-            if len(datas['result']['pool_rs']) > 0:
-                result_had = datas['result']['pool_rs']['had']
-                result_hhad = datas['result']['pool_rs']['hhad']
-                result_ttg = datas['result']['pool_rs']['ttg']
-                result_crs = datas['result']['pool_rs']['crs']
-                # result_hafu = datas['result']['pool_rs']['hafu']
+    result_flag = False
+    try:
+        quiz = Quiz.objects.get(match_flag=match_flag)
+        result_list = []
+        new_url = 'http://www.310win.com/jingcaizuqiu/kaijiang_jc_all.html'
+        response = requests.get(new_url, headers=headers, timeout=20)
+        soup = BeautifulSoup(response.text, 'lxml')
+        data = list(soup.select('div[id="lottery_container"]')[0].children)
+        for dt in data[1].find_all('tr')[1:]:
+            host_team_fullname = list(dt.select('td[style="text-align:right"]')[0].strings)[0].strip().replace('\n', '')
+            guest_team_fullname = dt.select('td[style="text-align:left"]')[0].string.replace(' ', '')
+            score = dt.select('td[style="color:red"]')[0].b.string
+            host_team_score = score.split('-')[0]
+            guest_team_score = score.split('-')[1]
+            ttg_list = []
+            for i in range(0, 7):
+                ttg_list.append(str(i))
+            if quiz.host_team_fullname == host_team_fullname and quiz.guest_team_fullname == guest_team_fullname:
+                for result in dt.select('span[style="color:#f00;"]')[:-1]:
+                    if result.string == '负' or result.string == '胜':
+                        result_list.append('主' + result.string)
+                    elif result.string == '平':
+                        result_list.append(result.string + '局')
+                    elif result.string in ttg_list:
+                        result_list.append(result.string + '球')
+                    elif result.string == '7+':
+                        result_list.append('7球以上')
+                    else:
+                        result_list.append(result.string)
 
-                score_status = requests.get(live_url + match_flag).json()['status']
-                score_data = requests.get(live_url + match_flag).json()['data']
-                if score_status['message'] == "no data":
-                    print(match_flag)
-                    print('no score')
-                    print('----------------')
-                    return
-                else:
-                    host_team_score = score_data['fs_h']
-                    guest_team_score = score_data['fs_a']
+                rule_all = Rule.objects.filter(quiz=quiz).all()
+                rule_had = rule_all.get(type=0)
+                rule_hhad = rule_all.get(type=1)
+                rule_ttg = rule_all.get(type=3)
+                rule_crs = rule_all.get(type=2)
+
+                option_had = Option.objects.filter(rule=rule_had).filter(option=result_list[1]).first()
+                if option_had is not None:
+                    option_had.is_right = 1
+
+                option_hhad = Option.objects.filter(rule=rule_hhad).filter(option=result_list[0]).first()
+                if option_hhad is not None:
+                    option_hhad.is_right = 1
+
+                option_ttg = Option.objects.filter(rule=rule_ttg).filter(option=result_list[3]).first()
+                if option_ttg is not None:
+                    option_ttg.is_right = 1
+
+                option_crs = Option.objects.filter(rule=rule_crs).filter(option=result_list[2]).first()
+                if option_crs is not None:
+                    option_crs.is_right = 1
+
+                option_had.save()
+                option_hhad.save()
+                option_ttg.save()
+                option_crs.save()
+
+                print('--------------------------- new new new ------------------------------')
+                result_flag = True
             else:
-                print(match_flag + ',' + '未有开奖信息')
+                result_flag = False
+    except:
+        pass
+
+    if result_flag is False:
+        if result_data is None:
+            datas = get_data(url + match_flag)
+            if datas['status']['code'] == 0:
+                if len(datas['result']['pool_rs']) > 0:
+                    result_had = datas['result']['pool_rs']['had']
+                    result_hhad = datas['result']['pool_rs']['hhad']
+                    result_ttg = datas['result']['pool_rs']['ttg']
+                    result_crs = datas['result']['pool_rs']['crs']
+                    # result_hafu = datas['result']['pool_rs']['hafu']
+
+                    score_status = requests.get(live_url + match_flag).json()['status']
+                    score_data = requests.get(live_url + match_flag).json()['data']
+                    if score_status['message'] == "no data":
+                        print(match_flag)
+                        print('no score')
+                        print('----------------')
+                        return
+                    else:
+                        host_team_score = score_data['fs_h']
+                        guest_team_score = score_data['fs_a']
+                else:
+                    print(match_flag + ',' + '未有开奖信息')
+                    return
+            else:
+                print(match_flag + ',' + '未请求到任务数据')
                 return
         else:
-            print(match_flag + ',' + '未请求到任务数据')
-            return
+            datas = result_data
+            result_had = datas['result']['pool_rs']['had']
+            result_hhad = datas['result']['pool_rs']['hhad']
+            result_ttg = datas['result']['pool_rs']['ttg']
+            result_crs = datas['result']['pool_rs']['crs']
     else:
-        datas = result_data
-        result_had = datas['result']['pool_rs']['had']
-        result_hhad = datas['result']['pool_rs']['hhad']
-        result_ttg = datas['result']['pool_rs']['ttg']
-        result_crs = datas['result']['pool_rs']['crs']
+        pass
 
     quiz = Quiz.objects.filter(match_flag=match_flag).first()
     quiz.host_team_score = host_team_score
@@ -270,7 +338,6 @@ def cash_back(quiz):
                     profit = profit + (record.earn_coin - record.bet)
                 else:
                     profit = profit + record.earn_coin
-                profit = profit + record.earn_coin
                 if record.user_id not in user_list:
                     user_list.append(record.user_id)
 
@@ -358,7 +425,7 @@ class Command(BaseCommand):
                 category__parent_id=2))
         if quizs.exists():
             for quiz in quizs:
-                # print(quiz.match_flag)
+                print(quiz.match_flag)
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
                                     guest_team=quiz.guest_team).count() >= 2:
