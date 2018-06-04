@@ -6,6 +6,7 @@ import time
 from django.db import transaction
 from users.models import UserCoin, UserRecharge, Coin
 from decimal import Decimal
+import math
 
 base_url = 'https://blockchain.info/multiaddr?active='
 coin_name = 'BTC'
@@ -59,13 +60,13 @@ class Command(BaseCommand):
         for user_coin in user_btc_address:
             btc_addresses.append(user_coin.address)
             # map address to userid
-            address_map_uid[user_coin.address] = user_coin.user_id
+            address_map_uid[user_coin.address.upper()] = user_coin.user_id
 
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 50
-        page_total = round(len(btc_addresses) / page_size)
+        page_total = int(math.ceil(len(btc_addresses) / page_size))
         for i in range(1, page_total + 1):
-            start = (i - 1) * page_size + 1
+            start = (i - 1) * page_size
             end = page_size * i
 
             self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
