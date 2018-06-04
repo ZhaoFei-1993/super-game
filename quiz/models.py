@@ -171,7 +171,7 @@ class OptionManager(models.Manager):
         :param roomquiz_id      俱乐部ID
         :return:
         """
-        return True         # 暂时关闭下注变更赔率功能
+        return True  # 暂时关闭下注变更赔率功能
         rule = Rule.objects.get(pk=rule_id)
 
         options = OptionOdds.objects.select_for_update().filter(option__rule_id=rule_id, club_id=roomquiz_id).order_by(

@@ -121,12 +121,12 @@ class RecordsListView(ListCreateAPIView):
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Record.objects.filter(Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2),
-                                                 user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
+                    return Record.objects.filter(
+                        Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
+                        user_id=user_id,
+                        roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(Q(quiz__status=3) | Q(quiz__status=4) | Q(quiz__status=5),
-                                                 user_id=user_id,
+                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5), user_id=user_id,
                                                  roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
