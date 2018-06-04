@@ -69,6 +69,7 @@ class Command(BaseCommand):
             addresses = ','.join(eth_address[start:end])
 
             transactions = get_transactions(addresses)
+            print('transactions = ', transactions)
             if not transactions:
                 self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
