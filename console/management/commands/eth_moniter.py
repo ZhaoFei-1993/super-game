@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
-        # 因URL有长度限制，这里分页处理，每页50条
+        # 因URL有长度限制，这里分页处理，每页80条
         page_size = 80
         page_total = int(math.ceil(len(eth_address) / page_size))
         for i in range(1, page_total + 1):
