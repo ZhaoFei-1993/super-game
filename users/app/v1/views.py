@@ -452,7 +452,7 @@ class InfoView(ListAPIView):
         coin_id = clubinfo.coin.pk
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # # 破产赠送hand功能
-        if int(usercoin.balance) < 1000:
+        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             today_time = int(time.mktime(today.timetuple()))
             # today_time = today.strftime("%Y%m%d%H%M%S")
