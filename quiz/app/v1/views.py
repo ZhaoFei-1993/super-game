@@ -175,6 +175,7 @@ class RecordsListView(ListCreateAPIView):
             #     quiz_id=quiz
             bet = fav.get('bet')
             data.append({
+                "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
                 'host_team': fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
