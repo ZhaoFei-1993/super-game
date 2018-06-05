@@ -403,10 +403,8 @@ class BetView(ListCreateAPIView):
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
-            today_time = int(time.mktime(today.timetuple()))
-            # today_time = today.strftime("%Y%m%d%H%M%S")
-            is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_id=4, money=10000,
-                                                       created_at__gte=today_time).count()
+            is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_name="HAND", money=10000,
+                                                       created_at__gte=today).count()
             if is_give <= 0:
                 usercoin.balance += Decimal(10000)
                 usercoin.save()

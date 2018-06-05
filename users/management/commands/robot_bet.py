@@ -175,9 +175,9 @@ class Command(BaseCommand):
             return False
 
         club_weight = {
-            1: 7,
-            3: 2,
-            4: 1,
+            1: 90,
+            3: 7,
+            4: 3,
         }
 
         weight_choice = WeightChoice()
@@ -302,9 +302,9 @@ class Command(BaseCommand):
             ETH下币权重
             """
             choices = {
-                values[0]: 7,
-                values[1]: 2,
-                values[2]: 1,
+                values[0]: 80,
+                values[1]: 15,
+                values[2]: 5,
             }
 
         weight_choice = WeightChoice()
