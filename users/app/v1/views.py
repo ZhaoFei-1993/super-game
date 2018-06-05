@@ -8,14 +8,14 @@ from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
-    CoinOutServiceCharge
+    CoinOutServiceCharge, BankruptcyRecords
 from chat.models import Club
 from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from base.function import LoginRequired
 from base.function import randomnickname, weight_choice
 from sms.models import Sms
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 import time
 import pytz
 from decimal import Decimal
@@ -450,7 +450,33 @@ class InfoView(ListAPIView):
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # # 破产赠送hand功能
+        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+            today = date.today()
+            is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
+                                                       created_at__gte=today).count()
+            if is_give <= 0:
+                usercoin.balance += Decimal(10000)
+                usercoin.save()
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user
+                coin_bankruptcy.coin_name = 'HAND'
+                coin_bankruptcy.amount = '+' + str(10000)
+                coin_bankruptcy.rest = Decimal(usercoin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
+                bankruptcy_info = BankruptcyRecords()
+                bankruptcy_info.user = user
+                bankruptcy_info.coin_name = 'HAND'
+                bankruptcy_info.money = Decimal(10000)
+                bankruptcy_info.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 10  # 修改密码
+                user_message.save()
+
         user_coin = usercoin.balance
         usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address

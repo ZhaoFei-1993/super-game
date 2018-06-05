@@ -7,13 +7,13 @@ from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
-from users.models import UserCoin, CoinValue, Coin
+from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
 from utils.functions import value_judge
-from datetime import datetime
+from datetime import datetime, date
 import time
 import re
 from utils.functions import normalize_fraction
@@ -175,6 +175,7 @@ class RecordsListView(ListCreateAPIView):
             #     quiz_id=quiz
             bet = fav.get('bet')
             data.append({
+                "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
                 'host_team': fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
@@ -278,6 +279,7 @@ class RuleView(ListAPIView):
         coin_icon = usercoin.coin.icon
 
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        print("coinvalue==================================", coinvalue)
         value1 = coinvalue[0].value
         value1 = normalize_fraction(value1, coinvalue[0].coin.coin_accuracy)
         value2 = coinvalue[1].value
@@ -396,6 +398,35 @@ class BetView(ListCreateAPIView):
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
         coins = float(coins)
+
+        clubinfo = Club.objects.get(pk=roomquiz_id)  # 破产赠送hand功能
+        coin_id = clubinfo.coin.pk
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+            today = date.today()
+            is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_name="HAND", money=10000,
+                                                       created_at__gte=today).count()
+            if is_give <= 0:
+                usercoin.balance += Decimal(10000)
+                usercoin.save()
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user
+                coin_bankruptcy.coin_name = 'HAND'
+                coin_bankruptcy.amount = '+' + str(10000)
+                coin_bankruptcy.rest = Decimal(usercoin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
+                bankruptcy_info = BankruptcyRecords()
+                bankruptcy_info.user = user
+                bankruptcy_info.coin_name = 'HAND'
+                bankruptcy_info.money = Decimal(10000)
+                bankruptcy_info.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 10  # 修改密码
+                user_message.save()
+
         try:  # 判断选项ID是否有效
             option_odds = OptionOdds.objects.get(pk=option)
         except Exception:

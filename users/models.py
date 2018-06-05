@@ -162,7 +162,26 @@ class RewardCoin(models.Model):
 
 @reversion.register()
 class CoinValue(models.Model):
+    RESULTS = 0
+    POLITENESS_RESULTS = 1
+    SCORE = 2
+    TOTAL_GOAL = 3
+    RESULT = 4
+    POLITENESS_RESULT = 5
+    SIZE_POINTS = 6
+    VICTORY_GAP = 7
+    TYPE_CHOICE = (
+        (RESULTS, "赛果"),
+        (POLITENESS_RESULTS, "让分赛果"),
+        (SCORE, "比分"),
+        (TOTAL_GOAL, "总进球"),
+        (RESULT, "胜负"),
+        (POLITENESS_RESULT, "让分胜负"),
+        (SIZE_POINTS, "大小分"),
+        (VICTORY_GAP, "胜分差"),
+    )
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     value_index = models.IntegerField(verbose_name='投注值序号', default=1)
     value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=3, default=0.000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -480,3 +499,14 @@ class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ip = models.CharField(verbose_name='登录ip', max_length=48)
     login_time = models.DateTimeField(verbose_name='登录时间', auto_now=True)
+
+
+@reversion.register()
+class BankruptcyRecords(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
+    money = models.DecimalField(verbose_name='金额', max_digits=20, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "破产记录表"
