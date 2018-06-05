@@ -28,9 +28,6 @@ class Command(BaseCommand):
         quiz = Quiz.objects.filter(pk=quiz_id).first()
         match_flag = quiz.match_flag
 
-        redis_conn = Redis()
-        q = Queue(connection=redis_conn)
-
         url = live_url
         time = get_time()[0:10]
         try:
@@ -38,20 +35,6 @@ class Command(BaseCommand):
             if response.status_code == 200:
                 dt = response.content.decode('utf-8')
                 match_list = re.findall(r'CDATA\[(.*?)]]>', dt)
-                # 直播页无返回数据情况
-                if len(match_list) == 0:
-                    if int(quiz.status) == int(Quiz.BONUS_DISTRIBUTION):
-                        # 比赛已经结束和分配奖金
-                        # 推送比赛时间
-                        q.enqueue(quiz_send_basketball_time, quiz_id, -1)
-                        # 推送比分
-                        q.enqueue(quiz_send_score, quiz_id, quiz.host_team_score, quiz.guest_team_score)
-                    else:
-                        # 比赛未开始
-                        q.enqueue(quiz_send_basketball_time, quiz_id, 0)
-                        # 推送比分
-                        q.enqueue(quiz_send_score, quiz_id, 0, 0)
-
                 for data in match_list:
                     data_list = data.split('^')
                     if len(data_list) < 4:
@@ -62,6 +45,9 @@ class Command(BaseCommand):
                         if match_flag == match_id:
                             host_team_score = data_list[13]
                             guest_team_score = data_list[12]
+
+                            redis_conn = Redis()
+                            q = Queue(connection=redis_conn)
 
                             if data_list[28] == '-1':
                                 # 推送比赛时间
@@ -89,8 +75,8 @@ class Command(BaseCommand):
                             q.enqueue(quiz_send_score, quiz_id, host_team_score, guest_team_score)
                         else:
                             print('查找失败')
-        except:
-            pass
+        except requests.ConnectionError as e:
+            print('Error', e.args)
 
         # with open('/tmp/debug_basketball_synctime', 'a+') as f:
         #     f.write('successed')
