@@ -320,6 +320,7 @@ class UserRegister(object):
             user_coin_give_records = CoinGiveRecords()
             user_coin_give_records.start_coin = user_coin.balance
             user_coin_give_records.user = user
+            user_coin_give_records.coin_give = give_info
             user_coin_give_records.lock_coin = give_info.number
             user_coin_give_records.save()
             user_coin.balance += give_info.number
@@ -491,6 +492,7 @@ class InfoView(ListAPIView):
                 user_coin_give_records = CoinGiveRecords()
                 user_coin_give_records.start_coin = user_coin.balance
                 user_coin_give_records.user = user
+                user_coin_give_records.coin_give = give_info
                 user_coin_give_records.lock_coin = give_info.number
                 user_coin_give_records.save()
                 user_coin.balance += give_info.number
