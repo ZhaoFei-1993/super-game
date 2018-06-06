@@ -353,8 +353,8 @@ class UserCoinSerialize(serializers.ModelSerializer):
         print("balance=========================", balance)
         if obj.coin.name == "USDT":
             coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
-            print("coin_give========================", coin_give.lock_coin)
             lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
+            print("lock_coin========================", lock_coin)
             balance -= lock_coin
             print("balance=========================", balance)
         return balance
@@ -413,8 +413,8 @@ class UserCoinSerialize(serializers.ModelSerializer):
         print("lock_coin==============================", lock_coin)
         if obj.coin.name == "USDT":
             coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
-            print("coin_give=================================", coin_give.lock_coin)
             coin_lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
+            print("coin_lock_coin=================================", coin_lock_coin)
             lock_coin += coin_lock_coin
             print("=============================", lock_coin)
         return lock_coin
