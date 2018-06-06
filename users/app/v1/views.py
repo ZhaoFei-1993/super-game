@@ -1064,6 +1064,9 @@ class AllreadView(ListCreateAPIView):
         return self.response(content)
 
 
+
+
+
 class AssetView(ListAPIView):
     """
     资产情况
@@ -1173,7 +1176,7 @@ class UserPresentationView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'p_address', 'passcode', 'p_address_name', 'p_amount', 'c_id')
+        value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -1181,12 +1184,23 @@ class UserPresentationView(CreateAPIView):
             userinfo = User.objects.get(pk=userid)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        passcode = request.data.get('passcode')
+        password = request.data.get('password')
+        if not userinfo.check_password(password):
+            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        code = request.data.get('code')
+        sms = Sms.objects.filter(telephone=userinfo.telephone, type=6).order_by('-id').first()
+        if (sms is None) or (sms.code != code):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
-        if str(passcode) != str(userinfo.pass_code):
-            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        # if str(passcode) != str(userinfo.pass_code):
+        #
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
