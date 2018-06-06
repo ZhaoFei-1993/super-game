@@ -474,7 +474,11 @@ class InfoView(ListAPIView):
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
-        coin_initialization(user_id, coin_id)  # 生成货币余额与充值地址
+        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+
+        for coin in coins:
+            coin_id = coin.id
+            coin_initialization(user_id, coin_id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
