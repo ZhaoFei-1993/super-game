@@ -488,7 +488,7 @@ class BetView(ListCreateAPIView):
                 record.roomquiz_id = roomquiz_id
                 record.rule_id = rule_id
                 record.option = option_odds
-                record.source = 3
+                record.source = 2
                 record.bet = round(Decimal(give_coin.lock_coin), 3)
                 record.odds = round(Decimal(option_odds.odds), 2)
                 record.save()
@@ -506,7 +506,7 @@ class BetView(ListCreateAPIView):
                 record.roomquiz_id = roomquiz_id
                 record.rule_id = rule_id
                 record.option = option_odds
-                record.source = 3
+                record.source = 2
                 record.bet = round(Decimal(coins), 3)
                 record.odds = round(Decimal(option_odds.odds), 2)
                 record.save()
