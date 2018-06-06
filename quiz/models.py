@@ -67,9 +67,11 @@ class Quiz(models.Model):
     category = models.ForeignKey(Category, verbose_name="竞猜分类", on_delete=models.DO_NOTHING)
     host_team = models.CharField(verbose_name="主队", max_length=255)
     host_team_fullname = models.CharField(verbose_name="主队全称", max_length=255, default='')
+    host_team_en = models.CharField(verbose_name="主队英文全称", max_length=255, default='')
     host_team_avatar = models.CharField(verbose_name="主队图标", max_length=255, default='')
     host_team_score = models.IntegerField(verbose_name="主队分数", default=0)
     guest_team = models.CharField(verbose_name="客队", max_length=255)
+    guest_team_en = models.CharField(verbose_name="客队英文全称", max_length=255, default='')
     guest_team_fullname = models.CharField(verbose_name="客队全称", max_length=255, default='')
     guest_team_avatar = models.CharField(verbose_name="客队图标", max_length=255, default='')
     guest_team_score = models.IntegerField(verbose_name="客队分数", default=0)
@@ -313,24 +315,27 @@ class Record(models.Model):
         verbose_name = verbose_name_plural = "用户下注表"
 
 
-class Quiz_Odds_Log(models.Model):
+class QuizOddsLog(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    option = models.CharField(verbose_name="选项值", max_length=20, default="")
+    option = models.ForeignKey(Option, on_delete=models.DO_NOTHING)
+    option_title = models.CharField(verbose_name="选项值", max_length=20, default="")
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
+    change_at = models.DateTimeField(verbose_name="赔率变化时间")
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜选项赔率记录表"
 
 
-class CashBack_Log(models.Model):
+class CashBackLog(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
     platform_sum = models.DecimalField(verbose_name="平台投注额", max_digits=15, decimal_places=3, default=0.000)
     profit = models.DecimalField(verbose_name="盈利", max_digits=15, decimal_places=3, default=0.000)
     cash_back_sum = models.DecimalField(verbose_name="返现总额", max_digits=15, decimal_places=3, default=0.000)
     coin_proportion = models.DecimalField(verbose_name="返现时比例", max_digits=15, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(verbose_name="发配日期", auto_now=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "返现记录表"

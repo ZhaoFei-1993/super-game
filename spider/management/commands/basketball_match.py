@@ -7,7 +7,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, Quiz_Odds_Log
+from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
 from wc_auth.models import Admin
 from .get_time import get_time
 
@@ -216,8 +216,8 @@ def get_data_info(url):
                         category.save()
                     quiz.category = Category.objects.filter(name=league_abbr).first()
 
-                    if quiz.category.name != '美职篮':
-                        return
+                    # if quiz.category.name != '美职篮':
+                    #     return
 
                     quiz.host_team = host_team_abbr
                     quiz.host_team_fullname = host_team
@@ -345,14 +345,17 @@ def get_data_info(url):
                             odds_pool_wnm.clear()
 
                     # 记录初始赔率
+                    change_time = get_time()
                     quiz = Quiz.objects.get(match_flag=match_id)
                     for rule in Rule.objects.filter(quiz=quiz):
                         for option in Option.objects.filter(rule=rule):
-                            quiz_odds_log = Quiz_Odds_Log()
+                            quiz_odds_log = QuizOddsLog()
                             quiz_odds_log.quiz = quiz
                             quiz_odds_log.rule = rule
-                            quiz_odds_log.option = option.option
+                            quiz_odds_log.option = option
+                            quiz_odds_log.option_title = option.option
                             quiz_odds_log.odds = option.odds
+                            quiz_odds_log.change_at = change_time
                             quiz_odds_log.save()
 
                             # 生成俱乐部选项赔率表

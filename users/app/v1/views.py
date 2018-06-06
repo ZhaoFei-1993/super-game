@@ -4,11 +4,11 @@ from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, Mes
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
 import qrcode
 from django.core.cache import caches
-from quiz.models import Quiz
+from quiz.models import Quiz, Record
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
-    CoinOutServiceCharge, BankruptcyRecords
+    CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords
 from chat.models import Club
 from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
@@ -23,7 +23,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code
+    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code, coin_initialization
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -140,6 +140,11 @@ class UserRegister(object):
                     usermessage.message = i
                     usermessage.save()
 
+            coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+            for coin in coins:
+                user_id = user.id
+                coin_id = coin.id
+                coin_initialization(user_id, coin_id)
             #  生成货币余额表
             # coin = Coin.objects.all()
             # for i in coin:
@@ -276,29 +281,49 @@ class UserRegister(object):
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
 
-        # 生成代币余额
-        btc_address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
-        btc_address.user = userinfo.id
-        btc_address.save()
+        # # 生成代币余额
+        # btc_address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+        # btc_address.user = userinfo.id
+        # btc_address.save()
+        #
+        # eth_address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+        # eth_address.user = userinfo.id
+        # eth_address.save()
+        #
+        # coins = Coin.objects.filter(is_disabled=False)
+        # for coin in coins:
+        #     user_coin = UserCoin()
+        #     # if coin.name == "EOS":
+        #
+        #     user_coin.user_id = userinfo.id
+        #     user_coin.coin_id = coin.id
+        #     # 以太坟代币均使用同一个ETH地址
+        #     if coin.is_eth_erc20:
+        #         user_coin.address = eth_address.address
+        #     else:
+        #         user_coin.address = btc_address.address
+        #     user_coin.save()
 
-        eth_address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
-        eth_address.user = userinfo.id
-        eth_address.save()
+        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
 
-        coins = Coin.objects.filter(is_disabled=False)
         for coin in coins:
-            user_coin = UserCoin()
-            # if coin.name == "EOS":
+            user_id = userinfo.id
+            coin_id = coin.id
+            coin_initialization(user_id, coin_id)
 
-            user_coin.user_id = userinfo.id
-            user_coin.coin_id = coin.id
-            # 以太坟代币均使用同一个ETH地址
-            if coin.is_eth_erc20:
-                user_coin.address = eth_address.address
-            else:
-                user_coin.address = btc_address.address
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
+        if today_time < end_date:  # 活动期间
+            user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=userinfo.id).first()
+            user_coin_give_records = CoinGiveRecords()
+            user_coin_give_records.start_coin = user_coin.balance
+            user_coin_give_records.user = user
+            user_coin_give_records.lock_coin = give_info.number
+            user_coin_give_records.save()
+            user_coin.balance += give_info.number
             user_coin.save()
-
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -449,7 +474,45 @@ class InfoView(ListAPIView):
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # # 破产赠送hand功能
+        coin_initialization(user_id, coin_id)  # 生成货币余额与充值地址
+
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
+        if today_time < end_date:  # 活动期间
+            is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
+            if is_give == 0:
+                user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
+                user_coin_give_records = CoinGiveRecords()
+                user_coin_give_records.start_coin = user_coin.balance
+                user_coin_give_records.user = user
+                user_coin_give_records.lock_coin = give_info.number
+                user_coin_give_records.save()
+                user_coin.balance += give_info.number
+                user_coin.save()
+        # elif today_time >= end_date:               # 活动时间到
+        #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
+        #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
+        #     user_recharge_coin = UserRecharge.objects.filter(
+        #         Q(confirm_at__gt=user_coin_give_records.created_at) | Q(confirm_at__lt=give_info.end_time)).aggregate(
+        #         Sum('amount'))
+        #     user_amount = user_recharge_coin['amount__sum']             # 活动期间总充值数
+        #     if user_coin.balance > user_amount:
+        #         user_quiz_bet_coin = Record.objects.filter(
+        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
+        #                 confirm_at__lt=give_info.end_time)).aggregate(
+        #             Sum('bet'))
+        #         user_bet = user_quiz_bet_coin['bet__sum']  # 活动期间总下注
+        #         user_quzi_coin = Record.objects.filter(
+        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
+        #                 confirm_at__lt=give_info.end_time)).aggregate(
+        #             Sum('earn_coin'))
+        #         user_earn_coin = user_quzi_coin['earn_coin__sum']  # 活动期间总赢
+        #         user_earn_coin -= user_bet
+        #
+
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # 破产赠送hand功能
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,

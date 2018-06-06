@@ -539,3 +539,27 @@ class CoinInstall(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "投注值表"
+
+
+@reversion.register()
+class CoinGive(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    number = models.DecimalField(verbose_name='赠送金额', max_digits=20, decimal_places=8, default=0.00000000)
+    ask_number = models.DecimalField(verbose_name='要求金额', max_digits=20, decimal_places=8, default=0.00000000)
+    match_number = models.IntegerField(verbose_name="要求局数", default=0)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    end_time = models.DateTimeField(verbose_name="结束日期", auto_now=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "货币赠送活动表"
+
+
+@reversion.register()
+class CoinGiveRecords(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    start_coin = models.DecimalField(verbose_name='开始余额', max_digits=20, decimal_places=8, default=0.00000000)
+    lock_coin = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "货币赠送活动表"

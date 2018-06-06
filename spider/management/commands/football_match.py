@@ -6,7 +6,7 @@ import re
 import requests
 import json
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
-from quiz.models import Quiz, Rule, Option, Quiz_Odds_Log, OptionOdds, Club
+from quiz.models import Quiz, Rule, Option, QuizOddsLog, OptionOdds, Club
 from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
@@ -46,8 +46,10 @@ def get_data_info(url):
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
             guest_team = data[1].get('a_cn')
+            guest_team_id = data[1].get('a_id_dc')
             guest_team_abbr = data[1].get('a_cn_abbr')
             host_team = data[1].get('h_cn')
+            host_team_id = data[1].get('h_id_dc')
             host_team_abbr = data[1].get('h_cn_abbr')
             host_team_order = data[1].get('h_order')
             guest_team_order = data[1].get('a_order')
@@ -56,6 +58,16 @@ def get_data_info(url):
                 guest_team_order = ' '
             else:
                 pass
+
+            host_team_url = 'http://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + host_team_id
+            guest_team_url = 'http://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + guest_team_id
+            response_host_team = requests.get(host_team_url, headers=headers)
+            response_guest_team = requests.get(guest_team_url, headers=headers)
+            host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
+            guest_team_dt = eval(response_guest_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
+            host_team_en = host_team_dt['result']['official_name']
+            guest_team_en = guest_team_dt['result']['official_name']
+
             time = data[1].get('date') + ' ' + data[1].get('time')
             created_at = get_time()
 
@@ -350,9 +362,11 @@ def get_data_info(url):
 
                         quiz.host_team = host_team_abbr
                         quiz.host_team_fullname = host_team
+                        quiz.host_team_en = host_team_en
                         quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + host_team_avatar
                         quiz.guest_team = guest_team_abbr
                         quiz.guest_team_fullname = guest_team
+                        quiz.guest_team_en = guest_team_en
                         quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + guest_team_avatar
                         quiz.match_name = league_abbr
                         quiz.begin_at = time
@@ -494,14 +508,17 @@ def get_data_info(url):
                                 odds_pool_ttg.clear()
 
                         # 记录初始赔率
+                        change_time = get_time()
                         quiz = Quiz.objects.get(match_flag=match_id)
                         for rule in Rule.objects.filter(quiz=quiz):
                             for option in Option.objects.filter(rule=rule):
-                                quiz_odds_log = Quiz_Odds_Log()
+                                quiz_odds_log = QuizOddsLog()
                                 quiz_odds_log.quiz = quiz
                                 quiz_odds_log.rule = rule
-                                quiz_odds_log.option = option.option
+                                quiz_odds_log.option = option
+                                quiz_odds_log.option_title = option.option
                                 quiz_odds_log.odds = option.odds
+                                quiz_odds_log.change_at = change_time
                                 quiz_odds_log.save()
 
                                 # 生成俱乐部选项赔率表
