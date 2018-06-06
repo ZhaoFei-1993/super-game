@@ -1226,9 +1226,19 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
-        if coin.name != 'HAND':
+        if coin.name != 'HAND' and coin.name != 'USDT':
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
+        elif coin.name == 'USDT':      # usdt
+            try:
+                coin_give = CoinGiveRecords.objects.get(user_id=userid)
+            except Exception:
+                raise
+            balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+            if balance < coin_out.value:
+                raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
         else:
             try:
                 coin_eth = UserCoin.objects.get(user_id=userid, coin_id=coin_out.coin_payment)
@@ -1238,6 +1248,16 @@ class UserPresentationView(CreateAPIView):
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             if p_amount > user_coin.balance:
+
+                if coin.name == "USDT":            # usdt
+                    try:
+                        coin_give = CoinGiveRecords.objects.get(user_id=userid)
+                    except Exception:
+                        raise
+                    balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+                    if p_amount > balance:
+                        raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
+
                 raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
             elif p_amount < coin.cash_control:
                 raise ParamErrorException(error_code.API_70103_USER_PRESENT_AMOUNT_LC)
