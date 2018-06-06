@@ -1069,9 +1069,6 @@ class AllreadView(ListCreateAPIView):
         return self.response(content)
 
 
-
-
-
 class AssetView(ListAPIView):
     """
     资产情况
