@@ -279,7 +279,6 @@ class RuleView(ListAPIView):
         coin_icon = usercoin.coin.icon
 
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
-        print("coinvalue==================================", coinvalue)
         value1 = coinvalue[0].value
         value1 = normalize_fraction(value1, coinvalue[0].coin.coin_accuracy)
         value2 = coinvalue[1].value

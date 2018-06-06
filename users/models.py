@@ -162,26 +162,26 @@ class RewardCoin(models.Model):
 
 @reversion.register()
 class CoinValue(models.Model):
-    RESULTS = 0
-    POLITENESS_RESULTS = 1
-    SCORE = 2
-    TOTAL_GOAL = 3
-    RESULT = 4
-    POLITENESS_RESULT = 5
-    SIZE_POINTS = 6
-    VICTORY_GAP = 7
-    TYPE_CHOICE = (
-        (RESULTS, "赛果"),
-        (POLITENESS_RESULTS, "让分赛果"),
-        (SCORE, "比分"),
-        (TOTAL_GOAL, "总进球"),
-        (RESULT, "胜负"),
-        (POLITENESS_RESULT, "让分胜负"),
-        (SIZE_POINTS, "大小分"),
-        (VICTORY_GAP, "胜分差"),
-    )
+    # RESULTS = 0
+    # POLITENESS_RESULTS = 1
+    # SCORE = 2
+    # TOTAL_GOAL = 3
+    # RESULT = 4
+    # POLITENESS_RESULT = 5
+    # SIZE_POINTS = 6
+    # VICTORY_GAP = 7
+    # TYPE_CHOICE = (
+    #     (RESULTS, "赛果"),
+    #     (POLITENESS_RESULTS, "让分赛果"),
+    #     (SCORE, "比分"),
+    #     (TOTAL_GOAL, "总进球"),
+    #     (RESULT, "胜负"),
+    #     (POLITENESS_RESULT, "让分胜负"),
+    #     (SIZE_POINTS, "大小分"),
+    #     (VICTORY_GAP, "胜分差"),
+    # )
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
+    # type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     value_index = models.IntegerField(verbose_name='投注值序号', default=1)
     value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=3, default=0.000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -510,3 +510,32 @@ class BankruptcyRecords(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "破产记录表"
+
+
+@reversion.register()
+class CoinInstall(models.Model):
+    RESULTS = 0
+    POLITENESS_RESULTS = 1
+    SCORE = 2
+    TOTAL_GOAL = 3
+    RESULT = 4
+    POLITENESS_RESULT = 5
+    SIZE_POINTS = 6
+    VICTORY_GAP = 7
+    TYPE_CHOICE = (
+        (RESULTS, "赛果"),
+        (POLITENESS_RESULTS, "让分赛果"),
+        (SCORE, "比分"),
+        (TOTAL_GOAL, "总进球"),
+        (RESULT, "胜负"),
+        (POLITENESS_RESULT, "让分胜负"),
+        (SIZE_POINTS, "大小分"),
+        (VICTORY_GAP, "胜分差"),
+    )
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
+    betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
+    betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "投注值表"

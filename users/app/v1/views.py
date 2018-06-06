@@ -206,8 +206,8 @@ class UserRegister(object):
             invitation_user = User.objects.get(invitation_code=invitation_code)
             invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
                                                            is_deleted=1).count()
-            if invitee_number >= 5:  # 邀请T1是否已达上限
-                raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+            # if invitee_number >= 5:  # 邀请T1是否已达上限
+            #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
             register_type = self.get_register_type(username)
             user = User()
@@ -224,8 +224,9 @@ class UserRegister(object):
             user.save()
 
             user_go_line = UserInvitation()
-            user_go_line.is_effective = 1
-            user_go_line.money = 2000
+            if invitee_number < 5:
+                user_go_line.is_effective = 1
+                user_go_line.money = 2000
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
             user_go_line.invitee_one = user.id
@@ -366,17 +367,14 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
-                # invitation_code = ''
-                # if 'invitation_code' in request.data:
-                #     invitation_code = request.data.get('invitation_code')
-                if 'invitation_code' not in request.data:
-                    raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
-                invitation_code = request.data.get('invitation_code')
-                invitation_code = invitation_code.upper()
+                invitation_code = ''
+                if 'invitation_code' in request.data:
+                    invitation_code = request.data.get('invitation_code')
+                    invitation_code = invitation_code.upper()
 
-                invitation_user = User.objects.filter(invitation_code=invitation_code).count()
-                if invitation_user == 0:
-                    raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
+                # invitation_user = User.objects.filter(invitation_code=invitation_code).count()
+                # if invitation_user == 0:
+                #     raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
                 message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
@@ -1757,10 +1755,10 @@ class InvitationRegisterView(CreateAPIView):
         telephone = request.data.get('telephone')
         code = request.data.get('code')
         password = request.data.get('password')
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-                                                       is_effective=1).count()
-        if int(invitee_number) == 5 or int(invitee_number) > 5:
-            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
+        #                                                is_effective=1).count()
+        # if int(invitee_number) == 5 or int(invitee_number) > 5:
+        #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -2182,9 +2180,9 @@ class CheckInvitationCode(ListAPIView):
             raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
         invitation_user = User.objects.get(invitation_code=invitation_code)
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
-                                                       is_deleted=1).count()
-        if invitee_number >= 5:  # 邀请T1是否已达上限
-            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
+        #                                                is_deleted=1).count()
+        # if invitee_number >= 5:  # 邀请T1是否已达上限
+        #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
         return self.response({'code': 0, 'id': invitation_user.id, 'avatar': invitation_user.avatar,
                               'nickname': invitation_user.nickname})
