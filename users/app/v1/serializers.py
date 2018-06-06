@@ -4,7 +4,8 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
+    CoinGiveRecords
 from quiz.models import Record, Quiz
 from base.exceptions import ParamErrorException
 from base import code as error_code
@@ -349,6 +350,9 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_balance(obj):
         balance = normalize_fraction(obj.balance, int(obj.coin.coin_accuracy))
+        if obj.coin.name == "USDT":
+            coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id)
+            # balance -=coin_give.
         return balance
 
     @staticmethod

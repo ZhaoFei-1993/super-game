@@ -31,7 +31,7 @@ class SmsView(ListCreateAPIView):
         telephone = request.data.get('telephone')
 
         code_type = request.data.get('code_type')
-        if int(code_type) not in range(1, 6):
+        if int(code_type) not in range(1, 7):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         if int(code_type) == 5:
             user_list = User.objects.filter(username=telephone, telephone=telephone).count()
@@ -57,6 +57,8 @@ class SmsView(ListCreateAPIView):
             sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_SET_PASSCODE
         elif int(code_type) == 5:  # 忘记密码
             sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_RESET_PASSWORD
+        elif int(code_type) == 6:  # 密保校验
+            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_PASSWORD
 
         code = sms.code()
         model = Sms()
@@ -87,7 +89,7 @@ class SmsVerifyView(ListCreateAPIView):
             message = Sms.objects.get(telephone=request.data.get('telephone'), code=request.data.get('code'))
 
         code_type = request.data.get('code_type')
-        if int(code_type) not in range(1, 5):
+        if int(code_type) not in range(1, 6):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
         if int(code_type) != int(message.type):

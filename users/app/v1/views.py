@@ -320,6 +320,7 @@ class UserRegister(object):
             user_coin_give_records = CoinGiveRecords()
             user_coin_give_records.start_coin = user_coin.balance
             user_coin_give_records.user = user
+            user_coin_give_records.coin_give = give_info
             user_coin_give_records.lock_coin = give_info.number
             user_coin_give_records.save()
             user_coin.balance += give_info.number
@@ -474,7 +475,11 @@ class InfoView(ListAPIView):
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
-        coin_initialization(user_id, coin_id)  # 生成货币余额与充值地址
+        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+
+        for coin in coins:
+            coin_pk = coin.id
+            coin_initialization(user_id, coin_pk)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -487,6 +492,7 @@ class InfoView(ListAPIView):
                 user_coin_give_records = CoinGiveRecords()
                 user_coin_give_records.start_coin = user_coin.balance
                 user_coin_give_records.user = user
+                user_coin_give_records.coin_give = give_info
                 user_coin_give_records.lock_coin = give_info.number
                 user_coin_give_records.save()
                 user_coin.balance += give_info.number
@@ -512,19 +518,19 @@ class InfoView(ListAPIView):
         #         user_earn_coin -= user_bet
         #
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # 破产赠送hand功能
-        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+        usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
             if is_give <= 0:
-                usercoin.balance += Decimal(10000)
-                usercoin.save()
+                usercoins.balance += Decimal(10000)
+                usercoins.save()
                 coin_bankruptcy = CoinDetail()
                 coin_bankruptcy.user = user
                 coin_bankruptcy.coin_name = 'HAND'
                 coin_bankruptcy.amount = '+' + str(10000)
-                coin_bankruptcy.rest = Decimal(usercoin.balance)
+                coin_bankruptcy.rest = Decimal(usercoins.balance)
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
                 bankruptcy_info = BankruptcyRecords()
@@ -538,8 +544,9 @@ class InfoView(ListAPIView):
                 user_message.message_id = 10  # 修改密码
                 user_message.save()
 
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        usercoin_avatar = usercoin.coin.icon
         user_coin = usercoin.balance
-        usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
 
         user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
@@ -1173,7 +1180,7 @@ class UserPresentationView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'p_address', 'passcode', 'p_address_name', 'p_amount', 'c_id')
+        value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -1181,12 +1188,23 @@ class UserPresentationView(CreateAPIView):
             userinfo = User.objects.get(pk=userid)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        passcode = request.data.get('passcode')
+        password = request.data.get('password')
+        if not userinfo.check_password(password):
+            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        code = request.data.get('code')
+        sms = Sms.objects.filter(telephone=userinfo.telephone, type=6).order_by('-id').first()
+        if (sms is None) or (sms.code != code):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
-        if str(passcode) != str(userinfo.pass_code):
-            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        # if str(passcode) != str(userinfo.pass_code):
+        #
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
@@ -2222,7 +2240,7 @@ class ActivityImageView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
+        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'uploads', 'ATI.jpg'])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
