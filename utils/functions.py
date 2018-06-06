@@ -21,7 +21,8 @@ from django.db.models import Q
 from config.models import Admin_Operation
 from quiz.models import Record
 from base import code
-from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation, User
+from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation, User, Coin, UserCoin
+from console.models import Address
 import reversion
 from wc_auth.functions import save_operation
 
@@ -30,7 +31,7 @@ def random_string(length=16):
     """
     生成指定长度随机字符串
     :param length: 随机数长度
-    :return: 
+    :return:
     """
     chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789'
     char_length = len(chars) - 1
@@ -64,8 +65,8 @@ def random_invitation_code(length=5):
 def random_salt(length=12):
     """
     随机salt值
-    :param length: 
-    :return: 
+    :param length:
+    :return:
     """
     chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789~!@#$%^&*()-'
     char_length = len(chars) - 1
@@ -309,3 +310,32 @@ def genarate_plist(version, file_path):
     save_file = os.path.join(MEDIA_ROOT, 'apps/IOS', 'version_%s_IOS.plist' % version)
     with open(save_file, 'wb') as fp:
         plistlib.dump(temp_x, fp)
+
+
+def coin_initialization(user_id, coin_id):
+    coin_info = Coin.objects.get(pk=coin_id)
+    is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id)
+    if len(is_usercoin) <= 0:
+        user = User.objects.get(pk=user_id)
+        if coin_info.is_eth_erc20:
+            address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+        else:
+            address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+        address.user = user_id
+        address.save()
+        user_coin = UserCoin()
+        user_coin.coin = coin_info
+        user_coin.user = user
+        user_coin.address = address.address
+        user_coin.save()
+    is_address = UserCoin.objects.filter(~Q(address=''), coin_id=coin_id, user_id=user_id).count()
+    if is_address <= 0:
+        if coin_info.is_eth_erc20:
+            address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+        else:
+            address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+        address.user = user_id
+        address.save()
+        user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
+        user_coin.address = address.address
+        user_coin.save()
