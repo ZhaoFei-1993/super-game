@@ -77,10 +77,10 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
-                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
                         'begin_at')
                 elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
                         '-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
