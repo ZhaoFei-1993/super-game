@@ -2,7 +2,8 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge, \
+    CoinOutServiceCharge
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
@@ -114,16 +115,25 @@ class CurrencySerializer(serializers.HyperlinkedModelSerializer):
     created_at = serializers.SerializerMethodField()
     # is_lock = serializers.SerializerMethodField()
     admin = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    value = serializers.SerializerMethodField()
 
     class Meta:
         model = Coin
         fields = ("id", "icon", "name", "exchange_rate", "admin", "created_at", "cash_control", "betting_toplimit",
-                  "betting_control", "coin_order", "url")
+                  "betting_control", "coin_order", "url", "value", "coin_accuracy", "is_eth_erc20")
 
     @staticmethod
     def get_created_at(obj):  # 时间
         data = obj.created_at.strftime('%Y年%m月%d日%H:%M')
         return data
+
+    @staticmethod
+    def get_value(obj):
+        try:
+            values = CoinOutServiceCharge.objects.get(coin_out_id=obj.id)
+        except Exception:
+            return ''
+        return values.value
 
     # @staticmethod
     # def get_is_lock(obj):  # 时间
@@ -373,3 +383,26 @@ class CoinBackendDetailSerializer(serializers.ModelSerializer):
         except Exception:
             return ''
         return room.id
+
+class UserRechargeSerializer(serializers.ModelSerializer):
+    """
+    用户充值序列
+    """
+    username = serializers.CharField(source='user.username')
+    coin_name = serializers.CharField(source='coin.name')
+    trade_at = serializers.SerializerMethodField()
+    confirm_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserRecharge
+        fields = ('username', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
+
+    @staticmethod
+    def get_trade_at(obj):
+        trade_time = obj.trade_at.strftime('%Y-%m-%d %H:%M:%S')
+        return trade_time
+
+    @staticmethod
+    def get_confirm_at(obj):
+        confirm_time = obj.confirm_at.strftime('%Y-%m-%d %H:%M:%S')
+        return confirm_time
