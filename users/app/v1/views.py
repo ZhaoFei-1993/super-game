@@ -477,8 +477,8 @@ class InfoView(ListAPIView):
         coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
 
         for coin in coins:
-            coin_id = coin.id
-            coin_initialization(user_id, coin_id)
+            coin_pk = coin.id
+            coin_initialization(user_id, coin_pk)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -516,7 +516,7 @@ class InfoView(ListAPIView):
         #         user_earn_coin -= user_bet
         #
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=clubinfo.coin.pk)  # 破产赠送hand功能
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # 破产赠送hand功能
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
