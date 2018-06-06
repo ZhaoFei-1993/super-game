@@ -57,7 +57,7 @@ def sitemap(request):
         "upload": reverse("backend-upload", request=request),
         "quiz-category": reverse("quiz-category-list", request=request),
         "quizs": reverse("quiz-list", request=request),
-        "coinlock": reverse("backend-coin-lock", request=request),
+        # "coinlock": reverse("backend-coin-lock", request=request),
         "configs": reverse("config-list", request=request),
         "upload_file": reverse("backend-upload-file", request=request),
         "currency": reverse("backend-coin-currency", request=request),
