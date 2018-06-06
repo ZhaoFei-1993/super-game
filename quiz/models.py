@@ -291,10 +291,12 @@ class OptionOdds(models.Model):
 class Record(models.Model):
     NORMAL = 0
     CONSOLE = 1
+    GIVE = 2
 
     SOURCE_CHOICE = (
         (NORMAL, "经典竞猜"),
         (CONSOLE, "系统下注"),
+        (GIVE, "赠送下注"),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
