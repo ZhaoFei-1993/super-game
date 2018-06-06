@@ -16,8 +16,6 @@ base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callb
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-img_dir = BASE_DIR+'/uploads/images/spider/basketball/team_icon'
-cache_dir = BASE_DIR + '/cache'
 
 
 def get_data(url):
@@ -32,33 +30,10 @@ def get_data(url):
 
 
 def get_data_info(url):
-    os.chdir(cache_dir)
-    files = []
-    for root, sub_dirs, files in list(os.walk(cache_dir))[0:1]:
-        files = files
-    if 'match_cache.txt' not in files:
-        with open('match_cache.txt', 'a+') as f:
-            pass
-
     datas = get_data(url)
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
-            league = data[1].get('l_cn')
-            league_abbr = data[1].get('l_cn_abbr')
-            guest_team = data[1].get('a_cn')
-            guest_team_abbr = data[1].get('a_cn_abbr')
-            host_team = data[1].get('h_cn')
-            host_team_abbr = data[1].get('h_cn_abbr')
-            host_team_order = data[1].get('h_order')
-            guest_team_order = data[1].get('a_order')
-            if len(host_team_order) == 0 and len(guest_team_order) == 0:
-                host_team_order = ' '
-                guest_team_order = ' '
-            else:
-                pass
-            time = data[1].get('date') + ' ' + data[1].get('time')
-            created_at = get_time()
 
             option_data_mnl = data[1].get('mnl')
             result_mnl = []
@@ -144,19 +119,17 @@ def get_data_info(url):
                               (flag_w4, title_w4, odd_w4), (flag_w5, title_w5, odd_w5), (flag_w6, title_w6, odd_w6),
                               (flag_l1, title_l1, odd_l1), (flag_l2, title_l2, odd_l2), (flag_l3, title_l3, odd_l3),
                               (flag_l4, title_l4, odd_l4), (flag_l5, title_l5, odd_l5), (flag_l6, title_l6, odd_l6)]
-            # ------------------------------------------------------------------------------------------------------
-            print(match_id)
-            print(league)
-            print(league_abbr)
-            print(guest_team)
-            print(host_team)
-            print(time)
-            print(created_at)
-            print(result_mnl)
-            print(result_hdc)
-            print(result_wnm)
-            print(result_hilo)
-            print('-----------------------------------------------------------------------------------------------')
+
+            if Quiz.objects.filter(match_flag=match_id).exists() is True:
+                quiz = Quiz.objects.get(match_flag=match_id)
+
+                rule_all = Rule.objects.filter(quiz=quiz).all()
+                rule_had = rule_all.filter(type=0).first()
+                rule_hhad = rule_all.filter(type=1).first()
+                rule_ttg = rule_all.filter(type=3).first()
+                rule_crs = rule_all.filter(type=2).first()
+
+                change_time = get_time()
 
     else:
         print('未请求到任何数据')
