@@ -2240,7 +2240,7 @@ class ActivityImageView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
+        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'uploads', 'ATI.jpg'])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
