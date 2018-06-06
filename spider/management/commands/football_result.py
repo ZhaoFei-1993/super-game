@@ -5,7 +5,7 @@ from django.db.models import Q
 import requests
 import json
 from bs4 import BeautifulSoup
-from quiz.models import Quiz, Rule, Option, Record, CashBack_Log
+from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice
 from chat.models import Club
 from django.db import transaction
@@ -41,9 +41,15 @@ def get_data(url):
 
 @transaction.atomic()
 def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest_team_score=None):
+    quiz = Quiz.objects.get(match_flag=match_flag)
+    rule_all = Rule.objects.filter(quiz=quiz).all()
+    rule_had = rule_all.get(type=0)
+    rule_hhad = rule_all.get(type=1)
+    rule_ttg = rule_all.get(type=3)
+    rule_crs = rule_all.get(type=2)
+
     result_flag = False
     try:
-        quiz = Quiz.objects.get(match_flag=match_flag)
         result_list = []
         new_url = 'http://www.310win.com/jingcaizuqiu/kaijiang_jc_all.html'
         response = requests.get(new_url, headers=headers, timeout=20)
@@ -59,6 +65,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             for i in range(0, 7):
                 ttg_list.append(str(i))
             if quiz.host_team_fullname == host_team_fullname and quiz.guest_team_fullname == guest_team_fullname:
+                quiz.host_team_score = host_team_score
+                quiz.guest_team_score = guest_team_score
+                quiz.save()
                 for result in dt.select('span[style="color:#f00;"]')[:-1]:
                     if result.string == '负' or result.string == '胜':
                         result_list.append('主' + result.string)
@@ -70,12 +79,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                         result_list.append('7球以上')
                     else:
                         result_list.append(result.string)
-
-                rule_all = Rule.objects.filter(quiz=quiz).all()
-                rule_had = rule_all.get(type=0)
-                rule_hhad = rule_all.get(type=1)
-                rule_ttg = rule_all.get(type=3)
-                rule_crs = rule_all.get(type=2)
 
                 option_had = Option.objects.filter(rule=rule_had).filter(option=result_list[1]).first()
                 if option_had is not None:
@@ -98,6 +101,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 option_ttg.save()
                 option_crs.save()
 
+                print('result_list===========================================>', result_list)
                 print('--------------------------- new new new ------------------------------')
                 result_flag = True
             else:
@@ -126,6 +130,31 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     else:
                         host_team_score = score_data['fs_h']
                         guest_team_score = score_data['fs_a']
+
+                    quiz.host_team_score = host_team_score
+                    quiz.guest_team_score = guest_team_score
+                    quiz.save()
+
+                    option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+                    if option_had is not None:
+                        option_had.is_right = 1
+                        option_had.save()
+
+                    option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+                    if option_hhad is not None:
+                        option_hhad.is_right = 1
+                        option_hhad.save()
+
+                    option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+                    if option_ttg is not None:
+                        option_ttg.is_right = 1
+                        option_ttg.save()
+
+                    option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+                    if option_crs is not None:
+                        option_crs.is_right = 1
+                        option_crs.save()
+
                 else:
                     print(match_flag + ',' + '未有开奖信息')
                     return
@@ -138,39 +167,32 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             result_hhad = datas['result']['pool_rs']['hhad']
             result_ttg = datas['result']['pool_rs']['ttg']
             result_crs = datas['result']['pool_rs']['crs']
+
+            quiz.host_team_score = host_team_score
+            quiz.guest_team_score = guest_team_score
+            quiz.save()
+
+            option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+            if option_had is not None:
+                option_had.is_right = 1
+                option_had.save()
+
+            option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+            if option_hhad is not None:
+                option_hhad.is_right = 1
+                option_hhad.save()
+
+            option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+            if option_ttg is not None:
+                option_ttg.is_right = 1
+                option_ttg.save()
+
+            option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+            if option_crs is not None:
+                option_crs.is_right = 1
+                option_crs.save()
     else:
         pass
-
-    quiz = Quiz.objects.filter(match_flag=match_flag).first()
-    quiz.host_team_score = host_team_score
-    quiz.guest_team_score = guest_team_score
-    quiz.save()
-
-    rule_all = Rule.objects.filter(quiz=quiz).all()
-    rule_had = rule_all.filter(type=0).first()
-    rule_hhad = rule_all.filter(type=1).first()
-    rule_ttg = rule_all.filter(type=3).first()
-    rule_crs = rule_all.filter(type=2).first()
-
-    option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
-    if option_had is not None:
-        option_had.is_right = 1
-        option_had.save()
-
-    option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
-    if option_hhad is not None:
-        option_hhad.is_right = 1
-        option_hhad.save()
-
-    option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
-    if option_ttg is not None:
-        option_ttg.is_right = 1
-        option_ttg.save()
-
-    option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
-    if option_crs is not None:
-        option_crs.is_right = 1
-        option_crs.save()
 
     flag = False
     # 分配奖金
@@ -244,7 +266,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             record.save()
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
-    # quiz.is_reappearance = 1
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
     return flag
@@ -385,7 +406,7 @@ def cash_back(quiz):
 
                         cash_back_sum = cash_back_sum + float(gsg_cash_back)
 
-            cash_back_log = CashBack_Log()
+            cash_back_log = CashBackLog()
             cash_back_log.quiz = quiz
             cash_back_log.roomquiz_id = club.id
             cash_back_log.platform_sum = platform_sum
@@ -399,6 +420,8 @@ def cash_back(quiz):
 
             print('cash_back_sum====>' + str(cash_back_sum))
             print('---------------------------')
+            quiz.is_reappearance = 1
+            quiz.save()
     print('\n')
 
 
