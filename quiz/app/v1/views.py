@@ -513,7 +513,7 @@ class BetView(ListCreateAPIView):
                 earn_coins = Decimal(give_coin.lock_coin) * option_odds.odds
                 earn_coins = round(earn_coins, 3)
 
-                give_coin.lock_coin -= give_coin.lock_coin
+                give_coin.lock_coin -= round(Decimal(coins), 3)
                 give_coin.save()
         else:
             record = Record()
