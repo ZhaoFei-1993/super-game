@@ -507,10 +507,10 @@ class BetView(ListCreateAPIView):
                 record.rule_id = rule_id
                 record.option = option_odds
                 record.source = 3
-                record.bet = round(Decimal(give_coin.lock_coin), 3)
+                record.bet = round(Decimal(coins), 3)
                 record.odds = round(Decimal(option_odds.odds), 2)
                 record.save()
-                earn_coins = Decimal(give_coin.lock_coin) * option_odds.odds
+                earn_coins = Decimal(coins) * option_odds.odds
                 earn_coins = round(earn_coins, 3)
 
                 give_coin.lock_coin -= round(Decimal(coins), 3)
