@@ -289,6 +289,7 @@ class RuleView(ListAPIView):
         for i in rule:
             # option = Option.objects.filter(rule_id=i.pk).order_by('order')
             option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
+            print("option====================================", option)
             option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by(
                 'option__order').values('pk')
             list = []
