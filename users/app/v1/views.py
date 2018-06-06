@@ -325,6 +325,11 @@ class UserRegister(object):
             user_coin_give_records.save()
             user_coin.balance += give_info.number
             user_coin.save()
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 11
+            user_message.save()
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -497,6 +502,11 @@ class InfoView(ListAPIView):
                 user_coin_give_records.save()
                 user_coin.balance += give_info.number
                 user_coin.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 11
+                user_message.save()
         # elif today_time >= end_date:               # 活动时间到
         #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
         #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
