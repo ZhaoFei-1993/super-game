@@ -326,43 +326,29 @@ def get_data_info(url):
                 #                    (flag_dh, title_dh, odd_dh), (flag_dd, title_dd, odd_dd), (flag_da, title_da, odd_da),
                 #                    (flag_ah, title_ah, odd_ah), (flag_ad, title_ad, odd_ad), (flag_aa, title_aa, odd_aa)]
 
-                if Quiz.objects.filter(match_flag=match_id).exists() is True:
-                    quiz = Quiz.objects.get(match_flag=match_id)
+            if Quiz.objects.filter(match_flag=match_id).exists() is True:
+                quiz = Quiz.objects.get(match_flag=match_id)
 
-                    rule_all = Rule.objects.filter(quiz=quiz).all()
-                    rule_had = rule_all.filter(type=0).first()
-                    rule_hhad = rule_all.filter(type=1).first()
-                    rule_ttg = rule_all.filter(type=3).first()
-                    rule_crs = rule_all.filter(type=2).first()
+                rule_all = Rule.objects.filter(quiz=quiz).all()
+                rule_had = rule_all.filter(type=0).first()
+                rule_hhad = rule_all.filter(type=1).first()
+                rule_ttg = rule_all.filter(type=3).first()
+                rule_crs = rule_all.filter(type=2).first()
 
-                    change_time = get_time()
-                    for i in range(0, 4):
-                        # 赛果
-                        if i == 0:
-                            update_odds(result_had, rule_had, quiz, change_time, i)
-                        # 让分赛果
-                        elif i == 1:
-                            update_odds(result_hhad, rule_hhad, quiz, change_time, i)
-                        # 比分
-                        elif i == 2:
-                            update_odds(result_crs, rule_crs, quiz, change_time, i)
-                        # 总进球
-                        elif i == 3:
-                            update_odds(result_ttg, rule_ttg, quiz, change_time, i)
-                # ------------------------------------------------------------------------------------------------------
-                # print(match_id)
-                # print(league)
-                # print(league_abbr)
-                # print(guest_team)
-                # print(host_team)
-                # print(time)
-                # print(created_at)
-                # print(result_had)
-                # print(result_hhad)
-                # print(result_ttg)
-                # print(result_crs)
-                # # print(result_hafu)
-                # print('-------------------------------------------------------------------------------------------')
+                change_time = get_time()
+                for i in range(0, 4):
+                    # 赛果
+                    if i == 0:
+                        update_odds(result_had, rule_had, quiz, change_time, i)
+                    # 让分赛果
+                    elif i == 1:
+                        update_odds(result_hhad, rule_hhad, quiz, change_time, i)
+                    # 比分
+                    elif i == 2:
+                        update_odds(result_crs, rule_crs, quiz, change_time, i)
+                    # 总进球
+                    elif i == 3:
+                        update_odds(result_ttg, rule_ttg, quiz, change_time, i)
     else:
         print('未请求到任何数据')
 
