@@ -516,7 +516,7 @@ class InfoView(ListAPIView):
         #         user_earn_coin -= user_bet
         #
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # 破产赠送hand功能
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=clubinfo.coin.pk)  # 破产赠送hand功能
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
@@ -542,8 +542,9 @@ class InfoView(ListAPIView):
                 user_message.message_id = 10  # 修改密码
                 user_message.save()
 
+        usercoin = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        usercoin_avatar = usercoin.coin.icon
         user_coin = usercoin.balance
-        usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
 
         user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
