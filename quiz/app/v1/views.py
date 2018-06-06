@@ -369,6 +369,7 @@ class RuleView(ListAPIView):
                     "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
                     "list": list
                 })
+        print("data==========================================", data)
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
                                        'coin_icon': coin_icon, 'coin_betting_control': coin_betting_control,
