@@ -70,6 +70,7 @@ class Command(BaseCommand):
         for quiz in quizs:
             # 世界杯题目未到开放时间暂时不下注
             if quiz.category_id == 873 and int(time.time()) < 1528732800:
+                print('世界杯专题，跳过')
                 continue
 
             # 随机获取俱乐部
