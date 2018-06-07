@@ -21,4 +21,5 @@ class Command(BaseCommand):
             if str(record.earn_coin) == '-' + str(record.bet):
                 print("答错=======================", i)
                 record.type = 2
+            i = i + 1
             record.save()
