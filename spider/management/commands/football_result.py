@@ -64,7 +64,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             ttg_list = []
             for i in range(0, 7):
                 ttg_list.append(str(i))
-            if quiz.host_team_fullname == host_team_fullname and quiz.guest_team_fullname == guest_team_fullname:
+            if (quiz.host_team_fullname == host_team_fullname or quiz.host_team == host_team_fullname) and (
+                    quiz.guest_team_fullname == guest_team_fullname or quiz.guest_team == guest_team_fullname):
                 quiz.host_team_score = host_team_score
                 quiz.guest_team_score = guest_team_score
                 quiz.save()
@@ -104,6 +105,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 print('result_list===========================================>', result_list)
                 print('--------------------------- new new new ------------------------------')
                 result_flag = True
+                break
             else:
                 result_flag = False
     except:
@@ -251,7 +253,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 coin_detail.coin_name = coin.name
                 coin_detail.amount = Decimal(earn_coin)
                 coin_detail.rest = user_coin.balance
-                coin_detail.sources = CoinDetail.BETS
+                coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
             # 发送信息
@@ -382,7 +384,7 @@ def cash_back(quiz):
                     for record_personal in records.filter(user_id=user_id):
                         personal_sum = personal_sum + record_personal.bet
                     gsg_cash_back = float(profit_abs) * cash_back_rate * (float(personal_sum) / float(platform_sum)) * (
-                                float(coin_price.price) / float(CoinPrice.objects.get(coin_name='GSG').price))
+                            float(coin_price.price) / float(CoinPrice.objects.get(coin_name='GSG').price))
                     gsg_cash_back = trunc(gsg_cash_back, 2)
                     if float(gsg_cash_back) > 0:
                         user = User.objects.get(pk=user_id)
