@@ -125,10 +125,14 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     score_status = requests.get(live_url + match_flag).json()['status']
                     score_data = requests.get(live_url + match_flag).json()['data']
                     if score_status['message'] == "no data":
-                        print(match_flag)
                         print('no score')
-                        print('----------------')
-                        return
+                        if ':' in result_crs['prs_name']:
+                            host_team_score = result_crs['prs_name'].split(':')[0]
+                            guest_team_score = result_crs['prs_name'].split(':')[1]
+                        else:
+                            print('really no score')
+                            print('----------------')
+                            return
                     else:
                         host_team_score = score_data['fs_h']
                         guest_team_score = score_data['fs_a']
