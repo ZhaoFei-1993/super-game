@@ -475,7 +475,6 @@ class InfoView(ListAPIView):
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
-        is_message = message_hints(user_id)  # 是否有未读消息
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
@@ -1099,7 +1098,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
