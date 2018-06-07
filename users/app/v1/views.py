@@ -320,10 +320,16 @@ class UserRegister(object):
             user_coin_give_records = CoinGiveRecords()
             user_coin_give_records.start_coin = user_coin.balance
             user_coin_give_records.user = user
+            user_coin_give_records.coin_give = give_info
             user_coin_give_records.lock_coin = give_info.number
             user_coin_give_records.save()
             user_coin.balance += give_info.number
             user_coin.save()
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 11
+            user_message.save()
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -477,8 +483,8 @@ class InfoView(ListAPIView):
         coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
 
         for coin in coins:
-            coin_id = coin.id
-            coin_initialization(user_id, coin_id)
+            coin_pk = coin.id
+            coin_initialization(user_id, coin_pk)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -491,10 +497,16 @@ class InfoView(ListAPIView):
                 user_coin_give_records = CoinGiveRecords()
                 user_coin_give_records.start_coin = user_coin.balance
                 user_coin_give_records.user = user
+                user_coin_give_records.coin_give = give_info
                 user_coin_give_records.lock_coin = give_info.number
                 user_coin_give_records.save()
                 user_coin.balance += give_info.number
                 user_coin.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 11
+                user_message.save()
         # elif today_time >= end_date:               # 活动时间到
         #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
         #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
@@ -516,19 +528,19 @@ class InfoView(ListAPIView):
         #         user_earn_coin -= user_bet
         #
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # 破产赠送hand功能
-        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+        usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
             if is_give <= 0:
-                usercoin.balance += Decimal(10000)
-                usercoin.save()
+                usercoins.balance += Decimal(10000)
+                usercoins.save()
                 coin_bankruptcy = CoinDetail()
                 coin_bankruptcy.user = user
                 coin_bankruptcy.coin_name = 'HAND'
                 coin_bankruptcy.amount = '+' + str(10000)
-                coin_bankruptcy.rest = Decimal(usercoin.balance)
+                coin_bankruptcy.rest = Decimal(usercoins.balance)
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
                 bankruptcy_info = BankruptcyRecords()
@@ -542,8 +554,9 @@ class InfoView(ListAPIView):
                 user_message.message_id = 10  # 修改密码
                 user_message.save()
 
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        usercoin_avatar = usercoin.coin.icon
         user_coin = usercoin.balance
-        usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
 
         user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
@@ -1068,9 +1081,6 @@ class AllreadView(ListCreateAPIView):
         return self.response(content)
 
 
-
-
-
 class AssetView(ListAPIView):
     """
     资产情况
@@ -1216,9 +1226,19 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
-        if coin.name != 'HAND':
+        if coin.name != 'HAND' and coin.name != 'USDT':
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
+        elif coin.name == 'USDT':      # usdt
+            try:
+                coin_give = CoinGiveRecords.objects.get(user_id=userid)
+            except Exception:
+                raise
+            balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+            if balance < coin_out.value:
+                raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
         else:
             try:
                 coin_eth = UserCoin.objects.get(user_id=userid, coin_id=coin_out.coin_payment)
@@ -1228,6 +1248,16 @@ class UserPresentationView(CreateAPIView):
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             if p_amount > user_coin.balance:
+
+                if coin.name == "USDT":            # usdt
+                    try:
+                        coin_give = CoinGiveRecords.objects.get(user_id=userid)
+                    except Exception:
+                        raise
+                    balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+                    if p_amount > balance:
+                        raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
+
                 raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
             elif p_amount < coin.cash_control:
                 raise ParamErrorException(error_code.API_70103_USER_PRESENT_AMOUNT_LC)

@@ -6,7 +6,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
-from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGiveRecords
 from chat.models import Club
 from django.db import transaction
 import datetime
@@ -238,6 +238,12 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 user_coin.user_id = record.user_id
                 user_coin.balance += Decimal(earn_coin)
                 user_coin.save()
+
+                # 增加系统赠送锁定金额
+                if int(record.source) == Record.GIVE:
+                    coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                    coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                    coin_give_records.save()
 
                 # 用户资金明细表
                 coin_detail = CoinDetail()
