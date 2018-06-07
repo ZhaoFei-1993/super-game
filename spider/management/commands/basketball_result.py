@@ -151,9 +151,11 @@ def get_data_info(url, match_flag):
                     is_right = True
 
             earn_coin = record.bet * record.odds
+            record.type = 1
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
                 earn_coin = '-' + str(record.bet)
+                record.type = 2
             record.earn_coin = earn_coin
             record.save()
 
@@ -219,6 +221,7 @@ def handle_delay_game(delay_quiz):
             # 延迟比赛，返回用户投注的钱
             return_coin = record.bet
             record.earn_coin = return_coin
+            record.type = 3
             record.save()
 
             # 用户增加回退还金额

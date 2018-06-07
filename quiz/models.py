@@ -298,17 +298,27 @@ class Record(models.Model):
         (CONSOLE, "系统下注"),
         (GIVE, "赠送下注"),
     )
+    AWAIT = 0
+    CORRECT = 1
+    MISTAKE = 2
+    ABNORMAL = 3
+    TYPE_CHOICE = (
+        (AWAIT, "未开奖"),
+        (CORRECT, "答对"),
+        (MISTAKE, "答错"),
+        (ABNORMAL, "异常"),
+    )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(OptionOdds, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
-    # bet = models.IntegerField(verbose_name="下注金额", default=0)
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=15, decimal_places=3, default=0.000)
     source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
+    type = models.CharField(verbose_name="状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
     is_distribution = models.BooleanField(verbose_name="是否分配过奖金", default=False)
 
