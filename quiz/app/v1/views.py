@@ -128,7 +128,8 @@ class RecordsListView(ListCreateAPIView):
                         user_id=user_id,
                         roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5), user_id=user_id,
+                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
+                                                 user_id=user_id,
                                                  roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
