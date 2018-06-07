@@ -22,6 +22,7 @@ from base import backend
 from django.http import JsonResponse
 from utils.functions import reversion_Decorator
 from url_filter.integrations.drf import DjangoFilterBackend
+from quiz.models import Record
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -124,7 +125,7 @@ class CurrencyListView(ListCreateAPIView):
         coin_accuracy = request.data['coin_accuracy']
         is_eth_erc20 = request.data['is_eth_erc20']
         value = request.data['value']
-        # Integral_proportion = request.data['Integral_proportion']
+        Integral_proportion = request.data['Integral_proportion']
 
         coin = Coin()
         coin.icon = request.data['icon']
@@ -168,11 +169,11 @@ class CurrencyListView(ListCreateAPIView):
         coin_service.coin_payment = coin
         coin_service.value=value
         coin_service.save()
-        # reward_coin = RewardCoin()
-        # reward_coin.coin = coin
-        # reward_coin.value_ratio = Integral_proportion
-        # reward_coin.admin = admin
-        # reward_coin.save()
+        reward_coin = RewardCoin()
+        reward_coin.coin = coin
+        reward_coin.value_ratio = Integral_proportion
+        reward_coin.admin = admin
+        reward_coin.save()
 
         return JsonResponse({},status=status.HTTP_201_CREATED)
 
@@ -219,7 +220,7 @@ class CurrencyDetailView(RetrieveUpdateDestroyAPIView):
             "betting_value_one": str(betting_value_one),
             "betting_value_two": str(betting_value_two),
             "betting_value_three": str(betting_value_three),
-            # "Integral_proportion": Integral_proportion,
+            "Integral_proportion": Integral_proportion,
             "coin_order": coin.coin_order,
             "coin_accuracy":coin.coin_accuracy,
             "value":value,
@@ -684,3 +685,11 @@ class CoinSts(ListAPIView):
             }
             data.append(temp_dict)
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+
+
+# class AABBCC(ListAPIView):
+#
+#     def list(self, request, *args, **kwargs):
+#         gsg = UserCoin.objects.filter(user__is_robot=0, coin__name='HAND').aggregate(Sum('balance'))
+#         return JsonResponse({'data':gsg}, status=status.HTTP_200_OK)
