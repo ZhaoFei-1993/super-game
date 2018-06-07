@@ -130,7 +130,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                             host_team_score = result_crs['prs_name'].split(':')[0]
                             guest_team_score = result_crs['prs_name'].split(':')[1]
                         else:
-                            print('really no score')
+                            print('really no score ')
                             print('----------------')
                             return
                     else:
