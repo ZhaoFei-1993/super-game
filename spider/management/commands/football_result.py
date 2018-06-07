@@ -126,13 +126,25 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     score_data = requests.get(live_url + match_flag).json()['data']
                     if score_status['message'] == "no data":
                         print('no score')
-                        if ':' in result_crs['prs_name']:
-                            host_team_score = result_crs['prs_name'].split(':')[0]
-                            guest_team_score = result_crs['prs_name'].split(':')[1]
-                        else:
-                            print('really no score ')
-                            print('----------------')
-                            return
+                        score_url = 'http://i.sporttery.cn/api/fb_match_info/get_result_his?limit=10&is_ha=all&limit=10&c_id=0&mid=' + match_flag + '&ptype[]=three_-1&ptype[]=asia_229&&f_callback=getResultHistoryInfo'
+                        response_score = requests.get(score_url, headers=headers)
+                        dt = response_score.text.encode("utf-8").decode('unicode_escape')
+                        score_dt = eval(dt[21:-2])
+
+                        for score in score_dt['result']['data']:
+                            if score['h_cn_abbr'] == quiz.host_team and score['a_cn_abbr'] == quiz.guest_team:
+                                if score['final'] != '':
+                                    host_team_score = score['final'].split(':')[0]
+                                    guest_team_score = score['final'].split(':')[1]
+                                    print('===================================================', score['final'])
+                                    break
+                                else:
+                                    print('really no score')
+                                    print('=================================')
+                                    return
+                            else:
+                                print('no mtach,return')
+                                return
                     else:
                         host_team_score = score_data['fs_h']
                         guest_team_score = score_data['fs_a']
