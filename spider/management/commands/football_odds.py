@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 import os
 import requests
 import json
@@ -81,7 +82,7 @@ def update_odds(result, rule, quiz, change_time, flag):
                 option.odds = dt[2]
                 option.save()
 
-                clubs = Club.objects.all()
+                clubs = Club.objects.filter(~Q(room_title='USDT俱乐部'))
                 for club in clubs:
                     option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
                     option_odds.odds = dt[2]
