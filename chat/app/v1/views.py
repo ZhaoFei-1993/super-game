@@ -30,8 +30,8 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = []
-        int_ban = '/'.join([MEDIA_DOMAIN_HOST, 'uploads',  "INT_BAN.jpg"])
-        usdt_ban = '/'.join([MEDIA_DOMAIN_HOST, 'uploads', "USDT.jpg"])
+        int_ban = '/'.join([MEDIA_DOMAIN_HOST,"INT_BAN.jpg"])
+        usdt_ban = '/'.join([MEDIA_DOMAIN_HOST,  "USDT.jpg"])
         banner = [{"img_url": int_ban, "action": 'Invite_New'}, {"img_url":usdt_ban, "action": 'USDT_ACTIVE'}] #活动轮播图
         for item in items:
             room_number = int(int(item['room_number'])*0.3)
