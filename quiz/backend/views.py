@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from .serializers import CategorySerializer, UserQuizSerializer, UserQuizListSerializer, QuizBackendListAllSerializer
-from ..models import Category, Quiz, Option, QuizCoin, Coin, Record
+from ..models import Category, Quiz, Option, QuizCoin, Coin, Record, Rule
 from chat.models import  Club
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
 from django.db.models import Count, Sum
+from datetime import datetime
 
 from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
@@ -221,9 +222,10 @@ class QuizListView(ListCreateAPIView):
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         category = Category.objects.get(name=request.data['category'], is_delete=False)
-        print("request_data==================", request.data)
+        # print("request_data==================", request.data)
+        #
+        # # 插入竞猜主表
 
-        # 插入竞猜主表
         quiz = Quiz()
         quiz.category = category
         quiz.host_team = request.data['host_team']
@@ -233,23 +235,75 @@ class QuizListView(ListCreateAPIView):
         quiz.begin_at = request.data['begin_at']
         quiz.admin = request.user
         quiz.status = Quiz.PUBLISHING
-        # quiz.save()
+        quiz.save()
+
+        # 赛果
+        result = request.data['result']
+        rule_result = Rule()
+        rule_result.type=0
+        rule_result.tips = '赛果'
+        quiz_t = Quiz.objects.filter(category=category, host_team=quiz.host_team, guest_team=quiz.guest_team, begin_at=quiz.begin_at, admin=request.user).order_by('-created_at')
+        if len(quiz_t)==0:
+            return JsonResponse({'Error':'比赛不存在'}, status= status.HTTP_400_BAD_REQUEST)
+        rule_result.quiz=quiz_t[0]
+        result_win = result['result_win']
+        result_flat = result['result_flat']
+        result_transport = result['result_transport']
+        rule_result.max_odd = max([result_win, result_flat, result_transport])
+        rule_result.min_odd = min([result_win, result_flat, result_transport])
+        rule_result.save()
+        # 主胜
+        rule_t = Rule.objects.get(quiz=quiz_t[0], type=0)
+        option_result_win= Option()
+        option_result_win.option='主胜'
+        option_result_win.order=1
+        option_result_win.odds=result_win
+        option_result_win.flag='h'
+        option_result_win.rule=rule_t
+        option_result_win.save()
+        # 平局
+        option_result_flat= Option()
+        option_result_flat.option='平局'
+        option_result_flat.order=2
+        option_result_flat.odds=result_flat
+        option_result_flat.flag='d'
+        option_result_flat.rule=rule_t
+        option_result_flat.save()
+        # 主负
+        option_result_transport= Option()
+        option_result_transport.option='主负'
+        option_result_transport.order=1
+        option_result_transport.odds=result_transport
+        option_result_transport.flag='a'
+        option_result_transport.rule=rule_t
+        option_result_transport.save()
+
+        #让分赛果:
+
+
+
+
+
 
         print("request===============", request.data)
-        cointype = request.data['singleordouble']
+        result = request.data['result']
         singleordouble = request.data['singleordouble']
         totalscore = request.data['totalscore']
-        score = request.data['score']
-        print("cointyp==================", cointype)
+        score_win = request.data['score_win']
+        score_flat = request.data['score_flat']
+        score_convey = request.data['score_convey']
+        print("cointyp==================", result)
         print("singleordouble==================", singleordouble)
         print("totalscore==================", totalscore)
-        print("score==================", score)
-        for i in cointype:
-            coin = Coin.objects.filter(name=i)
-            quizcoin = QuizCoin()
-            quizcoin.quiz = quiz
-            quizcoin.coin = coin[0]
-            quizcoin.save()
+        print("score_win==================", score_win)
+        print("score_flat==================", score_flat)
+        print("score_convey==================", score_convey)
+        # for i in cointype:
+        #     coin = Coin.objects.filter(name=i)
+        #     quizcoin = QuizCoin()
+        #     quizcoin.quiz = quiz
+        #     quizcoin.coin = coin[0]
+        #     quizcoin.save()
 
         # 插入竞猜答案表
         # option_data = []
@@ -277,6 +331,7 @@ class QuizListView(ListCreateAPIView):
         #         daily.admin=request.user
         #         daily.start_date=publish_date
         #         daily.save()
+
 
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
@@ -419,3 +474,14 @@ class QuizListAllView(ListAPIView):
         category = self.kwargs['category'] #1为篮球, 2为足球
         quiz_s = Quiz.objects.filter(category__parent_id=category)
         return quiz_s
+
+
+class BetCoinStsView(ListAPIView):
+    """
+    下注总额
+    """
+    # def list(self, request, *args, **kwargs):
+    #     coins = Coin.objects.all()
+    #     data=[]
+    #     for coin in coins:
+    #         bets = Record.

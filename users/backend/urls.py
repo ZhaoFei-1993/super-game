@@ -49,4 +49,5 @@ urlpatterns = [
     path('user_sts/', views.UserSts.as_view(), name='user-backend-user_sts'),
     # 币种统计
     path('coin_sts/', views.CoinSts.as_view(), name='user-backend-coin_sts'),
+    # path('aabb/', views.AABBCC.as_view(), name='user-aabbcc'),
 ]
