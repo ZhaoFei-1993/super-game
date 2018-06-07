@@ -58,7 +58,7 @@ class HotestView(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        return Quiz.objects.filter(status=0, is_delete=False).order_by('-total_people')[:10]
+        return Quiz.objects.filter(~Q(category_id=873), status=0, is_delete=False).order_by('-total_people')[:10]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -77,10 +77,12 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
-                    return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2),
+                                               is_delete=False).order_by(
                         'begin_at')
                 elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(~Q(category_id=873), Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=3) | Q(status=4) | Q(status=5),
+                                               is_delete=False).order_by(
                         '-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
@@ -462,15 +464,15 @@ class BetView(ListCreateAPIView):
         # 调整赔率
         Option.objects.change_odds(rule_id, coin_id, roomquiz_id)
 
-        if clubinfo.coin.name == "USDT":            # USDT下注
+        if clubinfo.coin.name == "USDT":  # USDT下注
             give_coin = CoinGiveRecords.objects.get(user_id=user.id)
-            coins = Decimal(coins)         # 总下注额
-            usercoin.balance = float(usercoin.balance - coins)        # 用户余额表减下注额
+            coins = Decimal(coins)  # 总下注额
+            usercoin.balance = float(usercoin.balance - coins)  # 用户余额表减下注额
             usercoin.save()
             if coins > give_coin.lock_coin:
-                coins_give = coins - give_coin.lock_coin      # 正常币下注额
+                coins_give = coins - give_coin.lock_coin  # 正常币下注额
 
-                record = Record()          # 正常币记录
+                record = Record()  # 正常币记录
                 record.user = user
                 record.quiz = quiz
                 record.roomquiz_id = roomquiz_id
@@ -482,7 +484,7 @@ class BetView(ListCreateAPIView):
                 earn_coins = Decimal(coins_give) * option_odds.odds
                 earn_coins_one = round(earn_coins, 3)
 
-                record = Record()              # 赠送币记录
+                record = Record()  # 赠送币记录
                 record.user = user
                 record.quiz = quiz
                 record.roomquiz_id = roomquiz_id
@@ -500,7 +502,7 @@ class BetView(ListCreateAPIView):
 
                 earn_coins = earn_coins_one + earn_coins_two
             else:
-                record = Record()              # 赠送币记录
+                record = Record()  # 赠送币记录
                 record.user = user
                 record.quiz = quiz
                 record.roomquiz_id = roomquiz_id

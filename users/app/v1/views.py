@@ -1221,8 +1221,6 @@ class UserPresentationView(CreateAPIView):
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
-        # if str(passcode) != str(userinfo.pass_code):
-        #
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
