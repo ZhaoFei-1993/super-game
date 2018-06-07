@@ -10,11 +10,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         record_list = Record.objects.filter(~Q(source=1))
+        i = 1
         for record in record_list:
             if record.earn_coin == record.bet:
+                print("异常=======================", i)
                 record.type = 3
             if record.earn_coin == record.bet * record.odds:
+                print("答对=======================", i)
                 record.type = 1
             if str(record.earn_coin) == 0:
+                print("答错=======================", i)
                 record.type = 2
             record.save()
