@@ -558,6 +558,8 @@ class CoinGive(models.Model):
 class CoinGiveRecords(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_give = models.ForeignKey(CoinGive, on_delete=models.CASCADE)
+    is_recharge_give = models.BooleanField(verbose_name="是否已获得赠送金额", default=False)
+    is_recharge_lock = models.BooleanField(verbose_name="是否已获得锁定金额", default=False)
     start_coin = models.DecimalField(verbose_name='开始余额', max_digits=20, decimal_places=8, default=0.00000000)
     lock_coin = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=0.00000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
