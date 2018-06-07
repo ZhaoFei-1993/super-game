@@ -638,12 +638,15 @@ class RunningView(ListAPIView):
     """
     def list(self, request, *args, **kwargs):
         user_register = User.objects.filter(is_robot=0)
-        user_invite = UserInvitation.objects.filter(inviter__is_robot=0)
         register_num = user_register.count()
-        x=user_register.extra(select={'sum_invite':'select count(*) from users_userinvitation as ui where ui.inviter_id=id'})
-        print(x.values())
-        invite_4=user_register.filter(sum_invite__gte=4).count()
-        invite_0=user_register.filter(sum_invite=0).count()
+        x=user_register.extra(select={'sum_invite':'select count(*) from users_userinvitation as ui where ui.inviter_id=users_user.id'}).values('sum_invite')
+        invite_4 = 0
+        invite_0 = 0
+        for i in x:
+            if i['sum_invite'] == 0:
+                invite_0 +=1
+            if i['sum_invite'] >= 4:
+                invite_4 +=1
         data={'register_num':register_num, 'invite_4':invite_4, 'invite_0':invite_0}
         return JsonResponse({'results':data}, status=status.HTTP_200_OK)
 
