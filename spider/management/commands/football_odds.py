@@ -82,7 +82,7 @@ def update_odds(result, rule, quiz, change_time, flag):
                 option.odds = dt[2]
                 option.save()
 
-                clubs = Club.objects.filter(~Q(room_title='USDT俱乐部'))
+                clubs = Club.objects.all()
                 for club in clubs:
                     option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
                     option_odds.odds = dt[2]
