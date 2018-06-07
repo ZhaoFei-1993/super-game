@@ -18,7 +18,7 @@ class Command(BaseCommand):
             if record.earn_coin == record.bet * record.odds:
                 print("答对=======================", i)
                 record.type = 1
-            if str(record.earn_coin) == 0:
+            if str(record.earn_coin) == '-' + str(record.bet):
                 print("答错=======================", i)
                 record.type = 2
             record.save()
