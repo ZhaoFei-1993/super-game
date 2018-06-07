@@ -57,7 +57,7 @@ def sitemap(request):
         "upload": reverse("backend-upload", request=request),
         "quiz-category": reverse("quiz-category-list", request=request),
         "quizs": reverse("quiz-list", request=request),
-        "coinlock": reverse("backend-coin-lock", request=request),
+        # "coinlock": reverse("backend-coin-lock", request=request),
         "configs": reverse("config-list", request=request),
         "upload_file": reverse("backend-upload-file", request=request),
         "currency": reverse("backend-coin-currency", request=request),
@@ -95,16 +95,17 @@ def upload(request):
             if form.is_valid():
                 new_doc = Image(image=request.FILES['image'])
                 new_doc.save()
-                url = ""
+                # url = ""
 
                 print('upload')
                 print("MEDIA_DOMAIN_HOST值：" + settings.MEDIA_DOMAIN_HOST)
                 print('new_doc.file.url值:' + new_doc.image.url)
 
-                if not settings.DEBUG:
-                    url = url.replace('/images', '')
-                else:
-                    url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/', '')
+                # if not settings.DEBUG:
+                #     url = url.replace('/images', '')
+                # else:
+                # url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url
+                url = settings.MEDIA_DOMAIN_HOST + new_doc.image.url.replace('uploads/', '')
 
                 print("上传的图片地址：" + url)
 

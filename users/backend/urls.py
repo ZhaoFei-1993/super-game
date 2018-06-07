@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     # 锁定周期管理
-    path('coin/lock/', views.CoinLockListView.as_view(), name="backend-coin-lock"),
-    path('coin/lock/<int:pk>/', views.CoinLockDetailView.as_view(), name="coinlock-detail"),
+    # path('coin/lock/', views.CoinLockListView.as_view(), name="backend-coin-lock"),
+    # path('coin/lock/<int:pk>/', views.CoinLockDetailView.as_view(), name="coinlock-detail"),
     # 币种管理
     path('currency/', views.CurrencyListView.as_view(), name="backend-coin-currency"),
     path('currency/<int:pk>/', views.CurrencyDetailView.as_view(), name="coin-detail"),
@@ -32,12 +32,22 @@ urlpatterns = [
     path('coin_present_check/<int:pk>/', views.CoinPresentCheckView.as_view(), name="backend-present_check"),
     # 充值记录
     path('recharge_list/<int:pk>/<coin_name>/', views.RechargeView.as_view(), name="backend-recharge"),
+    # 充值记录(全部)
+    path('recharge_all/', views.RechargeAllView.as_view(), name="backend-recharge_all"),
     # 积分(GSG)记录
     path('gsg_backend_list/<int:pk>/', views.GSGBackendView.as_view(), name="backend-gsg_backend_list"),
     # 资金明细
     path('coin_backend_detail/<int:pk>/', views.CoinBackendDetail.as_view(), name="backend-coin_backend_detail"),
     # 系统奖励及其他
-    path('backend_coin_reward/<int:pk>/<coin_name>/', views.RewardBackendDetail.as_view(), name="backend-backend_coin_reward"),
+    path('backend_coin_reward/<int:pk>/<coin_name>/', views.RewardBackendDetail.as_view(),
+         name="backend-backend_coin_reward"),
     # 用户提现列表
     path('coin_present/<int:pk>/<int:coin>/', views.CoinPresentDetailView.as_view(), name="backend-present-detail"),
+    # 运营数据
+    path('running/', views.RunningView.as_view(), name='backend-running'),
+    # 用户统计
+    path('user_sts/', views.UserSts.as_view(), name='user-backend-user_sts'),
+    # 币种统计
+    path('coin_sts/', views.CoinSts.as_view(), name='user-backend-coin_sts'),
+    # path('aabb/', views.AABBCC.as_view(), name='user-aabbcc'),
 ]

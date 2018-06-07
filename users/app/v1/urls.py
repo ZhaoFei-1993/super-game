@@ -73,7 +73,9 @@ urlpatterns = [
     # 点击抽奖
     path('click_luck_draw/', views.ClickLuckDrawView.as_view(), name="app-v1-user-click_luck_draw"),
     # 活动图片
-    path('activity_image/', views.ActivityImageView.as_view(), name="app-v1-user-activity_image")
+    path('activity_image/', views.ActivityImageView.as_view(), name="app-v1-user-activity_image"),
+    # usdt活动图片
+    path('usdt_act_image/', views.USDTActivityView.as_view(), name="app-v1-user-usdt_act_image"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

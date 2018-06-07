@@ -109,7 +109,7 @@ class Coin(models.Model):
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
-    coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.50)
+    # coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.50)
     coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
     coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
@@ -162,26 +162,26 @@ class RewardCoin(models.Model):
 
 @reversion.register()
 class CoinValue(models.Model):
-    RESULTS = 0
-    POLITENESS_RESULTS = 1
-    SCORE = 2
-    TOTAL_GOAL = 3
-    RESULT = 4
-    POLITENESS_RESULT = 5
-    SIZE_POINTS = 6
-    VICTORY_GAP = 7
-    TYPE_CHOICE = (
-        (RESULTS, "赛果"),
-        (POLITENESS_RESULTS, "让分赛果"),
-        (SCORE, "比分"),
-        (TOTAL_GOAL, "总进球"),
-        (RESULT, "胜负"),
-        (POLITENESS_RESULT, "让分胜负"),
-        (SIZE_POINTS, "大小分"),
-        (VICTORY_GAP, "胜分差"),
-    )
+    # RESULTS = 0
+    # POLITENESS_RESULTS = 1
+    # SCORE = 2
+    # TOTAL_GOAL = 3
+    # RESULT = 4
+    # POLITENESS_RESULT = 5
+    # SIZE_POINTS = 6
+    # VICTORY_GAP = 7
+    # TYPE_CHOICE = (
+    #     (RESULTS, "赛果"),
+    #     (POLITENESS_RESULTS, "让分赛果"),
+    #     (SCORE, "比分"),
+    #     (TOTAL_GOAL, "总进球"),
+    #     (RESULT, "胜负"),
+    #     (POLITENESS_RESULT, "让分胜负"),
+    #     (SIZE_POINTS, "大小分"),
+    #     (VICTORY_GAP, "胜分差"),
+    # )
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
+    # type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     value_index = models.IntegerField(verbose_name='投注值序号', default=1)
     value = models.DecimalField(verbose_name="货币允许投注值", max_digits=10, decimal_places=3, default=0.000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -510,3 +510,59 @@ class BankruptcyRecords(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "破产记录表"
+
+
+@reversion.register()
+class CoinInstall(models.Model):
+    RESULTS = 0
+    POLITENESS_RESULTS = 1
+    SCORE = 2
+    TOTAL_GOAL = 3
+    RESULT = 4
+    POLITENESS_RESULT = 5
+    SIZE_POINTS = 6
+    VICTORY_GAP = 7
+    TYPE_CHOICE = (
+        (RESULTS, "赛果"),
+        (POLITENESS_RESULTS, "让分赛果"),
+        (SCORE, "比分"),
+        (TOTAL_GOAL, "总进球"),
+        (RESULT, "胜负"),
+        (POLITENESS_RESULT, "让分胜负"),
+        (SIZE_POINTS, "大小分"),
+        (VICTORY_GAP, "胜分差"),
+    )
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
+    betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
+    betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "投注值表"
+
+
+@reversion.register()
+class CoinGive(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    number = models.DecimalField(verbose_name='赠送金额', max_digits=20, decimal_places=8, default=0.00000000)
+    ask_number = models.DecimalField(verbose_name='要求金额', max_digits=20, decimal_places=8, default=0.00000000)
+    match_number = models.IntegerField(verbose_name="要求局数", default=0)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    end_time = models.DateTimeField(verbose_name="结束日期", auto_now=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "货币赠送活动表"
+
+
+@reversion.register()
+class CoinGiveRecords(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    coin_give = models.ForeignKey(CoinGive, on_delete=models.CASCADE)
+    is_recharge_give = models.BooleanField(verbose_name="是否已获得赠送金额", default=False)
+    is_recharge_lock = models.BooleanField(verbose_name="是否已获得锁定金额", default=False)
+    start_coin = models.DecimalField(verbose_name='开始余额', max_digits=20, decimal_places=8, default=0.00000000)
+    lock_coin = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "货币赠送活动表"

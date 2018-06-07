@@ -4,7 +4,8 @@ import pytz
 from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
-    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge
+    UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
+    CoinGiveRecords
 from quiz.models import Record, Quiz
 from base.exceptions import ParamErrorException
 from base import code as error_code
@@ -349,6 +350,10 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_balance(obj):
         balance = normalize_fraction(obj.balance, int(obj.coin.coin_accuracy))
+        if obj.coin.name == "USDT":
+            coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
+            lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
+            balance -= lock_coin
         return balance
 
     @staticmethod
@@ -402,6 +407,10 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_locked_coin(obj):  # 提现申请期间锁定币数
         lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id), int(obj.coin.coin_accuracy))
+        if obj.coin.name == "USDT":
+            coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
+            coin_lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
+            lock_coin += coin_lock_coin
         return lock_coin
 
     @staticmethod

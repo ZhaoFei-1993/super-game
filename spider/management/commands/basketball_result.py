@@ -6,8 +6,8 @@ import datetime
 import re
 import requests
 from bs4 import BeautifulSoup
-from quiz.models import Quiz, Rule, Option, Record, CashBack_Log
-from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice
+from quiz.models import Quiz, Rule, Option, Record, CashBackLog
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGiveRecords
 from chat.models import Club
 from decimal import Decimal
 
@@ -174,13 +174,19 @@ def get_data_info(url, match_flag):
                 user_coin.balance += Decimal(earn_coin)
                 user_coin.save()
 
+                # 增加系统赠送锁定金额
+                if int(record.source) == Record.GIVE:
+                    coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                    coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                    coin_give_records.save()
+
                 # 用户资金明细表
                 coin_detail = CoinDetail()
                 coin_detail.user_id = record.user_id
                 coin_detail.coin_name = coin.name
                 coin_detail.amount = Decimal(earn_coin)
                 coin_detail.rest = user_coin.balance
-                coin_detail.sources = CoinDetail.BETS
+                coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
             # 发送信息
@@ -201,7 +207,6 @@ def get_data_info(url, match_flag):
             record.save()
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
-    # quiz.is_reappearance = 1
     quiz.save()
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
     return flag
@@ -319,7 +324,7 @@ def cash_back(quiz):
 
                         cash_back_sum = cash_back_sum + float(gsg_cash_back)
 
-            cash_back_log = CashBack_Log()
+            cash_back_log = CashBackLog()
             cash_back_log.quiz = quiz
             cash_back_log.roomquiz_id = club.id
             cash_back_log.platform_sum = platform_sum
@@ -333,6 +338,8 @@ def cash_back(quiz):
 
             print('cash_back_sum====>' + str(cash_back_sum))
             print('---------------------------')
+            quiz.is_reappearance = 1
+            quiz.save()
     print('\n')
 
 

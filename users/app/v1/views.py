@@ -4,11 +4,11 @@ from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, Mes
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
 import qrcode
 from django.core.cache import caches
-from quiz.models import Quiz
+from quiz.models import Quiz, Record
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
-    CoinOutServiceCharge, BankruptcyRecords
+    CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords
 from chat.models import Club
 from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
@@ -23,7 +23,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code
+    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code, coin_initialization
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -140,6 +140,11 @@ class UserRegister(object):
                     usermessage.message = i
                     usermessage.save()
 
+            coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+            for coin in coins:
+                user_id = user.id
+                coin_id = coin.id
+                coin_initialization(user_id, coin_id)
             #  生成货币余额表
             # coin = Coin.objects.all()
             # for i in coin:
@@ -206,8 +211,8 @@ class UserRegister(object):
             invitation_user = User.objects.get(invitation_code=invitation_code)
             invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
                                                            is_deleted=1).count()
-            if invitee_number >= 5:  # 邀请T1是否已达上限
-                raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+            # if invitee_number >= 5:  # 邀请T1是否已达上限
+            #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
             register_type = self.get_register_type(username)
             user = User()
@@ -224,8 +229,9 @@ class UserRegister(object):
             user.save()
 
             user_go_line = UserInvitation()
-            user_go_line.is_effective = 1
-            user_go_line.money = 2000
+            if invitee_number < 5:
+                user_go_line.is_effective = 1
+                user_go_line.money = 2000
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
             user_go_line.invitee_one = user.id
@@ -275,29 +281,55 @@ class UserRegister(object):
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
 
-        # 生成代币余额
-        btc_address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
-        btc_address.user = userinfo.id
-        btc_address.save()
+        # # 生成代币余额
+        # btc_address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+        # btc_address.user = userinfo.id
+        # btc_address.save()
+        #
+        # eth_address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+        # eth_address.user = userinfo.id
+        # eth_address.save()
+        #
+        # coins = Coin.objects.filter(is_disabled=False)
+        # for coin in coins:
+        #     user_coin = UserCoin()
+        #     # if coin.name == "EOS":
+        #
+        #     user_coin.user_id = userinfo.id
+        #     user_coin.coin_id = coin.id
+        #     # 以太坟代币均使用同一个ETH地址
+        #     if coin.is_eth_erc20:
+        #         user_coin.address = eth_address.address
+        #     else:
+        #         user_coin.address = btc_address.address
+        #     user_coin.save()
 
-        eth_address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
-        eth_address.user = userinfo.id
-        eth_address.save()
+        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
 
-        coins = Coin.objects.filter(is_disabled=False)
         for coin in coins:
-            user_coin = UserCoin()
-            # if coin.name == "EOS":
+            user_id = userinfo.id
+            coin_id = coin.id
+            coin_initialization(user_id, coin_id)
 
-            user_coin.user_id = userinfo.id
-            user_coin.coin_id = coin.id
-            # 以太坟代币均使用同一个ETH地址
-            if coin.is_eth_erc20:
-                user_coin.address = eth_address.address
-            else:
-                user_coin.address = btc_address.address
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
+        if today_time < end_date:  # 活动期间
+            user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=userinfo.id).first()
+            user_coin_give_records = CoinGiveRecords()
+            user_coin_give_records.start_coin = user_coin.balance
+            user_coin_give_records.user = user
+            user_coin_give_records.coin_give = give_info
+            user_coin_give_records.lock_coin = give_info.number
+            user_coin_give_records.save()
+            user_coin.balance += give_info.number
             user_coin.save()
-
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 11
+            user_message.save()
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -366,17 +398,14 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
-                # invitation_code = ''
-                # if 'invitation_code' in request.data:
-                #     invitation_code = request.data.get('invitation_code')
-                if 'invitation_code' not in request.data:
-                    raise ParamErrorException(error_code.API_10108_INVITATION_CODE_NOT_NOME)
-                invitation_code = request.data.get('invitation_code')
-                invitation_code = invitation_code.upper()
+                invitation_code = ''
+                if 'invitation_code' in request.data:
+                    invitation_code = request.data.get('invitation_code')
+                    invitation_code = invitation_code.upper()
 
-                invitation_user = User.objects.filter(invitation_code=invitation_code).count()
-                if invitation_user == 0:
-                    raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
+                # invitation_user = User.objects.filter(invitation_code=invitation_code).count()
+                # if invitation_user == 0:
+                #     raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
                 message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
@@ -446,24 +475,78 @@ class InfoView(ListAPIView):
         items = results.data.get('results')
         user_id = self.request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
-        is_message = message_hints(user_id)  # 是否有未读消息
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)  # # 破产赠送hand功能
-        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+        is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
+        if is_usermessage == 0:
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 12
+            user_message.save()
+
+        for coin in coins:
+            coin_pk = coin.id
+            coin_initialization(user_id, coin_pk)
+
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
+        if today_time < end_date:  # 活动期间
+            is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
+            if is_give == 0:
+                user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
+                user_coin_give_records = CoinGiveRecords()
+                user_coin_give_records.start_coin = user_coin.balance
+                user_coin_give_records.user = user
+                user_coin_give_records.coin_give = give_info
+                user_coin_give_records.lock_coin = give_info.number
+                user_coin_give_records.save()
+                user_coin.balance += give_info.number
+                user_coin.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 11
+                user_message.save()
+        # elif today_time >= end_date:               # 活动时间到
+        #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
+        #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
+        #     user_recharge_coin = UserRecharge.objects.filter(
+        #         Q(confirm_at__gt=user_coin_give_records.created_at) | Q(confirm_at__lt=give_info.end_time)).aggregate(
+        #         Sum('amount'))
+        #     user_amount = user_recharge_coin['amount__sum']             # 活动期间总充值数
+        #     if user_coin.balance > user_amount:
+        #         user_quiz_bet_coin = Record.objects.filter(
+        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
+        #                 confirm_at__lt=give_info.end_time)).aggregate(
+        #             Sum('bet'))
+        #         user_bet = user_quiz_bet_coin['bet__sum']  # 活动期间总下注
+        #         user_quzi_coin = Record.objects.filter(
+        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
+        #                 confirm_at__lt=give_info.end_time)).aggregate(
+        #             Sum('earn_coin'))
+        #         user_earn_coin = user_quzi_coin['earn_coin__sum']  # 活动期间总赢
+        #         user_earn_coin -= user_bet
+        #
+
+        usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
             if is_give <= 0:
-                usercoin.balance += Decimal(10000)
-                usercoin.save()
+                usercoins.balance += Decimal(10000)
+                usercoins.save()
                 coin_bankruptcy = CoinDetail()
                 coin_bankruptcy.user = user
                 coin_bankruptcy.coin_name = 'HAND'
                 coin_bankruptcy.amount = '+' + str(10000)
-                coin_bankruptcy.rest = Decimal(usercoin.balance)
+                coin_bankruptcy.rest = Decimal(usercoins.balance)
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
                 bankruptcy_info = BankruptcyRecords()
@@ -477,8 +560,9 @@ class InfoView(ListAPIView):
                 user_message.message_id = 10  # 修改密码
                 user_message.save()
 
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        usercoin_avatar = usercoin.coin.icon
         user_coin = usercoin.balance
-        usercoin_avatar = clubinfo.coin.icon
         recharge_address = usercoin.address
 
         user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
@@ -510,6 +594,8 @@ class InfoView(ListAPIView):
                 else:
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
+
+        is_message = message_hints(user_id)  # 是否有未读消息
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
@@ -1012,7 +1098,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
@@ -1112,7 +1198,7 @@ class UserPresentationView(CreateAPIView):
     permission_classes = (LoginRequired,)
 
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'p_address', 'passcode', 'p_address_name', 'p_amount', 'c_id')
+        value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -1120,12 +1206,23 @@ class UserPresentationView(CreateAPIView):
             userinfo = User.objects.get(pk=userid)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        passcode = request.data.get('passcode')
+        password = request.data.get('password')
+        if not userinfo.check_password(password):
+            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        code = request.data.get('code')
+        sms = Sms.objects.filter(telephone=userinfo.telephone, type=6).order_by('-id').first()
+        if (sms is None) or (sms.code != code):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
-        if str(passcode) != str(userinfo.pass_code):
-            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        # if str(passcode) != str(userinfo.pass_code):
+        #
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
@@ -1137,9 +1234,19 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
-        if coin.name != 'HAND':
+        if coin.name != 'HAND' and coin.name != 'USDT':
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
+        elif coin.name == 'USDT':  # usdt
+            try:
+                coin_give = CoinGiveRecords.objects.get(user_id=userid)
+            except Exception:
+                raise
+            balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+            if balance < coin_out.value:
+                raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
+
         else:
             try:
                 coin_eth = UserCoin.objects.get(user_id=userid, coin_id=coin_out.coin_payment)
@@ -1149,6 +1256,16 @@ class UserPresentationView(CreateAPIView):
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             if p_amount > user_coin.balance:
+
+                if coin.name == "USDT":  # usdt
+                    try:
+                        coin_give = CoinGiveRecords.objects.get(user_id=userid)
+                    except Exception:
+                        raise
+                    balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+                    if p_amount > balance:
+                        raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
+
                 raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
             elif p_amount < coin.cash_control:
                 raise ParamErrorException(error_code.API_70103_USER_PRESENT_AMOUNT_LC)
@@ -1757,10 +1874,10 @@ class InvitationRegisterView(CreateAPIView):
         telephone = request.data.get('telephone')
         code = request.data.get('code')
         password = request.data.get('password')
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-                                                       is_effective=1).count()
-        if int(invitee_number) == 5 or int(invitee_number) > 5:
-            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
+        #                                                is_effective=1).count()
+        # if int(invitee_number) == 5 or int(invitee_number) > 5:
+        #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -1922,10 +2039,10 @@ class InvitationUserView(ListAPIView):
         username = user_info.username
         invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(pk),
                                                        is_effective=1).count()
-        if int(invitee_number) == 5 or int(invitee_number) > 5:
-            return self.response(
-                {'code': error_code.API_10107_INVITATION_CODE_INVALID, "pk": pk, "nickname": nickname, "avatar": avatar,
-                 "username": username, "invitation_code": invitation_code})
+        # if int(invitee_number) == 5 or int(invitee_number) > 5:
+        #     return self.response(
+        #         {'code': error_code.API_10107_INVITATION_CODE_INVALID, "pk": pk, "nickname": nickname, "avatar": avatar,
+        #          "username": username, "invitation_code": invitation_code})
         return self.response({'code': 0, "pk": pk, "nickname": nickname, "avatar": avatar, "username": username,
                               "invitation_code": invitation_code})
 
@@ -2166,6 +2283,17 @@ class ActivityImageView(ListAPIView):
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
 
+class USDTActivityView(ListAPIView):
+    """
+    USDT活动图片
+    """
+
+    def get(self, request, *args, **kwargs):
+        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg'])
+        return self.response(
+            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
+
+
 class CheckInvitationCode(ListAPIView):
     """
     邀请码校验
@@ -2182,9 +2310,9 @@ class CheckInvitationCode(ListAPIView):
             raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
         invitation_user = User.objects.get(invitation_code=invitation_code)
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
-                                                       is_deleted=1).count()
-        if invitee_number >= 5:  # 邀请T1是否已达上限
-            raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
+        # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
+        #                                                is_deleted=1).count()
+        # if invitee_number >= 5:  # 邀请T1是否已达上限
+        #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
         return self.response({'code': 0, 'id': invitation_user.id, 'avatar': invitation_user.avatar,
                               'nickname': invitation_user.nickname})

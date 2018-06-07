@@ -10,6 +10,7 @@ class Sms(models.Model):
     FORGET_PASSWORD = 3
     REGISTER = 4
     FORGET_REGISTER = 5
+    PROVING_PASSWORD = 6
 
     READY = 1
     SUCCESS = 2
@@ -21,6 +22,7 @@ class Sms(models.Model):
         (FORGET_PASSWORD, "忘记密保"),
         (REGISTER, "用户注册"),
         (FORGET_REGISTER, "忘记密码"),
+        (PROVING_PASSWORD, "验证密保"),
     )
 
     STATUS_CHOICE = (

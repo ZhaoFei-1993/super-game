@@ -7,7 +7,7 @@ from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
-from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage
+from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
@@ -77,10 +77,10 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
-                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
                         'begin_at')
                 elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
+                    return Quiz.objects.filter(~Q(category_id=873), Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
                         '-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
@@ -279,7 +279,6 @@ class RuleView(ListAPIView):
         coin_icon = usercoin.coin.icon
 
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
-        print("coinvalue==================================", coinvalue)
         value1 = coinvalue[0].value
         value1 = normalize_fraction(value1, coinvalue[0].coin.coin_accuracy)
         value2 = coinvalue[1].value
@@ -399,8 +398,8 @@ class BetView(ListCreateAPIView):
         coins = self.request.data['wager']  # 获取投注金额
         coins = float(coins)
 
-        clubinfo = Club.objects.get(pk=roomquiz_id)  # 破产赠送hand功能
-        coin_id = clubinfo.coin.pk
+        clubinfo = Club.objects.get(pk=roomquiz_id)
+        coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
@@ -442,12 +441,10 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
-        clubinfo = Club.objects.get(pk=int(roomquiz_id))
         coin_betting_control = float(clubinfo.coin.betting_control)
         coin_betting_toplimit = float(clubinfo.coin.betting_toplimit)
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
-        coin_id = clubinfo.coin.pk
 
         # HAND币单场比赛最大下注100W
         if coin_id == Coin.HAND:
@@ -465,22 +462,76 @@ class BetView(ListCreateAPIView):
         # 调整赔率
         Option.objects.change_odds(rule_id, coin_id, roomquiz_id)
 
-        record = Record()
-        record.user = user
-        record.quiz = quiz
-        record.roomquiz_id = roomquiz_id
-        record.rule_id = rule_id
-        record.option = option_odds
-        record.bet = round(Decimal(coins), 3)
-        record.odds = round(Decimal(option_odds.odds), 2)
-        record.save()
-        earn_coins = Decimal(coins) * option_odds.odds
-        earn_coins = round(earn_coins, 3)
-        # 用户减少金币
-        usercoin.balance = float(usercoin.balance - Decimal(coins))
-        usercoin.save()
-        quiz.total_people += 1
-        quiz.save()
+        if clubinfo.coin.name == "USDT":            # USDT下注
+            give_coin = CoinGiveRecords.objects.get(user_id=user.id)
+            coins = Decimal(coins)         # 总下注额
+            usercoin.balance = float(usercoin.balance - coins)        # 用户余额表减下注额
+            usercoin.save()
+            if coins > give_coin.lock_coin:
+                coins_give = coins - give_coin.lock_coin      # 正常币下注额
+
+                record = Record()          # 正常币记录
+                record.user = user
+                record.quiz = quiz
+                record.roomquiz_id = roomquiz_id
+                record.rule_id = rule_id
+                record.option = option_odds
+                record.bet = round(Decimal(coins_give), 3)
+                record.odds = round(Decimal(option_odds.odds), 2)
+                record.save()
+                earn_coins = Decimal(coins_give) * option_odds.odds
+                earn_coins_one = round(earn_coins, 3)
+
+                record = Record()              # 赠送币记录
+                record.user = user
+                record.quiz = quiz
+                record.roomquiz_id = roomquiz_id
+                record.rule_id = rule_id
+                record.option = option_odds
+                record.source = 2
+                record.bet = round(Decimal(give_coin.lock_coin), 3)
+                record.odds = round(Decimal(option_odds.odds), 2)
+                record.save()
+                earn_coins = Decimal(give_coin.lock_coin) * option_odds.odds
+                earn_coins_two = round(earn_coins, 3)
+
+                give_coin.lock_coin -= give_coin.lock_coin
+                give_coin.save()
+
+                earn_coins = earn_coins_one + earn_coins_two
+            else:
+                record = Record()              # 赠送币记录
+                record.user = user
+                record.quiz = quiz
+                record.roomquiz_id = roomquiz_id
+                record.rule_id = rule_id
+                record.option = option_odds
+                record.source = 2
+                record.bet = round(Decimal(coins), 3)
+                record.odds = round(Decimal(option_odds.odds), 2)
+                record.save()
+                earn_coins = Decimal(coins) * option_odds.odds
+                earn_coins = round(earn_coins, 3)
+
+                give_coin.lock_coin -= round(Decimal(coins), 3)
+                give_coin.save()
+        else:
+            record = Record()
+            record.user = user
+            record.quiz = quiz
+            record.roomquiz_id = roomquiz_id
+            record.rule_id = rule_id
+            record.option = option_odds
+            record.bet = round(Decimal(coins), 3)
+            record.odds = round(Decimal(option_odds.odds), 2)
+            record.save()
+            earn_coins = Decimal(coins) * option_odds.odds
+            earn_coins = round(earn_coins, 3)
+            # 用户减少金币
+            usercoin.balance = float(usercoin.balance - Decimal(coins))
+            usercoin.save()
+            quiz.total_people += 1
+            quiz.save()
 
         coin_detail = CoinDetail()
         coin_detail.user = user

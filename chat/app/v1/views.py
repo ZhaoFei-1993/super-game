@@ -31,14 +31,16 @@ class ClublistView(ListAPIView):
         items = results.data.get('results')
         data = []
         int_ban = '/'.join([MEDIA_DOMAIN_HOST, "INT_BAN.jpg"])
-        banner = [{"img_url": int_ban, "action": 'Invite_New'}] #活动轮播图
+        usdt_ban = '/'.join([MEDIA_DOMAIN_HOST, "USDT.jpg"])
+        banner = [{"img_url": int_ban, "action": 'Invite_New'}, {"img_url": usdt_ban, "action": 'USDT_ACTIVE'}]  # 活动轮播图
         for item in items:
+            user_number = int(int(item['user_number']) * 0.3)
             data.append(
                 {
                     "club_id": item['id'],
                     "room_title": item['room_title'],
                     "autograph": item['autograph'],
-                    "user_number": item['user_number'],
+                    "user_number": user_number,
                     "room_number": item['room_number'],
                     "coin_name": item['coin_name'],
                     "coin_key": item['coin_key'],
