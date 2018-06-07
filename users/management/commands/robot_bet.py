@@ -180,9 +180,11 @@ class Command(BaseCommand):
             return False
 
         club_weight = {
-            1: 90,
-            3: 7,
-            4: 3,
+            1: 430,
+            2: 60,
+            3: 60,
+            4: 20,
+            6: 430
         }
 
         weight_choice = WeightChoice()
