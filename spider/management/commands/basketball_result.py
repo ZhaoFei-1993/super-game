@@ -186,7 +186,7 @@ def get_data_info(url, match_flag):
                 coin_detail.coin_name = coin.name
                 coin_detail.amount = Decimal(earn_coin)
                 coin_detail.rest = user_coin.balance
-                coin_detail.sources = CoinDetail.BETS
+                coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
             # 发送信息

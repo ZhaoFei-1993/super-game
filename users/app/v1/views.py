@@ -2283,6 +2283,17 @@ class ActivityImageView(ListAPIView):
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
 
+class USDTActivityView(ListAPIView):
+    """
+    USDT活动图片
+    """
+
+    def get(self, request, *args, **kwargs):
+        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg'])
+        return self.response(
+            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
+
+
 class CheckInvitationCode(ListAPIView):
     """
     邀请码校验
