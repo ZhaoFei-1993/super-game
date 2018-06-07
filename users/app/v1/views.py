@@ -481,6 +481,13 @@ class InfoView(ListAPIView):
         coin_id = clubinfo.coin.pk
 
         coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+        is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
+        if is_usermessage == 0:
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 12
+            user_message.save()
 
         for coin in coins:
             coin_pk = coin.id
@@ -588,6 +595,8 @@ class InfoView(ListAPIView):
                 else:
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
+
+        is_message = message_hints(user_id)  # 是否有未读消息
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
@@ -1230,7 +1239,7 @@ class UserPresentationView(CreateAPIView):
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
 
-        elif coin.name == 'USDT':      # usdt
+        elif coin.name == 'USDT':  # usdt
             try:
                 coin_give = CoinGiveRecords.objects.get(user_id=userid)
             except Exception:
@@ -1249,7 +1258,7 @@ class UserPresentationView(CreateAPIView):
         if p_amount > user_coin.balance or p_amount <= 0 or p_amount < coin.cash_control:
             if p_amount > user_coin.balance:
 
-                if coin.name == "USDT":            # usdt
+                if coin.name == "USDT":  # usdt
                     try:
                         coin_give = CoinGiveRecords.objects.get(user_id=userid)
                     except Exception:
