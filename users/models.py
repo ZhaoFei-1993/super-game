@@ -497,6 +497,7 @@ class IntegralPrizeRecord(models.Model):
 @reversion.register()
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    login_type = models.CharField(verbose_name='登录手机类型', max_length=48, default='')
     ip = models.CharField(verbose_name='登录ip', max_length=48)
     login_time = models.DateTimeField(verbose_name='登录时间', auto_now=True)
 

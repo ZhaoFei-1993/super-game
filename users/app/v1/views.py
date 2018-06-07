@@ -436,6 +436,7 @@ class LoginView(CreateAPIView):
             return 0
         lr = LoginRecord()
         lr.user = user_now
+        lr.login_type=request.META.get('HTTP_X_API_KEY', '')
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
         return self.response({
