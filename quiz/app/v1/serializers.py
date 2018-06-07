@@ -57,21 +57,15 @@ class QuizSerialize(serializers.ModelSerializer):
 
     def get_win_rate(self, obj):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        print("roomquiz_id==================================", roomquiz_id)
-        print("obj.pk=====================================", obj.pk)
         rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
         odds = 0
-        print("rule_obj=======================================", rule_obj)
         for rule in rule_obj:
-            print("rule.pk======================================", rule.pk)
             try:
                 # option = Option.objects.get(rule_id=rule.pk, flag="h")
                 option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="h", club_id=roomquiz_id)
                 odds = option.odds
             except OptionOdds.DoesNotExist:
                 odds = 0
-        print("odds========================================", odds)
-
         return odds
 
     def get_planish_rate(self, obj):
