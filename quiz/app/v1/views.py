@@ -180,6 +180,7 @@ class RecordsListView(ListCreateAPIView):
             data.append({
                 "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
+                "type": fav.get('type'),
                 'host_team': fav.get('host_team'),
                 'guest_team': fav.get('guest_team'),
                 'earn_coin': fav.get('earn_coin'),
