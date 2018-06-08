@@ -196,7 +196,7 @@ class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
-    balance = models.DecimalField(verbose_name='金额', max_digits=20, decimal_places=8, default=0.00000000)
+    balance = models.DecimalField(verbose_name='增加后金额', max_digits=20, decimal_places=8, default=0.00000000)
 
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
@@ -567,3 +567,17 @@ class CoinGiveRecords(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "货币赠送活动表"
+
+
+@reversion.register()
+class IntInvitation(models.Model):
+    inviter = models.ForeignKey(User, on_delete=models.CASCADE)
+    invitee = models.IntegerField(verbose_name="被邀请人id", default=0)
+    coin = models.IntegerField(verbose_name="INT货币表ID", default=0)
+    invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
+    money = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=10.00000000)
+    is_deleted = models.BooleanField(verbose_name="是否有奖励", default=True)
+    created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "INT活动邀请表"
