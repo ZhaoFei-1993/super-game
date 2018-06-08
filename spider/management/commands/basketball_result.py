@@ -134,6 +134,12 @@ def get_data_info(url, match_flag):
     records = Record.objects.filter(quiz=quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
+            # 用户增加对应币金额
+            club = Club.objects.get(pk=record.roomquiz_id)
+
+            # 获取币信息
+            coin = Coin.objects.get(pk=club.coin_id)
+
             flag = True
             # 判断是否回答正确
             is_right = False
@@ -160,12 +166,6 @@ def get_data_info(url, match_flag):
             record.save()
 
             if is_right is True:
-                # 用户增加对应币金额
-                club = Club.objects.get(pk=record.roomquiz_id)
-
-                # 获取币信息
-                coin = Coin.objects.get(pk=club.coin_id)
-
                 try:
                     user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
                 except UserCoin.DoesNotExist:
