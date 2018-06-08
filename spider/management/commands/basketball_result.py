@@ -151,11 +151,11 @@ def get_data_info(url, match_flag):
                     is_right = True
 
             earn_coin = record.bet * record.odds
-            record.type = 1
+            record.type = Record.CORRECT
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
                 earn_coin = '-' + str(record.bet)
-                record.type = 2
+                record.type = Record.MISTAKE
             record.earn_coin = earn_coin
             record.save()
 
@@ -196,7 +196,7 @@ def get_data_info(url, match_flag):
             u_mes.status = 0
             u_mes.user_id = record.user_id
             u_mes.message_id = 6  # 私人信息
-            u_mes.title = '开奖公告'
+            u_mes.title = club.room_title + '开奖公告'
             option_right = Option.objects.get(rule=record.rule, is_right=True)
             if is_right is False:
                 u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您答错了。'
@@ -221,7 +221,7 @@ def handle_delay_game(delay_quiz):
             # 延迟比赛，返回用户投注的钱
             return_coin = record.bet
             record.earn_coin = return_coin
-            record.type = 3
+            record.type = Record.ABNORMAL
             record.save()
 
             # 用户增加回退还金额
@@ -254,7 +254,7 @@ def handle_delay_game(delay_quiz):
             u_mes.status = 0
             u_mes.user_id = record.user_id
             u_mes.message_id = 6  # 私人信息
-            u_mes.title = '退回公告'
+            u_mes.title = club.room_title + '退回公告'
             u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + '赛事延期或已中断(您的下注已全额退回)'
             u_mes.save()
 
@@ -318,7 +318,7 @@ def cash_back(quiz):
                         u_mes.status = 0
                         u_mes.user_id = user_id
                         u_mes.message_id = 6  # 私人信息
-                        u_mes.title = '返现公告'
+                        u_mes.title = club.room_title + '返现公告'
                         u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(
                             gsg_cash_back) + '个GSG'
                         u_mes.save()
