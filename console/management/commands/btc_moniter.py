@@ -15,6 +15,7 @@ coin_name = 'BTC'
 def get_transactions(addresses):
     transactions = {}
     response = requests.get(base_url + addresses)
+    print('response = ', response)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
