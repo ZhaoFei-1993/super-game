@@ -6,7 +6,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
-from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGiveRecords
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
 from django.db import transaction
 import datetime
@@ -26,6 +26,71 @@ def trunc(f, n):
     if n <= len(s2):
         return s1 + '.' + s2[:n]
     return s1 + '.' + s2 + '0' * (n - len(s2))
+
+
+def handle_activity(record, coin, earn_coin):
+    # USDT活动
+    if CoinGiveRecords.objects.filter(user=record.user, coin_give__coin=coin).exists() is True:
+        coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+        if int(record.source) == Record.GIVE:
+            if coin_give_records.is_recharge_lock is False:
+                coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                coin_give_records.save()
+                coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                if (coin_give_records.lock_coin >= coin_give_records.coin_give.ask_number) and (
+                        Record.objects.filter(user=record.user,
+                                              roomquiz_id=Club.objects.get(
+                                                  coin=coin).id).count() >= coin_give_records.coin_give.match_number) and (
+                        datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+                    lock_coin = coin_give_records.lock_coin
+                    coin_give_records.is_recharge_lock = True
+                    coin_give_records.lock_coin = 0
+                    coin_give_records.save()
+
+                    # 发送信息
+                    u_mes = UserMessage()
+                    u_mes.status = 0
+                    u_mes.user_id = record.user_id
+                    u_mes.message_id = 6  # 私人信息
+                    u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
+                    u_mes.content = '恭喜您获得USDT活动奖励共 ' + str(trunc(lock_coin, 2)) + 'USDT，祝贺您。'
+                    u_mes.save()
+        else:
+            user_profit = 0
+            for user_record in Record.objects.filter(user=record.user,
+                                                     roomquiz_id=Club.objects.get(coin=coin).id,
+                                                     source=str(Record.NORMAL),
+                                                     created_at__lte=coin_give_records.coin_give.end_time,
+                                                     earn_coin__gte=0):
+                user_profit = user_profit + (user_record.earn_coin - user_record.bet)
+            if (user_profit >= 50) and (coin_give_records.is_recharge_give is False) and (
+                    datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+                coin_give_records.is_recharge_give = True
+                coin_give_records.save()
+
+                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                user_coin.balance += Decimal(10)
+                user_coin.save()
+
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = coin.name
+                coin_detail.amount = Decimal(10)
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.ACTIVITY
+                coin_detail.save()
+
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = record.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
+                u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
+                u_mes.save()
+    else:
+        pass
 
 
 def get_data(url):
@@ -216,8 +281,14 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     # 分配奖金
     records = Record.objects.filter(quiz=quiz, is_distribution=False)
     if len(records) > 0:
-        flag = True
         for record in records:
+            # 用户增加对应币金额
+            club = Club.objects.get(pk=record.roomquiz_id)
+
+            # 获取币信息
+            coin = Coin.objects.get(pk=club.coin_id)
+
+            flag = True
             # 判断是否回答正确
             is_right = False
             if record.rule_id == rule_had.id:
@@ -243,12 +314,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             record.save()
 
             if is_right is True:
-                # 用户增加对应币金额
-                club = Club.objects.get(pk=record.roomquiz_id)
-
-                # 获取币信息
-                coin = Coin.objects.get(pk=club.coin_id)
-
                 try:
                     user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
                 except UserCoin.DoesNotExist:
@@ -259,12 +324,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 user_coin.balance += Decimal(earn_coin)
                 user_coin.save()
 
-                # 增加系统赠送锁定金额
-                if int(record.source) == Record.GIVE:
-                    coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
-                    coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
-                    coin_give_records.save()
-
                 # 用户资金明细表
                 coin_detail = CoinDetail()
                 coin_detail.user_id = record.user_id
@@ -274,6 +333,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
+                # handle USDT活动
+                handle_activity(record, coin, earn_coin)
+
             # 发送信息
             u_mes = UserMessage()
             u_mes.status = 0
@@ -282,9 +344,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             u_mes.title = club.room_title + '开奖公告'
             option_right = Option.objects.get(rule=record.rule, is_right=True)
             if is_right is False:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您答错了。'
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您答错了。'
             elif is_right is True:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您的奖金是:' + str(
+                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是:' + option_right.option + ',您选的答案是:' + record.option.option.option + '，您的奖金是:' + str(
                     round(earn_coin, 3))
             u_mes.save()
 
@@ -338,7 +400,7 @@ def handle_delay_game(delay_quiz):
             u_mes.user_id = record.user_id
             u_mes.message_id = 6  # 私人信息
             u_mes.title = club.room_title + '退回公告'
-            u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + '赛事延期或已中断(您的下注已全额退回)'
+            u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
             u_mes.save()
 
             record.is_distribution = True
@@ -425,7 +487,7 @@ def cash_back(quiz):
                         u_mes.user_id = user_id
                         u_mes.message_id = 6  # 私人信息
                         u_mes.title = club.room_title + '返现公告'
-                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + '已经开奖' + ',您得到的返现为：' + str(
+                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖' + ',您得到的返现为：' + str(
                             gsg_cash_back) + '个GSG'
                         u_mes.save()
 
