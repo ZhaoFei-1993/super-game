@@ -12,6 +12,7 @@ class Command(BaseCommand):
     help = "给机器人分配邀请码"
 
     def handle(self, *args, **options):
+        os.chdir(BASE_DIR + '/cache')
         with open('invitation_code.txt', 'w+') as f:
             pass
         robot_list = User.objects.filter(is_robot=True, invitation_code='')
