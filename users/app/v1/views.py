@@ -307,6 +307,13 @@ class UserRegister(object):
             user_message.user = user
             user_message.message_id = 11
             user_message.save()
+            coin_bankruptcy = CoinDetail()
+            coin_bankruptcy.user = user
+            coin_bankruptcy.coin_name = 'USDT'
+            coin_bankruptcy.amount = '+' + str(give_info.number)
+            coin_bankruptcy.rest = Decimal(user_coin.balance)
+            coin_bankruptcy.sources = 4
+            coin_bankruptcy.save()
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
             if int(invitation_user.pk) == 2638:  # INT邀请活动
@@ -519,6 +526,13 @@ class InfoView(ListAPIView):
                 user_message.user = user
                 user_message.message_id = 11
                 user_message.save()
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user
+                coin_bankruptcy.coin_name = 'USDT'
+                coin_bankruptcy.amount = '+' + str(give_info.number)
+                coin_bankruptcy.rest = Decimal(user_coin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
         # elif today_time >= end_date:               # 活动时间到
         #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
         #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
