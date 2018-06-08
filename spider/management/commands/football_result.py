@@ -89,8 +89,6 @@ def handle_activity(record, coin, earn_coin):
                 u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
                 u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
                 u_mes.save()
-    else:
-        pass
 
 
 def get_data(url):
