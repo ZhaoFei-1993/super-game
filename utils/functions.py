@@ -318,9 +318,17 @@ def coin_initialization(user_id, coin_id):
     if len(is_usercoin) <= 0:
         user = User.objects.get(pk=user_id)
         if coin_info.is_eth_erc20:
-            address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
+            if user_coin_number != 0:
+                address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
+            else:
+                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
         else:
-            address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
+            if user_coin_number != 0:
+                address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
+            else:
+                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
         address.user = user_id
         address.save()
         user_coin = UserCoin()
