@@ -46,6 +46,71 @@ def trunc(f, n):
     return s1 + '.' + s2 + '0' * (n - len(s2))
 
 
+def handle_activity(record, coin, earn_coin):
+    # USDT活动
+    if CoinGiveRecords.objects.filter(user=record.user, coin_give__coin=coin).exists() is True:
+        coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+        if int(record.source) == Record.GIVE:
+            if coin_give_records.is_recharge_lock is False:
+                coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                coin_give_records.save()
+                coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                if (coin_give_records.lock_coin >= coin_give_records.coin_give.ask_number) and (
+                        Record.objects.filter(user=record.user,
+                                              roomquiz_id=Club.objects.get(
+                                                  coin=coin).id).count() >= coin_give_records.coin_give.match_number) and (
+                        datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+                    lock_coin = coin_give_records.lock_coin
+                    coin_give_records.is_recharge_lock = True
+                    coin_give_records.lock_coin = 0
+                    coin_give_records.save()
+
+                    # 发送信息
+                    u_mes = UserMessage()
+                    u_mes.status = 0
+                    u_mes.user_id = record.user_id
+                    u_mes.message_id = 6  # 私人信息
+                    u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
+                    u_mes.content = '恭喜您获得USDT活动奖励共 ' + str(trunc(lock_coin, 2)) + 'USDT，祝贺您。'
+                    u_mes.save()
+        else:
+            user_profit = 0
+            for user_record in Record.objects.filter(user=record.user,
+                                                     roomquiz_id=Club.objects.get(coin=coin).id,
+                                                     source=str(Record.NORMAL),
+                                                     created_at__lte=coin_give_records.coin_give.end_time,
+                                                     earn_coin__gte=0):
+                user_profit = user_profit + (user_record.earn_coin - user_record.bet)
+            if (user_profit >= 50) and (coin_give_records.is_recharge_give is False) and (
+                    datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+                coin_give_records.is_recharge_give = True
+                coin_give_records.save()
+
+                user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                user_coin.balance += Decimal(10)
+                user_coin.save()
+
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = coin.name
+                coin_detail.amount = Decimal(10)
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.ACTIVITY
+                coin_detail.save()
+
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = record.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
+                u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
+                u_mes.save()
+    else:
+        pass
+
+
 def get_data(url):
     try:
         response = requests.get(url, headers=headers)
@@ -190,6 +255,9 @@ def get_data_info(url, match_flag):
                 coin_detail.rest = user_coin.balance
                 coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
+
+                # handle USDT活动
+                handle_activity(record, coin, earn_coin)
 
             # 发送信息
             u_mes = UserMessage()
