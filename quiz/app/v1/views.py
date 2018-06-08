@@ -471,7 +471,7 @@ class BetView(ListCreateAPIView):
             coins = Decimal(coins)  # 总下注额
             usercoin.balance = float(usercoin.balance - coins)  # 用户余额表减下注额
             usercoin.save()
-            if coins > give_coin.lock_coin:
+            if give_coin.lock_coin != 0 and coins > give_coin.lock_coin:
                 coins_give = coins - give_coin.lock_coin  # 正常币下注额
 
                 record = Record()  # 正常币记录
