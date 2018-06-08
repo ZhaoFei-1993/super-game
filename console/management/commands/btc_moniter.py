@@ -73,6 +73,7 @@ class Command(BaseCommand):
             addresses = '|'.join(btc_addresses[start:end])
 
             transactions = get_transactions(addresses)
+            print('transactions = ', transactions)
             self.stdout.write(self.style.SUCCESS('获取到' + str(len(transactions)) + '条交易记录'))
             for address in transactions:
                 if len(transactions[address]) == 0:
