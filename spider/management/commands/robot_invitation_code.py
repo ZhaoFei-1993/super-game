@@ -24,5 +24,5 @@ class Command(BaseCommand):
             if int(invitee_number) < 5:
                 os.chdir(BASE_DIR + '/cache')
                 with open('invitation_code.txt', 'a+') as f:
-                    f.write(robot.invitation_code)
+                    f.write(robot.invitation_code, "=======================" + str(invitee_number))
                     f.write('\n')
