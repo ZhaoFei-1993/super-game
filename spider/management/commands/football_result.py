@@ -333,7 +333,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
-                # handle USDT活动
+                # handle  USDT活动
                 handle_activity(record, coin, earn_coin)
 
             # 发送信息
