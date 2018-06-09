@@ -15,6 +15,7 @@ from decimal import Decimal
 @reversion.register()
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
+    name_en = models.CharField(verbose_name="分类名称", max_length=50, default='')
     icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='自身ID', db_index=True, on_delete=models.CASCADE)
@@ -125,6 +126,7 @@ class Rule(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
+    tips_en = models.CharField(max_length=100, verbose_name="英文选项说明", default="")
     home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
                                          default=0.00)
     guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
@@ -223,6 +225,7 @@ class OptionManager(models.Manager):
 class Option(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.CharField(verbose_name="选项值", max_length=20, default="")
+    option_en = models.CharField(verbose_name="英文选项值", max_length=20, default="")
     option_type = models.CharField(verbose_name="选项分类", max_length=20, default="")
     order = models.IntegerField(verbose_name="排序", default=0)
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2, default=0.00)
