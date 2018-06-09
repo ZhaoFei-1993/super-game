@@ -16,7 +16,7 @@ class Command(BaseCommand):
             if Address.objects.filter(address=user_address).first().coin.is_eth_erc20 is True:
                 print('=========================>', i)
                 i += 1
-                address = Address.objects.filter(address=address).first()
+                address = Address.objects.filter(address=user_address).first()
                 address.user = 0
                 address.save()
 
