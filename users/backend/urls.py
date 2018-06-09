@@ -44,10 +44,14 @@ urlpatterns = [
     # 用户提现列表
     path('coin_present/<int:pk>/<int:coin>/', views.CoinPresentDetailView.as_view(), name="backend-present-detail"),
     # 运营数据
-    path('running/', views.RunningView.as_view(), name='backend-running'),
+    path('run_data/', views.RunningView.as_view(), name='backend-run_data'),
     # 用户统计
     path('user_sts/', views.UserSts.as_view(), name='user-backend-user_sts'),
     # 币种统计
-    path('coin_sts/', views.CoinSts.as_view(), name='user-backend-coin_sts'),
+    path('coin_sts/<int:club_room>/', views.CoinSts.as_view(), name='user-backend-coin_sts'),
+    # 登录统计
+    path('login_rate/', views.LoginRateView.as_view(), name='user-backend-login_rate'),
+    # 留存率统计
+    path('remain_rate/', views.RemainRate.as_view(), name='user-backend-remain_rate')
     # path('aabb/', views.AABBCC.as_view(), name='user-aabbcc'),
 ]
