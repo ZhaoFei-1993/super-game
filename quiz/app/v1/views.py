@@ -503,7 +503,7 @@ class BetView(ListCreateAPIView):
                 give_coin.save()
 
                 earn_coins = earn_coins_one + earn_coins_two
-            else:
+            elif coins < give_coin.lock_coin or coins == give_coin.lock_coin:
                 record = Record()  # 赠送币记录
                 record.user = user
                 record.quiz = quiz
@@ -519,6 +519,18 @@ class BetView(ListCreateAPIView):
 
                 give_coin.lock_coin -= round(Decimal(coins), 3)
                 give_coin.save()
+            else:
+                record = Record()  # 充值币记录
+                record.user = user
+                record.quiz = quiz
+                record.roomquiz_id = roomquiz_id
+                record.rule_id = rule_id
+                record.option = option_odds
+                record.bet = round(Decimal(coins), 3)
+                record.odds = round(Decimal(option_odds.odds), 2)
+                record.save()
+                earn_coins = Decimal(coins) * option_odds.odds
+                earn_coins = round(earn_coins, 3)
         else:
             record = Record()
             record.user = user
