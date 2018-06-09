@@ -46,7 +46,7 @@ class Command(BaseCommand):
         start_time = time()
 
         # 获取所有用户ETH地址
-        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
+        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False).order_by('id')
         eth_address_length = len(user_eth_address)
         if eth_address_length == 0:
             raise CommandError('无地址信息')
