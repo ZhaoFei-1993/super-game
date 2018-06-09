@@ -82,8 +82,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
-                user_id = address_map_uid[address]
-                user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
+                user_id = address_map_uid[address.upper()]
 
                 # 首次充值获得奖励
                 UserRecharge.objects.first_price(user_id)
