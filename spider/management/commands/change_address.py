@@ -14,15 +14,18 @@ class Command(BaseCommand):
             i = 1
             user_address = user_coin.address
             if Address.objects.filter(address=user_address).first().coin.is_eth_erc20 is True:
-                print('=========================>', i)
-                i += 1
                 address = Address.objects.filter(address=user_address).first()
                 address.user = 0
                 address.save()
 
                 user_usdt = UserCoin.objects.filter(user_id=user_coin.user_id, coin__name='USDT').first()
-                new_address = Address.objects.filter(user=0, coin__id=Coin.BTC).first().address
-                user_coin.address = new_address
-                user_usdt.address = new_address
+                new_address = Address.objects.filter(user=0, coin__id=Coin.BTC).first()
+                user_coin.address = new_address.address
+                user_usdt.address = new_address.address
+                new_address.user = user_coin.user_id
+                new_address.save()
                 user_coin.save()
                 user_usdt.save()
+
+                print('=========================> ', i, '=================address=====> ', new_address.address)
+                i += 1
