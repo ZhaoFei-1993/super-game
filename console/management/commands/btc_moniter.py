@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 if len(transactions[address]) == 0:
                     continue
 
-                user_id = address_map_uid[address]
+                user_id = address_map_uid[address.upper()]
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.BTC)
 
                 # 首次充值获得奖励
