@@ -11,5 +11,5 @@ class Command(BaseCommand):
         for coin_give_records in CoinGiveRecords.objects.all():
             user_coin = UserCoin.objects.filter(coin=coin_give_records.coin_give.coin,
                                                 user=coin_give_records.user).first()
-            if float(user_coin.balance) < float(coin_give_records.lock_coin):
+            if float(user_coin.balance) != float(coin_give_records.lock_coin):
                 print(coin_give_records.user.id, ',')
