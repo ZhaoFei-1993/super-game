@@ -127,10 +127,10 @@ def upload_file(request):
             return JsonResponse({"Error": "Empty File!"}, status=status.HTTP_400_BAD_REQUEST)
         file_type = files.name.split('.')[-1]
         if file_type == 'ipa':
-            type  = 'IOS'
+            type = 'IOS'
         else:
             type = 'Android'
-        if file_type not in ['apk','ipa']:
+        if file_type not in ['apk', 'ipa']:
             return JsonResponse({"Error": "Upload File Type Error!"}, status=status.HTTP_400_BAD_REQUEST)
         date = datetime.now().strftime('%Y%m%d')
         media_android = MEDIA_ROOT + 'apps/Android'
@@ -146,4 +146,4 @@ def upload_file(request):
         with open(save_file, 'wb') as f:
             for line in files.chunks():
                 f.write(line)
-        return JsonResponse({'m_type':type}, status=201)
+        return JsonResponse({'m_type': type}, status=201)

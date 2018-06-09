@@ -319,7 +319,7 @@ class UserRegister(object):
             if int(invitation_user.pk) == 2638:  # INT邀请活动
                 invitation_number = IntInvitation.objects.all().count()
                 int_invitation = IntInvitation()
-                int_invitation.invitee = user.pk
+                int_invitation.invitee = userinfo.id
                 int_invitation.inviter = invitation_user
                 int_invitation.coin = 1
                 int_invitation.invitation_code = invitation_code
@@ -334,7 +334,7 @@ class UserRegister(object):
                 user_message.save()
                 if int_invitation.money > 0:
                     int_user_coin = UserCoin.objects.get(user_id=user.pk, coin_id=1)
-                    int_user_coin.balance += int_invitation.money
+                    int_user_coin.balance += Decimal(int_invitation.money)
                     int_user_coin.save()
                     coin_bankruptcy = CoinDetail()
                     coin_bankruptcy.user = user
