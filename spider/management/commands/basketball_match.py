@@ -216,8 +216,8 @@ def get_data_info(url):
                         category.save()
                     quiz.category = Category.objects.filter(name=league_abbr).first()
 
-                    if quiz.category.name != '美职篮':
-                        return
+                    # if quiz.category.name != '美职篮':
+                    #     return
 
                     quiz.host_team = host_team_abbr
                     quiz.host_team_fullname = host_team
@@ -240,12 +240,19 @@ def get_data_info(url):
                             rule = Rule()
                             rule.quiz = quiz
                             rule.type = i
+                            rule.type_en = i
                             rule.tips = '胜负'
+                            rule.tips_en = 'Results of the match'
                             rule.save()
                             for dt in result_mnl:
                                 option = Option()
                                 option.rule = rule
                                 option.option = dt[1]
+                                if dt[1] == '主负':
+                                    option.option_en = 'Away'
+                                elif dt[1] == '主胜':
+                                    option.option_en = 'Home'
+
                                 option.odds = dt[2]
                                 odds_pool_mnl.append(float(dt[2]))
                                 option.flag = dt[0]
@@ -264,11 +271,17 @@ def get_data_info(url):
                             rule = Rule()
                             rule.quiz = quiz
                             rule.type = i
+                            rule.type_en = i
                             rule.save()
                             for dt in result_hdc:
                                 option = Option()
                                 option.rule = rule
                                 option.option = dt[1]
+                                if dt[1] == '让分主负':
+                                    option.option_en = 'Away'
+                                elif dt[1] == '让分主胜':
+                                    option.option_en = 'Home'
+
                                 option.odds = dt[3]
                                 odds_pool_hdc.append(float(dt[3]))
                                 option.flag = dt[0]
@@ -281,6 +294,7 @@ def get_data_info(url):
                                 else:
                                     rule.home_let_score = dt[2][1:]
                                 rule.tips = '让分胜负'
+                                rule.tips_en = 'Handicap Results'
                                 rule.save()
                             rule.max_odd = max(odds_pool_hdc)
                             rule.min_odd = min(odds_pool_hdc)
@@ -294,13 +308,19 @@ def get_data_info(url):
                             rule = Rule()
                             rule.quiz = quiz
                             rule.type = i
+                            rule.type_en = i
                             rule.tips = '大小分,两队总得分大于或小于预估总得分'
+                            rule.tips_en = 'Compare the total score'
                             rule.save()
                             for dt in result_hilo:
                                 option = Option()
                                 option.rule = rule
                                 option.option = dt[1].replace('+', '')
-                                option.odds = dt[3]
+                                option.option_en = dt[2].replace('+', '')
+                                if dt[2].replace('+', '')[0:4] == '总分大于':
+                                    option.option_en = 'More than ' + dt[2].replace('+', '')
+                                else:
+                                    option.option_en = 'Less than ' + dt[2].replace('+', '')
                                 odds_pool_hilo.append(float(dt[3]))
                                 option.flag = dt[0]
                                 num = num + 1
@@ -322,12 +342,15 @@ def get_data_info(url):
                             rule = Rule()
                             rule.quiz = quiz
                             rule.type = i
+                            rule.type_en = i
                             rule.tips = '胜分差'
+                            rule.tips_en = 'Wins the gap'
                             rule.save()
                             for dt in result_wnm:
                                 option = Option()
                                 option.rule = rule
                                 option.option = dt[1][2:]
+                                option.option_en = dt[1][2:]
                                 option.odds = dt[2]
                                 odds_pool_wnm.append(float(dt[2]))
                                 option.option_type = dt[1][0:2]

@@ -123,8 +123,19 @@ class Rule(models.Model):
         (SIZE_POINTS, "大小分"),
         (VICTORY_GAP, "胜分差"),
     )
+    TYPE_CHOICE_EN = (
+        (RESULTS, "Results of the match"),
+        (POLITENESS_RESULTS, "Handicap Results"),
+        (SCORE, "Score"),
+        (TOTAL_GOAL, "Total goals"),
+        (RESULT, "Results of the match"),
+        (POLITENESS_RESULT, "Handicap Results"),
+        (SIZE_POINTS, "Compare the total score"),
+        (VICTORY_GAP, "Wins the gap"),
+    )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
+    type_en = models.CharField(verbose_name="英文玩法", choices=TYPE_CHOICE_EN, max_length=1, default=RESULTS)
     tips = models.CharField(max_length=100, verbose_name="选项说明", default="")
     tips_en = models.CharField(max_length=100, verbose_name="英文选项说明", default="")
     home_let_score = models.DecimalField(verbose_name="主队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
