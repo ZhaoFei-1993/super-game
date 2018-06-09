@@ -109,9 +109,6 @@ class Command(BaseCommand):
                     user_recharge.trade_at = trans['time']
                     user_recharge.save()
 
-                    user_coin.balance += Decimal(tx_value)
-                    user_coin.save()
-
                     valid_trans += 1
 
         stop_time = time()

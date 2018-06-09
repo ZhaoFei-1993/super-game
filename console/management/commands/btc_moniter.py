@@ -14,7 +14,11 @@ coin_name = 'BTC'
 
 def get_transactions(addresses):
     transactions = {}
+    print('addresses = ', addresses)
     response = requests.get(base_url + addresses)
+    # if response.status_code == 500:
+    #     raise CommandError(response)
+    print('response = ', response.__dict__)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
@@ -73,6 +77,7 @@ class Command(BaseCommand):
             addresses = '|'.join(btc_addresses[start:end])
 
             transactions = get_transactions(addresses)
+            print('transactions = ', transactions)
             self.stdout.write(self.style.SUCCESS('获取到' + str(len(transactions)) + '条交易记录'))
             for address in transactions:
                 if len(transactions[address]) == 0:
