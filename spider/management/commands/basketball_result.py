@@ -256,8 +256,11 @@ def get_data_info(url, match_flag):
                 coin_detail.sources = CoinDetail.OPEB_PRIZE
                 coin_detail.save()
 
-                # handle USDT活动
+            # handle  USDT活动
+            if is_right is True:
                 handle_activity(record, coin, earn_coin)
+            else:
+                handle_activity(record, coin, 0)
 
             # 发送信息
             u_mes = UserMessage()
