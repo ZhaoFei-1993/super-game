@@ -46,7 +46,7 @@ class Command(BaseCommand):
         start_time = time()
 
         # 获取所有用户ETH地址
-        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False)
+        user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False).order_by('id')
         eth_address_length = len(user_eth_address)
         if eth_address_length == 0:
             raise CommandError('无地址信息')
@@ -82,8 +82,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(self.style.SUCCESS(address + '获取到' + str(len_trans) + '交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
-                user_id = address_map_uid[address]
-                user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.ETH)
+                user_id = address_map_uid[address.upper()]
 
                 # 首次充值获得奖励
                 UserRecharge.objects.first_price(user_id)

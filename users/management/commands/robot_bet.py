@@ -170,9 +170,6 @@ class Command(BaseCommand):
         """
         获取下注的俱乐部
         不同俱乐部选择权重不同
-        HAND: 70
-        ETH: 20
-        BTC: 10
         :return:
         """
         clubs = Club.objects.filter(~Q(is_recommend=Club.CLOSE))
