@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'reversion',
     'spider',
     'console',
+    'handle',
 ]
 
 MIDDLEWARE = [

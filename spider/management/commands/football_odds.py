@@ -87,7 +87,7 @@ def update_odds(result, rule, quiz, change_time, flag):
                     option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
                     option_odds.odds = dt[2]
                     option_odds.save()
-        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + '的玩法:' + rule.tips + ',赔率已变化')
+        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
         print('=================================================')
     else:
         pass
@@ -355,7 +355,7 @@ def get_data_info(url):
 
 
 class Command(BaseCommand):
-    help = "爬取足球比赛"
+    help = "刷新足球赔率"
 
     def handle(self, *args, **options):
         get_data_info(base_url)

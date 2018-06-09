@@ -10,8 +10,8 @@ class Command(BaseCommand):
     help = "更换用户ETH地址"
 
     def handle(self, *args, **options):
+        i = 1
         for user_coin in UserCoin.objects.filter(~Q(address=''), coin__is_eth_erc20=False):
-            i = 1
             user_address = user_coin.address
             if Address.objects.filter(address=user_address).first().coin.is_eth_erc20 is True:
                 address = Address.objects.filter(address=user_address).first()
