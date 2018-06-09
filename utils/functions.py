@@ -316,7 +316,7 @@ def coin_initialization(user_id, coin_id):
     coin_info = Coin.objects.get(pk=coin_id)
     is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id)
     user = User.objects.get(pk=user_id)
-    if len(is_usercoin) <= 0:
+    if len(is_usercoin) <= 0:                 # 是否有余额表记录
         if coin_info.is_eth_erc20:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
             if user_coin_number != 0:
@@ -330,7 +330,7 @@ def coin_initialization(user_id, coin_id):
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
-                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+                address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
                 address.user = user.pk
                 address.save()
 
@@ -340,11 +340,23 @@ def coin_initialization(user_id, coin_id):
         user_coin.address = address.address
         user_coin.save()
     is_address = UserCoin.objects.filter(~Q(address=''), coin_id=coin_id, user_id=user_id).count()
-    if is_address <= 0:
+    if is_address == 0:
         if coin_info.is_eth_erc20:
-            address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
+            if user_coin_number != 0:
+                address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
+            else:
+                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+                address.user = user.pk
+                address.save()
         else:
-            address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
+            if user_coin_number != 0:
+                address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
+            else:
+                address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+                address.user = user.pk
+                address.save()
         address.user = user
         address.save()
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
