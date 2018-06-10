@@ -168,7 +168,7 @@ class DailySerialize(serializers.ModelSerializer):
 
     def get_is_sign(self, obj):  # 是否已签到
         user = self.context['request'].user.id
-        # sign = sign_confirmation(user)  # 判断是否签到
+        sign = sign_confirmation(user)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime("%Y%m%d")
         yesterday_format = str(yesterday_format) + "000000"  # 今天凌晨00.00时间
@@ -184,6 +184,8 @@ class DailySerialize(serializers.ModelSerializer):
             is_sign = 0
             daily.number = 1
             daily.save()
+        elif sign == 1 and daily.number == 0:
+            is_sign = 1
         elif daily.number >= obj.days:
             is_sign = 1
 
