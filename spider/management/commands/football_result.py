@@ -34,7 +34,7 @@ def handle_activity(record, coin, earn_coin):
         coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
         if int(record.source) == Record.GIVE:
             if coin_give_records.is_recharge_lock is False:
-                coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                coin_give_records.lock_coin = Decimal(coin_give_records.lock_coin) + Decimal(earn_coin)
                 coin_give_records.save()
                 coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
                 if (coin_give_records.lock_coin >= coin_give_records.coin_give.ask_number) and (
@@ -69,7 +69,7 @@ def handle_activity(record, coin, earn_coin):
                 coin_give_records.save()
 
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
-                user_coin.balance += Decimal(10)
+                user_coin.balance = Decimal(user_coin.balance) + Decimal(10)
                 user_coin.save()
 
                 # 用户资金明细表
@@ -319,7 +319,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
                 user_coin.coin_id = club.coin_id
                 user_coin.user_id = record.user_id
-                user_coin.balance += Decimal(earn_coin)
+                user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
                 user_coin.save()
 
                 # 用户资金明细表
@@ -383,7 +383,7 @@ def handle_delay_game(delay_quiz):
 
             user_coin.coin_id = club.coin_id
             user_coin.user_id = record.user_id
-            user_coin.balance += Decimal(return_coin)
+            user_coin.balance = Decimal(user_coin.balance) + Decimal(return_coin)
             user_coin.save()
 
             # 用户资金明细表
