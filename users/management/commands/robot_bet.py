@@ -69,9 +69,9 @@ class Command(BaseCommand):
 
         for quiz in quizs:
             # 世界杯题目未到开放时间暂时不下注
-            if quiz.category_id == 873 and int(time.time()) < 1528732800:
-                print('世界杯专题，跳过')
-                continue
+            # if quiz.category_id == 873 and int(time.time()) < 1528732800:
+            #     print('世界杯专题，跳过')
+            #     continue
 
             # 随机获取俱乐部
             club = self.get_bet_club()
@@ -111,9 +111,9 @@ class Command(BaseCommand):
                 Option.objects.change_odds(rule.id, club.coin_id, club.id)
 
             # 用户减少对应币持有数
-            user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
-            user_coin.balance -= wager
-            user_coin.save()
+            # user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
+            # user_coin.balance -= wager
+            # user_coin.save()
 
             rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
             coin = Coin.objects.get(pk=club.coin_id)
@@ -155,7 +155,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 20)
+        user_total = random.randint(1, 200)
         start_date, end_date = self.get_date()
 
         random_datetime = []
