@@ -442,15 +442,6 @@ class LoginView(CreateAPIView):
             else:
                 password = request.data.get('password')
                 token = ur.login(source=source, username=username, password=password)
-        try:
-            user_now = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return 0
-        lr = LoginRecord()
-        lr.user = user_now
-        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
-        lr.ip = request.META.get("REMOTE_ADDR", '')
-        lr.save()
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -614,6 +605,12 @@ class InfoView(ListAPIView):
                 else:
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
+
+        lr = LoginRecord() #登录记录
+        lr.user = user
+        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
+        lr.ip = request.META.get("REMOTE_ADDR", '')
+        lr.save()
 
         is_message = message_hints(user_id)  # 是否有未读消息
 
@@ -2325,7 +2322,8 @@ class ActivityImageView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
+        now_time = datetime.now().strftime('%Y%m%d%H%M')
+        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg?t=%s' % now_time])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
@@ -2336,7 +2334,8 @@ class USDTActivityView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg'])
+        now_time = datetime.now().strftime('%Y%m%d%H%M')
+        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg?t=%s'% now_time])
         return self.response(
             {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
 
