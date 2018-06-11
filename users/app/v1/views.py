@@ -2371,7 +2371,6 @@ class CountriesView(ListAPIView):
     """
     电话区号列表
     """
-    permission_classes = (LoginRequired,)
     serializer_class = CountriesSerialize
 
     def get_queryset(self):
