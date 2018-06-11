@@ -583,6 +583,15 @@ class IntInvitation(models.Model):
         verbose_name = verbose_name_plural = "INT活动邀请表"
 
 
+@reversion.register()
+class Countries(models.Model):
+    code = models.CharField(verbose_name="代码", max_length=2, default="")
+    area_code = models.IntegerField(verbose_name="手机区号", default=0)
+    name_en = models.CharField(verbose_name="名称（英文)", max_length=255, default="")
+    name_zh_CN = models.CharField(verbose_name="名称（简体中文）", max_length=255, default="")
+    name_zh_HK = models.CharField(verbose_name="名称（繁体中文）", max_length=255, default="")
+    language = models.CharField(verbose_name="语言", max_length=255, default="")
+    status = models.BooleanField(verbose_name="是否显示", default=True)
 
-# @reversion.register()
-# class countries
+    class Meta:
+        verbose_name = verbose_name_plural = "电话号码区好表"
