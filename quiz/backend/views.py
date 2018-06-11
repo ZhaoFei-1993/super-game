@@ -341,7 +341,7 @@ class UserQuizView(ListCreateAPIView):
     """
     用户竞猜列表
     """
-    queryset = Record.objects.all()
+    queryset = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE])
     serializer_class = UserQuizSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'bet', 'earn_coin', 'option']
@@ -354,7 +354,7 @@ class QuizListBackEndView(FormatListAPIView):
 
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
-        values = Record.objects.filter(source = Record.NORMAL, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
+        values = Record.objects.filter(source__in = [Record.NORMAL,Record.GIVE], quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
                                                                       sum_bet=Sum('bet'), sum_earn_coin=Sum('earn_coin')).order_by('-quiz__begin_at')
         data = []
         for x in values:
@@ -408,7 +408,7 @@ class QuizListBackEndDetailView(ListAPIView):
             return JsonResponse({'Error:参数room不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             room = int(room)
-        records = Record.objects.filter(source=Record.NORMAL, quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
+        records = Record.objects.filter(source__in=[Record.NORMAL,Record.GIVE], quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
         if len(records) > 0:
             rule_id = records[0].rule_id
             options = Option.objects.filter(rule_id =rule_id).order_by('id')
@@ -450,7 +450,7 @@ class UserQuizListView(ListAPIView):
     def get_queryset(self):
         pk = self.kwargs['user_id']
         room_id = self.kwargs['room_id']
-        rec_s = Record.objects.filter(user_id=pk, source=Record.NORMAL, roomquiz_id=room_id)
+        rec_s = Record.objects.filter(user_id=pk, source__in=[Record.NORMAL,Record.GIVE], roomquiz_id=room_id)
         return rec_s
 
 
@@ -463,7 +463,7 @@ class QuizCountListView(ListAPIView):
     def get_queryset(self):
         option_id = int(self.kwargs['pk'])
         room = int(self.kwargs['room'])
-        records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=room, option__option_id=option_id)
+        records = Record.objects.filter(source__in=[Record.NORMAL,Record.GIVE], roomquiz_id=room, option__option_id=option_id)
         return records
 
 
@@ -477,14 +477,3 @@ class QuizListAllView(ListAPIView):
         category = self.kwargs['category'] #1为篮球, 2为足球
         quiz_s = Quiz.objects.filter(category__parent_id=category)
         return quiz_s
-
-
-class BetCoinStsView(ListAPIView):
-    """
-    下注总额
-    """
-    # def list(self, request, *args, **kwargs):
-    #     coins = Coin.objects.all()
-    #     data=[]
-    #     for coin in coins:
-    #         bets = Record.
