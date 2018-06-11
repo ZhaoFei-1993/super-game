@@ -2322,7 +2322,8 @@ class ActivityImageView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg'])
+        now_time = datetime.now().strftime('%Y%m%d%H%M')
+        activity_img = '/'.join([MEDIA_DOMAIN_HOST, 'ATI.jpg?t=%s' % now_time])
         return self.response(
             {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
 
@@ -2333,7 +2334,8 @@ class USDTActivityView(ListAPIView):
     """
 
     def get(self, request, *args, **kwargs):
-        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg'])
+        now_time = datetime.now().strftime('%Y%m%d%H%M')
+        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg?t=%s'% now_time])
         return self.response(
             {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
 
