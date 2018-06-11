@@ -1645,18 +1645,19 @@ class ForgetPasswordView(ListAPIView):
     """
 
     def post(self, request):
-        value = value_judge(request, "password", "code", "username")
+        value = value_judge(request, "password", "code", "username", "area_code")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        area_code = request.data.get('area_code')
         password = request.data.get('password')
         username = request.data.get('username')
         try:
-            userinfo = User.objects.get(username=username)
+            userinfo = User.objects.get(area_code=area_code, username=username)
         except Exception:
             raise ParamErrorException(error_code.API_20103_TELEPHONE_UNREGISTER)
 
         # 获取该手机号码最后一条发短信记录
-        sms = Sms.objects.filter(telephone=userinfo.telephone).order_by('-id').first()
+        sms = Sms.objects.filter(area_code=area_code, telephone=userinfo.telephone).order_by('-id').first()
         if (sms is None) or (sms.code != request.data.get('code')):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
