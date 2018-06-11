@@ -10,5 +10,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         record_list = Record.objects.filter(Q(quiz_id__gte=313) | Q(quiz_id__lte=344), source=1)
+        i = 1
         for record in record_list:
+            print("狗带啦你===============================================》", 1)
+            i += 1
             record.delete()
