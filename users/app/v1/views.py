@@ -406,10 +406,9 @@ class LoginView(CreateAPIView):
         if len(user) == 0:
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
-
+            nickname = str(username[0:3]) + "***" + str(username[7:])
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
-                nickname = str(username[0:3]) + "***" + str(username[7:])
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password)
 
@@ -424,12 +423,11 @@ class LoginView(CreateAPIView):
                 # if invitation_user == 0:
                 #     raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
-                message = Sms.objects.filter(telephone=username, code=code, type=Sms.REGISTER)
+                message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
                     return self.response({
                         'code': error_code.API_20402_INVALID_SMS_CODE
                     })
-                nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
                                     password=password, invitation_code=invitation_code, area_code=area_code)
