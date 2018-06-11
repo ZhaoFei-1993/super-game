@@ -218,7 +218,6 @@ class UserRegister(object):
             #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
             register_type = self.get_register_type(username)
-            print("area_code=area_code=============================", area_code)
             user = User()
             if len(username) == 11:
                 user.telephone = username
@@ -263,6 +262,7 @@ class UserRegister(object):
             if len(username) == 11:
                 user.telephone = username
 
+            user.area_code = area_code
             user.username = username
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
