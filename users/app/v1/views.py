@@ -193,12 +193,13 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, avatar='', nickname='', invitation_code=''):
+    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code=''):
         """
         用户注册
         :param source:      用户来源：ios、android
         :param username:    用户账号：openid
         :param password     登录密码
+        :param area_code     手机区号
         :param avatar:      用户头像，第三方登录提供
         :param nickname:    用户昵称，第三方登录提供
         :return:
@@ -218,6 +219,7 @@ class UserRegister(object):
 
             register_type = self.get_register_type(username)
             user = User()
+            user.area_code = area_code
             if len(username) == 11:
                 user.telephone = username
 
@@ -413,6 +415,7 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
+                area_code = request.data.get('area_code')
                 invitation_code = ''
                 if 'invitation_code' in request.data:
                     invitation_code = request.data.get('invitation_code')
@@ -429,7 +432,7 @@ class LoginView(CreateAPIView):
                 nickname = str(username[0:3]) + "***" + str(username[7:])
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, invitation_code=invitation_code)
+                                    password=password, invitation_code=invitation_code, area_code=area_code)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
