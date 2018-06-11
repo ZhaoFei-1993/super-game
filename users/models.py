@@ -219,6 +219,7 @@ class CoinDetail(models.Model):
     INVITE = 8
     RETURN = 9
     CASHBACK = 10
+    LOCK = 11
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -231,6 +232,7 @@ class CoinDetail(models.Model):
         (INVITE, "邀请好友"),
         (RETURN, "返还"),
         (CASHBACK, "返现"),
+        (LOCK, "锁定")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
@@ -249,8 +251,8 @@ class CoinDetail(models.Model):
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.00)
-    limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
-    limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
+    limit_start = models.DecimalField(verbose_name="锁定起步金额", max_digits=10, decimal_places=3, default=0.000)
+    limit_end = models.DecimalField(verbose_name="最大锁定金额", max_digits=10, decimal_places=3, default=0.000)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
@@ -581,3 +583,17 @@ class IntInvitation(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "INT活动邀请表"
+
+
+@reversion.register()
+class Countries(models.Model):
+    code = models.CharField(verbose_name="代码", max_length=2, default="")
+    area_code = models.IntegerField(verbose_name="手机区号", default=0)
+    name_en = models.CharField(verbose_name="名称（英文)", max_length=255, default="")
+    name_zh_CN = models.CharField(verbose_name="名称（简体中文）", max_length=255, default="")
+    name_zh_HK = models.CharField(verbose_name="名称（繁体中文）", max_length=255, default="")
+    language = models.CharField(verbose_name="语言", max_length=255, default="")
+    status = models.BooleanField(verbose_name="是否显示", default=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "电话号码区好表"

@@ -355,7 +355,7 @@ class QuizListBackEndView(FormatListAPIView):
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
         values = Record.objects.filter(source = Record.NORMAL, quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
-                                                                      sum_bet=Sum('bet'), sum_earn_coin=Sum('earn_coin')).order_by('-total_bet')
+                                                                      sum_bet=Sum('bet'), sum_earn_coin=Sum('earn_coin')).order_by('-quiz__begin_at')
         data = []
         for x in values:
             q_id = int(x['quiz'])
@@ -428,6 +428,9 @@ class QuizListBackEndDetailView(ListAPIView):
                 }
                 if type in [0, 1, 4, 5]:
                     temp_dict['rate']=round((100*count_t)/ records.count(),0)
+                    if type in [1,5]:
+                        temp_dict['home_let_score'] = x.rule.home_let_score
+                        temp_dict['guest_let_score'] = x.rule.guest_let_score
                 if type in [2, 7]:
                     temp_dict['option_type']= x.option_type
                 data.append(temp_dict)
