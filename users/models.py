@@ -219,6 +219,7 @@ class CoinDetail(models.Model):
     INVITE = 8
     RETURN = 9
     CASHBACK = 10
+    LOCK = 11
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -231,6 +232,7 @@ class CoinDetail(models.Model):
         (INVITE, "邀请好友"),
         (RETURN, "返还"),
         (CASHBACK, "返现"),
+        (LOCK, "锁定")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
@@ -249,8 +251,8 @@ class CoinDetail(models.Model):
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.00)
-    limit_start = models.IntegerField(verbose_name="锁定起步金额", default=0)
-    limit_end = models.IntegerField(verbose_name="最大锁定金额", default=0)
+    limit_start = models.DecimalField(verbose_name="锁定起步金额", max_digits=10, decimal_places=3, default=0.000)
+    limit_end = models.DecimalField(verbose_name="最大锁定金额", max_digits=10, decimal_places=3, default=0.000)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)

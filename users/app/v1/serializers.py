@@ -281,7 +281,7 @@ class AssetSerialize(serializers.ModelSerializer):
             d = delta.days
             h = int(delta.seconds / 3600)
             m = int((delta.seconds % 3600) / 60)
-            s = int(delta.seconds % 60)
+            # s = int(delta.seconds % 60)
             value = '剩余锁定时间:%d天%d小时%d分' % (d, h, m)
             # for item in {'0天': d, '0小时': h, '0分': m}.items():
             #     if item[0] in value and item[1] == 0:
@@ -292,7 +292,7 @@ class AssetSerialize(serializers.ModelSerializer):
     def get_created_at(obj):
         # created_time = timezone.localtime(obj.created_at)
         created_time = obj.created_at
-        created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
+        created_at = created_time.strftime("%Y/%m/%d")
         return created_at
 
     @staticmethod
