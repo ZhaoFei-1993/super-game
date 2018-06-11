@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
-    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer
+    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, CountriesSerialize
 import qrcode
 from django.core.cache import caches
 from quiz.models import Quiz, Record
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
-    CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords, IntInvitation
+    CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords, IntInvitation, Countries
 from chat.models import Club
 from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
@@ -2362,3 +2362,32 @@ class CheckInvitationCode(ListAPIView):
         #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
         return self.response({'code': 0, 'id': invitation_user.id, 'avatar': invitation_user.avatar,
                               'nickname': invitation_user.nickname})
+
+
+class CountriesView(ListAPIView):
+    """
+    电话区号列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = CountriesSerialize
+
+    def get_queryset(self):
+        list = Countries.objects.filter(~Q(status=1))
+        return list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for list in items:
+            data.append({
+                "id": list["id"],
+                "code": list["code"],
+                "area_code": list["area_code"],
+                "name_en": list["name_en"],
+                "name_zh_HK": list["name_zh_HK"],
+                "name_zh_CN": list["name_zh_CN"],
+                "language": list["language"]
+            })
+
+        return self.response({'code': 0, 'data': data})

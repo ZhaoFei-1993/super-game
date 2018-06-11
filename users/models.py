@@ -594,4 +594,4 @@ class Countries(models.Model):
     status = models.BooleanField(verbose_name="是否显示", default=True)
 
     class Meta:
-        verbose_name = verbose_name_plural = "电话号码区好表"
+        verbose_name = verbose_name_plural = "电话号码区号表"

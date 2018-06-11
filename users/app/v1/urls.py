@@ -76,6 +76,8 @@ urlpatterns = [
     path('activity_image/', views.ActivityImageView.as_view(), name="app-v1-user-activity_image"),
     # usdt活动图片
     path('usdt_act_image/', views.USDTActivityView.as_view(), name="app-v1-user-usdt_act_image"),
+    # 电话区号列表
+    path('countries/', views.CountriesView.as_view(), name="app-v1-user-countries"),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

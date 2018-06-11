@@ -5,7 +5,7 @@ from django.db.models import Q
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
-    CoinGiveRecords
+    CoinGiveRecords, Countries
 from quiz.models import Record, Quiz
 from base.exceptions import ParamErrorException
 from base import code as error_code
@@ -599,3 +599,12 @@ class LuckDrawSerializer(serializers.ModelSerializer):
                 coin = Coin.objects.filter(name=obj.prize_name)
                 prize_number = normalize_fraction(float(prize_number), int(coin[0].coin_accuracy))
         return prize_number
+
+
+class CountriesSerialize(serializers.ModelSerializer):
+    """
+    电话区号序列化
+    """
+    class Meta:
+        model = Countries
+        fields = ('id', 'code', 'area_code', 'name_en', 'name_zh_CN', 'name_zh_HK', 'language')
