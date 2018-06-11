@@ -58,7 +58,7 @@ class HotestView(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        return Quiz.objects.filter(~Q(category_id=873), status=0, is_delete=False).order_by('-total_people')[:10]
+        return Quiz.objects.filter(status=0, is_delete=False).order_by('-total_people')[:10]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -77,17 +77,17 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if 'category' not in self.request.GET or self.request.GET['category'] == '':
                 if int(self.request.GET.get('type')) == 1:  # 未结束
-                    return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2),
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
                                                is_delete=False).order_by(
                         'begin_at')
                 elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(~Q(category_id=873), Q(status=3) | Q(status=4) | Q(status=5),
+                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
                                                is_delete=False).order_by(
                         '-begin_at')
             category_id = str(self.request.GET.get('category'))
             category_arr = category_id.split(',')
             if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(~Q(category_id=873), Q(status=0) | Q(status=1) | Q(status=2),
+                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
                                            is_delete=False, category__in=category_arr).order_by('begin_at')
             elif int(self.request.GET.get('type')) == 2:  # 已结束
                 return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
