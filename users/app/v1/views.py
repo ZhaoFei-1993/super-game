@@ -1131,7 +1131,6 @@ class AssetView(ListAPIView):
             raise
 
         for list in Progress:
-            print("list[balance]=============================", list["balance"])
             temp_dict = {
                 'coin_order': list["coin_order"],
                 'icon': list["icon"],
