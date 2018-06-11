@@ -108,7 +108,7 @@ class UserRegister(object):
 
         return token
 
-    def login(self, source, username, password):
+    def login(self, source, username, area_code, password):
         """
         用户登录
         :param source:   用户来源
@@ -125,7 +125,7 @@ class UserRegister(object):
             token = self.get_access_token(source=source, user=user)
         else:
             try:
-                user = User.objects.get(username=username)
+                user = User.objects.get(area_code=area_code, username=username)
             except Exception:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             if user.check_password(password):
@@ -218,11 +218,11 @@ class UserRegister(object):
             #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
             register_type = self.get_register_type(username)
+            print("area_code=area_code=============================", area_code)
             user = User()
-            user.area_code = area_code
             if len(username) == 11:
                 user.telephone = username
-
+            user.area_code = area_code
             user.username = username
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
@@ -429,8 +429,9 @@ class LoginView(CreateAPIView):
                         'code': error_code.API_20402_INVALID_SMS_CODE
                     })
                 password = request.data.get('password')
-                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, invitation_code=invitation_code, area_code=area_code)
+                token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
+                                    avatar=avatar,
+                                    password=password, invitation_code=invitation_code)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -439,12 +440,14 @@ class LoginView(CreateAPIView):
                 token = ur.login(source=source, username=username, password=password)
             elif int(register_type) == 3:
                 password = ''
+                area_code = request.data.get('area_code')
                 if 'password' in request.data:
                     password = request.data.get('password')
-                token = ur.login(source=source, username=username, password=password)
+                token = ur.login(source=source, username=username, area_code=area_code, password=password)
             else:
                 password = request.data.get('password')
-                token = ur.login(source=source, username=username, password=password)
+                area_code = request.data.get('area_code')
+                token = ur.login(source=source, username=username, area_code=area_code, password=password)
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -856,6 +859,7 @@ class BackPasscodeView(ListCreateAPIView):
         value = value_judge(request, "passcode", "code")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        passcode = request.data.get('passcode')
         passcode = request.data.get('passcode')
         user_id = self.request.user.id
         try:
@@ -1893,6 +1897,7 @@ class InvitationRegisterView(CreateAPIView):
         invitation_id = request.data.get('invitation_id')
         telephone = request.data.get('telephone')
         code = request.data.get('code')
+        area_code = request.data.get('area_code')
         password = request.data.get('password')
         # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
         #                                                is_effective=1).count()
@@ -1923,7 +1928,8 @@ class InvitationRegisterView(CreateAPIView):
         ur = UserRegister()
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
-        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname)
+        token = ur.register(source=source, username=telephone, area_code=area_code, password=password, avatar=avatar,
+                            nickname=nickname)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
