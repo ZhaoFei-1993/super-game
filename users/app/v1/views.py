@@ -606,7 +606,7 @@ class InfoView(ListAPIView):
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()
 
-        lr = LoginRecord() #登录记录
+        lr = LoginRecord()  # 登录记录
         lr.user = user
         lr.login_type = request.META.get('HTTP_X_API_KEY', '')
         lr.ip = request.META.get("REMOTE_ADDR", '')
@@ -1131,6 +1131,7 @@ class AssetView(ListAPIView):
             raise
 
         for list in Progress:
+            print("list[balance]=============================", list["balance"])
             temp_dict = {
                 'coin_order': list["coin_order"],
                 'icon': list["icon"],
@@ -2335,7 +2336,7 @@ class USDTActivityView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
-        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg?t=%s'% now_time])
+        usdt_img = '/'.join([MEDIA_DOMAIN_HOST, 'USDT_ATI.jpg?t=%s' % now_time])
         return self.response(
             {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
 
