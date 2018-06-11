@@ -61,7 +61,7 @@ def handle_activity(record, coin, earn_coin):
                                                      roomquiz_id=Club.objects.get(coin=coin).id,
                                                      source=str(Record.NORMAL),
                                                      created_at__lte=coin_give_records.coin_give.end_time,
-                                                     earn_coin__gte=0):
+                                                     earn_coin__gt=0):
                 user_profit = user_profit + (user_record.earn_coin - user_record.bet)
             if (user_profit >= 50) and (coin_give_records.is_recharge_give is False) and (
                     datetime.datetime.now() <= coin_give_records.coin_give.end_time):
