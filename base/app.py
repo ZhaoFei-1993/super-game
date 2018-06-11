@@ -43,8 +43,8 @@ class BaseView(generics.GenericAPIView):
         page_size = int(page_size)
         if page_size < 0 or page_size == 0:
             page_size = pnp.page_size
-        if page_size > 100:
-            page_size = 100
+        if page_size > 1000:
+            page_size = 1000
 
         pnp.request = self.request
         paginator = DjangoPaginator(queryset, page_size)
