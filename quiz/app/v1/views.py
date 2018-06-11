@@ -614,5 +614,5 @@ class WorldCup(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
-        time = 1528732800
+        time = 0
         return self.response({"code": 0, "data": value, 'time': time})
