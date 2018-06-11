@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
-    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, AssetSerialize, CountriesSerialize
+    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, AssetSerialize, \
+    CountriesSerialize
 import qrcode
 from django.core.cache import caches
 from quiz.models import Quiz, Record
@@ -1201,8 +1202,8 @@ class AssetLockView(CreateAPIView):
         new_log.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
-        coin_detail.coin_name  = user_coin.coin.name
-        coin_detail.amount = '-'+str(amounts)
+        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.amount = '-' + str(amounts)
         coin_detail.rest = user_coin.balance
         coin_detail.sources = CoinDetail.LOCK
         coin_detail.save()
