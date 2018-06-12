@@ -298,7 +298,7 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_ip_address(obj):
-        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('login_time')
         if not ip_address.exists():
             return ''
         else:
