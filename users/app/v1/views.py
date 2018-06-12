@@ -1957,7 +1957,7 @@ class InvitationRegisterView(CreateAPIView):
 
         if invitee_one > 0:  # 邀请人为他人T1.
             try:
-                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
+                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter
