@@ -1257,6 +1257,11 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
+        if coin.name != 'USDT':
+            records = Record.objects.filter(source=Record.GIVE, user_id=userid).values('quiz_id').distinct().count()
+            if records < 6:
+                raise ParamErrorException(error_code.API_70109_USER_PRESENT_USDT_QUIZ_LT_6)
+
         if coin.name != 'HAND' and coin.name != 'USDT':
             if user_coin.balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
@@ -1269,7 +1274,6 @@ class UserPresentationView(CreateAPIView):
             balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
             if balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
-
         else:
             try:
                 coin_eth = UserCoin.objects.get(user_id=userid, coin_id=coin_out.coin_payment)
@@ -1440,7 +1444,6 @@ class LockListView(ListAPIView):
             # if x['end_time'] >= x['created_at']:
             data.append(
                 {
-
                     'id': x['id'],
                     'created_at': x['created_at'],
                     'amount': x['amount'],
@@ -1464,6 +1467,7 @@ class LockListView(ListAPIView):
 #         query = UserCoinLock.objects.filter(user_id=userid, is_free=1)  # USE_TZ = True时,可直接用now比较,否则now=datetime.utcnow()
 #         return query
 #
+
 #     def list(self, request, *args, **kwargs):
 #         results = super().list(request, *args, **kwargs)
 #         items = results.data.get('results')
