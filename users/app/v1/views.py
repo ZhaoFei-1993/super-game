@@ -1257,7 +1257,7 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
-        if coin.name != 'USDT':
+        if coin.name == 'USDT':
             records = Record.objects.filter(source=Record.GIVE, user_id=userid).values('quiz_id').distinct().count()
             if records < 6:
                 raise ParamErrorException(error_code.API_70109_USER_PRESENT_USDT_QUIZ_LT_6)
