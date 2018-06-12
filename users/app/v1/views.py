@@ -418,7 +418,8 @@ class LoginView(CreateAPIView):
 
             else:
                 code = request.data.get('code')
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = 86
                 invitation_code = ''
                 if 'invitation_code' in request.data:
                     invitation_code = request.data.get('invitation_code')
@@ -444,13 +445,15 @@ class LoginView(CreateAPIView):
                 token = ur.login(source=source, username=username, password=password)
             elif int(register_type) == 3:
                 password = ''
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = 86
                 if 'password' in request.data:
                     password = request.data.get('password')
                 token = ur.login(source=source, username=username, area_code=area_code, password=password)
             else:
                 password = request.data.get('password')
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = area_code = 86
                 token = ur.login(source=source, username=username, area_code=area_code, password=password)
         return self.response({
             'code': 0,
