@@ -509,7 +509,7 @@ class CoinPresentView(ListAPIView):
     """
     提现记录表
     """
-    queryset = UserPresentation.objects.all().order_by('-created_at', 'status')
+    queryset = UserPresentation.objects.all().order_by('-created_at')
     serializer_class = PresentationSerialize
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'status', 'coin']
@@ -579,7 +579,7 @@ class RechargeAllView(ListAPIView):
     """
     所有用户充值记录
     """
-    queryset = UserRecharge.objects.filter(user__is_robot=0).order_by('-amount')
+    queryset = UserRecharge.objects.filter(user__is_robot=0).order_by('-created_at')
     serializer_class = serializers.UserRechargeSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'coin']
@@ -648,10 +648,7 @@ class RunningView(ListAPIView):
         :return:
         """
         usdt = CoinGiveRecords.objects.all()
-        if number == 50:
-            count_user = usdt.filter(is_recharge_lock=True, is_recharge_give=True).count()
-        else:
-            count_user = usdt.filter(lock_coin__gte=number).count()
+        count_user = usdt.filter(lock_coin__gte=number).count()
         return count_user
 
     def list(self, request, *args, **kwargs):
@@ -715,6 +712,15 @@ class RunningView(ListAPIView):
         usdt_lock_coin_max = \
             CoinGiveRecords.objects.filter(user__is_robot=0).values('lock_coin').aggregate(Max('lock_coin'))[
                 'lock_coin__max']
+        usdt_present_temp = CoinGiveRecords.objects.filter(user__is_robot=0, is_recharge_lock=1)
+        usdt_lock_present=0
+        for x in usdt_present_temp:
+            if UserPresentation.objects.filter(user_id=x.user_id, coin__name='USDT').exists():
+                usdt_lock_present +=1
+        usdt_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT').count()
+        usdt_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT', status=1).count()
+
+
 
         # for x in records:
         #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
@@ -728,6 +734,7 @@ class RunningView(ListAPIView):
                 'invite_0': invite_0,  # 邀请0个用户数
                 'gsg_0': gsg_0,  # gsg余额为0用户数
                 'gsg_sent': gsg_sent,  # gsg发放的金额数
+                'gsg_rest': sum_integral,  # gsg余额
                 'recharge_sum': recharge_sum,  # 充值人数
                 'present_sum': present_sum,  # 提现人数
                 'hand_recharge': hand_recharge,  # hand币充值金额
@@ -748,6 +755,9 @@ class RunningView(ListAPIView):
                 'usdt_bet_not_begin': usdt_bet_not_begin,  # usdt用户投注未结算
                 'usdt_balance_max': usdt_balance_max,  # usdt用户余额最大值
                 'usdt_lock_coin_max': usdt_lock_coin_max,  # usdt用户锁定金额最大值
+                'usdt_lock_present':usdt_lock_present,
+                'usdt_success': usdt_success,
+                'usdt_present': usdt_present,
                 'usdt_earn_gte_20': self.count_earn_coin(20),
                 'usdt_earn_gte_30': self.count_earn_coin(30),
                 'usdt_earn_gte_40': self.count_earn_coin(40),
@@ -811,7 +821,6 @@ class UserSts(ListAPIView):
         data = []
         activy_list = [it for it in activy_user]
         activy_list = [{'date': datetime.strptime('2018-5-28', '%Y-%m-%d').date(), 'activy_count': 0}] + activy_list
-        print('aaaaaaaaaaaaaaa', activy_list)
         # activy.insert({'date': datetime.strptime('2018-5-28', '%Y-%m-%d').date(), 'activy_count':0})
         # print('aaaaaaaaaaaaa',activy)
         if len(new_register) == len(activy_list) == len(bet_user):
@@ -822,16 +831,15 @@ class UserSts(ListAPIView):
                     unbet = total - z['user_count']
                     temp_dict = {
                         'date': date,
-                        'new_register': x['register_count'],
-                        'activy_user': y['activy_count'],
-                        'bet_user': z['user_count'],
-                        'unbet_user': unbet
+                        '新增账号': x['register_count'],
+                        '每日活跃': y['activy_count'],
+                        '有投注用户': z['user_count'],
+                        '未投注用户': unbet
                     }
                     data.append(temp_dict)
                 else:
                     return JsonResponse({'Error': '日期需按同一顺序列表'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            print(new_register, '----------\n', activy_user, '-----------\n', bet_user)
             return JsonResponse({'Error': '缺少天数'}, status=status.HTTP_400_BAD_REQUEST)
 
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
@@ -844,8 +852,6 @@ class UserSts(ListAPIView):
         #         'total_count': x['total_count']
         #     }
         #     data.append(temp_dict)
-
-        return JsonResponse({'results': ''}, status=status.HTTP_200_OK)
 
 
 class CoinSts(ListAPIView):
@@ -902,12 +908,12 @@ class CoinSts(ListAPIView):
                 if a['date'] == b['date'] == c['date'] == d['date']:
                     temp_dict = {
                         'date': a['date'].strftime('%m/%d'),
-                        'coin_out': a['out'],
-                        'coin_in': b['in_count'],
-                        'bet_user': c['user_count'],
-                        'bet_times': d['rc_count'],
-                        'earn_coin': b['in_count'] - a['out'],
-                        'bet_sum': e['bet_sum']
+                        '净放发数量': float(a['out']),
+                        '回收数量': float(b['in_count']),
+                        '下注用户数': c['user_count'],
+                        '投注次数': d['rc_count'],
+                        '净盈利': float((b['in_count'] - a['out'])),
+                        '投注数量': float(e['bet_sum'])
                     }
                     data.append(temp_dict)
                 else:
@@ -949,7 +955,7 @@ class RemainRate(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        end_day = datetime.now().date() - timedelta(1)
+        end_day = datetime.now().date()
         register_user = User.objects.filter(is_robot=0, created_at__date__lt=end_day).extra(
             select={'date': 'date(created_at)'}).values('date', 'id').order_by('date')
         temp_user = {}
@@ -962,14 +968,24 @@ class RemainRate(ListAPIView):
         count_dict = {}
         for x in temp_user:
             count_dict[x] = len(temp_user[x])
+        data=[]
         for x in temp_user:
             start_day = datetime.strptime(x, '%Y-%m-%d').date() + timedelta(1)
-            print(x)
-            login_users = LoginRecord.objects.filter(user__in=temp_user[x],
-                                                     login_time__date__range=(start_day, end_day)).extra(
-                select={'date': 'date(login_time)'}).values('date').annotate(Count('user_id', distinct=True)).order_by(
-                'date')
+            login_users = LoginRecord.objects\
+                .filter(user__in=temp_user[x],login_time__date__range=(start_day, end_day))\
+                .extra(select={'date': 'date(login_time)'})\
+                .values('date')\
+                .annotate(Count('user_id', distinct=True))\
+                .order_by('date')
             # user = LoginRecord.objects.filter(user__)
-            print(login_users)
+            login_temp={}
+            login_temp['date'] = x
+            for i in login_users:
+                day=i['date']-datetime.strptime(x, '%Y-%m-%d').date()
+                delta = str(day.days)
+                login_temp[delta]=round(100*i['user_id__count']/count_dict[x],2)
+            data.append(login_temp)
 
-        return JsonResponse({'date': count_dict}, status=status.HTTP_200_OK)
+        return JsonResponse({'data': data}, status=status.HTTP_200_OK)
+
+
