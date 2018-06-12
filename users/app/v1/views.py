@@ -1987,10 +1987,10 @@ class InvitationInfoView(ListAPIView):
         else:
             invitation_code = user.invitation_code
         invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # T1总人数
-        user_invitation_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=user.id, is_deleted=1,
+        user_invitation_two = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
                                                             coin=4).aggregate(
             Sum('money'))
-        user_invitation_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=user.id, is_deleted=1,
+        user_invitation_one = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
                                                             coin=9).aggregate(
             Sum('money'))
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
