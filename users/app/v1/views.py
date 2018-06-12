@@ -548,7 +548,8 @@ class InfoView(ListAPIView):
         #
 
         usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
-        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1:
+        record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
@@ -1919,9 +1920,12 @@ class InvitationRegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
+        inviter = User.objects.get(pk=int(invitation_id))
+        invitation_code = inviter.invitation_code
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
-        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname)
+        token = ur.register(source=source, username=telephone, password=password, avatar=avatar, nickname=nickname,
+				invitation_code=invitation_code)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
