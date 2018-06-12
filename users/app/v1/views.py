@@ -193,7 +193,7 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code=''):
+    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code='', ip_address=''):
         """
         用户注册
         :param source:      用户来源：ios、android
@@ -226,6 +226,7 @@ class UserRegister(object):
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
             user.register_type = register_type
+            user.ip_address=ip_address
             user.avatar = avatar
             user.nickname = nickname
             user.invitation_code = random_invitation_code()
@@ -266,6 +267,7 @@ class UserRegister(object):
             user.username = username
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
+            user.ip_address = ip_address
             user.register_type = register_type
             user.avatar = avatar
             user.nickname = nickname
@@ -393,6 +395,7 @@ class LoginView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
+        ip_address = request.META.get("REMOTE_ADDR", '')
         register_type = ur.get_register_type(username)
 
         avatar = self.get_name_avatar()
@@ -410,7 +413,7 @@ class LoginView(CreateAPIView):
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password)
+                                    password=password, ip_address=ip_address)
 
             else:
                 code = request.data.get('code')
@@ -431,7 +434,7 @@ class LoginView(CreateAPIView):
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
                                     avatar=avatar,
-                                    password=password, invitation_code=invitation_code)
+                                    password=password, invitation_code=invitation_code, ip_address=ip_address)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -1915,7 +1918,7 @@ class InvitationRegisterView(CreateAPIView):
             return self.response({
                 'code': error_code.API_20402_INVALID_SMS_CODE
             })
-
+        ip_address = request.META.get("REMOTE_ADDR", '')
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
         if len(user) > 0:
@@ -1934,7 +1937,7 @@ class InvitationRegisterView(CreateAPIView):
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, area_code=area_code, password=password, avatar=avatar,
-                            nickname=nickname)
+                            nickname=nickname, ip_address=ip_address)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
