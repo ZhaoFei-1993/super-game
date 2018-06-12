@@ -61,6 +61,9 @@ class SmsView(ListCreateAPIView):
         elif int(code_type) == 6:  # 密保校验
             sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_PASSWORD
 
+        if area_code is None:
+            area_code = 86
+
         code = sms.code()
         model = Sms()
         model.area_code = area_code

@@ -1936,8 +1936,9 @@ class InvitationRegisterView(CreateAPIView):
         invitation_code = inviter.invitation_code
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
-        token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar, nickname=nickname,
-				invitation_code=invitation_code)
+        token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
+                            nickname=nickname,
+                            invitation_code=invitation_code)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
