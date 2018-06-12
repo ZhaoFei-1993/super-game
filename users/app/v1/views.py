@@ -221,6 +221,8 @@ class UserRegister(object):
             user = User()
             if len(username) == 11:
                 user.telephone = username
+            if area_code is None:
+                area_code = 86
             user.area_code = area_code
             user.username = username
             user.source = user.__getattribute__(source.upper())
