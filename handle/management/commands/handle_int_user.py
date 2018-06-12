@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         i = 1
-        for user in UserInvitation.objects.filter(~Q(is_money=0), inviter_id=2638):
+        for user in UserInvitation.objects.filter(~Q(money=0), inviter_id=2638):
             print("i==============================", i)
             i += 1
             user.delete()
