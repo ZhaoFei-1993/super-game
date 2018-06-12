@@ -576,6 +576,9 @@ class InfoView(ListAPIView):
                     coin_detail.rest = Decimal(usdt_balance.balance)
                     coin_detail.sources = 8
                     coin_detail.save()
+                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                    usdt_give.lock_coin += round(Decimal(a.money),0)
+                    usdt_give.save()
                 else:
                     userbalance.balance += a.money
                     userbalance.save()
