@@ -1659,10 +1659,12 @@ class ForgetPasswordView(ListAPIView):
     """
 
     def post(self, request):
-        value = value_judge(request, "password", "code", "username", "area_code")
+        # value = value_judge(request, "password", "code", "username", "area_code")
+        value = value_judge(request, "password", "code", "username")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        area_code = request.data.get('area_code')
+        # area_code = request.data.get('area_code')
+        area_code = 86
         password = request.data.get('password')
         username = request.data.get('username')
         try:
