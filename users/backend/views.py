@@ -509,7 +509,7 @@ class CoinPresentView(ListAPIView):
     """
     提现记录表
     """
-    queryset = UserPresentation.objects.all().order_by('-created_at', 'status')
+    queryset = UserPresentation.objects.all().order_by('-created_at')
     serializer_class = PresentationSerialize
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'status', 'coin']
@@ -579,7 +579,7 @@ class RechargeAllView(ListAPIView):
     """
     所有用户充值记录
     """
-    queryset = UserRecharge.objects.filter(user__is_robot=0).order_by('-amount')
+    queryset = UserRecharge.objects.filter(user__is_robot=0).order_by('-created_at')
     serializer_class = serializers.UserRechargeSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['user', 'coin']
@@ -677,7 +677,7 @@ class RunningView(ListAPIView):
                 'amount__sum']
         hand_system = CoinDetail.objects.filter(coin_name='HAND', user__is_robot=0, sources__in=[4, 6, 7, 8]).values(
             'amount').aggregate(Sum('amount'))['amount__sum']
-        records = Record.objects.filter(source__in=Record.NORMAL, roomquiz_id=1)
+        records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=1)
         hand_bet = records.values('bet').aggregate(Sum('bet'))['bet__sum']
         hand_out = records.filter(quiz__status=5, option__option__is_right=1).annotate(
             hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
@@ -908,12 +908,12 @@ class CoinSts(ListAPIView):
                 if a['date'] == b['date'] == c['date'] == d['date']:
                     temp_dict = {
                         'date': a['date'].strftime('%m/%d'),
-                        '净放发数量': a['out'],
-                        '回收数量': b['in_count'],
+                        '净放发数量': float(a['out']),
+                        '回收数量': float(b['in_count']),
                         '下注用户数': c['user_count'],
                         '投注次数': d['rc_count'],
-                        '净盈利': b['in_count'] - a['out'],
-                        '投注数量': e['bet_sum']
+                        '净盈利': float((b['in_count'] - a['out'])),
+                        '投注数量': float(e['bet_sum'])
                     }
                     data.append(temp_dict)
                 else:
