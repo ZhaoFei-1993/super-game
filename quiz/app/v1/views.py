@@ -471,7 +471,8 @@ class BetView(ListCreateAPIView):
             coins = Decimal(coins)  # 总下注额
             usercoin.balance = float(usercoin.balance - coins)  # 用户余额表减下注额
             usercoin.save()
-            if give_coin.lock_coin != float(0) and coins > give_coin.lock_coin:
+            lock_coin = normalize_fraction(give_coin.lock_coin, 2)
+            if give_coin.lock_coin != float(0) and coins > lock_coin:
                 coins_give = coins - give_coin.lock_coin  # 正常币下注额
 
                 record = Record()  # 正常币记录
@@ -503,7 +504,7 @@ class BetView(ListCreateAPIView):
                 give_coin.save()
 
                 earn_coins = earn_coins_one + earn_coins_two
-            elif coins < give_coin.lock_coin or coins == give_coin.lock_coin:
+            elif coins < lock_coin or coins == lock_coin:
                 record = Record()  # 赠送币记录
                 record.user = user
                 record.quiz = quiz

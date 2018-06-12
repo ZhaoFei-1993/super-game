@@ -149,25 +149,6 @@ class UserRegister(object):
                 user_id = user.id
                 coin_id = coin.id
                 coin_initialization(user_id, coin_id)
-            #  生成货币余额表
-            # coin = Coin.objects.all()
-            # for i in coin:
-            #     if i.name != 'EOS':
-            #         addresss = Address.objects.filter(user=0, coin_id=i.id)
-            #         address = addresss[0]
-            #     userbalance = UserCoin.objects.filter(coin_id=i.pk, user_id=user.id).count()
-            #     if userbalance == 0:
-            #         usercoin = UserCoin()
-            #         usercoin.user_id = user.id
-            #         usercoin.coin_id = i.id
-            #         # usercoin.is_opt = False
-            #         if i.name != 'EOS':
-            #             usercoin.address = address.address
-            #         usercoin.save()
-            #         if i.name != 'EOS':
-            #             address.user = usercoin.id
-            #             address.save()
-            #   邀请送HAND币
 
             # 注册送HAND币
             if user.is_money == 0:
@@ -195,7 +176,8 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code='', ip_address=''):
+    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code='',
+                 ip_address=''):
         """
         用户注册
         :param source:      用户来源：ios、android
@@ -230,7 +212,7 @@ class UserRegister(object):
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
             user.register_type = register_type
-            user.ip_address=ip_address
+            user.ip_address = ip_address
             user.avatar = avatar
             user.nickname = nickname
             user.invitation_code = random_invitation_code()
@@ -266,7 +248,8 @@ class UserRegister(object):
             user = User()
             if len(username) == 11:
                 user.telephone = username
-
+            if area_code is None:
+                area_code = 86
             user.area_code = area_code
             user.username = username
             user.source = user.__getattribute__(source.upper())
@@ -540,26 +523,6 @@ class InfoView(ListAPIView):
                 coin_bankruptcy.rest = Decimal(user_coin.balance)
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
-        # elif today_time >= end_date:               # 活动时间到
-        #     user_coin_give_records = CoinGiveRecords.objects.filter(user_id=user_id).first()
-        #     user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
-        #     user_recharge_coin = UserRecharge.objects.filter(
-        #         Q(confirm_at__gt=user_coin_give_records.created_at) | Q(confirm_at__lt=give_info.end_time)).aggregate(
-        #         Sum('amount'))
-        #     user_amount = user_recharge_coin['amount__sum']             # 活动期间总充值数
-        #     if user_coin.balance > user_amount:
-        #         user_quiz_bet_coin = Record.objects.filter(
-        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
-        #                 confirm_at__lt=give_info.end_time)).aggregate(
-        #             Sum('bet'))
-        #         user_bet = user_quiz_bet_coin['bet__sum']  # 活动期间总下注
-        #         user_quzi_coin = Record.objects.filter(
-        #             Q(confirm_at__gt=user_coin_give_records.created_at) | Q(
-        #                 confirm_at__lt=give_info.end_time)).aggregate(
-        #             Sum('earn_coin'))
-        #         user_earn_coin = user_quzi_coin['earn_coin__sum']  # 活动期间总赢
-        #         user_earn_coin -= user_bet
-        #
 
         usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
         record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
@@ -1950,7 +1913,7 @@ class InvitationRegisterView(CreateAPIView):
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
                             nickname=nickname,
-                            invitation_code=invitation_code,ip_address=ip_address)
+                            invitation_code=invitation_code, ip_address=ip_address)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)

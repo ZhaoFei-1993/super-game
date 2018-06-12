@@ -9,7 +9,7 @@ from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, When, Case, DecimalField
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
-    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, UserMessage
+    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, UserMessage, IntInvitation
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -493,6 +493,7 @@ class InviteNewView(ListAPIView):
         inviter = UserInvitation.objects.filter(inviter_id=uuid)
         user_id1 = inviter.values_list('invitee_one')
         user_id2 = inviter.values_list('invitee_two')
+        invitee = IntInvitation.objects.filter(inviter_id=uuid).values_list('invitee')
         users = []
         if inviter.exists():
             for x in list(user_id1):
@@ -500,6 +501,10 @@ class InviteNewView(ListAPIView):
                     users.append(int(x[0]))
             for x in list(user_id2):
                 if x[0] != 0:
+                    users.append(int(x[0]))
+        if len(user_id1) == 0 and len(user_id2==0):
+            if len(invitee)!=0:
+                for x in invitee:
                     users.append(int(x[0]))
         user_group = User.objects.filter(pk__in=users)
         return user_group
@@ -931,7 +936,7 @@ class CoinSts(ListAPIView):
         data = []
         if len(coin_out) == len(coin_in) == len(bet_user) == len(bet_times) == len(bet_sum):
             for a, b, c, d, e in zip(coin_out, coin_in, bet_user, bet_times, bet_sum):
-                if a['date'] == b['date'] == c['date'] == d['date']:
+                if a['date'] == b['date'] == c['date'] == d['date']==e['date']:
                     temp_dict = {
                         'date': a['date'].strftime('%m/%d'),
                         '净放发数量': float(a['out']),

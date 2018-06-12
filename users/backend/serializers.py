@@ -271,7 +271,7 @@ class CoinDetailSerializer(serializers.ModelSerializer):
 class UserAllSerializer(serializers.ModelSerializer):
     created_at = serializers.SerializerMethodField()
     login_time = serializers.SerializerMethodField()
-    ip_address = serializers.SerializerMethodField()
+    login_address = serializers.SerializerMethodField()
     inviter = serializers.SerializerMethodField()
     inviter_id = serializers.SerializerMethodField()
     invite_new = serializers.SerializerMethodField()
@@ -280,7 +280,7 @@ class UserAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'integral', 'inviter', 'inviter_id',
+        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id',
         'invite_new', 'status')
 
     @staticmethod
@@ -297,12 +297,12 @@ class UserAllSerializer(serializers.ModelSerializer):
             return datetime.strftime(login_time[0].login_time, '%Y-%m-%d %H:%M')
 
     @staticmethod
-    def get_ip_address(obj):
-        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('login_time')
-        if not ip_address.exists():
-            return ''
-        else:
+    def get_login_address(obj):
+        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        if len(ip_address) > 0:
             return ip_address[0].ip
+        else:
+            return ''
 
     @staticmethod
     def get_inviter(obj):
@@ -329,8 +329,8 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_invite_new(obj):
-        invitee_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=obj, is_robot=0).count()
-        invitee_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=obj, is_robot=0).count()
+        invitee_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=obj).values('invitee_one').count()
+        invitee_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=obj).values('invitee_two').count()
         invitee = IntInvitation.objects.filter(inviter=obj).count()
         if invitee_one==0 and invitee_one==0:
             if invitee==0:
