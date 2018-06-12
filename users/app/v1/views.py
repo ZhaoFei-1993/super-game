@@ -243,7 +243,7 @@ class UserRegister(object):
             invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).count()
             if invitee_one > 0:  # 邀请人为他人T1.
                 try:
-                    invitee = UserInvitation.objects.get(invitee_one=int(invitation_user.pk))
+                    invitee = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).first()
                 except DailyLog.DoesNotExist:
                     return 0
                 on_line = invitee.inviter
