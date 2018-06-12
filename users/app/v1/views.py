@@ -394,6 +394,14 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         user = User.objects.filter(username=username)
         if len(user) == 0:
+            print('ip_address = ', ip_address)
+            # 判断同一IP地址是否重复注册
+            ip1, ip2, ip3, ip4 = ip_address.split('.')
+            startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
+            ip_users = User.objects.filter(ip_address__startswith=startswith).count()
+            if ip_users > 0:
+                raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             nickname = str(username[0:3]) + "***" + str(username[7:])
