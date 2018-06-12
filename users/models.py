@@ -66,6 +66,7 @@ class User(AbstractBaseUser):
     is_notify = models.BooleanField(verbose_name="是否开启推送", default=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
+    ip_address = models.CharField(verbose_name='注册ip', max_length=48,default='')
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
     integral = models.DecimalField(verbose_name='GSG', max_digits=15, decimal_places=3, default=0.000)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
