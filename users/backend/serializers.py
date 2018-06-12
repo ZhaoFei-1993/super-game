@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.utils import timezone
 import time
 from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge, \
-    CoinOutServiceCharge
+    CoinOutServiceCharge, IntInvitation
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
@@ -306,23 +306,26 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_inviter(obj):
+        inv = UserInvitation.objects.filter(invitee_one=obj.id)
+        if len(inv)  == 0:
+            inv = IntInvitation.objects.filter(invitee=obj.id)
+            if len(inv) == 0:
+                return ''
         try:
-            inv = UserInvitation.objects.get(invitee_one=obj.id)
-        except Exception:
-            return ''
-        try:
-            user = User.objects.get(id=inv.inviter_id)
+            user = User.objects.get(id=inv[0].inviter_id)
         except Exception:
             return ''
         return user.nickname
 
+
     @staticmethod
     def get_inviter_id(obj):
-        try:
-            inv = UserInvitation.objects.get(invitee_one=obj.id)
-        except Exception:
-            return ''
-        return inv.inviter_id
+        inv = UserInvitation.objects.filter(invitee_one=obj.id)
+        if len(inv)  == 0:
+            inv = IntInvitation.objects.filter(invitee=obj.id)
+            if len(inv) == 0:
+                return ''
+        return inv[0].inviter_id
 
     @staticmethod
     def get_invite_new(obj):
