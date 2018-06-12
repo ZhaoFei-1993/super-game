@@ -468,6 +468,7 @@ class UserInvitation(models.Model):
     invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     money = models.IntegerField(verbose_name="奖励金额", default=0)
+    coin = models.IntegerField(verbose_name="币种ID", default=4)
     is_effective = models.BooleanField(verbose_name="是否有效", default=False)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=True)
     is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
