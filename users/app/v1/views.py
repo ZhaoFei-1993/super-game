@@ -566,23 +566,26 @@ class InfoView(ListAPIView):
             except Exception:
                 return 0
             for a in user_invitation_info:
-                userbalance.balance += a.money
-                usdt_balance.balance += round(Decimal(1), 3)
-                usdt_balance.save()
-                userbalance.save()
-                coin_detail = CoinDetail()
-                coin_detail.user = user
-                coin_detail.coin_name = 'HAND'
-                coin_detail.amount = '+' + str(a.money)
-                coin_detail.rest = Decimal(userbalance.balance)
-                coin_detail.sources = 8
-                coin_detail.save()
-                coin_detail.user = user
-                coin_detail.coin_name = 'USDT'
-                coin_detail.amount = '+' + str(1)
-                coin_detail.rest = Decimal(usdt_balance.balance)
-                coin_detail.sources = 8
-                coin_detail.save()
+                if int(a.moey) == 1:
+                    usdt_balance.balance += a.money
+                    usdt_balance.save()
+                    coin_detail = CoinDetail()
+                    coin_detail.user = user
+                    coin_detail.coin_name = 'USDT'
+                    coin_detail.amount = '+' + str(a.money)
+                    coin_detail.rest = Decimal(usdt_balance.balance)
+                    coin_detail.sources = 8
+                    coin_detail.save()
+                else:
+                    userbalance.balance += a.money
+                    userbalance.save()
+                    coin_detail = CoinDetail()
+                    coin_detail.user = user
+                    coin_detail.coin_name = 'HAND'
+                    coin_detail.amount = '+' + str(a.money)
+                    coin_detail.rest = Decimal(userbalance.balance)
+                    coin_detail.sources = 8
+                    coin_detail.save()
                 a.is_deleted = 1
                 a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
@@ -1842,10 +1845,6 @@ class InvitationRegisterView(CreateAPIView):
         code = request.data.get('code')
         area_code = request.data.get('area_code')
         password = request.data.get('password')
-        # invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id),
-        #                                                is_effective=1).count()
-        # if int(invitee_number) == 5 or int(invitee_number) > 5:
-        #     raise ParamErrorException(error_code.API_10107_INVITATION_CODE_INVALID)
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -1897,7 +1896,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
             if invitee_number < 10 and is_robot.is_robot == False:
                 user_on_line.is_effective = 1
-                user_on_line.money = 1000
+                user_on_line.money = 2000
                 user_on_line.is_robot = False
             user_on_line.inviter = on_line
             user_on_line.invitee_two = user_info.id
@@ -1915,7 +1914,7 @@ class InvitationRegisterView(CreateAPIView):
             return 0
         if invitee_number < 5 and is_robot.is_robot == False:
             user_go_line.is_effective = 1
-            user_go_line.money = 2000
+            user_go_line.money = 1
             user_go_line.is_robot = False
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
