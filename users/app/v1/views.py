@@ -125,6 +125,8 @@ class UserRegister(object):
             token = self.get_access_token(source=source, user=user)
         else:
             try:
+                if area_code is None:
+                    area_code = 86
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
