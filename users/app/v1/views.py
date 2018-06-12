@@ -398,7 +398,7 @@ class LoginView(CreateAPIView):
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
             ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-            if ip_users > 0:
+            if ip_users > 2:
                 raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
             if int(type) == 2:
@@ -1863,6 +1863,14 @@ class InvitationRegisterView(CreateAPIView):
                 'code': error_code.API_20402_INVALID_SMS_CODE
             })
         ip_address = request.META.get("REMOTE_ADDR", '')
+        print('ip_address = ', ip_address)
+        # 判断同一IP地址是否重复注册
+        ip1, ip2, ip3, ip4 = ip_address.split('.')
+        startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
+        ip_users = User.objects.filter(ip_address__startswith=startswith).count()
+        if ip_users > 2:
+            raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
         if len(user) > 0:
