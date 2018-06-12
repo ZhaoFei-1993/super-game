@@ -59,6 +59,7 @@ class User(AbstractBaseUser):
     register_type = models.CharField(verbose_name="注册类型", choices=REGISTER_TYPE, max_length=1, default=REGISTER_UNKNOWN)
     source = models.CharField(verbose_name="用户来源", choices=SOURCE_CHOICE, max_length=2, default=IOS)
     avatar = models.CharField(verbose_name="头像", max_length=255, default='')
+    area_code = models.IntegerField(verbose_name="手机区号", default=86)
     telephone = models.CharField(verbose_name="手机号码", max_length=11, default='')
     pass_code = models.CharField(verbose_name="资金密保", max_length=32, default='')
     is_sound = models.BooleanField(verbose_name="是否开启音效", default=False)

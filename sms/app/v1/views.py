@@ -28,6 +28,7 @@ class SmsView(ListCreateAPIView):
         """
         super().post(request, *args, **kwargs)
 
+        area_code = request.data.get('area_code')
         telephone = request.data.get('telephone')
 
         code_type = request.data.get('code_type')
@@ -62,6 +63,7 @@ class SmsView(ListCreateAPIView):
 
         code = sms.code()
         model = Sms()
+        model.area_code = area_code
         model.telephone = telephone
         model.code = code
         model.message = sms_message.replace('{code}', code)

@@ -53,5 +53,4 @@ urlpatterns = [
     path('login_rate/', views.LoginRateView.as_view(), name='user-backend-login_rate'),
     # 留存率统计
     path('remain_rate/', views.RemainRate.as_view(), name='user-backend-remain_rate')
-    # path('aabb/', views.AABBCC.as_view(), name='user-aabbcc'),
 ]

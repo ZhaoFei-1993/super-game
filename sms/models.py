@@ -31,6 +31,7 @@ class Sms(models.Model):
         (FAIL, "发送失败"),
     )
 
+    area_code = models.IntegerField(verbose_name="手机区号", default=86)
     telephone = models.CharField(verbose_name="接收手机号码", max_length=20)
     code = models.CharField(verbose_name="短信验证码", max_length=10, default='')
     message = models.CharField(verbose_name="短信内容", max_length=255)
