@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
+from utils.functions import normalize_fraction
 from django.db import transaction
 import datetime
 from decimal import Decimal
@@ -307,6 +308,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     is_right = True
 
             earn_coin = record.bet * record.odds
+            earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
             record.type = Record.CORRECT
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
