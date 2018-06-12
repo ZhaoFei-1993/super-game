@@ -331,6 +331,12 @@ class UserAllSerializer(serializers.ModelSerializer):
     def get_invite_new(obj):
         invitee_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=obj, is_robot=0).count()
         invitee_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=obj, is_robot=0).count()
+        invitee = IntInvitation.objects.filter(inviter=obj).count()
+        if invitee_one==0 and invitee_one==0:
+            if invitee==0:
+                return 0
+            else:
+                return invitee
         return invitee_one + invitee_two
 
     @staticmethod
