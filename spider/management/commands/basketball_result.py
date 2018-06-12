@@ -48,6 +48,7 @@ def trunc(f, n):
 
 def handle_activity(record, coin, earn_coin):
     # USDT活动
+    quiz_list = []
     if CoinGiveRecords.objects.filter(user=record.user, coin_give__coin=coin).exists() is True:
         coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
         if int(record.source) == Record.GIVE:
@@ -55,11 +56,14 @@ def handle_activity(record, coin, earn_coin):
                 coin_give_records.lock_coin = Decimal(coin_give_records.lock_coin) + Decimal(earn_coin)
                 coin_give_records.save()
                 coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+
+                for count_record in Record.objects.filter(user=record.user, roomquiz_id=Club.objects.get(coin=coin).id):
+                    if count_record.quiz_id not in quiz_list:
+                        quiz_list.append(count_record.quiz_id)
+
                 if (coin_give_records.lock_coin >= coin_give_records.coin_give.ask_number) and (
-                        Record.objects.filter(user=record.user,
-                                              roomquiz_id=Club.objects.get(
-                                                  coin=coin).id).count() >= coin_give_records.coin_give.match_number) and (
-                        datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+                        datetime.datetime.now() <= coin_give_records.coin_give.end_time) and (
+                        len(quiz_list) >= coin_give_records.coin_give.match_number):
                     lock_coin = coin_give_records.lock_coin
                     coin_give_records.is_recharge_lock = True
                     coin_give_records.lock_coin = 0
@@ -107,8 +111,6 @@ def handle_activity(record, coin, earn_coin):
                 u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
                 u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
                 u_mes.save()
-    else:
-        pass
 
 
 def get_data(url):
