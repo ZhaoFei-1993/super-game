@@ -196,8 +196,8 @@ class UserRegister(object):
 
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_user.pk),
-                                                           is_deleted=1, coin=4).count()
+            invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
+                                                           is_effective=1, coin=4).count()
 
             register_type = self.get_register_type(username)
             user = User()
@@ -1895,7 +1895,7 @@ class InvitationRegisterView(CreateAPIView):
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line.id, coin=9).count()
+            invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
             try:
                 is_robot = User.objects.get(pk=on_line.id)
             except DailyLog.DoesNotExist:
@@ -1909,7 +1909,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(invitation_id), coin=4).count()
+        invitee_number = UserInvitation.objects.filter(inviter=int(invitation_id), coin=9, is_effective=1).count()
         try:
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
