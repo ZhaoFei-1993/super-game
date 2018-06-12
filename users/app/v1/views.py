@@ -234,7 +234,7 @@ class UserRegister(object):
                     return 0
                 on_line = invitee.inviter
                 invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
-                                                               is_deleted=1, coin=9).count()
+                                                               is_effective=1, coin=9).count()
                 user_on_line = UserInvitation()  # 邀请T2是否已达上限
                 if invitee_number < 10 and on_line.is_robot == False:
                     user_on_line.is_effective = 1
