@@ -71,6 +71,7 @@ class User(AbstractBaseUser):
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
+    is_block = models.BooleanField(verbose_name="是否被封", default=False)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -316,7 +317,9 @@ class Message(models.Model):
     )
     type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PUBLIC)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
+    title_en = models.CharField(verbose_name="英文消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
+    content_en = models.CharField(verbose_name="英文消息内容", max_length=255, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -337,7 +340,9 @@ class UserMessage(models.Model):
     status = models.CharField(verbose_name="消息状态", choices=TYPE_CHOICE, max_length=1, default=UNREAD)
     user = models.ForeignKey(User, verbose_name="收件人ID", on_delete=models.CASCADE)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
+    title_en = models.CharField(verbose_name="英文消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
+    content_en = models.CharField(verbose_name="英文消息内容", max_length=255, default="")
     message = models.ForeignKey(Message, verbose_name="消息内容表外键", on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
