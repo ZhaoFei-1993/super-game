@@ -125,6 +125,8 @@ class UserRegister(object):
             token = self.get_access_token(source=source, user=user)
         else:
             try:
+                if area_code is None:
+                    area_code = 86
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -193,7 +195,7 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code=''):
+    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code='', ip_address=''):
         """
         用户注册
         :param source:      用户来源：ios、android
@@ -221,11 +223,14 @@ class UserRegister(object):
             user = User()
             if len(username) == 11:
                 user.telephone = username
+            if area_code is None:
+                area_code = 86
             user.area_code = area_code
             user.username = username
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
             user.register_type = register_type
+            user.ip_address=ip_address
             user.avatar = avatar
             user.nickname = nickname
             user.invitation_code = random_invitation_code()
@@ -243,7 +248,7 @@ class UserRegister(object):
             invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).count()
             if invitee_one > 0:  # 邀请人为他人T1.
                 try:
-                    invitee = UserInvitation.objects.get(invitee_one=int(invitation_user.pk))
+                    invitee = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).first()
                 except DailyLog.DoesNotExist:
                     return 0
                 on_line = invitee.inviter
@@ -266,6 +271,7 @@ class UserRegister(object):
             user.username = username
             user.source = user.__getattribute__(source.upper())
             user.set_password(password)
+            user.ip_address = ip_address
             user.register_type = register_type
             user.avatar = avatar
             user.nickname = nickname
@@ -393,6 +399,7 @@ class LoginView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
+        ip_address = request.META.get("REMOTE_ADDR", '')
         register_type = ur.get_register_type(username)
 
         avatar = self.get_name_avatar()
@@ -410,11 +417,12 @@ class LoginView(CreateAPIView):
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password)
+                                    password=password, ip_address=ip_address)
 
             else:
                 code = request.data.get('code')
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = 86
                 invitation_code = ''
                 if 'invitation_code' in request.data:
                     invitation_code = request.data.get('invitation_code')
@@ -431,7 +439,7 @@ class LoginView(CreateAPIView):
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
                                     avatar=avatar,
-                                    password=password, invitation_code=invitation_code)
+                                    password=password, invitation_code=invitation_code, ip_address=ip_address)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
@@ -440,13 +448,15 @@ class LoginView(CreateAPIView):
                 token = ur.login(source=source, username=username, password=password)
             elif int(register_type) == 3:
                 password = ''
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = 86
                 if 'password' in request.data:
                     password = request.data.get('password')
                 token = ur.login(source=source, username=username, area_code=area_code, password=password)
             else:
                 password = request.data.get('password')
-                area_code = request.data.get('area_code')
+                # area_code = request.data.get('area_code')
+                area_code = area_code = 86
                 token = ur.login(source=source, username=username, area_code=area_code, password=password)
         return self.response({
             'code': 0,
@@ -552,7 +562,8 @@ class InfoView(ListAPIView):
         #
 
         usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
-        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1:
+        record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
@@ -1654,10 +1665,12 @@ class ForgetPasswordView(ListAPIView):
     """
 
     def post(self, request):
-        value = value_judge(request, "password", "code", "username", "area_code")
+        # value = value_judge(request, "password", "code", "username", "area_code")
+        value = value_judge(request, "password", "code", "username")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        area_code = request.data.get('area_code')
+        # area_code = request.data.get('area_code')
+        area_code = 86
         password = request.data.get('password')
         username = request.data.get('username')
         try:
@@ -1915,7 +1928,7 @@ class InvitationRegisterView(CreateAPIView):
             return self.response({
                 'code': error_code.API_20402_INVALID_SMS_CODE
             })
-
+        ip_address = request.META.get("REMOTE_ADDR", '')
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
         if len(user) > 0:
@@ -1931,10 +1944,13 @@ class InvitationRegisterView(CreateAPIView):
 
         # 用户注册
         ur = UserRegister()
+        inviter = User.objects.get(pk=int(invitation_id))
+        invitation_code = inviter.invitation_code
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
-        token = ur.register(source=source, username=telephone, area_code=area_code, password=password, avatar=avatar,
-                            nickname=nickname)
+        token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
+                            nickname=nickname,
+                            invitation_code=invitation_code,ip_address=ip_address)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
@@ -1944,7 +1960,7 @@ class InvitationRegisterView(CreateAPIView):
 
         if invitee_one > 0:  # 邀请人为他人T1.
             try:
-                invitee = UserInvitation.objects.get(invitee_one=int(invitation_id))
+                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
             except DailyLog.DoesNotExist:
                 return 0
             on_line = invitee.inviter

@@ -9,7 +9,7 @@ from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, When, Case, DecimalField
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
-    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive
+    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, UserMessage
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -549,6 +549,20 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 else:
                     user_coin.balance = user_coin.balance + item.amount + coin_out.value
                 user_coin.save()
+                coin_detail = CoinDetail()
+                coin_detail.name = user_coin.coin.name
+                coin_detail.amount = item.amount
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.RETURN
+                coin_detail.save()
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.content = '拒绝提现理由:'+item.feedback
+                user_message.title = '提现失败公告'
+                user_message.user = item.user
+                user_message.message_id = 6  # 修改密码
+                user_message.save()
+
         if 'text' in request.data:
             text = request.data.get('text')
             item.feedback = text
@@ -719,9 +733,21 @@ class RunningView(ListAPIView):
                 usdt_lock_present +=1
         usdt_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT').count()
         usdt_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT', status=1).count()
-
-
-
+        coins = Coin.objects.all()
+        dt=[]
+        for x in coins:
+            temp_dict={}
+            try:
+                room_id = Club.objects.get(coin_id=x.id)
+            except:
+                raise
+            records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room_id)
+            temp_dict['coin_name']=x.name
+            temp_dict[x.name+'_bet']=records.values('bet').aggregate(Sum('bet'))['bet__sum']
+            temp_dict[x.name+'_out']=records.filter(quiz__status=5, option__option__is_right=1).annotate(
+                hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
+            temp_dict[x.name+'_in'] = records.filter(quiz__status=5, option__option__is_right=0).annotate(
+                hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
         # for x in records:
         #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
         #     if len(option) > 0:
