@@ -352,6 +352,8 @@ def coin_initialization(user_id, coin_id):
             else:
                 print("444444444444444444")
                 address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+                address.user = user_id
+                address.save()
         else:
             print("5555555555555555555")
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
@@ -361,8 +363,8 @@ def coin_initialization(user_id, coin_id):
             else:
                 print("77777777777777777777777777")
                 address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
-        address.user = user_id
-        address.save()
+                address.user = user_id
+                address.save()
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         user_coin.address = address.address
         user_coin.save()
