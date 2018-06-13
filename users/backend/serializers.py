@@ -307,9 +307,9 @@ class UserAllSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_inviter(obj):
         inv = UserInvitation.objects.filter(invitee_one=obj.id)
-        if len(inv)  == 0:
+        if not inv.exists():
             inv = IntInvitation.objects.filter(invitee=obj.id)
-            if len(inv) == 0:
+            if not inv.exists():
                 return ''
         try:
             user = User.objects.get(id=inv[0].inviter_id)
@@ -321,9 +321,9 @@ class UserAllSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_inviter_id(obj):
         inv = UserInvitation.objects.filter(invitee_one=obj.id)
-        if len(inv)  == 0:
+        if not inv.exists():
             inv = IntInvitation.objects.filter(invitee=obj.id)
-            if len(inv) == 0:
+            if not inv.exists():
                 return ''
         return inv[0].inviter_id
 
