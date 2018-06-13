@@ -102,6 +102,7 @@ class Coin(models.Model):
     BTC = 3
     HAND = 4
     EOS = 8
+    USDT = 9
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)

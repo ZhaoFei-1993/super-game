@@ -88,10 +88,14 @@ class SmsVerifyView(ListCreateAPIView):
     serializer_class = serializers.SmsSerializer
 
     def post(self, request, *args, **kwargs):
+        area_code = request.data.get('area_code')
+        if 'area_code' not in request.data.get:
+            area_code = 86
         if "telephone" not in request.data:
             message = Sms.objects.get(code=request.data.get('code'))
         else:
-            message = Sms.objects.get(telephone=request.data.get('telephone'), code=request.data.get('code'))
+            message = Sms.objects.get(area_code=area_code, telephone=request.data.get('telephone'),
+                                      code=request.data.get('code'))
 
         code_type = request.data.get('code_type')
         if int(code_type) not in range(1, 6):

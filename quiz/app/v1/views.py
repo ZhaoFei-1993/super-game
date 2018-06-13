@@ -454,7 +454,7 @@ class BetView(ListCreateAPIView):
         if coin_id == Coin.HAND:
             bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
                 Sum('bet'))
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 1000000:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -602,7 +602,6 @@ class WorldCup(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        world_cup = self.request.GET.get('world_cup')
         if int(self.request.GET.get('type')) == 1:  # 未开始
             list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
                                        is_delete=False).order_by('begin_at')

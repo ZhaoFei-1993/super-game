@@ -314,9 +314,9 @@ def genarate_plist(version, file_path):
 
 def coin_initialization(user_id, coin_id):
     coin_info = Coin.objects.get(pk=coin_id)
-    is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id)
+    is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
     user = User.objects.get(pk=user_id)
-    if len(is_usercoin) <= 0:                 # 是否有余额表记录
+    if is_usercoin <= 0:                 # 是否有余额表记录
         if coin_info.is_eth_erc20:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
             if user_coin_number != 0:
@@ -347,7 +347,7 @@ def coin_initialization(user_id, coin_id):
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
             else:
                 address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
-                address.user = user.pk
+                address.user = user_id
                 address.save()
         else:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
@@ -355,10 +355,8 @@ def coin_initialization(user_id, coin_id):
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
                 address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
-                address.user = user.pk
+                address.user = user_id
                 address.save()
-        address.user = user
-        address.save()
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         user_coin.address = address.address
         user_coin.save()

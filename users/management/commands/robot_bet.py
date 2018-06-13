@@ -155,7 +155,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 200)
+        user_total = random.randint(1, 50)
         start_date, end_date = self.get_date()
 
         random_datetime = []
@@ -304,6 +304,15 @@ class Command(BaseCommand):
         elif coin_id == Coin.ETH:
             """
             ETH下币权重
+            """
+            choices = {
+                values[0]: 80,
+                values[1]: 15,
+                values[2]: 5,
+            }
+        elif coin_id == Coin.USDT:
+            """
+            USDT下币权重
             """
             choices = {
                 values[0]: 80,
