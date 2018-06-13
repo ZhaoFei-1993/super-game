@@ -483,7 +483,6 @@ class InfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = request.user
-        user = self.request.user
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         roomquiz_id = kwargs['roomquiz_id']
