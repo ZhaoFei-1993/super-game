@@ -2018,8 +2018,7 @@ class InvitationInfoView(ListAPIView):
         user_invitation_ones = user_invitation_one['money__sum']  # T2获得总钱数
         if user_invitation_ones == None:
             user_invitation_ones = 0
-        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(user.id),
-                                                       is_effective=1).count()
+        invitee_number = UserInvitation.objects.filter(inviter=int(user.id), is_effective=1, coin=9).count()
         invitee_number = 5 - int(invitee_number)
         if invitee_number < 0:
             invitee_number = 0
