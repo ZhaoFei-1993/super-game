@@ -17,5 +17,5 @@ class RequestExceptionHandler(object):
     def process_exception(request, exception):
         if is_registered(exception):
             status = exception.status_code
-            exception_dict = exception.to_dict()
+            exception_dict = exception.to_dict(request)
             return exception_dict
