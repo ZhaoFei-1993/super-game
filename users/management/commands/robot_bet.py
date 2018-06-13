@@ -310,6 +310,15 @@ class Command(BaseCommand):
                 values[1]: 15,
                 values[2]: 5,
             }
+        elif coin_id == Coin.USDT:
+            """
+            USDT下币权重
+            """
+            choices = {
+                values[0]: 80,
+                values[1]: 15,
+                values[2]: 5,
+            }
 
         weight_choice = WeightChoice()
         weight_choice.set_choices(choices)
