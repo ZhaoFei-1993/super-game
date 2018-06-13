@@ -12,7 +12,9 @@ class Command(BaseCommand):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         ip_list = []
         for user in UserInvitation.objects.filter(inviter_id=2638):
-            ip_address = user.invitee_one.ip_address
+            user_id = user.invitee_one
+            user_info = User.objects.get(pk=user_id)
+            ip_address = user_info.ip_address
             print("ip_address==========================", ip_address)
             # if User.objects.filter(ip_address=user.ip_address).count() >= 20:
             #     if user.ip_address not in ip_list:
