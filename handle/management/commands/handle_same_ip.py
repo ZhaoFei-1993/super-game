@@ -14,7 +14,7 @@ class Command(BaseCommand):
         for user in IntInvitation.objects.filter(inviter_id=2638):
             user_id = user.invitee
             user_info = User.objects.get(id=user_id)
-            ip_address = user_info.ip_address
+            ip_address = str(user_info.ip_address)
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
             if User.objects.filter(ip_address__startswith=startswith).count() >= 5 and ip_address != '':
