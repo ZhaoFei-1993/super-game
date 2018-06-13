@@ -361,7 +361,7 @@ def coin_initialization(user_id, coin_id):
             else:
                 print("77777777777777777777777777")
                 address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
-        address.user = user
+        address.user = user.id
         address.save()
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         user_coin.address = address.address
