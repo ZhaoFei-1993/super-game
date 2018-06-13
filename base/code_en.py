@@ -23,6 +23,7 @@ API_20104_LOGIN_ERROR = 20104
 API_20401_TELEPHONE_ERROR = 20401
 API_20402_INVALID_SMS_CODE = 20402
 API_20403_SMS_CODE_EXPIRE = 20403
+API_20404_SAME_IP_ERROR = 20404
 API_20601_PASS_CODE_ERROR = 20601
 API_20602_PASS_CODE_LEN_ERROR = 20602
 API_20701_USED_PASS_CODE_ = 20701
@@ -81,6 +82,7 @@ API_ERROR_MESSAGE_EN = {
     API_20104_LOGIN_ERROR: 'Phone number or code error',
     API_20401_TELEPHONE_ERROR: 'Please input phone number',
     API_20402_INVALID_SMS_CODE: 'Message verification code error',
+    API_20404_SAME_IP_ERROR: 'The same IP cannot be re registered',
     API_20403_SMS_CODE_EXPIRE: 'Verification is out of date',
     API_20601_PASS_CODE_ERROR: 'Please input security card number',
     API_20602_PASS_CODE_LEN_ERROR: 'Please input security card number of more than six figures',
