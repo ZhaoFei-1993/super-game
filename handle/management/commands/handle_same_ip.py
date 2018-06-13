@@ -13,19 +13,17 @@ class Command(BaseCommand):
         ip_list = []
         for user in IntInvitation.objects.filter(inviter_id=2638):
             user_id = user.invitee
-            print("user_id==========================", user_id)
             user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
-            print("ip_address==========================", ip_address)
-            # if User.objects.filter(ip_address=user.ip_address).count() >= 20:
-            #     if user.ip_address not in ip_list:
-            #         block_user_list = []
-            #         ip_list.append(user.ip_address)
-            #         for block_user in User.objects.filter(ip_address=user.ip_address):
-            #             block_user.is_block = True
-            #             block_user.save()
-            #             block_user_list.append(block_user.id)
-            #         print('ip:' + user.ip_address + ' ,共封禁 ' + str(len(block_user_list)) + ' 个账号')
-            #     else:
-            #         pass
+            if User.objects.filter(ip_address=ip_address).count() >= 20:
+                if user.ip_address not in ip_list:
+                    block_user_list = []
+                    ip_list.append(user.ip_address)
+                    for block_user in User.objects.filter(ip_address=user.ip_address):
+                        block_user.is_block = True
+                        # block_user.save()
+                        block_user_list.append(block_user.id)
+                    print('ip:' + user.ip_address + ' ,共封禁 ' + str(len(block_user_list)) + ' 个账号')
+                else:
+                    pass
         print('>>>>>>>>>>>>>>>>>>>>>>>> 结束 >>>>>>>>>>>>>>>>>>>>>>>>')
