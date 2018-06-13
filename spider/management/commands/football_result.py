@@ -40,7 +40,8 @@ def handle_activity(record, coin, earn_coin):
                 coin_give_records.save()
                 coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
 
-                for count_record in Record.objects.filter(user=record.user, roomquiz_id=Club.objects.get(coin=coin).id):
+                for count_record in Record.objects.filter(Q(type=1) | Q(type=2), user=record.user,
+                                                          roomquiz_id=Club.objects.get(coin=coin).id):
                     if count_record.quiz_id not in quiz_list:
                         quiz_list.append(count_record.quiz_id)
 
