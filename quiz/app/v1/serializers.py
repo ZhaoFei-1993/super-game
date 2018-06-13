@@ -34,7 +34,7 @@ class QuizSerialize(serializers.ModelSerializer):
         fields = (
             "id", "match_name", "host_team", "host_team_avatar", "host_team_score", "guest_team", "guest_team_avatar",
             "guest_team_score", "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate",
-            "planish_rate", "lose_rate", "total_coin_avatar", "status")
+            "planish_rate", "lose_rate", "total_coin_avatar", "status", "host_team_en", "guest_team_en")
 
     @staticmethod
     def get_begin_at(obj):

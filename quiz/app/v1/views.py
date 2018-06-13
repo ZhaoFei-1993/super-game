@@ -14,8 +14,7 @@ from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
 from utils.functions import value_judge
 from datetime import datetime, date
-import time
-import re
+from utils.functions import language_switch
 from utils.functions import normalize_fraction
 
 
@@ -584,10 +583,14 @@ class RecommendView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
+            host_team = language_switch(self.request.GET.get('language'), 'host_team')
+            guest_team = language_switch(self.request.GET.get('language'), 'guest_team')
+            host_team = item[host_team]
+            guest_team = item[guest_team]
             data.append(
                 {
                     "quiz_id": item['id'],
-                    "match": item['host_team'] + " VS " + item['guest_team'],
+                    "match": host_team + " VS " + guest_team,
                     "match_time": datetime.strftime(datetime.fromtimestamp(item['begin_at']), '%H:%M')
                 }
             )

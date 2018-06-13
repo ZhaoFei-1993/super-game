@@ -5,6 +5,7 @@ from rest_framework.views import exception_handler
 import traceback
 
 from .code import API_ERROR_MESSAGE
+from .code_en import API_ERROR_MESSAGE_EN
 
 
 class CCBaseException(Exception):
@@ -22,11 +23,15 @@ class CCBaseException(Exception):
         self.context = context
 
     def to_dict(self, request):
-        print('request ==================== ', request.__dict__)
         context = {
             'code': self.error_code,
             'message': API_ERROR_MESSAGE[self.error_code],
         }
+        if request.GET.get('language') == 'en':
+            context = {
+                'code': self.error_code,
+                'message': API_ERROR_MESSAGE_EN[self.error_code],
+            }
         if self.context is not None:
             context = {**context, **self.context}
         return HttpResponse(json.dumps(context), content_type='application/json')
