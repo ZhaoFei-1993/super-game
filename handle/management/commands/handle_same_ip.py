@@ -16,14 +16,14 @@ class Command(BaseCommand):
             user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
             if User.objects.filter(ip_address=ip_address).count() >= 20:
-                if user.ip_address not in ip_list:
+                if user_info.ip_address not in ip_list:
                     block_user_list = []
-                    ip_list.append(user.ip_address)
-                    for block_user in User.objects.filter(ip_address=user.ip_address):
+                    ip_list.append(user_info.ip_address)
+                    for block_user in User.objects.filter(ip_address=user_info.ip_address):
                         block_user.is_block = True
                         # block_user.save()
                         block_user_list.append(block_user.id)
-                    print('ip:' + user.ip_address + ' ,共封禁 ' + str(len(block_user_list)) + ' 个账号')
+                    print('ip:' + user_info.ip_address + ' ,共封禁 ' + str(len(block_user_list)) + ' 个账号')
                 else:
                     pass
         print('>>>>>>>>>>>>>>>>>>>>>>>> 结束 >>>>>>>>>>>>>>>>>>>>>>>>')
