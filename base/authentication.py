@@ -14,6 +14,8 @@ from django.conf import settings
 from . import code
 
 from users.models import User
+from base import code as error_code
+from base.exceptions import ParamErrorException
 
 
 class SignatureAuthentication(authentication.BaseAuthentication):
@@ -190,6 +192,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
                 request.user = User.objects.get(pk=token['user_id'])
             except Exception:
                 raise NotLoginException(code.API_403_ACCESS_DENY)
+            if request.user.is_block == 1:
+                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
 
         # Fetch credentials for API key from the data store.
         try:

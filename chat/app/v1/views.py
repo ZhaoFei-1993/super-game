@@ -29,7 +29,7 @@ class ClublistView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        user = self.request.user
+        user = request.user
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
