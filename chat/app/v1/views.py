@@ -30,7 +30,7 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
-        if user.is_robot == 1:
+        if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
         date_now = datetime.now().strftime('%Y%m%d%H%M')
