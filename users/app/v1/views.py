@@ -155,7 +155,7 @@ class UserRegister(object):
                 coin_initialization(user_id, coin_id)
 
             # 注册送HAND币
-            if user.is_money == 0:
+            if user.is_money == 0 and user.is_robot == 0:
                 user_money = 10000
                 try:
                     user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
@@ -509,7 +509,7 @@ class InfoView(ListAPIView):
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
-        if today_time < end_date:  # 活动期间
+        if today_time < end_date and user.is_robot == 0:  # 活动期间
             is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
             if is_give == 0:
                 user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
@@ -536,7 +536,7 @@ class InfoView(ListAPIView):
 
         usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
         record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
-        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1:
+        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot == 0:
             today = date.today()
             is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
                                                        created_at__gte=today).count()
