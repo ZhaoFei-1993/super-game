@@ -13,7 +13,8 @@ class Command(BaseCommand):
         ip_list = []
         for user in UserInvitation.objects.filter(inviter_id=2638):
             user_id = user.invitee_one
-            user_info = User.objects.get(pk=user_id)
+            print("user_id==========================", user_id)
+            user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
             print("ip_address==========================", ip_address)
             # if User.objects.filter(ip_address=user.ip_address).count() >= 20:
