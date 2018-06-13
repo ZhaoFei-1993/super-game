@@ -12,7 +12,7 @@ class Command(BaseCommand):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         ip_list = []
         for user in IntInvitation.objects.filter(inviter_id=2638):
-            user_id = int(user.inviter)
+            user_id = user.invitee
             print("user_id==========================", user_id)
             user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
