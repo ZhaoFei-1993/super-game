@@ -15,7 +15,7 @@ class Command(BaseCommand):
             user_id = user.invitee
             user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
-            if User.objects.filter(ip_address=ip_address).count() >= 10 and ip_address != '':
+            if User.objects.filter(ip_address=ip_address).count() >= 5 and ip_address != '':
                 if user_info.ip_address not in ip_list:
                     block_user_list = []
                     ip_list.append(user_info.ip_address)
