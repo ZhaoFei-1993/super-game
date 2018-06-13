@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from users.models import User, UserInvitation
+from users.models import User, IntInvitation
 from django.db.models import Q
 
 
@@ -11,8 +11,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         ip_list = []
-        for user in UserInvitation.objects.filter(inviter_id=2638):
-            user_id = int(user.invitee_one)
+        for user in IntInvitation.objects.filter(inviter_id=2638):
+            user_id = int(user.inviter)
             print("user_id==========================", user_id)
             user_info = User.objects.get(id=user_id)
             ip_address = user_info.ip_address
