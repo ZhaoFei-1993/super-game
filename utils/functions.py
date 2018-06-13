@@ -313,7 +313,6 @@ def genarate_plist(version, file_path):
 
 
 def coin_initialization(user_id, coin_id):
-    print("coin======================================", coin_id)
     coin_info = Coin.objects.get(pk=coin_id)
     is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
     user = User.objects.get(pk=user_id)
@@ -342,26 +341,19 @@ def coin_initialization(user_id, coin_id):
         user_coin.save()
     is_address = UserCoin.objects.filter(~Q(address=''), coin_id=coin_id, user_id=user_id).count()
     if is_address == 0:
-        print("111111111111111111")
         if coin_info.is_eth_erc20:
-            print("2222222222222222222222")
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
             if user_coin_number != 0:
-                print("33333333333333333333")
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
             else:
-                print("444444444444444444")
                 address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
                 address.user = user_id
                 address.save()
         else:
-            print("5555555555555555555")
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
             if user_coin_number != 0:
-                print("666666666666666666666")
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
-                print("77777777777777777777777777")
                 address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
                 address.user = user_id
                 address.save()
