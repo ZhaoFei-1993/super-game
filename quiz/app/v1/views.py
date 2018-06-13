@@ -591,14 +591,10 @@ class RecommendView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
-            host_team = language_switch(self.request.GET.get('language'), 'host_team')
-            guest_team = language_switch(self.request.GET.get('language'), 'guest_team')
-            host_team = item[host_team]
-            guest_team = item[guest_team]
             data.append(
                 {
                     "quiz_id": item['id'],
-                    "match": host_team + " VS " + guest_team,
+                    "match": item['host_team'] + " VS " + item['guest_team'],
                     "match_time": datetime.strftime(datetime.fromtimestamp(item['begin_at']), '%H:%M')
                 }
             )
