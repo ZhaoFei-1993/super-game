@@ -16,7 +16,7 @@ class Command(BaseCommand):
             if ip_address != '':
                 ip1, ip2, ip3, ip4 = ip_address.split('.')
                 startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
-                if User.objects.filter(ip_address__startswith=startswith).count() >= 10:
+                if User.objects.filter(ip_address__startswith=startswith).count() >= 20:
                     if user.ip_address not in ip_list:
                         block_user_list = []
                         ip_list.append(user.ip_address)
