@@ -48,7 +48,7 @@ class SmsView(ListCreateAPIView):
             last_sent_time = record.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
             current_time = time.mktime(datetime.now().timetuple())
             if current_time - time.mktime(last_sent_time.timetuple()) <= settings.SMS_PERIOD_TIME:
-                return self.response({'code': error_code.API_40104_SMS_PERIOD_INVALID})
+                raise ParamErrorException(error_code.API_40104_SMS_PERIOD_INVALID)
         sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_REGISTER  # 用户注册
         if int(code_type) == 1:  # 绑定手机
             sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_BINDING_CELL_PHONE
