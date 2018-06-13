@@ -311,12 +311,13 @@ class PresentationSerialize(serializers.ModelSerializer):
     coin_name = serializers.CharField(source="coin.name")
     user_name = serializers.CharField(source="user.username")
     telephone = serializers.CharField(source="user.telephone")
+    is_block = serializers.BooleanField(source="user.is_block")
 
     class Meta:
         model = UserPresentation
         fields = (
             "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status", "is_bill")
+            "created_at", "feedback", "status", "is_bill", "is_block")
 
     @staticmethod
     def get_created_at(obj):
