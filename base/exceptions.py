@@ -21,7 +21,8 @@ class CCBaseException(Exception):
         self.error_code = error_code
         self.context = context
 
-    def to_dict(self):
+    def to_dict(self, request):
+        print('request ==================== ', request.__dict__)
         context = {
             'code': self.error_code,
             'message': API_ERROR_MESSAGE[self.error_code],
