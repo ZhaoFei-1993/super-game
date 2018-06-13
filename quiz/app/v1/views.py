@@ -602,7 +602,6 @@ class WorldCup(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        world_cup = self.request.GET.get('world_cup')
         if int(self.request.GET.get('type')) == 1:  # 未开始
             list = Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), category_id=873,
                                        is_delete=False).order_by('begin_at')
