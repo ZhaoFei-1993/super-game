@@ -122,6 +122,8 @@ class UserRegister(object):
                 user = User.objects.get(username=username)
             except Exception:
                 raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
+            if user.is_block == 1:
+                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             token = self.get_access_token(source=source, user=user)
         else:
             try:
