@@ -313,6 +313,7 @@ def genarate_plist(version, file_path):
 
 
 def coin_initialization(user_id, coin_id):
+    print("coin======================================", coin_id)
     coin_info = Coin.objects.get(pk=coin_id)
     is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
     user = User.objects.get(pk=user_id)
