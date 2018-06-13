@@ -130,6 +130,8 @@ class UserRegister(object):
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if user.is_block == 1:
+                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             if user.check_password(password):
                 token = self.get_access_token(source=source, user=user)
             else:
