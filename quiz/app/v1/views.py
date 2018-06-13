@@ -454,7 +454,7 @@ class BetView(ListCreateAPIView):
         if coin_id == Coin.HAND:
             bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
                 Sum('bet'))
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 1000000:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
