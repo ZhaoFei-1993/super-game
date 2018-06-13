@@ -6,12 +6,9 @@ from base.function import LoginRequired
 from .serializers import ClubListSerialize
 from chat.models import Club
 from api.settings import MEDIA_DOMAIN_HOST
-from wsms import sms
+from utils.functions import language_switch
 from base import code as error_code
 from datetime import datetime
-import time
-import pytz
-from django.conf import settings
 from base.exceptions import ParamErrorException
 
 
@@ -43,12 +40,10 @@ class ClublistView(ListAPIView):
                   ]  # 活动轮播图
         for item in items:
             user_number = int(int(item['user_number']) * 0.3)
-            if 'language_en' in self.request.GET:
-                room_title = item['room_title_en']
-                autograph = item['autograph_en']
-            else:
-                room_title = item['room_title']
-                autograph = item['autograph']
+            room_title = language_switch(self.request.GET.get('language'), 'room_title')
+            autograph = language_switch(self.request.GET.get('language'), 'autograph')
+            room_title = item[room_title]
+            autograph = item[autograph]
             data.append(
                 {
                     "club_id": item['id'],
