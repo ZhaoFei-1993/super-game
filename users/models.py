@@ -585,6 +585,7 @@ class IntInvitation(models.Model):
     inviter = models.ForeignKey(User, on_delete=models.CASCADE)
     invitee = models.IntegerField(verbose_name="被邀请人id", default=0)
     coin = models.IntegerField(verbose_name="INT货币表ID", default=0)
+    is_block = models.BooleanField(verbose_name="是否被封", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     money = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=10.00000000)
     is_deleted = models.BooleanField(verbose_name="是否有奖励", default=True)
