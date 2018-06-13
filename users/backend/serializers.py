@@ -402,6 +402,7 @@ class UserRechargeSerializer(serializers.ModelSerializer):
     trade_at = serializers.SerializerMethodField()
     confirm_at = serializers.SerializerMethodField()
 
+
     class Meta:
         model = UserRecharge
         fields = ('username', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
