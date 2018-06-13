@@ -17,7 +17,7 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Club
-        fields = ("id", "room_title", "autograph", "user_number", "room_number", "coin_name", "coin_key", "is_recommend"
+        fields = ("id", "room_title", "room_title_en", "autograph", "autograph_en", "user_number", "room_number", "coin_name", "coin_key", "is_recommend"
                   , "icon", "coin_icon")
 
     @staticmethod

@@ -316,7 +316,7 @@ def coin_initialization(user_id, coin_id):
     coin_info = Coin.objects.get(pk=coin_id)
     is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
     user = User.objects.get(pk=user_id)
-    if is_usercoin <= 0:                 # 是否有余额表记录
+    if is_usercoin <= 0:  # 是否有余额表记录
         if coin_info.is_eth_erc20:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
             if user_coin_number != 0:
@@ -326,7 +326,8 @@ def coin_initialization(user_id, coin_id):
                 address.user = user.pk
                 address.save()
         else:
-            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id,
+                                                       coin__is_eth_erc20=False).count()
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
@@ -350,7 +351,8 @@ def coin_initialization(user_id, coin_id):
                 address.user = user_id
                 address.save()
         else:
-            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id,
+                                                       coin__is_eth_erc20=False).count()
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
@@ -360,3 +362,16 @@ def coin_initialization(user_id, coin_id):
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         user_coin.address = address.address
         user_coin.save()
+
+
+def language_switch(i, s):
+    """
+    语言处理
+    """
+    a = s
+    print("i============================", i)
+    if i == 'en':
+        a = str(s) + '_' + i
+    print("a==========================", a)
+
+    return a

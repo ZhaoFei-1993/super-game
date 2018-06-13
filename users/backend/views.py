@@ -468,7 +468,7 @@ class UserAllView(ListAPIView):
     filter_fields = ['username']
 
 
-class InviterDetailView(RetrieveAPIView):
+class UserAllDetailView(RetrieveUpdateDestroyAPIView):
     """
     推荐人信息
     """
@@ -481,6 +481,17 @@ class InviterDetailView(RetrieveAPIView):
             return JsonResponse({'Error': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
         rc = serializers.UserAllSerializer(user)
         return JsonResponse({'results': [rc.data]}, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        uuid = self.kwargs['pk']
+        is_block = request.data.get('title')
+        try:
+            user = User.objects.get(pk=uuid)
+        except Exception:
+            return JsonResponse({'Error': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        user.is_block=int(is_block)
+        user.save()
+        return JsonResponse({},status=status.HTTP_200_OK)
 
 
 class InviteNewView(ListAPIView):
