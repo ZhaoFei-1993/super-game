@@ -102,7 +102,7 @@ class SmsVerifyView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
         if int(code_type) != int(message.type):
-            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
+            raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
 
         # 短信发送时间
         code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
@@ -111,15 +111,15 @@ class SmsVerifyView(ListCreateAPIView):
 
         # 判断code_id有效性
         if message is None:
-            return self.response({'code': error_code.API_40101_SMS_CODE_ID_INVALID})
+            raise ParamErrorException(error_code.API_40101_SMS_CODE_ID_INVALID)
 
         # 判断code有效性
         if message.code != request.data.get('code'):
-            return self.response({'code': error_code.API_40103_SMS_CODE_INVALID})
+            raise ParamErrorException(error_code.API_40103_SMS_CODE_INVALID)
 
         # 判断code是否过期
         if (settings.SMS_CODE_EXPIRE_TIME > 0) and (current_time - code_time > settings.SMS_CODE_EXPIRE_TIME):
-            return self.response({'code': error_code.API_40102_SMS_CODE_EXPIRED})
+            raise ParamErrorException(error_code.API_40102_SMS_CODE_EXPIRED)
 
         # 若校验通过，则更新短信发送记录表状态为校验通过
         message.is_passed = True
