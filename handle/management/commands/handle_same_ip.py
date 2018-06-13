@@ -2,6 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from users.models import User
+from django.db.models import Q
 
 
 class Command(BaseCommand):
@@ -10,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         ip_list = []
-        for user in User.objects.all():
+        for user in User.objects.filter(~Q(ip_address=''), is_robot=0):
             if User.objects.filter(ip_address=user.ip_address).count() >= 20:
                 if user.ip_address not in ip_list:
                     block_user_list = []

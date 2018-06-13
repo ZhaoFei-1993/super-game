@@ -16,8 +16,9 @@ class Command(BaseCommand):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         for user in User.objects.filter(ip_address='', is_robot=False):
             login_address_list = []
-            for login_address in LoginRecord.objects.filter(user=user):
+            for login_address in LoginRecord.objects.filter(user_id=user.id):
                 login_address_list.append(login_address.ip)
+            print("login_address_list=======================", login_address_list)
             if len(login_address_list) > 0:
                 address_counter = Counter(login_address_list)
                 commonly_address = address_counter.most_common(1)[0][0]
