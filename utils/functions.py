@@ -369,7 +369,7 @@ def language_switch(i, s):
     语言处理
     """
     a = s
-    if i != 'en':
+    if i == 'en':
         a = str(s) + '_' + i
         print("a==========================", a)
 
