@@ -43,11 +43,17 @@ class ClublistView(ListAPIView):
                   ]  # 活动轮播图
         for item in items:
             user_number = int(int(item['user_number']) * 0.3)
+            if 'language_en' in self.request.GET:
+                room_title = item['room_title_en']
+                autograph = item['autograph_en']
+            else:
+                room_title = item['room_title']
+                autograph = item['autograph']
             data.append(
                 {
                     "club_id": item['id'],
-                    "room_title": item['room_title'],
-                    "autograph": item['autograph'],
+                    "room_title": room_title,
+                    "autograph": autograph,
                     "user_number": user_number,
                     "room_number": item['room_number'],
                     "coin_name": item['coin_name'],
