@@ -4,7 +4,7 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from django.db import transaction
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, When, Case, DecimalField
 from chat.models import Club
@@ -738,21 +738,40 @@ class RunningView(ListAPIView):
                 usdt_lock_present +=1
         usdt_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT').count()
         usdt_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT', status=1).count()
-        coins = Coin.objects.all()
-        dt=[]
-        for x in coins:
-            temp_dict={}
-            try:
-                room_id = Club.objects.get(coin_id=x.id)
-            except:
-                raise
-            records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room_id)
-            temp_dict['coin_name']=x.name
-            temp_dict[x.name+'_bet']=records.values('bet').aggregate(Sum('bet'))['bet__sum']
-            temp_dict[x.name+'_out']=records.filter(quiz__status=5, option__option__is_right=1).annotate(
-                hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
-            temp_dict[x.name+'_in'] = records.filter(quiz__status=5, option__option__is_right=0).annotate(
-                hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
+        usdt_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt = 0, coin__name='USDT').count()
+
+        int_record = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=2)
+        int_recharge_count = UserRecharge.objects.filter(user__is_robot=0, coin__name='INT').values(
+            'user_id').distinct().count()
+        int_recharge = \
+            UserRecharge.objects.filter(coin__name='INT', user__is_robot=0).values('amount').aggregate(Sum('amount'))[
+                'amount__sum']
+        int_bet = int_record.values('bet').aggregate(Sum('bet'))['bet__sum']
+        int_out = int_record.filter(quiz__status=5, option__option__is_right=1).annotate(
+            hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
+        int_in = int_record.filter(quiz__status=5, option__option__is_right=0).annotate(
+            hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
+        int_rest = \
+            UserCoin.objects.filter(user__is_robot=0, coin__name='INT').values('balance').aggregate(Sum('balance'))[
+                'balance__sum']
+        int_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT').count()
+        int_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT', status=1).count()
+
+        # coins = Coin.objects.all()
+        # dt=[]
+        # for x in coins:
+        #     temp_dict={}
+        #     try:
+        #         room_id = Club.objects.get(coin_id=x.id)
+        #     except:
+        #         raise
+        #     records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room_id)
+        #     temp_dict['coin_name']=x.name
+        #     temp_dict[x.name+'_bet']=records.values('bet').aggregate(Sum('bet'))['bet__sum']
+        #     temp_dict[x.name+'_out']=records.filter(quiz__status=5, option__option__is_right=1).annotate(
+        #         hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
+        #     temp_dict[x.name+'_in'] = records.filter(quiz__status=5, option__option__is_right=0).annotate(
+        #         hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
         # for x in records:
         #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
         #     if len(option) > 0:
@@ -789,10 +808,20 @@ class RunningView(ListAPIView):
                 'usdt_lock_present':usdt_lock_present,
                 'usdt_success': usdt_success,
                 'usdt_present': usdt_present,
+                'usdt_rest_num':usdt_rest_num,
+                'usdt_earn_gte_10': self.count_earn_coin(10),
                 'usdt_earn_gte_20': self.count_earn_coin(20),
                 'usdt_earn_gte_30': self.count_earn_coin(30),
                 'usdt_earn_gte_40': self.count_earn_coin(40),
                 'usdt_earn_gte_50': self.count_earn_coin(50),
+                'int_recharge_count': int_recharge_count,
+                'int_recharge':int_recharge,
+                'int_bet':int_bet,
+                'int_out':int_out,
+                'int_in':int_in,
+                'int_rest': int_rest,
+                'int_success': int_success,
+                'int_present': int_present,
                 'now_time': datetime.now().strftime('%Y年%m月%d日')
                 }
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
@@ -901,56 +930,83 @@ class CoinSts(ListAPIView):
             return JsonResponse({'Error': '俱乐部不存在'}, status=status.HTTP_400_BAD_REQUEST)
         coin_name = club.coin.name
         records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=club_room)
+
         # whens = [
         #     When(multiplier_choice='A', then=F('bet') * (F('odds')-1))
         # ]
         # multiplier_case = Case(*whens, output_field=DecimalField(), default=0)
+
         bet_sum = records \
             .extra(select={'date': 'date(quiz_record.created_at)'}) \
-            .values('date').annotate(bet_sum=Sum('bet')) \
+            .values('date').annotate(date_sum=Sum('bet')) \
             .order_by('date')
         coin_out = records \
             .filter(quiz__status=5, option__option__is_right=1) \
             .extra(select={'date': 'date(quiz_record.created_at)'}) \
             .values('date') \
-            .annotate(out=Sum(F('bet') * (F('odds') - 1))) \
+            .annotate(date_sum=Sum(F('bet') * (F('odds') - 1))) \
             .order_by('date')
 
         coin_in = records \
             .filter(quiz__status=5, option__option__is_right=0) \
             .extra(select={'date': 'date(quiz_record.created_at)'}) \
             .values('date') \
-            .annotate(in_count=Sum('bet')) \
+            .annotate(date_sum=Sum('bet')) \
             .order_by('date')
 
         bet_user = records \
             .extra(select={'date': 'date(quiz_record.created_at)'}) \
             .values('date') \
-            .annotate(user_count=Count('user_id', distinct=True)) \
+            .annotate(date_sum=Count('user_id', distinct=True)) \
             .order_by('date')
 
         bet_times = records \
             .extra(select={'date': 'date(quiz_record.created_at)'}) \
-            .values('date').annotate(rc_count=Count('id')) \
+            .values('date').annotate(date_sum=Count('id')) \
             .order_by('date')
+        items= {
+            'bet_sum':bet_sum,
+            'coin_out':coin_out,
+            'coin_in':coin_in,
+            'bet_user':bet_user,
+            'bet_times':bet_times
+        }
         data = []
-        if len(coin_out) == len(coin_in) == len(bet_user) == len(bet_times) == len(bet_sum):
-            for a, b, c, d, e in zip(coin_out, coin_in, bet_user, bet_times, bet_sum):
-                if a['date'] == b['date'] == c['date'] == d['date']==e['date']:
-                    temp_dict = {
-                        'date': a['date'].strftime('%m/%d'),
-                        '净放发数量': float(a['out']),
-                        '回收数量': float(b['in_count']),
-                        '下注用户数': c['user_count'],
-                        '投注次数': d['rc_count'],
-                        '净盈利': float((b['in_count'] - a['out'])),
-                        '投注数量': float(e['bet_sum'])
-                    }
-                    data.append(temp_dict)
-                else:
-                    return JsonResponse({'Error': '日期不一致'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return JsonResponse({'Error': '缺少天数'}, status=status.HTTP_400_BAD_REQUEST)
+        # if club_room ==2:
+        #     print(coin_out ,'|', coin_in ,'|', bet_user,'|', bet_times,'|', bet_sum)
+        min_date = date(2099,1,1)
+        max_date= date(1970,1,1)
+        for x in items:
+            if len(items[x])>0:
+                items[x]=[n for n in items[x]]
+                if items[x][0]['date'] < min_date:
+                    min_date = items[x][0]['date']
+                if items[x][-1]['date']>max_date:
+                    max_date = items[x][-1]['date']
+        if min_date== date(2099,1,1) or max_date==date(1970,1,1):
+            return JsonResponse({'coin_name':coin_name, 'results':[]}, status=status.HTTP_200_OK)
+        delta = (max_date-min_date).days
+        for x in range(delta+1):
+            for v in items:
+                date_now  = min_date+timedelta(x)
+                if len(items[v])==0:
+                    items[v]=[{'date':date_now,'date_sum':0}]
+                if items[v][-1]['date'] > date_now:
+                    if items[v][x]['date']!=date_now:
+                        items[v].insert(x,{'date':date_now,'date_sum':0})
+                if items[v][-1]['date'] < date_now:
+                    items[v].append({'date':date_now,'date_sum':0})
+        for a, b, c, d, e in zip(*list(items.values())):
+            temp_dict = {
+                'date': a['date'].strftime('%m/%d'),
+                '净放发数量': float(b['date_sum']),
+                '回收数量': float(c['date_sum']),
+                '下注用户数': float(d['date_sum']),
+                '投注次数': float(e['date_sum']),
+                '投注数量': float(a['date_sum']),
+            }
+            temp_dict['净盈利']= round(float(temp_dict['回收数量']-temp_dict['净放发数量']),2)
+            data.append(temp_dict)
         return JsonResponse({'coin_name': coin_name, 'results': data}, status=status.HTTP_200_OK)
 
 
