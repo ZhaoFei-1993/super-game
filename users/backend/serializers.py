@@ -281,7 +281,7 @@ class UserAllSerializer(serializers.ModelSerializer):
         model = User
         fields = (
         'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id',
-        'invite_new', 'status')
+        'invite_new', 'status', 'is_block')
 
     @staticmethod
     def get_created_at(obj):
