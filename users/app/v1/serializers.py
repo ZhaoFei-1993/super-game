@@ -316,8 +316,8 @@ class PresentationSerialize(serializers.ModelSerializer):
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status", "is_bill", "is_block")
+            "id", "user", "user_name", "telephone", "coin", "is_block", "coin_name", "amount", "address", "address_name", "rest",
+            "created_at", "feedback", "status", "is_bill")
 
     @staticmethod
     def get_created_at(obj):
