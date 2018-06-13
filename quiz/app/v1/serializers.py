@@ -28,6 +28,8 @@ class QuizSerialize(serializers.ModelSerializer):
     planish_rate = serializers.SerializerMethodField()  # 平
     lose_rate = serializers.SerializerMethodField()  # 负
     total_people = serializers.SerializerMethodField()  # 是否已结束
+    host_team_en = serializers.SerializerMethodField()  # 是否已结束
+    guest_team_en = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
         model = Quiz
@@ -43,6 +45,20 @@ class QuizSerialize(serializers.ModelSerializer):
         start = int(begin_at)
         # ok = int(time.time())-900
         return start
+
+    @staticmethod
+    def get_host_team_en(obj):
+        host_team_en = obj.host_team_en
+        if host_team_en == None or host_team_en == '':
+            host_team_en = obj.host_team
+        return host_team_en
+
+    @staticmethod
+    def get_guest_team_en(obj):
+        guest_team_en = obj.guest_team_en
+        if guest_team_en == '' or guest_team_en == None:
+            guest_team_en = obj.guest_team
+        return guest_team_en
 
     def get_total_people(self, obj):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']

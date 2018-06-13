@@ -364,11 +364,20 @@ def coin_initialization(user_id, coin_id):
         user_coin.save()
 
 
-def language_switch(i, s):
+def language_switch(language, parameter):
     """
     语言处理
     """
-    a = s
-    if i == 'en':
-        a = str(s) + '_' + i
-    return a
+    if language == 'en':
+        parameter = str(parameter) + '_' + language
+    return parameter
+
+#
+# def language(language, parameter):
+#     """
+#     语言
+#     """
+#     parameter = parameter
+#     if language == 'en':
+#         parameter = parameter + '_' + language
+#     return parameter
