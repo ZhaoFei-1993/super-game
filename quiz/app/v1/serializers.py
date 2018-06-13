@@ -276,11 +276,29 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     # quiz_push = serializers.SerializerMethodField()  # 投注推送
     start = serializers.SerializerMethodField()  # 比赛开始时间
     status = serializers.SerializerMethodField()  # 比赛状态
+    guest_team = serializers.SerializerMethodField()  # 比赛状态
+    host_team = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Quiz
         fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "host_team_score",
                   "guest_team_score")
+
+    def get_host_team(self, obj):
+        host_team = obj.host_team
+        if self.context['request'].GET.get('language') == 'en':
+            host_team = obj.host_team_en
+            if host_team == '' or host_team == None:
+                host_team = obj.host_team
+        return host_team
+
+    def get_guest_team(self, obj):
+        guest_team = obj.guest_team
+        if self.context['request'].GET.get('language') == 'en':
+            guest_team = obj.guest_team_en
+            if guest_team == '' or guest_team == None:
+                guest_team = obj.guest_team
+        return guest_team
 
     @staticmethod
     def get_start(obj):
@@ -294,16 +312,23 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         status = int(obj.status)
         return status
 
-    @staticmethod
-    def get_year(obj):  # 时间
+    def get_year(self, obj):  # 时间
         yesterday = datetime.today() + timedelta(+1)
         yesterday_format = yesterday.strftime('%m月%d日')
         time = strftime('%m月%d日')
         year = obj.begin_at.strftime('%m月%d日')
+        if self.context['request'].GET.get('language') == 'en':
+            yesterday_format = yesterday.strftime('%d day %m month')
+            time = strftime('%d day %m month')
+            year = obj.begin_at.strftime('%d day %m month')
         if time == year:
             year = year + " " + "今天"
+            if self.context['request'].GET.get('language') == 'en':
+                year = year + " " + "Today"
         elif year == yesterday_format:
             year = year + " " + "明天"
+            if self.context['request'].GET.get('language') == 'en':
+                year = year + " " + "Tomorrow"
         return year
 
     @staticmethod

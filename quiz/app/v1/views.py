@@ -219,6 +219,7 @@ class QuizDetailView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        print("items==========================", items)
         item = items[0]
         return self.response({"code": 0, "data": {
             "id": item['id'],
@@ -591,6 +592,7 @@ class RecommendView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
+
             data.append(
                 {
                     "quiz_id": item['id'],
