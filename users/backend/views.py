@@ -768,13 +768,12 @@ class RunningView(ListAPIView):
         # int_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT').count()
         # int_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT', status=1).count()
         # int_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt=0, coin__name='INT').count()
-
-        coins = Coin.objects.select_related().all()
         results = []
+        coins = Coin.objects.all()
         for x in coins:
             temp_dict = {}
             try:
-                room = Club.objects.get(coin_id=x.id)
+                room = Club.objects.get(coin=x)
             except Exception:
                 return JsonResponse({'Error': '币种%s不存在' % x.name}, status=status.HTTP_400_BAD_REQUEST)
             records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room.id)
