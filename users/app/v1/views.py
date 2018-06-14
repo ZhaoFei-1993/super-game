@@ -133,7 +133,7 @@ class UserRegister(object):
                     area_code = 86
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             if user.is_block == 1:
                 raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             if user.check_password(password):
