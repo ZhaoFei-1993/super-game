@@ -312,12 +312,13 @@ class PresentationSerialize(serializers.ModelSerializer):
     user_name = serializers.CharField(source="user.username")
     telephone = serializers.CharField(source="user.telephone")
     is_block = serializers.BooleanField(source="user.is_block")
+    ip_count = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPresentation
         fields = (
             "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status", "is_bill", "is_block")
+            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count")
 
     @staticmethod
     def get_created_at(obj):
@@ -325,6 +326,17 @@ class PresentationSerialize(serializers.ModelSerializer):
         created_time = obj.created_at
         created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
         return created_at
+
+
+    @staticmethod
+    def get_ip_count(obj):
+        if obj.user.ip_address=='':
+            return 0
+        else:
+            ip = obj.user.ip_address.rsplit('.', 1)[0]
+            ip_count = User.objects.filter(ip_address__contains=ip).count()
+            return ip_count
+
 
 
 class UserCoinSerialize(serializers.ModelSerializer):
