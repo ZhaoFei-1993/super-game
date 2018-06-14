@@ -35,12 +35,12 @@ class CategoryView(ListAPIView):
             category_name = category.name
             if self.request.GET.get('language') == 'en':
                 category_name = category.name_en
-            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("-id")
+            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by('order')
             for categorylist in categoryslist:
                 categorylist_name = categorylist.name
                 if self.request.GET.get('language') == 'en':
                     categorylist_name = categorylist.name_en
-                    if categorylist_name == "":
+                    if categorylist_name == "" or categorylist_name == None:
                         categorylist_name = categorylist.name
                 number = Quiz.objects.filter(category_id=categorylist.id).count()
                 if number <= 0:
@@ -54,7 +54,6 @@ class CategoryView(ListAPIView):
                 "category_name": category_name,
                 "children": children
             })
-        print("data==================================", data)
         return self.response({'code': 0, 'data': data})
 
 
@@ -318,9 +317,14 @@ class RuleView(ListAPIView):
                 else:
                     accuracy = number / total
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                option = s.option.option
+                if self.request.GET.get('language') == 'en':
+                    option = s.option.option_en
+                    if option == '' or option == None:
+                        option = s.option.option
                 list.append({
                     "option_id": s.pk,
-                    "option": s.option.option,
+                    "option": option,
                     "odds": odds,
                     "option_type": s.option.option_type,
                     "is_right": s.option.is_right,
@@ -341,10 +345,15 @@ class RuleView(ListAPIView):
                         flat.append(l)
                     else:
                         loss.append(l)
+                tips = i.tips
+                if self.request.GET.get('language') == 'en':
+                    tips = i.tips_en
+                    if tips == '' or tips == None:
+                        tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
-                    "tips": i.tips,
+                    "tips": tips,
                     "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),

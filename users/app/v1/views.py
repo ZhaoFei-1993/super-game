@@ -133,7 +133,7 @@ class UserRegister(object):
                     area_code = 86
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             if user.is_block == 1:
                 raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             if user.check_password(password):
@@ -222,8 +222,12 @@ class UserRegister(object):
             user.invitation_code = random_invitation_code()
             user.save()
 
-            user_go_line = UserInvitation()
-            if invitee_number < 5 and invitation_user.is_robot == False:
+            give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+            end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+            today = date.today()
+            today_time = today.strftime("%Y%m%d%H%M%S")
+            user_go_line = UserInvitation()  # 邀请T1是否已达上限
+            if invitee_number < 5 or today_time < end_date or invitation_user.is_robot == False:
                 user_go_line.is_effective = 1
                 user_go_line.money = 1
                 user_go_line.coin = 9
@@ -243,7 +247,7 @@ class UserRegister(object):
                 invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
                                                                is_effective=1, coin=9).count()
                 user_on_line = UserInvitation()  # 邀请T2是否已达上限
-                if invitee_number < 10 and on_line.is_robot == False:
+                if invitee_number < 10 or on_line.is_robot == False:
                     user_on_line.is_effective = 1
                     user_on_line.money = 2000
                     user_go_line.is_robot = False
@@ -419,8 +423,8 @@ class LoginView(CreateAPIView):
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
             ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-            if ip_users > 2:
-                raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+            # if ip_users > 2:
+            #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
@@ -594,10 +598,10 @@ class InfoView(ListAPIView):
         user_coin = usercoin.balance
         recharge_address = usercoin.address
 
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -614,11 +618,11 @@ class InfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'USDT'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(usdt_balance.balance)
+                    coin_detail.rest = usdt_balance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
                     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += round(Decimal(a.money), 0)
+                    usdt_give.lock_coin += a.money
                     usdt_give.save()
                 else:
                     userbalance.balance += a.money
@@ -627,11 +631,11 @@ class InfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
+                    coin_detail.rest = userbalance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
-                a.is_deleted = 1
-                a.save()
+                    a.is_deleted = 1
+                    a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -658,6 +662,7 @@ class InfoView(ListAPIView):
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"], 2),
+            'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'is_message': is_message,
@@ -1108,15 +1113,25 @@ class DetailView(ListAPIView):
             public_sign = 1
         system_sign = message_sign(user, 1)
         if int(user_message.message.type) == 3:
+            data = user_message.content
+            if self.request.GET.get('language') == 'en':
+                data = user_message.content_en
+                if data == '' or data == None:
+                    data = user_message.content
             content = {'code': 0,
-                       'data': user_message.content,
+                       'data': data,
                        'status': user_message.status,
                        'system_sign': system_sign,
                        'public_sign': public_sign
                        }
         else:
+            data = user_message.message.content
+            if self.request.GET.get('language') == 'en':
+                data = user_message.message.content_en
+                if data == '' or data == None:
+                    data = user_message.message.content
             content = {'code': 0,
-                       'data': user_message.message.content,
+                       'data': data,
                        'status': user_message.status,
                        'system_sign': system_sign,
                        'public_sign': public_sign
@@ -1901,8 +1916,8 @@ class InvitationRegisterView(CreateAPIView):
         ip1, ip2, ip3, ip4 = ip_address.split('.')
         startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
         ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-        if ip_users > 2:
-            raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+        # if ip_users > 2:
+        #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
@@ -1923,55 +1938,55 @@ class InvitationRegisterView(CreateAPIView):
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
                             nickname=nickname, ip_address=ip_address)
-        invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
-        try:
-            user = ur.get_user(telephone)
-            user_info = User.objects.get(pk=user.id)
-        except DailyLog.DoesNotExist:
-            return 0
-
-        if invitee_one > 0:  # 邀请人为他人T1.
-            try:
-                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
-            except DailyLog.DoesNotExist:
-                return 0
-            on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
-            try:
-                is_robot = User.objects.get(pk=on_line.id)
-            except DailyLog.DoesNotExist:
-                return 0
-            user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 10 or is_robot.is_robot == False:
-                user_on_line.is_effective = 1
-                user_on_line.money = 2000
-                user_on_line.is_robot = False
-            user_on_line.inviter = on_line
-            user_on_line.invitee_two = user_info.id
-            user_on_line.save()
-
-        invitee_number = UserInvitation.objects.filter(inviter=int(invitation_id), coin=9, is_effective=1).count()
-        try:
-            invitation = User.objects.get(pk=invitation_id)
-        except DailyLog.DoesNotExist:
-            return 0
-        try:
-            is_robot = User.objects.get(pk=invitation_id)
-        except DailyLog.DoesNotExist:
-            return 0
-        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
-        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-        today = date.today()
-        today_time = today.strftime("%Y%m%d%H%M%S")
-        user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if invitee_number < 5 and today_time < end_date or is_robot.is_robot == False:
-            user_go_line.is_effective = 1
-            user_go_line.money = 1
-            user_go_line.coin = 9
-            user_go_line.is_robot = False
-        user_go_line.inviter = invitation
-        user_go_line.invitee_one = user_info.id
-        user_go_line.save()
+        # invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
+        # try:
+        #     user = ur.get_user(telephone)
+        #     user_info = User.objects.get(pk=user.id)
+        # except DailyLog.DoesNotExist:
+        #     return 0
+        #
+        # if invitee_one > 0:  # 邀请人为他人T1.
+        #     try:
+        #         invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
+        #     except DailyLog.DoesNotExist:
+        #         return 0
+        #     on_line = invitee.inviter
+        #     invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
+        #     try:
+        #         is_robot = User.objects.get(pk=on_line.id)
+        #     except DailyLog.DoesNotExist:
+        #         return 0
+        #     user_on_line = UserInvitation()  # 邀请T2是否已达上限
+        #     if invitee_number < 10 or is_robot.is_robot == False:
+        #         user_on_line.is_effective = 1
+        #         user_on_line.money = 2000
+        #         user_on_line.is_robot = False
+        #     user_on_line.inviter = on_line
+        #     user_on_line.invitee_two = user_info.id
+        #     user_on_line.save()
+        #
+        # invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9, is_effective=1).count()
+        # try:
+        #     invitation = User.objects.get(pk=invitation_id)
+        # except DailyLog.DoesNotExist:
+        #     return 0
+        # try:
+        #     is_robot = User.objects.get(pk=invitation_id)
+        # except DailyLog.DoesNotExist:
+        #     return 0
+        # give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        # end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        # today = date.today()
+        # today_time = today.strftime("%Y%m%d%H%M%S")
+        # user_go_line = UserInvitation()  # 邀请T1是否已达上限
+        # if invitee_number < 5 or today_time < end_date or is_robot.is_robot == False:
+        #     user_go_line.is_effective = 1
+        #     user_go_line.money = 1
+        #     user_go_line.coin = 9
+        #     user_go_line.is_robot = False
+        # user_go_line.inviter = invitation
+        # user_go_line.invitee_one = user_info.id
+        # user_go_line.save()
 
         return self.response({
             'code': error_code.API_0_SUCCESS,
@@ -1992,10 +2007,10 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -2010,11 +2025,14 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'USDT'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(usdt_balance.balance)
+                    coin_detail.rest = usdt_balance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
-                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += round(Decimal(a.money), 0)
+                    try:
+                        usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                    except Exception:
+                        return 0
+                    usdt_give.lock_coin += a.money
                     usdt_give.save()
                 else:
                     userbalance.balance += a.money
@@ -2023,7 +2041,7 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
+                    coin_detail.rest = userbalance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
                 a.is_deleted = 1

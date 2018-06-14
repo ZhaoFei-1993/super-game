@@ -316,8 +316,7 @@ def get_data_info(url):
                                 option = Option()
                                 option.rule = rule
                                 option.option = dt[1].replace('+', '')
-                                option.option_en = dt[2].replace('+', '')
-                                if dt[2].replace('+', '')[0:4] == '总分大于':
+                                if '总分大于' in dt[1].replace('+', ''):
                                     option.option_en = 'More than ' + dt[2].replace('+', '')
                                 else:
                                     option.option_en = 'Less than ' + dt[2].replace('+', '')
