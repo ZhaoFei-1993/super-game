@@ -19,6 +19,7 @@ class Command(BaseCommand):
                 print("normalize_fraction(user_coin.balance, 2)=========================", user_coin.balance)
                 print("coin_give_records.coin_give.coin.id=========================", coin_give_records.coin_give.coin.id)
                 print("coin_give_records.user.id=========================", coin_give_records.user.id)
+                print("user_coin.user.id=========================", user_coin.user.id)
                 print("normalize_fraction(coin_give_records.lock_coin, 2)=========================",
                       coin_give_records.lock_coin)
                 print(coin_give_records.user.id, ',')
