@@ -317,9 +317,14 @@ class RuleView(ListAPIView):
                 else:
                     accuracy = number / total
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                option = s.option.option
+                if self.request.GET.get('language') == 'en':
+                    option = s.option.option_en
+                    if option == '' or option == None:
+                        option = s.option.option
                 list.append({
                     "option_id": s.pk,
-                    "option": s.option.option,
+                    "option": option,
                     "odds": odds,
                     "option_type": s.option.option_type,
                     "is_right": s.option.is_right,
@@ -340,10 +345,15 @@ class RuleView(ListAPIView):
                         flat.append(l)
                     else:
                         loss.append(l)
+                tips = i.tips
+                if self.request.GET.get('language') == 'en':
+                    tips = i.tips_en
+                    if tips == '' or tips == None:
+                        tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
-                    "tips": i.tips,
+                    "tips": tips,
                     "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),

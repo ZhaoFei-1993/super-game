@@ -133,7 +133,7 @@ class UserRegister(object):
                     area_code = 86
                 user = User.objects.get(area_code=area_code, username=username)
             except Exception:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             if user.is_block == 1:
                 raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             if user.check_password(password):
@@ -419,8 +419,8 @@ class LoginView(CreateAPIView):
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
             ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-            if ip_users > 2:
-                raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+            # if ip_users > 2:
+            #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
@@ -594,10 +594,10 @@ class InfoView(ListAPIView):
         user_coin = usercoin.balance
         recharge_address = usercoin.address
 
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -630,8 +630,8 @@ class InfoView(ListAPIView):
                     coin_detail.rest = Decimal(userbalance.balance)
                     coin_detail.sources = 8
                     coin_detail.save()
-                a.is_deleted = 1
-                a.save()
+                    a.is_deleted = 1
+                    a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -1912,8 +1912,8 @@ class InvitationRegisterView(CreateAPIView):
         ip1, ip2, ip3, ip4 = ip_address.split('.')
         startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
         ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-        if ip_users > 2:
-            raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+        # if ip_users > 2:
+        #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
@@ -1961,7 +1961,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
-        invitee_number = UserInvitation.objects.filter(inviter=int(invitation_id), coin=9, is_effective=1).count()
+        invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9, is_effective=1).count()
         try:
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
@@ -1975,7 +1975,7 @@ class InvitationRegisterView(CreateAPIView):
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if invitee_number < 5 and today_time < end_date or is_robot.is_robot == False:
+        if invitee_number < 5 or today_time < end_date or is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 1
             user_go_line.coin = 9
@@ -2003,10 +2003,10 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -2021,11 +2021,14 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'USDT'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(usdt_balance.balance)
+                    coin_detail.rest = usdt_balance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
-                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += round(Decimal(a.money), 0)
+                    try:
+                        usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                    except Exception:
+                        return 0
+                    usdt_give.lock_coin += a.money
                     usdt_give.save()
                 else:
                     userbalance.balance += a.money
@@ -2034,7 +2037,7 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
+                    coin_detail.rest = userbalance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
                 a.is_deleted = 1
