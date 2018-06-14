@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = "寻找不同步usdt用户"
 
     def handle(self, *args, **options):
-        for coin_give_records in CoinGiveRecords.objects.all():
+        for coin_give_records in CoinGiveRecords.objects.filter(is_recharge_lock=False):
             user_coin = UserCoin.objects.filter(coin=coin_give_records.coin_give.coin,
                                                 user=coin_give_records.user).first()
             if float(user_coin.balance) != float(coin_give_records.lock_coin):

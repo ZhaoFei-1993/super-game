@@ -513,6 +513,12 @@ class InfoView(ListAPIView):
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
+        lr = LoginRecord()  # 登录记录
+        lr.user = user
+        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
+        lr.ip = request.META.get("REMOTE_ADDR", '')
+        lr.save()
+
         coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
@@ -599,6 +605,8 @@ class InfoView(ListAPIView):
                 return 0
             for a in user_invitation_info:
                 if int(a.coin) == 9:
+                    a.is_deleted = 1
+                    a.save()
                     usdt_balance.balance += a.money
                     usdt_balance.save()
                     coin_detail = CoinDetail()
@@ -1934,7 +1942,7 @@ class InvitationRegisterView(CreateAPIView):
             except DailyLog.DoesNotExist:
                 return 0
             user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 10 and is_robot.is_robot == False:
+            if invitee_number < 10 or is_robot.is_robot == False:
                 user_on_line.is_effective = 1
                 user_on_line.money = 2000
                 user_on_line.is_robot = False
@@ -1956,7 +1964,7 @@ class InvitationRegisterView(CreateAPIView):
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if invitee_number < 5 and today_time < end_date and is_robot.is_robot == False:
+        if invitee_number < 5 and today_time < end_date or is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 1
             user_go_line.coin = 9
@@ -2005,6 +2013,9 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.rest = Decimal(usdt_balance.balance)
                     coin_detail.sources = 8
                     coin_detail.save()
+                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                    usdt_give.lock_coin += round(Decimal(a.money), 0)
+                    usdt_give.save()
                 else:
                     userbalance.balance += a.money
                     userbalance.save()
@@ -2015,6 +2026,8 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.rest = Decimal(userbalance.balance)
                     coin_detail.sources = 8
                     coin_detail.save()
+                a.is_deleted = 1
+                a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user

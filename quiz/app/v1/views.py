@@ -476,8 +476,9 @@ class BetView(ListCreateAPIView):
 
         if clubinfo.coin.name == "USDT":  # USDT下注
             give_coin = CoinGiveRecords.objects.get(user_id=user.id)
-            coins = Decimal(coins)  # 总下注额
-            usercoin.balance = float(usercoin.balance - coins)  # 用户余额表减下注额
+            coins = normalize_fraction(coins, 2)  # 总下注额
+            balance = normalize_fraction(usercoin.balance, 2)  # 总下注额
+            usercoin.balance = balance - coins  # 用户余额表减下注额
             usercoin.save()
             lock_coin = normalize_fraction(give_coin.lock_coin, 2)
             if give_coin.lock_coin != float(0) and coins > lock_coin:
