@@ -41,6 +41,8 @@ from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache
+import requests
+import json
 
 
 class UserRegister(object):
@@ -388,6 +390,20 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
         register_type = ur.get_register_type(username)
+
+        # 校验google recaptcha
+        # if 'recaptcha' not in request.data:
+        #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
+        # recaptcha = request.data.get('recaptcha')
+        # recaptcha_data = {
+        #     'secret': '6LcKRlwUAAAAANrxoU9dyYO68fTr_9aXOOYVT-ta',
+        #     'response': recaptcha,
+        #     'remoteip': ip_address,
+        # }
+        # result = requests.post('https://www.google.com/recaptcha/api/siteverify', data=recaptcha_data)
+        # res = json.loads(result.content.decode('utf-8'))
+        # if res is False:
+        #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
 
         avatar = self.get_name_avatar()
         if 'avatar' in request.data:
