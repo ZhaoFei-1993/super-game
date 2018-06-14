@@ -310,7 +310,6 @@ class RuleView(ListAPIView):
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
-                # odds = normalize_fraction(s.odds, int(coinvalue[0].coin.coin_accuracy))
                 odds = normalize_fraction(s.odds, 2)
                 number = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:
