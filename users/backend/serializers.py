@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.utils import timezone
 import time
 from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge, \
-    CoinOutServiceCharge, IntInvitation
+    CoinOutServiceCharge, IntInvitation, UserPresentation
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
@@ -276,12 +276,13 @@ class UserAllSerializer(serializers.ModelSerializer):
     inviter_id = serializers.SerializerMethodField()
     invite_new = serializers.SerializerMethodField()
     integral = serializers.SerializerMethodField()
+    ip_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
         'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id',
-        'invite_new', 'status', 'is_block')
+        'invite_new', 'status', 'is_block','ip_count')
 
     @staticmethod
     def get_created_at(obj):
@@ -343,6 +344,15 @@ class UserAllSerializer(serializers.ModelSerializer):
     def get_integral(obj):
         integral = normalize_fraction(obj.integral, 2)
         return integral
+
+    @staticmethod
+    def get_ip_count(obj):
+        if obj.ip_address=='':
+            return 0
+        else:
+            ip = obj.ip_address.rsplit('.', 1)[0]
+            ip_count = User.objects.filter(ip_address__contains=ip).count()
+            return ip_count
 
 
 class CoinDetailSerializer(serializers.ModelSerializer):
@@ -416,3 +426,48 @@ class UserRechargeSerializer(serializers.ModelSerializer):
     def get_confirm_at(obj):
         confirm_time = obj.confirm_at.strftime('%Y-%m-%d %H:%M:%S')
         return confirm_time
+
+
+class IPAddressSerializer(serializers.ModelSerializer):
+    """
+    同ip用户列表
+    """
+
+    login_times = serializers.SerializerMethodField()
+    recharges = serializers.SerializerMethodField()
+    presents = serializers.SerializerMethodField()
+    present_success = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'ip_address', 'login_times', 'recharges', 'presents', 'present_success', 'is_block','created_at')
+
+
+    @staticmethod
+    def get_login_times(obj):
+        login_times = LoginRecord.objects.filter(user_id=obj.id).count()
+        return login_times
+
+
+    @staticmethod
+    def get_recharges(obj):
+        recharges = UserRecharge.objects.filter(user_id=obj.id).count()
+        return recharges
+
+
+    @staticmethod
+    def get_presents(obj):
+        presents = UserPresentation.objects.filter(user_id=obj.id).count()
+        return presents
+
+
+    @staticmethod
+    def get_present_success(obj):
+        present_success = UserPresentation.objects.filter(user_id=obj.id, status=1).count()
+        return present_success
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        return created_time
