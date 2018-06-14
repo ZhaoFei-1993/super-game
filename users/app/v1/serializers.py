@@ -197,6 +197,7 @@ class DailySerialize(serializers.ModelSerializer):
         yesterday_format = str(yesterday_format) + "000000"
         print("yesterday_format==============================", yesterday_format)
         user = self.context['request'].user.id
+        print("user==================================", user)
         sign = sign_confirmation(user)  # 判断是否签到
         try:
             daily = DailyLog.objects.get(user_id=user)
