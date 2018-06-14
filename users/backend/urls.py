@@ -24,6 +24,8 @@ urlpatterns = [
     path('user_all/', views.UserAllView.as_view(), name="backend-user-all"),
     # 推荐人信息
     path('user_all/<int:pk>/', views.UserAllDetailView.as_view(), name="backend-user-all-detail"),
+    # Ip同列表
+    path('user_all/ip/<int:id>/', views.SameIPAddressView.as_view(), name="backend-user-all-detail"),
     # 邀请好友数
     path('invite_new/<int:pk>/', views.InviteNewView.as_view(), name="backend-invite_new"),
     # 提现列表
