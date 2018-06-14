@@ -191,20 +191,26 @@ class RecordSerialize(serializers.ModelSerializer):
         bet = normalize_fraction(obj.bet, int(coin_accuracy))
         return bet
 
-    @staticmethod
-    def get_host_team(obj):  # 主队
+    def get_host_team(self, obj):  # 主队
         if obj.quiz_id == 0:
             return None
         quiz = Quiz.objects.get(pk=obj.quiz_id)
         host_team = quiz.host_team
+        if self.context['request'].GET.get('language') == 'en':
+            host_team = quiz.host_team_en
+            if host_team == '' or host_team == None:
+                host_team = quiz.host_team
         return host_team
 
-    @staticmethod
-    def get_guest_team(obj):  # 副队
+    def get_guest_team(self, obj):  # 副队
         if obj.quiz_id == 0:
             return None
         quiz = Quiz.objects.get(pk=obj.quiz_id)
         guest_team = quiz.guest_team
+        if self.context['request'].GET.get('language') == 'en':
+            guest_team = quiz.guest_team_en
+            if guest_team == '' or guest_team == None:
+                guest_team = quiz.guest_team
         return guest_team
 
     @staticmethod
@@ -219,14 +225,21 @@ class RecordSerialize(serializers.ModelSerializer):
         }]
         return data
 
-    @staticmethod
-    def get_my_option(obj):  # 我的选项
+    def get_my_option(self, obj):  # 我的选项
         # option_info = Option.objects.get(pk=obj.option_id)
-        option = OptionOdds.objects.get(pk=obj.option_id)
+        options = OptionOdds.objects.get(pk=obj.option_id)
 
-        rule_list = Rule.objects.get(pk=option.option.rule_id)
-        my_rule = rule_list.TYPE_CHOICE[int(rule_list.type)][1]
-        my_option = my_rule + ":" + option.option.option + "/" + str(
+        rule_list = Rule.objects.get(pk=options.option.rule_id)
+        my_rule = rule_list.tips_en
+        option = options.option.option
+        if self.context['request'].GET.get('language') == 'en':
+            my_rule = rule_list.tips_en
+            if my_rule == '' or my_rule == None:
+                my_rule = rule_list.tips_en
+            option = options.option.option_en
+            if option == '' or option == None:
+                option = options.option.option
+        my_option = my_rule + ":" + option + "/" + str(
             normalize_fraction(obj.odds, 2))
 
         data = [{
@@ -247,14 +260,17 @@ class RecordSerialize(serializers.ModelSerializer):
         coin_name = club_info.coin.name
         return coin_name
 
-    @staticmethod
-    def get_earn_coin(obj):
+    def get_earn_coin(self, obj):
         club = Club.objects.get(pk=obj.roomquiz_id)
         i = [0, 1, 2, 3]
         if int(obj.quiz.status) in i:
             earn_coin = "待开奖"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Lottery to be announced "
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Guess wrong"
         else:
             earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(club.coin.coin_accuracy)))
         return earn_coin
