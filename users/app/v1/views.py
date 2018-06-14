@@ -1938,55 +1938,55 @@ class InvitationRegisterView(CreateAPIView):
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
                             nickname=nickname, ip_address=ip_address)
-        # invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
-        # try:
-        #     user = ur.get_user(telephone)
-        #     user_info = User.objects.get(pk=user.id)
-        # except DailyLog.DoesNotExist:
-        #     return 0
-        #
-        # if invitee_one > 0:  # 邀请人为他人T1.
-        #     try:
-        #         invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
-        #     except DailyLog.DoesNotExist:
-        #         return 0
-        #     on_line = invitee.inviter
-        #     invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
-        #     try:
-        #         is_robot = User.objects.get(pk=on_line.id)
-        #     except DailyLog.DoesNotExist:
-        #         return 0
-        #     user_on_line = UserInvitation()  # 邀请T2是否已达上限
-        #     if invitee_number < 10 or is_robot.is_robot == False:
-        #         user_on_line.is_effective = 1
-        #         user_on_line.money = 2000
-        #         user_on_line.is_robot = False
-        #     user_on_line.inviter = on_line
-        #     user_on_line.invitee_two = user_info.id
-        #     user_on_line.save()
-        #
-        # invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9, is_effective=1).count()
-        # try:
-        #     invitation = User.objects.get(pk=invitation_id)
-        # except DailyLog.DoesNotExist:
-        #     return 0
-        # try:
-        #     is_robot = User.objects.get(pk=invitation_id)
-        # except DailyLog.DoesNotExist:
-        #     return 0
-        # give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
-        # end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-        # today = date.today()
-        # today_time = today.strftime("%Y%m%d%H%M%S")
-        # user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        # if invitee_number < 5 or today_time < end_date or is_robot.is_robot == False:
-        #     user_go_line.is_effective = 1
-        #     user_go_line.money = 1
-        #     user_go_line.coin = 9
-        #     user_go_line.is_robot = False
-        # user_go_line.inviter = invitation
-        # user_go_line.invitee_one = user_info.id
-        # user_go_line.save()
+        invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
+        try:
+            user = ur.get_user(telephone)
+            user_info = User.objects.get(pk=user.id)
+        except DailyLog.DoesNotExist:
+            return 0
+
+        if invitee_one > 0:  # 邀请人为他人T1.
+            try:
+                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
+            except DailyLog.DoesNotExist:
+                return 0
+            on_line = invitee.inviter
+            invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
+            try:
+                is_robot = User.objects.get(pk=on_line.id)
+            except DailyLog.DoesNotExist:
+                return 0
+            user_on_line = UserInvitation()  # 邀请T2是否已达上限
+            if invitee_number < 10 or is_robot.is_robot == False:
+                user_on_line.is_effective = 1
+                user_on_line.money = 2000
+                user_on_line.is_robot = False
+            user_on_line.inviter = on_line
+            user_on_line.invitee_two = user_info.id
+            user_on_line.save()
+
+        invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9, is_effective=1).count()
+        try:
+            invitation = User.objects.get(pk=invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
+        try:
+            is_robot = User.objects.get(pk=invitation_id)
+        except DailyLog.DoesNotExist:
+            return 0
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
+        user_go_line = UserInvitation()  # 邀请T1是否已达上限
+        if invitee_number < 5 or today_time < end_date or is_robot.is_robot == False:
+            user_go_line.is_effective = 1
+            user_go_line.money = 1
+            user_go_line.coin = 9
+            user_go_line.is_robot = False
+        user_go_line.inviter = invitation
+        user_go_line.invitee_one = user_info.id
+        user_go_line.save()
 
         return self.response({
             'code': error_code.API_0_SUCCESS,
