@@ -393,7 +393,7 @@ class QuizPushSerializer(serializers.ModelSerializer):
     def get_my_rule(self, obj):
         rule = Rule.objects.get(pk=obj.rule_id)
         my_rule = rule.tips
-        if self.request.GET.get('language') == 'en':
+        if self.context['request'].GET.get('language') == 'en':
             my_rule = rule.tips_en
         return my_rule
 
