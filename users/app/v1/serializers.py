@@ -195,6 +195,7 @@ class DailySerialize(serializers.ModelSerializer):
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime("%Y%m%d")
         yesterday_format = str(yesterday_format) + "000000"
+        print("yesterday_format==============================", yesterday_format)
         user = self.context['request'].user.id
         sign = sign_confirmation(user)  # 判断是否签到
         try:
@@ -203,6 +204,7 @@ class DailySerialize(serializers.ModelSerializer):
             return 0
         is_selected = 0
         sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
+        print("sign_date==============================", sign_date)
         if sign_date < yesterday_format:  # 判断昨天签到没有
             is_selected = 0
             if obj.days == 1:
@@ -214,6 +216,7 @@ class DailySerialize(serializers.ModelSerializer):
             elif sign == 0 and sign_date > yesterday_format:
                 if obj.days == (daily.number + 1):
                     is_selected = 1
+        print("is_selected=================================", is_selected)
         return is_selected
 
 
