@@ -497,6 +497,12 @@ class InfoView(ListAPIView):
         coin_name = clubinfo.coin.name
         coin_id = clubinfo.coin.pk
 
+        lr = LoginRecord()  # 登录记录
+        lr.user = user
+        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
+        lr.ip = request.META.get("REMOTE_ADDR", '')
+        lr.save()
+
         coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
