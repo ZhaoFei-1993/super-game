@@ -235,10 +235,12 @@ class RecordSerialize(serializers.ModelSerializer):
         if self.context['request'].GET.get('language') == 'en':
             my_rule = rule_list.tips_en
             if my_rule == '' or my_rule == None:
+                print(111111111111111111111)
                 my_rule = rule_list.tips
             option = options.option.option_en
             if option == '' or option == None:
                 option = options.option.option
+        print("my_rule=======================", my_rule)
         my_option = my_rule + ":" + option + "/" + str(
             normalize_fraction(obj.odds, 2))
 
