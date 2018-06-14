@@ -12,9 +12,11 @@ class Command(BaseCommand):
         # quiz_list = []
         for coin_give_records in CoinGiveRecords.objects.filter(is_recharge_lock=False, user__is_block=False,
                                                                 user__is_robot=False):
-            user_coin = UserCoin.objects.get(coin=coin_give_records.coin_give.coin, user=coin_give_records.user)
+            user_coin = UserCoin.objects.get(coin_id=coin_give_records.coin_give.coin.id, user_id=coin_give_records.user.id)
             if user_coin.balance != coin_give_records.lock_coin:
                 print("normalize_fraction(user_coin.balance, 2)=========================", user_coin.balance)
+                print("coin_give_records.coin_give.coin.id=========================", coin_give_records.coin_give.coin.id)
+                print("coin_give_records.user.id=========================", coin_give_records.user.id)
                 print("normalize_fraction(coin_give_records.lock_coin, 2)=========================",
                       coin_give_records.lock_coin)
                 print(coin_give_records.user.id, ',')
