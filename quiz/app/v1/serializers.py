@@ -235,7 +235,7 @@ class RecordSerialize(serializers.ModelSerializer):
         if self.context['request'].GET.get('language') == 'en':
             my_rule = rule_list.tips_en
             if my_rule == '' or my_rule == None:
-                my_rule = rule_list.tips_en
+                my_rule = rule_list.tips
             option = options.option.option_en
             if option == '' or option == None:
                 option = options.option.option
