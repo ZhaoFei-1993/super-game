@@ -1,16 +1,18 @@
 # -*- coding: UTF-8 -*-
 import time
-from rest_framework import serializers
-from ...models import Quiz, Record, Option, Rule, Category, OptionOdds
-from time import strftime, gmtime
-from decimal import Decimal
 from datetime import timedelta, datetime
-from users.models import User
-from chat.models import Club
-from api import settings
-from django.db.models import Q
+from decimal import Decimal
+from time import strftime
+
 import pytz
+from django.db.models import Q
+from rest_framework import serializers
+
+from api import settings
+from chat.models import Club
+from users.models import User
 from utils.functions import normalize_fraction
+from ...models import Quiz, Record, Rule, Category, OptionOdds
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -28,6 +30,9 @@ class QuizSerialize(serializers.ModelSerializer):
     planish_rate = serializers.SerializerMethodField()  # 平
     lose_rate = serializers.SerializerMethodField()  # 负
     total_people = serializers.SerializerMethodField()  # 是否已结束
+    host_team = serializers.SerializerMethodField()  # 是否已结束
+    guest_team = serializers.SerializerMethodField()  # 是否已结束
+    match_name = serializers.SerializerMethodField()  # 是否已结束
 
     class Meta:
         model = Quiz
@@ -43,6 +48,31 @@ class QuizSerialize(serializers.ModelSerializer):
         start = int(begin_at)
         # ok = int(time.time())-900
         return start
+
+    def get_host_team(self, obj):
+        host_team = obj.host_team
+        if self.context['request'].GET.get('language') == 'en':
+            host_team = obj.host_team_en
+            if host_team == '' or host_team == None:
+                host_team = obj.host_team
+        return host_team
+
+    def get_match_name(self, obj):
+        vv = Category.objects.get(pk=obj.category_id)
+        match_name = vv.name
+        if self.context['request'].GET.get('language') == 'en':
+            match_name = vv.name_en
+            if match_name == '' or match_name == None:
+                match_name = vv.match_name
+        return match_name
+
+    def get_guest_team(self, obj):
+        guest_team = obj.guest_team
+        if self.context['request'].GET.get('language') == 'en':
+            guest_team = obj.guest_team_en
+            if guest_team == '' or guest_team == None:
+                guest_team = obj.guest_team
+        return guest_team
 
     def get_total_people(self, obj):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
@@ -61,7 +91,6 @@ class QuizSerialize(serializers.ModelSerializer):
         odds = 0
         for rule in rule_obj:
             try:
-                # option = Option.objects.get(rule_id=rule.pk, flag="h")
                 option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="h", club_id=roomquiz_id)
                 odds = option.odds
             except OptionOdds.DoesNotExist:
@@ -247,11 +276,29 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     # quiz_push = serializers.SerializerMethodField()  # 投注推送
     start = serializers.SerializerMethodField()  # 比赛开始时间
     status = serializers.SerializerMethodField()  # 比赛状态
+    guest_team = serializers.SerializerMethodField()  # 比赛状态
+    host_team = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Quiz
         fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "host_team_score",
                   "guest_team_score")
+
+    def get_host_team(self, obj):
+        host_team = obj.host_team
+        if self.context['request'].GET.get('language') == 'en':
+            host_team = obj.host_team_en
+            if host_team == '' or host_team == None:
+                host_team = obj.host_team
+        return host_team
+
+    def get_guest_team(self, obj):
+        guest_team = obj.guest_team
+        if self.context['request'].GET.get('language') == 'en':
+            guest_team = obj.guest_team_en
+            if guest_team == '' or guest_team == None:
+                guest_team = obj.guest_team
+        return guest_team
 
     @staticmethod
     def get_start(obj):
@@ -265,16 +312,23 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         status = int(obj.status)
         return status
 
-    @staticmethod
-    def get_year(obj):  # 时间
+    def get_year(self, obj):  # 时间
         yesterday = datetime.today() + timedelta(+1)
         yesterday_format = yesterday.strftime('%m月%d日')
         time = strftime('%m月%d日')
         year = obj.begin_at.strftime('%m月%d日')
+        if self.context['request'].GET.get('language') == 'en':
+            yesterday_format = yesterday.strftime('%d day %m month')
+            time = strftime('%d day %m month')
+            year = obj.begin_at.strftime('%d day %m month')
         if time == year:
             year = year + " " + "今天"
+            if self.context['request'].GET.get('language') == 'en':
+                year = year + " " + "Today"
         elif year == yesterday_format:
             year = year + " " + "明天"
+            if self.context['request'].GET.get('language') == 'en':
+                year = year + " " + "Tomorrow"
         return year
 
     @staticmethod

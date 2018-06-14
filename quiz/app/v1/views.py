@@ -14,8 +14,7 @@ from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
 from utils.functions import value_judge
 from datetime import datetime, date
-import time
-import re
+from utils.functions import language_switch
 from utils.functions import normalize_fraction
 
 
@@ -33,18 +32,26 @@ class CategoryView(ListAPIView):
         data = []
         for category in categorys:
             children = []
+            category_name = category.name
+            if self.request.GET.get('language') == 'en':
+                category_name = category.name_en
             categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("order")
             for categorylist in categoryslist:
+                categorylist_name = categorylist.name
+                if self.request.GET.get('language') == 'en':
+                    categorylist_name = categorylist.name_en
+                    if categorylist_name == "":
+                        categorylist_name = categorylist.name
                 number = Quiz.objects.filter(category_id=categorylist.id).count()
                 if number <= 0:
                     continue
                 children.append({
                     "category_id": categorylist.id,
-                    "category_name": categorylist.name,
+                    "category_name": categorylist_name,
                 })
             data.append({
                 "category_id": category.id,
-                "category_name": category.name,
+                "category_name": category_name,
                 "children": children
             })
         return self.response({'code': 0, 'data': data})
@@ -212,6 +219,7 @@ class QuizDetailView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        print("items==========================", items)
         item = items[0]
         return self.response({"code": 0, "data": {
             "id": item['id'],
@@ -584,6 +592,7 @@ class RecommendView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
+
             data.append(
                 {
                     "quiz_id": item['id'],

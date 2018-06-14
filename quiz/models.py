@@ -15,7 +15,7 @@ from decimal import Decimal
 @reversion.register()
 class Category(MPTTModel):
     name = models.CharField(verbose_name="分类名称", max_length=50)
-    name_en = models.CharField(verbose_name="分类名称", max_length=50, default='')
+    name_en = models.CharField(verbose_name="分类名称(英文)", max_length=50, default='')
     icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='自身ID', db_index=True, on_delete=models.CASCADE)

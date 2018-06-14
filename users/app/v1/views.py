@@ -426,9 +426,8 @@ class LoginView(CreateAPIView):
 
                 message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
-                    return self.response({
-                        'code': error_code.API_20402_INVALID_SMS_CODE
-                    })
+                    raise ParamErrorException(error_code.API_20402_INVALID_SMS_CODE)
+
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
                                     avatar=avatar,
