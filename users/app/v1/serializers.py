@@ -259,7 +259,7 @@ class MessageListSerialize(serializers.ModelSerializer):
     def get_created_at(obj):  # 时间
         created_time = obj.created_at
         # created_time = timezone.localtime(obj.created_at)
-        data = created_time.strftime('%Y年%m月%d日%H:%M')
+        data = created_time.strftime('%Y.%m.%d %H:%M')
         return data
 
 
@@ -334,16 +334,14 @@ class PresentationSerialize(serializers.ModelSerializer):
         created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
         return created_at
 
-
     @staticmethod
     def get_ip_count(obj):
-        if obj.user.ip_address=='':
+        if obj.user.ip_address == '':
             return 0
         else:
             ip = obj.user.ip_address.rsplit('.', 1)[0]
             ip_count = User.objects.filter(ip_address__contains=ip).count()
             return ip_count
-
 
 
 class UserCoinSerialize(serializers.ModelSerializer):
@@ -602,10 +600,19 @@ class LuckDrawSerializer(serializers.ModelSerializer):
     奖品列表序列化
     """
     prize_number = serializers.SerializerMethodField()
+    prize_name = serializers.SerializerMethodField()
 
     class Meta:
         model = IntegralPrize
         fields = ('id', 'prize_name', 'icon', 'prize_number', 'prize_consume', 'prize_weight', 'created_at')
+
+    def get_prize_name(self, obj):
+        prize_name = obj.prize_name
+        if self.context['request'].GET.get('language') == 'en' and prize_name == '谢谢参与':
+            prize_name = 'Thanks for participation'
+        if self.context['request'].GET.get('language') == 'en' and prize_name == '再来一次':
+            prize_name = 'Once again'
+        return prize_name
 
     @staticmethod
     def get_prize_number(obj):
@@ -625,6 +632,7 @@ class CountriesSerialize(serializers.ModelSerializer):
     """
     电话区号序列化
     """
+
     class Meta:
         model = Countries
         fields = ('id', 'code', 'area_code', 'name_en', 'name_zh_CN', 'name_zh_HK', 'language')
