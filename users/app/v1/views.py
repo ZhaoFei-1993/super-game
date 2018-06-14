@@ -366,7 +366,9 @@ class LoginView(CreateAPIView):
             line_number = 1
 
         file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
+        print("file_avatar_nickname=====================", file_avatar_nickname)
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
+        print("avatar_nickname==============================", avatar_nickname)
         a = avatar_nickname.split('_')
         print("a=======================", a[0])
         print("a=======================", a[1])
@@ -407,16 +409,15 @@ class LoginView(CreateAPIView):
         # res = json.loads(result.content.decode('utf-8'))
         # if res is False:
         #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
-
-        avatar = self.get_name_avatar()
-        if 'avatar' in request.data:
-            avatar = request.data.get('avatar')
         type = request.data.get('type')  # 1 注册          2 登录
         regex = re.compile(r'^(1|2)$')
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         user = User.objects.filter(username=username)
         if len(user) == 0:
+            avatar = self.get_name_avatar()
+            if 'avatar' in request.data:
+                avatar = request.data.get('avatar')
             print('ip_address = ', ip_address)
             # 判断同一IP地址是否重复注册
             ip1, ip2, ip3, ip4 = ip_address.split('.')
