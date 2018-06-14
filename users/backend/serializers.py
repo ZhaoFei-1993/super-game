@@ -437,10 +437,11 @@ class IPAddressSerializer(serializers.ModelSerializer):
     recharges = serializers.SerializerMethodField()
     presents = serializers.SerializerMethodField()
     present_success = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'ip_address', 'login_times', 'recharges', 'presents', 'present_success')
+        fields = ('id', 'username', 'ip_address', 'login_times', 'recharges', 'presents', 'present_success', 'is_block','created_at')
 
 
     @staticmethod
@@ -465,3 +466,8 @@ class IPAddressSerializer(serializers.ModelSerializer):
     def get_present_success(obj):
         present_success = UserPresentation.objects.filter(user_id=obj.id, status=1).count()
         return present_success
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        return created_time

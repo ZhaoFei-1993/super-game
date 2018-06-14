@@ -1153,5 +1153,5 @@ class SameIPAddressView(ListAPIView):
         users = User.objects.filter(id=uuid, is_robot=0)
         if users.exists():
             ip = users[0].ip_address.rsplit('.', 1)[0]
-            users = User.objects.filter(ip_address__contains=ip)
+            users = User.objects.filter(ip_address__contains=ip).order_by('-created_at')
         return users
