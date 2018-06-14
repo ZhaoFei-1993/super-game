@@ -594,10 +594,10 @@ class InfoView(ListAPIView):
         user_coin = usercoin.balance
         recharge_address = usercoin.address
 
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -2003,10 +2003,10 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                is_effective=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter=user.id,
+            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
             try:
                 userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
@@ -2021,11 +2021,14 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'USDT'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(usdt_balance.balance)
+                    coin_detail.rest = usdt_balance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
-                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += round(Decimal(a.money), 0)
+                    try:
+                        usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                    except Exception:
+                        return 0
+                    usdt_give.lock_coin += a.money
                     usdt_give.save()
                 else:
                     userbalance.balance += a.money
@@ -2034,7 +2037,7 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.user = user
                     coin_detail.coin_name = 'HAND'
                     coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = Decimal(userbalance.balance)
+                    coin_detail.rest = userbalance.balance
                     coin_detail.sources = 8
                     coin_detail.save()
                 a.is_deleted = 1
