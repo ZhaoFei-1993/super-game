@@ -309,7 +309,7 @@ def get_data_info(url):
                             rule.quiz = quiz
                             rule.type = i
                             rule.type_en = i
-                            rule.tips = '大小分,两队总得分大于或小于预估总得分'
+                            rule.tips = '大小分'
                             rule.tips_en = 'Compare the total score'
                             rule.save()
                             for dt in result_hilo:
