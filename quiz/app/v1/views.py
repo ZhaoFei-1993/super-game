@@ -310,7 +310,6 @@ class RuleView(ListAPIView):
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
-                # odds = normalize_fraction(s.odds, int(coinvalue[0].coin.coin_accuracy))
                 odds = normalize_fraction(s.odds, 2)
                 number = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id=i.pk, option_id=s.pk).count()
                 if number == 0 or total == 0:
@@ -435,7 +434,7 @@ class BetView(ListCreateAPIView):
                 user_message = UserMessage()
                 user_message.status = 0
                 user_message.user = user
-                user_message.message_id = 10  # 修改密码
+                user_message.message_id = 10
                 user_message.save()
 
         try:  # 判断选项ID是否有效
@@ -481,8 +480,8 @@ class BetView(ListCreateAPIView):
             usercoin.balance = balance - coins  # 用户余额表减下注额
             usercoin.save()
             lock_coin = normalize_fraction(give_coin.lock_coin, 2)
-            if give_coin.lock_coin != float(0) and coins > lock_coin:
-                coins_give = coins - give_coin.lock_coin  # 正常币下注额
+            if lock_coin != float(0) and coins > lock_coin:
+                coins_give = coins - lock_coin  # 正常币下注额
 
                 record = Record()  # 正常币记录
                 record.user = user
@@ -490,11 +489,11 @@ class BetView(ListCreateAPIView):
                 record.roomquiz_id = roomquiz_id
                 record.rule_id = rule_id
                 record.option = option_odds
-                record.bet = round(Decimal(coins_give), 3)
-                record.odds = round(Decimal(option_odds.odds), 2)
+                record.bet = coins_give
+                record.odds = option_odds.odds
                 record.save()
-                earn_coins = Decimal(coins_give) * option_odds.odds
-                earn_coins_one = round(earn_coins, 3)
+                earn_coins = coins_give * option_odds.odds
+                earn_coins_one = normalize_fraction(earn_coins, 2)
 
                 record = Record()  # 赠送币记录
                 record.user = user
@@ -503,13 +502,13 @@ class BetView(ListCreateAPIView):
                 record.rule_id = rule_id
                 record.option = option_odds
                 record.source = 2
-                record.bet = round(Decimal(give_coin.lock_coin), 3)
-                record.odds = round(Decimal(option_odds.odds), 2)
+                record.bet = lock_coin
+                record.odds = option_odds.odds
                 record.save()
-                earn_coins = Decimal(give_coin.lock_coin) * option_odds.odds
-                earn_coins_two = round(earn_coins, 3)
+                earn_coins = lock_coin * option_odds.odds
+                earn_coins_two = normalize_fraction(earn_coins, 2)
 
-                give_coin.lock_coin -= give_coin.lock_coin
+                give_coin.lock_coin -= lock_coin
                 give_coin.save()
 
                 earn_coins = earn_coins_one + earn_coins_two
@@ -521,13 +520,13 @@ class BetView(ListCreateAPIView):
                 record.rule_id = rule_id
                 record.option = option_odds
                 record.source = 2
-                record.bet = round(Decimal(coins), 3)
-                record.odds = round(Decimal(option_odds.odds), 2)
+                record.bet = coins
+                record.odds = option_odds.odds
                 record.save()
-                earn_coins = Decimal(coins) * option_odds.odds
-                earn_coins = round(earn_coins, 3)
+                earn_coins = coins * option_odds.odds
+                earn_coins = normalize_fraction(earn_coins, 2)
 
-                give_coin.lock_coin -= round(Decimal(coins), 3)
+                give_coin.lock_coin -= coins
                 give_coin.save()
             else:
                 record = Record()  # 充值币记录
@@ -536,11 +535,11 @@ class BetView(ListCreateAPIView):
                 record.roomquiz_id = roomquiz_id
                 record.rule_id = rule_id
                 record.option = option_odds
-                record.bet = round(Decimal(coins), 3)
-                record.odds = round(Decimal(option_odds.odds), 2)
+                record.bet = coins
+                record.odds = option_odds.odds
                 record.save()
-                earn_coins = Decimal(coins) * option_odds.odds
-                earn_coins = round(earn_coins, 3)
+                earn_coins = coins * option_odds.odds
+                earn_coins = normalize_fraction(earn_coins, 2)
         else:
             record = Record()
             record.user = user
