@@ -1912,8 +1912,8 @@ class InvitationRegisterView(CreateAPIView):
         ip1, ip2, ip3, ip4 = ip_address.split('.')
         startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
         ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-        if ip_users > 2:
-            raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
+        # if ip_users > 2:
+        #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
         # 判断该手机号码是否已经注册
         user = User.objects.filter(username=telephone)
