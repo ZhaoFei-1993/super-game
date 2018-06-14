@@ -979,7 +979,7 @@ class DailyListView(ListAPIView):
                 "is_sign": list["is_sign"],
                 "is_selected": list["is_selected"]
             })
-
+        print("data===================", data)
         return self.response({'code': 0, 'data': data})
 
 
