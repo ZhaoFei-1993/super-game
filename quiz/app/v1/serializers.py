@@ -230,7 +230,7 @@ class RecordSerialize(serializers.ModelSerializer):
         options = OptionOdds.objects.get(pk=obj.option_id)
 
         rule_list = Rule.objects.get(pk=options.option.rule_id)
-        my_rule = rule_list.tips_en
+        my_rule = rule_list.tips
         option = options.option.option
         if self.context['request'].GET.get('language') == 'en':
             my_rule = rule_list.tips_en
