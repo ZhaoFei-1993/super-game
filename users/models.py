@@ -607,3 +607,14 @@ class Countries(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "电话号码区号表"
+
+
+@reversion.register()
+class Robot(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.BooleanField(verbose_name="是否可疑", default=False)
+    created_at = models.DateTimeField(verbose_name="注册日期", auto_now=True)
+    log_at = models.DateTimeField(verbose_name="登录日期", auto_now=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "可疑用户表"
