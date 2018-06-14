@@ -31,9 +31,12 @@ class ClublistView(ListAPIView):
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
         date_now = datetime.now().strftime('%Y%m%d%H%M')
-        int_ban = '/'.join([MEDIA_DOMAIN_HOST, "INT_BAN.jpg?t=%s" % date_now])
-        usdt_ban = '/'.join([MEDIA_DOMAIN_HOST, "USDT.jpg?t=%s" % date_now])
-        int_act_ban = '/'.join([MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
+        int_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
+        usdt_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
+        int_act_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_ACT") + ".jpg?t=%s" % date_now])
         banner = [{"img_url": int_ban, "action": 'Invite_New'},
                   {"img_url": usdt_ban, "action": 'USDT_ACTIVE'},
                   {"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}
