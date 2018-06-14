@@ -16,6 +16,7 @@ from . import code
 from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
+from utils.cache import get_cache, set_cache
 
 
 class SignatureAuthentication(authentication.BaseAuthentication):
@@ -159,10 +160,8 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
-            # raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
-            pass  # TODO: remove it!!!!
-
-        # TODO: prevent replay request!!!
+            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            # pass  # TODO: remove it!!!!
 
         # Check if request has a "Signature" request header.
         authorization_header = self.header_canonical('Authorization')
@@ -178,6 +177,11 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('x-nonce = ', sent_nonce)
         # if not sent_nonce:
         #     raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
+
+        # TODO: prevent replay request!!!，把nonce传入缓存中，60秒有效，60秒内如果有相同的nonce值，则deny
+        if get_cache('api_nonce') == sent_nonce:
+            raise SystemParamException(code.API_10110_REQUEST_REPLY_DENY)
+        set_cache('api_nonce', sent_nonce, 60)
 
         # 登录验证
         sent_token = self.get_token_from_signature_string(sent_string)
