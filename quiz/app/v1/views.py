@@ -35,7 +35,7 @@ class CategoryView(ListAPIView):
             category_name = category.name
             if self.request.GET.get('language') == 'en':
                 category_name = category.name_en
-            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("order")
+            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by("~id")
             for categorylist in categoryslist:
                 categorylist_name = categorylist.name
                 if self.request.GET.get('language') == 'en':
