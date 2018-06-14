@@ -366,12 +366,11 @@ class LoginView(CreateAPIView):
             line_number = 1
 
         file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
-        print("file_avatar_nickname=====================", file_avatar_nickname)
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
-        print("avatar_nickname================================", avatar_nickname)
         a = avatar_nickname.split('_')
         if len(a) > 2:
             folder = str(a[0])
+            suffix = str(a[1]) + "_" + str(a[2])
         else:
             folder, suffix = avatar_nickname.split('_')
 
@@ -1860,7 +1859,7 @@ class InvitationRegisterView(CreateAPIView):
         获取已经下载的用户昵称和头像
         :return:
         """
-        key_name_avatar = 'key_name_avatar'
+        key_name_avatar = 'key_avatar'
 
         line_number = get_cache(key_name_avatar)
         if line_number is None:
