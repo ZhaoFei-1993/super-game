@@ -14,11 +14,11 @@ coin_name = 'BTC'
 
 def get_transactions(addresses):
     transactions = {}
-    print('addresses = ', addresses)
+    # print('addresses = ', addresses)
     response = requests.get(base_url + addresses)
     # if response.status_code == 500:
     #     raise CommandError(response)
-    print('response = ', response.__dict__)
+    # print('response = ', response.__dict__)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
