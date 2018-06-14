@@ -368,7 +368,10 @@ class LoginView(CreateAPIView):
         file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
         a = avatar_nickname.split('_')
-        print("a=======================", a)
+        print("a=======================", a[0])
+        print("a=======================", a[1])
+        print("a=======================", a[2])
+        print("a=======================", a[3])
         if len(a) > 2:
             folder = str(a[0])
             suffix = str(a[1]) + "_" + str(a[2])
