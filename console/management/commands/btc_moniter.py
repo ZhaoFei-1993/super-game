@@ -14,11 +14,11 @@ coin_name = 'BTC'
 
 def get_transactions(addresses):
     transactions = {}
-    print('addresses = ', addresses)
+    # print('addresses = ', addresses)
     response = requests.get(base_url + addresses)
     # if response.status_code == 500:
     #     raise CommandError(response)
-    print('response = ', response.__dict__)
+    # print('response = ', response.__dict__)
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
@@ -52,7 +52,7 @@ class Command(BaseCommand):
     @transaction.atomic()
     def handle(self, *args, **options):
         # 获取所有用户ETH地址
-        user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False)
+        user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False, user__is_block=False)
         if len(user_btc_address) == 0:
             self.stdout.write(self.style.SUCCESS('无' + coin_name + '地址信息'))
             return True
