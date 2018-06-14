@@ -14,6 +14,8 @@ class Command(BaseCommand):
         for coin_give_records in CoinGiveRecords.objects.filter(is_recharge_lock=False, user__is_block=False,
                                                                 user__is_robot=False):
             user_coin = UserCoin.objects.get(coin=coin_give_records.coin_give.coin, user=coin_give_records.user)
+            print("normalize_fraction(user_coin.balance, 2)=========================", normalize_fraction(user_coin.balance, 2))
+            print("normalize_fraction(coin_give_records.lock_coin, 2)=========================", normalize_fraction(coin_give_records.lock_coin, 2))
             if normalize_fraction(user_coin.balance, 2) != normalize_fraction(coin_give_records.lock_coin, 2):
                 print(coin_give_records.user.id, ',')
 
