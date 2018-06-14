@@ -609,7 +609,7 @@ class LuckDrawSerializer(serializers.ModelSerializer):
     def get_prize_name(self, obj):
         prize_name = obj.prize_name
         if self.context['request'].GET.get('language') == 'en' and prize_name == '谢谢参与':
-            prize_name = 'Thanks for participation'
+            prize_name = 'Thanks'
         if self.context['request'].GET.get('language') == 'en' and prize_name == '再来一次':
             prize_name = 'Once again'
         return prize_name
