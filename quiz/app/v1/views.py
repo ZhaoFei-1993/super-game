@@ -411,6 +411,7 @@ class BetView(ListCreateAPIView):
 
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
+        coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
             today = date.today()
@@ -475,11 +476,11 @@ class BetView(ListCreateAPIView):
 
         if clubinfo.coin.name == "USDT":  # USDT下注
             give_coin = CoinGiveRecords.objects.get(user_id=user.id)
-            coins = normalize_fraction(coins, 2)  # 总下注额
-            balance = normalize_fraction(usercoin.balance, 2)  # 总下注额
+            coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
+            balance = normalize_fraction(usercoin.balance, coin_accuracy)  # 总下注额
             usercoin.balance = balance - coins  # 用户余额表减下注额
             usercoin.save()
-            lock_coin = normalize_fraction(give_coin.lock_coin, 2)
+            lock_coin = normalize_fraction(give_coin.lock_coin, coin_accuracy)
             if lock_coin != float(0) and coins > lock_coin:
                 coins_give = coins - lock_coin  # 正常币下注额
 
@@ -493,7 +494,7 @@ class BetView(ListCreateAPIView):
                 record.odds = option_odds.odds
                 record.save()
                 earn_coins = coins_give * option_odds.odds
-                earn_coins_one = normalize_fraction(earn_coins, 2)
+                earn_coins_one = normalize_fraction(earn_coins, coin_accuracy)
 
                 record = Record()  # 赠送币记录
                 record.user = user
@@ -506,7 +507,7 @@ class BetView(ListCreateAPIView):
                 record.odds = option_odds.odds
                 record.save()
                 earn_coins = lock_coin * option_odds.odds
-                earn_coins_two = normalize_fraction(earn_coins, 2)
+                earn_coins_two = normalize_fraction(earn_coins, coin_accuracy)
 
                 give_coin.lock_coin -= lock_coin
                 give_coin.save()
@@ -524,7 +525,7 @@ class BetView(ListCreateAPIView):
                 record.odds = option_odds.odds
                 record.save()
                 earn_coins = coins * option_odds.odds
-                earn_coins = normalize_fraction(earn_coins, 2)
+                earn_coins = normalize_fraction(earn_coins, coin_accuracy)
 
                 give_coin.lock_coin -= coins
                 give_coin.save()
@@ -539,21 +540,23 @@ class BetView(ListCreateAPIView):
                 record.odds = option_odds.odds
                 record.save()
                 earn_coins = coins * option_odds.odds
-                earn_coins = normalize_fraction(earn_coins, 2)
+                earn_coins = normalize_fraction(earn_coins, coin_accuracy)
         else:
+            coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
             record = Record()
             record.user = user
             record.quiz = quiz
             record.roomquiz_id = roomquiz_id
             record.rule_id = rule_id
             record.option = option_odds
-            record.bet = round(Decimal(coins), 3)
-            record.odds = round(Decimal(option_odds.odds), 2)
+            record.bet = coins
+            record.odds = option_odds.odds
             record.save()
-            earn_coins = Decimal(coins) * option_odds.odds
-            earn_coins = round(earn_coins, 3)
+            earn_coins = coins * option_odds.odds
+            earn_coins = normalize_fraction(earn_coins, coin_accuracy)
             # 用户减少金币
-            usercoin.balance = float(usercoin.balance - Decimal(coins))
+            balance = normalize_fraction(usercoin.balance, coin_accuracy)
+            usercoin.balance = balance - coins
             usercoin.save()
             quiz.total_people += 1
             quiz.save()
@@ -562,7 +565,7 @@ class BetView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = usercoin.coin.name
         coin_detail.amount = '-' + str(coins)
-        coin_detail.rest = Decimal(usercoin.balance)
+        coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
         response = {

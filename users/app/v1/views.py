@@ -227,6 +227,7 @@ class UserRegister(object):
                 user_go_line.is_effective = 1
                 user_go_line.money = 1
                 user_go_line.coin = 9
+                user_go_line.is_robot = False
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
             user_go_line.invitee_one = user.id
@@ -245,6 +246,7 @@ class UserRegister(object):
                 if invitee_number < 10 and on_line.is_robot == False:
                     user_on_line.is_effective = 1
                     user_on_line.money = 2000
+                    user_go_line.is_robot = False
                 user_on_line.inviter = on_line
                 user_on_line.invitee_two = user.id
                 user_on_line.save()
