@@ -589,6 +589,8 @@ class InfoView(ListAPIView):
                 return 0
             for a in user_invitation_info:
                 if int(a.coin) == 9:
+                    a.is_deleted = 1
+                    a.save()
                     usdt_balance.balance += a.money
                     usdt_balance.save()
                     coin_detail = CoinDetail()
@@ -1941,12 +1943,12 @@ class InvitationRegisterView(CreateAPIView):
             is_robot = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
             return 0
-        # give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
-        # end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-        # today = date.today()
-        # today_time = today.strftime("%Y%m%d%H%M%S")
+        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
+        today = date.today()
+        today_time = today.strftime("%Y%m%d%H%M%S")
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if invitee_number < 5 or is_robot.is_robot == False:
+        if invitee_number < 5 and today_time < end_date or is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 1
             user_go_line.coin = 9
@@ -2005,6 +2007,8 @@ class InvitationInfoView(ListAPIView):
                     coin_detail.rest = Decimal(userbalance.balance)
                     coin_detail.sources = 8
                     coin_detail.save()
+                a.is_deleted = 1
+                a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
