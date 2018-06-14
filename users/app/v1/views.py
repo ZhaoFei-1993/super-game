@@ -658,6 +658,7 @@ class InfoView(ListAPIView):
             'usercoin_avatar': usercoin_avatar,
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"], 2),
+            'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
             'is_message': is_message,
@@ -1108,15 +1109,25 @@ class DetailView(ListAPIView):
             public_sign = 1
         system_sign = message_sign(user, 1)
         if int(user_message.message.type) == 3:
+            data = user_message.content
+            if self.request.GET.get('language') == 'en':
+                data = user_message.content_en
+                if data == '' or data == None:
+                    data = user_message.content
             content = {'code': 0,
-                       'data': user_message.content,
+                       'data': data,
                        'status': user_message.status,
                        'system_sign': system_sign,
                        'public_sign': public_sign
                        }
         else:
+            data = user_message.message.content
+            if self.request.GET.get('language') == 'en':
+                data = user_message.message.content_en
+                if data == '' or data == None:
+                    data = user_message.message.content
             content = {'code': 0,
-                       'data': user_message.message.content,
+                       'data': data,
                        'status': user_message.status,
                        'system_sign': system_sign,
                        'public_sign': public_sign

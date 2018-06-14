@@ -73,7 +73,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id", "nickname", "avatar", "integral", "telephone", "is_passcode",
-            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user")
+            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user", "area_code")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
@@ -237,15 +237,22 @@ class MessageListSerialize(serializers.ModelSerializer):
         type = list.type
         return type
 
-    @staticmethod
-    def get_titles(obj):  # 消息标题
+    def get_titles(self, obj):  # 消息标题
         list = Message.objects.get(pk=obj.message_id)
         type = list.type
         if int(type) == 3:
             title = obj.title
+            if self.context['request'].GET.get('language') == 'en':
+                title = obj.title_en
+                if title == '' or title == None:
+                    title = obj.title
         else:
             list = Message.objects.get(pk=obj.message_id)
             title = list.title
+            if self.context['request'].GET.get('language') == 'en':
+                title = list.title_en
+                if title == '' or title == None:
+                    title = list.title
         return title
 
     @staticmethod

@@ -35,12 +35,12 @@ class CategoryView(ListAPIView):
             category_name = category.name
             if self.request.GET.get('language') == 'en':
                 category_name = category.name_en
-            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by('-order')
+            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by('order')
             for categorylist in categoryslist:
                 categorylist_name = categorylist.name
                 if self.request.GET.get('language') == 'en':
                     categorylist_name = categorylist.name_en
-                    if categorylist_name == "":
+                    if categorylist_name == "" or categorylist_name == None:
                         categorylist_name = categorylist.name
                 number = Quiz.objects.filter(category_id=categorylist.id).count()
                 if number <= 0:
@@ -54,7 +54,6 @@ class CategoryView(ListAPIView):
                 "category_name": category_name,
                 "children": children
             })
-        print("data==================================", data)
         return self.response({'code': 0, 'data': data})
 
 
