@@ -54,6 +54,7 @@ class CategoryView(ListAPIView):
                 "category_name": category_name,
                 "children": children
             })
+        print("data==================================", data)
         return self.response({'code': 0, 'data': data})
 
 
