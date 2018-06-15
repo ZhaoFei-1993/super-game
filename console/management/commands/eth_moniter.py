@@ -5,7 +5,6 @@ import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
 from base.eth import *
 from time import time
-from decimal import Decimal
 import math
 
 
@@ -60,7 +59,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
         # 因URL有长度限制，这里分页处理，每页80条
-        page_size = 80
+        page_size = 100
         page_total = int(math.ceil(len(eth_address) / page_size))
         for i in range(1, page_total + 1):
             start = (i - 1) * page_size
