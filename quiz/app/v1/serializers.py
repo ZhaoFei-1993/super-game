@@ -63,7 +63,7 @@ class QuizSerialize(serializers.ModelSerializer):
         if self.context['request'].GET.get('language') == 'en':
             match_name = vv.name_en
             if match_name == '' or match_name == None:
-                match_name = vv.match_name
+                match_name = vv.name_en
         return match_name
 
     def get_guest_team(self, obj):
