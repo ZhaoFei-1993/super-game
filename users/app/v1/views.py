@@ -2321,12 +2321,17 @@ class ClickLuckDrawView(CreateAPIView):
         prize_number = integral_prize.prize_number
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
+        prize_name = integral_prize.prize_name
+        if self.request.GET.get('language') == 'en' and prize_name == '谢谢参与':
+            prize_name = 'Thanks'
+        if self.request.GET.get('language') == 'en' and prize_name == '再来一次':
+            prize_name = 'Once again'
         return self.response({
             'code': 0,
             'data': {
                 'id': integral_prize.id,
                 'icon': integral_prize.icon,
-                'prize_name': integral_prize.prize_name,
+                'prize_name': prize_name,
                 'prize_number': prize_number,
                 'integral': normalize_fraction(user_info.integral, 2),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
@@ -2342,10 +2347,15 @@ class ActivityImageView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         activity_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "ATI") + '.jpg?t=%s' % now_time])
+            [MEDIA_DOMAIN_HOST, language_switch(language, "ATI") + '.jpg?t=%s' % now_time])
+        if language=='en':
+            activity = 'Recharge'
+        else:
+            activity = '充值福利'
         return self.response(
-            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
+            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': activity}]})
 
 
 class USDTActivityView(ListAPIView):
@@ -2355,10 +2365,15 @@ class USDTActivityView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         usdt_img = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT_ATI") + ".jpg?t=%s" % now_time])
+        if language=='en':
+            activity = 'GIVE YOU A HAND'
+        else:
+            activity = '助你一币之力'
         return self.response(
-            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
+            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': activity}]})
 
 
 class CheckInvitationCode(ListAPIView):
