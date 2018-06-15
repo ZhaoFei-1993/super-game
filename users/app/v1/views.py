@@ -794,6 +794,8 @@ class RankingView(ListAPIView):
         user = request.user
         user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
+        if self.request.GET.get('language') == 'en':
+            my_ran = "Not on the list"
         index = 0
         for i in user_arr:
             index = index + 1
