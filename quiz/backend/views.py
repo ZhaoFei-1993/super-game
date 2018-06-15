@@ -2,7 +2,7 @@
 from base.backend import FormatListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from .serializers import CategorySerializer, UserQuizSerializer, UserQuizListSerializer, QuizBackendListAllSerializer
 from ..models import Category, Quiz, Option, QuizCoin, Coin, Record, Rule
-from chat.models import  Club
+from chat.models import Club
 from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
@@ -12,7 +12,7 @@ from datetime import datetime
 from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
 from rest_framework import status
-from utils.functions import convert_localtime
+from utils.functions import convert_localtime, normalize_fraction
 from rest_framework.reverse import reverse
 from django.http import HttpResponse
 import json
@@ -141,6 +141,7 @@ class QuizListView(ListCreateAPIView):
     post:
     添加一条竞猜数据
     """
+
     #
     # serializer_class = serializers.QuizSerializer
     # filter_class = QuizFilter
@@ -240,12 +241,13 @@ class QuizListView(ListCreateAPIView):
         # 赛果
         result = request.data['result']
         rule_result = Rule()
-        rule_result.type=0
+        rule_result.type = 0
         rule_result.tips = '赛果'
-        quiz_t = Quiz.objects.filter(category=category, host_team=quiz.host_team, guest_team=quiz.guest_team, begin_at=quiz.begin_at, admin=request.user).order_by('-created_at')
-        if len(quiz_t)==0:
-            return JsonResponse({'Error':'比赛不存在'}, status= status.HTTP_400_BAD_REQUEST)
-        rule_result.quiz=quiz_t[0]
+        quiz_t = Quiz.objects.filter(category=category, host_team=quiz.host_team, guest_team=quiz.guest_team,
+                                     begin_at=quiz.begin_at, admin=request.user).order_by('-created_at')
+        if len(quiz_t) == 0:
+            return JsonResponse({'Error': '比赛不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        rule_result.quiz = quiz_t[0]
         result_win = result['result_win']
         result_flat = result['result_flat']
         result_transport = result['result_transport']
@@ -254,36 +256,31 @@ class QuizListView(ListCreateAPIView):
         rule_result.save()
         # 主胜
         rule_t = Rule.objects.get(quiz=quiz_t[0], type=0)
-        option_result_win= Option()
-        option_result_win.option='主胜'
-        option_result_win.order=1
-        option_result_win.odds=result_win
-        option_result_win.flag='h'
-        option_result_win.rule=rule_t
+        option_result_win = Option()
+        option_result_win.option = '主胜'
+        option_result_win.order = 1
+        option_result_win.odds = result_win
+        option_result_win.flag = 'h'
+        option_result_win.rule = rule_t
         option_result_win.save()
         # 平局
-        option_result_flat= Option()
-        option_result_flat.option='平局'
-        option_result_flat.order=2
-        option_result_flat.odds=result_flat
-        option_result_flat.flag='d'
-        option_result_flat.rule=rule_t
+        option_result_flat = Option()
+        option_result_flat.option = '平局'
+        option_result_flat.order = 2
+        option_result_flat.odds = result_flat
+        option_result_flat.flag = 'd'
+        option_result_flat.rule = rule_t
         option_result_flat.save()
         # 主负
-        option_result_transport= Option()
-        option_result_transport.option='主负'
-        option_result_transport.order=1
-        option_result_transport.odds=result_transport
-        option_result_transport.flag='a'
-        option_result_transport.rule=rule_t
+        option_result_transport = Option()
+        option_result_transport.option = '主负'
+        option_result_transport.order = 1
+        option_result_transport.odds = result_transport
+        option_result_transport.flag = 'a'
+        option_result_transport.rule = rule_t
         option_result_transport.save()
 
-        #让分赛果:
-
-
-
-
-
+        # 让分赛果:
 
         print("request===============", request.data)
         result = request.data['result']
@@ -332,7 +329,6 @@ class QuizListView(ListCreateAPIView):
         #         daily.start_date=publish_date
         #         daily.save()
 
-
         content = {'status': status.HTTP_201_CREATED}
         return HttpResponse(json.dumps(content), content_type='text/json')
 
@@ -352,14 +348,25 @@ class QuizListBackEndView(FormatListAPIView):
     后台竞猜列表
     """
 
+    def ts_null_2_zero(self, item):
+        if item == None:
+            return 0
+        else:
+            return float(normalize_fraction(item, 4))
+
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
-        values = Record.objects.filter(source__in = [Record.NORMAL,Record.GIVE], quiz__category__parent__id=category).values("quiz", "roomquiz_id").annotate(total_bet=Count('roomquiz_id'),
-                                                                      sum_bet=Sum('bet'), sum_earn_coin=Sum('earn_coin')).order_by('-quiz__begin_at')
+        records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz__category__parent__id=category)
+        values = records.values("quiz", "roomquiz_id").annotate(total_bet=Count('id'),
+                                                                sum_bet=Sum('bet')).order_by('-quiz__begin_at')
         data = []
         for x in values:
             q_id = int(x['quiz'])
             r_id = int(x['roomquiz_id'])
+            sum_out = self.ts_null_2_zero(
+                records.filter(quiz_id=q_id, roomquiz_id=r_id, earn_coin__gt=0).aggregate(Sum('earn_coin'))[
+                    'earn_coin__sum'])
+
             try:
                 quiz = Quiz.objects.get(id=q_id)
                 room = Club.objects.get(id=r_id)
@@ -376,28 +383,32 @@ class QuizListBackEndView(FormatListAPIView):
                 'host_team': quiz.host_team,
                 'guest_team': quiz.guest_team,
                 'match_time': match_time,
-                'score': str(quiz.host_team_score)+":"+str(quiz.guest_team_score),
+                'score': str(quiz.host_team_score) + ":" + str(quiz.guest_team_score),
                 'room': room.room_title,
                 'room_id': room.id,
                 'total_bet': x['total_bet'],
                 'sum_bet': x['sum_bet'],
-                'sum_earn_coin': -Decimal(x['sum_earn_coin']),
+                'sum_out': sum_out,
                 'status': state,
             }
+            if int(quiz.status) != Quiz.BONUS_DISTRIBUTION:
+                temp_dict['sum_earn_coin']=0
+            else:
+                temp_dict['sum_earn_coin']=normalize_fraction(float(temp_dict['sum_bet'])-temp_dict['sum_out'],8)
             data.append(temp_dict)
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
-
 
 
 class QuizListBackEndDetailView(ListAPIView):
     """
     比赛赛果
     """
+
     def list(self, request, *args, **kwargs):
         type = int(self.kwargs['type'])
         for i in ['room', 'quiz_id']:
             if i not in request.query_params:
-                return JsonResponse({'Error:参数%s缺失'% i}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({'Error:参数%s缺失' % i}, status=status.HTTP_400_BAD_REQUEST)
         quiz_id = request.query_params.get('quiz_id')
         room = request.query_params.get('room')
         if quiz_id == '':
@@ -408,12 +419,13 @@ class QuizListBackEndDetailView(ListAPIView):
             return JsonResponse({'Error:参数room不能为空,需为整数'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             room = int(room)
-        records = Record.objects.filter(source__in=[Record.NORMAL,Record.GIVE], quiz_id=quiz_id, roomquiz_id=room, rule__type=type)
+        records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz_id=quiz_id, roomquiz_id=room,
+                                        rule__type=type)
         if len(records) > 0:
             rule_id = records[0].rule_id
-            options = Option.objects.filter(rule_id =rule_id).order_by('id')
+            options = Option.objects.filter(rule_id=rule_id).order_by('id')
         else:
-            return JsonResponse({'提示':'无投注数据'}, status=status.HTTP_200_OK)
+            return JsonResponse({'提示': '无投注数据'}, status=status.HTTP_200_OK)
         data = []
         if len(options) > 0:
             for x in options:
@@ -427,17 +439,16 @@ class QuizListBackEndDetailView(ListAPIView):
                     'sum_bet': 0 if sum_t['bet__sum'] == None else sum_t['bet__sum']
                 }
                 if type in [0, 1, 4, 5]:
-                    temp_dict['rate']=round((100*count_t)/ records.count(),0)
-                    if type in [1,5]:
+                    temp_dict['rate'] = round((100 * count_t) / records.count(), 0)
+                    if type in [1, 5]:
                         temp_dict['home_let_score'] = x.rule.home_let_score
                         temp_dict['guest_let_score'] = x.rule.guest_let_score
                 if type in [2, 7]:
-                    temp_dict['option_type']= x.option_type
+                    temp_dict['option_type'] = x.option_type
                 data.append(temp_dict)
         else:
-            return JsonResponse({'Error':'无对应选项'},status=status.HTTP_400_BAD_REQUEST)
-        return JsonResponse({'results':data}, status=status.HTTP_200_OK)
-
+            return JsonResponse({'Error': '无对应选项'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
 class UserQuizListView(ListAPIView):
@@ -450,7 +461,7 @@ class UserQuizListView(ListAPIView):
     def get_queryset(self):
         pk = self.kwargs['user_id']
         room_id = self.kwargs['room_id']
-        rec_s = Record.objects.filter(user_id=pk, source__in=[Record.NORMAL,Record.GIVE], roomquiz_id=room_id)
+        rec_s = Record.objects.filter(user_id=pk, source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room_id)
         return rec_s
 
 
@@ -463,7 +474,8 @@ class QuizCountListView(ListAPIView):
     def get_queryset(self):
         option_id = int(self.kwargs['pk'])
         room = int(self.kwargs['room'])
-        records = Record.objects.filter(source__in=[Record.NORMAL,Record.GIVE], roomquiz_id=room, option__option_id=option_id)
+        records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=room,
+                                        option__option_id=option_id)
         return records
 
 
@@ -474,6 +486,6 @@ class QuizListAllView(ListAPIView):
     serializer_class = QuizBackendListAllSerializer
 
     def get_queryset(self):
-        category = self.kwargs['category'] #1为篮球, 2为足球
+        category = self.kwargs['category']  # 1为篮球, 2为足球
         quiz_s = Quiz.objects.filter(category__parent_id=category)
         return quiz_s
