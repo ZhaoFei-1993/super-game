@@ -353,6 +353,7 @@ def handle_delay_game(delay_quiz):
 
 def cash_back(quiz):
     cash_back_rate = 0.1
+
     for club in Club.objects.filter(~Q(room_title='HAND俱乐部')):
         records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, user__is_robot=False)
         if len(records) > 0:
