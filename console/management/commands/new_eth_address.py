@@ -9,7 +9,7 @@ from time import time
 
 class Command(BaseCommand):
     help = "分配ETH地址"
-    max_address = 10000
+    max_address = 100
 
     def handle(self, *args, **options):
         start = time()
