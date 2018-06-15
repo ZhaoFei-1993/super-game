@@ -117,7 +117,8 @@ class Command(BaseCommand):
 
             rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
             coin = Coin.objects.get(pk=club.coin_id)
-            self.stdout.write(self.style.SUCCESS('机器人ID=' + str(user.id) + '在' + club.room_title + '玩法ID=' + rule_title + '下注' + str(wager) + '个' + coin.name))
+            quiz_info = quiz.host_team + ' VS ' + quiz.guest_team
+            self.stdout.write(self.style.SUCCESS('机器人ID=' + str(user.id) + '在' + club.room_title + '(' + quiz_info + ')' + '玩法ID=' + rule_title + '下注' + str(wager) + '个' + coin.name))
 
         self.stdout.write(self.style.SUCCESS('下注成功'))
 
@@ -257,12 +258,21 @@ class Command(BaseCommand):
         :param rule_id 玩法ID
         :return:
         """
-        options = OptionOdds.objects.filter(club_id=club_id, option__rule_id=rule_id)
+        options = OptionOdds.objects.filter(club_id=club_id, option__rule_id=rule_id).order_by('odds')
         if len(options) == 0:
             return False
 
-        secure_random = random.SystemRandom()
-        return secure_random.choice(options)
+        # 低赔率下注数权重高于高赔率
+        choices = {
+            0: 70,
+            1: 20,
+            2: 10,
+        }
+        weight_choice = WeightChoice()
+        weight_choice.set_choices(choices)
+        idx = weight_choice.choice()
+
+        return options[idx]
 
     @staticmethod
     def get_bet_user():
