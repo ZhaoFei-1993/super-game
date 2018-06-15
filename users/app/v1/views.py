@@ -202,8 +202,8 @@ class UserRegister(object):
 
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
-            invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
-                                                           is_effective=1, coin=4).count()
+            inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
+                                                           is_effective=1, coin=9).count()
 
             register_type = self.get_register_type(username)
             user = User()
@@ -227,7 +227,7 @@ class UserRegister(object):
             today = date.today()
             today_time = today.strftime("%Y%m%d%H%M%S")
             user_go_line = UserInvitation()  # 邀请T1是否已达上限
-            if invitee_number < 5 and today_time < end_date and invitation_user.is_robot == False:
+            if inviter_number < 5 and today_time < end_date and invitation_user.is_robot == False:
                 user_go_line.is_effective = 1
                 user_go_line.money = 1
                 user_go_line.coin = 9
@@ -245,7 +245,7 @@ class UserRegister(object):
                     return 0
                 on_line = invitee.inviter
                 invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
-                                                               is_effective=1, coin=9).count()
+                                                               is_effective=1, coin=4).count()
                 user_on_line = UserInvitation()  # 邀请T2是否已达上限
                 if invitee_number < 10 and on_line.is_robot == False:
                     user_on_line.is_effective = 1
@@ -1967,7 +1967,7 @@ class InvitationRegisterView(CreateAPIView):
             user_on_line.invitee_two = user_info.id
             user_on_line.save()
 
-        invitee_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9, is_effective=1).count()
+        inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9).count()
         try:
             invitation = User.objects.get(pk=invitation_id)
         except DailyLog.DoesNotExist:
@@ -1981,7 +1981,7 @@ class InvitationRegisterView(CreateAPIView):
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if invitee_number < 5 and today_time < end_date and is_robot.is_robot == False:
+        if inviter_number < 5 and today_time < end_date and is_robot.is_robot == False:
             user_go_line.is_effective = 1
             user_go_line.money = 1
             user_go_line.coin = 9
