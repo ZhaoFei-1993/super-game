@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
-from users.models import UserInvitation
+from users.models import UserInvitation, User
 
 
 class Command(BaseCommand):
@@ -10,7 +10,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         i = 1
-        for user in UserInvitation.objects.filter(~Q(money=0), inviter_id=2638):
-            print("i==============================", i)
-            i += 1
-            user.delete()
+        for user in UserInvitation.objects.filter(~Q(invitee_one=0), inviter_id=16114):
+            print("================================================", i, "===========================", user.invitee_one)
+            i = i+1
+            user_list = User.objects.get(id=user.invitee_one)
+            user_list.is_block = 1
+            user_list.save()
