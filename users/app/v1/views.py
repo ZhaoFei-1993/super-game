@@ -2321,12 +2321,17 @@ class ClickLuckDrawView(CreateAPIView):
         prize_number = integral_prize.prize_number
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
+        prize_name = integral_prize.prize_name
+        if self.request.GET.get('language') == 'en' and prize_name == '谢谢参与':
+            prize_name = 'Thanks'
+        if self.request.GET.get('language') == 'en' and prize_name == '再来一次':
+            prize_name = 'Once again'
         return self.response({
             'code': 0,
             'data': {
                 'id': integral_prize.id,
                 'icon': integral_prize.icon,
-                'prize_name': integral_prize.prize_name,
+                'prize_name': prize_name,
                 'prize_number': prize_number,
                 'integral': normalize_fraction(user_info.integral, 2),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
