@@ -23,6 +23,7 @@ def get_transactions(coin, address):
 
     txs = {}
     items = json_data['data']
+    print('items = ', items)
     for addr in items:
         txs[addr] = []
         transactions = items[addr]
