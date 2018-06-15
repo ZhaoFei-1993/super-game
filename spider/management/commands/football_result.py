@@ -453,7 +453,8 @@ def handle_unusual_game(quiz_list):
 
 
 def cash_back(quiz):
-    cash_back_rate = 0.5
+    cash_back_rate = 0.1
+
     for club in Club.objects.filter(~Q(room_title='HAND俱乐部')):
         records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, user__is_robot=False)
         if len(records) > 0:
