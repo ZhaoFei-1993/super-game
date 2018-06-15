@@ -370,10 +370,15 @@ class RuleView(ListAPIView):
                     win.sort(key=lambda x: x["order"])
                     flat.sort(key=lambda x: x["order"])
                     loss.sort(key=lambda x: x["order"])
+                tips = i.tips
+                if self.request.GET.get('language') == 'en':
+                    tips = i.tips_en
+                    if tips == '' or tips == None:
+                        tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
-                    "tips": i.tips,
+                    "tips": tips,
                     "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
@@ -381,10 +386,15 @@ class RuleView(ListAPIView):
                     "list_loss": loss,
                 })
             else:
+                tips = i.tips
+                if self.request.GET.get('language') == 'en':
+                    tips = i.tips_en
+                    if tips == '' or tips == None:
+                        tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
-                    "tips": i.tips,
+                    "tips": tips,
                     "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
                     "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),

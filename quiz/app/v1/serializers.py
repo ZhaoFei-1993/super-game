@@ -63,7 +63,7 @@ class QuizSerialize(serializers.ModelSerializer):
         if self.context['request'].GET.get('language') == 'en':
             match_name = vv.name_en
             if match_name == '' or match_name == None:
-                match_name = vv.match_name
+                match_name = vv.name_en
         return match_name
 
     def get_guest_team(self, obj):
@@ -266,7 +266,7 @@ class RecordSerialize(serializers.ModelSerializer):
         if int(obj.quiz.status) in i:
             earn_coin = "待开奖"
             if self.context['request'].GET.get('language') == 'en':
-                earn_coin = "Lottery to be announced "
+                earn_coin = "Wait results"
         elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
             earn_coin = "猜错"
             if self.context['request'].GET.get('language') == 'en':

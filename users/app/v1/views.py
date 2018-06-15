@@ -321,7 +321,7 @@ class UserRegister(object):
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
             if int(invitation_user.pk) == 2638:  # INT邀请活动
-                invitation_number = IntInvitation.objects.all().count()
+                invitation_number = IntInvitation.objects.filter(is_block=0).count()
                 int_invitation = IntInvitation()
                 int_invitation.invitee = userinfo.id
                 int_invitation.inviter = invitation_user
@@ -1990,6 +1990,34 @@ class InvitationRegisterView(CreateAPIView):
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
 
+        if int(invitation.pk) == 2638:  # INT邀请活动
+            invitation_number = IntInvitation.objects.filter(is_block=0).count()
+            int_invitation = IntInvitation()
+            int_invitation.invitee = user_info.id
+            int_invitation.inviter = invitation
+            int_invitation.coin = 1
+            int_invitation.invitation_code = invitation.invitation_code
+            if invitation_number >= 2000:
+                int_invitation.money = 0
+                int_invitation.is_deleted = False
+            int_invitation.save()
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user_info
+            user_message.message_id = 13
+            user_message.save()
+            if int_invitation.money > 0:
+                int_user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=1)
+                int_user_coin.balance += Decimal(int_invitation.money)
+                int_user_coin.save()
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user_info
+                coin_bankruptcy.coin_name = 'INT'
+                coin_bankruptcy.amount = '+' + str(int_invitation.money)
+                coin_bankruptcy.rest = Decimal(int_user_coin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
+
         return self.response({
             'code': error_code.API_0_SUCCESS,
             'data': {
@@ -2139,11 +2167,17 @@ class InvitationMergeView(ListAPIView):
         else:
             invitation_code = user.invitation_code
 
-        if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
-            qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
+        if self.request.GET.get('language') == 'en':
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_en.jpg', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.jpg'
+                qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
+                return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
+        else:
+            if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+                qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
+                return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
-            return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
         pygame.init()
         # 设置字体和字号
         font = pygame.font.SysFont('Microsoft YaHei', 64)
@@ -2154,7 +2188,10 @@ class InvitationMergeView(ListAPIView):
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
         # qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
-        base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
+        if self.request.GET.get('language') == 'en':
+            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk_en.jpg')
+        else:
+            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
         qr = qrcode.QRCode(
             version=1,
@@ -2174,8 +2211,12 @@ class InvitationMergeView(ListAPIView):
         qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
         # 保存推广图片
-        base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+        if self.request.GET.get('language') == 'en':
+            base_img.save(save_path + '/spread_' + str(user.id) + '_en.jpg', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.jpg'
+        else:
+            base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
@@ -2321,12 +2362,17 @@ class ClickLuckDrawView(CreateAPIView):
         prize_number = integral_prize.prize_number
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
+        prize_name = integral_prize.prize_name
+        if self.request.GET.get('language') == 'en' and prize_name == '谢谢参与':
+            prize_name = 'Thanks'
+        if self.request.GET.get('language') == 'en' and prize_name == '再来一次':
+            prize_name = 'Once again'
         return self.response({
             'code': 0,
             'data': {
                 'id': integral_prize.id,
                 'icon': integral_prize.icon,
-                'prize_name': integral_prize.prize_name,
+                'prize_name': prize_name,
                 'prize_number': prize_number,
                 'integral': normalize_fraction(user_info.integral, 2),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
@@ -2342,10 +2388,15 @@ class ActivityImageView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         activity_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "ATI") + '.jpg?t=%s' % now_time])
+            [MEDIA_DOMAIN_HOST, language_switch(language, "ATI") + '.jpg?t=%s' % now_time])
+        if language=='en':
+            activity = 'Recharge'
+        else:
+            activity = '充值福利'
         return self.response(
-            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
+            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': activity}]})
 
 
 class USDTActivityView(ListAPIView):
@@ -2355,10 +2406,15 @@ class USDTActivityView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         usdt_img = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT_ATI") + ".jpg?t=%s" % now_time])
+        if language=='en':
+            activity = 'GIVE YOU A HAND'
+        else:
+            activity = '助你一币之力'
         return self.response(
-            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
+            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': activity}]})
 
 
 class CheckInvitationCode(ListAPIView):
