@@ -15,4 +15,4 @@ class Command(BaseCommand):
             i = i+1
             user_list = User.objects.get(id=user.invitee_one)
             user_list.is_block = 1
-            # user_list.save()
+            user_list.save()
