@@ -13,3 +13,4 @@ class Command(BaseCommand):
             record_list = UserInvitation.objects.filter(money__gt=0, inviter_id=i.id, coin=9).count()
             if record_list > 5:
                 print("=================================================", i.id)
+                print("=================================================", record_list)
