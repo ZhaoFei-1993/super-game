@@ -15,7 +15,7 @@ class Command(BaseCommand):
         #     block_user_int_coin.balance = 0
         #     block_user_int_coin.save()
         records = Record.objects.filter(source=Record.GIVE, user_id=5089, roomquiz_id=6).values(
-            'quiz_id').distinct().count()
+            'quiz_id').count()
         print("records=================================", records)
         if records < 6:
             print("records===============================================")
