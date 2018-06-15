@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         i = 1
-        for user in UserInvitation.objects.filter(~Q(invitee_one=0), inviter_id=16114):
+        for user in UserInvitation.objects.filter(~Q(invitee_one=0), inviter_id=16678):
             print("================================================", i, "===========================", user.invitee_one)
             i = i+1
             user_list = User.objects.get(id=user.invitee_one)
