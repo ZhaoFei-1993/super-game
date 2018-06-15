@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 import time as format_time
 from users.models import UserCoin, UserRecharge, Coin
-from base.eth_test import *
+from base.eth import *
 from time import time
 import math
 from decimal import Decimal
