@@ -390,10 +390,11 @@ class QuizPushSerializer(serializers.ModelSerializer):
         model = Record
         fields = ("id", "username", "my_rule", "my_option", "bet")
 
-    @staticmethod
-    def get_my_rule(obj):
+    def get_my_rule(self, obj):
         rule = Rule.objects.get(pk=obj.rule_id)
-        my_rule = rule.TYPE_CHOICE[int(rule.type)][1]
+        my_rule = rule.tips
+        if self.context['request'].GET.get('language') == 'en':
+            my_rule = rule.tips_en
         return my_rule
 
     @staticmethod
@@ -401,12 +402,12 @@ class QuizPushSerializer(serializers.ModelSerializer):
         bet = round(float(obj.bet), 3)
         return bet
 
-    @staticmethod
-    def get_my_option(obj):
+    def get_my_option(self, obj):
         # option = Option.objects.get(pk=obj.option_id)
         option = OptionOdds.objects.get(pk=obj.option_id)
-
         my_option = option.option.option
+        if self.context['request'].GET.get('language') == 'en':
+            my_option = option.option.option_en
         return my_option
 
     @staticmethod

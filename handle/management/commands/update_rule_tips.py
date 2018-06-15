@@ -60,13 +60,13 @@ class Command(BaseCommand):
             i += 1
             print('========================> i = ', i)
 
-        for option in Option.objects.filter(option_en=''):
+        for option in Option.objects.all():
             if '主胜' in option.option:
                 option.option_en = 'Home'
             elif '主负' in option.option:
-                option.option_en = 'Draw'
-            elif '平局' in option.option:
                 option.option_en = 'Away'
+            elif '平局' in option.option:
+                option.option_en = 'Draw'
             elif ':' in option.option:
                 option.option_en = option.option
             elif '球' in option.option:
