@@ -23,6 +23,7 @@ def get_transactions(coin, address):
 
     txs = {}
     items = json_data['data']
+    print('items = ', items)
     for addr in items:
         txs[addr] = []
         transactions = items[addr]
@@ -124,7 +125,7 @@ class Command(BaseCommand):
                     # 插入充值记录表
                     user_recharge = UserRecharge()
                     user_recharge.user_id = user_id
-                    user_recharge.coin_id = Coin.ETH
+                    user_recharge.coin_id = coin_id
                     user_recharge.address = address
                     user_recharge.amount = tx_value / Decimal(coin_decimal)
                     user_recharge.confirmations = 0
