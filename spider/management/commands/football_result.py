@@ -41,7 +41,8 @@ def handle_activity(record, coin, earn_coin):
                 coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
 
                 for count_record in Record.objects.filter(is_distribution=True, user=record.user,
-                                                          roomquiz_id=Club.objects.get(coin=coin).id):
+                                                          roomquiz_id=Club.objects.get(coin=coin).id,
+                                                          source=str(Record.GIVE)):
                     if count_record.quiz_id not in quiz_list:
                         quiz_list.append(count_record.quiz_id)
 
@@ -61,7 +62,8 @@ def handle_activity(record, coin, earn_coin):
                     u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
                     u_mes.title_en = Club.objects.get(coin=coin).room_title_en + ' Notifications of upcoming Events'
                     u_mes.content = '恭喜您获得USDT活动奖励共 ' + str(trunc(lock_coin, 2)) + 'USDT，祝贺您。'
-                    u_mes.content_en = 'Congratulations on your USDT event award, ' + str(trunc(lock_coin, 2)) + 'in total.Congratulations for you.'
+                    u_mes.content_en = 'Congratulations on your USDT event award, ' + str(
+                        trunc(lock_coin, 2)) + 'in total.Congratulations for you.'
                     u_mes.save()
         else:
             user_profit = 0
