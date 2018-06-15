@@ -321,7 +321,7 @@ class UserRegister(object):
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
             if int(invitation_user.pk) == 2638:  # INT邀请活动
-                invitation_number = IntInvitation.objects.all().count()
+                invitation_number = IntInvitation.objects.filter(is_block=0).count()
                 int_invitation = IntInvitation()
                 int_invitation.invitee = userinfo.id
                 int_invitation.inviter = invitation_user
@@ -1989,6 +1989,34 @@ class InvitationRegisterView(CreateAPIView):
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
         user_go_line.save()
+
+        if int(invitation.pk) == 2638:  # INT邀请活动
+            invitation_number = IntInvitation.objects.filter(is_block=0).count()
+            int_invitation = IntInvitation()
+            int_invitation.invitee = user_info.id
+            int_invitation.inviter = invitation
+            int_invitation.coin = 1
+            int_invitation.invitation_code = invitation.invitation_code
+            if invitation_number >= 2000:
+                int_invitation.money = 0
+                int_invitation.is_deleted = False
+            int_invitation.save()
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user_info
+            user_message.message_id = 13
+            user_message.save()
+            if int_invitation.money > 0:
+                int_user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=1)
+                int_user_coin.balance += Decimal(int_invitation.money)
+                int_user_coin.save()
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user_info
+                coin_bankruptcy.coin_name = 'INT'
+                coin_bankruptcy.amount = '+' + str(int_invitation.money)
+                coin_bankruptcy.rest = Decimal(int_user_coin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
 
         return self.response({
             'code': error_code.API_0_SUCCESS,
