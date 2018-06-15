@@ -354,24 +354,55 @@ class QuizListBackEndView(FormatListAPIView):
         else:
             return float(normalize_fraction(item, 4))
 
+
+
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
+        # room_id = self.request.GET.get('room_id', '')
+        # state = self.request.GET.get('state', '')
+        # start_time= self.request.GET.get('start_time','')
+        # end_time = self.request.GET.get('end_time','')
         records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz__category__parent__id=category)
+        # if room_id !='':
+        #     room_id = int(room_id)
+        #     vv = records.filter(roomquiz_id=room_id)
+        # if state !='':
+        #     state=int(state)
+        #     vv = records.filter(quiz_status=state)
         values = records.values("quiz", "roomquiz_id").annotate(total_bet=Count('id'),
-                                                                sum_bet=Sum('bet')).order_by('-quiz__begin_at')
+                                                            sum_bet=Sum('bet')).order_by('-quiz__begin_at')
+        page = int(self.request.GET.get('page'))
+        if page <= 0:
+            return JsonResponse({'Error':'Wrong PAGE INDEX!'}, status=status.HTTP_400_BAD_REQUEST)
+        page_size = 10
         data = []
-        for x in values:
+        total = len(values)
+        pages = int(total/page_size)+1
+        num = page-1
+        if page > pages:
+            page = pages
+            num =pages-1
+        vv = values[num*page_size: page*page_size]
+        for x in vv:
             q_id = int(x['quiz'])
             r_id = int(x['roomquiz_id'])
-            sum_out = self.ts_null_2_zero(
-                records.filter(quiz_id=q_id, roomquiz_id=r_id, earn_coin__gt=0).aggregate(Sum('earn_coin'))[
-                    'earn_coin__sum'])
-
+            # sum_out = self.ts_null_2_zero(
+            #     records.filter(quiz_id=q_id, roomquiz_id=r_id, earn_coin__gt=0).aggregate(Sum('earn_coin'))[
+            #         'earn_coin__sum'])
             try:
                 quiz = Quiz.objects.get(id=q_id)
                 room = Club.objects.get(id=r_id)
             except Exception:
                 return JsonResponse({'ERROR': '比赛不存在或币种不存在'}, status=status.HTTP_400_BAD_REQUEST)
+
+            cursor = connection.cursor()
+            sql = "select sum(earn_coin) from quiz_record "
+            sql += "where source <> " +str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
+            sql += " and roomquiz_id= " + str(room.id) + " and earn_coin > 0"
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            bet_total = dt_all[0][0] if dt_all[0][0] else 0
+
             state = ''
             for i in quiz.STATUS_CHOICE:
                 if int(quiz.status) == i[0]:
@@ -388,15 +419,15 @@ class QuizListBackEndView(FormatListAPIView):
                 'room_id': room.id,
                 'total_bet': x['total_bet'],
                 'sum_bet': x['sum_bet'],
-                'sum_out': sum_out,
+                'sum_out': bet_total,
                 'status': state,
             }
             if int(quiz.status) != Quiz.BONUS_DISTRIBUTION:
                 temp_dict['sum_earn_coin']=0
             else:
-                temp_dict['sum_earn_coin']=normalize_fraction(float(temp_dict['sum_bet'])-temp_dict['sum_out'],8)
+                temp_dict['sum_earn_coin']=normalize_fraction(float(temp_dict['sum_bet'])-float(temp_dict['sum_out']),8)
             data.append(temp_dict)
-        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+        return JsonResponse({'total':total, 'results': data}, status=status.HTTP_200_OK)
 
 
 class QuizListBackEndDetailView(ListAPIView):
