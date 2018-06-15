@@ -2342,10 +2342,15 @@ class ActivityImageView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         activity_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "ATI") + '.jpg?t=%s' % now_time])
+            [MEDIA_DOMAIN_HOST, language_switch(language, "ATI") + '.jpg?t=%s' % now_time])
+        if language=='en':
+            activity = 'Recharge'
+        else:
+            activity = '充值福利'
         return self.response(
-            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': "充值福利"}]})
+            {'code': 0, 'data': [{'img_url': activity_img, 'action': 'Activity', 'activity_name': activity}]})
 
 
 class USDTActivityView(ListAPIView):
@@ -2355,10 +2360,15 @@ class USDTActivityView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
         usdt_img = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT_ATI") + ".jpg?t=%s" % now_time])
+        if language=='en':
+            activity = 'GIVE YOU A HAND'
+        else:
+            activity = '助你一币之力'
         return self.response(
-            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': "助你壹币之力"}]})
+            {'code': 0, 'data': [{'img_url': usdt_img, 'action': 'USDT_Activity', 'activity_name': activity}]})
 
 
 class CheckInvitationCode(ListAPIView):
