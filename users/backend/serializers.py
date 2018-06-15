@@ -415,7 +415,7 @@ class UserRechargeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserRecharge
-        fields = ('username', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
+        fields = ('username', 'user', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
 
     @staticmethod
     def get_trade_at(obj):
