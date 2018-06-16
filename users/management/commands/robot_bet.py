@@ -159,10 +159,10 @@ class Command(BaseCommand):
             }
         elif len(quizs) >= 6:
             quiz_choice = {
-                0: 60,
-                1: 10,
-                2: 10,
-                3: 8,
+                0: 65,
+                1: 8,
+                2: 8,
+                3: 7,
                 4: 7,
                 5: 5
             }
