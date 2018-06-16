@@ -62,65 +62,138 @@ class Command(BaseCommand):
             raise CommandError('非自动下注时间')
 
         # 获取所有进行中的竞猜
-        quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False, begin_at__gt=datetime.now())
+        quiz_list = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False, begin_at__gt=datetime.now()).order_by('begin_at')
         # quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False)
-        if len(quizs) == 0:
+        if len(quiz_list) == 0:
             raise CommandError('当前无进行中的竞猜')
 
+        quizs = self.get_get_quiz(quiz_list)
+        quiz_len = len(quizs)
+
+        idx = 0
         for quiz in quizs:
-            # 世界杯题目未到开放时间暂时不下注
-            # if quiz.category_id == 873 and int(time.time()) < 1528732800:
-            #     print('世界杯专题，跳过')
-            #     continue
+            bet_number = random.randrange(quiz_len + 1, quiz_len * 3 + 1)
+            bet_number -= idx * 2
 
-            # 随机获取俱乐部
-            club = self.get_bet_club()
-            if club is False:
-                continue
+            for n in range(1, bet_number):
+                # 随机获取俱乐部
+                club = self.get_bet_club()
+                if club is False:
+                    continue
 
-            # 随机抽取玩法
-            rule = self.get_bet_rule(quiz.id)
-            if rule is False:
-                continue
+                # 随机抽取玩法
+                rule = self.get_bet_rule(quiz.id)
+                if rule is False:
+                    continue
 
-            # 随机下注选项
-            option = self.get_bet_option(club.id, rule.id)
-            if option is False:
-                continue
+                # 随机下注选项
+                option = self.get_bet_option(club.id, rule.id)
+                if option is False:
+                    continue
 
-            # 随机下注用户
-            user = self.get_bet_user()
+                # 随机下注用户
+                user = self.get_bet_user()
 
-            # 随机下注币、赌注
-            wager = self.get_bet_wager(club.coin_id)
+                # 随机下注币、赌注
+                wager = self.get_bet_wager(club.coin_id)
 
-            current_odds = option.odds
+                current_odds = option.odds
 
-            record = Record()
-            record.quiz = quiz
-            record.user = user
-            record.rule = rule
-            record.option = option
-            record.roomquiz_id = club.id
-            record.bet = wager
-            record.odds = current_odds
-            record.source = Record.CONSOLE
-            record.save()
+                record = Record()
+                record.quiz = quiz
+                record.user = user
+                record.rule = rule
+                record.option = option
+                record.roomquiz_id = club.id
+                record.bet = wager
+                record.odds = current_odds
+                record.source = Record.CONSOLE
+                record.save()
 
-            if self.robot_bet_change_odds is True:
-                Option.objects.change_odds(rule.id, club.coin_id, club.id)
+                if self.robot_bet_change_odds is True:
+                    Option.objects.change_odds(rule.id, club.coin_id, club.id)
 
-            # 用户减少对应币持有数
-            # user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
-            # user_coin.balance -= wager
-            # user_coin.save()
+                # 用户减少对应币持有数
+                # user_coin = UserCoin.objects.get(user=user, coin_id=club.coin_id)
+                # user_coin.balance -= wager
+                # user_coin.save()
 
-            rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
-            coin = Coin.objects.get(pk=club.coin_id)
-            quiz_info = quiz.host_team + ' VS ' + quiz.guest_team
-            self.stdout.write(self.style.SUCCESS('机器人ID=' + str(user.id) + '在' + club.room_title + '(' + quiz_info + ')' + '玩法ID=' + rule_title + '下注' + str(wager) + '个' + coin.name))
+                rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
+                coin = Coin.objects.get(pk=club.coin_id)
+                quiz_info = quiz.host_team + ' VS ' + quiz.guest_team
+                self.stdout.write(self.style.SUCCESS('机器人ID=' + str(user.id) + '在' + club.room_title + '(' + quiz_info + ')' + '玩法ID=' + rule_title + '下注' + str(wager) + '个' + coin.name))
+
+            idx += 1
 
         self.stdout.write(self.style.SUCCESS('下注成功'))
+
+    @staticmethod
+    def get_get_quiz(quizs):
+        """
+        进行中的比赛下注权重
+        3天数据：今天比赛:明天比赛:后天比赛 = 7:2:1
+        4天数据：今天比赛:明天比赛:后天比赛:大后天 = 6:2:1:1
+        5天以上数据，则随机用3天或4天数据
+        :param quizs:
+        :return:
+        """
+        quiz_choice = {
+            0: 7,
+            1: 2,
+            2: 1,
+        }
+        if len(quizs) == 4:
+            quiz_choice = {
+                0: 6,
+                1: 2,
+                2: 1,
+                3: 1,
+            }
+        elif len(quizs) == 5:
+            quiz_choice = {
+                0: 60,
+                1: 13,
+                2: 12,
+                3: 8,
+                4: 7
+            }
+        elif len(quizs) >= 6:
+            quiz_choice = {
+                0: 60,
+                1: 10,
+                2: 10,
+                3: 8,
+                4: 7,
+                5: 5
+            }
+
+        weight_choice = WeightChoice()
+        weight_choice.set_choices(quiz_choice)
+        date_index = weight_choice.choice()
+
+        # 竞猜以日期分组
+        obj = {}
+        for quiz in quizs:
+            dt = quiz.begin_at.strftime('%Y%m%d')
+
+            dt_len = 0
+            try:
+                dt_len = len(obj[dt])
+            except Exception:
+                pass
+
+            if dt_len == 0:
+                obj[dt] = []
+
+            obj[dt].append(quiz)
+
+        items = {}
+        index = 0
+        for idx in sorted(obj):
+            items[index] = obj[idx]
+            index += 1
+
+        return items[date_index]
 
     @staticmethod
     def get_key(prefix):
@@ -156,7 +229,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 50)
+        user_total = random.randint(1, 200)
         start_date, end_date = self.get_date()
 
         random_datetime = []
