@@ -18,4 +18,4 @@ class Command(BaseCommand, BaseView):
             ip_prefix = ip[0]
             user_total = User.objects.filter(ip_address__startswith=ip_prefix).count()
             print('ip = ', ip_prefix, ' 共禁用 ', user_total, ' 个账号')
-            User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).update(is_block=1)
+            # User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).update(is_block=1)
