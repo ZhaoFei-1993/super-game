@@ -15,6 +15,6 @@ class Command(BaseCommand):
         i = 1
         for user in User.objects.filter(is_block=1):
             user_loging = LoginRecord.objects.filter(user_id=user.id).count()
-            if user_loging > 0:
+            if user_loging < 0:
                 i += 1
         print("i==================================", i)
