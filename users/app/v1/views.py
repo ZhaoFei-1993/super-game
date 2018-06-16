@@ -384,6 +384,9 @@ class LoginView(CreateAPIView):
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
+        myfile = open(file_avatar_nickname)
+        lines = len(myfile.readlines())
+        print("000000000000000000000000000000000000000", lines)
         return avatar_url
 
     def post(self, request, *args, **kwargs):
