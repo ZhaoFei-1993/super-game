@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from users.models import User, IntInvitation
+from users.models import User
 from base.app import BaseView
 
 
