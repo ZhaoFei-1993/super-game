@@ -11,9 +11,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         ip_list = []
-        for user in IntInvitation.objects.filter(inviter_id=2638):
-            user_id = user.invitee
-            user_info = User.objects.get(id=user_id)
+        # for user in IntInvitation.objects.filter(inviter_id=2638):
+        for user_info in User.objects.all():
+            # user_id = user.invitee
+            # user_info = User.objects.get(id=user_id)
             ip_address = str(user_info.ip_address)
             if ip_address != '':
                 ip1, ip2, ip3, ip4 = ip_address.split('.')
