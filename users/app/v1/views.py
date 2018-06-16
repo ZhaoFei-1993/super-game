@@ -1809,6 +1809,7 @@ class VersionUpdateView(RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
+        language = request.GET.get('language')
         if str(mobile_type).upper() == "IOS":
             type = 1
         else:
@@ -1830,6 +1831,8 @@ class VersionUpdateView(RetrieveAPIView):
                 data = serialize.data
                 data['is_update'] = True if data['is_update'] else False
                 data['is_delete'] = True if data['is_delete'] else False
+            if language == 'en':
+                data['comment'] = data['comment_en']
             return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
