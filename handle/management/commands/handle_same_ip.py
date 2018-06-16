@@ -13,9 +13,12 @@ class Command(BaseCommand, BaseView):
         sql = "SELECT SUBSTRING_INDEX(ip_address, '.', 3) as subip, count(*) as cnt "
         sql += "FROM users_user u WHERE ip_address != '' GROUP BY subip HAVING cnt >= 50 order by cnt desc"
         same_ips = self.get_all_by_sql(sql)
-
+        ip_list = []
         for ip in same_ips:
             ip_prefix = ip[0]
             user_total = User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).count()
             print('ip = ', ip_prefix, ' 共禁用 ', user_total, ' 个账号')
+            ip_list.append(user_total)
             # User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).update(is_block=1)
+        ip = sum(ip_list)
+        print("===================================", ip)
