@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction
@@ -72,8 +72,22 @@ class Command(BaseCommand):
 
         idx = 0
         for quiz in quizs:
+            # 按照比赛时间顺序递减下注数
             bet_number = random.randrange(quiz_len + 1, quiz_len * 3 + 1)
             bet_number -= idx * 2
+
+            # 比赛前两个小时下注更密集
+            time_now = datetime.now()
+            countdown = (quiz.begin_at - time_now).seconds
+
+            # 两个小时内
+            if 3600 < countdown <= 7200:
+                bet_number *= 2
+            elif countdown <= 3600:
+                bet_number *= 3
+
+            if bet_number < 2:
+                continue
 
             for n in range(1, bet_number):
                 # 随机获取俱乐部
