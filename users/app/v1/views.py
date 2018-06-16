@@ -365,7 +365,7 @@ class LoginView(CreateAPIView):
         获取已经下载的用户昵称和头像
         :return:
         """
-        key_name_avatar = 'key_avatar'
+        key_name_avatar = 'key_new_avatar'
 
         line_number = get_cache(key_name_avatar)
         if line_number is None:
