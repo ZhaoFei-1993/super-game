@@ -322,6 +322,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 earn_coin = '-' + str(record.bet)
                 record.type = Record.MISTAKE
             record.earn_coin = earn_coin
+            record.is_distribution = True
             record.save()
 
             if is_right is True:
@@ -368,7 +369,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     round(earn_coin, 3))
             u_mes.save()
 
-            record.is_distribution = True
             record.save()
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
