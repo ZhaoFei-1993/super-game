@@ -40,7 +40,7 @@ from utils.models import Image as Im
 from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
-from utils.cache import set_cache, get_cache, decr_cache, incr_cache
+from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 import requests
 import json
 
@@ -365,13 +365,17 @@ class LoginView(CreateAPIView):
         获取已经下载的用户昵称和头像
         :return:
         """
-        key_name_avatar = 'key_avatar'
+        key_name_avatar = 'new_avatar_key'
 
         line_number = get_cache(key_name_avatar)
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
+        myfile = open(file_avatar_nickname)
+        lines = len(myfile.readlines())
+        if line_number > lines:
+            delete_cache(key_name_avatar)
         if line_number is None:
             line_number = 1
 
-        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
         avatar_nickname = linecache.getline(file_avatar_nickname, line_number)
         a = avatar_nickname.split('_')
         if len(a) > 2:
@@ -384,6 +388,7 @@ class LoginView(CreateAPIView):
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
+
         return avatar_url
 
     def post(self, request, *args, **kwargs):
@@ -1809,6 +1814,7 @@ class VersionUpdateView(RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
+        language = request.GET.get('language')
         if str(mobile_type).upper() == "IOS":
             type = 1
         else:
@@ -1830,6 +1836,8 @@ class VersionUpdateView(RetrieveAPIView):
                 data = serialize.data
                 data['is_update'] = True if data['is_update'] else False
                 data['is_delete'] = True if data['is_delete'] else False
+            if language == 'en':
+                data['comment'] = data['comment_en']
             return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
@@ -1877,9 +1885,14 @@ class InvitationRegisterView(CreateAPIView):
         获取已经下载的用户昵称和头像
         :return:
         """
-        key_name_avatar = 'key_avatar'
+        key_name_avatar = 'new_avatar_key'
 
         line_number = get_cache(key_name_avatar)
+        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
+        myfile = open(file_avatar_nickname)
+        lines = len(myfile.readlines())
+        if line_number > lines:
+            delete_cache(key_name_avatar)
         if line_number is None:
             line_number = 1
 
@@ -2391,7 +2404,7 @@ class ActivityImageView(ListAPIView):
         language = self.request.GET.get('language')
         activity_img = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(language, "ATI") + '.jpg?t=%s' % now_time])
-        if language=='en':
+        if language == 'en':
             activity = 'Recharge'
         else:
             activity = '充值福利'
@@ -2409,7 +2422,7 @@ class USDTActivityView(ListAPIView):
         language = self.request.GET.get('language')
         usdt_img = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT_ATI") + ".jpg?t=%s" % now_time])
-        if language=='en':
+        if language == 'en':
             activity = 'GIVE YOU A HAND'
         else:
             activity = '助你一币之力'
