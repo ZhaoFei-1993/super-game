@@ -120,7 +120,7 @@ class Command(BaseCommand):
 
                 # rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
                 coin = Coin.objects.get(pk=club.coin_id)
-                vs_info = quiz.host_team + ' VS ' + quiz.guest_team + ' - ' + quiz.begin_at
+                vs_info = quiz.host_team + ' VS ' + quiz.guest_team + ' - ' + str(quiz.begin_at)
                 self.stdout.write(self.style.SUCCESS(club.room_title + '(' + vs_info + ') ' + rule.title + '玩法' + '下注' + str(wager) + '个' + coin.name))
 
             idx += 1
