@@ -478,11 +478,23 @@ class BetView(ListCreateAPIView):
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
-        # HAND币单场比赛最大下注100W
+        # HAND币单场比赛最大下注
+        bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
+            Sum('bet'))
         if coin_id == Coin.HAND:
-            bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
-                Sum('bet'))
             if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.INT:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.ETH:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.BTC:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.USDT:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
