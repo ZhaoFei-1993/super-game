@@ -14,6 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         i = 1
         s = 1
+        a = User.objects.filter(is_block=1).count()
         for user in User.objects.filter(is_block=1):
             if LoginRecord.objects.filter(user=user).exists() is not True:
                 s += 1
@@ -22,5 +23,6 @@ class Command(BaseCommand):
                 log_at = LoginRecord.objects.filter(user=user).order_by('login_time').first().login_time
                 if log_at - create_at > datetime.timedelta(minutes=20):
                     i += 1
+        print("a==================================", a)
         print("s==================================", s)
         print("i==================================", i)
