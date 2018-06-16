@@ -11,7 +11,7 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         sql = "SELECT SUBSTRING_INDEX(ip_address, '.', 3) as subip, count(*) as cnt "
-        sql += "FROM users_user u WHERE ip_address != '' GROUP BY subip HAVING cnt >= 1 order by cnt desc"
+        sql += "FROM users_user u WHERE ip_address != '' GROUP BY subip HAVING cnt >= 50 order by cnt desc"
         same_ips = self.get_all_by_sql(sql)
 
         for ip in same_ips:
