@@ -12,6 +12,7 @@ class Command(BaseCommand):
     help = "给机器人分配邀请码"
 
     def handle(self, *args, **options):
+        c = 1
         i = 1
         s = 1
         a = User.objects.filter(is_block=1).count()
@@ -20,9 +21,13 @@ class Command(BaseCommand):
                 s += 1
             else:
                 create_at = user.created_at
+                log_st = LoginRecord.objects.filter(user=user).count()
                 log_at = LoginRecord.objects.filter(user=user).order_by('login_time').first().login_time
                 if log_at - create_at > datetime.timedelta(minutes=20):
                     i += 1
+                if log_st > 1:
+                    c += 1
         print("a==================================", a)
+        print("c==================================", c)
         print("s==================================", s)
         print("i==================================", i)
