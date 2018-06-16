@@ -369,10 +369,6 @@ class LoginView(CreateAPIView):
 
         line_number = get_cache(key_name_avatar)
         file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
-        myfile = open(file_avatar_nickname)
-        lines = len(myfile.readlines())
-        if line_number > lines:
-            delete_cache(key_name_avatar)
         if line_number is None:
             line_number = 1
 
@@ -388,7 +384,10 @@ class LoginView(CreateAPIView):
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
-
+        myfile = open(file_avatar_nickname)
+        lines = len(myfile.readlines())
+        if line_number >= lines:
+            delete_cache(key_name_avatar)
         return avatar_url
 
     def post(self, request, *args, **kwargs):
@@ -1888,11 +1887,6 @@ class InvitationRegisterView(CreateAPIView):
         key_name_avatar = 'new_avatar_key'
 
         line_number = get_cache(key_name_avatar)
-        file_avatar_nickname = settings.CACHE_DIR + '/new_avatar.lst'
-        myfile = open(file_avatar_nickname)
-        lines = len(myfile.readlines())
-        if line_number > lines:
-            delete_cache(key_name_avatar)
         if line_number is None:
             line_number = 1
 
@@ -1909,6 +1903,10 @@ class InvitationRegisterView(CreateAPIView):
 
         line_number += 1
         set_cache(key_name_avatar, line_number)
+        myfile = open(file_avatar_nickname)
+        lines = len(myfile.readlines())
+        if line_number >= lines:
+            delete_cache(key_name_avatar)
         return avatar_url
 
     def post(self, request, *args, **kwargs):
