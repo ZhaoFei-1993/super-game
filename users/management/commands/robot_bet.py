@@ -118,10 +118,10 @@ class Command(BaseCommand):
                 # user_coin.balance -= wager
                 # user_coin.save()
 
-                rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
+                # rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
                 coin = Coin.objects.get(pk=club.coin_id)
-                quiz_info = quiz.host_team + ' VS ' + quiz.guest_team
-                self.stdout.write(self.style.SUCCESS('机器人ID=' + str(user.id) + '在' + club.room_title + '(' + quiz_info + ')' + '玩法ID=' + rule_title + '下注' + str(wager) + '个' + coin.name))
+                vs_info = quiz.host_team + ' VS ' + quiz.guest_team
+                self.stdout.write(self.style.SUCCESS(club.room_title + '(' + vs_info + ') ' + rule.title + '玩法' + '下注' + str(wager) + '个' + coin.name))
 
             idx += 1
 
