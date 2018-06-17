@@ -9,7 +9,7 @@ from utils.functions import normalize_fraction
 
 
 class Command(BaseCommand):
-    help = "计算盈利"
+    help = "计算盈利--昨天"
 
     def handle(self, *args, **options):
         date_last = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                     profit_table.platform_sum = normalize_fraction(platform_sum, 3)
                     profit_table.profit = normalize_fraction(profit_user, 3)
                     profit_table.profit_total = normalize_fraction(profit_total, 3)
-                    # profit_table.save()
+                    profit_table.save()
 
                     print('=======================================>', club.room_title)
                     print('robot_platform_sum = ', normalize_fraction(robot_platform_sum, 3))
