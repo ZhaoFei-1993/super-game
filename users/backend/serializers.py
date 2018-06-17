@@ -269,6 +269,9 @@ class CoinDetailSerializer(serializers.ModelSerializer):
 
 
 class UserAllSerializer(serializers.ModelSerializer):
+    """
+    用户管理
+    """
     created_at = serializers.SerializerMethodField()
     login_time = serializers.SerializerMethodField()
     login_address = serializers.SerializerMethodField()
@@ -281,8 +284,7 @@ class UserAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id',
-        'invite_new', 'status', 'is_block','ip_count')
+        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id','invite_new', 'status', 'is_block','ip_count')
 
     @staticmethod
     def get_created_at(obj):
@@ -291,7 +293,7 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_login_time(obj):
-        login_time = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        login_time = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time')
         if not login_time.exists():
             return ''
         else:
@@ -299,7 +301,7 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_login_address(obj):
-        ip_address = LoginRecord.objects.filter(user_id=obj.id).order_by('-login_time')
+        ip_address = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time')
         if len(ip_address) > 0:
             return ip_address[0].ip
         else:
@@ -307,13 +309,17 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_inviter(obj):
-        inv = UserInvitation.objects.filter(invitee_one=obj.id)
-        if not inv.exists():
-            inv = IntInvitation.objects.filter(invitee=obj.id)
-            if not inv.exists():
+
+        sql = 'select user.nickname from users_user as a'
+        sql += ' inner join users_userinvitation b on a.id=b.invitee_one'
+        sql += ' where '
+        inv = UserInvitation.objects.filter(invitee_one=obj.id).values('inviter_id')
+        if len(inv)==0:
+            inv = IntInvitation.objects.filter(invitee=obj.id).values('inviter_id')
+            if len(inv)==0:
                 return ''
         try:
-            user = User.objects.get(id=inv[0].inviter_id)
+            user = User.objects.get(id=inv[0][0])
         except Exception:
             return ''
         return user.nickname
@@ -330,15 +336,9 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_invite_new(obj):
-        invitee_one = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=obj).values('invitee_one').count()
-        invitee_two = UserInvitation.objects.filter(~Q(invitee_two=0), inviter=obj).values('invitee_two').count()
+        invitee_one = UserInvitation.objects.filter(inviter=obj).count()
         invitee = IntInvitation.objects.filter(inviter=obj).count()
-        if invitee_one==0 and invitee_one==0:
-            if invitee==0:
-                return 0
-            else:
-                return invitee
-        return invitee_one + invitee_two
+        return invitee_one+invitee
 
     @staticmethod
     def get_integral(obj):
@@ -353,6 +353,14 @@ class UserAllSerializer(serializers.ModelSerializer):
             ip = obj.ip_address.rsplit('.', 1)[0]
             ip_count = User.objects.filter(ip_address__contains=ip).count()
             return ip_count
+
+
+class UserALLSerializer(object):
+    """
+    xxxx
+    """
+
+    pass
 
 
 class CoinDetailSerializer(serializers.ModelSerializer):

@@ -54,5 +54,9 @@ urlpatterns = [
     # 登录统计
     path('login_rate/', views.LoginRateView.as_view(), name='user-backend-login_rate'),
     # 留存率统计
-    path('remain_rate/', views.RemainRate.as_view(), name='user-backend-remain_rate')
+    path('remain_rate/', views.RemainRate.as_view(), name='user-backend-remain_rate'),
+    # 俱乐部统计
+    path('run_data/club_sts/<int:room_id>/', views.ClubSts.as_view(), name='user-backend-run_data-clubsts'),
+    # test
+    # path('jjtest/', views.JJtest.as_view(), name='user-backend-test')
 ]

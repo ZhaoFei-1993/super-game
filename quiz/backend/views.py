@@ -7,7 +7,7 @@ from django.db import connection
 from api.settings import REST_FRAMEWORK
 from django.db import transaction
 from django.db.models import Count, Sum
-from datetime import datetime
+from datetime import datetime, date
 
 from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
@@ -355,37 +355,62 @@ class QuizListBackEndView(FormatListAPIView):
             return float(normalize_fraction(item, 4))
 
 
-
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
-        # room_id = self.request.GET.get('room_id', '')
-        # state = self.request.GET.get('state', '')
-        # start_time= self.request.GET.get('start_time','')
-        # end_time = self.request.GET.get('end_time','')
-        records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz__category__parent__id=category)
-        # if room_id !='':
-        #     room_id = int(room_id)
-        #     vv = records.filter(roomquiz_id=room_id)
-        # if state !='':
-        #     state=int(state)
-        #     vv = records.filter(quiz_status=state)
-        values = records.values("quiz", "roomquiz_id").annotate(total_bet=Count('id'),
-                                                            sum_bet=Sum('bet')).order_by('-quiz__begin_at')
+        room_id = self.request.GET.get('room_id','')
+        state = self.request.GET.get('state','')
+        start_time= self.request.GET.get('start_time','')
+        end_time = self.request.GET.get('end_time','')
+        # records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz__category__parent__id=category)
+        cursor = connection.cursor()
+
+        sql = "select quiz_id, roomquiz_id from quiz_record a "
+        sql += "inner join quiz_quiz b on a.quiz_id=b.id "
+        sql += "inner join quiz_category c on b.category_id=c.id "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and c.parent_id = " + str(category)
+
+        if room_id !='':
+            room_id = int(room_id)
+            sql += ' and roomquiz_id = '+ str(room_id)
+            # records = records.filter(roomquiz_id=room_id)
+        if state !='':
+            state=int(state)
+            sql += ' and status = ' + str(state)
+            # records = records.filter(quiz__status=state)
+        if start_time !='' and end_time !='':
+            sql += ' and DATE_FORMAT(b.begin_at, "%Y-%m-%d") >= ' + '"%s"' %start_time
+            sql += ' and DATE_FORMAT(b.begin_at, "%Y-%m-%d") <= ' + '"%s"' %end_time
+            # b_time  = datetime.strptime(start_time + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
+            # e_time = datetime.strptime(end_time + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+            # records = records.filter(quiz__begin_at__range=(b_time, e_time))
+        sql += ' group by quiz_id, roomquiz_id order by b.begin_at desc'
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+
+        # values = records.values("quiz", "roomquiz_id").distinct().order_by('-quiz__begin_at')
         page = int(self.request.GET.get('page'))
         if page <= 0:
             return JsonResponse({'Error':'Wrong PAGE INDEX!'}, status=status.HTTP_400_BAD_REQUEST)
         page_size = 10
         data = []
-        total = len(values)
-        pages = int(total/page_size)+1
+        total = len(dt_all)
+        if total==0:
+            return JsonResponse({'total':total, 'results': data})
+        if total%page_size==0:
+            pages = int(total/page_size)
+        else:
+            pages = int(total/page_size)+1
         num = page-1
         if page > pages:
             page = pages
             num =pages-1
-        vv = values[num*page_size: page*page_size]
+        vv = dt_all[num*page_size: page*page_size]
         for x in vv:
-            q_id = int(x['quiz'])
-            r_id = int(x['roomquiz_id'])
+            # q_id = int(x['quiz'])
+            # r_id = int(x['roomquiz_id'])
+            q_id = x[0]
+            r_id = x[1]
             # sum_out = self.ts_null_2_zero(
             #     records.filter(quiz_id=q_id, roomquiz_id=r_id, earn_coin__gt=0).aggregate(Sum('earn_coin'))[
             #         'earn_coin__sum'])
@@ -395,7 +420,7 @@ class QuizListBackEndView(FormatListAPIView):
             except Exception:
                 return JsonResponse({'ERROR': '比赛不存在或币种不存在'}, status=status.HTTP_400_BAD_REQUEST)
 
-            cursor = connection.cursor()
+
             sql = "select sum(earn_coin) from quiz_record "
             sql += "where source <> " +str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
             sql += " and roomquiz_id= " + str(room.id) + " and earn_coin > 0"
@@ -403,6 +428,23 @@ class QuizListBackEndView(FormatListAPIView):
             dt_all = cursor.fetchall()
             bet_total = dt_all[0][0] if dt_all[0][0] else 0
 
+            # cursor = connection.cursor()
+            sql = "select count(distinct(user_id)) from quiz_record "
+            sql += "where source <> " + str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
+            sql += " and roomquiz_id= " + str(room.id)
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            people = dt_all[0][0] if dt_all[0][0] else 0
+
+            sql = "select sum(bet), count(id) from quiz_record "
+            sql += "where source <> " + str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
+            sql += " and roomquiz_id= " + str(room.id)
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            sum_bet= dt_all[0][0] if dt_all[0][0] else 0
+            bet_times = dt_all[0][1] if dt_all[0][1] else 0
+
+            # people = values.values('user_id').distinct().count()
             state = ''
             for i in quiz.STATUS_CHOICE:
                 if int(quiz.status) == i[0]:
@@ -417,8 +459,9 @@ class QuizListBackEndView(FormatListAPIView):
                 'score': str(quiz.host_team_score) + ":" + str(quiz.guest_team_score),
                 'room': room.room_title,
                 'room_id': room.id,
-                'total_bet': x['total_bet'],
-                'sum_bet': x['sum_bet'],
+                'total_bet': bet_times,
+                'sum_bet': sum_bet,
+                'sum_people':people,
                 'sum_out': bet_total,
                 'status': state,
             }

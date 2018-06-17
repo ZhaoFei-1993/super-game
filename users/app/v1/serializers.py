@@ -320,12 +320,13 @@ class PresentationSerialize(serializers.ModelSerializer):
     telephone = serializers.CharField(source="user.telephone")
     is_block = serializers.BooleanField(source="user.is_block")
     ip_count = serializers.SerializerMethodField()
+    recharge_times = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPresentation
         fields = (
             "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count")
+            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times")
 
     @staticmethod
     def get_created_at(obj):
@@ -340,8 +341,13 @@ class PresentationSerialize(serializers.ModelSerializer):
             return 0
         else:
             ip = obj.user.ip_address.rsplit('.', 1)[0]
-            ip_count = User.objects.filter(ip_address__contains=ip).count()
+            ip_count = User.objects.select_related().filter(ip_address__contains=ip).count()
             return ip_count
+
+    @staticmethod
+    def get_recharge_times(obj):
+        recharge_times = UserRecharge.objects.select_related().filter(user_id=obj.user_id).count()
+        return recharge_times
 
 
 class UserCoinSerialize(serializers.ModelSerializer):
@@ -636,3 +642,4 @@ class CountriesSerialize(serializers.ModelSerializer):
     class Meta:
         model = Countries
         fields = ('id', 'code', 'area_code', 'name_en', 'name_zh_CN', 'name_zh_HK', 'language')
+

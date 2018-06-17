@@ -4,6 +4,7 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from django.db import transaction
 from decimal import Decimal
+from django.db import connection
 from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, When, Case, DecimalField
@@ -489,9 +490,9 @@ class UserAllDetailView(RetrieveUpdateDestroyAPIView):
             user = User.objects.get(pk=uuid)
         except Exception:
             return JsonResponse({'Error': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
-        user.is_block=int(is_block)
+        user.is_block = int(is_block)
         user.save()
-        return JsonResponse({},status=status.HTTP_200_OK)
+        return JsonResponse({}, status=status.HTTP_200_OK)
 
 
 class InviteNewView(ListAPIView):
@@ -617,6 +618,18 @@ class RechargeAllView(ListAPIView):
     filter_fields = ['user', 'coin']
 
 
+# class RechargeAllDetailView(ListAPIView):
+#     """
+#     用户充值记录
+#     """
+#     serializer_class = serializers.UserRechargeSerializer
+#
+#     def get_queryset(self):
+#         pk = self.kwargs['pk']
+#         recharges=UserRecharge.objects.filter(user_id=pk)
+#         return recharges
+
+
 class GSGBackendView(ListAPIView):
     """
     用户GSG明细
@@ -674,14 +687,6 @@ class RunningView(ListAPIView):
     运营数据统计
     """
 
-    def count_earn_coin(self, usdt, number):
-        """
-        计算赠送币的人数
-        :return:
-        """
-        count_user = usdt.filter(lock_coin__gte=number).count()
-        return count_user
-
     def ts_null_2_zero(self, item):
         if item == None:
             return 0
@@ -689,8 +694,6 @@ class RunningView(ListAPIView):
             return float(normalize_fraction(item, 4))
 
     def list(self, request, *args, **kwargs):
-        import time
-        a = time.clock()
         user_register = User.objects.filter(is_robot=0)
         register_num = user_register.count()
         user_invite = user_register.extra(select={
@@ -713,8 +716,6 @@ class RunningView(ListAPIView):
         recharge_all_sum = UserRecharge.objects.filter(user__is_robot=0).values('user_id').distinct().count()  # 充值总人数
         present_all_sum = UserPresentation.objects.filter(user__is_robot=0).values(
             'user_id').distinct().count()  # 提现总人数
-        b=time.clock()
-        print('time_spend:', b-a)
         # hand_recharge = \
         #     UserRecharge.objects.filter(coin__name='HAND', user__is_robot=0).values('amount').aggregate(Sum('amount'))[
         #         'amount__sum']
@@ -782,115 +783,227 @@ class RunningView(ListAPIView):
         # int_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT').count()
         # int_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT', status=1).count()
         # int_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt=0, coin__name='INT').count()
-        results = []
-        clubs = Club.objects.all()
-        for x in clubs:
-            temp_dict = {}
-            # try:
-            #     room = Club.objects.get(coin=x)
-            # except Exception:
-            #     return JsonResponse({'Error': '币种俱乐部%s不存在' % x.name}, status=status.HTTP_400_BAD_REQUEST)
-            records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=x.id)
-            temp_dict['coin_name'] = x.coin.name
-            temp_dict['bet'] = self.ts_null_2_zero(records.values('bet').aggregate(Sum('bet'))['bet__sum'])
-            temp_dict['out'] = self.ts_null_2_zero(
-                records.filter(quiz__status=5, option__option__is_right=1).annotate(
-                    hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum'])
-            temp_dict['in'] = \
-                self.ts_null_2_zero(
-                    records.filter(quiz__status=5, option__option__is_right=0).aggregate(Sum('bet'))['bet__sum'])
-            temp_dict['earn'] = temp_dict['in']-temp_dict['out']
-            temp_dict['bet_not_begin'] = self.ts_null_2_zero(records.filter(quiz__status=0).aggregate(Sum('bet'))['bet__sum'])
-            temp_dict['bet_user_sum'] = records.values('user_id').distinct().count()
-            temp_dict['bet_times'] = records.count()
-            user_coin = UserCoin.objects.filter(user__is_robot=0, coin=x.coin)
-            temp_dict['rest'] = self.ts_null_2_zero(user_coin.aggregate(Sum('balance'))['balance__sum'])
-            temp_dict['rest_gt_0'] = user_coin.filter(balance__gt=0).count()
-            temp_dict['rest_eq_0'] = user_coin.filter(balance=0).count()
-            recharge = UserRecharge.objects.filter(user__is_robot=0, coin=x.coin)
-            temp_dict['recharge_num'] = recharge.count()
-            temp_dict['recharge_user_num'] = recharge.values('user_id').distinct().count()
-            temp_dict['recharge_amount'] = self.ts_null_2_zero(recharge.aggregate(Sum('amount'))['amount__sum'])
-            present = UserPresentation.objects.filter(user__is_robot=0, coin=x.coin)
-            temp_dict['present_user_num'] = present.values('user_id').distinct().count()
-            temp_dict['present_amount'] = self.ts_null_2_zero(present.aggregate(Sum('amount'))['amount__sum'])
-            temp_dict['present_num'] = present.count()
-            temp_dict['present_success_num'] = present.filter(status=1).count()
-            if x.coin.name == 'USDT':
-                usdt = CoinGiveRecords.objects.select_related().all()
-                temp_dict['rest_gte_10'] = self.count_earn_coin(usdt, 10)
-                temp_dict['rest_gte_20'] = self.count_earn_coin(usdt, 20)
-                temp_dict['rest_gte_30'] = self.count_earn_coin(usdt, 30)
-                temp_dict['rest_gte_40'] = self.count_earn_coin(usdt, 40)
-                temp_dict['rest_gte_50'] = self.count_earn_coin(usdt, 50)
-                temp_dict['rest_gte_60'] = self.count_earn_coin(usdt, 60)
-            results.append(temp_dict)
-            # for x in records:
-            #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
-            #     if len(option) > 0:
-            #         if option[0].id == x.option.option_id:
-            #             hand_out += x.bet * (x.odds - 1)
-            #         else:
-            #             hand_in += x.bet
-            # data = {'register_num': register_num,  # 总注册用户数
-            #         'invite_4': invite_4,  # 邀请4个以上的用户数
-            #         'invite_0': invite_0,  # 邀请0个用户数
-            #         'gsg_0': gsg_0,  # gsg余额为0用户数
-            #         'gsg_sent': gsg_sent,  # gsg发放的金额数
-            #         'gsg_rest': sum_integral,  # gsg余额
-            #         'recharge_sum': recharge_sum,  # 充值人数
-            #         'present_sum': present_sum,  # 提现人数
-            #         'hand_recharge': hand_recharge,  # hand币充值金额
-            #         'hand_system': hand_system,  # hand币系统发放
-            #         'hand_bet': hand_bet,  # hand币投注金额
-            #         'hand_out': hand_out,  # hand币投注发出金额
-            #         'hand_in': hand_in,  # hand币投注回收金额
-            #         'hand_rest': hand_rest,  ##hand币所有用户余额
-            #         'hand_rest_num': hand_rest_num,
-            #         'hand_bet_not_begin': hand_bet_not_begin,  # hand币投注未开奖金额
-            #         'hand_sent': hand_sent,  # hand币发放金额
-            #         'usdt_recharge_count': usdt_recharge_count,  # usdt充值人数
-            #         'usdt_recharge': 0 if usdt_recharge == None else usdt_recharge,  # usdt充值额度
-            #         'usdt_bet': usdt_bet,  # usdt下注值
-            #         'usdt_out': usdt_out,  # usdt下注平台发放
-            #         'usdt_in': usdt_in,  # usdt下注平台回收
-            #         'usdt_system': usdt_system,  # usdt平台系统赠送
-            #         'usdt_rest': usdt_rest,  # usdt用户余额
-            #         'usdt_bet_not_begin': usdt_bet_not_begin,  # usdt用户投注未结算
-            #         'usdt_balance_max': usdt_balance_max,  # usdt用户余额最大值
-            #         'usdt_lock_coin_max': usdt_lock_coin_max,  # usdt用户锁定金额最大值
-            #         'usdt_lock_present': usdt_lock_present,
-            #         'usdt_success': usdt_success,
-            #         'usdt_present': usdt_present,
-            #         'usdt_rest_num': usdt_rest_num,
-            #         'usdt_earn_gte_10': self.count_earn_coin(10),
-            #         'usdt_earn_gte_20': self.count_earn_coin(20),
-            #         'usdt_earn_gte_30': self.count_earn_coin(30),
-            #         'usdt_earn_gte_40': self.count_earn_coin(40),
-            #         'usdt_earn_gte_50': self.count_earn_coin(50),
-            #         'int_recharge_count': int_recharge_count,
-            #         'int_recharge': 0 if int_recharge == None else int_recharge,
-            #         'int_bet': int_bet,
-            #         'int_out': 0 if int_out == None else int_out,
-            #         'int_in': 0 if int_in == None else int_in,
-            #         'int_rest': int_rest,
-            #         'int_rest_num': int_rest_num,
-            #         'int_success': int_success,
-            #         'int_present': int_present,
-            #         'now_time': datetime.now().strftime('%Y年%m月%d日')
+
+        #     results.append(temp_dict)
+        # for x in records:
+        #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
+        #     if len(option) > 0:
+        #         if option[0].id == x.option.option_id:
+        #             hand_out += x.bet * (x.odds - 1)
+        #         else:
+        #             hand_in += x.bet
+        # data = {'register_num': register_num,  # 总注册用户数
+        #         'invite_4': invite_4,  # 邀请4个以上的用户数
+        #         'invite_0': invite_0,  # 邀请0个用户数
+        #         'gsg_0': gsg_0,  # gsg余额为0用户数
+        #         'gsg_sent': gsg_sent,  # gsg发放的金额数
+        #         'gsg_rest': sum_integral,  # gsg余额
+        #         'recharge_sum': recharge_sum,  # 充值人数
+        #         'present_sum': present_sum,  # 提现人数
+        #         'hand_recharge': hand_recharge,  # hand币充值金额
+        #         'hand_system': hand_system,  # hand币系统发放
+        #         'hand_bet': hand_bet,  # hand币投注金额
+        #         'hand_out': hand_out,  # hand币投注发出金额
+        #         'hand_in': hand_in,  # hand币投注回收金额
+        #         'hand_rest': hand_rest,  ##hand币所有用户余额
+        #         'hand_rest_num': hand_rest_num,
+        #         'hand_bet_not_begin': hand_bet_not_begin,  # hand币投注未开奖金额
+        #         'hand_sent': hand_sent,  # hand币发放金额
+        #         'usdt_recharge_count': usdt_recharge_count,  # usdt充值人数
+        #         'usdt_recharge': 0 if usdt_recharge == None else usdt_recharge,  # usdt充值额度
+        #         'usdt_bet': usdt_bet,  # usdt下注值
+        #         'usdt_out': usdt_out,  # usdt下注平台发放
+        #         'usdt_in': usdt_in,  # usdt下注平台回收
+        #         'usdt_system': usdt_system,  # usdt平台系统赠送
+        #         'usdt_rest': usdt_rest,  # usdt用户余额
+        #         'usdt_bet_not_begin': usdt_bet_not_begin,  # usdt用户投注未结算
+        #         'usdt_balance_max': usdt_balance_max,  # usdt用户余额最大值
+        #         'usdt_lock_coin_max': usdt_lock_coin_max,  # usdt用户锁定金额最大值
+        #         'usdt_lock_present': usdt_lock_present,
+        #         'usdt_success': usdt_success,
+        #         'usdt_present': usdt_present,
+        #         'usdt_rest_num': usdt_rest_num,
+        #         'usdt_earn_gte_10': self.count_earn_coin(10),
+        #         'usdt_earn_gte_20': self.count_earn_coin(20),
+        #         'usdt_earn_gte_30': self.count_earn_coin(30),
+        #         'usdt_earn_gte_40': self.count_earn_coin(40),
+        #         'usdt_earn_gte_50': self.count_earn_coin(50),
+        #         'int_recharge_count': int_recharge_count,
+        #         'int_recharge': 0 if int_recharge == None else int_recharge,
+        #         'int_bet': int_bet,
+        #         'int_out': 0 if int_out == None else int_out,
+        #         'int_in': 0 if int_in == None else int_in,
+        #         'int_rest': int_rest,
+        #         'int_rest_num': int_rest_num,
+        #         'int_success': int_success,
+        #         'int_present': int_present,
+        #         'now_time': datetime.now().strftime('%Y年%m月%d日')
         #         }
-        data={
+        data = {
             'register_num': register_num,  # 总注册用户数
-            'invite_4': invite_4,  # 邀请4个以上的用户数
             'invite_0': invite_0,  # 邀请0个用户数
             'gsg_0': gsg_eq_0_user,  # gsg余额为0用户数
             'gsg_sent': gsg_sent,  # gsg发放的金额数
             'gsg_rest': gsg_sum_integral,  # gsg余额
+            'invite_4': invite_4,  # 邀请4个以上的用户数
             'recharge_sum': recharge_all_sum,  # 充值人数
             'present_sum': present_all_sum,  # 提现人数
-            'results':results
+            'now_time': datetime.now().strftime('%Y年%m月%d日'),
+            # 'results':results
         }
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+
+class ClubSts(ListAPIView):
+    """
+    各俱乐部
+    """
+
+    def count_earn_coin(self, usdt, number):
+        """
+        计算赠送币的人数
+        :return:
+        """
+        count_user = usdt.filter(lock_coin__gte=number).count()
+        return count_user
+
+    def ts_null_2_zero(self, item):
+        if item == None:
+            return 0
+        else:
+            return float(normalize_fraction(item, 4))
+
+    def list(self, request, *args, **kwargs):
+        cursor = connection.cursor()
+        club = int(kwargs['room_id'])
+        # clubs = Club.objects.all()
+        temp_dict = {}
+        try:
+            room = Club.objects.get(id=club)
+        except Exception:
+            return JsonResponse({'Error': '币种俱乐部%s不存在' % room.name}, status=status.HTTP_400_BAD_REQUEST)
+        r_id = room.id
+        coin_id = room.coin_id
+        # records = Record.objects.filter(~Q(source=Record.CONSOLE), roomquiz_id=r_id)
+        temp_dict['coin_name'] = room.coin.name
+        # -----------------------------------------------------------------------------------
+        #         #下注数
+        sql = "select sum(bet) from quiz_record "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and roomquiz_id= " + str(r_id)
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['bet'] = self.ts_null_2_zero(bet_total)
+        # temp_dict['bet'] = self.ts_null_2_zero(records.values('bet').aggregate(Sum('bet'))['bet__sum'])
+        # temp_dict['out'] = self.ts_null_2_zero(
+        #     records.filter(quiz__status=5, earn_coin__gte=0).annotate(
+        #         hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum'])
+        # -----------------------------------------------------------------------------------
+        # 计算用户净放发
+        sql = "select sum(earn_coin-bet) from quiz_record "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and roomquiz_id= " + str(r_id) + " and earn_coin > 0"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['out'] = self.ts_null_2_zero(bet_total)
+        # -----------------------------------------------------------------------------------
+        # 计算用户收入
+        sql = "select sum(bet) from quiz_record "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and roomquiz_id= " + str(r_id) + " and earn_coin < 0"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['in'] = self.ts_null_2_zero(bet_total)
+        # temp_dict['in'] = \
+        #     self.ts_null_2_zero(
+        #         records.filter(quiz__status=5, earn_coin__lt=0).aggregate(Sum('bet'))['bet__sum'])
+        temp_dict['earn'] = normalize_fraction(temp_dict['in'] - temp_dict['out'], 4)
+        # temp_dict['bet_not_begin'] = self.ts_null_2_zero(
+        #     records.filter(~Q(quiz__status=5)).aggregate(Sum('bet'))['bet__sum'])
+        # -----------------------------------------------------------------------------------
+        sql = "select sum(bet) from quiz_record a"
+        sql += " inner join quiz_quiz b on a.quiz_id=b.id"
+        sql += " where roomquiz_id= " + str(r_id)
+        sql += " and source <> " + str(Record.CONSOLE)
+        sql += " and  b.status<> 5"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['bet_not_begin'] = self.ts_null_2_zero(bet_total)
+        # temp_dict['bet_user_sum'] = records.values('user_id').distinct().count()
+        # 计算下注用户数
+        # -----------------------------------------------------------------------------------
+        sql = "select count(distinct(user_id)) from quiz_record "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and roomquiz_id= " + str(r_id)
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['bet_user_sum'] = bet_total
+        # -----------------------------------------------------------------------------------
+        # 下注次数
+        sql = "select count(id) from quiz_record "
+        sql += "where source <> " + str(Record.CONSOLE)
+        sql += " and roomquiz_id= " + str(r_id)
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['bet_times'] = bet_total
+        # temp_dict['bet_times'] = records.count()
+        # -----------------------------------------------------------------------------------
+        # 计算总余额
+        sql = "select sum(a.balance) from users_usercoin a"
+        sql += " inner join users_user b on a.user_id=b.id"
+        sql += " where b.is_robot= 0"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['rest'] = self.ts_null_2_zero(bet_total)
+        # temp_dict['rest'] = self.ts_null_2_zero(user_coin.aggregate(Sum('balance'))['balance__sum'])
+        # -----------------------------------------------------------------------------------
+        # 计算余额大于0用户数
+        sql = "select count(a.user_id) from users_usercoin a"
+        sql += " inner join users_user b on a.user_id=b.id"
+        sql += " where b.is_robot= 0"
+        sql += " and  a.balance > 0"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['rest_gt_0'] = self.ts_null_2_zero(bet_total)
+        # temp_dict['rest_gt_0'] = user_coin.filter(balance__gt=0).values('id').count()
+        # -----------------------------------------------------------------------------------
+        # user_coin = UserCoin.objects.filter(user__is_robot=0, coin_id=coin_id)
+        sql = "select count(a.user_id) from users_usercoin a"
+        sql += " inner join users_user b on a.user_id=b.id"
+        sql += " where b.is_robot= 0"
+        sql += " and  a.balance = 0"
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        temp_dict['rest_eq_0'] = self.ts_null_2_zero(bet_total)
+        # -----------------------------------------------------------------------------------
+        # temp_dict['rest_eq_0'] = user_coin.filter(balance=0).values('id').count()
+        recharge = UserRecharge.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
+        temp_dict['recharge_num'] = recharge.count()
+        temp_dict['recharge_user_num'] = recharge.values('user_id').distinct().count()
+        temp_dict['recharge_amount'] = self.ts_null_2_zero(recharge.aggregate(Sum('amount'))['amount__sum'])
+        present = UserPresentation.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
+        temp_dict['present_user_num'] = present.values('user_id').distinct().count()
+        temp_dict['present_amount'] = self.ts_null_2_zero(present.aggregate(Sum('amount'))['amount__sum'])
+        temp_dict['present_num'] = present.count()
+        temp_dict['present_success_num'] = present.select_related().filter(status=1).values('id').count()
+        # if room.coin.name == 'USDT':
+        #     usdt = CoinGiveRecords.objects.select_related().all()
+        #     temp_dict['rest_gte_10'] = self.count_earn_coin(usdt, 10)
+        #     temp_dict['rest_gte_20'] = self.count_earn_coin(usdt, 20)
+        #     temp_dict['rest_gte_30'] = self.count_earn_coin(usdt, 30)
+        #     temp_dict['rest_gte_40'] = self.count_earn_coin(usdt, 40)
+        #     temp_dict['rest_gte_50'] = self.count_earn_coin(usdt, 50)
+        #     temp_dict['rest_gte_60'] = self.count_earn_coin(usdt, 60)
+        return JsonResponse({'data': [temp_dict]})
 
 
 class LoginRateView(ListAPIView):
@@ -1155,3 +1268,115 @@ class SameIPAddressView(ListAPIView):
             ip = users[0].ip_address.rsplit('.', 1)[0]
             users = User.objects.filter(ip_address__contains=ip).order_by('-created_at')
         return users
+
+
+# class JJtest(ListAPIView):
+#     """
+#     测试
+#     """
+#
+#     def list(self, request, *args, **kwargs):
+#         new_register = User.objects.filter(is_robot=0, is_block=0).extra(select={'date': 'date(created_at)'}).values(
+#             'date').annotate(
+#             date_sum=Count('id')).order_by('date')
+#         activy_user = LoginRecord.objects.annotate(date=Func(F('login_time'), function='date')).filter(
+#             ~Q(user__created_at__date__contains=F('date')), user__is_robot=0).values('date').annotate(
+#             date_sum=Count('user_id', distinct=True)).order_by('date')
+#         presents = UserPresentation.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
+#             date_sum=Count('user_id', distinct=True)).order_by('date')
+#         recharge = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
+#             date_sum=Count('user_id', distinct=True)).order_by('date')
+#         items = {
+#             'new_register': new_register,
+#             'activy_user': activy_user,
+#             'presents': presents,
+#             'recharge': recharge,
+#         }
+#         data = []
+#         # if club_room ==2:
+#         #     print(coin_out ,'|', coin_in ,'|', bet_user,'|', bet_times,'|', bet_sum)
+#         min_date = date(2099, 1, 1)
+#         max_date = date(1970, 1, 1)
+#         for x in items:
+#             if len(items[x]) > 0:
+#                 items[x] = [n for n in items[x]]
+#                 if items[x][0]['date'] < min_date:
+#                     min_date = items[x][0]['date']
+#                 if items[x][-1]['date'] > max_date:
+#                     max_date = items[x][-1]['date']
+#         if min_date == date(2099, 1, 1) or max_date == date(1970, 1, 1):
+#             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+#         delta = (max_date - min_date).days
+#         for x in range(delta + 1):
+#             for v in items:
+#                 date_now = min_date + timedelta(x)
+#                 if len(items[v]) == 0:
+#                     items[v] = [{'date': date_now, 'date_sum': 0}]
+#                 if items[v][-1]['date'] > date_now:
+#                     if items[v][x]['date'] != date_now:
+#                         items[v].insert(x, {'date': date_now, 'date_sum': 0})
+#                 if items[v][-1]['date'] < date_now:
+#                     items[v].append({'date': date_now, 'date_sum': 0})
+#         for a, b, c, d in zip(*list(items.values())):
+#             temp_dict = {
+#                 'date': a['date'].strftime('%m/%d'),
+#                 '新增有效用户数': float(a['date_sum']),
+#                 '活跃用户': float(b['date_sum']),
+#                 '提现人数': float(c['date_sum']),
+#                 '充值人数': float(d['date_sum']),
+#             }
+#             data.append(temp_dict)
+#         import csv
+#         with open('/home/zhijiefong/sts/gsg.csv', 'w') as hf:
+#             writer = csv.DictWriter(hf, data[0].keys())
+#             writer.writeheader()
+#             for info in data:
+#                 writer.writerow(info)
+#         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+#
+#     def list1(self, request, *args, **kwargs):
+#         clubs = Club.objects.all()
+#         temp_dict={}
+#         for x in clubs:
+#             recharge = UserRecharge.objects.filter(coin_id=x.coin).extra(select={'date': 'date(trade_at)'}).values(
+#                     'date').annotate(date_sum=Sum('amount')).order_by('date')
+#             temp_dict[x.coin.name]=recharge
+#         items = temp_dict
+#
+#         data = []
+#         # if club_room ==2:
+#         #     print(coin_out ,'|', coin_in ,'|', bet_user,'|', bet_times,'|', bet_sum)
+#         min_date = date(2099, 1, 1)
+#         max_date = date(1970, 1, 1)
+#         for x in items:
+#             if len(items[x]) > 0:
+#                 items[x] = [n for n in items[x]]
+#                 if items[x][0]['date'] < min_date:
+#                     min_date = items[x][0]['date']
+#                 if items[x][-1]['date'] > max_date:
+#                     max_date = items[x][-1]['date']
+#         if min_date == date(2099, 1, 1) or max_date == date(1970, 1, 1):
+#             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+#         delta = (max_date - min_date).days
+#         for x in range(delta + 1):
+#             for v in items:
+#                 date_now = min_date + timedelta(x)
+#                 if len(items[v]) == 0:
+#                     items[v] = [{'date': date_now, 'date_sum': 0}]
+#                 if items[v][-1]['date'] > date_now:
+#                     if items[v][x]['date'] != date_now:
+#                         items[v].insert(x, {'date': date_now, 'date_sum': 0})
+#                 if items[v][-1]['date'] < date_now:
+#                     items[v].append({'date': date_now, 'date_sum': 0})
+#         for a,b,c,d,e,f in zip(*[temp_dict['USDT'], temp_dict['EOS'], temp_dict['BTC'], temp_dict['ETH'], temp_dict['INT'],temp_dict['HAND']]):
+#             temp_d = {
+#                 'date':a['date'].strftime('%m/%d'),
+#                 'USDT':float(a['date_sum']),
+#                 'EOS':float(b['date_sum']),
+#                 'BTC':float(c['date_sum']),
+#                 'ETH':float(d['date_sum']),
+#                 'INT':float(e['date_sum']),
+#                 'HAND':float(f['date_sum']),
+#             }
+#             data.append(temp_d)
+#         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
