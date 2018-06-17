@@ -18,7 +18,7 @@ def get_transactions(coin, address):
     :return:
     """
     eth_wallet = Wallet()
-    json_data = eth_wallet.get(url='v1/account/' + coin.lower() + '/transaction/' + address)
+    json_data = eth_wallet.get(url='v1/account/' + coin.lower() + '/transaction2/' + address)
     if len(json_data['data']) == 0:
         return []
 
@@ -73,16 +73,23 @@ class Command(BaseCommand, BaseView):
 
         # 获取所有用户ETH地址
         # user_eth_address = UserCoin.objects.filter(coin_id=coin_id, user__is_robot=False, user__is_block=False).order_by('id')
-        sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 50 ORDER BY cnt desc'
-        user_eth_address = self.get_all_by_sql(sql)
-        if len(user_eth_address) == 0:
-            raise CommandError('无地址信息')
+        sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 100 ORDER BY cnt desc'
+        aaaa = self.get_all_by_sql(sql)
+
+        user_ids = []
+        for uea in aaaa:
+            user_ids.append(str(uea[0]))
+
+        sql1 = 'SELECT * FROM users_usercoin WHERE user_id IN(' + ','.join(user_ids) + ') AND coin_id = 2'
+        user_eth_address = self.get_all_by_sql(sql1)
 
         eth_address = []
         address_map_uid = {}
         for user_addr in user_eth_address:
-            eth_address.append(user_addr.address)
-            address_map_uid[user_addr.address.upper()] = user_addr.user_id
+            user_address = user_addr[4]
+
+            eth_address.append(user_address)
+            address_map_uid[user_address.upper()] = user_addr[6]
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_eth_address)) + '条用户' + coin_name + '地址信息'))
 
