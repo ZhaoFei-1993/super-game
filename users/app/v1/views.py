@@ -398,10 +398,8 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         register_type = ur.get_register_type(username)
         print('ip_address ============================================= ', ip_address)
-        print('x_forwarded_for ============================================= ', x_forwarded_for)
 
         # 校验google recaptcha
         # if 'recaptcha' not in request.data:

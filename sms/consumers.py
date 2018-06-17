@@ -31,7 +31,7 @@ def send_sms(sms_id):
 
     sms = Sms.objects.get(pk=sms_id)
 
-    telephone = sms.area_code + sms.telephone
+    telephone = str(sms.area_code) + str(sms.telephone)
 
     params = {'account': account, 'password': password, 'msg': sms.message, 'mobile': telephone, 'report': 'false'}
     params = json.dumps(params)
