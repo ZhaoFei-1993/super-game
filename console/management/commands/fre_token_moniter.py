@@ -100,13 +100,13 @@ class Command(BaseCommand, BaseView):
             start = (i - 1) * page_size
             end = page_size * i
 
-            self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
+            # self.stdout.write(self.style.SUCCESS('正在获取' + str(start) + ' ~ ' + str(end) + '的交易记录'))
             addresses = ','.join(eth_address[start:end])
 
             transactions = get_transactions(coin_name, addresses)
             if not transactions:
-                self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
-                self.stdout.write(self.style.SUCCESS(''))
+                # self.stdout.write(self.style.SUCCESS('未获取到任何交易记录'))
+                # self.stdout.write(self.style.SUCCESS(''))
                 continue
 
             for address in transactions:
