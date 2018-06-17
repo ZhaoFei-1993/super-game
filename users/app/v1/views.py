@@ -422,7 +422,7 @@ class LoginView(CreateAPIView):
             avatar = self.get_name_avatar()
             if 'avatar' in request.data:
                 avatar = request.data.get('avatar')
-            print('ip_address = ', ip_address)
+            print('ip_address ============================================= ', ip_address)
             # 判断同一IP地址是否重复注册
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
