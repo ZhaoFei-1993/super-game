@@ -365,3 +365,16 @@ class CashBackLog(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "返现记录表"
+
+
+class ClubProfitAbroad(models.Model):
+    roomquiz_id = models.IntegerField(verbose_name="俱乐部ID", default=0)
+    robot_platform_sum = models.DecimalField(verbose_name="机器人投注额", max_digits=18, decimal_places=3, default=0.000)
+    platform_sum = models.DecimalField(verbose_name="用户投注额", max_digits=18, decimal_places=3, default=0.000)
+    profit = models.DecimalField(verbose_name="真实盈利", max_digits=15, decimal_places=3, default=0.000)
+    profit_total = models.DecimalField(verbose_name="总盈利", max_digits=15, decimal_places=3, default=0.000)
+    cash_back_sum = models.DecimalField(verbose_name="返现总额", max_digits=15, decimal_places=3, default=0.000)
+    created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "盈利表"
