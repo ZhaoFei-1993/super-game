@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'spider',
     'console',
     'handle',
+
 ]
 
 MIDDLEWARE = [
@@ -84,6 +85,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'base.middleware.RequestExceptionHandler',
+    'base.middleware.SetRemoteAddrFromForwardedFor'
+
 ]
 
 ROOT_URLCONF = 'api.urls'
