@@ -400,6 +400,8 @@ class LoginView(CreateAPIView):
         ip_address = request.META.get("REMOTE_ADDR", '')
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         register_type = ur.get_register_type(username)
+        print('ip_address ============================================= ', ip_address)
+        print('x_forwarded_for ============================================= ', x_forwarded_for)
 
         # 校验google recaptcha
         # if 'recaptcha' not in request.data:
@@ -423,8 +425,6 @@ class LoginView(CreateAPIView):
             avatar = self.get_name_avatar()
             if 'avatar' in request.data:
                 avatar = request.data.get('avatar')
-            print('ip_address ============================================= ', ip_address)
-            print('x_forwarded_for ============================================= ', x_forwarded_for)
             # 判断同一IP地址是否重复注册
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
