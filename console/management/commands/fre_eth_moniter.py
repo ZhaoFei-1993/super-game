@@ -52,7 +52,7 @@ class Command(BaseCommand, BaseView):
 
         user_ids = []
         for uea in aaaa:
-            user_ids.append(uea[0])
+            user_ids.append(str(uea[0]))
 
         sql1 = 'SELECT * FROM users_usercoin WHERE user_id IN(' + ','.join(user_ids) + ')'
         user_eth_address = self.get_all_by_sql(sql1)
