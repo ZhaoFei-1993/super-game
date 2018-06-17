@@ -35,6 +35,18 @@ class BaseView(generics.GenericAPIView):
             rows = cursor.fetchall()
         return rows
 
+    @staticmethod
+    def get_all_by_sql(sql):
+        """
+        使用原生SQL获取数据
+        :param sql:
+        :return:
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+        return rows
+
     def paginate_queryset(self, queryset):
         pnp = PageNumberPagination
         page_size = self.request.GET.get('page_size')

@@ -333,19 +333,21 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         yesterday_format = yesterday.strftime('%m月%d日')
         time = strftime('%m月%d日')
         year = obj.begin_at.strftime('%m月%d日')
+        years = obj.begin_at.strftime('%m月%d日')
         if self.context['request'].GET.get('language') == 'en':
             yesterday_format = yesterday.strftime('%d day %m month')
             time = strftime('%d day %m month')
             year = obj.begin_at.strftime('%d day %m month')
+            years = obj.begin_at.strftime('%d day %m month')
         if time == year:
-            year = year + " " + "今天"
+            years = year + " " + "今天"
             if self.context['request'].GET.get('language') == 'en':
-                year = year + " " + "Today"
+                years = year + " " + "Today"
         elif year == yesterday_format:
-            year = year + " " + "明天"
+            years = year + " " + "明天"
             if self.context['request'].GET.get('language') == 'en':
-                year = year + " " + "Tomorrow"
-        return year
+                years = year + " " + "Tomorrow"
+        return years
 
     @staticmethod
     def get_time(obj):  # 时间

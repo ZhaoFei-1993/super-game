@@ -1,32 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from users.models import User, IntInvitation
-from django.db.models import Q
+from users.models import User
+from base.app import BaseView
 
 
-class Command(BaseCommand):
+class Command(BaseCommand, BaseView):
     help = "处理相同注册ip用户"
 
     def handle(self, *args, **options):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
+        sql = "SELECT SUBSTRING_INDEX(ip_address, '.', 3) as subip, count(*) as cnt "
+        sql += "FROM users_user u WHERE ip_address != '' GROUP BY subip HAVING cnt >= 50 order by cnt desc"
+        same_ips = self.get_all_by_sql(sql)
         ip_list = []
-        for user in IntInvitation.objects.filter(inviter_id=2638):
-            user_id = user.invitee
-            user_info = User.objects.get(id=user_id)
-            ip_address = str(user_info.ip_address)
-            if ip_address != '':
-                ip1, ip2, ip3, ip4 = ip_address.split('.')
-                startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
-                if User.objects.filter(ip_address__startswith=startswith).count() >= 5 and ip_address != '':
-                    if user_info.ip_address not in ip_list:
-                        block_user_list = []
-                        ip_list.append(user_info.ip_address)
-                        for block_user in User.objects.filter(ip_address=user_info.ip_address):
-                            block_user.is_block = True
-                            block_user.save()
-                            block_user_list.append(block_user.id)
-                        print('ip:' + user_info.ip_address + ' ,共封禁 ' + str(len(block_user_list)) + ' 个账号')
-                else:
-                    pass
-        print('>>>>>>>>>>>>>>>>>>>>>>>> 结束 >>>>>>>>>>>>>>>>>>>>>>>>')
+        for ip in same_ips:
+            ip_prefix = ip[0]
+            user_total = User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).count()
+            print('ip = ', ip_prefix, ' 共禁用 ', user_total, ' 个账号')
+            ip_list.append(user_total)
+            User.objects.filter(ip_address__startswith=ip_prefix, is_block=0).update(is_block=1)
+        ip = sum(ip_list)
+        print("===================================", ip)

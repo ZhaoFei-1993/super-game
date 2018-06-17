@@ -1,29 +1,33 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from users.models import User, UserInvitation
+from users.models import User, LoginRecord
 from utils.functions import random_invitation_code
 from django.db.models import Q
 from api.settings import BASE_DIR
-import os
+import datetime
 
 
 class Command(BaseCommand):
     help = "给机器人分配邀请码"
 
     def handle(self, *args, **options):
-        os.chdir(BASE_DIR + '/cache')
-        with open('invitation_code.txt', 'w+') as f:
-            pass
-        robot_list = User.objects.filter(is_robot=True, invitation_code='')
-        for robot in robot_list:
-            robot.invitation_code = random_invitation_code()
-            robot.save()
-
-        for robot in User.objects.filter(is_robot=True):
-            invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=robot.id, is_effective=1).count()
-            if int(invitee_number) < 5:
-                os.chdir(BASE_DIR + '/cache')
-                with open('invitation_code.txt', 'a+') as f:
-                    f.write(robot.invitation_code + "=======================" + str(invitee_number))
-                    f.write('\n')
+        c = 1
+        i = 1
+        s = 1
+        a = User.objects.filter(is_block=1).count()
+        for user in User.objects.filter(is_block=1):
+            if LoginRecord.objects.filter(user=user).exists() is not True:
+                s += 1
+            else:
+                create_at = user.created_at
+                log_st = LoginRecord.objects.filter(user=user).count()
+                log_at = LoginRecord.objects.filter(user=user).order_by('login_time').first().login_time
+                if log_at - create_at > datetime.timedelta(minutes=20):
+                    i += 1
+                if log_st > 5:
+                    c += 1
+        print("a==================================", a)
+        print("c==================================", c)
+        print("s==================================", s)
+        print("i==================================", i)
