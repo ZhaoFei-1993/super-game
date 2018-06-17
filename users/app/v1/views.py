@@ -1300,11 +1300,11 @@ class UserPresentationView(CreateAPIView):
             coin_out = CoinOutServiceCharge.objects.get(coin_out=coin.id)
         except Exception:
             raise
-        if coin.name == 'USDT':
-            records = Record.objects.filter(source=Record.GIVE, user_id=userid, roomquiz_id=6).values(
-                'quiz_id').distinct().count()
-            if records < 6:
-                raise ParamErrorException(error_code.API_70109_USER_PRESENT_USDT_QUIZ_LT_6)
+        # if coin.name == 'USDT':
+        #     records = Record.objects.filter(source=Record.GIVE, user_id=userid, roomquiz_id=6).values(
+        #         'quiz_id').distinct().count()
+        #     if records < 6:
+        #         raise ParamErrorException(error_code.API_70109_USER_PRESENT_USDT_QUIZ_LT_6)
 
         if coin.name != 'HAND' and coin.name != 'USDT':
             if user_coin.balance < coin_out.value:
@@ -1775,8 +1775,17 @@ class CoinOperateView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        language = request.GET.get('language')
         temp_dict = {}
         for x in items:
+            if language == 'en':
+                x['month'] = datetime.strptime(x['month'], '%Y年%m月').strftime('%m/%Y')
+                if x['status']=='提现申请中':
+                    x['status']='Processing'
+                if x['status']=='提现成功' or x['status']=='充值成功':
+                    x['status']='Success'
+                if x['status']=='提现失败':
+                    x['status']='Fail'
             if x['month'] not in temp_dict:
                 x['top'] = True
                 temp_dict[x['month']] = [x, ]
@@ -1786,7 +1795,6 @@ class CoinOperateView(ListAPIView):
         for x in temp_dict:
             item = {'year': x, 'items': temp_dict[x]}
             temp_list.append(item)
-
         return self.response({'code': 0, 'data': temp_list})
 
 
@@ -1798,13 +1806,23 @@ class CoinOperateDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
+        language= request.GET.get('language')
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
         except Exception:
             raise
         serialize = CoinOperateSerializer(item)
-        return self.response({'code': 0, 'data': serialize.data})
+        data = serialize.data
+        if language=='en':
+            data['month']= datetime.strptime(data['month'], '%Y年%m月').strftime('%m/%Y')
+            if data['status'] == '提现申请中':
+                data['status'] = 'Processing'
+            if data['status'] == '提现成功' or data['status'] == '充值成功':
+                data['status'] = 'Success'
+            if data['status'] == '提现失败':
+                data['status'] = 'Fail'
+        return self.response({'code': 0, 'data': data})
 
 
 class VersionUpdateView(RetrieveAPIView):
