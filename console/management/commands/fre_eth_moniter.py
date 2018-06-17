@@ -48,7 +48,15 @@ class Command(BaseCommand, BaseView):
         # 获取所有用户ETH地址
         # user_eth_address = UserCoin.objects.filter(coin_id=Coin.ETH, user__is_robot=False, user__is_block=False).order_by('id')
         sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 50 ORDER BY cnt desc'
-        user_eth_address = self.get_all_by_sql(sql)
+        aaaa = self.get_all_by_sql(sql)
+
+        user_ids = []
+        for uea in aaaa:
+            user_ids.append(uea[0])
+
+        sql1 = 'SELECT * FROM users_usercoin WHERE user_id IN(' + ','.join(user_ids) + ')'
+        user_eth_address = self.get_all_by_sql(sql1)
+
         eth_address_length = len(user_eth_address)
         if eth_address_length == 0:
             raise CommandError('无地址信息')
@@ -56,6 +64,7 @@ class Command(BaseCommand, BaseView):
         eth_address = []
         address_map_uid = {}
         for user_addr in user_eth_address:
+            print('user_addr = ', user_addr)
             eth_address.append(user_addr.address)
             address_map_uid[user_addr.address.upper()] = user_addr.user_id
 
