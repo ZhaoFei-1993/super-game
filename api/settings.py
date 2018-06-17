@@ -85,7 +85,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'base.middleware.RequestExceptionHandler',
-    'django.middleware.http.SetRemoteAddrFromForwardedFor'
 ]
 
 ROOT_URLCONF = 'api.urls'
