@@ -398,6 +398,7 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
+        real_ip = request.META['HTTP_X_FORWARDED_FOR']
         register_type = ur.get_register_type(username)
 
         # 校验google recaptcha
@@ -423,6 +424,7 @@ class LoginView(CreateAPIView):
             if 'avatar' in request.data:
                 avatar = request.data.get('avatar')
             print('ip_address ============================================= ', ip_address)
+            print('real_ip ============================================= ', real_ip)
             # 判断同一IP地址是否重复注册
             ip1, ip2, ip3, ip4 = ip_address.split('.')
             startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
