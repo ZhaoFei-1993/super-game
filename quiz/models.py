@@ -334,6 +334,7 @@ class Record(models.Model):
     source = models.CharField(verbose_name="竞猜来源", choices=SOURCE_CHOICE, max_length=1, default=NORMAL)
     type = models.CharField(verbose_name="状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
+    open_prize_time = models.DateTimeField(verbose_name="开奖时间", default='1970-01-01 00:00:00')
     is_distribution = models.BooleanField(verbose_name="是否分配过奖金", default=False)
 
     class Meta:
