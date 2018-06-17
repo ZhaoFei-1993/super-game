@@ -112,6 +112,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         is_update = request.data.get('is_update')
         version = request.data.get('version')
         comment = request.data.get('comment')
+        comment_en = request.data.get('comment_en')
         mobile_type = request.data.get('mobile_type')
         config = AndroidVersion()
         if str(mobile_type).upper() == 'IOS':
@@ -125,6 +126,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             config.version = version
         config.is_update = is_update
         config.comment = comment
+        config.comment_en = comment_en
         config.mobile_type = type
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
@@ -164,6 +166,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             item.is_update = int(request.data.get('is_update'))
         if "comment" in request.data:
             item.comment = request.data.get('comment')
+        if "comment_en" in request.data:
+            item.comment_en = request.data.get('comment_en')
         item.save()
         return self.response({"code": 0})
 
