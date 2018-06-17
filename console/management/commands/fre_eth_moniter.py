@@ -64,9 +64,11 @@ class Command(BaseCommand, BaseView):
         eth_address = []
         address_map_uid = {}
         for user_addr in user_eth_address:
+            user_address = user_addr[4]
+
             print('user_addr = ', user_addr)
-            eth_address.append(user_addr.address)
-            address_map_uid[user_addr.address.upper()] = user_addr.user_id
+            eth_address.append(user_address)
+            address_map_uid[user_address.upper()] = user_addr[6]
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
 
