@@ -1773,7 +1773,7 @@ class CoinOperateView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        language = request.GET.get('language')
+        language = request.GET.get('language', '')
         temp_dict = {}
         for x in items:
             if language == 'en':
@@ -1804,7 +1804,7 @@ class CoinOperateDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        language= request.GET.get('language')
+        language= request.GET.get('language','')
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
