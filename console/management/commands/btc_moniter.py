@@ -22,7 +22,9 @@ def get_transactions(addresses):
     datas = json.loads(response.text)
     for item in datas['txs']:
         for out in item['out']:
-            print('out = ', out)
+            if 'addr' not in out:
+                continue
+
             addr = out['addr']
             txid = item['hash']
 
