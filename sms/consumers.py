@@ -78,7 +78,7 @@ def send_sms_content(content):
     # 创蓝密码
     password = "VMetsvLuzq9496"
 
-    telephone = '15812425072'
+    telephone = '8615812425072'
 
     params = {'account': account, 'password': password, 'msg': content, 'mobile': telephone, 'report': 'false'}
     params = json.dumps(params)
@@ -88,6 +88,7 @@ def send_sms_content(content):
     conn.request("POST", sms_send_uri, params, headers)
     conn.close()
     return True
+
 
 def get_user_balance(account, password, host, port, balance_get_uri):
     """
