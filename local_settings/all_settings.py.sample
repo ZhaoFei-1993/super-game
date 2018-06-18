@@ -117,6 +117,19 @@ SMS_CL_TEMPLATE_SET_PASSCODE = '尊敬的用户您好！您正在重置密保。
 SMS_CL_BINDING_CELL_PHONE = '尊敬的用户您好！您绑定手机号码。验证码：{code}，如不是您本人的操作，请忽略。'
 SMS_CL_RELIEVE_BINDING_CELL_PHONE = '尊敬的用户您好！您正在解除手机绑定。验证码：{code}，如不是您本人的操作，请忽略。'
 
+SMS_CL_SIGN_NAME_EN = '【Super Game】'
+SMS_CL_TEMPLATE_REGISTER_EN = 'Dear users！Thank you for registration GSG.one！verification code：{code}'
+SMS_CL_TEMPLATE_RESET_PASSWORD_EN = 'Dear users！You\'re retrieving the password。verification code：{code}，If ' \
+                                    'it\'s not your own operation，Please ignore it。'
+SMS_CL_TEMPLATE_PASSWORD_EN = 'Dear users！You are verifying your phone number。verification code：{code}，If ' \
+                              'it\'s not your own operation，Please ignore it。'
+SMS_CL_TEMPLATE_SET_PASSCODE_EN = 'Dear users！You are resetting secret security。verification code：{code}，' \
+                                  'If it\'s not your own operation，Please ignore it。'
+SMS_CL_BINDING_CELL_PHONE_EN = 'Dear users！You are binding the account to your phone number。verification code：{code}，' \
+                               'If it\'s not your own operation，Please ignore it。'
+SMS_CL_RELIEVE_BINDING_CELL_PHONE_EN = 'Dear users！You are unbinding the account to your phone。' \
+                                       'verification code：{code}，If it\'s not your own operation，Please ignore it。'
+
 # BTC钱包配置
 BTC_WALLET_API_GUID = '887c59bc-4895-415b-a090-98b0a1710837'
 BTC_WALLET_API_URL = 'http://47.254.75.129:3000'

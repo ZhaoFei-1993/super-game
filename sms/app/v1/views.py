@@ -56,17 +56,30 @@ class SmsView(ListCreateAPIView):
             current_time = time.mktime(datetime.now().timetuple())
             if current_time - time.mktime(last_sent_time.timetuple()) <= settings.SMS_PERIOD_TIME:
                 raise ParamErrorException(error_code.API_40104_SMS_PERIOD_INVALID)
-        sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_REGISTER  # 用户注册
-        if int(code_type) == 1:  # 绑定手机
-            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_BINDING_CELL_PHONE
-        elif int(code_type) == 2:  # 解除手机绑定
-            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_RELIEVE_BINDING_CELL_PHONE
-        elif int(code_type) == 3:  # 忘记密保
-            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_SET_PASSCODE
-        elif int(code_type) == 5:  # 忘记密码
-            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_RESET_PASSWORD
-        elif int(code_type) == 6:  # 密保校验
-            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_PASSWORD
+        if self.request.GET.get('language') == 'en':
+            sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_TEMPLATE_REGISTER_EN  # 用户注册
+            if int(code_type) == 1:  # 绑定手机
+                sms_message = settings.SMS_CL_SIGN_NAME_en + settings.SMS_CL_BINDING_CELL_PHONE_EN
+            elif int(code_type) == 2:  # 解除手机绑定
+                sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_RELIEVE_BINDING_CELL_PHONE_EN
+            elif int(code_type) == 3:  # 忘记密保
+                sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_TEMPLATE_SET_PASSCODE_EN
+            elif int(code_type) == 5:  # 忘记密码
+                sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_TEMPLATE_RESET_PASSWORD_EN
+            elif int(code_type) == 6:  # 密保校验
+                sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_TEMPLATE_PASSWORD_EN
+        else:
+            sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_REGISTER  # 用户注册
+            if int(code_type) == 1:  # 绑定手机
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_BINDING_CELL_PHONE
+            elif int(code_type) == 2:  # 解除手机绑定
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_RELIEVE_BINDING_CELL_PHONE
+            elif int(code_type) == 3:  # 忘记密保
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_SET_PASSCODE
+            elif int(code_type) == 5:  # 忘记密码
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_RESET_PASSWORD
+            elif int(code_type) == 6:  # 密保校验
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_PASSWORD
 
         if area_code is None or area_code == '':
             area_code = 86
