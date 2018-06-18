@@ -9,6 +9,10 @@ from users.models import UserCoin, UserRecharge, Coin, CoinDetail
 from decimal import Decimal
 import math
 
+from rq import Queue
+from redis import Redis
+from sms.consumers import send_sms_content
+
 base_url = 'https://blockchain.info/multiaddr?active='
 coin_name = 'BTC'
 
@@ -149,7 +153,7 @@ class Command(BaseCommand):
                     # 用户余额变更记录
                     coin_detail = CoinDetail()
                     coin_detail.user_id = user_id
-                    coin_detail.coin_name = Coin.BTC
+                    coin_detail.coin_name = 'BTC'
                     coin_detail.amount = tx_value
                     coin_detail.rest = user_coin.balance
                     coin_detail.sources = CoinDetail.RECHARGE
@@ -157,6 +161,10 @@ class Command(BaseCommand):
 
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
+
+                redis_conn = Redis()
+                q = Queue(connection=redis_conn)
+                q.enqueue(send_sms_content, '有数据')
 
             stop_time = time()
             cost_time = str(round(stop_time - start_time)) + '秒'
