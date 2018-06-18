@@ -20,7 +20,6 @@ def get_transactions(addresses):
     #     raise CommandError(response)
     # print('response = ', response.__dict__)
     datas = json.loads(response.text)
-    print('datas = ', datas)
     for item in datas['txs']:
         for out in item['out']:
             if 'addr' not in out:
@@ -85,6 +84,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('获取到' + str(len(transactions)) + '条交易记录'))
             for address in transactions:
                 if len(transactions[address]) == 0:
+                    continue
+
+
+                if address.upper() not in address_map_uid:
                     continue
 
                 user_id = address_map_uid[address.upper()]
