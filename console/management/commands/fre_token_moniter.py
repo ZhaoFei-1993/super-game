@@ -80,7 +80,7 @@ class Command(BaseCommand, BaseView):
         for uea in aaaa:
             user_ids.append(str(uea[0]))
 
-        sql1 = 'SELECT * FROM users_usercoin WHERE user_id IN(' + ','.join(user_ids) + ') AND coin_id = 2'
+        sql1 = 'SELECT * FROM users_usercoin WHERE user_id IN(' + ','.join(user_ids) + ') AND coin_id = ' + str(coin_id)
         user_eth_address = self.get_all_by_sql(sql1)
 
         eth_address = []
