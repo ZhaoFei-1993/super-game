@@ -67,7 +67,7 @@ class Command(BaseCommand):
             address_map_uid[user_coin.address.upper()] = user_coin.user_id
 
         # 因URL有长度限制，这里分页处理，每页50条
-        page_size = 50
+        page_size = 100
         page_total = int(math.ceil(len(btc_addresses) / page_size))
         for i in range(1, page_total + 1):
             start = (i - 1) * page_size
@@ -94,6 +94,10 @@ class Command(BaseCommand):
                     tx_id = trans['txid']
                     tx_value = trans['value']
                     confirmations = trans['confirmations']
+
+                    # 过滤一个txid
+                    if tx_id == 'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb':
+                        continue
 
                     # 确认数为0暂时不处理
                     if confirmations < 1:
@@ -123,8 +127,8 @@ class Command(BaseCommand):
                     user_recharge.save()
 
                     # 变更用户余额
-                    user_coin.balance += Decimal(tx_value)
-                    user_coin.save()
+                    # user_coin.balance += Decimal(tx_value)
+                    # user_coin.save()
 
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
