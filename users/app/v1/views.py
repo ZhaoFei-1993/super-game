@@ -257,8 +257,8 @@ class UserRegister(object):
         else:
             register_type = self.get_register_type(username)
             user = User()
-            if len(username) == 11:
-                user.telephone = username
+
+            user.telephone = username
             if area_code is None:
                 area_code = 86
             user.area_code = area_code
