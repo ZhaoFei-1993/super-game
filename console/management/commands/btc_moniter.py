@@ -91,17 +91,17 @@ class Command(BaseCommand):
             address_map_uid[user_coin.address.upper()] = user_coin.user_id
 
         out_tx = [
-            # 'cc8fcbb094e72bedf5ca7a5230f66b29915522f3395e846fe5acb713ebd88fee',
-            # 'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb',
-            # '1dd7ff837dc6dad3e4a2cf696f8035a258b6a35c9f474e76505c0aa8d63a31bf',
-            # 'bc1d923b4efa67541dba52a521cfdc67193e5ae0e1943814b5afa00dcb493dcc',
-            # 'e92e30731ae2f7d06cd202483f5e0e519b821c8ed888a300d9d9d722518d637f',
-            # '40b7f0e5e0f2868f1d74dbe700f8b71d95114a55f1ec9d396543655942653281',
-            # 'b3c6d8bebefc07ca182873b8e4a0840587dc198cdfebf68c65e30fd7f12afe49',
-            # 'a9a8a0d44624a5746ec91406c7356155e731babb374033dc3a86f99cdc853766',
-            # 'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342',
-            # 'e5a74a1fc6c57b6acf08691503e867381d93b524045190f14a1da25efc7f35af',
-            # 'b193e0a7fee20bfda1202ec3c7e136f72d9b2926327fe17cf1db6cbeaf1f002a',
+            'cc8fcbb094e72bedf5ca7a5230f66b29915522f3395e846fe5acb713ebd88fee',
+            'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb',
+            '1dd7ff837dc6dad3e4a2cf696f8035a258b6a35c9f474e76505c0aa8d63a31bf',
+            'bc1d923b4efa67541dba52a521cfdc67193e5ae0e1943814b5afa00dcb493dcc',
+            'e92e30731ae2f7d06cd202483f5e0e519b821c8ed888a300d9d9d722518d637f',
+            '40b7f0e5e0f2868f1d74dbe700f8b71d95114a55f1ec9d396543655942653281',
+            'b3c6d8bebefc07ca182873b8e4a0840587dc198cdfebf68c65e30fd7f12afe49',
+            'a9a8a0d44624a5746ec91406c7356155e731babb374033dc3a86f99cdc853766',
+            'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342',
+            'e5a74a1fc6c57b6acf08691503e867381d93b524045190f14a1da25efc7f35af',
+            'b193e0a7fee20bfda1202ec3c7e136f72d9b2926327fe17cf1db6cbeaf1f002a',
         ]
 
         # 因URL有长度限制，这里分页处理，每页50条
