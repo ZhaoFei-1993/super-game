@@ -379,7 +379,7 @@ class ClubProfitAbroad(models.Model):
     profit_total = models.DecimalField(verbose_name="总盈利", max_digits=15, decimal_places=3, default=0.000)
     profit_total_rmb = models.DecimalField(verbose_name="总盈利(rmb)", max_digits=15, decimal_places=8, default=0.00000000)
     cash_back_sum = models.DecimalField(verbose_name="返现总额", max_digits=15, decimal_places=3, default=0.000)
-    created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now=True)
+    created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now_add=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "盈利表"

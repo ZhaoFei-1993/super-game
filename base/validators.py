@@ -16,7 +16,8 @@ class PhoneValidator(object):
     """
     message = '手机号码格式错误'
     # expression = r'^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$'
-    expression = r'^1\d{10}'
+    # expression = r'^1\d{10}'
+    expression = r'\d'
 
     def __init__(self, field, message=None):
         self.field = field

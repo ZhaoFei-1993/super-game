@@ -182,7 +182,7 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, area_code, avatar='', nickname='', invitation_code='',
+    def register(self, source, username, password, area_code='', avatar='', nickname='', invitation_code='',
                  ip_address=''):
         """
         用户注册
@@ -209,7 +209,7 @@ class UserRegister(object):
             user = User()
             if len(username) == 11:
                 user.telephone = username
-            if area_code is None:
+            if area_code is None or area_code == '':
                 area_code = 86
             user.area_code = area_code
             user.username = username
@@ -398,8 +398,8 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
-        register_type = ur.get_register_type(username)
-        print('ip_address ============================================= ', ip_address)
+        # register_type = ur.get_register_type(username)
+        register_type = User.REGISTER_TELEPHONE
 
         # 校验google recaptcha
         # if 'recaptcha' not in request.data:
@@ -423,15 +423,16 @@ class LoginView(CreateAPIView):
             avatar = self.get_name_avatar()
             if 'avatar' in request.data:
                 avatar = request.data.get('avatar')
-            # 判断同一IP地址是否重复注册
-            ip1, ip2, ip3, ip4 = ip_address.split('.')
-            startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
-            ip_users = User.objects.filter(ip_address__startswith=startswith).count()
+            # # 判断同一IP地址是否重复注册
+            # ip1, ip2, ip3, ip4 = ip_address.split('.')
+            # startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
+            # ip_users = User.objects.filter(ip_address__startswith=startswith).count()
             # if ip_users > 2:
             #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
+            print("username==========================", len(username))
             nickname = str(username[0:3]) + "***" + str(username[7:])
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
