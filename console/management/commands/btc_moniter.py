@@ -9,6 +9,10 @@ from users.models import UserCoin, UserRecharge, Coin, CoinDetail
 from decimal import Decimal
 import math
 
+from rq import Queue
+from redis import Redis
+from sms.consumers import send_sms_content
+
 base_url = 'https://blockchain.info/multiaddr?active='
 coin_name = 'BTC'
 
@@ -58,7 +62,7 @@ class Command(BaseCommand):
         start_time = time()
 
         # 获取所有用户ETH地址
-        user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False, user__is_block=False)
+        user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False, user__is_block=False).order_by('id')
         if len(user_btc_address) == 0:
             self.stdout.write(self.style.SUCCESS('无' + coin_name + '地址信息'))
             return True
@@ -77,6 +81,11 @@ class Command(BaseCommand):
             'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb',
             '1dd7ff837dc6dad3e4a2cf696f8035a258b6a35c9f474e76505c0aa8d63a31bf',
             'bc1d923b4efa67541dba52a521cfdc67193e5ae0e1943814b5afa00dcb493dcc',
+            'e92e30731ae2f7d06cd202483f5e0e519b821c8ed888a300d9d9d722518d637f',
+            '40b7f0e5e0f2868f1d74dbe700f8b71d95114a55f1ec9d396543655942653281',
+            'b3c6d8bebefc07ca182873b8e4a0840587dc198cdfebf68c65e30fd7f12afe49',
+            'a9a8a0d44624a5746ec91406c7356155e731babb374033dc3a86f99cdc853766',
+            'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342'
         ]
 
         # 因URL有长度限制，这里分页处理，每页50条
@@ -149,7 +158,7 @@ class Command(BaseCommand):
                     # 用户余额变更记录
                     coin_detail = CoinDetail()
                     coin_detail.user_id = user_id
-                    coin_detail.coin_name = Coin.BTC
+                    coin_detail.coin_name = 'BTC'
                     coin_detail.amount = tx_value
                     coin_detail.rest = user_coin.balance
                     coin_detail.sources = CoinDetail.RECHARGE
@@ -158,6 +167,10 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
 
-            stop_time = time()
-            cost_time = str(round(stop_time - start_time)) + '秒'
-            self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
+                redis_conn = Redis()
+                q = Queue(connection=redis_conn)
+                q.enqueue(send_sms_content, '有数据')
+
+        stop_time = time()
+        cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
