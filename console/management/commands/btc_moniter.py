@@ -2,7 +2,8 @@
 from django.core.management.base import BaseCommand, CommandError
 import requests
 import json
-import time
+import time as format_time
+from time import time
 from django.db import transaction
 from users.models import UserCoin, UserRecharge, Coin, CoinDetail
 from decimal import Decimal
@@ -37,8 +38,8 @@ def get_transactions(addresses):
                 if 'block_height' in item:
                     confirmations = datas['info']['latest_block']['height'] - item['block_height'] + 1
 
-            time_local = time.localtime(item['time'])
-            time_dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+            time_local = format_time.localtime(item['time'])
+            time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
             transactions[addr].append({
                 'txid': txid,
@@ -54,6 +55,8 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
+        start_time = time()
+
         # 获取所有用户ETH地址
         user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False, user__is_block=False)
         if len(user_btc_address) == 0:
@@ -154,3 +157,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
+
+            stop_time = time()
+            cost_time = str(round(stop_time - start_time)) + '秒'
+            self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
