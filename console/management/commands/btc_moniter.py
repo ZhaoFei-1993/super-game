@@ -166,6 +166,6 @@ class Command(BaseCommand):
                 q = Queue(connection=redis_conn)
                 q.enqueue(send_sms_content, '有数据')
 
-            stop_time = time()
-            cost_time = str(round(stop_time - start_time)) + '秒'
-            self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
+        stop_time = time()
+        cost_time = str(round(stop_time - start_time)) + '秒'
+        self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
