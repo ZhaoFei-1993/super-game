@@ -4,7 +4,7 @@ import requests
 import json
 import time
 from django.db import transaction
-from users.models import UserCoin, UserRecharge, Coin
+from users.models import UserCoin, UserRecharge, Coin, CoinDetail
 from decimal import Decimal
 import math
 
@@ -142,6 +142,15 @@ class Command(BaseCommand):
                     # 变更用户余额
                     # user_coin.balance += Decimal(tx_value)
                     # user_coin.save()
+
+                    # 用户余额变更记录
+                    coin_detail = CoinDetail()
+                    coin_detail.user_id = user_id
+                    coin_detail.coin_name = Coin.BTC
+                    coin_detail.amount = tx_value
+                    coin_detail.rest = user_coin.balance
+                    coin_detail.sources = CoinDetail.RECHARGE
+                    coin_detail.save()
 
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
