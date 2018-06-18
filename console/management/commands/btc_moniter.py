@@ -85,7 +85,9 @@ class Command(BaseCommand):
             '40b7f0e5e0f2868f1d74dbe700f8b71d95114a55f1ec9d396543655942653281',
             'b3c6d8bebefc07ca182873b8e4a0840587dc198cdfebf68c65e30fd7f12afe49',
             'a9a8a0d44624a5746ec91406c7356155e731babb374033dc3a86f99cdc853766',
-            'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342'
+            'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342',
+            'e5a74a1fc6c57b6acf08691503e867381d93b524045190f14a1da25efc7f35af',
+            'b193e0a7fee20bfda1202ec3c7e136f72d9b2926327fe17cf1db6cbeaf1f002a',
         ]
 
         # 因URL有长度限制，这里分页处理，每页50条
