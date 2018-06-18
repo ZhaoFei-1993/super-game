@@ -69,6 +69,13 @@ class Command(BaseCommand):
             # map address to userid
             address_map_uid[user_coin.address.upper()] = user_coin.user_id
 
+        out_tx = [
+            'cc8fcbb094e72bedf5ca7a5230f66b29915522f3395e846fe5acb713ebd88fee',
+            'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb',
+            '1dd7ff837dc6dad3e4a2cf696f8035a258b6a35c9f474e76505c0aa8d63a31bf',
+            'bc1d923b4efa67541dba52a521cfdc67193e5ae0e1943814b5afa00dcb493dcc',
+        ]
+
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 100
         page_total = int(math.ceil(len(btc_addresses) / page_size))
@@ -86,7 +93,6 @@ class Command(BaseCommand):
                 if len(transactions[address]) == 0:
                     continue
 
-
                 if address.upper() not in address_map_uid:
                     continue
 
@@ -103,7 +109,7 @@ class Command(BaseCommand):
                     confirmations = trans['confirmations']
 
                     # 过滤一个txid
-                    if tx_id == 'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb':
+                    if tx_id in out_tx:
                         continue
 
                     # 确认数为0暂时不处理
