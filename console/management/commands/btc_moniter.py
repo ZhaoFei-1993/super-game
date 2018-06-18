@@ -169,9 +169,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
 
-                redis_conn = Redis()
-                q = Queue(connection=redis_conn)
-                q.enqueue(send_sms_content, '有数据')
+                # redis_conn = Redis()
+                # q = Queue(connection=redis_conn)
+                # q.enqueue(send_sms_content, '有数据')
 
         stop_time = time()
         cost_time = str(round(stop_time - start_time)) + '秒'
