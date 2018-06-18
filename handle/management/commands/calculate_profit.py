@@ -14,16 +14,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         date_last = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        date_now = datetime.datetime.now().strftime('%Y-%m-%d')
 
-        yesterday = datetime.datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]),
-                                      int(date_last.split('-')[2]), 0, 0)
-        today = datetime.datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]),
-                                  0, 0)
-        print(yesterday)
-        print(today)
+        start_with = datetime.datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]),
+                                       int(date_last.split('-')[2]), 0, 0, 0)
+        end_with = datetime.datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]),
+                                     int(date_last.split('-')[2]), 23, 59, 59)
+        print(start_with)
+        print(end_with)
 
-        quizs = Quiz.objects.filter(status=str(Quiz.BONUS_DISTRIBUTION), begin_at__range=(yesterday, today))
+        quizs = Quiz.objects.filter(status=str(Quiz.BONUS_DISTRIBUTION), begin_at__range=(start_with, end_with))
         if len(quizs) > 0:
             quiz_list = []
             for quiz in quizs:
@@ -71,7 +70,8 @@ class Command(BaseCommand):
                     profit_table.roomquiz_id = club.pk
 
                     profit_table.robot_platform_sum = normalize_fraction(robot_platform_sum, 3)
-                    profit_table.robot_platform_rmb = normalize_fraction(float(robot_platform_sum) * float(coin_price.price), 8)
+                    profit_table.robot_platform_rmb = normalize_fraction(
+                        float(robot_platform_sum) * float(coin_price.price), 8)
 
                     profit_table.platform_sum = normalize_fraction(platform_sum, 3)
                     profit_table.platform_rmb = normalize_fraction(float(platform_sum) * float(coin_price.price), 8)
@@ -84,10 +84,13 @@ class Command(BaseCommand):
 
                     profit_table.cash_back_sum = normalize_fraction(cash_back_sum, 2)
                     profit_table.save()
+                    profit_table.created_at = end_with
+                    profit_table.save()
 
                     print('=======================================>', club.room_title)
                     print('robot_platform_sum = ', normalize_fraction(robot_platform_sum, 3))
-                    print('robot_platform_rmb = ', normalize_fraction(float(robot_platform_sum) * float(coin_price.price), 8))
+                    print('robot_platform_rmb = ',
+                          normalize_fraction(float(robot_platform_sum) * float(coin_price.price), 8))
 
                     print('platform_sum = ', normalize_fraction(platform_sum, 3))
                     print('platform_rmb = ', normalize_fraction(float(platform_sum) * float(coin_price.price), 8))
@@ -101,3 +104,9 @@ class Command(BaseCommand):
 
                     print('cash_back_sum = ', normalize_fraction(cash_back_sum, 2))
                     print('----------------------------------------')
+                else:
+                    profit_table = ClubProfitAbroad()
+                    profit_table.roomquiz_id = club.id
+                    profit_table.save()
+                    profit_table.created_at = end_with
+                    profit_table.save()
