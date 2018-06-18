@@ -25,6 +25,7 @@ from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation, 
 from console.models import Address
 import reversion
 from wc_auth.functions import save_operation
+from django.db import connection
 
 
 def random_string(length=16):
@@ -381,3 +382,10 @@ def language_switch(language, parameter):
 #     if language == 'en':
 #         parameter = parameter + '_' + language
 #     return parameter
+
+
+def get_sql(sql):
+    cursor = connection.cursor()
+    cursor.execute(sql, None)
+    dt_all = cursor.fetchall()
+    return dt_all
