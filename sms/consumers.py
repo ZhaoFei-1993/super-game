@@ -51,6 +51,44 @@ def send_sms(sms_id):
     return True
 
 
+def send_sms_content(content):
+    """
+    发送手机短信
+    :param content:
+    :return:
+    """
+    # 服务地址
+    host = "intapi.253.com"
+
+    # 端口号
+    port = 80
+
+    # 版本号
+    version = "v1.1"
+
+    # 查账户信息的URI
+    balance_get_uri = "/balance/json"
+
+    # 智能匹配模版短信接口的URI
+    sms_send_uri = "/send/json"
+
+    # 创蓝账号
+    account = "I2621746"
+
+    # 创蓝密码
+    password = "VMetsvLuzq9496"
+
+    telephone = '15812425072'
+
+    params = {'account': account, 'password': password, 'msg': content, 'mobile': telephone, 'report': 'false'}
+    params = json.dumps(params)
+
+    headers = {"Content-type": "application/json"}
+    conn = http.client.HTTPConnection(host, port=port, timeout=30)
+    conn.request("POST", sms_send_uri, params, headers)
+    conn.close()
+    return True
+
 def get_user_balance(account, password, host, port, balance_get_uri):
     """
     取账户余额
