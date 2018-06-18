@@ -20,9 +20,9 @@ def get_transactions(addresses):
     #     raise CommandError(response)
     # print('response = ', response.__dict__)
     datas = json.loads(response.text)
-    print('datas = ', datas)
     for item in datas['txs']:
         for out in item['out']:
+            print('out = ', out)
             addr = out['addr']
             txid = item['hash']
 
