@@ -45,6 +45,7 @@ def send_sms(sms_id):
 
     response_str = response_str.decode('utf-8')
     result = json.loads(response_str)
+    print('result = ', result)
     if int(result['code']) == 0:
         sms.status = Sms.SUCCESS
         sms.save()
