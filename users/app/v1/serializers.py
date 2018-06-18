@@ -7,9 +7,10 @@ from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, U
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
     CoinGiveRecords, Countries
 from quiz.models import Record, Quiz
+from django.db import connection
 from base.exceptions import ParamErrorException
 from base import code as error_code
-from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction
+from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql
 from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -321,12 +322,14 @@ class PresentationSerialize(serializers.ModelSerializer):
     is_block = serializers.BooleanField(source="user.is_block")
     ip_count = serializers.SerializerMethodField()
     recharge_times = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
+    rest = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user", "user_name", "telephone", "coin", "coin_name", "amount", "address", "address_name", "rest",
-            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times")
+            "id", "user_id", "user_name", "telephone", "coin_id", "coin_name", "amount", "address", "address_name", "rest",
+            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
 
     @staticmethod
     def get_created_at(obj):
@@ -335,19 +338,49 @@ class PresentationSerialize(serializers.ModelSerializer):
         created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
         return created_at
 
+    # @staticmethod
+    # def get_ip_count(obj):
+    #     if obj.user.ip_address == '':
+    #         return 0
+    #     else:
+    #         ip = obj.user.ip_address.rsplit('.', 1)[0]
+    #         ip_count = User.objects.select_related().filter(ip_address__contains=ip).count()
+    #         return ip_count
     @staticmethod
     def get_ip_count(obj):
         if obj.user.ip_address == '':
             return 0
         else:
             ip = obj.user.ip_address.rsplit('.', 1)[0]
-            ip_count = User.objects.select_related().filter(ip_address__contains=ip).count()
+            cursor = connection.cursor()
+            sql = "select count(id) from users_user"
+            sql += " where ip_address LIKE '%s." % ip + "%'"
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            ip_count = dt_all[0][0] if dt_all[0][0] else 0
+            # ip_count = User.objects.filter(ip_address__contains=ip).count()
             return ip_count
 
     @staticmethod
     def get_recharge_times(obj):
-        recharge_times = UserRecharge.objects.select_related().filter(user_id=obj.user_id).count()
+        # recharge_times = UserRecharge.objects.select_related().filter(user_id=obj.user_id).count()
+        sql = "select count(id) from users_userrecharge where user_id = " + str(obj.user_id)
+        dt_all = get_sql(sql)
+        if len(dt_all) > 0:
+            recharge_times = dt_all[0][0] if dt_all[0][0] else 0
+        else:
+            recharge_times = 0
+
         return recharge_times
+
+    @staticmethod
+    def get_amount(obj):
+        return normalize_fraction(obj.amount, 8)
+
+
+    @staticmethod
+    def get_rest(obj):
+        return normalize_fraction(obj.rest, 8)
 
 
 class UserCoinSerialize(serializers.ModelSerializer):

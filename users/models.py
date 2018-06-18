@@ -442,6 +442,7 @@ class UserPresentation(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     is_bill = models.BooleanField(verbose_name="是否已打款", default=False)
+    txid = models.TextField(verbose_name='txid地址', default="")
 
     class Meta:
         ordering = ['-id']

@@ -1412,11 +1412,11 @@ class PresentationListView(ListAPIView):
         items = results.data.get('results')
         data = []
         for x in items:
-            coin = Coin.objects.get(pk=x['coin'])
+            coin = Coin.objects.get(pk=x['coin_id'])
             data.append(
                 {
                     'id': x['id'],
-                    'coin_id': x['coin'],
+                    'coin_id': x['coin_id'],
                     'amount': normalize_fraction(x['amount'], coin.coin_accuracy),
                     'rest': normalize_fraction(x['rest'], coin.coin_accuracy),
                     'address': x['address'],

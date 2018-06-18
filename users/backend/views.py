@@ -459,14 +459,21 @@ class CoinDetailView(ListAPIView, DestroyAPIView):
 #         return JsonResponse({'results': rc.data}, status=status.HTTP_200_OK)
 
 
-class UserAllView(ListAPIView):
+class UserAllView(FormatListAPIView):
     """
     所有用户资产表
     """
-    queryset = User.objects.filter(is_robot=0).order_by('-created_at')
+    queryset = User.objects.filter(is_robot=0).order_by('-id')
     serializer_class = serializers.UserAllSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ['id', 'username', 'is_block']
+
+    # def list(self, request, *args, **kwargs):
+    #     results = super().list(request, *args, **kwargs)
+    #     total = results.comment.get('pagination')
+    #     print(total)
+    #     return JsonResponse({'count': total['total'], 'results': results.data.get('list')},
+    #                         status=status.HTTP_200_OK)
 
 
 class UserAllDetailView(RetrieveUpdateDestroyAPIView):
@@ -541,7 +548,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
-        if 'status' not in request.data and 'text' not in request.data and 'is_bill' not in request.data:
+        if 'status' not in request.data and 'text' not in request.data and 'is_bill' not in request.data and 'txid' not in request.data:
             return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             item = UserPresentation.objects.get(pk=id)
@@ -574,21 +581,23 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 coin_detail.rest = user_coin.balance
                 coin_detail.sources = CoinDetail.RETURN
                 coin_detail.save()
-                user_message = UserMessage()
-                user_message.status = 0
-                user_message.content = '拒绝提现理由:' + item.feedback
-                user_message.title = '提现失败公告'
-                user_message.user = item.user
-                user_message.message_id = 6  # 修改密码
-                user_message.save()
-
-        if 'text' in request.data:
-            text = request.data.get('text')
-            item.feedback = text
-
+                if 'text' in request.data:
+                    text = request.data.get('text')
+                    item.feedback = text
+                    user_message = UserMessage()
+                    user_message.status = 0
+                    user_message.content = '拒绝提现理由:' + item.feedback
+                    user_message.title = '提现失败公告'
+                    user_message.user = item.user
+                    user_message.message_id = 6  # 修改密码
+                    user_message.save()
         if 'is_bill' in request.data:
             bill = request.data.get('is_bill')
             item.is_bill = bill
+        if 'txid' in request.data:
+            txid = request.data.get('txid')
+            item.txid=txid
+        print(item.txid)
         item.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
@@ -1268,7 +1277,6 @@ class SameIPAddressView(ListAPIView):
             ip = users[0].ip_address.rsplit('.', 1)[0]
             users = User.objects.filter(ip_address__contains=ip).order_by('-created_at')
         return users
-
 
 # class JJtest(ListAPIView):
 #     """

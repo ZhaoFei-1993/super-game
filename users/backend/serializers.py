@@ -2,13 +2,14 @@
 from rest_framework import serializers
 from django.utils import timezone
 import time
-from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, UserRecharge, \
+from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, \
+    UserRecharge, \
     CoinOutServiceCharge, IntInvitation, UserPresentation
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
-from django.db.models import Q
-from utils.functions import normalize_fraction
+from django.db import connection
+from utils.functions import get_sql
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -284,7 +285,8 @@ class UserAllSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-        'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral', 'inviter', 'inviter_id','invite_new', 'status', 'is_block','ip_count')
+            'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral',
+            'inviter', 'inviter_id', 'invite_new', 'status', 'is_block', 'ip_count')
 
     @staticmethod
     def get_created_at(obj):
@@ -293,65 +295,116 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_login_time(obj):
-        login_time = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time')
-        if not login_time.exists():
-            return ''
+        # login_time = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time').first()
+        sql ="select ip, max(login_time) from users_loginrecord"
+        sql += " where user_id=" + str(obj.id)
+        sql += " group by ip"
+        ip = get_sql(sql)
+        if len(ip) > 0:
+            return datetime.strftime(ip[0][1], '%Y-%m-%d %H:%M')
         else:
-            return datetime.strftime(login_time[0].login_time, '%Y-%m-%d %H:%M')
+            return ''
+
 
     @staticmethod
     def get_login_address(obj):
-        ip_address = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time')
-        if len(ip_address) > 0:
-            return ip_address[0].ip
+        # ip_address = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time').first()
+        sql ="select ip, max(login_time) from users_loginrecord"
+        sql += " where user_id=" + str(obj.id)
+        sql += " group by ip"
+        ip = get_sql(sql)
+        if len(ip) > 0:
+            return ip[0][0]
         else:
             return ''
 
     @staticmethod
     def get_inviter(obj):
 
-        sql = 'select user.nickname from users_user as a'
+        sql = 'select nickname from users_user as a'
         sql += ' inner join users_userinvitation b on a.id=b.invitee_one'
-        sql += ' where '
-        inv = UserInvitation.objects.filter(invitee_one=obj.id).values('inviter_id')
-        if len(inv)==0:
-            inv = IntInvitation.objects.filter(invitee=obj.id).values('inviter_id')
-            if len(inv)==0:
+        sql += ' where ' + str(obj.id) + '=b.inviter_id'
+        dt_all=get_sql(sql)
+        if len(dt_all) == 0:
+            # inv = UserInvitation.objects.filter(invitee_one=obj.id).values('inviter_id')
+            sql = 'select nickname from users_user as a'
+            sql += ' inner join users_intinvitation b on a.id=b.invitee'
+            sql += ' where ' + str(obj.id) + '=b.inviter_id'
+            dt_all = get_sql(sql)
+            if len(dt_all) == 0:
                 return ''
-        try:
-            user = User.objects.get(id=inv[0][0])
-        except Exception:
-            return ''
-        return user.nickname
-
+        nickname = dt_all[0][0] if dt_all[0][0] else ''
+        #     inv = IntInvitation.objects.filter(invitee=obj.id).values('inviter_id')
+        #     if len(inv)==0:
+        #         return ''
+        # try:
+        #     user = User.objects.get(id=inv[0][0])
+        # except Exception:
+        #     return ''
+        return nickname
 
     @staticmethod
     def get_inviter_id(obj):
-        inv = UserInvitation.objects.filter(invitee_one=obj.id)
-        if not inv.exists():
-            inv = IntInvitation.objects.filter(invitee=obj.id)
-            if not inv.exists():
+        cursor = connection.cursor()
+        sql = "select inviter_id from users_userinvitation"
+        sql += " where invitee_one=" + str(obj.id)
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
+        if len(dt_all) == 0:
+            sql = "select inviter_id from users_intinvitation"
+            sql += " where invitee=" + str(obj.id)
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            if len(dt_all) == 0:
                 return ''
-        return inv[0].inviter_id
+        inviter_id = dt_all[0][0] if dt_all[0][0] else ''
+        return inviter_id
+        # inv = UserInvitation.objects.filter(invitee_one=obj.id)
+        # if not inv.exists():
+        #     inv = IntInvitation.objects.filter(invitee=obj.id)
+        #     if not inv.exists():
+        #         return ''
+        # return inv[0].inviter_id
 
     @staticmethod
     def get_invite_new(obj):
-        invitee_one = UserInvitation.objects.filter(inviter=obj).count()
-        invitee = IntInvitation.objects.filter(inviter=obj).count()
-        return invitee_one+invitee
+        # invitee_one = UserInvitation.objects.filter(inviter=obj).count()
+        sql = 'select count(id) from users_userinvitation'
+        sql += ' where inviter_id='+ str(obj.id)
+        dt1 = get_sql(sql)
+        if len(dt1) > 0:
+            dt1_count = dt1[0][0]
+        else:
+            dt1_count =0
+
+        sql = 'select count(id) from users_intinvitation'
+        sql += ' where inviter_id='+ str(obj.id)
+        dt2 = get_sql(sql)
+        if len(dt2) > 0:
+            dt2_count = dt2[0][0]
+        else:
+            dt2_count =0
+        # invitee = IntInvitation.objects.filter(inviter=obj).count()
+        return dt1_count + dt2_count
 
     @staticmethod
     def get_integral(obj):
-        integral = normalize_fraction(obj.integral, 2)
+        integral = round(float(obj.integral), 2)
         return integral
 
     @staticmethod
     def get_ip_count(obj):
-        if obj.ip_address=='':
+        if obj.ip_address == '':
             return 0
         else:
             ip = obj.ip_address.rsplit('.', 1)[0]
-            ip_count = User.objects.filter(ip_address__contains=ip).count()
+            cursor = connection.cursor()
+            sql = "select count(id) from users_user"
+            sql += " where ip_address LIKE '%s." % ip + "%'"
+            cursor.execute(sql, None)
+            dt_all = cursor.fetchall()
+            ip_count = dt_all[0][0] if dt_all[0][0] else 0
+            # ip_count = User.objects.filter(ip_address__contains=ip).count()
             return ip_count
 
 
@@ -375,7 +428,6 @@ class CoinDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoinDetail
         fields = ("user", "telephone", "user_name", "coin_name", "amount", "rest", "created_at", "sources")
-
 
     @staticmethod
     def get_created_at(obj):
@@ -402,7 +454,6 @@ class CoinBackendDetailSerializer(serializers.ModelSerializer):
         model = UserCoin
         fields = ('username', 'coin_name', 'room_id', 'balance', 'coin', 'user')
 
-
     @staticmethod
     def get_room_id(obj):
         try:
@@ -410,6 +461,7 @@ class CoinBackendDetailSerializer(serializers.ModelSerializer):
         except Exception:
             return ''
         return room.id
+
 
 class UserRechargeSerializer(serializers.ModelSerializer):
     """
@@ -420,10 +472,10 @@ class UserRechargeSerializer(serializers.ModelSerializer):
     trade_at = serializers.SerializerMethodField()
     confirm_at = serializers.SerializerMethodField()
 
-
     class Meta:
         model = UserRecharge
-        fields = ('username', 'user', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
+        fields = (
+        'username', 'user', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
 
     @staticmethod
     def get_trade_at(obj):
@@ -449,26 +501,23 @@ class IPAddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'ip_address', 'login_times', 'recharges', 'presents', 'present_success', 'is_block','created_at')
-
+        fields = ('id', 'username', 'ip_address', 'login_times', 'recharges', 'presents', 'present_success', 'is_block',
+                  'created_at')
 
     @staticmethod
     def get_login_times(obj):
         login_times = LoginRecord.objects.filter(user_id=obj.id).count()
         return login_times
 
-
     @staticmethod
     def get_recharges(obj):
         recharges = UserRecharge.objects.filter(user_id=obj.id).count()
         return recharges
 
-
     @staticmethod
     def get_presents(obj):
         presents = UserPresentation.objects.filter(user_id=obj.id).count()
         return presents
-
 
     @staticmethod
     def get_present_success(obj):
