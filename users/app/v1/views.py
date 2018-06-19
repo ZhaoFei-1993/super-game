@@ -1693,11 +1693,11 @@ class ForgetPasswordView(ListAPIView):
         userinfo.set_password(password)
         userinfo.save()
 
-        u_mes = UserMessage()  # 修改密码后消息
-        u_mes.status = 0
-        u_mes.user = userinfo
-        u_mes.message_id = 7  # 修改密码
-        u_mes.save()
+        # u_mes = UserMessage()  # 修改密码后消息
+        # u_mes.status = 0
+        # u_mes.user = userinfo
+        # u_mes.message_id = 7  # 修改密码
+        # u_mes.save()
 
         content = {'code': 0}
         return self.response(content)
