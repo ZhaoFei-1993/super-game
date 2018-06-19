@@ -117,7 +117,7 @@ class SmsVerifyView(ListCreateAPIView):
             message = Sms.objects.get(area_code=area_code, telephone=request.data.get('telephone'),
                                       code=request.data.get('code'))
 
-        if 'telephone' in request.data.get:
+        if request.data.get('telephone') is not None:
             record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone')).order_by(
                 '-id').first()
             if int(record.degree) >= 5:
