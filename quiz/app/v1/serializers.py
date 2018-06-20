@@ -12,7 +12,7 @@ from api import settings
 from chat.models import Club
 from users.models import User
 from utils.functions import normalize_fraction
-from ...models import Quiz, Record, Rule, Category, OptionOdds
+from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -46,7 +46,6 @@ class QuizSerialize(serializers.ModelSerializer):
         begin_at = obj.begin_at.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
-        # ok = int(time.time())-900
         return start
 
     def get_host_team(self, obj):
@@ -329,30 +328,29 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         return status
 
     def get_year(self, obj):  # 时间
-        yesterday = datetime.today() + timedelta(+1)
-        yesterday_format = yesterday.strftime('%m月%d日')
-        time = strftime('%m月%d日')
-        year = obj.begin_at.strftime('%m月%d日')
-        years = obj.begin_at.strftime('%m月%d日')
         if self.context['request'].GET.get('language') == 'en':
-            yesterday_format = yesterday.strftime('%d day %m month')
-            time = strftime('%d day %m month')
-            year = obj.begin_at.strftime('%d day %m month')
-            years = obj.begin_at.strftime('%d day %m month')
-        if time == year:
-            years = year + " " + "今天"
-            if self.context['request'].GET.get('language') == 'en':
-                years = year + " " + "Today"
-        elif year == yesterday_format:
-            years = year + " " + "明天"
-            if self.context['request'].GET.get('language') == 'en':
-                years = year + " " + "Tomorrow"
+            end_with = obj.begin_at
+            new_time = end_with - timedelta(hours=12)
+            years = new_time.strftime("%H:%M %w EDT")
+        else:
+            yesterday = datetime.today() + timedelta(+1)
+            yesterday_format = yesterday.strftime('%m月%d日')
+            time = strftime('%m月%d日')
+            year = obj.begin_at.strftime('%m月%d日')
+            years = obj.begin_at.strftime('%m月%d日')
+            if time == year:
+                years = year + " " + "今天"
+            elif year == yesterday_format:
+                years = year + " " + "明天"
         return years
 
-    @staticmethod
-    def get_time(obj):  # 时间
+    def get_time(self, obj):  # 时间
         year = obj.begin_at
         year = year.strftime('%H:%M')
+        if self.context['request'].GET.get('language') == 'en':
+            end_with = obj.begin_at
+            new_time = end_with - timedelta(hours=12)
+            year = new_time.strftime(" | %A, %b %y")
         return year
 
     # @staticmethod
@@ -418,3 +416,32 @@ class QuizPushSerializer(serializers.ModelSerializer):
         username = user_info.nickname
         user_name = str(username[0]) + "**"
         return user_name
+
+
+class ClubProfitAbroadSerialize(serializers.ModelSerializer):
+    """
+    俱乐部收益
+    """
+    coin_name = serializers.SerializerMethodField()  # 俱乐部昵称
+    coin_icon = serializers.SerializerMethodField()  # 货币图标
+    created_at = serializers.SerializerMethodField()  # 货币图标
+
+    class Meta:
+        model = ClubProfitAbroad
+        fields = ("id", "coin_name", "coin_icon", "robot_platform_sum", "platform_sum",
+                  "profit", "profit_total", "cash_back_sum", "created_at")
+
+    @staticmethod
+    def get_coin_name(obj):
+        club_info = Club.objects.get(id=obj.roomquiz_id)
+        return club_info.coin.name
+
+    @staticmethod
+    def get_coin_icon(obj):
+        club_info = Club.objects.get(id=obj.roomquiz_id)
+        return club_info.coin.icon
+
+    @staticmethod
+    def get_created_at(obj):
+        created_at = obj.created_at.strftime("%Y-%m-%d")
+        return created_at

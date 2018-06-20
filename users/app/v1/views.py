@@ -452,7 +452,6 @@ class LoginView(CreateAPIView):
 
                 record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
                     '-id').first()
-                print("record==============================", record)
                 if int(record.degree) >= 5:
                     raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
                 else:

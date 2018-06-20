@@ -4,16 +4,17 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from base.function import LoginRequired
 from base.app import ListAPIView, ListCreateAPIView
-from ...models import Category, Quiz, Record, Rule, Option, OptionOdds
+from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
 from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
-from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer
+from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer, \
+    ClubProfitAbroadSerialize
 from utils.functions import value_judge
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from utils.functions import language_switch
 from utils.functions import normalize_fraction
 
@@ -219,7 +220,6 @@ class QuizDetailView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        print("items==========================", items)
         item = items[0]
         return self.response({"code": 0, "data": {
             "id": item['id'],
@@ -627,7 +627,6 @@ class RecommendView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
-
             data.append(
                 {
                     "quiz_id": item['id'],
@@ -660,3 +659,63 @@ class WorldCup(ListAPIView):
         value = results.data.get('results')
         time = 0
         return self.response({"code": 0, "data": value, 'time': time})
+
+
+class ProfitView(ListAPIView):
+    """
+    俱乐部收益
+    """
+    serializer_class = ClubProfitAbroadSerialize
+
+    def get_queryset(self):
+        date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        date_now = datetime.now().strftime('%Y-%m-%d')
+        # 昨天
+        start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
+                              0, 0)
+        # 今天
+        end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 12,
+                            0)
+        if 'start_time' in self.request.GET:
+            start_time = self.request.GET.get('start_time')
+        if 'end_time' in self.request.GET:
+            end_time = self.request.GET.get('end_time')
+        if 'roomquiz_id' in self.request.GET:
+            roomquiz_id = self.request.GET.get('roomquiz_id')
+            list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time),
+                                                   roomquiz_id=roomquiz_id)
+        else:
+            list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time))
+        return list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = {}
+        for item in items:
+            date_key = item['created_at']
+            if date_key not in data:
+                data[date_key] = []
+            if item['created_at'] == date_key:
+                if 'is_robot' in self.request.GET:
+                    # 真实
+                    data[date_key].append(
+                        {
+                            'coin_name': item["coin_name"],  # 昵称
+                            'coin_icon': item["coin_icon"],  # 图标
+                            'platform_sum': item["platform_sum"],  # 用户投注额
+                            'profit_total': item["profit"],  # 真实盈利
+                        }
+                    )
+                else:
+                    # +机器
+                    platform_sum = item["robot_platform_sum"] + item["platform_sum"]
+                    data[date_key].append(
+                        {
+                            'coin_name': item["coin_name"],  # 昵称
+                            'coin_icon': item["coin_icon"],  # 图标
+                            'platform_sum': platform_sum,  # 总投注额
+                            'profit_total': item["profit_total"],  # 总盈利
+                        }
+                    )
+        return self.response({'code': 0, 'data': data})
