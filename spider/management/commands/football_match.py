@@ -387,7 +387,7 @@ def get_data_info(url):
                                 rule.type = i
                                 rule.type_en = i
                                 rule.tips = '赛果'
-                                rule.tips_en = 'Results of the match'
+                                rule.tips_en = ' Winner'
                                 rule.save()
                                 for dt in result_had:
                                     option = Option()
@@ -461,7 +461,7 @@ def get_data_info(url):
                                 rule.type = i
                                 rule.type_en = i
                                 rule.tips = '比分'
-                                rule.tips_en = 'Score'
+                                rule.tips_en = 'Scored'
                                 rule.save()
                                 for dt in result_crs:
                                     option = Option()

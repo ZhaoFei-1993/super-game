@@ -242,7 +242,7 @@ def get_data_info(url):
                             rule.type = i
                             rule.type_en = i
                             rule.tips = '胜负'
-                            rule.tips_en = 'Results of the match'
+                            rule.tips_en = ' Winner'
                             rule.save()
                             for dt in result_mnl:
                                 option = Option()

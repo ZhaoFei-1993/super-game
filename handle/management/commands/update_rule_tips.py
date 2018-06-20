@@ -11,8 +11,8 @@ class Command(BaseCommand):
         print('>>>>>>>>>>>>>>>>>>>>>>>> 开始 >>>>>>>>>>>>>>>>>>>>>>>>')
         i = 0
 
-        for rule in Rule.objects.filter(type=str(Rule.RESULTS), tips_en=''):
-            rule.tips_en = 'Results of the match'
+        for rule in Rule.objects.filter(type=str(Rule.RESULTS)):
+            rule.tips_en = ' Winner'
             rule.save()
             i += 1
             print('========================> i = ', i)
@@ -23,8 +23,8 @@ class Command(BaseCommand):
             i += 1
             print('========================> i = ', i)
 
-        for rule in Rule.objects.filter(type=str(Rule.SCORE), tips_en=''):
-            rule.tips_en = 'Score'
+        for rule in Rule.objects.filter(type=str(Rule.SCORE)):
+            rule.tips_en = 'Scored'
             rule.save()
             i += 1
             print('========================> i = ', i)
@@ -35,8 +35,8 @@ class Command(BaseCommand):
             i += 1
             print('========================> i = ', i)
 
-        for rule in Rule.objects.filter(type=str(Rule.RESULT), tips_en=''):
-            rule.tips_en = 'Results of the match'
+        for rule in Rule.objects.filter(type=str(Rule.RESULT)):
+            rule.tips_en = ' Winner'
             rule.save()
             i += 1
             print('========================> i = ', i)
@@ -60,32 +60,32 @@ class Command(BaseCommand):
             i += 1
             print('========================> i = ', i)
 
-        for option in Option.objects.all():
-            if '主胜' in option.option:
-                option.option_en = 'Home'
-            elif '主负' in option.option:
-                option.option_en = 'Away'
-            elif '平局' in option.option:
-                option.option_en = 'Draw'
-            elif ':' in option.option:
-                option.option_en = option.option
-            elif '球' in option.option:
-                if option.option[0] == '7':
-                    option.option_en = '7+'
-                else:
-                    option.option_en = option.option[0]
-            elif option.option == '胜其他' or option.option == '平其他' or option.option == '负其他':
-                option.option_en = 'Other'
-            elif '-' in option.option:
-                option.option_en = option.option
-            elif '总分大于' in option.option:
-                option.option_en = 'More than ' + option.option[4:]
-            elif '总分小于' in option.option:
-                option.option_en = 'Less than ' + option.option[4:]
+        # for option in Option.objects.all():
+        #     if '主胜' in option.option:
+        #         option.option_en = 'Home'
+        #     elif '主负' in option.option:
+        #         option.option_en = 'Away'
+        #     elif '平局' in option.option:
+        #         option.option_en = 'Draw'
+        #     elif ':' in option.option:
+        #         option.option_en = option.option
+        #     elif '球' in option.option:
+        #         if option.option[0] == '7':
+        #             option.option_en = '7+'
+        #         else:
+        #             option.option_en = option.option[0]
+        #     elif option.option == '胜其他' or option.option == '平其他' or option.option == '负其他':
+        #         option.option_en = 'Other'
+        #     elif '-' in option.option:
+        #         option.option_en = option.option
+        #     elif '总分大于' in option.option:
+        #         option.option_en = 'More than ' + option.option[4:]
+        #     elif '总分小于' in option.option:
+        #         option.option_en = 'Less than ' + option.option[4:]
+        #
+        #     option.save()
 
-            option.save()
-
-            i += 1
-            print('========================> i = ', i)
+            # i += 1
+            # print('========================> i = ', i)
 
         print('>>>>>>>>>>>>>>>>>>>>>>>> 结束 >>>>>>>>>>>>>>>>>>>>>>>>')
