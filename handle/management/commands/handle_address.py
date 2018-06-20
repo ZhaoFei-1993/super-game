@@ -29,7 +29,7 @@ class Command(BaseCommand):
                         a.append(addres)
                     else:
                         user_id.address = ''
-                        # user_id.save()
+                        user_id.save()
                     print("==========================i=========================", i)
                     i += 1
         print("==========================i=========================", a)
