@@ -5,22 +5,20 @@ import requests
 from quiz.models import GsgValue
 from users.models import Coin, CoinPrice
 
-url = 'https://www.bitforex.com/server/cointrade.act?cmd=getTickers&currencyCode=usdt'
+url = 'https://www.debi.com/Ajax/getTradelog?market=btc_usdt'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 
 
 class Command(BaseCommand):
-    help = "debi"
+    help = "bitforex"
 
     def handle(self, *args, **options):
         response = requests.get(url, headers=headers)
         json_dt = response.json()
-        for dt in json_dt['data']:
-            if dt['busitype'] == 'coin-usdt-btc':
-                value = dt['last']
-                value_rmb = float(value) * float(CoinPrice.objects.get(coin_name='USDT').price)
+        value = json_dt['tradelog'][0]['price']
+        value_rmb = float(value) * float(CoinPrice.objects.get(coin_name='USDT').price)
 
         gsg_value = GsgValue()
         gsg_value.coin = Coin.objects.get(name='BTC')
