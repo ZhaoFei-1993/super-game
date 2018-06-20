@@ -11,8 +11,6 @@ import math
 
 base_url = 'https://blockchain.info/multiaddr?active='
 omni_url = 'https://api.omniexplorer.info/v1/transaction/tx/'
-coin_name = 'BTC'
-usdt_name = 'USDT'
 
 
 def get_transactions(addresses):
@@ -78,8 +76,7 @@ class Command(BaseCommand):
         # 获取所有用户ETH地址
         user_btc_address = UserCoin.objects.filter(coin_id=Coin.BTC, user__is_robot=False, user__is_block=False).order_by('id')
         if len(user_btc_address) == 0:
-            self.stdout.write(self.style.SUCCESS('无比特币地址信息'))
-            return True
+            raise CommandError('无比特币地址信息')
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_btc_address)) + '条用户地址信息'))
 
@@ -90,6 +87,7 @@ class Command(BaseCommand):
             # map address to userid
             address_map_uid[user_coin.address.upper()] = user_coin.user_id
 
+        # 过滤掉测试数据的TXID
         out_tx = [
             'cc8fcbb094e72bedf5ca7a5230f66b29915522f3395e846fe5acb713ebd88fee',
             'd1c8dafc62c897c7eaa77184d9d4a2f7be35823ce4f28824226995343cc27beb',
@@ -102,6 +100,7 @@ class Command(BaseCommand):
             'd180c0a3a76e160765eda4fbbc8450ee37f6b24e1d1cb15a3105e0519d2c2342',
             'e5a74a1fc6c57b6acf08691503e867381d93b524045190f14a1da25efc7f35af',
             'b193e0a7fee20bfda1202ec3c7e136f72d9b2926327fe17cf1db6cbeaf1f002a',
+            '77c6ccab03443fa13fe6ecb68939c4ec433575168054307722d3966c0e3f8eb4',
         ]
 
         # 因URL有长度限制，这里分页处理，每页50条
@@ -135,7 +134,7 @@ class Command(BaseCommand):
                     tx_value = trans['value']
                     confirmations = trans['confirmations']
 
-                    # 过滤一个txid
+                    # 过滤掉测试数据的TXID
                     if tx_id in out_tx:
                         continue
 
