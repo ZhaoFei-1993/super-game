@@ -178,11 +178,17 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             f.write(str(event))
             f.write("\n")
         quiz_id = event['quiz_id']
-        call_command('football_synctime', quiz_id)
+        if int(quiz_id) == 1312:
+            pass
+        else:
+            call_command('football_synctime', quiz_id)
 
     async def basketball_time_message(self, event):
         with open('/tmp/debug_mseeage', 'a+') as f:
             f.write(str(event))
             f.write("\n")
         quiz_id = event['quiz_id']
-        call_command('basketball_synctime', quiz_id)
+        if int(quiz_id) == 1312:
+            pass
+        else:
+            call_command('basketball_synctime', quiz_id)
