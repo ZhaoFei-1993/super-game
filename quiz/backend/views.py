@@ -384,7 +384,7 @@ class QuizListBackEndView(FormatListAPIView):
             # b_time  = datetime.strptime(start_time + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
             # e_time = datetime.strptime(end_time + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
             # records = records.filter(quiz__begin_at__range=(b_time, e_time))
-        sql += ' group by quiz_id, roomquiz_id order by b.begin_at desc'
+        sql += ' group by quiz_id, roomquiz_id  order by b.begin_at desc, b.id desc'
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
 
