@@ -331,7 +331,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         if self.context['request'].GET.get('language') == 'en':
             end_with = obj.begin_at
             new_time = end_with - timedelta(hours=12)
-            years = new_time.strftime("%H:%M %w EDT")
+            years = new_time.strftime("%H:%M %p EDT")
         else:
             yesterday = datetime.today() + timedelta(+1)
             yesterday_format = yesterday.strftime('%m月%d日')
