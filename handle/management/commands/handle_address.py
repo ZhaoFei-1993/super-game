@@ -14,6 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         os.chdir(BASE_DIR + '/cache')
         i = 1
+        a = []
         with open('corrent_address.txt', 'r+') as f:
             for line in f:
                 line_dt = line.strip().split(',')
@@ -25,8 +26,11 @@ class Command(BaseCommand):
                     user_recharge = UserRecharge.objects.filter(user=user_id.user, coin=user_id.coin).count()
                     if user_recharge != 0:
                         print("addres=========================", addres)
+                        a.append(addres)
                     else:
                         user_id.address = ''
                         # user_id.save()
                     print("==========================i=========================", i)
                     i += 1
+                print("==========================i=========================", a)
+
