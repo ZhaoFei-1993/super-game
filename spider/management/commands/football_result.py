@@ -512,7 +512,7 @@ def cash_back(quiz):
                         u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖' + ',您得到的返现为：' + str(
                             gsg_cash_back) + '个GSG'
                         u_mes.content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced' + ',he volume of cash-back you get is：' + str(
-                            gsg_cash_back) + '个GSG'
+                            gsg_cash_back) + 'GSG'
                         u_mes.save()
 
                         print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
