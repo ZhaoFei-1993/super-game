@@ -27,6 +27,6 @@ class Command(BaseCommand):
                         print("addres=========================", addres)
                     else:
                         user_id.address = ''
-                        user_id.save()
+                        # user_id.save()
                     print("==========================i=========================", i)
                     i += 1
