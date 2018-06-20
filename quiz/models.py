@@ -124,11 +124,11 @@ class Rule(models.Model):
         (VICTORY_GAP, "胜分差"),
     )
     TYPE_CHOICE_EN = (
-        (RESULTS, "Results of the match"),
+        (RESULTS, "Winner"),
         (POLITENESS_RESULTS, "Handicap Results"),
-        (SCORE, "Score"),
+        (SCORE, "Scored"),
         (TOTAL_GOAL, "Total goals"),
-        (RESULT, "Results of the match"),
+        (RESULT, "Winner"),
         (POLITENESS_RESULT, "Handicap Results"),
         (SIZE_POINTS, "Compare the total score"),
         (VICTORY_GAP, "Wins the gap"),
