@@ -1272,6 +1272,7 @@ class UserPresentationView(CreateAPIView):
     """
     permission_classes = (LoginRequired,)
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
         if value == 0:
@@ -1298,7 +1299,7 @@ class UserPresentationView(CreateAPIView):
         c_id = request.data.get('c_id')
         try:
             coin = Coin.objects.get(id=int(c_id))
-            user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+            user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin.id)
         except Exception:
             raise
         p_amount = eval(request.data.get('p_amount'))
