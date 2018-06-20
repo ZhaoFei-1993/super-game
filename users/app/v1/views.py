@@ -537,7 +537,7 @@ class InfoView(ListAPIView):
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
 
-        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+        coins = Coin.objects.filter(is_disabled=False)
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
             user_message = UserMessage()
