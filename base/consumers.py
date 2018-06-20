@@ -115,6 +115,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_send(group_name, {
                 "type": "football_time.message",
                 "quiz_id": content.get("quiz_id"),
+                "content": content
             })
         elif command == 'basketball_synctime':
             await self.channel_layer.group_send(group_name, {
