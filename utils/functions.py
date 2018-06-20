@@ -12,6 +12,7 @@ import datetime
 import plistlib
 from PIL import Image
 from decimal import Decimal
+from django.db import transaction
 from django.conf import settings
 from django.db.models import Sum
 from base.exceptions import ParamErrorException
@@ -323,7 +324,7 @@ def coin_initialization(user_id, coin_id):
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
             else:
-                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+                address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.ETH).first()
                 address.user = user.pk
                 address.save()
         else:
@@ -332,7 +333,7 @@ def coin_initialization(user_id, coin_id):
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
-                address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+                address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.BTC).first()
                 address.user = user.pk
                 address.save()
 
@@ -348,7 +349,7 @@ def coin_initialization(user_id, coin_id):
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).first()
             else:
-                address = Address.objects.filter(user=0, coin_id=Coin.ETH).first()
+                address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.ETH).first()
                 address.user = user_id
                 address.save()
         else:
@@ -357,7 +358,7 @@ def coin_initialization(user_id, coin_id):
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
-                address = Address.objects.filter(user=0, coin_id=Coin.BTC).first()
+                address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.BTC).first()
                 address.user = user_id
                 address.save()
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
