@@ -608,6 +608,17 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
         if 'txid' in request.data:
             txid = request.data.get('txid')
             item.txid = txid
+            user_message = UserMessage()
+            user_message.status = 0
+            if language == 'en':
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = 'Present Success'
+            else:
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = '提现成功公告'
+            user_message.user = item.user
+            user_message.message_id = 6  # 修改密码
+            user_message.save()
         print(item.txid)
         item.save()
 
