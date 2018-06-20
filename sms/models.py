@@ -38,6 +38,7 @@ class Sms(models.Model):
     type = models.CharField(verbose_name="短信类型", choices=TYPE_CHOICE, max_length=1)
     status = models.CharField(verbose_name="发送状态", choices=STATUS_CHOICE, max_length=1, default=READY)
     feedback = models.CharField(verbose_name="失败反馈", max_length=255)
+    degree = models.IntegerField(verbose_name="校验次数", default=0)
     is_passed = models.BooleanField(verbose_name="是否通过校验", default=False)
     created_at = models.DateTimeField(verbose_name="发送时间", auto_now_add=True)
 

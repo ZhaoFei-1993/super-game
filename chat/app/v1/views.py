@@ -27,6 +27,7 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
+        language = self.request.GET.get('language')
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
@@ -36,11 +37,11 @@ class ClublistView(ListAPIView):
         usdt_ban = '/'.join(
             [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
         int_act_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_ACT") + ".jpg?t=%s" % date_now])
+            # [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_ACT") + ".jpg?t=%s" % date_now])
+            [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
         banner = [{"img_url": int_ban, "action": 'Invite_New'},
-                  {"img_url": usdt_ban, "action": 'USDT_ACTIVE'},
-                  {"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}
-                  ]  # 活动轮播图
+                  {"img_url": usdt_ban, "action": 'USDT_ACTIVE'}
+                  ] + ([] if language=='en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}]) # 活动轮播图
         for item in items:
             user_number = int(int(item['user_number']) * 0.3)
             room_title = language_switch(self.request.GET.get('language'), 'room_title')
