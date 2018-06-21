@@ -606,6 +606,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
             bill = request.data.get('is_bill')
             item.is_bill = bill
         if 'txid' in request.data:
+            language = request.data.get('language', '')
             txid = request.data.get('txid')
             item.txid = txid
             user_message = UserMessage()
