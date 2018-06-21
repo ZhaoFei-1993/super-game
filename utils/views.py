@@ -21,6 +21,7 @@ from api.settings import MEDIA_ROOT
 from datetime import datetime
 from base.app import CreateAPIView
 from users.models import User
+import random
 
 
 class ObtainAuthToken(APIView):
@@ -158,8 +159,11 @@ def user_captcha_generate(request):
     :param request:
     :return:
     """
+    print('settings.CAPTCHA_GENERATOR = ', settings.CAPTCHA_GENERATOR)
+    generator = random.choice(settings.CAPTCHA_GENERATOR)
+    print('generator = ', generator)
     response = {
-        "key": CaptchaStore.generate_key(settings.CAPTCHA_GENERATOR),
+        "key": CaptchaStore.generate_key(generator),
     }
     response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
     return Response(response)
