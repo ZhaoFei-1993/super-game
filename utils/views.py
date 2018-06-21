@@ -160,6 +160,7 @@ def user_captcha_generate(request):
     :return:
     """
     generator = random.choice(settings.CAPTCHA_GENERATOR)
+    print('generator = ', generator)
     response = {
         "key": CaptchaStore.generate_key(generator),
     }
