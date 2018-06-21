@@ -459,6 +459,14 @@ class LoginView(CreateAPIView):
                     invitation_code = request.data.get('invitation_code')
                     invitation_code = invitation_code.upper()
 
+                record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
+                    '-id').first()
+                if int(record.degree) >= 5:
+                    raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+                else:
+                    record.degree += 1
+                    record.save()
+
                 message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
                 if len(message) == 0:
                     raise ParamErrorException(error_code.API_20402_INVALID_SMS_CODE)
@@ -538,7 +546,7 @@ class InfoView(ListAPIView):
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
 
-        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
+        coins = Coin.objects.filter(is_disabled=False)
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
             user_message = UserMessage()
@@ -1273,6 +1281,7 @@ class UserPresentationView(CreateAPIView):
     """
     permission_classes = (LoginRequired,)
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
         if value == 0:
@@ -1299,7 +1308,7 @@ class UserPresentationView(CreateAPIView):
         c_id = request.data.get('c_id')
         try:
             coin = Coin.objects.get(id=int(c_id))
-            user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+            user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin.id)
         except Exception:
             raise
         p_amount = eval(request.data.get('p_amount'))
@@ -1702,11 +1711,11 @@ class ForgetPasswordView(ListAPIView):
         userinfo.set_password(password)
         userinfo.save()
 
-        u_mes = UserMessage()  # 修改密码后消息
-        u_mes.status = 0
-        u_mes.user = userinfo
-        u_mes.message_id = 7  # 修改密码
-        u_mes.save()
+        # u_mes = UserMessage()  # 修改密码后消息
+        # u_mes.status = 0
+        # u_mes.user = userinfo
+        # u_mes.message_id = 7  # 修改密码
+        # u_mes.save()
 
         content = {'code': 0}
         return self.response(content)

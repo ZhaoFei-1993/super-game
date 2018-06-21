@@ -26,7 +26,8 @@ class Command(BaseCommand):
         try:
             quiz = Quiz.objects.get(pk=quiz_id)
         except Quiz.DoesNotExist:
-            raise CommandError('quiz_id无效')
+            msg = 'quiz_id = ' + str(quiz_id) + ' ,quiz_id无效'
+            raise CommandError(msg)
         match_flag = quiz.match_flag
 
         url = base_url

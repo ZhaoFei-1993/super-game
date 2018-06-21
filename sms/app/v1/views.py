@@ -123,6 +123,18 @@ class SmsVerifyView(ListCreateAPIView):
             message = Sms.objects.get(area_code=area_code, telephone=request.data.get('telephone'),
                                       code=request.data.get('code'))
 
+        print("request.data====================================", request.data)
+        print("request.data====================================", request.data.get('telephone'))
+        if request.data.get('telephone') is not None:
+            record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone')).order_by(
+                '-id').first()
+            print("record.degree=============================================", record.degree)
+            if int(record.degree) >= 5:
+                raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+            else:
+                record.degree += 1
+                record.save()
+
         code_type = request.data.get('code_type')
         if int(code_type) not in range(1, 6):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)

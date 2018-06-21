@@ -124,11 +124,11 @@ class Rule(models.Model):
         (VICTORY_GAP, "胜分差"),
     )
     TYPE_CHOICE_EN = (
-        (RESULTS, "Results of the match"),
+        (RESULTS, "Winner"),
         (POLITENESS_RESULTS, "Handicap Results"),
-        (SCORE, "Score"),
+        (SCORE, "Scored"),
         (TOTAL_GOAL, "Total goals"),
-        (RESULT, "Results of the match"),
+        (RESULT, "Winner"),
         (POLITENESS_RESULT, "Handicap Results"),
         (SIZE_POINTS, "Compare the total score"),
         (VICTORY_GAP, "Wins the gap"),
@@ -371,7 +371,8 @@ class CashBackLog(models.Model):
 class ClubProfitAbroad(models.Model):
     roomquiz_id = models.IntegerField(verbose_name="俱乐部ID", default=0)
     robot_platform_sum = models.DecimalField(verbose_name="机器人总投注额", max_digits=18, decimal_places=3, default=0.000)
-    robot_platform_rmb = models.DecimalField(verbose_name="机器人总投注额(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
+    robot_platform_rmb = models.DecimalField(verbose_name="机器人总投注额(rmb)", max_digits=18, decimal_places=8,
+                                             default=0.00000000)
     platform_sum = models.DecimalField(verbose_name="用户投注额", max_digits=18, decimal_places=3, default=0.000)
     platform_rmb = models.DecimalField(verbose_name="用户投注额(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
     profit = models.DecimalField(verbose_name="真实盈利", max_digits=15, decimal_places=3, default=0.000)
@@ -383,3 +384,14 @@ class ClubProfitAbroad(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "盈利表"
+
+
+class GsgValue(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    house = models.CharField(verbose_name="交易所名称", max_length=8, default="")
+    value = models.DecimalField(verbose_name="价格(USDT)", max_digits=18, decimal_places=8, default=0.00000000)
+    value_rmb = models.DecimalField(verbose_name="价格(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "GSG价格表"
