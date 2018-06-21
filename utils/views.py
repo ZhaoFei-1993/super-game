@@ -159,6 +159,7 @@ def user_captcha_generate(request):
     :param request:
     :return:
     """
+    print('settings.CAPTCHA_GENERATOR = ', settings.CAPTCHA_GENERATOR)
     generator = random.choice(settings.CAPTCHA_GENERATOR)
     print('generator = ', generator)
     response = {
