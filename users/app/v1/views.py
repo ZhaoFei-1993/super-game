@@ -111,7 +111,7 @@ class UserRegister(object):
 
         return token
 
-    def login(self, source, username, area_code, password):
+    def login(self, source, username, area_code, password, device_token=''):
         """
         用户登录
         :param source:   用户来源
@@ -157,6 +157,10 @@ class UserRegister(object):
                 coin_id = coin.id
                 coin_initialization(user_id, coin_id)
 
+            # 更新用户的device_token
+            if 'device_token' is not None and len(user) > 0:
+                User.objects.filter(id=user[0]['id']).update(device_token=device_token)
+
             # 注册送HAND币
             if user.is_money == 0 and user.is_robot == 0:
                 user_money = 10000
@@ -183,8 +187,8 @@ class UserRegister(object):
         return token
 
     @transaction.atomic()
-    def register(self, source, username, password, area_code='', avatar='', nickname='', invitation_code='',
-                 ip_address=''):
+    def register(self, source, username, password, device_token='', area_code='', avatar='', nickname='',
+                 invitation_code='', ip_address=''):
         """
         用户注册
         :param source:      用户来源：ios、android
@@ -220,6 +224,7 @@ class UserRegister(object):
             user.ip_address = ip_address
             user.avatar = avatar
             user.nickname = nickname
+            user.device_token = device_token
             user.invitation_code = random_invitation_code()
             user.save()
 
@@ -270,6 +275,7 @@ class UserRegister(object):
             user.register_type = register_type
             user.avatar = avatar
             user.nickname = nickname
+            user.device_token = device_token
             user.invitation_code = random_invitation_code()
             user.save()
 
@@ -427,6 +433,10 @@ class LoginView(CreateAPIView):
             if captcha_valid_code > 0:
                 return self.response({'code': captcha_valid_code})
 
+        device_token = ""
+        if 'device_token' in request.data:
+            device_token = request.data.get('device_token')
+
         user = User.objects.filter(username=username)
         if len(user) == 0:
             avatar = self.get_name_avatar()
@@ -441,12 +451,11 @@ class LoginView(CreateAPIView):
 
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
-            print("username==========================", len(username))
             nickname = str(username[0:3]) + "***" + str(username[7:])
             if int(register_type) == 1 or int(register_type) == 2:
                 password = random_salt(8)
                 token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, ip_address=ip_address)
+                                    password=password, device_token=device_token, ip_address=ip_address)
 
             else:
                 code = request.data.get('code')
@@ -473,14 +482,14 @@ class LoginView(CreateAPIView):
 
                 password = request.data.get('password')
                 token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
-                                    avatar=avatar,
+                                    avatar=avatar, device_token=device_token,
                                     password=password, invitation_code=invitation_code, ip_address=ip_address)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
             if int(register_type) == 1 or int(register_type) == 2:
                 password = None
-                token = ur.login(source=source, username=username, password=password)
+                token = ur.login(source=source, username=username, device_token=device_token, password=password)
             elif int(register_type) == 3:
                 password = ''
                 # area_code = request.data.get('area_code')
@@ -490,7 +499,8 @@ class LoginView(CreateAPIView):
                     area_code = request.data.get('area_code')
                 if 'password' in request.data:
                     password = request.data.get('password')
-                token = ur.login(source=source, username=username, area_code=area_code, password=password)
+                token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
+                                 password=password)
             else:
                 password = request.data.get('password')
                 # area_code = request.data.get('area_code')
@@ -498,7 +508,8 @@ class LoginView(CreateAPIView):
                     area_code = 86
                 else:
                     area_code = request.data.get('area_code')
-                token = ur.login(source=source, username=username, area_code=area_code, password=password)
+                token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
+                                 password=password)
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -1797,12 +1808,12 @@ class CoinOperateView(ListAPIView):
         for x in items:
             if language == 'en':
                 x['month'] = datetime.strptime(x['month'], '%Y年%m月').strftime('%m/%Y')
-                if x['status']=='提现申请中':
-                    x['status']='Processing'
-                if x['status']=='提现成功' or x['status']=='充值成功':
-                    x['status']='Success'
-                if x['status']=='提现失败':
-                    x['status']='Fail'
+                if x['status'] == '提现申请中':
+                    x['status'] = 'Processing'
+                if x['status'] == '提现成功' or x['status'] == '充值成功':
+                    x['status'] = 'Success'
+                if x['status'] == '提现失败':
+                    x['status'] = 'Fail'
             if x['month'] not in temp_dict:
                 x['top'] = True
                 temp_dict[x['month']] = [x, ]
@@ -1823,7 +1834,7 @@ class CoinOperateDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        language= request.GET.get('language','')
+        language = request.GET.get('language', '')
         try:
             coin = Coin.objects.get(id=self.kwargs['coin'])
             item = CoinDetail.objects.get(id=pk, coin_name=coin.name)
@@ -1831,8 +1842,8 @@ class CoinOperateDetailView(RetrieveAPIView):
             raise
         serialize = CoinOperateSerializer(item)
         data = serialize.data
-        if language=='en':
-            data['month']= datetime.strptime(data['month'], '%Y年%m月').strftime('%m/%Y')
+        if language == 'en':
+            data['month'] = datetime.strptime(data['month'], '%Y年%m月').strftime('%m/%Y')
             if data['status'] == '提现申请中':
                 data['status'] = 'Processing'
             if data['status'] == '提现成功' or data['status'] == '充值成功':
@@ -1953,6 +1964,9 @@ class InvitationRegisterView(CreateAPIView):
         code = request.data.get('code')
         area_code = request.data.get('area_code')
         password = request.data.get('password')
+        device_token = ""
+        if 'device_token' in request.data:
+            device_token = request.data.get('device_token')
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -1987,7 +2001,7 @@ class InvitationRegisterView(CreateAPIView):
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
-                            nickname=nickname, ip_address=ip_address)
+                            nickname=nickname, ip_address=ip_address, device_token=device_token)
         invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
         try:
             user = ur.get_user(telephone)
