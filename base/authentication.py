@@ -150,6 +150,14 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         if not api_key:
             raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
 
+        # 获取语言数据
+        language = 'cn'
+        if 'language' in request.GET:
+            language = request.GET.get('language')
+        request.language = language
+
+        print('request.language = ', request.language)
+
         # 60秒以前的请求不再处理
         date_key = 'date'
         if api_key == 'HTML5':

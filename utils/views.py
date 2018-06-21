@@ -19,6 +19,8 @@ from .models import Image
 from .forms import ImageForm
 from api.settings import MEDIA_ROOT
 from datetime import datetime
+from base.app import CreateAPIView
+from users.models import User
 
 
 class ObtainAuthToken(APIView):
@@ -72,7 +74,7 @@ def captcha_generate(request):
     response = {
         "key": CaptchaStore.generate_key(),
     }
-    response["url"] = "https://" + request.get_host() + captcha_image_url(response["key"])
+    response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
     return Response(response)
 
 
@@ -147,3 +149,28 @@ def upload_file(request):
             for line in files.chunks():
                 f.write(line)
         return JsonResponse({'m_type': type}, status=201)
+
+
+@decorators.api_view()
+def user_captcha_generate(request):
+    """
+    生成用户注册登录验证码
+    :param request:
+    :return:
+    """
+    response = {
+        "key": CaptchaStore.generate_key(settings.CAPTCHA_GENERATOR),
+    }
+    response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
+    return Response(response)
+
+
+class UserCaptchaValid(CreateAPIView):
+    """
+    验证user_captcha_valid
+    """
+    authentication_classes = ()
+
+    def post(self, request, *args, **kwargs):
+        captcha_valid_code = User.objects.captcha_valid(request)
+        return self.response({'code': captcha_valid_code})

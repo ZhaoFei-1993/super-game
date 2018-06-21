@@ -43,6 +43,7 @@ from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 import requests
 import json
+from captcha.models import CaptchaStore
 
 
 class UserRegister(object):
@@ -414,10 +415,18 @@ class LoginView(CreateAPIView):
         # res = json.loads(result.content.decode('utf-8'))
         # if res is False:
         #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
+
         type = request.data.get('type')  # 1 注册          2 登录
         regex = re.compile(r'^(1|2)$')
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+
+        # 图形验证码，目前只限于HTML5 - 登录请求
+        if type == 2:
+            captcha_valid_code = User.objects.captcha_valid(request)
+            if captcha_valid_code > 0:
+                return self.response({'code': captcha_valid_code})
+
         user = User.objects.filter(username=username)
         if len(user) == 0:
             avatar = self.get_name_avatar()

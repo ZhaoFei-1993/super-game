@@ -8,12 +8,35 @@ from datetime import datetime
 import time
 from decimal import Decimal
 import django.utils.timezone as timezone
+from captcha.models import CaptchaStore
+from django.conf import settings
+from base.error_code import get_code
 
 
 class UserManager(BaseUserManager):
     """
     用户操作
     """
+    @staticmethod
+    def captcha_valid(request):
+        """
+        验证码校验
+        :return:
+        """
+        code = get_code(request)
+
+        source = request.META.get('HTTP_X_API_KEY')
+        if source == 'HTML5' and settings.IS_USER_CAPTCHA_ENABLE:
+            if 'key' not in request.data or 'challenge' not in request.data:
+                return code.API_20405_CAPTCHA_ERROR
+            key = request.data.get('key')
+            challenge = request.data.get("challenge")
+            try:
+                captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
+                captcha.delete()
+            except CaptchaStore.DoesNotExist:
+                return code.API_20405_CAPTCHA_ERROR
+        return 0
 
 
 @reversion.register()
