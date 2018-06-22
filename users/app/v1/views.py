@@ -1973,7 +1973,8 @@ class InvitationRegisterView(CreateAPIView):
         captcha_valid_code = User.objects.captcha_valid(request)
         print('captcha_valid_code = ', captcha_valid_code)
         if captcha_valid_code > 0:
-            return self.response({'code': captcha_valid_code})
+            raise ParamErrorException(captcha_valid_code)
+            # return self.response({'code': captcha_valid_code})
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
