@@ -158,7 +158,7 @@ class UserRegister(object):
                 coin_initialization(user_id, coin_id)
 
             # 更新用户的device_token
-            if 'device_token' is not None and len(user) > 0:
+            if 'device_token' is not None:
                 User.objects.filter(id=user[0]['id']).update(device_token=device_token)
 
             # 注册送HAND币
