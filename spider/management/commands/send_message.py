@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         message = Message.objects.all().order_by('-id')
-        print("message======================", message[0].content)
+        message[0].delete()
         # u_mes = Message()
         # u_mes.type = 1
         # u_mes.title = '每日签到赠送活动更换通知'
