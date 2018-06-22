@@ -31,6 +31,9 @@ class UserManager(BaseUserManager):
                 return code.API_20405_CAPTCHA_ERROR
             key = request.data.get('key')
             challenge = request.data.get("challenge")
+            challenge = challenge.lower()
+            print('captcha_valid challenge = ', challenge)
+            print('captcha_valid key = ', key)
             try:
                 captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
                 captcha.delete()
