@@ -1971,6 +1971,7 @@ class InvitationRegisterView(CreateAPIView):
 
         # 图形验证码，目前只限于HTML5 - 登录请求
         captcha_valid_code = User.objects.captcha_valid(request)
+        print('captcha_valid_code = ', captcha_valid_code)
         if captcha_valid_code > 0:
             return self.response({'code': captcha_valid_code})
 
