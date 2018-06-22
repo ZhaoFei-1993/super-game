@@ -432,7 +432,7 @@ class LoginView(CreateAPIView):
         if type == 2:
             captcha_valid_code = User.objects.captcha_valid(request)
             if captcha_valid_code > 0:
-                return self.response({'code': captcha_valid_code})
+                raise ParamErrorException(captcha_valid_code)
 
         device_token = ""
         if 'device_token' in request.data:
@@ -1971,7 +1971,6 @@ class InvitationRegisterView(CreateAPIView):
 
         # 图形验证码，目前只限于HTML5 - 登录请求
         captcha_valid_code = User.objects.captcha_valid(request)
-        print('captcha_valid_code = ', captcha_valid_code)
         if captcha_valid_code > 0:
             raise ParamErrorException(captcha_valid_code)
             # return self.response({'code': captcha_valid_code})
