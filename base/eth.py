@@ -73,4 +73,9 @@ class Wallet(object):
         :return:
         """
         result = requests.get(local_settings.ETH_WALLET_API_URL + url, headers=self.request_headers())
-        return result.json()
+        response = {'code': 0, 'message': 'success', 'data': {}}
+        try:
+            response = result.json()
+        except Exception:
+            pass
+        return response
