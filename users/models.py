@@ -34,6 +34,9 @@ class UserManager(BaseUserManager):
             challenge = challenge.lower()
             print('captcha_valid challenge = ', challenge)
             print('captcha_valid key = ', key)
+
+            aaa = CaptchaStore.objects.filter(response=challenge, hashkey=key)
+            print('captcha_valid query = ', aaa.query)
             try:
                 captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
                 print('captcha_valid  captcha_valid captcha = ', captcha)
