@@ -40,7 +40,7 @@ class UserManager(BaseUserManager):
             try:
                 captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
                 print('captcha_valid  captcha_valid captcha = ', captcha)
-                captcha.delete()
+                # captcha.delete()
             except CaptchaStore.DoesNotExist:
                 return code.API_20405_CAPTCHA_ERROR
         return 0
