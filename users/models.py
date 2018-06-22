@@ -32,17 +32,12 @@ class UserManager(BaseUserManager):
             key = request.data.get('key')
             challenge = request.data.get("challenge")
             challenge = challenge.lower()
-            print('captcha_valid challenge = ', challenge)
-            print('captcha_valid key = ', key)
 
-            aaa = CaptchaStore.objects.filter(response=challenge, hashkey=key)
-            print('captcha_valid query = ', aaa.query)
-            try:
-                captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
-                print('captcha_valid  captcha_valid captcha = ', captcha)
-                # captcha.delete()
-            except CaptchaStore.DoesNotExist:
+            is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key, expiration__gt=datetime.now()).count()
+            if is_captcha_valid == 0:
                 return code.API_20405_CAPTCHA_ERROR
+
+            # captcha.delete()
         return 0
 
 
