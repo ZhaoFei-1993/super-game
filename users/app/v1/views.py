@@ -429,10 +429,10 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
 
         # 图形验证码，目前只限于HTML5 - 登录请求
-        # if int(type) == 2:
-        #     captcha_valid_code = User.objects.captcha_valid(request)
-        #     if captcha_valid_code > 0:
-        #         raise ParamErrorException(captcha_valid_code)
+        if int(type) == 2:
+            captcha_valid_code = User.objects.captcha_valid(request)
+            if captcha_valid_code > 0:
+                raise ParamErrorException(captcha_valid_code)
 
         device_token = ""
         if 'device_token' in request.data:
