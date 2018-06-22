@@ -36,6 +36,7 @@ class UserManager(BaseUserManager):
             print('captcha_valid key = ', key)
             try:
                 captcha = CaptchaStore.objects.get(response=challenge, hashkey=key)
+                print('captcha_valid  captcha_valid captcha = ', captcha)
                 captcha.delete()
             except CaptchaStore.DoesNotExist:
                 return code.API_20405_CAPTCHA_ERROR
