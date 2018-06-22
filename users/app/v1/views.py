@@ -159,7 +159,7 @@ class UserRegister(object):
 
             # 更新用户的device_token
             if 'device_token' is not None:
-                User.objects.filter(id=user[0]['id']).update(device_token=device_token)
+                User.objects.get(id=user.id).update(device_token=device_token)
 
             # 注册送HAND币
             if user.is_money == 0 and user.is_robot == 0:
