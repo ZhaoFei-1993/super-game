@@ -34,7 +34,7 @@ class SmsView(ListCreateAPIView):
         code_type = request.data.get('code_type')
 
         # 图形验证码，目前只限于HTML5 - 发送注册短信验证码
-        if code_type == 4:
+        if int(code_type) == 4:
             captcha_valid_code = User.objects.captcha_valid(request)
             if captcha_valid_code > 0:
                 return self.response({'code': captcha_valid_code})
