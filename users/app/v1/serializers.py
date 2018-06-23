@@ -167,7 +167,7 @@ class DailySerialize(serializers.ModelSerializer):
     @staticmethod
     def get_rewards(obj):  # 金额
         date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
+        end_date = "2018-06-23 00:00:00"
         if date_last > end_date:
             rewards = normalize_fraction(obj.rewards, 2)
         else:
@@ -190,7 +190,7 @@ class DailySerialize(serializers.ModelSerializer):
     @staticmethod
     def get_icon(obj):  # 图
         date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
+        end_date = "2018-06-23 00:00:00"
         if date_last >= end_date:
             icon = obj.coin.icon
         else:
@@ -200,7 +200,7 @@ class DailySerialize(serializers.ModelSerializer):
     @staticmethod
     def get_name(obj):  # 昵称
         date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
+        end_date = "2018-06-23 00:00:00"
         if date_last >= end_date:
             name = obj.coin.name
         else:

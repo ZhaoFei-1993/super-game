@@ -425,11 +425,12 @@ class ClubProfitAbroadSerialize(serializers.ModelSerializer):
     coin_name = serializers.SerializerMethodField()  # 俱乐部昵称
     coin_icon = serializers.SerializerMethodField()  # 货币图标
     created_at = serializers.SerializerMethodField()  # 货币图标
+    pass_by = serializers.SerializerMethodField()  # 货币图标
 
     class Meta:
         model = ClubProfitAbroad
         fields = ("id", "coin_name", "coin_icon", "robot_platform_sum", "platform_sum",
-                  "profit", "profit_total", "cash_back_sum", "created_at")
+                  "profit", "profit_total", "cash_back_sum", "created_at", "pass_by")
 
     @staticmethod
     def get_coin_name(obj):
@@ -443,5 +444,22 @@ class ClubProfitAbroadSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_created_at(obj):
-        created_at = obj.created_at.strftime("%Y-%m-%d")
+        created_at = obj.created_at.strftime("%m-%d")
         return created_at
+
+    @staticmethod
+    def get_pass_by(obj):
+        # created_at = obj.created_at
+        # date_last = (created_at - timedelta(days=1)).strftime('%Y-%m-%d')
+        # date_now = created_at.strftime('%Y-%m-%d')
+        # # 昨天
+        # start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
+        #                       0, 0)
+        # # 今天
+        # end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 0,
+        #                     0)
+        # old_profitabroad = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time), roomquiz_id=obj.roomquiz_id)
+        # pass_by = old_profitabroad
+        # print("old_profitabroad=======================", old_profitabroad)
+        pass_by = "-66.666666%"
+        return pass_by

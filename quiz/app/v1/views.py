@@ -432,31 +432,31 @@ class BetView(ListCreateAPIView):
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
-        if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
-            today = date.today()
-            is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_name="HAND", money=10000,
-                                                       created_at__gte=today).count()
-            if is_give <= 0:
-                usercoin.balance += Decimal(10000)
-                usercoin.save()
-                coin_bankruptcy = CoinDetail()
-                coin_bankruptcy.user = user
-                coin_bankruptcy.coin_name = 'HAND'
-                coin_bankruptcy.amount = '+' + str(10000)
-                coin_bankruptcy.rest = Decimal(usercoin.balance)
-                coin_bankruptcy.sources = 4
-                coin_bankruptcy.save()
-                bankruptcy_info = BankruptcyRecords()
-                bankruptcy_info.user = user
-                bankruptcy_info.coin_name = 'HAND'
-                bankruptcy_info.money = Decimal(10000)
-                bankruptcy_info.save()
-                user_message = UserMessage()
-                user_message.status = 0
-                user_message.user = user
-                user_message.message_id = 10
-                user_message.save()
+        # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        # if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
+        #     today = date.today()
+        #     is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_name="HAND", money=10000,
+        #                                                created_at__gte=today).count()
+        #     if is_give <= 0:
+        #         usercoin.balance += Decimal(10000)
+        #         usercoin.save()
+        #         coin_bankruptcy = CoinDetail()
+        #         coin_bankruptcy.user = user
+        #         coin_bankruptcy.coin_name = 'HAND'
+        #         coin_bankruptcy.amount = '+' + str(10000)
+        #         coin_bankruptcy.rest = Decimal(usercoin.balance)
+        #         coin_bankruptcy.sources = 4
+        #         coin_bankruptcy.save()
+        #         bankruptcy_info = BankruptcyRecords()
+        #         bankruptcy_info.user = user
+        #         bankruptcy_info.coin_name = 'HAND'
+        #         bankruptcy_info.money = Decimal(10000)
+        #         bankruptcy_info.save()
+        #         user_message = UserMessage()
+        #         user_message.status = 0
+        #         user_message.user = user
+        #         user_message.message_id = 10
+        #         user_message.save()
 
         try:  # 判断选项ID是否有效
             option_odds = OptionOdds.objects.get(pk=option)
@@ -674,7 +674,7 @@ class ProfitView(ListAPIView):
         start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
                               0, 0)
         # 今天
-        end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 12,
+        end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 0,
                             0)
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
@@ -688,34 +688,38 @@ class ProfitView(ListAPIView):
             list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by('-created_at')
         return list
 
+    # def list(self, request, *args, **kwargs):
+    #     results = super().list(request, *args, **kwargs)
+    #     items = results.data.get('results')
+    #     data = {}
+    #     for item in items:
+    #         date_key = item['coin_name']
+    #         if date_key not in data:
+    #             data[date_key] = []
+    #         if item['coin_name'] == date_key:
+    #             platform_sum.append(item["robot_platform_sum"] + item["platform_sum"])
+    #             profit_total.append(item["profit_total"])
+    #             profit_total.append(item["created_at"])
+    #     return self.response({'code': 0, 'data': data})
+
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = {}
+        name = []
         for item in items:
-            date_key = item['created_at']
+            if item['coin_name'] not in name:
+                name.append(item['coin_name'])
+            date_key = item['coin_name']
             if date_key not in data:
-                data[date_key] = []
-            if item['created_at'] == date_key:
-                if 'is_robot' in self.request.GET:
-                    # 真实
-                    data[date_key].append(
-                        {
-                            'coin_name': item["coin_name"],  # 昵称
-                            'coin_icon': item["coin_icon"],  # 图标
-                            'platform_sum': item["platform_sum"],  # 用户投注额
-                            'profit_total': item["profit"],  # 真实盈利
-                        }
-                    )
-                else:
-                    # +机器
-                    platform_sum = item["robot_platform_sum"] + item["platform_sum"]
-                    data[date_key].append(
-                        {
-                            'coin_name': item["coin_name"],  # 昵称
-                            'coin_icon': item["coin_icon"],  # 图标
-                            'platform_sum': platform_sum,  # 总投注额
-                            'profit_total': item["profit_total"],  # 总盈利
-                        }
-                    )
-        return self.response({'code': 0, 'data': data})
+                data[date_key] = {}
+                data[date_key]["sum"] = 0
+                data[date_key]["total"] = []
+                data[date_key]['created_at'] = []
+            if item['coin_name'] == date_key:
+                # data[date_key]["sum"].append(item["robot_platform_sum"] + item["platform_sum"])
+                profit_total = item["profit_total"]
+                data[date_key]["sum"] += normalize_fraction(profit_total, 2)
+                data[date_key]["total"].append(item["profit_total"])
+                data[date_key]['created_at'].append(item["created_at"])
+        return self.response({'code': 0, 'data': data, 'name': name})

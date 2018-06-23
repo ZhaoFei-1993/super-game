@@ -1062,7 +1062,7 @@ class DailySignListView(ListCreateAPIView):
                 fate = daily.number + 1
                 daily.number += 1
         date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
+        end_date = "2018-06-23 00:00:00"
         if date_last > end_date:
             try:
                 dailysettings = DailySettings.objects.get(days=fate)
