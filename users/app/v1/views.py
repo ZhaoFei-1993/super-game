@@ -1082,7 +1082,8 @@ class DailySignListView(ListCreateAPIView):
 
         content = {'code': 0,
                    'data': normalize_fraction(rewards, 2),
-                   'icon': dailysettings.coin.icon
+                   'icon': dailysettings.coin.icon,
+                   'name': dailysettings.coin.name
                    }
         return self.response(content)
 
