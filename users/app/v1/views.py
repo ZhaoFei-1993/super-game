@@ -1061,30 +1061,67 @@ class DailySignListView(ListCreateAPIView):
             else:
                 fate = daily.number + 1
                 daily.number += 1
-        try:
-            dailysettings = DailySettings.objects.get(days=fate)
-        except DailySettings.DoesNotExist:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        rewards = dailysettings.rewards
-        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
-        user_coin.balance += Decimal(rewards)
-        user_coin.save()
-        daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
-        daily.user_id = user_id
-        daily.save()
-        coin_detail = CoinDetail()
-        coin_detail.user = user
-        coin_detail.coin_name = dailysettings.coin.name
-        coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = Decimal(user.integral)
-        coin_detail.sources = 7
-        coin_detail.save()
+        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = "2018-06-24 00:00:00"
+        if date_last > end_date:
+            try:
+                dailysettings = DailySettings.objects.get(days=fate)
+            except DailySettings.DoesNotExist:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            rewards = dailysettings.rewards
+            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
+            user_coin.balance += Decimal(rewards)
+            user_coin.save()
+            daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
+            daily.user_id = user_id
+            daily.save()
+            coin_detail = CoinDetail()
+            coin_detail.user = user
+            coin_detail.coin_name = dailysettings.coin.name
+            coin_detail.amount = '+' + str(rewards)
+            coin_detail.rest = Decimal(user_coin.balance)
+            coin_detail.sources = 7
+            coin_detail.save()
 
-        content = {'code': 0,
-                   'data': normalize_fraction(rewards, 2),
-                   'icon': dailysettings.coin.icon,
-                   'name': dailysettings.coin.name
-                   }
+            content = {'code': 0,
+                       'data': normalize_fraction(rewards, 2),
+                       'icon': dailysettings.coin.icon,
+                       'name': dailysettings.coin.name
+                       }
+        else:
+            if fate == 1:
+                rewards = 6
+            if fate == 2:
+                rewards = 8
+            if fate == 3:
+                rewards = 10
+            if fate == 4:
+                rewards = 12
+            if fate == 5:
+                rewards = 14
+            if fate == 6:
+                rewards = 16
+            if fate == 7:
+                rewards = 18
+            user.integral += rewards
+            user.save()
+            daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
+            daily.user_id = user_id
+            daily.save()
+            coin_detail = CoinDetail()
+            coin_detail.user = user
+            coin_detail.coin_name = 'GSG'
+            coin_detail.amount = '+' + str(rewards)
+            coin_detail.rest = Decimal(user.integral)
+            coin_detail.sources = 7
+            coin_detail.save()
+
+            content = {'code': 0,
+                       'data': normalize_fraction(rewards, 2),
+                       'icon': '',
+                       'name': ''
+                       }
+
         return self.response(content)
 
 

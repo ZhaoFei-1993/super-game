@@ -165,19 +165,47 @@ class DailySerialize(serializers.ModelSerializer):
         fields = ("id", "days", "rewards", "icon", "name", "is_sign", "is_selected")
 
     @staticmethod
-    def get_rewards(obj):  # 电话号码
-        rewards = normalize_fraction(obj.rewards, 2)
+    def get_rewards(obj):  # 金额
+        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = "2018-06-24 00:00:00"
+        if date_last > end_date:
+            rewards = normalize_fraction(obj.rewards, 2)
+        else:
+            if obj.days == 1:
+                rewards = 6
+            if obj.days == 2:
+                rewards = 8
+            if obj.days == 3:
+                rewards = 10
+            if obj.days == 4:
+                rewards = 12
+            if obj.days == 5:
+                rewards = 14
+            if obj.days == 6:
+                rewards = 16
+            if obj.days == 7:
+                rewards = 18
         return rewards
 
     @staticmethod
-    def get_icon(obj):  # 电话号码
-        rewards = obj.coin.icon
-        return rewards
-
+    def get_icon(obj):  # 图
+        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = "2018-06-24 00:00:00"
+        if date_last >= end_date:
+            icon = obj.coin.icon
+        else:
+            icon = ''
+        return icon
 
     @staticmethod
-    def get_name(obj):  # 电话号码
-        name = obj.coin.name
+    def get_name(obj):  # 昵称
+        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = "2018-06-24 00:00:00"
+        if date_last >= end_date:
+            name = obj.coin.name
+        else:
+            name = ''
+
         return name
 
     def get_is_sign(self, obj):  # 是否已签到
@@ -341,7 +369,8 @@ class PresentationSerialize(serializers.ModelSerializer):
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user_id", "user_name", "telephone", "coin_id", "coin_name", "amount", "address", "address_name", "rest",
+            "id", "user_id", "user_name", "telephone", "coin_id", "coin_name", "amount", "address", "address_name",
+            "rest",
             "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
 
     @staticmethod
@@ -389,7 +418,6 @@ class PresentationSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_amount(obj):
         return normalize_fraction(obj.amount, 8)
-
 
     @staticmethod
     def get_rest(obj):
@@ -688,4 +716,3 @@ class CountriesSerialize(serializers.ModelSerializer):
     class Meta:
         model = Countries
         fields = ('id', 'code', 'area_code', 'name_en', 'name_zh_CN', 'name_zh_HK', 'language')
-
