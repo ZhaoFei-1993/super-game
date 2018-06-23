@@ -558,6 +558,16 @@ class InfoView(ListAPIView):
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
 
+        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+        for i in message:
+            message_id = i.id
+            user_message = UserMessage.objects.filter(message=message_id, user=user.id)
+            if len(user_message) == 0:
+                usermessage = UserMessage()
+                usermessage.user = user
+                usermessage.message = i
+                usermessage.save()
+
         coins = Coin.objects.filter(is_disabled=False)
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
