@@ -600,32 +600,32 @@ class InfoView(ListAPIView):
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
 
-        usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
-        record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
-        if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot == 0:
-            today = date.today()
-            is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
-                                                       created_at__gte=today).count()
-            if is_give <= 0:
-                usercoins.balance += Decimal(10000)
-                usercoins.save()
-                coin_bankruptcy = CoinDetail()
-                coin_bankruptcy.user = user
-                coin_bankruptcy.coin_name = 'HAND'
-                coin_bankruptcy.amount = '+' + str(10000)
-                coin_bankruptcy.rest = Decimal(usercoins.balance)
-                coin_bankruptcy.sources = 4
-                coin_bankruptcy.save()
-                bankruptcy_info = BankruptcyRecords()
-                bankruptcy_info.user = user
-                bankruptcy_info.coin_name = 'HAND'
-                bankruptcy_info.money = Decimal(10000)
-                bankruptcy_info.save()
-                user_message = UserMessage()
-                user_message.status = 0
-                user_message.user = user
-                user_message.message_id = 10  # 修改密码
-                user_message.save()
+        # usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        # record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
+        # if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot == 0:
+        #     today = date.today()
+        #     is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
+        #                                                created_at__gte=today).count()
+        #     if is_give <= 0:
+        #         usercoins.balance += Decimal(10000)
+        #         usercoins.save()
+        #         coin_bankruptcy = CoinDetail()
+        #         coin_bankruptcy.user = user
+        #         coin_bankruptcy.coin_name = 'HAND'
+        #         coin_bankruptcy.amount = '+' + str(10000)
+        #         coin_bankruptcy.rest = Decimal(usercoins.balance)
+        #         coin_bankruptcy.sources = 4
+        #         coin_bankruptcy.save()
+        #         bankruptcy_info = BankruptcyRecords()
+        #         bankruptcy_info.user = user
+        #         bankruptcy_info.coin_name = 'HAND'
+        #         bankruptcy_info.money = Decimal(10000)
+        #         bankruptcy_info.save()
+        #         user_message = UserMessage()
+        #         user_message.status = 0
+        #         user_message.user = user
+        #         user_message.message_id = 10  # 修改密码
+        #         user_message.save()
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         usercoin_avatar = usercoin.coin.icon
@@ -1016,6 +1016,8 @@ class DailyListView(ListAPIView):
             data.append({
                 "id": list["id"],
                 "days": list["days"],
+                "icon": list["icon"],
+                "name": list["name"],
                 "rewards": list["rewards"],
                 "is_sign": list["is_sign"],
                 "is_selected": list["is_selected"]
@@ -1064,21 +1066,23 @@ class DailySignListView(ListCreateAPIView):
         except DailySettings.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
-        user.integral += Decimal(rewards)
-        user.save()
+        user_coin= UserCoin.objects.get(coin=dailysettings.coin)
+        user_coin.balance += Decimal(rewards)
+        user_coin.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.user_id = user_id
         daily.save()
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin_name = "GSG"
+        coin_detail.coin_name = dailysettings.coin.name
         coin_detail.amount = '+' + str(rewards)
         coin_detail.rest = Decimal(user.integral)
         coin_detail.sources = 7
         coin_detail.save()
 
         content = {'code': 0,
-                   'data': normalize_fraction(rewards, 2)
+                   'data': normalize_fraction(rewards, 2),
+                   'icon': dailysettings.coin.icon
                    }
         return self.response(content)
 

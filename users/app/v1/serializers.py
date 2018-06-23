@@ -157,15 +157,28 @@ class DailySerialize(serializers.ModelSerializer):
     is_sign = serializers.SerializerMethodField()  # 消息类型
     is_selected = serializers.SerializerMethodField()  # 消息类型
     rewards = serializers.SerializerMethodField()  # 消息类型
+    icon = serializers.SerializerMethodField()  # 图片
+    name = serializers.SerializerMethodField()  # 昵称
 
     class Meta:
         model = DailySettings
-        fields = ("id", "days", "rewards", "is_sign", "is_selected")
+        fields = ("id", "days", "rewards", "icon", "name", "is_sign", "is_selected")
 
     @staticmethod
     def get_rewards(obj):  # 电话号码
         rewards = normalize_fraction(obj.rewards, 2)
         return rewards
+
+    @staticmethod
+    def get_icon(obj):  # 电话号码
+        rewards = obj.coin.icon
+        return rewards
+
+
+    @staticmethod
+    def get_name(obj):  # 电话号码
+        name = obj.coin.name
+        return name
 
     def get_is_sign(self, obj):  # 是否已签到
         user = self.context['request'].user.id
