@@ -1066,7 +1066,7 @@ class DailySignListView(ListCreateAPIView):
         except DailySettings.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
-        user_coin= UserCoin.objects.get(coin=dailysettings.coin)
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
         user_coin.balance += Decimal(rewards)
         user_coin.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
