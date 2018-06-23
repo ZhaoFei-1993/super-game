@@ -680,46 +680,30 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        if 'roomquiz_id' in self.request.GET:
-            roomquiz_id = self.request.GET.get('roomquiz_id')
-            list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time).order_by('-created_at'),
-                                                   roomquiz_id=roomquiz_id)
-        else:
-            list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by('-created_at')
+        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by('-created_at')
         return list
-
-    # def list(self, request, *args, **kwargs):
-    #     results = super().list(request, *args, **kwargs)
-    #     items = results.data.get('results')
-    #     data = {}
-    #     for item in items:
-    #         date_key = item['coin_name']
-    #         if date_key not in data:
-    #             data[date_key] = []
-    #         if item['coin_name'] == date_key:
-    #             platform_sum.append(item["robot_platform_sum"] + item["platform_sum"])
-    #             profit_total.append(item["profit_total"])
-    #             profit_total.append(item["created_at"])
-    #     return self.response({'code': 0, 'data': data})
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         data = {}
         name = []
+        icon = []
         for item in items:
             if item['coin_name'] not in name:
                 name.append(item['coin_name'])
+                icon.append(item['coin_icon'])
             date_key = item['coin_name']
             if date_key not in data:
                 data[date_key] = {}
                 data[date_key]["sum"] = 0
                 data[date_key]["total"] = []
                 data[date_key]['created_at'] = []
+                data[date_key]['Same as'] = 0
             if item['coin_name'] == date_key:
-                # data[date_key]["sum"].append(item["robot_platform_sum"] + item["platform_sum"])
                 profit_total = item["profit_total"]
                 data[date_key]["sum"] += normalize_fraction(profit_total, 2)
                 data[date_key]["total"].append(item["profit_total"])
                 data[date_key]['created_at'].append(item["created_at"])
-        return self.response({'code': 0, 'data': data, 'name': name})
+                data[date_key]['same_as'] = "-8.56%"
+        return self.response({'code': 0, 'data': data, 'name': name, 'icon': icon})

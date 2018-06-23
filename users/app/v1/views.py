@@ -558,6 +558,16 @@ class InfoView(ListAPIView):
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
 
+        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+        for i in message:
+            message_id = i.id
+            user_message = UserMessage.objects.filter(message=message_id, user=user.id)
+            if len(user_message) == 0:
+                usermessage = UserMessage()
+                usermessage.user = user
+                usermessage.message = i
+                usermessage.save()
+
         coins = Coin.objects.filter(is_disabled=False)
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
@@ -1422,6 +1432,14 @@ class UserPresentationView(CreateAPIView):
                     raise ParamErrorException(error_code.API_70104_USER_PRESENT_ADDRESS_EX)
                 else:
                     raise ParamErrorException(error_code.API_70105_USER_PRESENT_ADDRESS_EY)
+
+        if coin.name=='ETH' or coin.name=='HAND' or coin.name=='INT':
+            if not p_address.startswith('0'):
+                raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
+
+        if coin.name=='BTC' or coin.name=='USDT':
+            if not p_address.startswith('1') and  not p_address.startswith('3'):
+                raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
 
         if p_address_name == '':
             raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
