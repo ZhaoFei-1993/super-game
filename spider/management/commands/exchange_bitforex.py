@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
         gsg_value = GsgValue()
         gsg_value.coin = Coin.objects.get(name='BTC')
-        gsg_value.house = 'debi'
+        gsg_value.house = 'bitforex'
         gsg_value.value = float(value)
         gsg_value.value_rmb = value_rmb
         gsg_value.save()
