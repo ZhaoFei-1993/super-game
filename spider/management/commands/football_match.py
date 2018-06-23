@@ -11,7 +11,8 @@ from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
 
-base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
+base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
+asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
@@ -59,8 +60,8 @@ def get_data_info(url):
             else:
                 pass
 
-            host_team_url = 'http://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + host_team_id
-            guest_team_url = 'http://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + guest_team_id
+            host_team_url = 'https://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + host_team_id
+            guest_team_url = 'https://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + guest_team_id
             response_host_team = requests.get(host_team_url, headers=headers)
             response_guest_team = requests.get(guest_team_url, headers=headers)
             host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
