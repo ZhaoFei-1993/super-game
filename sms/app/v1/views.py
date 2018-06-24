@@ -39,12 +39,12 @@ class SmsView(ListCreateAPIView):
             if captcha_valid_code > 0:
                 return self.response({'code': captcha_valid_code})
 
-        # 判断同一IP地址是否重复注册
-        ip1, ip2, ip3, ip4 = ip_address.split('.')
-        startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
-        ip_users = User.objects.filter(ip_address__startswith=startswith).count()
-        if ip_users > 15:
-            raise ParamErrorException(error_code.API_20101_TELEPHONE_ERROR)
+        # # 判断同一IP地址是否重复注册
+        # ip1, ip2, ip3, ip4 = ip_address.split('.')
+        # startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
+        # ip_users = User.objects.filter(ip_address__startswith=startswith).count()
+        # if ip_users > 15:
+        #     raise ParamErrorException(error_code.API_20101_TELEPHONE_ERROR)
         if int(code_type) not in range(1, 7):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         if int(code_type) == 5:
