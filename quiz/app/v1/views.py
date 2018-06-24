@@ -699,7 +699,6 @@ class ProfitView(ListAPIView):
                 data[date_key]["sum"] = 0
                 data[date_key]["total"] = []
                 data[date_key]['created_at'] = []
-                data[date_key]['Same as'] = 0
             if item['coin_name'] == date_key:
                 profit_total = item["profit_total"]
                 data[date_key]["sum"] += normalize_fraction(profit_total, 2)
