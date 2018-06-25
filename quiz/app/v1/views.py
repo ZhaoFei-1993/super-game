@@ -714,10 +714,10 @@ class ProfitView(ListAPIView):
                 print("c=========================", c)
                 c += 1
                 data[date_key] = {}
-                data[date_key]["icon"] = ''
-                data[date_key]["sum"] = 0
-                data[date_key]["total"] = []
-                data[date_key]['created_at'] = []
+            data[date_key]["icon"] = ''
+            data[date_key]["sum"] = 0
+            data[date_key]["total"] = []
+            data[date_key]['created_at'] = []
             if item['coin_name'] == date_key:
                 print("d=========================", d)
                 d += 1
