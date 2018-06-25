@@ -689,21 +689,21 @@ class ProfitView(ListAPIView):
         items = results.data.get('results')
         data = {}
         name = []
-        icon = []
         for item in items:
             if item['coin_name'] not in name:
                 name.append(item['coin_name'])
-                icon.append(item['coin_icon'])
             date_key = item['coin_name']
             if date_key not in data:
                 data[date_key] = {}
+                data[date_key]["icon"] = ''
                 data[date_key]["sum"] = 0
                 data[date_key]["total"] = []
                 data[date_key]['created_at'] = []
             if item['coin_name'] == date_key:
                 profit_total = item["profit_total"]
+                data[date_key]["icon"] = item["coin_icon"]
                 data[date_key]["sum"] += normalize_fraction(profit_total, 2)
                 data[date_key]["total"].append(item["profit_total"])
                 data[date_key]['created_at'].append(item["created_at"])
                 data[date_key]['same_as'] = "-8.56%"
-        return self.response({'code': 0, 'data': data, 'name': name, 'icon': icon})
+        return self.response({'code': 0, 'data': data, 'name': name})
