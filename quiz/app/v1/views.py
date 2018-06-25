@@ -462,6 +462,8 @@ class BetView(ListCreateAPIView):
             option_odds = OptionOdds.objects.get(pk=option)
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+        if option_odds.quiz.id != quiz_id:
+            raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
         i = 0
         Decimal(i)
         # 判断赌注是否有效
