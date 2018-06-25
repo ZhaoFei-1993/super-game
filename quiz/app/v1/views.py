@@ -671,31 +671,20 @@ class ProfitView(ListAPIView):
 
     def get_queryset(self):
         date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        print("date_last========================================", date_last)
         date_now = datetime.now().strftime('%Y-%m-%d')
-        print("date_now========================================", date_now)
-        # 昨天
-        start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
-                              0, 0)
-        print("start_time========================================", start_time)
-
-        # 今天
-        end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 0,
-                            0)
-        print("end_time========================================", end_time)
+        start_time = str(date_last) + ' 00:00:00'
+        end_time = str(date_now) + ' 00:00:00'
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
         list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
             'created_at')
-        print('list============================', list)
         return list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        print('items================================', items)
         data = {}
         name = []
         a = 1
@@ -703,23 +692,19 @@ class ProfitView(ListAPIView):
         c = 1
         d = 1
         for item in items:
-            print("a=========================", a)
             a += 1
             if item['coin_name'] not in name:
-                print("b=========================", b)
                 b += 1
                 name.append(item['coin_name'])
             date_key = item['coin_name']
             if date_key not in data:
-                print("c=========================", c)
                 c += 1
                 data[date_key] = {}
-            data[date_key]["icon"] = ''
-            data[date_key]["sum"] = 0
-            data[date_key]["total"] = []
-            data[date_key]['created_at'] = []
+                data[date_key]["icon"] = ''
+                data[date_key]["sum"] = 0
+                data[date_key]["total"] = []
+                data[date_key]['created_at'] = []
             if item['coin_name'] == date_key:
-                print("d=========================", d)
                 d += 1
                 profit_total = item["profit_total"]
                 data[date_key]["icon"] = item["coin_icon"]
@@ -727,5 +712,4 @@ class ProfitView(ListAPIView):
                 data[date_key]["total"].append(item["profit_total"])
                 data[date_key]['created_at'].append(item["created_at"])
                 data[date_key]['same_as'] = "-8.56%"
-        print('data====================================', data)
         return self.response({'code': 0, 'data': data, 'name': name})
