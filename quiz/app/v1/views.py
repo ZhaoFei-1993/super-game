@@ -671,19 +671,25 @@ class ProfitView(ListAPIView):
 
     def get_queryset(self):
         date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        print("date_last========================================", date_last)
         date_now = datetime.now().strftime('%Y-%m-%d')
+        print("date_now========================================", date_now)
         # 昨天
         start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
                               0, 0)
+        print("start_time========================================", start_time)
+
         # 今天
         end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 0,
                             0)
+        print("end_time========================================", end_time)
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
         list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-            '-created_at')
+            'created_at')
+        print('list============================', list)
         return list
 
     def list(self, request, *args, **kwargs):
