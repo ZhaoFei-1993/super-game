@@ -710,7 +710,7 @@ class ProfitView(ListAPIView):
                 profit_total = item["profit_total"]
                 data[date_key]["icon"] = item["coin_icon"]
                 data[date_key]["sum"] += normalize_fraction(profit_total, 2)
-                data[date_key]["total"].append(item["profit_total"])
+                data[date_key]["total"].append(normalize_fraction(item["profit_total"], 18))
                 data[date_key]['created_at'].append(item["created_at"])
                 data[date_key]['same_as'] = "-8.56%"
         return self.response({'code': 0, 'data': data, 'name': name})
