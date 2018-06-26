@@ -2371,7 +2371,7 @@ class LuckDrawListView(ListAPIView):
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
-            is_gratis = 1
+            is_gratis = 0
             set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
             number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
