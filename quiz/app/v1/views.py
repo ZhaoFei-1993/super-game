@@ -671,9 +671,8 @@ class ProfitView(ListAPIView):
 
     def get_queryset(self):
         date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        date_now = datetime.now().strftime('%Y-%m-%d')
+        end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         start_time = str(date_last) + ' 00:00:00'
-        end_time = str(date_now) + ' 00:00:00'
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
@@ -695,7 +694,9 @@ class ProfitView(ListAPIView):
             a += 1
             if item['coin_name'] not in name:
                 b += 1
-                name.append(item['coin_name'])
+                type = self.request.GET.get('type')
+                if len(name) < int(type):
+                    name.append(item['coin_name'])
             date_key = item['coin_name']
             if date_key not in data:
                 c += 1
