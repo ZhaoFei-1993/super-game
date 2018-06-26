@@ -30,3 +30,6 @@ qrcode==6.0
 redis==2.10.6
 python-memcached==1.58
 pygame==1.9.3
+watchdog==0.8.3
+lxml==4.2.1
+bs4==0.0.1
