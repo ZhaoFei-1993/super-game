@@ -2426,12 +2426,12 @@ class ClickLuckDrawView(CreateAPIView):
             prize_weight.append(int(list[1]) * 1000)
             prize.append(list[0])
         choice = prize[weight_choice(prize_weight)]
-        if int(is_gratis) == 1 and int(number) == 6:
+        if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
         elif int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
-        elif int(is_gratis) != 1 and int(number) != 6:
+        elif int(is_gratis) != 1:
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_info.integral -= Decimal(prize_consume)
             user_info.save()
