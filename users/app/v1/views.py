@@ -2464,16 +2464,17 @@ class ClickLuckDrawView(CreateAPIView):
         if fictitious_prize_name == None:
             fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
                 'prize_name')
+            # fictitious_prize_name = {}
             fictitious_prize_name = []
             for a in fictitious_prize_name_list:
-                # fictitious_prize_name.append(a[0])
-                fictitious_prize_name.append(
-                    {
-                        'name': a[0]
-                    }
-                )
+                fictitious_prize_name.append(a[0])
+                # fictitious_prize_name.append(
+                #     {
+                #         'name': a[0]
+                #     }
+                # )
             print("fictitious_prize_name_list===============================", fictitious_prize_name_list)
-            set_cache(CACHE_FICTITIOUS_PRIZE_NAME, number, fictitious_prize_name)
+            set_cache(CACHE_FICTITIOUS_PRIZE_NAME, fictitious_prize_name)
             print("fictitious_prize_name=================================", fictitious_prize_name)
 
         if choice in fictitious_prize_name:
