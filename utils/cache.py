@@ -33,7 +33,7 @@ def get_cache(key):
 
 def decr_cache(key):
     """
-    通过键获取数值
+    通过键获取数值-1
     :param key:
     :return:
     """
@@ -42,7 +42,7 @@ def decr_cache(key):
 
 def incr_cache(key):
     """
-    通过键获取数值
+    通过键获取数值 +1
     :param key:
     :return:
     """

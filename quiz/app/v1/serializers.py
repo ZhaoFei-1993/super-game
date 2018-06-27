@@ -15,6 +15,7 @@ from utils.functions import normalize_fraction
 from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
 
 
+
 class QuizSerialize(serializers.ModelSerializer):
     """
     全民竞猜题目列表

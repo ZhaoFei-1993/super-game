@@ -1433,12 +1433,12 @@ class UserPresentationView(CreateAPIView):
                 else:
                     raise ParamErrorException(error_code.API_70105_USER_PRESENT_ADDRESS_EY)
 
-        if coin.name=='ETH' or coin.name=='HAND' or coin.name=='INT':
+        if coin.name == 'ETH' or coin.name == 'HAND' or coin.name == 'INT':
             if not p_address.startswith('0'):
                 raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
 
-        if coin.name=='BTC' or coin.name=='USDT':
-            if not p_address.startswith('1') and  not p_address.startswith('3'):
+        if coin.name == 'BTC' or coin.name == 'USDT':
+            if not p_address.startswith('1') and not p_address.startswith('3'):
                 raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
 
         if p_address_name == '':
@@ -2042,11 +2042,10 @@ class InvitationRegisterView(CreateAPIView):
                 'code': error_code.API_20402_INVALID_SMS_CODE
             })
         ip_address = request.META.get("REMOTE_ADDR", '')
-        print('ip_address = ', ip_address)
         # 判断同一IP地址是否重复注册
-        ip1, ip2, ip3, ip4 = ip_address.split('.')
-        startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
-        ip_users = User.objects.filter(ip_address__startswith=startswith).count()
+        # ip1, ip2, ip3, ip4 = ip_address.split('.')
+        # startswith = ip1 + '.' + ip2 + '.' + ip3 + '.'
+        # ip_users = User.objects.filter(ip_address__startswith=startswith).count()
         # if ip_users > 2:
         #     raise ParamErrorException(error_code.API_20404_SAME_IP_ERROR)
 
@@ -2372,11 +2371,11 @@ class LuckDrawListView(ListAPIView):
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
             number = 6
-            is_gratis = 1
+            is_gratis = 0
             set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
-            number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
-            is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
+        number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
+        is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
@@ -2427,12 +2426,9 @@ class ClickLuckDrawView(CreateAPIView):
             prize_weight.append(int(list[1]) * 1000)
             prize.append(list[0])
         choice = prize[weight_choice(prize_weight)]
-        if int(is_gratis) == 1 and int(number) == 6:
+        if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
-            decr_cache(NUMBER_OF_PRIZES_PER_DAY)
-        elif int(is_gratis) == 1:
-            decr_cache(NUMBER_OF_LOTTERY_AWARDS)
-        elif int(is_gratis) != 1 and int(number) != 6:
+        elif int(is_gratis) != 1:
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_info.integral -= Decimal(prize_consume)
             user_info.save()
@@ -2462,11 +2458,15 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.sources = 4
             coin_detail.save()
 
-        fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
-            'prize_name')
-        fictitious_prize_name = []
-        for a in fictitious_prize_name_list:
-            fictitious_prize_name.append(a[0])
+        CACHE_FICTITIOUS_PRIZE_NAME = "cache_fictitious_prize_name"
+        fictitious_prize_name = get_cache(CACHE_FICTITIOUS_PRIZE_NAME)
+        if fictitious_prize_name == None:
+            fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
+                'prize_name')
+            fictitious_prize_name = []
+            for a in fictitious_prize_name_list:
+                fictitious_prize_name.append(a[0])
+            set_cache(CACHE_FICTITIOUS_PRIZE_NAME, fictitious_prize_name)
 
         if choice in fictitious_prize_name:
             try:

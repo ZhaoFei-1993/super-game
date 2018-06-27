@@ -26,7 +26,7 @@ class UserManager(BaseUserManager):
         code = get_code(request)
 
         source = request.META.get('HTTP_X_API_KEY')
-        if source == 'HTML5' and settings.IS_USER_CAPTCHA_ENABLE:
+        if source in ['HTML5'] and settings.IS_USER_CAPTCHA_ENABLE:
             if 'key' not in request.data or 'challenge' not in request.data:
                 return code.API_20405_CAPTCHA_ERROR
             key = request.data.get('key')

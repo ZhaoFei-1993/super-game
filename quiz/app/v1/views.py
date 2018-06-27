@@ -462,6 +462,8 @@ class BetView(ListCreateAPIView):
             option_odds = OptionOdds.objects.get(pk=option)
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+        if int(option_odds.quiz.id) != int(quiz_id):
+            raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
         i = 0
         Decimal(i)
         # 判断赌注是否有效
@@ -668,19 +670,16 @@ class ProfitView(ListAPIView):
     serializer_class = ClubProfitAbroadSerialize
 
     def get_queryset(self):
-        date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        date_now = datetime.now().strftime('%Y-%m-%d')
-        # 昨天
-        start_time = datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]), int(date_last.split('-')[2]),
-                              0, 0)
-        # 今天
-        end_time = datetime(int(date_now.split('-')[0]), int(date_now.split('-')[1]), int(date_now.split('-')[2]), 0,
-                            0)
+        days = self.request.GET.get('days')
+        date_last = (datetime.now() - timedelta(days=int(days))).strftime('%Y-%m-%d')
+        end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        start_time = str(date_last) + ' 00:00:00'  # 开始时间
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by('-created_at')
+        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
+            'created_at')
         return list
 
     def list(self, request, *args, **kwargs):
@@ -688,22 +687,22 @@ class ProfitView(ListAPIView):
         items = results.data.get('results')
         data = {}
         name = []
-        icon = []
         for item in items:
             if item['coin_name'] not in name:
-                name.append(item['coin_name'])
-                icon.append(item['coin_icon'])
-            date_key = item['coin_name']
-            if date_key not in data:
-                data[date_key] = {}
-                data[date_key]["sum"] = 0
-                data[date_key]["total"] = []
-                data[date_key]['created_at'] = []
-                data[date_key]['Same as'] = 0
-            if item['coin_name'] == date_key:
+                type = self.request.GET.get('type')
+                if len(name) < int(type):
+                    name.append(item['coin_name'])
+                    date_key = item['coin_name']
+                    if date_key not in data:
+                        data[date_key] = {}
+                        data[date_key]["icon"] = ''
+                        data[date_key]["sum"] = 0
+                        data[date_key]["total"] = []
+                        data[date_key]['created_at'] = []
+            if item['coin_name'] in name:
                 profit_total = item["profit_total"]
-                data[date_key]["sum"] += normalize_fraction(profit_total, 2)
-                data[date_key]["total"].append(item["profit_total"])
-                data[date_key]['created_at'].append(item["created_at"])
-                data[date_key]['same_as'] = "-8.56%"
-        return self.response({'code': 0, 'data': data, 'name': name, 'icon': icon})
+                data[item['coin_name']]["icon"] = item["coin_icon"]
+                data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
+                data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
+                data[item['coin_name']]['created_at'].append(item["created_at"])
+        return self.response({'code': 0, 'data': data, 'name': name})
