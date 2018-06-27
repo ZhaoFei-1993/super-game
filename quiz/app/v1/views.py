@@ -687,30 +687,22 @@ class ProfitView(ListAPIView):
         items = results.data.get('results')
         data = {}
         name = []
-        a = 1
-        b = 1
-        c = 1
-        d = 1
         for item in items:
-            a += 1
             if item['coin_name'] not in name:
-                b += 1
                 type = self.request.GET.get('type')
                 if len(name) < int(type):
                     name.append(item['coin_name'])
-            date_key = item['coin_name']
-            if date_key not in data:
-                c += 1
-                data[date_key] = {}
-                data[date_key]["icon"] = ''
-                data[date_key]["sum"] = 0
-                data[date_key]["total"] = []
-                data[date_key]['created_at'] = []
-            if item['coin_name'] == date_key:
-                d += 1
-                profit_total = item["profit_total"]
-                data[date_key]["icon"] = item["coin_icon"]
-                data[date_key]["sum"] += normalize_fraction(profit_total, 2)
-                data[date_key]["total"].append(normalize_fraction(item["profit_total"], 18))
-                data[date_key]['created_at'].append(item["created_at"])
+                    date_key = item['coin_name']
+                    if date_key not in data:
+                        data[date_key] = {}
+                        data[date_key]["icon"] = ''
+                        data[date_key]["sum"] = 0
+                        data[date_key]["total"] = []
+                        data[date_key]['created_at'] = []
+                    if item['coin_name'] == date_key:
+                        profit_total = item["profit_total"]
+                        data[date_key]["icon"] = item["coin_icon"]
+                        data[date_key]["sum"] += normalize_fraction(profit_total, 2)
+                        data[date_key]["total"].append(normalize_fraction(item["profit_total"], 18))
+                        data[date_key]['created_at'].append(item["created_at"])
         return self.response({'code': 0, 'data': data, 'name': name})
