@@ -699,10 +699,10 @@ class ProfitView(ListAPIView):
                         data[date_key]["sum"] = 0
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
-            if item['coin_name'] == date_key:
+            if item['coin_name'] in name:
                 profit_total = item["profit_total"]
-                data[date_key]["icon"] = item["coin_icon"]
-                data[date_key]["sum"] += normalize_fraction(profit_total, 2)
-                data[date_key]["total"].append(normalize_fraction(item["profit_total"], 18))
-                data[date_key]['created_at'].append(item["created_at"])
+                data[item['coin_name']]["icon"] = item["coin_icon"]
+                data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
+                data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
+                data[item['coin_name']]['created_at'].append(item["created_at"])
         return self.response({'code': 0, 'data': data, 'name': name})
