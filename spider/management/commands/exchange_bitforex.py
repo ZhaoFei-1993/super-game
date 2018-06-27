@@ -12,21 +12,21 @@ headers = {
 
 
 class Command(BaseCommand):
-    help = "debi"
+    help = "bitforex"
 
     def handle(self, *args, **options):
         response = requests.get(url, headers=headers)
         json_dt = response.json()
         for dt in json_dt['data']:
-            if dt['busitype'] == 'coin-usdt-btc':
-                value = dt['last']
-                value_rmb = float(value) * float(CoinPrice.objects.get(coin_name='USDT').price)
+            if dt['busitype'] == 'coin-usdt-etc':
+                value_etc = dt['last']
+            elif dt['busitype'] == 'coin-usdt-eth':
+                value_eth = dt['last']
 
         gsg_value = GsgValue()
-        gsg_value.coin = Coin.objects.get(name='BTC')
+        gsg_value.coin = Coin.objects.get(name='ETC')
         gsg_value.house = 'bitforex'
-        gsg_value.value = float(value)
-        gsg_value.value_rmb = value_rmb
+        gsg_value.value = float(value_etc / value_eth)
         gsg_value.save()
 
-        print('BTC/USDT价格为: ' + str(value) + ' 对应rmb价格为: ' + str(value_rmb))
+        print('ETC/ETH价格为: ' + str(value_etc / value_eth))
