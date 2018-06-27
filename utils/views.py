@@ -15,13 +15,17 @@ from captcha.helpers import captcha_image_url
 from django.conf import settings
 
 from wc_auth.models import Permission
-from .models import Image
+from .models import Image, CodeModel
 from .forms import ImageForm
 from api.settings import MEDIA_ROOT
 from datetime import datetime
 from base.app import CreateAPIView
 from users.models import User
 import random
+from .functions import ImageChar, string_to_list
+from . import SAVE_PATH
+import time
+import hashlib
 
 
 class ObtainAuthToken(APIView):
@@ -156,23 +160,81 @@ def upload_file(request):
 def user_captcha_generate(request):
     """
     生成用户注册登录验证码
-    :param request:
-    :return:
+    :param: telphone,style(ch or en)
+    :return:key,url,hanz(中文汉字列表)
     """
-    generator = random.choice(settings.CAPTCHA_GENERATOR)
-    response = {
-        "key": CaptchaStore.generate_key(generator),
-    }
-    response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
-    return Response(response)
+    # generator = random.choice(settings.CAPTCHA_GENERATOR)
+    # response = {
+    #     "key": CaptchaStore.generate_key(generator),
+    # }
+    # response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
+    # return Response(response)
+    style = request.GET.get('style')
+    if style not in ['en', 'ch']:
+        return JsonResponse({'code': 500, 'msg': '无效参数！'})
+    ic = ImageChar()
+    char_list, position = ic.randCH_or_EN(4, style)
+    prev = str(random.random()).replace('.','') + '_' + str(time.time()).replace('.', '')
+
+    img_name = prev + '.jpg'  # 生成图片名
+    url = '/utils/img/' + img_name
+
+    hash = hashlib.sha1()  # hash加密生成随机的key
+    hash.update((prev + str(random.random())).encode('utf-8'))
+    key = hash.hexdigest()
+
+    # 存入数据库
+    try:
+        co = CodeModel()
+        co.name = url
+        co.key = key
+        co.position = str(position)
+        co.save()
+    except:
+        return JsonResponse({'code': 501, 'message': '服务器错误！'})
+
+    try:
+        ic.save(os.path.join(SAVE_PATH, img_name))
+    except:
+        return JsonResponse({'code': 502, 'message': '服务器错误！'})
+
+    return JsonResponse({'code': 200, 'message': "请求成功！", 'data': {'key': key, 'url': url, 'hanz': char_list}})
 
 
 class UserCaptchaValid(CreateAPIView):
     """
     验证user_captcha_valid
+    :param: key,user_position,
+    :return:code,msg
     """
     authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
-        captcha_valid_code = User.objects.captcha_valid(request)
-        return self.response({'code': captcha_valid_code})
+        # captcha_valid_code = User.objects.captcha_valid(request)
+        # return self.response({'code': captcha_valid_code})
+        key = request.POST.get('key')
+        user_position = request.POST.get('user_position')
+        if not (key and user_position) or not string_to_list(user_position):
+            return self.response({'code': 405})
+        user_position = string_to_list(user_position)
+
+        try:
+            codeinfo = CodeModel.objects.get(key=key)
+        except:
+            return self.response({'code': 405})
+
+        position = eval(codeinfo.position)
+
+        status = 1  # 记录判断结果
+        res = map(lambda x, y: y[0][0] <= x[0] <= y[0][1] and y[1][0] <= x[1] <= y[1][1], user_position,
+                  position)  # 判断用户点击坐标
+
+        for i in res:
+            if not i:
+                status = 0  # 判断失败，存在一个点不在正确坐标范围内就失败
+
+        if status == 1:# 判断成功
+            return self.response({'code': 0})
+        else: # 判断失败，数据库增加判断错误次数，若次数已达到三次，删除图片
+            return self.response({'code': })
+
