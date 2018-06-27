@@ -26,6 +26,7 @@ class Command(BaseCommand):
                 for quiz in quizs:
                     quiz_list.append(quiz.id)
                 print(quiz_list)
+
                 for club in Club.objects.filter(~Q(room_title='HAND俱乐部')):
                     if ClubProfitAbroad.objects.filter(roomquiz_id=club.id,
                                                        created_at__range=(start_with, end_with)).exists():
