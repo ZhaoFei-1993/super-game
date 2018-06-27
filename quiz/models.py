@@ -389,8 +389,7 @@ class ClubProfitAbroad(models.Model):
 class GsgValue(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     house = models.CharField(verbose_name="交易所名称", max_length=8, default="")
-    value = models.DecimalField(verbose_name="价格(USDT)", max_digits=18, decimal_places=8, default=0.00000000)
-    value_rmb = models.DecimalField(verbose_name="价格(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
+    value = models.DecimalField(verbose_name="价格(ETH)", max_digits=18, decimal_places=8, default=0.00000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
