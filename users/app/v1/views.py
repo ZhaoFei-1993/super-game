@@ -1433,12 +1433,12 @@ class UserPresentationView(CreateAPIView):
                 else:
                     raise ParamErrorException(error_code.API_70105_USER_PRESENT_ADDRESS_EY)
 
-        if coin.name=='ETH' or coin.name=='HAND' or coin.name=='INT':
+        if coin.name == 'ETH' or coin.name == 'HAND' or coin.name == 'INT':
             if not p_address.startswith('0'):
                 raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
 
-        if coin.name=='BTC' or coin.name=='USDT':
-            if not p_address.startswith('1') and  not p_address.startswith('3'):
+        if coin.name == 'BTC' or coin.name == 'USDT':
+            if not p_address.startswith('1') and not p_address.startswith('3'):
                 raise ParamErrorException(error_code.API_70109_USER_PRESENT_ADDRESS_ERROR)
 
         if p_address_name == '':
@@ -2458,13 +2458,15 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.sources = 4
             coin_detail.save()
 
-
-
-        fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
-            'prize_name')
-        fictitious_prize_name = []
-        for a in fictitious_prize_name_list:
-            fictitious_prize_name.append(a[0])
+        CACHE_FICTITIOUS_PRIZE_NAME = "cache_fictitious_prize_name"
+        fictitious_prize_name = get_cache(CACHE_FICTITIOUS_PRIZE_NAME)
+        if fictitious_prize_name == None:
+            fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
+                'prize_name')
+            fictitious_prize_name = []
+            for a in fictitious_prize_name_list:
+                fictitious_prize_name.append(a[0])
+            set_cache(CACHE_FICTITIOUS_PRIZE_NAME, number, fictitious_prize_name)
 
         if choice in fictitious_prize_name:
             try:
