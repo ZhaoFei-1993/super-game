@@ -2472,6 +2472,7 @@ class ClickLuckDrawView(CreateAPIView):
                         'name': a[0]
                     }
                 )
+            print("fictitious_prize_name_list===============================", fictitious_prize_name_list)
             set_cache(CACHE_FICTITIOUS_PRIZE_NAME, number, fictitious_prize_name)
             print("fictitious_prize_name=================================", fictitious_prize_name)
 
