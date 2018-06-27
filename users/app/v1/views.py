@@ -2,7 +2,7 @@
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, AssetSerialize, \
-    CountriesSerialize
+    CountriesSerialize, UserRechargeSerizlize
 import qrcode
 from django.core.cache import caches
 from quiz.models import Quiz, Record
@@ -1490,11 +1490,7 @@ class PresentationListView(ListAPIView):
     def get_queryset(self):
         userid = self.request.user.id
         c_id = int(self.kwargs['c_id'])
-        try:
-            coin = Coin.objects.get(id=c_id)
-        except Exception:
-            raise
-        query = UserPresentation.objects.filter(user_id=userid, status=1, coin_id=coin.id)
+        query = UserPresentation.objects.filter(user_id=userid, coin_id=c_id)
         return query
 
     def list(self, request, *args, **kwargs):
@@ -1502,20 +1498,127 @@ class PresentationListView(ListAPIView):
         items = results.data.get('results')
         data = []
         for x in items:
-            coin = Coin.objects.get(pk=x['coin_id'])
             data.append(
                 {
                     'id': x['id'],
                     'coin_id': x['coin_id'],
-                    'amount': normalize_fraction(x['amount'], coin.coin_accuracy),
-                    'rest': normalize_fraction(x['rest'], coin.coin_accuracy),
+                    'coin_icon':x['coin_icon'],
+                    'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
-                    'created_at': x['created_at'].split(' ')[0].replace('-', '/')
+                    'status':x['status'],
+                    'created_at': x['created_at']
                 }
             )
         return self.response({'code': 0, 'data': data})
 
 
+class PresentationDetailView(RetrieveAPIView):
+    """
+    提现记录表明细
+    """
+    permission_classes = (LoginRequired,)
+
+    def retrieve(self, request, *args, **kwargs):
+        language = request.GET.get('language')
+        rc_id = int(kwargs['p_id'])
+        try:
+            record = UserPresentation.objects.get(id=rc_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            service = CoinOutServiceCharge.objects.get(coin_out_id=record.coin_id)
+        except Exception:
+            raise
+        sers = PresentationSerialize(record).data
+        data={
+                'id': sers['id'],
+                'coin_icon':sers['coin_icon'],
+                'amount': normalize_fraction(sers['amount'], 8),
+                'service_value':normalize_fraction(service.value,5),
+                'service_coin_name':service.coin_payment.name,
+                'address_name':sers['address_name'],
+                'address': sers['address'],
+                'created_at': sers['created_at']
+            }
+        status=int(sers['status'])
+        data['status_code']=status
+        if status==0:
+            if language=='en':
+                data['status'] = 'Processing'
+            else:
+                data['status']='提现申请中'
+            data['text']=''
+        elif  status==1:
+            if language=='en':
+                data['status'] = 'Success'
+            else:
+                data['status']='提现成功'
+            data['text']=sers['txid']
+        else:
+            if language=='en':
+                data['status'] = 'Fail'
+            else:
+                data['status'] = '提现失败'
+            data['text'] = sers['feedback']
+        return self.response({'code': 0, 'data': data})
+
+class RechargeListView(ListAPIView):
+    """
+    充值记录表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = UserRechargeSerizlize
+
+    def get_queryset(self):
+        user = self.request.user.id
+        coin_id = self.kwargs['coin_id']
+        recharges = UserRecharge.objects.filter(user_id=user, coin_id=coin_id, is_deleted=0)
+        return recharges
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for x in items:
+            data.append(
+                {
+                    'id': x['id'],
+                    'coin_id': x['coin_id'],
+                    'coin_icon':x['coin_icon'],
+                    'amount': normalize_fraction(x['amount'], 8),
+                    'address': x['address'],
+                    'status':x['status'],
+                    'trade_at': x['trade_at']
+                }
+            )
+        return self.response({'code': 0, 'data': data})
+
+
+
+class RechargeDetailView(RetrieveAPIView):
+    """
+    充值记录明细
+    """
+    permission_classes = (LoginRequired,)
+
+    def retrieve(self, request, *args, **kwargs):
+        r_id = int(kwargs['r_id'])
+        try:
+            record = UserRecharge.objects.get(id=r_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        sers = UserRechargeSerizlize(record).data
+        data ={
+                'id': sers['id'],
+                'coin_id': sers['coin_id'],
+                'coin_icon':sers['coin_icon'],
+                'amount': normalize_fraction(sers['amount'], 8),
+                'address_name': sers['address'],
+                'address': sers['address'],
+                'status':sers['status'],
+                'trade_at': sers['trade_at']
+            }
+        return self.response({'code': 0, 'data': data})
 # class ReviewListView(ListAPIView):
 #     """
 #     提现审核情况

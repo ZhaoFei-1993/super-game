@@ -47,6 +47,14 @@ urlpatterns = [
     path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),
     # 提现记录表
     path('asset/list_pre/<int:c_id>/', views.PresentationListView.as_view(), name='app-v1-user-asset-list_pre'),
+    # 提现记录表明细
+    path('asset/list_pre/<int:coin_id>/<int:p_id>/', views.PresentationDetailView.as_view(),
+         name='app-v1-user-asset-list_pre-detail'),
+    # 充值记录表
+    path('asset/list_recharge/<int:coin_id>/', views.RechargeListView.as_view(), name='app-v1-user-asset-list_recharge'),
+    # 充值记录表明细
+    path('asset/list_recharge/<int:coin_id>/<int:r_id>/', views.RechargeDetailView.as_view(),
+         name='app-v1-user-asset-list_recharge-detail'),
     # 用户设置其他(index支持1-5)
     path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
     # 用户充值

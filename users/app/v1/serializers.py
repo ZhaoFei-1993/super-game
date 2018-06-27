@@ -358,6 +358,7 @@ class PresentationSerialize(serializers.ModelSerializer):
     """
     created_at = serializers.SerializerMethodField()
     coin_name = serializers.CharField(source="coin.name")
+    coin_icon = serializers.CharField(source = "coin.icon")
     user_name = serializers.CharField(source="user.username")
     telephone = serializers.CharField(source="user.telephone")
     is_block = serializers.BooleanField(source="user.is_block")
@@ -369,15 +370,14 @@ class PresentationSerialize(serializers.ModelSerializer):
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user_id", "user_name", "telephone", "coin_id", "coin_name", "amount", "address", "address_name",
-            "rest",
-            "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
+            "id", "user_id", "user_name", "telephone", "coin_id","coin_icon", "coin_name", "amount", "address", "address_name",
+            "rest","created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
 
     @staticmethod
     def get_created_at(obj):
         # created_time = timezone.localtime(obj.created_at)
         created_time = obj.created_at
-        created_at = created_time.strftime("%Y-%m-%d %H:%M:%S")
+        created_at = created_time.strftime("%Y-%m-%d %H:%M")
         return created_at
 
     # @staticmethod
@@ -716,3 +716,26 @@ class CountriesSerialize(serializers.ModelSerializer):
     class Meta:
         model = Countries
         fields = ('id', 'code', 'area_code', 'name_en', 'name_zh_CN', 'name_zh_HK', 'language')
+
+
+class UserRechargeSerizlize(serializers.ModelSerializer):
+    """
+    充值序列化
+    """
+    coin_icon = serializers.CharField(source='coin.icon')
+    status = serializers.SerializerMethodField()
+    trade_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserRecharge
+        fields = ('id','coin_id','coin_icon','address', 'status','amount','trade_at')
+
+    @staticmethod
+    def get_status(obj):
+        status = '充值成功' if obj.confirmations > 0 else '待确认'
+        return status
+
+    @staticmethod
+    def get_trade_at(obj):
+        trade_time= obj.trade_at.strftime('%Y-%m-%d %H:%M') if obj.trade_at else ''
+        return trade_time
