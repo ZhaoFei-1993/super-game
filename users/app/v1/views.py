@@ -2374,8 +2374,8 @@ class LuckDrawListView(ListAPIView):
             is_gratis = 0
             set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
-            number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
-            is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
+        number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
+        is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         user = request.user
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
@@ -2428,9 +2428,6 @@ class ClickLuckDrawView(CreateAPIView):
         choice = prize[weight_choice(prize_weight)]
         if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
-            decr_cache(NUMBER_OF_PRIZES_PER_DAY)
-        elif int(is_gratis) == 1:
-            decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_info.integral -= Decimal(prize_consume)
@@ -2460,6 +2457,8 @@ class ClickLuckDrawView(CreateAPIView):
             coin_detail.rest = Decimal(user_info.integral)
             coin_detail.sources = 4
             coin_detail.save()
+
+
 
         fictitious_prize_name_list = IntegralPrize.objects.filter(is_delete=0, is_fictitious=1).values_list(
             'prize_name')
