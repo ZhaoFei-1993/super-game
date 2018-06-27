@@ -670,9 +670,10 @@ class ProfitView(ListAPIView):
     serializer_class = ClubProfitAbroadSerialize
 
     def get_queryset(self):
-        date_last = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        days = self.request.GET.get('days')
+        date_last = (datetime.now() - timedelta(days=int(days))).strftime('%Y-%m-%d')
         end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        start_time = str(date_last) + ' 00:00:00'
+        start_time = str(date_last) + ' 00:00:00'  # 开始时间
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
@@ -712,5 +713,4 @@ class ProfitView(ListAPIView):
                 data[date_key]["sum"] += normalize_fraction(profit_total, 2)
                 data[date_key]["total"].append(normalize_fraction(item["profit_total"], 18))
                 data[date_key]['created_at'].append(item["created_at"])
-                data[date_key]['same_as'] = "-8.56%"
         return self.response({'code': 0, 'data': data, 'name': name})
