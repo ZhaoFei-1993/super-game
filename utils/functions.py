@@ -462,8 +462,8 @@ class ImageChar(object):
         char_list = []  # 汉字列表,存储汉字保证不重复
         res_co_list = [] # 存储返回结果的4个坐标
         res_char_list = [] # 存储返回结果的4个汉字
-        for i in range(1, num + 1):
-            if style == 'ch':  # 中文
+        for i in range(1, num+1):
+            if style == 'cn':  # 中文
                 while True:
                     try:
                         char = RandomChar().GB2312()  # 随机生成中文字符串
@@ -485,13 +485,13 @@ class ImageChar(object):
                         break
 
             while True:
-                tag = 0  # 标记坐标是否验证成功
                 x = random.randint(0, 80)  # 生成左顶点的横坐标
                 y = random.randint(0, 80)  # 生成左顶点的纵坐标
                 x_right = x + self.fontSize  # 计算横坐标最右值
                 y_foot = y + self.fontSize  # 计算纵坐标的最右值
                 if not co_list:  # 列表为空直接存入坐标范围
                     co_list.append([[x, x_right], [y, y_foot]])
+                    res_co_list.append([[x, x_right], [y, y_foot]])
                     break
                 else:  # 若坐标不为空则判断生成的中文是否有重叠，重叠则继续循环
                     for co in co_list:
