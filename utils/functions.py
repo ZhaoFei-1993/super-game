@@ -457,12 +457,12 @@ class ImageChar(object):
         for i in range(0, num):
             draw.line([self.randPoint(), self.randPoint()], self.lineRGB())
 
-    def randCH_or_EN(self, num=6, style='ch', select=4):  # 总共生成7个字，选取4个字
+    def randCH_or_EN(self, num=6, style='cn', select=4):  # 总共生成6个字，选取4个字
         co_list = []  # 坐标列表，存储已经生成的坐标保证不重叠
         char_list = []  # 汉字列表,存储汉字保证不重复
-        res_co_list = [] # 存储返回结果的4个坐标
-        res_char_list = [] # 存储返回结果的4个汉字
-        for i in range(1, num+1):
+        res_co_list = []  # 存储返回结果的4个坐标
+        res_char_list = []  # 存储返回结果的4个汉字
+        for i in range(1, num + 1):
             if style == 'cn':  # 中文
                 while True:
                     try:
@@ -485,8 +485,8 @@ class ImageChar(object):
                         break
 
             while True:
-                x = random.randint(0, 80)  # 生成左顶点的横坐标
-                y = random.randint(0, 80)  # 生成左顶点的纵坐标
+                x = random.randint(0, self.size[0] - self.fontSize)  # 生成左顶点的横坐标
+                y = random.randint(0, self.size[1] - self.fontSize)  # 生成左顶点的纵坐标
                 x_right = x + self.fontSize  # 计算横坐标最右值
                 y_foot = y + self.fontSize  # 计算纵坐标的最右值
                 if not co_list:  # 列表为空直接存入坐标范围
@@ -505,7 +505,7 @@ class ImageChar(object):
                         break
 
             self.drawText((x, y), char, self.randRGB())
-            self.rotate()
+            # self.rotate()
         self.randLine(20)
         return res_char_list, res_co_list
 
