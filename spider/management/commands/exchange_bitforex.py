@@ -27,6 +27,6 @@ class Command(BaseCommand):
         gsg_value.coin = Coin.objects.get(name='ETC')
         gsg_value.house = 'bitforex'
         gsg_value.value = float(value_etc / value_eth)
-        gsg_value.save()
+        # gsg_value.save()
 
         print('ETC/ETH价格为: ' + str(value_etc / value_eth))
