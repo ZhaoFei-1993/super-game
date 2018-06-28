@@ -26,6 +26,7 @@ from .functions import ImageChar, string_to_list
 from . import SAVE_PATH
 import time
 import hashlib
+from base.auth import CCSignatureAuthentication
 
 
 class ObtainAuthToken(APIView):
@@ -156,7 +157,8 @@ def upload_file(request):
         return JsonResponse({'m_type': type}, status=201)
 
 
-@decorators.api_view()
+@decorators.api_view(['GET'])
+@decorators.authentication_classes((CCSignatureAuthentication,))
 def user_captcha_generate(request):
     """
     生成用户注册登录验证码
@@ -169,8 +171,9 @@ def user_captcha_generate(request):
     # }
     # response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
     # return Response(response)
-    style = request.GET.get('language')
-    if style not in ['en', 'ch']:
+
+    style = request.language
+    if style not in ['en', 'cn']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})
     ic = ImageChar()
     char_list, position = ic.randCH_or_EN(style=style)
@@ -207,7 +210,7 @@ class UserCaptchaValid(CreateAPIView):
     :param: key,user_position,
     :return:code,msg
     """
-    authentication_classes = ()
+    # authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
         # captcha_valid_code = User.objects.captcha_valid(request)
