@@ -459,15 +459,18 @@ class ImageChar(object):
 
     def randCH_or_EN(self, num=6, style='ch', select=4):  # 总共生成7个字，选取4个字
         co_list = []  # 坐标列表，存储已经生成的坐标保证不重叠
-        char_list = []  # 汉字列表
+        char_list = []  # 汉字列表,存储汉字保证不重复
+        res_co_list = [] # 存储返回结果的4个坐标
+        res_char_list = [] # 存储返回结果的4个汉字
         for i in range(1, num + 1):
             if style == 'ch':  # 中文
                 while True:
                     try:
                         char = RandomChar().GB2312()  # 随机生成中文字符串
                         if char not in char_list:
+                            char_list.append(char)
                             if i <= select:
-                                char_list.append(char)
+                                res_char_list.append(char)
                             break
                     except Exception as e:
                         pass
@@ -476,8 +479,9 @@ class ImageChar(object):
                 while True:
                     char = random.sample(en_list, 1)[0]  # 随机生成中文字符串
                     if char not in char_list:
+                        char_list.append(char)
                         if i <= select:
-                            char_list.append(char)
+                            res_char_list.append(char)
                         break
 
             while True:
@@ -495,14 +499,15 @@ class ImageChar(object):
                                                                                         y_foot]):  # 若横纵坐标存在没有交集，则成功生成汉字,跳出两层循环，否则继续循环直到找到合适的坐标
                             break
                     else:
+                        co_list.append([[x, x_right], [y, y_foot]])
                         if i <= select:
-                            co_list.append([[x, x_right], [y, y_foot]])
+                            res_co_list.append([[x, x_right], [y, y_foot]])
                         break
 
             self.drawText((x, y), char, self.randRGB())
             self.rotate()
         self.randLine(20)
-        return char_list, co_list
+        return res_char_list, res_co_list
 
     def judge_co(self, list1, list2):
         """判断文字区间是否有重叠"""
