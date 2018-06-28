@@ -11,12 +11,14 @@ import django.utils.timezone as timezone
 from captcha.models import CaptchaStore
 from django.conf import settings
 from base.error_code import get_code
+from utils.models import CodeModel
 
 
 class UserManager(BaseUserManager):
     """
     用户操作
     """
+
     @staticmethod
     def captcha_valid(request):
         """
@@ -27,17 +29,22 @@ class UserManager(BaseUserManager):
 
         source = request.META.get('HTTP_X_API_KEY')
         if source in ['HTML5'] and settings.IS_USER_CAPTCHA_ENABLE:
-            if 'key' not in request.data or 'challenge' not in request.data:
+            # if 'key' not in request.data or 'challenge' not in request.data:
+            #     return code.API_20405_CAPTCHA_ERROR
+            # key = request.data.get('key')
+            # challenge = request.data.get("challenge")
+            # challenge = challenge.lower()
+            #
+            # is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key, expiration__gt=datetime.now()).count()
+            if 'key' not in request.data:
                 return code.API_20405_CAPTCHA_ERROR
             key = request.data.get('key')
-            challenge = request.data.get("challenge")
-            challenge = challenge.lower()
-
-            is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key, expiration__gt=datetime.now()).count()
+            is_captcha_valid = CodeModel.objects.filter(key=key,
+                                                        status=1).count()
             if is_captcha_valid == 0:
                 return code.API_20405_CAPTCHA_ERROR
 
-            # captcha.delete()
+                # captcha.delete()
         return 0
 
 

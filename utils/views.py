@@ -169,7 +169,7 @@ def user_captcha_generate(request):
     # }
     # response["url"] = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + captcha_image_url(response["key"])
     # return Response(response)
-    style = request.GET.get('style')
+    style = request.GET.get('language')
     if style not in ['en', 'ch']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})
     ic = ImageChar()
@@ -227,23 +227,21 @@ class UserCaptchaValid(CreateAPIView):
         count = codeinfo.count
         name = codeinfo.name
 
-        if count == 0: # 第一次进行验证便删除存储的图片，验证码一次性存储
-            os.remove(os.path.join(SAVE_PATH,name))
+        if count == 0:  # 第一次进行验证便删除存储的图片，验证码一次性存储
+            os.remove(os.path.join(SAVE_PATH, name))
 
         if count == 3:  # 验证超过三次，无法继续验证
             return JsonResponse({'code': 500, 'message': '已验证失败三次，请刷新验证码！'})
 
-        status = 1  # 记录判断结果
         res = map(lambda x, y: y[0][0] <= x[0] <= y[0][1] and y[1][0] <= x[1] <= y[1][1], user_position,
                   position)  # 判断用户点击坐标
 
         for i in res:
             if not i:
-                status = 0  # 判断失败，存在一个点不在正确坐标范围内就失败
                 codeinfo.count += 1
                 codeinfo.save()
+                return JsonResponse({'code': 500, 'message': '验证失败，请重新验证！'})
 
-        if status == 1:  # 验证成功
-            return JsonResponse({'code': 200, 'message': '验证成功！'})
-        else:  # 验证失败
-            return JsonResponse({'code': 500, 'message': '验证失败，请重新验证！'})
+        codeinfo.status = 1  # 修改状态为已验证
+        codeinfo.save()
+        return JsonResponse({'code': 200, 'message': '验证成功！'})
