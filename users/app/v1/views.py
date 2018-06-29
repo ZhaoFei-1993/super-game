@@ -236,8 +236,7 @@ class UserRegister(object):
             user_go_line = UserInvitation()  # 邀请T1是否已达上限
             if inviter_number < 5 and today_time < end_date and invitation_user.is_robot == False:
                 user_go_line.is_effective = 1
-                user_go_line.money = 1
-                user_go_line.coin = 9
+                user_go_line.money = 3888
                 user_go_line.is_robot = False
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
@@ -647,39 +646,38 @@ class InfoView(ListAPIView):
         if user_invitation_number > 0:
             user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
-            try:
-                userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
-                usdt_balance = UserCoin.objects.get(coin_id=9, user_id=user.id)
-            except Exception:
-                return 0
             for a in user_invitation_info:
-                if int(a.coin) == 9:
-                    a.is_deleted = 1
-                    a.save()
-                    usdt_balance.balance += a.money
-                    usdt_balance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'USDT'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = usdt_balance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += a.money
-                    usdt_give.save()
-                else:
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    a.is_deleted = 1
-                    a.save()
+                try:
+                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                except Exception:
+                    return 0
+                # if int(a.coin) == 9:
+                #     a.is_deleted = 1
+                #     a.save()
+                #     usdt_balance.balance += a.money
+                #     usdt_balance.save()
+                #     coin_detail = CoinDetail()
+                #     coin_detail.user = user
+                #     coin_detail.coin_name = 'USDT'
+                #     coin_detail.amount = '+' + str(a.money)
+                #     coin_detail.rest = usdt_balance.balance
+                #     coin_detail.sources = 8
+                #     coin_detail.save()
+                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     usdt_give.lock_coin += a.money
+                #     usdt_give.save()
+                # else:
+                userbalance.balance += a.money
+                userbalance.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = userbalance.coin.name
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = userbalance.balance
+                coin_detail.sources = 8
+                coin_detail.save()
+                a.is_deleted = 1
+                a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -2216,8 +2214,8 @@ class InvitationRegisterView(CreateAPIView):
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
         if inviter_number < 5 and today_time < end_date and is_robot.is_robot == False:
             user_go_line.is_effective = 1
-            user_go_line.money = 1
-            user_go_line.coin = 9
+            user_go_line.money = 3888
+            # user_go_line.coin = 4
             user_go_line.is_robot = False
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
@@ -2275,38 +2273,37 @@ class InvitationInfoView(ListAPIView):
         if user_invitation_number > 0:
             user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
-            try:
-                userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
-                usdt_balance = UserCoin.objects.get(coin_id=9, user_id=user.id)
-            except Exception:
-                return 0
             for a in user_invitation_info:
-                if int(a.coin) == 9:
-                    usdt_balance.balance += a.money
-                    usdt_balance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'USDT'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = usdt_balance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    try:
-                        usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    except Exception:
-                        return 0
-                    usdt_give.lock_coin += a.money
-                    usdt_give.save()
-                else:
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
+                try:
+                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                except Exception:
+                    return 0
+                # if int(a.coin) == 9:
+                #     usdt_balance.balance += a.money
+                #     usdt_balance.save()
+                #     coin_detail = CoinDetail()
+                #     coin_detail.user = user
+                #     coin_detail.coin_name = 'USDT'
+                #     coin_detail.amount = '+' + str(a.money)
+                #     coin_detail.rest = usdt_balance.balance
+                #     coin_detail.sources = 8
+                #     coin_detail.save()
+                #     try:
+                #         usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     except Exception:
+                #         return 0
+                #     usdt_give.lock_coin += a.money
+                #     usdt_give.save()
+                # else:
+                userbalance.balance += a.money
+                userbalance.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = userbalance.coin.name
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = userbalance.balance
+                coin_detail.sources = 8
+                coin_detail.save()
                 a.is_deleted = 1
                 a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
@@ -2324,11 +2321,11 @@ class InvitationInfoView(ListAPIView):
             user.save()
         else:
             invitation_code = user.invitation_code
-        invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # T1总人数
-        user_invitation_two = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
+        invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # 总人数
+        user_invitation_two = UserInvitation.objects.filter(invitee_one=0, inviter=user.id, is_deleted=1,
                                                             coin=4).aggregate(
             Sum('money'))
-        user_invitation_one = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
+        user_invitation_one = UserInvitation.objects.filter(invitee_two=0, inviter=user.id, is_deleted=1,
                                                             coin=9).aggregate(
             Sum('money'))
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
@@ -2337,7 +2334,7 @@ class InvitationInfoView(ListAPIView):
         user_invitation_ones = user_invitation_one['money__sum']  # T2获得总钱数
         if user_invitation_ones == None:
             user_invitation_ones = 0
-        invitee_number = UserInvitation.objects.filter(inviter=int(user.id), is_effective=1, coin=9).count()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(user.id), is_effective=1).count()
         invitee_number = 5 - int(invitee_number)
         if invitee_number < 0:
             invitee_number = 0
