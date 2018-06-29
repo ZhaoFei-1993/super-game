@@ -2028,10 +2028,10 @@ class VersionUpdateView(RetrieveAPIView):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
         language = request.GET.get('language')
-        if str(mobile_type).upper() == "IOS":
-            type = 1
-        else:
+        if str(mobile_type).upper() == "ANDROID":
             type = 0
+        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() =="HTML5":#由于目前ios版本是内嵌html5的网页
+            type = 1
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
         if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
