@@ -39,7 +39,7 @@ class ClublistView(ListAPIView):
         int_act_ban = '/'.join(
             # [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_ACT") + ".jpg?t=%s" % date_now])
             [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
-        banner = ([] if language=='en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
+        banner = ([] if language=='en' else [{"img_url": int_ban, "action": 'HAND_New'}]) \
                   + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
                   + ([] if language=='en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}]) # 活动轮播图
         for item in items:
