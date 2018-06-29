@@ -1502,10 +1502,10 @@ class PresentationListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin_id'],
-                    'coin_icon':x['coin_icon'],
+                    'coin_icon': x['coin_icon'],
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
-                    'status':x['status'],
+                    'status': x['status'],
                     'created_at': x['created_at']
                 }
             )
@@ -1530,37 +1530,38 @@ class PresentationDetailView(RetrieveAPIView):
         except Exception:
             raise
         sers = PresentationSerialize(record).data
-        data={
-                'id': sers['id'],
-                'coin_icon':sers['coin_icon'],
-                'amount': normalize_fraction(sers['amount'], 8),
-                'service_value':normalize_fraction(service.value,5),
-                'service_coin_name':service.coin_payment.name,
-                'address_name':sers['address_name'],
-                'address': sers['address'],
-                'created_at': sers['created_at']
-            }
-        status=int(sers['status'])
-        data['status_code']=status
-        if status==0:
-            if language=='en':
+        data = {
+            'id': sers['id'],
+            'coin_icon': sers['coin_icon'],
+            'amount': normalize_fraction(sers['amount'], 8),
+            'service_value': normalize_fraction(service.value, 5),
+            'service_coin_name': service.coin_payment.name,
+            'address_name': sers['address_name'],
+            'address': sers['address'],
+            'created_at': sers['created_at']
+        }
+        status = int(sers['status'])
+        data['status_code'] = status
+        if status == 0:
+            if language == 'en':
                 data['status'] = 'Processing'
             else:
-                data['status']='提现申请中'
-            data['text']=''
-        elif  status==1:
-            if language=='en':
+                data['status'] = '提现申请中'
+            data['text'] = ''
+        elif status == 1:
+            if language == 'en':
                 data['status'] = 'Success'
             else:
-                data['status']='提现成功'
-            data['text']=sers['txid']
+                data['status'] = '提现成功'
+            data['text'] = sers['txid']
         else:
-            if language=='en':
+            if language == 'en':
                 data['status'] = 'Fail'
             else:
                 data['status'] = '提现失败'
             data['text'] = sers['feedback']
         return self.response({'code': 0, 'data': data})
+
 
 class RechargeListView(ListAPIView):
     """
@@ -1584,15 +1585,14 @@ class RechargeListView(ListAPIView):
                 {
                     'id': x['id'],
                     'coin_id': x['coin_id'],
-                    'coin_icon':x['coin_icon'],
+                    'coin_icon': x['coin_icon'],
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
-                    'status':x['status'],
+                    'status': x['status'],
                     'trade_at': x['trade_at']
                 }
             )
         return self.response({'code': 0, 'data': data})
-
 
 
 class RechargeDetailView(RetrieveAPIView):
@@ -1608,17 +1608,19 @@ class RechargeDetailView(RetrieveAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         sers = UserRechargeSerizlize(record).data
-        data ={
-                'id': sers['id'],
-                'coin_id': sers['coin_id'],
-                'coin_icon':sers['coin_icon'],
-                'amount': normalize_fraction(sers['amount'], 8),
-                'address_name': sers['address'],
-                'address': sers['address'],
-                'status':sers['status'],
-                'trade_at': sers['trade_at']
-            }
+        data = {
+            'id': sers['id'],
+            'coin_id': sers['coin_id'],
+            'coin_icon': sers['coin_icon'],
+            'amount': normalize_fraction(sers['amount'], 8),
+            'address_name': sers['address'],
+            'address': sers['address'],
+            'status': sers['status'],
+            'trade_at': sers['trade_at']
+        }
         return self.response({'code': 0, 'data': data})
+
+
 # class ReviewListView(ListAPIView):
 #     """
 #     提现审核情况
@@ -2469,7 +2471,6 @@ class LuckDrawListView(ListAPIView):
         user_id = request.user.id
         date = datetime.now().strftime('%Y%m%d')
         NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_id) + str(date)  # 再来一次次数
-        is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:

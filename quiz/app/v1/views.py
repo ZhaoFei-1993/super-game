@@ -679,7 +679,7 @@ class ProfitView(ListAPIView):
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
         list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-            'created_at')
+            '-profit_total', 'created_at')
         return list
 
     def list(self, request, *args, **kwargs):

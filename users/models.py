@@ -17,6 +17,7 @@ class UserManager(BaseUserManager):
     """
     用户操作
     """
+
     @staticmethod
     def captcha_valid(request):
         """
@@ -33,7 +34,8 @@ class UserManager(BaseUserManager):
             challenge = request.data.get("challenge")
             challenge = challenge.lower()
 
-            is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key, expiration__gt=datetime.now()).count()
+            is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key,
+                                                           expiration__gt=datetime.now()).count()
             if is_captcha_valid == 0:
                 return code.API_20405_CAPTCHA_ERROR
 
@@ -132,16 +134,14 @@ class Coin(models.Model):
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
     raw_name = models.CharField(verbose_name="货币充值前名称", max_length=255, default="")
-    # type = models.CharField(verbose_name="货币类型", choices=TYPE_CHOICE, max_length=1, default=ETH)
     exchange_rate = models.IntegerField(verbose_name="兑换比例", default=1)
-    # service_charge = models.DecimalField(verbose_name='提现手续费',max_digits=10, decimal_places=1, default=0.000)
     cash_control = models.DecimalField(verbose_name="提现下限", max_digits=10, decimal_places=3, default=0.000)
     betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
-    # coin_proportion = models.DecimalField(verbose_name="返现比例", max_digits=15, decimal_places=2, default=0.50)
     coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
     coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
+    is_criterion = models.BooleanField(verbose_name="是否为垃圾币", default=False)
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
     # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
@@ -156,7 +156,7 @@ class Coin(models.Model):
 class CoinPrice(models.Model):
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default="")
     platform_name = models.CharField(verbose_name="平台名称", max_length=20, default="")
-    price = models.DecimalField(verbose_name="平台价格", max_digits=15, decimal_places=4, default=0.0000)
+    price = models.DecimalField(verbose_name="平台价格", max_digits=32, decimal_places=18, default=0.000000000000000000)
     updated_at = models.DateTimeField(verbose_name="最后更新时间", auto_now=True)
 
     class Meta:
@@ -225,7 +225,7 @@ class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # balance = models.DecimalField(verbose_name="余额", max_digits=18, decimal_places=2, default=0.00)
-    balance = models.DecimalField(verbose_name='增加后金额', max_digits=20, decimal_places=8, default=0.00000000)
+    balance = models.DecimalField(verbose_name='余额', max_digits=32, decimal_places=18, default=0.000000000000000000)
 
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
@@ -266,7 +266,7 @@ class CoinDetail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
     amount = models.CharField(verbose_name="操作数额", max_length=255)
-    rest = models.DecimalField(verbose_name="余额", max_digits=20, decimal_places=8, default=0.00000000)
+    rest = models.DecimalField(verbose_name="余额", max_digits=32, decimal_places=18, default=0.000000000000000000)
     sources = models.CharField(verbose_name="资金流动类型", choices=TYPE_CHOICE, max_length=2, default=BETS)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="操作时间", auto_now_add=True)
@@ -280,8 +280,10 @@ class CoinDetail(models.Model):
 class CoinLock(models.Model):
     period = models.IntegerField(verbose_name="锁定周期", default=0)
     profit = models.DecimalField(verbose_name="收益率", max_digits=10, decimal_places=2, default=0.00)
-    limit_start = models.DecimalField(verbose_name="锁定起步金额", max_digits=10, decimal_places=3, default=0.000)
-    limit_end = models.DecimalField(verbose_name="最大锁定金额", max_digits=10, decimal_places=3, default=0.000)
+    limit_start = models.DecimalField(verbose_name="锁定起步金额", max_digits=32, decimal_places=18,
+                                      default=0.000000000000000000)
+    limit_end = models.DecimalField(verbose_name="最大锁定金额", max_digits=32, decimal_places=18,
+                                    default=0.000000000000000000)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
@@ -458,8 +460,8 @@ class UserPresentation(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    amount = models.DecimalField(verbose_name="提现数量", max_digits=20, decimal_places=8, default=0.00000000)
-    rest = models.DecimalField(verbose_name='剩余数量', max_digits=20, decimal_places=8, default=0.00000000)
+    amount = models.DecimalField(verbose_name="提现数量", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    rest = models.DecimalField(verbose_name='剩余数量', max_digits=32, decimal_places=18, default=0.000000000000000000)
     address = models.CharField(verbose_name="提现ETH地址", max_length=255, default="")
     address_name = models.CharField(verbose_name="提现地址名称", max_length=255, default="")
     status = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=APPLICATION)
@@ -509,7 +511,8 @@ class UserInvitation(models.Model):
 class IntegralPrize(models.Model):
     prize_name = models.CharField(verbose_name="奖品名称", max_length=150, default="")
     icon = models.CharField(verbose_name="奖品图标", max_length=255, default="")
-    prize_number = models.DecimalField(verbose_name="奖品奖励数量", max_digits=10, decimal_places=3, default=0.000)
+    prize_number = models.DecimalField(verbose_name="奖品奖励数量", max_digits=32, decimal_places=18,
+                                       default=0.000000000000000000)
     prize_consume = models.DecimalField(verbose_name="抽奖消耗", max_digits=10, decimal_places=3, default=0.000)
     prize_weight = models.IntegerField(verbose_name="奖品权重", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
@@ -543,7 +546,7 @@ class LoginRecord(models.Model):
 class BankruptcyRecords(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
-    money = models.DecimalField(verbose_name='金额', max_digits=20, decimal_places=8, default=0.00000000)
+    money = models.DecimalField(verbose_name='金额', max_digits=32, decimal_places=18, default=0.000000000000000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -572,8 +575,10 @@ class CoinInstall(models.Model):
     )
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
-    betting_control = models.DecimalField(verbose_name="投注下限", max_digits=10, decimal_places=3, default=0.000)
-    betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=10, decimal_places=3, default=0.000)
+    betting_control = models.DecimalField(verbose_name="投注下限", max_digits=32, decimal_places=18,
+                                          default=0.000000000000000000)
+    betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=32, decimal_places=18,
+                                           default=0.000000000000000000)
 
     class Meta:
         verbose_name = verbose_name_plural = "投注值表"
@@ -582,8 +587,9 @@ class CoinInstall(models.Model):
 @reversion.register()
 class CoinGive(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    number = models.DecimalField(verbose_name='赠送金额', max_digits=20, decimal_places=8, default=0.00000000)
-    ask_number = models.DecimalField(verbose_name='要求金额', max_digits=20, decimal_places=8, default=0.00000000)
+    number = models.DecimalField(verbose_name='赠送金额', max_digits=32, decimal_places=18, default=0.000000000000000000)
+    ask_number = models.DecimalField(verbose_name='要求金额', max_digits=32, decimal_places=18,
+                                     default=0.000000000000000000)
     match_number = models.IntegerField(verbose_name="要求局数", default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     end_time = models.DateTimeField(verbose_name="结束日期", auto_now=True)
@@ -598,8 +604,10 @@ class CoinGiveRecords(models.Model):
     coin_give = models.ForeignKey(CoinGive, on_delete=models.CASCADE)
     is_recharge_give = models.BooleanField(verbose_name="是否已获得赠送金额", default=False)
     is_recharge_lock = models.BooleanField(verbose_name="是否已获得锁定金额", default=False)
-    start_coin = models.DecimalField(verbose_name='开始余额', max_digits=20, decimal_places=8, default=0.00000000)
-    lock_coin = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=10.00000000)
+    start_coin = models.DecimalField(verbose_name='开始余额', max_digits=32, decimal_places=18,
+                                     default=0.000000000000000000)
+    lock_coin = models.DecimalField(verbose_name='锁定金额', max_digits=32, decimal_places=18,
+                                    default=10.000000000000000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -613,7 +621,7 @@ class IntInvitation(models.Model):
     coin = models.IntegerField(verbose_name="INT货币表ID", default=0)
     is_block = models.BooleanField(verbose_name="是否被封", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
-    money = models.DecimalField(verbose_name='锁定金额', max_digits=20, decimal_places=8, default=10.00000000)
+    money = models.DecimalField(verbose_name='锁定金额', max_digits=32, decimal_places=18, default=10.000000000000000000)
     is_deleted = models.BooleanField(verbose_name="是否有奖励", default=True)
     created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
 

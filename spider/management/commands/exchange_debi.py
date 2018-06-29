@@ -23,7 +23,7 @@ class Command(BaseCommand):
         gsg_value.coin = Coin.objects.get(name='ETC')
         gsg_value.house = 'debi'
         gsg_value.value = float(value)
-        gsg_value.save()
+        # gsg_value.save()
 
         print('ETC/ETH价格为: ' + str(value))
 
