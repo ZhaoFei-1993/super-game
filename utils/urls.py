@@ -1,7 +1,11 @@
 # -*- coding: UTF-8 -*-
 from django.urls import path
-
+from django.conf.urls import url
+from django.views.static import serve
 from . import views
+import os
+from . import SAVE_PATH
+
 
 urlpatterns = [
     path('sitemap/', views.sitemap, name="backend-admin-sitemap"),
@@ -12,4 +16,5 @@ urlpatterns = [
 
     path('re-captcha/', views.user_captcha_generate, name="user-register-login-captcha"),
     path('valid-captcha/', views.UserCaptchaValid.as_view(), name="valid-register-login-captcha"),
+    url('img/(?P<path>.*)/', serve, {'document_root': SAVE_PATH}) # 访问静态验证码图片
 ]

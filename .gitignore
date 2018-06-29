@@ -8,3 +8,4 @@ all_settings.py
 uploads
 images
 authentication.py
+captcha_img
