@@ -78,7 +78,7 @@ def handle_activity(record, coin, earn_coin):
                     u_mes.user_id = record.user_id
                     u_mes.message_id = 6  # 私人信息
                     u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
-                    u_mes.title_en = Club.objects.get(coin=coin).room_title_en + ' Notifications of upcoming Events'
+                    u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(coin=coin).room_title_en
                     u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
                     u_mes.content_en = 'Congratulations on your USDT event award, 10 USDT in total.Congratulations for you.'
                     u_mes.save()
@@ -114,7 +114,7 @@ def handle_activity(record, coin, earn_coin):
                 u_mes.user_id = record.user_id
                 u_mes.message_id = 6  # 私人信息
                 u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
-                u_mes.title_en = Club.objects.get(coin=coin).room_title_en + ' Notifications of upcoming Events'
+                u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(coin=coin).room_title_en
                 u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
                 u_mes.content_en = 'Congratulations on your USDT event award, 10 USDT in total.Congratulations for you.'
                 u_mes.save()
@@ -279,7 +279,7 @@ def get_data_info(url, match_flag):
             u_mes.user_id = record.user_id
             u_mes.message_id = 6  # 私人信息
             u_mes.title = club.room_title + '开奖公告'
-            u_mes.title_en = club.room_title_en + ' Lottery announcement'
+            u_mes.title_en = 'Lottery announcement from ' + club.room_title_en
             option_right = Option.objects.get(rule=record.rule, is_right=True)
             if is_right is False:
                 u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
@@ -340,7 +340,7 @@ def handle_delay_game(delay_quiz):
             u_mes.user_id = record.user_id
             u_mes.message_id = 6  # 私人信息
             u_mes.title = club.room_title + '退回公告'
-            u_mes.title_en = club.room_title_en + ' Return to announcement'
+            u_mes.title_en = 'Return to announcement from ' + club.room_title_en
             u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
             u_mes.content_en = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
             u_mes.save()
@@ -407,7 +407,7 @@ def cash_back(quiz):
                         u_mes.user_id = user_id
                         u_mes.message_id = 6  # 私人信息
                         u_mes.title = club.room_title + '返现公告'
-                        u_mes.title_en = club.room_title_en + ' Cash-back announcement'
+                        u_mes.title_en = 'Cash-back announcement from ' + club.room_title_en
                         u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖' + ',您得到的返现为：' + str(
                             gsg_cash_back) + '个GSG'
                         u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced' + ',he volume of cash-back you get is：' + str(
