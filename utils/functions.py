@@ -407,7 +407,7 @@ def gsg_coin_initialization(user_id, coin_id):
     user_coin = UserCoin()
     user_coin.coin = coin_info
     user_coin.user = user
-    user_coin.balance = user.integral
+    user_coin.balance = Decimal(user.integral)
     user_coin.address = address.address
     user_coin.save()
     return user_coin
