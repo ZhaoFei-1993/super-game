@@ -28,7 +28,7 @@ def get_data(url):
             result = json.loads(dt[8:-2])
             return result
     except requests.ConnectionError as e:
-        print('Error', e.args)
+        print('match Error ', e.args)
 
 
 def get_data_info(url):
@@ -303,7 +303,7 @@ def get_data_info(url):
                     guest_team_avatar = ''
 
                     try:
-                        img_base_url = 'http://i.sporttery.cn/api/fb_match_info/get_match_info?mid=' + match_id + '&f_callback=getMatchInfo'
+                        img_base_url = 'https://i.sporttery.cn/api/fb_match_info/get_match_info?mid=' + match_id + '&f_callback=getMatchInfo'
                         response_img_url = requests.get(img_base_url, headers=headers)
                         if response_img_url.status_code == 200:
                             dt = response_img_url.text.encode("utf-8").decode('unicode_escape')
@@ -347,7 +347,7 @@ def get_data_info(url):
                                     print('图片已经存在')
 
                     except requests.ConnectionError as e:
-                        print('Error', e.args)
+                        print('img Error', e.args)
                     # ------------------------------------------------------------------------------------------------------
                     if Quiz.objects.filter(match_flag=match_id).exists() is not True:
                         quiz = Quiz()

@@ -27,6 +27,8 @@ from console.models import Address
 import reversion
 from wc_auth.functions import save_operation
 from django.db import connection
+from PIL import Image, ImageDraw, ImageFont
+import random
 
 
 def random_string(length=16):
@@ -374,6 +376,7 @@ def language_switch(language, parameter):
         parameter = str(parameter) + '_' + language
     return parameter
 
+
 #
 # def language(language, parameter):
 #     """
@@ -408,3 +411,141 @@ def gsg_coin_initialization(user_id, coin_id):
     user_coin.address = address.address
     user_coin.save()
     return user_coin
+
+class RandomChar(object):
+    """汉字生成类"""
+
+    @staticmethod
+    def Unicode():
+        # val = random.randint(0x4E00, 0x9FBF)
+        # return unichr(val)
+        return "你好"
+
+    @staticmethod
+    def GB2312():
+        head = random.randint(0xb0, 0xf7)
+        body = random.randint(0xa1, 0xf9)  # 在head区号为55的那一块最后5个汉字是乱码,为了方便缩减下范围
+        val = f'{head:x}{body:x}'
+        str = bytes.fromhex(val).decode('gb2312')
+        return str
+
+
+class ImageChar(object):
+    """验证码图片生成"""
+
+    # SAVE_PATH = os.path.join(os.getcwd(), 'utils/captcha_img')
+
+    def __init__(self, fontColor=(0, 0, 0),
+                 size=(100, 100),
+                 fontPath='./utils/simsun.ttc',
+                 bgColor=(255, 255, 255),
+                 fontSize=20):
+        self.size = size
+        self.fontPath = fontPath
+        self.bgColor = bgColor
+        self.fontSize = fontSize
+        self.fontColor = fontColor
+        self.font = ImageFont.truetype(self.fontPath, self.fontSize)
+        self.image = Image.new('RGB', size, bgColor)
+
+    def rotate(self):
+        self.image.rotate(random.randint(0, 90), expand=0)
+
+    def drawText(self, pos, txt, fill):
+        draw = ImageDraw.Draw(self.image)
+        draw.text(pos, txt, font=self.font, fill=fill)
+
+    def randRGB(self):
+        return (random.randint(0, 100),
+                random.randint(0, 100),
+                random.randint(0, 100))
+
+    def lineRGB(self):
+        return (random.randint(150, 255),
+                random.randint(150, 255),
+                random.randint(150, 255))
+
+    def randPoint(self):
+        (width, height) = self.size
+        return (random.randint(0, width), random.randint(0, height))
+
+    def randLine(self, num):
+        draw = ImageDraw.Draw(self.image)
+        for i in range(0, num):
+            draw.line([self.randPoint(), self.randPoint()], self.lineRGB())
+
+    def randCH_or_EN(self, num=6, style='cn', select=4):  # 总共生成6个字，选取4个字
+        co_list = []  # 坐标列表，存储已经生成的坐标保证不重叠
+        char_list = []  # 汉字列表,存储汉字保证不重复
+        res_co_list = []  # 存储返回结果的4个坐标
+        res_char_list = []  # 存储返回结果的4个汉字
+        for i in range(1, num + 1):
+            if style == 'cn':  # 中文
+                while True:
+                    try:
+                        char = RandomChar().GB2312()  # 随机生成中文字符串
+                        if char not in char_list:
+                            char_list.append(char)
+                            if i <= select:
+                                res_char_list.append(char)
+                            break
+                    except Exception as e:
+                        pass
+            else:
+                en_list = list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+                while True:
+                    char = random.sample(en_list, 1)[0]  # 随机生成中文字符串
+                    if char not in char_list:
+                        char_list.append(char)
+                        if i <= select:
+                            res_char_list.append(char)
+                        break
+
+            while True:
+                x = random.randint(0, self.size[0] - self.fontSize)  # 生成左顶点的横坐标
+                y = random.randint(0, self.size[1] - self.fontSize)  # 生成左顶点的纵坐标
+                x_right = x + self.fontSize  # 计算横坐标最右值
+                y_foot = y + self.fontSize  # 计算纵坐标的最右值
+                if not co_list:  # 列表为空直接存入坐标范围
+                    co_list.append([[x, x_right], [y, y_foot]])
+                    res_co_list.append([[x, x_right], [y, y_foot]])
+                    break
+                else:  # 若坐标不为空则判断生成的中文是否有重叠，重叠则继续循环
+                    for co in co_list:
+                        if self.judge_co(co[0], [x, x_right]) and self.judge_co(co[1], [y,
+                                                                                        y_foot]):  # 若横纵坐标存在没有交集，则成功生成汉字,跳出两层循环，否则继续循环直到找到合适的坐标
+                            break
+                    else:
+                        co_list.append([[x, x_right], [y, y_foot]])
+                        if i <= select:
+                            res_co_list.append([[x, x_right], [y, y_foot]])
+                        break
+
+            self.drawText((x, y), char, self.randRGB())
+            # self.rotate()
+        self.randLine(20)
+        return res_char_list, res_co_list
+
+    def judge_co(self, list1, list2):
+        """判断文字区间是否有重叠"""
+        if list1[1] < list2[0] or list2[1] < list1[0]:  # 没重叠
+            return False
+        else:  # 重叠
+            return True
+
+    def save(self, path):
+        self.image.save(path)
+
+
+def string_to_list(str):
+    """将x,y|x,y|x,y|x,y格式的字符串转化成列表"""
+    lists = str.split('|')
+    try:
+        res = [[int(i.split(',')[0]), int(i.split(',')[1])] for i in lists if len(i.split(',')) == 2]
+    except:
+        return None
+
+    if len(res) == 4:
+        return res
+    else:
+        return None

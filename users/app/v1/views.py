@@ -236,8 +236,7 @@ class UserRegister(object):
             user_go_line = UserInvitation()  # 邀请T1是否已达上限
             if inviter_number < 5 and today_time < end_date and invitation_user.is_robot == False:
                 user_go_line.is_effective = 1
-                user_go_line.money = 1
-                user_go_line.coin = 9
+                user_go_line.money = 3888
                 user_go_line.is_robot = False
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
@@ -647,39 +646,38 @@ class InfoView(ListAPIView):
         if user_invitation_number > 0:
             user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
-            try:
-                userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
-                usdt_balance = UserCoin.objects.get(coin_id=9, user_id=user.id)
-            except Exception:
-                return 0
             for a in user_invitation_info:
-                if int(a.coin) == 9:
-                    a.is_deleted = 1
-                    a.save()
-                    usdt_balance.balance += a.money
-                    usdt_balance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'USDT'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = usdt_balance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    usdt_give.lock_coin += a.money
-                    usdt_give.save()
-                else:
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    a.is_deleted = 1
-                    a.save()
+                try:
+                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                except Exception:
+                    return 0
+                # if int(a.coin) == 9:
+                #     a.is_deleted = 1
+                #     a.save()
+                #     usdt_balance.balance += a.money
+                #     usdt_balance.save()
+                #     coin_detail = CoinDetail()
+                #     coin_detail.user = user
+                #     coin_detail.coin_name = 'USDT'
+                #     coin_detail.amount = '+' + str(a.money)
+                #     coin_detail.rest = usdt_balance.balance
+                #     coin_detail.sources = 8
+                #     coin_detail.save()
+                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     usdt_give.lock_coin += a.money
+                #     usdt_give.save()
+                # else:
+                userbalance.balance += a.money
+                userbalance.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = userbalance.coin.name
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = userbalance.balance
+                coin_detail.sources = 8
+                coin_detail.save()
+                a.is_deleted = 1
+                a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
                 u_mes.status = 0
                 u_mes.user = user
@@ -2029,10 +2027,10 @@ class VersionUpdateView(RetrieveAPIView):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
         language = request.GET.get('language')
-        if str(mobile_type).upper() == "IOS":
-            type = 1
-        else:
+        if str(mobile_type).upper() == "ANDROID":
             type = 0
+        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() =="HTML5":#由于目前ios版本是内嵌html5的网页
+            type = 1
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
         if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
@@ -2217,8 +2215,8 @@ class InvitationRegisterView(CreateAPIView):
         user_go_line = UserInvitation()  # 邀请T1是否已达上限
         if inviter_number < 5 and today_time < end_date and is_robot.is_robot == False:
             user_go_line.is_effective = 1
-            user_go_line.money = 1
-            user_go_line.coin = 9
+            user_go_line.money = 3888
+            # user_go_line.coin = 4
             user_go_line.is_robot = False
         user_go_line.inviter = invitation
         user_go_line.invitee_one = user_info.id
@@ -2276,38 +2274,37 @@ class InvitationInfoView(ListAPIView):
         if user_invitation_number > 0:
             user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
-            try:
-                userbalance = UserCoin.objects.get(coin_id=4, user_id=user.id)
-                usdt_balance = UserCoin.objects.get(coin_id=9, user_id=user.id)
-            except Exception:
-                return 0
             for a in user_invitation_info:
-                if int(a.coin) == 9:
-                    usdt_balance.balance += a.money
-                    usdt_balance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'USDT'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = usdt_balance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
-                    try:
-                        usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                    except Exception:
-                        return 0
-                    usdt_give.lock_coin += a.money
-                    usdt_give.save()
-                else:
-                    userbalance.balance += a.money
-                    userbalance.save()
-                    coin_detail = CoinDetail()
-                    coin_detail.user = user
-                    coin_detail.coin_name = 'HAND'
-                    coin_detail.amount = '+' + str(a.money)
-                    coin_detail.rest = userbalance.balance
-                    coin_detail.sources = 8
-                    coin_detail.save()
+                try:
+                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                except Exception:
+                    return 0
+                # if int(a.coin) == 9:
+                #     usdt_balance.balance += a.money
+                #     usdt_balance.save()
+                #     coin_detail = CoinDetail()
+                #     coin_detail.user = user
+                #     coin_detail.coin_name = 'USDT'
+                #     coin_detail.amount = '+' + str(a.money)
+                #     coin_detail.rest = usdt_balance.balance
+                #     coin_detail.sources = 8
+                #     coin_detail.save()
+                #     try:
+                #         usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     except Exception:
+                #         return 0
+                #     usdt_give.lock_coin += a.money
+                #     usdt_give.save()
+                # else:
+                userbalance.balance += a.money
+                userbalance.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = userbalance.coin.name
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = userbalance.balance
+                coin_detail.sources = 8
+                coin_detail.save()
                 a.is_deleted = 1
                 a.save()
                 u_mes = UserMessage()  # 邀请注册成功后消息
@@ -2325,11 +2322,11 @@ class InvitationInfoView(ListAPIView):
             user.save()
         else:
             invitation_code = user.invitation_code
-        invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # T1总人数
-        user_invitation_two = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
+        invitation_number = UserInvitation.objects.filter(inviter=user.id).count()  # 总人数
+        user_invitation_two = UserInvitation.objects.filter(invitee_one=0, inviter=user.id, is_deleted=1,
                                                             coin=4).aggregate(
             Sum('money'))
-        user_invitation_one = UserInvitation.objects.filter(inviter=user.id, is_deleted=1,
+        user_invitation_one = UserInvitation.objects.filter(invitee_two=0, inviter=user.id, is_deleted=1,
                                                             coin=9).aggregate(
             Sum('money'))
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
@@ -2338,7 +2335,7 @@ class InvitationInfoView(ListAPIView):
         user_invitation_ones = user_invitation_one['money__sum']  # T2获得总钱数
         if user_invitation_ones == None:
             user_invitation_ones = 0
-        invitee_number = UserInvitation.objects.filter(inviter=int(user.id), is_effective=1, coin=9).count()
+        invitee_number = UserInvitation.objects.filter(~Q(invitee_one=0), inviter=int(user.id), is_effective=1).count()
         invitee_number = 5 - int(invitee_number)
         if invitee_number < 0:
             invitee_number = 0
@@ -2402,13 +2399,13 @@ class InvitationMergeView(ListAPIView):
             invitation_code = user.invitation_code
 
         if self.request.GET.get('language') == 'en':
-            if os.access(save_path + '/qrcode_' + str(user.id) + '_en.jpg', os.F_OK):
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_new_en.jpg', os.F_OK):
                 base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.jpg'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
         else:
-            if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
-                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_new.jpg', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.jpg'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
@@ -2416,7 +2413,7 @@ class InvitationMergeView(ListAPIView):
         # 设置字体和字号
         font = pygame.font.SysFont('Microsoft YaHei', 64)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        ftext = font.render(invitation_code, True, (255, 255, 255), (178, 34, 34))
+        ftext = font.render(invitation_code, True, (255, 255, 255), (116, 68, 11))
         # 保存图片
         invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -2430,27 +2427,27 @@ class InvitationMergeView(ListAPIView):
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=8,
-            border=2,
+            box_size=10,
+            border=3,
         )
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (242, 721))
+        base_img.paste(qr_img, (200, 678))
         ftext = Image.open(
             settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
-        base_img.paste(ftext, (302, 1040))  # 插入邀请码
+        base_img.paste(ftext, (310, 1080))  # 插入邀请码
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
         # 保存推广图片
         if self.request.GET.get('language') == 'en':
-            base_img.save(save_path + '/spread_' + str(user.id) + '_en.jpg', quality=90)
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.jpg'
+            base_img.save(save_path + '/spread_' + str(user.id) + '_new_en.jpg', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new_en.jpg'
         else:
-            base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+            base_img.save(save_path + '/spread_' + str(user.id) + '_new.jpg', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.jpg'
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
