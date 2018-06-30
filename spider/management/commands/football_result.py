@@ -47,7 +47,6 @@ def handle_activity(record, coin, earn_coin):
                         quiz_list.append(count_record.quiz_id)
 
                 if (coin_give_records.lock_coin >= coin_give_records.coin_give.ask_number) and (
-                        datetime.datetime.now() <= coin_give_records.coin_give.end_time) and (
                         len(quiz_list) >= coin_give_records.coin_give.match_number):
                     lock_coin = coin_give_records.lock_coin
                     coin_give_records.is_recharge_lock = True
@@ -73,8 +72,7 @@ def handle_activity(record, coin, earn_coin):
                                                      created_at__lte=coin_give_records.coin_give.end_time,
                                                      earn_coin__gt=0):
                 user_profit = user_profit + (user_record.earn_coin - user_record.bet)
-            if (user_profit >= 50) and (coin_give_records.is_recharge_give is False) and (
-                    datetime.datetime.now() <= coin_give_records.coin_give.end_time):
+            if (user_profit >= 50) and (coin_give_records.is_recharge_give is False):
                 coin_give_records.is_recharge_give = True
                 coin_give_records.save()
 
