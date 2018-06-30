@@ -102,6 +102,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             is_user = 0
         return is_user
 
+
     @staticmethod
     def get_is_passcode(obj):  # 密保
         if obj.pass_code == '' or obj.pass_code is None:
