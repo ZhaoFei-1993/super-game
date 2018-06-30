@@ -115,17 +115,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
         return usercoin.balance
 
     # @staticmethod
-    # def get_ggtc(obj):  # GGTC余额
-    #     ggtc = Coin.objects.get(type=1)
-    #     userggtc = UserCoin.objects.get(user_id=obj.id, coin_id=ggtc.id)
-    #     return userggtc.balance
-    #
-    # @staticmethod
-    # def get_ggtc_avatar(obj):  # GSG图片
-    #     ggtc = Coin.objects.get(type=1)
-    #     return ggtc.icon
-
-    # @staticmethod
     # def get_usercoin_avatar(obj):  # 代币图片
     #     usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
     #     coin = Coin.objects.get(pk=usercoin.coin_id)
