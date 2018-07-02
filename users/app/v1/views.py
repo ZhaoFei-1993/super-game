@@ -713,9 +713,9 @@ class InfoView(ListAPIView):
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
-            'is_passcode': items[0]["is_passcode"],
+            'is_passcode': int(items[0]["is_passcode"]),
             'is_message': is_message,
-            'is_sound': items[0]["is_sound"],
+            'is_sound': int(items[0]["is_sound"]),
             'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
