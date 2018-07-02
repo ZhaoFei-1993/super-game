@@ -701,7 +701,7 @@ class ProfitView(ListAPIView):
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
             if item['coin_name'] in name:
-                profit_total = item["profit_total"]
+                profit_total = float(item["profit_total"])
                 if profit_total<0:
                     type = 1
                 data[item['coin_name']]["icon"] = item["coin_icon"]
