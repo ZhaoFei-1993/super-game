@@ -707,7 +707,7 @@ class ProfitView(ListAPIView):
                 else:
                     type = 0
                 data[item['coin_name']]["icon"] = item["coin_icon"]
-                data[item['coin_name']]["type"] += type
+                data[item['coin_name']]["type"].append(type)
                 data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
                 data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
                 data[item['coin_name']]['created_at'].append(item["created_at"])
