@@ -2485,7 +2485,7 @@ class LuckDrawListView(ListAPIView):
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
-        user_gsg = UserCoin.objects.get(id=6)
+        user_gsg = UserCoin.objects.get(user_id=user_id, coin_id=6)
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
         prize_consume = list[0]['prize_consume']
