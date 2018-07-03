@@ -17,8 +17,10 @@ def get_transactions(addresses):
     transactions = {}
     # print('addresses = ', addresses)
     response = requests.get(base_url + addresses)
-    # if response.status_code == 500:
-    #     raise CommandError(response)
+    if response.status_code == 500 or response.status_code == 400:
+        print('Error = ', response.__dict__)
+        return []
+        # raise CommandError(response)
     # print('response = ', response.__dict__)
     datas = json.loads(response.text)
     for item in datas['txs']:
@@ -104,7 +106,7 @@ class Command(BaseCommand):
         ]
 
         # 因URL有长度限制，这里分页处理，每页50条
-        page_size = 100
+        page_size = 80
         page_total = int(math.ceil(len(btc_addresses) / page_size))
         for i in range(1, page_total + 1):
             start = (i - 1) * page_size
