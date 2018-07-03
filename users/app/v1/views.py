@@ -841,7 +841,7 @@ class RankingView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_gsg = UserCoin.objects.get(pk=6)
+        user_gsg = UserCoin.objects.get(user_id=user.id, coin_id=6)
         user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         if self.request.GET.get('language') == 'en':
@@ -2538,7 +2538,7 @@ class ClickLuckDrawView(CreateAPIView):
         if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
-            user_gsg = UserCoin.objects.get(id=6)
+            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_gsg.balance -= Decimal(prize_consume)
             user_gsg.save()
@@ -2557,7 +2557,7 @@ class ClickLuckDrawView(CreateAPIView):
             incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
-            user_gsg = UserCoin.objects.get(id=6)
+            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             integral = Decimal(integral_prize.prize_number)
             user_gsg.balance += integral
             user_gsg.save()
@@ -2600,7 +2600,7 @@ class ClickLuckDrawView(CreateAPIView):
         integral_prize_record.is_receive = 1
         integral_prize_record.save()
         prize_number = integral_prize.prize_number
-        user_gsg = UserCoin.objects.get(id=6)
+        user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
         prize_name = integral_prize.prize_name
