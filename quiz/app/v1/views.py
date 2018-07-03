@@ -696,12 +696,18 @@ class ProfitView(ListAPIView):
                     if date_key not in data:
                         data[date_key] = {}
                         data[date_key]["icon"] = ''
+                        data[date_key]["type"] = []
                         data[date_key]["sum"] = 0
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
             if item['coin_name'] in name:
-                profit_total = item["profit_total"]
+                profit_total = float(item["profit_total"])
+                if profit_total<0:
+                    type = 1
+                else:
+                    type = 0
                 data[item['coin_name']]["icon"] = item["coin_icon"]
+                data[item['coin_name']]["type"].append(type)
                 data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
                 data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
                 data[item['coin_name']]['created_at'].append(item["created_at"])

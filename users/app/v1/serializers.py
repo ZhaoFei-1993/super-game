@@ -10,7 +10,8 @@ from quiz.models import Record, Quiz
 from django.db import connection
 from base.exceptions import ParamErrorException
 from base import code as error_code
-from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql
+from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql, \
+    gsg_coin_initialization
 from api import settings
 from datetime import timedelta, datetime
 from django.utils import timezone
@@ -85,7 +86,12 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # 电话号码
-        integral = normalize_fraction(obj.integral, 2)
+        gsg_count = UserCoin.objects.filter(user_id=obj.pk, coin_id=6).count()
+        if gsg_count == 0:
+            coin_gsg = gsg_coin_initialization(obj.pk, 6)
+        else:
+            coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
+        integral = coin_gsg.balance
         return integral
 
     def get_is_user(self, obj):  # 电话号码
@@ -95,6 +101,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
         else:
             is_user = 0
         return is_user
+
 
     @staticmethod
     def get_is_passcode(obj):  # 密保
@@ -107,23 +114,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
     def get_usercoin(obj):  # 代币余额
         usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
         return usercoin.balance
-
-    # @staticmethod
-    # def get_ggtc(obj):  # GGTC余额
-    #     ggtc = Coin.objects.get(type=1)
-    #     userggtc = UserCoin.objects.get(user_id=obj.id, coin_id=ggtc.id)
-    #     return userggtc.balance
-    #
-    # @staticmethod
-    # def get_ggtc_avatar(obj):  # GSG图片
-    #     ggtc = Coin.objects.get(type=1)
-    #     return ggtc.icon
-
-    # @staticmethod
-    # def get_usercoin_avatar(obj):  # 代币图片
-    #     usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
-    #     coin = Coin.objects.get(pk=usercoin.coin_id)
-    #     return coin.icon
 
     @staticmethod
     def get_win_ratio(obj):  # 胜率
@@ -358,7 +348,7 @@ class PresentationSerialize(serializers.ModelSerializer):
     """
     created_at = serializers.SerializerMethodField()
     coin_name = serializers.CharField(source="coin.name")
-    coin_icon = serializers.CharField(source = "coin.icon")
+    coin_icon = serializers.CharField(source="coin.icon")
     user_name = serializers.CharField(source="user.username")
     telephone = serializers.CharField(source="user.telephone")
     is_block = serializers.BooleanField(source="user.is_block")
@@ -370,8 +360,9 @@ class PresentationSerialize(serializers.ModelSerializer):
     class Meta:
         model = UserPresentation
         fields = (
-            "id", "user_id", "user_name", "telephone", "coin_id","coin_icon", "coin_name", "amount", "address", "address_name",
-            "rest","created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
+            "id", "user_id", "user_name", "telephone", "coin_id", "coin_icon", "coin_name", "amount", "address",
+            "address_name",
+            "rest", "created_at", "feedback", "status", "is_bill", "is_block", "ip_count", "recharge_times", "txid")
 
     @staticmethod
     def get_created_at(obj):
@@ -728,7 +719,7 @@ class UserRechargeSerizlize(serializers.ModelSerializer):
 
     class Meta:
         model = UserRecharge
-        fields = ('id','coin_id','coin_icon','address', 'status','amount','trade_at')
+        fields = ('id', 'coin_id', 'coin_icon', 'address', 'status', 'amount', 'trade_at')
 
     @staticmethod
     def get_status(obj):
@@ -737,5 +728,5 @@ class UserRechargeSerizlize(serializers.ModelSerializer):
 
     @staticmethod
     def get_trade_at(obj):
-        trade_time= obj.trade_at.strftime('%Y-%m-%d %H:%M') if obj.trade_at else ''
+        trade_time = obj.trade_at.strftime('%Y-%m-%d %H:%M') if obj.trade_at else ''
         return trade_time

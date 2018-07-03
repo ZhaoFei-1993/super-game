@@ -25,7 +25,8 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, language_switch, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code, coin_initialization
+    message_sign, gsg_coin_initialization, value_judge, resize_img, normalize_fraction, random_invitation_code, \
+    coin_initialization
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -155,7 +156,10 @@ class UserRegister(object):
             for coin in coins:
                 user_id = user.id
                 coin_id = coin.id
-                coin_initialization(user_id, coin_id)
+                if int(coin_id) == 6:
+                    gsg_coin_initialization(user_id, coin_id)
+                else:
+                    coin_initialization(user_id, coin_id)
 
             # 更新用户的device_token
             if device_token is not None and device_token != '':
@@ -297,7 +301,10 @@ class UserRegister(object):
         for coin in coins:
             user_id = userinfo.id
             coin_id = coin.id
-            coin_initialization(user_id, coin_id)
+            if int(coin_id) == 6:
+                gsg_coin_initialization(user_id, coin_id)
+            else:
+                coin_initialization(user_id, coin_id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -706,9 +713,9 @@ class InfoView(ListAPIView):
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
-            'is_passcode': items[0]["is_passcode"],
+            'is_passcode': int(items[0]["is_passcode"]),
             'is_message': is_message,
-            'is_sound': items[0]["is_sound"],
+            'is_sound': int(items[0]["is_sound"]),
             'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
@@ -834,6 +841,7 @@ class RankingView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
+        user_gsg = UserCoin.objects.get(pk=6)
         user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         if self.request.GET.get('language') == 'en':
@@ -845,7 +853,7 @@ class RankingView(ListAPIView):
                 my_ran = index
         avatar = user.avatar
         nickname = user.nickname
-        integral = user.integral
+        integral = user_gsg.balance
         # win_ratio = user.victory
         # if user.victory == 0:
         #     win_ratio = 0
@@ -2028,7 +2036,7 @@ class VersionUpdateView(RetrieveAPIView):
         language = request.GET.get('language')
         if str(mobile_type).upper() == "ANDROID":
             type = 0
-        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() =="HTML5":#由于目前ios版本是内嵌html5的网页
+        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() == "HTML5":  # 由于目前ios版本是内嵌html5的网页
             type = 1
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
         if not versions.exists():
@@ -2477,7 +2485,7 @@ class LuckDrawListView(ListAPIView):
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
-        user = request.user
+        user_gsg = UserCoin.objects.get(id=6)
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
         prize_consume = list[0]['prize_consume']
@@ -2496,7 +2504,7 @@ class LuckDrawListView(ListAPIView):
             )
         return self.response(
             {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
-             'integral': normalize_fraction(user.integral, 2),
+             'integral': normalize_fraction(user_gsg.balance, 2),
              'prize_consume': normalize_fraction(prize_consume, 2)})
 
 
@@ -2530,14 +2538,15 @@ class ClickLuckDrawView(CreateAPIView):
         if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
+            user_gsg = UserCoin.objects.get(id=6)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
-            user_info.integral -= Decimal(prize_consume)
-            user_info.save()
+            user_gsg.balance -= Decimal(prize_consume)
+            user_gsg.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
-            coin_detail.coin_name = "GSG"
+            coin_detail.coin_name = user_gsg.coin.name
             coin_detail.amount = '-' + str(prize_consume)
-            coin_detail.rest = Decimal(user_info.integral)
+            coin_detail.rest = Decimal(user_gsg.balance)
             coin_detail.sources = 4
             coin_detail.save()
         try:
@@ -2548,14 +2557,15 @@ class ClickLuckDrawView(CreateAPIView):
             incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
+            user_gsg = UserCoin.objects.get(id=6)
             integral = Decimal(integral_prize.prize_number)
-            user_info.integral += integral
-            user_info.save()
+            user_gsg.balance += integral
+            user_gsg.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
-            coin_detail.coin_name = "GSG"
+            coin_detail.coin_name = user_gsg.coin.name
             coin_detail.amount = '+' + str(integral)
-            coin_detail.rest = Decimal(user_info.integral)
+            coin_detail.rest = Decimal(user_gsg.balance)
             coin_detail.sources = 4
             coin_detail.save()
 
@@ -2590,6 +2600,7 @@ class ClickLuckDrawView(CreateAPIView):
         integral_prize_record.is_receive = 1
         integral_prize_record.save()
         prize_number = integral_prize.prize_number
+        user_gsg = UserCoin.objects.get(id=6)
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
         prize_name = integral_prize.prize_name
@@ -2604,7 +2615,7 @@ class ClickLuckDrawView(CreateAPIView):
                 'icon': integral_prize.icon,
                 'prize_name': prize_name,
                 'prize_number': prize_number,
-                'integral': normalize_fraction(user_info.integral, 2),
+                'integral': normalize_fraction(user_gsg.balance, 2),
                 'number': get_cache(NUMBER_OF_PRIZES_PER_DAY),
                 'is_gratis': get_cache(NUMBER_OF_LOTTERY_AWARDS)
             }
