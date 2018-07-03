@@ -25,7 +25,8 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, language_switch, \
-    message_sign, amount, value_judge, resize_img, normalize_fraction, random_invitation_code, coin_initialization
+    message_sign, gsg_coin_initialization, value_judge, resize_img, normalize_fraction, random_invitation_code, \
+    coin_initialization
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -155,7 +156,10 @@ class UserRegister(object):
             for coin in coins:
                 user_id = user.id
                 coin_id = coin.id
-                coin_initialization(user_id, coin_id)
+                if int(coin_id) == 6:
+                    gsg_coin_initialization(user_id, coin_id)
+                else:
+                    coin_initialization(user_id, coin_id)
 
             # 更新用户的device_token
             if device_token is not None and device_token != '':
@@ -297,7 +301,10 @@ class UserRegister(object):
         for coin in coins:
             user_id = userinfo.id
             coin_id = coin.id
-            coin_initialization(user_id, coin_id)
+            if int(coin_id) == 6:
+                gsg_coin_initialization(user_id, coin_id)
+            else:
+                coin_initialization(user_id, coin_id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -706,9 +713,9 @@ class InfoView(ListAPIView):
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
-            'is_passcode': items[0]["is_passcode"],
+            'is_passcode': int(items[0]["is_passcode"]),
             'is_message': is_message,
-            'is_sound': items[0]["is_sound"],
+            'is_sound': int(items[0]["is_sound"]),
             'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
@@ -2029,7 +2036,7 @@ class VersionUpdateView(RetrieveAPIView):
         language = request.GET.get('language')
         if str(mobile_type).upper() == "ANDROID":
             type = 0
-        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() =="HTML5":#由于目前ios版本是内嵌html5的网页
+        if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() == "HTML5":  # 由于目前ios版本是内嵌html5的网页
             type = 1
         versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
         if not versions.exists():
