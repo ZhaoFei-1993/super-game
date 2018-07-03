@@ -2479,7 +2479,7 @@ class LuckDrawListView(ListAPIView):
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
-            number = 6
+            number = 5
             is_gratis = 0
             set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
