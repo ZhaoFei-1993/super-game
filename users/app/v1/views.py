@@ -1376,6 +1376,9 @@ class UserPresentationView(CreateAPIView):
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
+        if int(c_id)==6:
+            return self.response({'code': error_code.API_70109_USER_PRESENT_ADDRESS_ERROR})
+
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin.id)
