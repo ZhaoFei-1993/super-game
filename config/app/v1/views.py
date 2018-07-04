@@ -16,4 +16,5 @@ class Html5ConfigView(ListAPIView):
         return self.response({
             'code': 0,
             'is_captcha_enable': 1 if settings.IS_USER_CAPTCHA_ENABLE else 0,
+            'is_club_profit_enable': 0,
         })
