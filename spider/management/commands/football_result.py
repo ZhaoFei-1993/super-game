@@ -489,12 +489,11 @@ def cash_back(quiz):
                     gsg_cash_back = trunc(gsg_cash_back, 2)
                     if float(gsg_cash_back) > 0:
                         user = User.objects.get(pk=user_id)
-                        if UserCoin.objects.filter(user=user, coin_id=6).exists():
-                            user_coin_gsg = UserCoin.objects.filter(user=user, coin_id=6).first()
-                        else:
+                        gsg_count = UserCoin.objects.filter(user_id=user.id, coin_id=6).count()
+                        if gsg_count == 0:
                             user_coin_gsg = gsg_coin_initialization(user.id, 6)
-                            user_coin_gsg.balance = user.integral
-                            user_coin_gsg.save()
+                        else:
+                            user_coin_gsg = UserCoin.objects.filter(user=user, coin_id=6).first()
 
                         user_coin_gsg.balance = float(user_coin_gsg.balance) + float(gsg_cash_back)
                         user_coin_gsg.save()

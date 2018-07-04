@@ -301,10 +301,7 @@ class UserRegister(object):
         for coin in coins:
             user_id = userinfo.id
             coin_id = coin.id
-            if int(coin_id) == 6:
-                gsg_coin_initialization(user_id, coin_id)
-            else:
-                coin_initialization(user_id, coin_id)
+            coin_initialization(user_id, coin_id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")

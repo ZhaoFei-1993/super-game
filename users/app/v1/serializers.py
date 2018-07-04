@@ -85,7 +85,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             return obj.telephone
 
     @staticmethod
-    def get_integral(obj):  # 电话号码
+    def get_integral(obj):  # GSG
         gsg_count = UserCoin.objects.filter(user_id=obj.pk, coin_id=6).count()
         if gsg_count == 0:
             coin_gsg = gsg_coin_initialization(obj.pk, 6)
