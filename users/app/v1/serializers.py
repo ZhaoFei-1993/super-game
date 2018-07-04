@@ -430,13 +430,15 @@ class UserCoinSerialize(serializers.ModelSerializer):
     min_present = serializers.SerializerMethodField()  # 提现限制最小金额
     service_charge = serializers.SerializerMethodField()  # 提现手续费
     service_coin = serializers.SerializerMethodField()  # 用于提现的币种
+    is_reality = serializers.SerializerMethodField()  # 用于提现的币种
+    is_recharge = serializers.SerializerMethodField()  # 用于提现的币种
     coin_order = serializers.IntegerField(source='coin.coin_order')  # 币种顺序
 
     class Meta:
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "service_charge", "service_coin",
-                  "min_present", "coin_order", "recent_address")
+                  "min_present", "coin_order", "recent_address", "", "is_recharge")
 
     @staticmethod
     def get_balance(obj):
@@ -446,6 +448,24 @@ class UserCoinSerialize(serializers.ModelSerializer):
             lock_coin = normalize_fraction(coin_give.lock_coin, 6)
             balance -= lock_coin
         return balance
+
+    @staticmethod
+    def get_is_reality(obj):
+        try:
+            list = Coin.objects.get(pk=obj.coin.id)
+        except Exception:
+            return ''
+        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+        return list.is_reality
+
+    @staticmethod
+    def get_is_recharge(obj):
+        try:
+            list = Coin.objects.get(pk=obj.coin.id)
+        except Exception:
+            return ''
+        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+        return list.is_recharge
 
     @staticmethod
     def get_coin_value(obj):

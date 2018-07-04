@@ -1279,6 +1279,8 @@ class AssetView(ListAPIView):
                 'recharge_address': list["address"],
                 'balance': list["balance"],
                 'locked_coin': list["locked_coin"],
+                'is_reality': list["is_reality"],
+                'is_recharge': list["is_recharge"],
                 'service_charge': list["service_charge"],
                 'service_coin': list["service_coin"],
                 'min_present': list["min_present"],
@@ -1376,7 +1378,7 @@ class UserPresentationView(CreateAPIView):
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
-        if int(c_id)==6:
+        if int(c_id) == 6:
             return self.response({'code': error_code.API_70109_USER_PRESENT_ADDRESS_ERROR})
 
         try:

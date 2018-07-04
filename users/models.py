@@ -153,7 +153,8 @@ class Coin(models.Model):
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
     is_criterion = models.BooleanField(verbose_name="是否为垃圾币", default=False)
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
-    # is_lock = models.BooleanField(verbose_name="是否容许锁定", default=0)
+    is_reality = models.BooleanField(verbose_name="是否容许提现", default=0)
+    is_recharge = models.BooleanField(verbose_name="是否容许充值", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
