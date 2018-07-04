@@ -438,7 +438,7 @@ class UserCoinSerialize(serializers.ModelSerializer):
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "service_charge", "service_coin",
-                  "min_present", "coin_order", "recent_address", "", "is_recharge")
+                  "min_present", "coin_order", "recent_address", "is_reality", "is_recharge")
 
     @staticmethod
     def get_balance(obj):
