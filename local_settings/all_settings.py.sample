@@ -143,4 +143,3 @@ GSG_EXCHANGE_START_DATE = '2018-07-02 00:00:00'              # gsg兑换开始�
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 
-APP_API_KEY_IOS = ''
