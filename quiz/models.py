@@ -394,3 +394,24 @@ class GsgValue(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG价格表"
+
+
+class EveryDayInjectionValue(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    injection_value = models.DecimalField(verbose_name="总投注值(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
+    is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
+    injection_time = models.DateTimeField(verbose_name="投注时间(年月日)")
+
+    class Meta:
+        verbose_name = verbose_name_plural = "投注价值表"
+
+
+class ChangeRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    change_eth_value = models.DecimalField(verbose_name="兑换值(ETH)", max_digits=18, decimal_places=8, default=0.00000000)
+    change_gsg_value = models.DecimalField(verbose_name="兑换值(GSG)", max_digits=18, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "兑换记录表"
