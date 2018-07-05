@@ -389,9 +389,9 @@ def language_switch(language, parameter):
 
 
 def get_sql(sql):
-    cursor = connection.cursor()
-    cursor.execute(sql, None)
-    dt_all = cursor.fetchall()
+    with connection.cursor() as cursor:
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
     return dt_all
 
 def gsg_coin_initialization(user_id, coin_id):
