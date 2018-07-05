@@ -13,10 +13,11 @@ from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer, \
     ClubProfitAbroadSerialize
-from utils.functions import value_judge
+from utils.functions import value_judge, get_sql
 from datetime import datetime, date, timedelta
 from django.conf import settings
 from utils.functions import normalize_fraction
+from django.db import connection
 
 
 class CategoryView(ListAPIView):
@@ -738,50 +739,45 @@ class Change(ListAPIView):
     兑换
     """
     permission_classes = (LoginRequired,)
-    serializer_class = QuizSerialize
 
     def get_queryset(self):
-        days = self.request.GET.get('days')
-        date_last = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        end_time = str(date_last) + ' 23:59:59'  # 开始时间
-        start_time = str(date_last) + ' 00:00:00'  # 开始时间
-        if days > end_time:
-            pass
-        if 'start_time' in self.request.GET:
-            start_time = self.request.GET.get('start_time')
-        if 'end_time' in self.request.GET:
-            end_time = self.request.GET.get('end_time')
-        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-            'created_at', '-profit_total')
-        return list
+        pass
 
-    # def list(self, request, *args, **kwargs):
-    #     results = super().list(request, *args, **kwargs)
-    #     items = results.data.get('results')
-    #     data = {}
-    #     name = []
-    #     for item in items:
-    #         if item['coin_name'] not in name:
-    #             type = self.request.GET.get('type')
-    #             if len(name) < int(type):
-    #                 name.append(item['coin_name'])
-    #                 date_key = item['coin_name']
-    #                 if date_key not in data:
-    #                     data[date_key] = {}
-    #                     data[date_key]["icon"] = ''
-    #                     data[date_key]["type"] = []
-    #                     data[date_key]["sum"] = 0
-    #                     data[date_key]["total"] = []
-    #                     data[date_key]['created_at'] = []
-    #         if item['coin_name'] in name:
-    #             profit_total = float(item["profit_total"])
-    #             if profit_total < 0:
-    #                 type = 1
-    #             else:
-    #                 type = 0
-    #             data[item['coin_name']]["icon"] = item["coin_icon"]
-    #             data[item['coin_name']]["type"].append(type)
-    #             data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
-    #             data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
-    #             data[item['coin_name']]['created_at'].append(item["created_at"])
-    #     return self.response({'code': 0, 'data': data, 'name': name})
+    def list(self, request, *args, **kwargs):
+        sql = "select a.name, a.icon from users_coin a"
+        sql += " where id=6 or id=5"
+        coin = get_sql(sql)  # gsg
+        gsg = coin[1]
+        eth = coin[0]
+        sql = "select a.price from users_coinprice a"
+        sql += " where coin_name='ETH'"
+        sql += " and a.platform_name!=''"
+        eth_vlue = get_sql(sql)[0][0]         # ETH 价格
+        gsg_value = Decimal(0.3)
+        convert_ratio = int(eth_vlue/gsg_value)     # 1 ETH 换多少 GSG
+        toplimit = Decimal(100000000/50)         # 一天容许兑换的总数
+
+        day = datetime.now().strftime('%Y-%m-%d')
+        if 'days' in self.request.GET:
+            day = self.request.GET.get('days')
+        start_time = str(day) + ' 00:00:00'  # 开始时间
+        end_time = str(day) + ' 23:59:59'  # 开始时间
+        sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
+        sql += " where created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'"
+        is_use = get_sql(sql)[0][0]              # 已经兑换了多少GSG
+        ratio = is_use/toplimit              # 兑换了的GSG占天当总数的百分比
+        sql = "select count(*) from quiz_changerecord a"
+        sql += " where created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'"
+        numbers = get_sql(sql)[0][0]            # 兑换总人数
+        return self.response({'code': 0, "data": {
+            "convert_ratio": convert_ratio,
+            "toplimit": toplimit,
+            "ratio": ratio,
+            "numbers": numbers,
+            "coin_one": str(1)+" "+eth[0],
+            "coin_icon_one": eth[1],
+            "coin_two": str(convert_ratio)+" "+gsg[0],
+            "coin_icon_two": gsg[1]
+        }})
