@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
-from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad
+from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
 from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
@@ -717,8 +717,9 @@ class ProfitView(ListAPIView):
 
 class ChangeDate(ListAPIView):
     """
-    兑换
+    兑换页面时间轴
     """
+    permission_classes = (LoginRequired,)
 
     def get_queryset(self):
         pass
@@ -736,7 +737,7 @@ class ChangeDate(ListAPIView):
 
 class Change(ListAPIView):
     """
-    兑换
+    兑换主页面
     """
     permission_classes = (LoginRequired,)
 
@@ -745,17 +746,17 @@ class Change(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         sql = "select a.name, a.icon from users_coin a"
-        sql += " where id=6 or id=5"
+        sql += " where id=2 or id=6"
         coin = get_sql(sql)  # gsg
         gsg = coin[1]
         eth = coin[0]
         sql = "select a.price from users_coinprice a"
         sql += " where coin_name='ETH'"
         sql += " and a.platform_name!=''"
-        eth_vlue = get_sql(sql)[0][0]         # ETH 价格
+        eth_vlue = get_sql(sql)[0][0]  # ETH 价格
         gsg_value = Decimal(0.3)
-        convert_ratio = int(eth_vlue/gsg_value)     # 1 ETH 换多少 GSG
-        toplimit = Decimal(100000000/50)         # 一天容许兑换的总数
+        convert_ratio = int(eth_vlue / gsg_value)  # 1 ETH 换多少 GSG
+        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
 
         day = datetime.now().strftime('%Y-%m-%d')
         if 'days' in self.request.GET:
@@ -765,19 +766,141 @@ class Change(ListAPIView):
         sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
-        is_use = get_sql(sql)[0][0]              # 已经兑换了多少GSG
-        ratio = is_use/toplimit              # 兑换了的GSG占天当总数的百分比
+        is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
+        ratio = is_use / toplimit  # 兑换了的GSG占天当总数的百分比
         sql = "select count(*) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
-        numbers = get_sql(sql)[0][0]            # 兑换总人数
+        numbers = get_sql(sql)[0][0]  # 兑换总人数
         return self.response({'code': 0, "data": {
             "convert_ratio": convert_ratio,
             "toplimit": toplimit,
             "ratio": ratio,
             "numbers": numbers,
-            "coin_one": str(1)+" "+eth[0],
+            "coin_one": str(1) + " " + eth[0],
             "coin_icon_one": eth[1],
-            "coin_two": str(convert_ratio)+" "+gsg[0],
+            "coin_two": str(convert_ratio) + " " + gsg[0],
             "coin_icon_two": gsg[1]
+        }})
+
+
+class ChangeGsg(ListAPIView):
+    """
+    点击兑换
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request, *args, **kwargs):
+        user_id = str(request.user.id)
+        value = value_judge(request, "wager", "convert_ratio")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        coins = float(self.request.data['wager'])                                               # 获取兑换ETH
+        coin_astrict = float(0.01)
+        if coins < coin_astrict:
+            raise ParamErrorException(error_code.API_70204_ETH_UNQUALIFIED_CONVERTIBILITY)    # 判断兑换值是否大于0.01
+
+        toplimit = Decimal(100000000 / 50)                                              # 一天容许兑换的总数
+        day = datetime.now().strftime('%Y-%m-%d')
+        start_time = str(day) + ' 00:00:00'                                                # 开始时间
+        end_time = str(day) + ' 23:59:59'                                                    # 开始时间
+        sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
+        sql += " where created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'"
+        is_use = get_sql(sql)[0][0]                                                       # 已经兑换了多少GSG
+        left_gsg = toplimit - is_use
+        print("剩余可兑换GSG=============================", left_gsg)
+
+        sql = "select sum(a.change_eth_value) from quiz_changerecord a"
+        sql += " where created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'"
+        sql += " and a.user_id=" + user_id
+        has_user_change = get_sql(sql)[0][0]                                              # 用户当天已经兑换了多少GSG
+        user_change = Decimal(coins) + has_user_change
+        print("用户当天已经兑换了多少GSG=============================", has_user_change)
+        print("总数=============================", user_change)
+        if user_change > 5:
+            raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)           # 判断用户兑换是否超过5个ETH
+
+        convert_ratio = float(self.request.data['convert_ratio'])                           # 获取兑换比例
+        print("获取兑换比例==========================", convert_ratio)
+        print("获取兑换ETH==========================", coins)
+
+
+        sql = "select a.balance from users_usercoin a"
+        sql += " where coin_id=2"
+        sql += " and a.user_id=" + user_id
+        eth_balance = get_sql(sql)[0][0]                                                             # 用户拥有的ETH
+        print("用户拥有ETH============================", eth_balance)
+        if eth_balance < coins:
+            raise ParamErrorException(error_code.API_70205_ETH_NOT_SUFFICIENT_FUNDS)            # 判断用户ETH余额是否足
+
+        gsg_ratio = convert_ratio * coins
+        print("兑换GSG总值==========================", gsg_ratio)
+        if left_gsg < gsg_ratio:
+            raise ParamErrorException(error_code.API_70206_CONVERTIBLE_GSG_INSUFFICIENT)    # 判断是否有足够GSG供用户兑换
+
+        change_record = ChangeRecord()
+        change_record.user = request.user
+        change_record.change_eth_value = Decimal(coins)
+        change_record.change_gsg_value = Decimal(gsg_ratio)
+        change_record.is_robot = request.user.is_robot
+        change_record.save()
+
+        user_coin_gsg = UserCoin.objects.get(user_id=request.user.id, coin_id=6)
+        user_coin_gsg.balance += Decimal(gsg_ratio)
+        user_coin_gsg.save()
+        coin_detail = CoinDetail()
+        coin_detail.user = request.user
+        coin_detail.coin_name = user_coin_gsg.coin.name
+        coin_detail.amount = '+' + str(gsg_ratio)
+        coin_detail.rest = user_coin_gsg.balance
+        coin_detail.sources = 3
+        coin_detail.save()
+
+        user_coin_ETH = UserCoin.objects.get(user_id=request.user.id, coin_id=2)
+        user_coin_ETH.balance -= Decimal(coins)
+        user_coin_ETH.save()
+        coin_detail = CoinDetail()
+        coin_detail.user = request.user
+        coin_detail.coin_name = user_coin_ETH.coin.name
+        coin_detail.amount = '-' + str(coins)
+        coin_detail.rest = user_coin_ETH.balance
+        coin_detail.sources = 4
+        coin_detail.save()
+
+
+        content = {'code': 0, 'user_coin_ETH':user_coin_ETH.balance}
+        return self.response(content)
+
+
+class ChangeTable(ListAPIView):
+    """
+    点击兑换页面
+    """
+
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user_id = str(request.user.id)
+        sql = "select a.balance from users_usercoin a"
+        sql += " where coin_id=2"
+        sql += " and a.user_id=" + user_id
+        eth_balance = get_sql(sql)[0][0]                                                             # 用户拥有的ETH
+        eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
+        eth_exchange_instruction_one = settings.ETH_EXCHANGE_INSTRUCTION_ONE
+        eth_exchange_instruction_two = settings.ETH_EXCHANGE_INSTRUCTION_TWO
+        eth_exchange_instruction_three = settings.ETH_EXCHANGE_INSTRUCTION_THREE
+        eth_exchange_instruction_four = settings.ETH_EXCHANGE_INSTRUCTION_ONE_FOUR
+        return self.response({'code': 0, "data": {
+            "eth_limit": eth_limit,
+            "eth_balance": eth_balance,
+            "eth_exchange_instruction_one": eth_exchange_instruction_one,
+            "eth_exchange_instruction_two": eth_exchange_instruction_two,
+            "eth_exchange_instruction_three": eth_exchange_instruction_three,
+            "eth_exchange_instruction_four": eth_exchange_instruction_four
         }})

@@ -28,9 +28,13 @@ urlpatterns = [
     path('recommend/<int:roomquiz_id>/', views.RecommendView.as_view(), name="app-v1-quiz-recommend"),
     # 俱乐部收益
     path('club/profit/', views.ProfitView.as_view(), name="app-v1-club-profit"),
-    # 兑换
+    # 兑换主页面
     path('change/', views.Change.as_view(), name="app-v1-change"),
-    # 兑换日期
-    path('change/date/', views.ChangeDate.as_view(), name="app-v1-change-date")
+    # 兑换页面时间轴
+    path('change/date/', views.ChangeDate.as_view(), name="app-v1-change-date"),
+    # 点击兑换
+    path('change/gsg/', views.ChangeGsg.as_view(), name="app-v1-change-gsg"),
+    # 点击兑换页面
+    path('change/table/', views.ChangeTable.as_view(), name="app-v1-change-table")
 
 ]
