@@ -2,7 +2,7 @@
 from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from django.db import transaction
 from django.db.models import Q, Sum
-from base.function import LoginRequired
+from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad
 from users.models import UserCoin, CoinValue, CoinDetail
@@ -15,7 +15,7 @@ from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, Q
     ClubProfitAbroadSerialize
 from utils.functions import value_judge
 from datetime import datetime, date, timedelta
-from utils.functions import language_switch
+from django.conf import settings
 from utils.functions import normalize_fraction
 
 
@@ -702,7 +702,7 @@ class ProfitView(ListAPIView):
                         data[date_key]['created_at'] = []
             if item['coin_name'] in name:
                 profit_total = float(item["profit_total"])
-                if profit_total<0:
+                if profit_total < 0:
                     type = 1
                 else:
                     type = 0
@@ -712,3 +712,76 @@ class ProfitView(ListAPIView):
                 data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
                 data[item['coin_name']]['created_at'].append(item["created_at"])
         return self.response({'code': 0, 'data': data, 'name': name})
+
+
+class ChangeDate(ListAPIView):
+    """
+    兑换
+    """
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        days = int(settings.GSG_EXCHANGE_DATE)
+        gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
+        start_date = datetime.strptime(gsg_exchange_date, "%Y-%m-%d %H:%M:%S")
+        day = 0
+        data = []
+        if day != days:
+            data = time_data(start_date, day, data, days)
+        return self.response({'code': 0, 'data': data})
+
+
+class Change(ListAPIView):
+    """
+    兑换
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = QuizSerialize
+
+    def get_queryset(self):
+        days = self.request.GET.get('days')
+        date_last = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        end_time = str(date_last) + ' 23:59:59'  # 开始时间
+        start_time = str(date_last) + ' 00:00:00'  # 开始时间
+        if days > end_time:
+            pass
+        if 'start_time' in self.request.GET:
+            start_time = self.request.GET.get('start_time')
+        if 'end_time' in self.request.GET:
+            end_time = self.request.GET.get('end_time')
+        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
+            'created_at', '-profit_total')
+        return list
+
+    # def list(self, request, *args, **kwargs):
+    #     results = super().list(request, *args, **kwargs)
+    #     items = results.data.get('results')
+    #     data = {}
+    #     name = []
+    #     for item in items:
+    #         if item['coin_name'] not in name:
+    #             type = self.request.GET.get('type')
+    #             if len(name) < int(type):
+    #                 name.append(item['coin_name'])
+    #                 date_key = item['coin_name']
+    #                 if date_key not in data:
+    #                     data[date_key] = {}
+    #                     data[date_key]["icon"] = ''
+    #                     data[date_key]["type"] = []
+    #                     data[date_key]["sum"] = 0
+    #                     data[date_key]["total"] = []
+    #                     data[date_key]['created_at'] = []
+    #         if item['coin_name'] in name:
+    #             profit_total = float(item["profit_total"])
+    #             if profit_total < 0:
+    #                 type = 1
+    #             else:
+    #                 type = 0
+    #             data[item['coin_name']]["icon"] = item["coin_icon"]
+    #             data[item['coin_name']]["type"].append(type)
+    #             data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
+    #             data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
+    #             data[item['coin_name']]['created_at'].append(item["created_at"])
+    #     return self.response({'code': 0, 'data': data, 'name': name})

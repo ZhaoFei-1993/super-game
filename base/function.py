@@ -10,6 +10,7 @@ from .exceptions import NotLoginException
 from .code import API_403_ACCESS_DENY
 import random
 import bisect
+from datetime import datetime, date, timedelta
 
 
 class LoginRequired(IsAuthenticated):
@@ -88,3 +89,20 @@ def weight_choice(weight):
         weight_sum.append(sum)
     t = random.randint(0, sum - 1)
     return bisect.bisect_right(weight_sum, t)
+
+def time_data(start_date, day, data, days):
+    date_last = (start_date + timedelta(days=day)).strftime('%Y年%m月%d日')
+    present_time = datetime.now().strftime('%Y年%m月%d日')
+    is_same_day = 0
+    if present_time == date_last:
+        is_same_day = 1
+    day += 1
+    data.append(
+        {
+            "days": date_last,
+            "is_same_day": is_same_day
+        }
+    )
+    if day<days:
+        data=time_data(start_date, day, data, days)
+    return data
