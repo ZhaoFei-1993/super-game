@@ -555,4 +555,3 @@ def string_to_list(str):
         return res
     else:
         return None
-

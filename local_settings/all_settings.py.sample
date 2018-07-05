@@ -136,8 +136,10 @@ BTC_WALLET_API_URL = 'http://47.254.75.129:3000'
 BTC_WALLET_MAIN_PASSWORD = 'wecom$888'
 
 GOOGLE_RECAPTCHA_OPEN = 1
-IS_USER_CAPTCHA_ENABLE = True
+IS_USER_CAPTCHA_ENABLE = True            # 是否开启图形验证码
+CLUB_REVENUE = False           # 是否开启营收
+GSG_EXCHANGE_DATE = 50              # gsg兑换期限
+GSG_EXCHANGE_START_DATE = '2018-07-02 00:00:00'              # gsg兑换开始时间
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 
-APP_API_KEY_IOS = ''
