@@ -8,7 +8,7 @@ from api.settings import REST_FRAMEWORK
 from django.db import transaction
 from django.db.models import Count, Sum
 from datetime import datetime, date
-
+from utils.functions import get_sql
 from url_filter.integrations.drf import DjangoFilterBackend
 from mptt.utils import get_cached_trees
 from rest_framework import status
@@ -354,7 +354,8 @@ class QuizListBackEndView(FormatListAPIView):
         else:
             return float(normalize_fraction(item, 4))
 
-
+    # from silk.profiling.profiler import silk_profile
+    # @silk_profile()
     def list(self, request, *args, **kwargs):
         category = kwargs['category']
         room_id = self.request.GET.get('room_id','')
@@ -364,35 +365,51 @@ class QuizListBackEndView(FormatListAPIView):
         # records = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], quiz__category__parent__id=category)
         cursor = connection.cursor()
 
-        sql = "select quiz_id, roomquiz_id from quiz_record a "
+
+        sql = "select a.quiz_id, a.roomquiz_id from quiz_record a "
         sql += "inner join quiz_quiz b on a.quiz_id=b.id "
         sql += "inner join quiz_category c on b.category_id=c.id "
-        sql += "where source <> " + str(Record.CONSOLE)
+        sql += "where source in (" + str(Record.NORMAL) +',' +str(Record.GIVE)+')'
         sql += " and c.parent_id = " + str(category)
 
         if room_id !='':
             room_id = int(room_id)
-            sql += ' and roomquiz_id = '+ str(room_id)
+            sql += ' and a.roomquiz_id = '+ str(room_id)
             # records = records.filter(roomquiz_id=room_id)
-        if state !='':
-            state=int(state)
-            sql += ' and status = ' + str(state)
             # records = records.filter(quiz__status=state)
+        if state !='':
+            state = int(state)
+            sql1 = 'select id from quiz_quiz'
+            sql1 += ' where status = ' + str(state)
+            all_quiz = get_sql(sql1)
+            if len(all_quiz)==0:
+                sql += " and b.status=" + str(state)
+            else:
+                quiz_all = []
+                for x in all_quiz:
+                    quiz_all.append(str(x[0]))
+                quizs = '(' + ','.join(quiz_all) + ')'
+                sql += ' and b.id in '+ quizs
+
         if start_time !='' and end_time !='':
             sql += ' and DATE_FORMAT(b.begin_at, "%Y-%m-%d") >= ' + '"%s"' %start_time
             sql += ' and DATE_FORMAT(b.begin_at, "%Y-%m-%d") <= ' + '"%s"' %end_time
             # b_time  = datetime.strptime(start_time + ' 00:00:00', '%Y-%m-%d %H:%M:%S')
             # e_time = datetime.strptime(end_time + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
             # records = records.filter(quiz__begin_at__range=(b_time, e_time))
-        sql += ' group by quiz_id, roomquiz_id  order by b.begin_at desc, b.id desc'
+        sql += ' group by a.quiz_id, a.roomquiz_id  order by b.begin_at desc, a.quiz_id, a.roomquiz_id'
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
 
         # values = records.values("quiz", "roomquiz_id").distinct().order_by('-quiz__begin_at')
-        page = int(self.request.GET.get('page'))
+        page = self.request.GET.get('page','')
+        if page=='':
+            page=1
+        else:
+            page = int(page)
         if page <= 0:
-            return JsonResponse({'Error':'Wrong PAGE INDEX!'}, status=status.HTTP_400_BAD_REQUEST)
-        page_size = 10
+            page=1
+        page_size = int(REST_FRAMEWORK['PAGE_SIZE'])
         data = []
         total = len(dt_all)
         if total==0:
@@ -401,11 +418,10 @@ class QuizListBackEndView(FormatListAPIView):
             pages = int(total/page_size)
         else:
             pages = int(total/page_size)+1
-        num = page-1
         if page > pages:
             page = pages
-            num =pages-1
-        vv = dt_all[num*page_size: page*page_size]
+        num =page-1
+        vv = dt_all[num*page_size:page*page_size]
         for x in vv:
             # q_id = int(x['quiz'])
             # r_id = int(x['roomquiz_id'])
@@ -422,27 +438,27 @@ class QuizListBackEndView(FormatListAPIView):
 
 
             sql = "select sum(earn_coin) from quiz_record "
-            sql += "where source <> " +str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
+            sql += "where source in (" + str(Record.NORMAL) +"," +str(Record.GIVE)+")" + " and quiz_id=" + str(quiz.id)
             sql += " and roomquiz_id= " + str(room.id) + " and earn_coin > 0"
             cursor.execute(sql, None)
             dt_all = cursor.fetchall()
             bet_total = dt_all[0][0] if dt_all[0][0] else 0
 
             # cursor = connection.cursor()
-            sql = "select count(distinct(user_id)) from quiz_record "
-            sql += "where source <> " + str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
+            sql = "select count(distinct(user_id)),sum(bet), count(user_id) from quiz_record "
+            sql += "where source in (" + str(Record.NORMAL) +"," +str(Record.GIVE)+")" + " and quiz_id=" + str(quiz.id)
             sql += " and roomquiz_id= " + str(room.id)
             cursor.execute(sql, None)
             dt_all = cursor.fetchall()
             people = dt_all[0][0] if dt_all[0][0] else 0
+            sum_bet= dt_all[0][1] if dt_all[0][1] else 0
+            bet_times = dt_all[0][2] if dt_all[0][2] else 0
+            # sql = "select  from quiz_record "
+            # sql += "where source in (" + str(Record.NORMAL) + "," +str(Record.GIVE)+")" + " and quiz_id=" + str(quiz.id)
+            # sql += " and roomquiz_id= " + str(room.id)
+            # cursor.execute(sql, None)
+            # dt_all = cursor.fetchall()
 
-            sql = "select sum(bet), count(id) from quiz_record "
-            sql += "where source <> " + str(Record.CONSOLE) + " and quiz_id=" + str(quiz.id)
-            sql += " and roomquiz_id= " + str(room.id)
-            cursor.execute(sql, None)
-            dt_all = cursor.fetchall()
-            sum_bet= dt_all[0][0] if dt_all[0][0] else 0
-            bet_times = dt_all[0][1] if dt_all[0][1] else 0
 
             # people = values.values('user_id').distinct().count()
             state = ''
