@@ -12,11 +12,9 @@ import os
 from django.conf import settings
 #from django_redis import get_redis_connection
 from redis import Redis
-
+from base.app import BaseView
 from users.models import UserRecharge, Coin, UserCoin, CoinDetail,User
 
-def get_transactions(address):
-    return 1
 
 def dealDbData(dict):
     #test
@@ -42,7 +40,8 @@ def dealDbData(dict):
 
     #users_userrecharge 用户充值记录
     charge_info = UserRecharge.objects.filter(address=addr,txid=txid)
-    print('addr___',charge_info[0].address)
+    if charge_info:
+        print('addr___',charge_info[0].address)
 
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
@@ -60,18 +59,22 @@ def dealDbData(dict):
         recharge_obj.save()
 
         #刷新用户余额表
-        usercoin_info.balance = usercoin_info.balance+value
+        usercoin_info[0].balance = usercoin_info[0].balance+value
 
     return 1
 
 
-class Command(BaseCommand):
+class Command(BaseCommand,BaseView):
     help = "消费ETH_blocknum获取取交易数据"
     listKey = 'pre_eth_block_list'
     #base_url = "http://127.0.0.1:3001/api/v1/chain/blocknum/"
 
+    # def add_arguments(self, parser):
+    #     parser.add_argument('coin', type=str)
+
     @transaction.atomic()
     def handle(self, *args, **options):
+        #coin_name = options['coin'].upper()
         eth_wallet = Wallet()
         #raise CommandError('name' + '无效')
         start_time = time()
@@ -110,6 +113,8 @@ class Command(BaseCommand):
             dealDbData(tmp_dict)
             #self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
             """
+            sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 100 ORDER BY cnt desc'
+            aaaa = self.get_all_by_sql(sql)
             #address
                 raise CommandError('无地址信息')
             """
