@@ -155,6 +155,7 @@ class Coin(models.Model):
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
     is_reality = models.BooleanField(verbose_name="是否容许提现", default=0)
     is_recharge = models.BooleanField(verbose_name="是否容许充值", default=0)
+    is_lock_valid = models.BooleanField(verbose_name="是否允许锁定分红",default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
