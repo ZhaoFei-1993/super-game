@@ -1571,13 +1571,14 @@ class PresentationDetailView(RetrieveAPIView):
                 data['status'] = 'Success'
             else:
                 data['status'] = '提现成功'
-            data['text'] = sers['txid']
+            data['text'] = 'Txhash:' + sers['txid']
         else:
             if language == 'en':
                 data['status'] = 'Fail'
+                data['text'] = 'Reject:' + sers['feedback']
             else:
                 data['status'] = '提现失败'
-            data['text'] = sers['feedback']
+                data['text'] = '拒绝理由：' + sers['feedback']
         return self.response({'code': 0, 'data': data})
 
 
