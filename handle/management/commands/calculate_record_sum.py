@@ -5,6 +5,7 @@ from quiz.models import Record, EveryDayInjectionValue
 from users.models import CoinPrice, User
 from chat.models import Club
 from utils.functions import normalize_fraction
+from django.db.models import Q
 import datetime
 
 
@@ -21,7 +22,8 @@ class Command(BaseCommand):
         print(date_last, start_with, end_with, sep='\n')
 
         user_list = []
-        records = Record.objects.filter(created_at__range=(start_with, end_with))
+        records = Record.objects.filter(~Q(roomquiz_id=Club.objects.get(room_title='HAND俱乐部').id),
+                                        created_at__range=(start_with, end_with))
         for record in records:
             if record.user_id not in user_list:
                 user_list.append(record.user_id)
