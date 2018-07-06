@@ -262,6 +262,7 @@ class QuizPushView(ListAPIView):
                     "bet": item['bet']
                 }
             )
+            print("item['bet']================================", item['bet'])
         return self.response({"code": 0, "data": data})
 
 
