@@ -900,7 +900,7 @@ class ChangeGsg(ListAPIView):
         coin_detail.sources = 4
         coin_detail.save()
 
-        content = {'code': 0, 'user_coin_ETH': user_coin_ETH.balance}
+        content = {'code': 0, 'user_coin_ETH': normalize_fraction(user_coin_ETH.balance, 2)}
         return self.response(content)
 
 
