@@ -836,6 +836,8 @@ class ChangeGsg(ListAPIView):
         sql += " where created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
         is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
+        print("is_use===============================", is_use)
+        print("toplimit===============================", toplimit)
         left_gsg = toplimit - is_use
         print("剩余可兑换GSG=============================", left_gsg)
 
