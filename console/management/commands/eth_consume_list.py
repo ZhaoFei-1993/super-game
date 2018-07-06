@@ -59,7 +59,8 @@ def dealDbData(dict):
         recharge_obj.save()
 
         #刷新用户余额表
-        usercoin_info[0].balance = usercoin_info[0].balance+value
+        usercoin_info[0].balance +=value
+        usercoin_info[0].save()
 
     return 1
 
@@ -92,7 +93,7 @@ class Command(BaseCommand,BaseView):
 
         #根据block_num 获取交易数据
         # test curl http://127.0.0.1:3001/api/v1/chain/blocknum/7
-        #url = self.base_url + str(block_num)
+        #url = self.base_url + str(block_num)j
         #h_data = {}
         #res = requests.get(url=url, headers=h_data)
         #json_obj = json.loads(res.text)
