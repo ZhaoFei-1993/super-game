@@ -871,12 +871,13 @@ class RankingView(ListAPIView):
         for fav in Progress:
             i = i + 1
             user_id = fav.get('id')
+            integral = fav.get('integral')
             list.append({
                 'user_id': user_id,
                 'avatar': fav.get('avatar'),
                 'nickname': fav.get('nickname'),
                 'is_user': fav.get('is_user'),
-                'win_ratio': fav.get('integral'),
+                'win_ratio': normalize_fraction(integral, 2),
                 'ranking': i,
             })
             list.sort(key=lambda x: x["ranking"])
