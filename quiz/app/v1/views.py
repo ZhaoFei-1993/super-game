@@ -915,7 +915,7 @@ class ChangeTable(ListAPIView):
         sql = "select a.balance from users_usercoin a"
         sql += " where coin_id=2"
         sql += " and a.user_id=" + user_id
-        eth_balance = round(get_sql(sql)[0][0])  # 用户拥有的ETH
+        eth_balance = normalize_fraction(get_sql(sql)[0][0], 3) # 用户拥有的ETH
         print("eth_balance====================================", eth_balance)
         eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
         print("eth_limit===================================", eth_limit)
