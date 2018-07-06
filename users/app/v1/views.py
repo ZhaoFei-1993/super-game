@@ -1287,6 +1287,14 @@ class AssetView(ListAPIView):
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance, eth.coin.coin_accuracy)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
+            if temp_dict['coin_name']=='GSG':
+                coinlocks = CoinLock.objects.filter(coin__name='GSG')
+                if not coinlocks.exists():
+                    raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                else:
+                    for x in coinlocks:
+                        s = 'day_' + str(x.period)
+                        temp_dict[s]=x.period
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
