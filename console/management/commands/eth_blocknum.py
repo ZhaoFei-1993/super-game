@@ -11,10 +11,10 @@ import os
 from django.conf import settings
 #from django_redis import get_redis_connection
 from redis import Redis
-
+from base.app import BaseView
 #base_url = "http://127.0.0.1:3001/api/v1/account/gethightblock"
 
-class Command(BaseCommand):
+class Command(BaseCommand,BaseView):
     help = "获取ETH_blocknum"
     cacheKey = 'pre_eth_block_num'
     listKey = 'pre_eth_block_list'
@@ -48,7 +48,9 @@ class Command(BaseCommand):
         #缓存中blocknum
         if cache_blocknum < content:
             redis_obj.set(self.cacheKey, content, 86400)
-            redis_obj.lpush(self.listKey, content)
+            for i in range(cache_blocknum,content):
+                redis_obj.lpush(self.listKey, i)
+
         #print(cache_blocknum)
 
         stop_time = time()
