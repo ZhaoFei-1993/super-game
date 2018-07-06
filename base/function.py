@@ -91,7 +91,7 @@ def weight_choice(weight):
     return bisect.bisect_right(weight_sum, t)
 
 def time_data(start_date, day, data, days):
-    date_last = (start_date + timedelta(days=day)).strftime('%Y年%m月%d日')
+    date_last = (start_date + timedelta(days=day)).strftime('%Y-%m-%d')
     present_time = datetime.now().strftime('%Y年%m月%d日')
     is_same_day = 0
     if present_time == date_last:
