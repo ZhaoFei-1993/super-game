@@ -316,6 +316,7 @@ def genarate_plist(version, file_path):
         plistlib.dump(temp_x, fp)
 
 
+@transaction.atomic()
 def coin_initialization(user_id, coin_id):
     coin_info = Coin.objects.get(pk=coin_id)
     is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
@@ -394,6 +395,7 @@ def get_sql(sql):
         dt_all = cursor.fetchall()
     return dt_all
 
+@transaction.atomic()
 def gsg_coin_initialization(user_id, coin_id):
     coin_info = Coin.objects.get(pk=coin_id)
     user = User.objects.get(pk=user_id)
