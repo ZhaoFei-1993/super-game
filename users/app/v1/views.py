@@ -1561,9 +1561,11 @@ class PresentationDetailView(RetrieveAPIView):
         if status == 0:
             if language == 'en':
                 data['status'] = 'Processing'
+                data['text'] = 'Processing...'
             else:
                 data['status'] = '提现申请中'
-            data['text'] = ''
+                data['text'] = '提现申请中...'
+
         elif status == 1:
             if language == 'en':
                 data['status'] = 'Success'
