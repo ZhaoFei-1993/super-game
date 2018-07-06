@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.db import connection
 from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
-from django.db.models import Q, Count, Sum, Max, F, Func, When, Case, DecimalField
+from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
@@ -464,10 +464,103 @@ class UserAllView(FormatListAPIView):
     """
     所有用户资产表
     """
-    queryset = User.objects.filter(is_robot=0).order_by('-id')
-    serializer_class = serializers.UserAllSerializer
-    filter_backends = [DjangoFilterBackend]
-    filter_fields = ['id', 'username', 'is_block']
+    # queryset = User.objects.filter(is_robot=0).order_by('-id')
+    # serializer_class = serializers.UserAllSerializer
+    # filter_backends = [DjangoFilterBackend]
+    # filter_fields = ['id', 'username', 'is_block']
+
+
+
+    def list(self, request, *args, **kwargs):
+        id = request.GET.get('id','')
+        username = request.GET.get('username__contains','')
+        is_block = request.GET.get('is_block','')
+        page_size = 10
+        page = request.GET.get('page','')
+
+        sql = "select count(id) from users_user where is_robot=0"
+        if id !='':
+            sql +=' and id = '+ str(id)
+        if username != '':
+            sql +=' and instr(username,' + str(username) + ') > 0'
+        if is_block != '':
+            sql +=' and is_block = ' + str(is_block)
+        dt_all = get_sql(sql)
+        total = dt_all[0][0] if dt_all[0][0] else 0
+        if total==0:
+            return JsonResponse({'total':0, 'results':[]},status=status.HTTP_200_OK)
+
+        pages = int(total/page_size)
+        if total % page_size != 0:
+            pages = pages + 1
+        if page=='':
+            page=1
+        else:
+            page= int(page)
+        if page <=0:
+            page=1
+        if page > pages:
+            page = pages
+        start = page-1
+
+
+        sql = "select id from users_user where is_robot=0"
+        if id !='':
+            sql +=' and id = '+ str(id)
+        if username != '':
+            sql +=' and instr(username,' + str(username) + ') > 0'
+        if is_block != '':
+            sql +=' and is_block = ' + str(is_block)
+        sql += ' order by id desc'
+        sql += ' limit '+ str(start*page_size) + ', ' + str(page_size)
+        user_all = get_sql(sql)
+        userall=[]
+        for x in user_all:
+            userall.append(str(x[0]))
+        users='('+','.join(userall) +')'
+
+        sql = "select a.id, a.telephone, a.nickname, a.created_at , c.login_time, a.ip_address, d.ip as login_address, a.integral, h.nickname as inviter, e.inviter_id, f.inviter_new,a.status, a.is_block, ip_count"
+        sql += " from users_user a  "
+        sql += " left join (select  user_id,max(login_time) as login_time from users_loginrecord where user_id in " + users+ " group by user_id) c on a.id=c.user_id"
+        sql += " left join users_loginrecord d on d.user_id = a.id and d.login_time = c.login_time"
+        sql += " left join ((select  invitee_one as idd ,inviter_id from users_userinvitation a where invitee_one in " + users+")"
+        sql += " union (select  invitee as idd,inviter_id from users_intinvitation a where invitee in " +users + " )) e on e.idd =a.id "
+        sql += " left join ((select  inviter_id ,count(id)  as inviter_new from users_userinvitation where inviter_id in "+ users+ " group by inviter_id)"
+        sql += " union (select  inviter_id,count(id)  as inviter_new from users_intinvitation where inviter_id in " + users +" group by inviter_id)) f on f.inviter_id=a.id"
+        sql += " left join(select b.id, count(a.ip_address) as ip_count from users_user a join (select  ip_address, id from users_user where id in "+ users +") b on a.ip_address=b.ip_address group by b.id) g on g.id=a.id"
+        sql += " left join users_user h on h.id=e.inviter_id"
+        sql += " where a.id in " + users
+        sql += " order by id desc"
+        dt_all = get_sql(sql)
+        fields = (
+            'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral',
+            'inviter', 'inviter_id', 'invite_new', 'status', 'is_block', 'ip_count')
+        data=[]
+        for x in dt_all:
+            temp_dict={
+                'id':x[0],
+                'telephone':x[1],
+                'nickname':x[2],
+                'created_at': x[3].strftime('%Y-%m-%d %H:%M:%S'),
+                'login_time': x[4].strftime('%Y-%m-%d %H:%M:%S') if x[4] else '',
+                'ip_address': x[5] if x[5] else '',
+                'login_address':x[6] if x[6] else '',
+                'integral': float(normalize_fraction(x[7], 6)) if x[7] else 0,
+                'inviter':x[8] if x[8] else '',
+                'inviter_id':x[9] if x[9] else '',
+                'inviter_new': x[10] if x[10] else 0,
+                'status':x[11],
+                'is_block':x[12],
+                'ip_count':x[13]
+            }
+
+            data.append(temp_dict)
+        return JsonResponse({'total':total,'results':data}, status=status.HTTP_200_OK)
+
+
+
+    #     sql = 'select a.id, a.telephone, a.nickname, a.created_at, a.ip_address, b.ip, max(b.login_time), integral,'
+    #     sql += ' c.inviter, c.inviter_id, count(c.inviter_id) as invite_new,status,is_block,ip_count'
 
     # def list(self, request, *args, **kwargs):
     #     results = super().list(request, *args, **kwargs)
@@ -553,7 +646,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
         if 'status' not in request.data \
                 and 'text' not in request.data \
                 and 'is_bill' not in request.data \
-                and 'txid' not in request.data\
+                and 'txid' not in request.data \
                 and 'language' not in request.data:
             return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -589,7 +682,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 coin_detail.save()
                 if 'text' in request.data:
                     text = request.data.get('text')
-                    language = request.data.get('language','')
+                    language = request.data.get('language', '')
                     item.feedback = text
                     user_message = UserMessage()
                     user_message.status = 0
@@ -726,163 +819,75 @@ class RunningView(ListAPIView):
             return float(normalize_fraction(item, 4))
 
     def list(self, request, *args, **kwargs):
-        user_register = User.objects.filter(is_robot=0)
-        register_num = user_register.count()
-        user_invite = user_register.extra(select={
-            'sum_invite': 'select count(*) from users_userinvitation as ui where ui.inviter_id=users_user.id'}).values(
-            'sum_invite')
-        invite_4 = 0
-        invite_0 = 0
-        for i in user_invite:
-            if i['sum_invite'] == 0:
-                invite_0 += 1
-            if i['sum_invite'] >= 4:
-                invite_4 += 1
-        gsg_eq_0_user = user_register.filter(integral=0).count()
-        gsg_sum_integral = self.ts_null_2_zero(
-            user_register.values('integral').aggregate(Sum('integral'))['integral__sum'])
-        gsg_sum_amount = self.ts_null_2_zero(
-            CoinDetail.objects.filter(user__is_robot=0, coin_name='GSG', sources=4).values('amount').aggregate(
-                Sum('amount'))['amount__sum'])
-        gsg_sent = Decimal(str(gsg_sum_integral)) - Decimal(str(gsg_sum_amount))  # 发放gsg数量
-        recharge_all_sum = UserRecharge.objects.filter(user__is_robot=0).values('user_id').distinct().count()  # 充值总人数
-        present_all_sum = UserPresentation.objects.filter(user__is_robot=0).values(
-            'user_id').distinct().count()  # 提现总人数
-        # hand_recharge = \
-        #     UserRecharge.objects.filter(coin__name='HAND', user__is_robot=0).values('amount').aggregate(Sum('amount'))[
-        #         'amount__sum']
-        # hand_system = CoinDetail.objects.filter(coin_name='HAND', user__is_robot=0, sources__in=[4, 6, 7, 8]).values(
-        #     'amount').aggregate(Sum('amount'))['amount__sum']
-        # records = Record.objects.filter(source=Record.NORMAL, roomquiz_id=1)
-        # hand_bet = records.values('bet').aggregate(Sum('bet'))['bet__sum']
-        # hand_out = records.filter(quiz__status=5, option__option__is_right=1).annotate(
-        #     hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
-        # hand_in = records.filter(quiz__status=5, option__option__is_right=0).annotate(
-        #     hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
-        # hand_bet_not_begin = records.filter(quiz__status=0).aggregate(Sum('bet'))['bet__sum']
-        # hand_rest = \
-        #     UserCoin.objects.filter(user__is_robot=0, coin__name='HAND').values('balance').aggregate(Sum('balance'))[
-        #         'balance__sum']
-        # hand_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt=0, coin__name='HAND').count()
-        # hand_sent = hand_rest + hand_bet_not_begin + hand_in - hand_recharge
-        # usdt_record = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=6)
-        # usdt_recharge_count = UserRecharge.objects.filter(user__is_robot=0, coin__name='USDT').values(
-        #     'user_id').distinct().count()
-        # usdt_recharge = \
-        #     UserRecharge.objects.filter(coin__name='USDT', user__is_robot=0).values('amount').aggregate(Sum('amount'))[
-        #         'amount__sum']
-        # usdt_bet = usdt_record.values('bet').aggregate(Sum('bet'))['bet__sum']
-        # usdt_out = usdt_record.filter(quiz__status=5, option__option__is_right=1).annotate(
-        #     hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
-        # usdt_in = usdt_record.filter(quiz__status=5, option__option__is_right=0).annotate(
-        #     hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
-        # usdt_system = \
-        #     CoinGiveRecords.objects.all().values('coin_give__number').aggregate(total_coin=Sum('coin_give__number'))[
-        #         'total_coin']
-        # usdt_rest = \
-        #     UserCoin.objects.filter(user__is_robot=0, coin__name='USDT').values('balance').aggregate(Sum('balance'))[
-        #         'balance__sum']
-        # usdt_bet_not_begin = usdt_record.filter(quiz__status=0).aggregate(Sum('bet'))['bet__sum']
-        # usdt_balance_max = \
-        #     UserCoin.objects.filter(user__is_robot=0, coin__name='USDT').values('balance').aggregate(Max('balance'))[
-        #         'balance__max']
-        # usdt_lock_coin_max = \
-        #     CoinGiveRecords.objects.filter(user__is_robot=0).values('lock_coin').aggregate(Max('lock_coin'))[
-        #         'lock_coin__max']
-        # usdt_present_temp = CoinGiveRecords.objects.filter(user__is_robot=0, is_recharge_lock=1)
-        # usdt_lock_present = 0
-        # for x in usdt_present_temp:
-        #     if UserPresentation.objects.filter(user_id=x.user_id, coin__name='USDT').exists():
-        #         usdt_lock_present += 1
-        # usdt_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT').count()
-        # usdt_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='USDT', status=1).count()
-        # usdt_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt=0, coin__name='USDT').count()
-        #
-        # int_record = Record.objects.filter(source__in=[Record.NORMAL, Record.GIVE], roomquiz_id=2)
-        # int_recharge_count = UserRecharge.objects.filter(user__is_robot=0, coin__name='INT').values(
-        #     'user_id').distinct().count()
-        # int_recharge = \
-        #     UserRecharge.objects.filter(coin__name='INT', user__is_robot=0).values('amount').aggregate(Sum('amount'))[
-        #         'amount__sum']
-        # int_bet = int_record.values('bet').aggregate(Sum('bet'))['bet__sum']
-        # int_out = int_record.filter(quiz__status=5, option__option__is_right=1).annotate(
-        #     hand_o=F('bet') * (F('odds') - 1)).aggregate(Sum('hand_o'))['hand_o__sum']
-        # int_in = int_record.filter(quiz__status=5, option__option__is_right=0).annotate(
-        #     hand_i=F('bet')).aggregate(Sum('hand_i'))['hand_i__sum']
-        # int_rest = \
-        #     UserCoin.objects.filter(user__is_robot=0, coin__name='INT').values('balance').aggregate(Sum('balance'))[
-        #         'balance__sum']
-        # int_present = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT').count()
-        # int_success = UserPresentation.objects.filter(user__is_robot=0, coin__name='INT', status=1).count()
-        # int_rest_num = UserCoin.objects.filter(user__is_robot=0, balance__gt=0, coin__name='INT').count()
+        # 筛选出有效用户数
+        sql = "select a.id from users_user a"
+        sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+        sql += " where b.count <=3 "
+        sql += " and is_robot=0 and is_block=0"
+        dt_all = list(get_sql(sql))
 
-        #     results.append(temp_dict)
-        # for x in records:
-        #     option = Option.objects.filter(is_right=1, rule_id=x.rule_id)
-        #     if len(option) > 0:
-        #         if option[0].id == x.option.option_id:
-        #             hand_out += x.bet * (x.odds - 1)
-        #         else:
-        #             hand_in += x.bet
-        # data = {'register_num': register_num,  # 总注册用户数
-        #         'invite_4': invite_4,  # 邀请4个以上的用户数
-        #         'invite_0': invite_0,  # 邀请0个用户数
-        #         'gsg_0': gsg_0,  # gsg余额为0用户数
-        #         'gsg_sent': gsg_sent,  # gsg发放的金额数
-        #         'gsg_rest': sum_integral,  # gsg余额
-        #         'recharge_sum': recharge_sum,  # 充值人数
-        #         'present_sum': present_sum,  # 提现人数
-        #         'hand_recharge': hand_recharge,  # hand币充值金额
-        #         'hand_system': hand_system,  # hand币系统发放
-        #         'hand_bet': hand_bet,  # hand币投注金额
-        #         'hand_out': hand_out,  # hand币投注发出金额
-        #         'hand_in': hand_in,  # hand币投注回收金额
-        #         'hand_rest': hand_rest,  ##hand币所有用户余额
-        #         'hand_rest_num': hand_rest_num,
-        #         'hand_bet_not_begin': hand_bet_not_begin,  # hand币投注未开奖金额
-        #         'hand_sent': hand_sent,  # hand币发放金额
-        #         'usdt_recharge_count': usdt_recharge_count,  # usdt充值人数
-        #         'usdt_recharge': 0 if usdt_recharge == None else usdt_recharge,  # usdt充值额度
-        #         'usdt_bet': usdt_bet,  # usdt下注值
-        #         'usdt_out': usdt_out,  # usdt下注平台发放
-        #         'usdt_in': usdt_in,  # usdt下注平台回收
-        #         'usdt_system': usdt_system,  # usdt平台系统赠送
-        #         'usdt_rest': usdt_rest,  # usdt用户余额
-        #         'usdt_bet_not_begin': usdt_bet_not_begin,  # usdt用户投注未结算
-        #         'usdt_balance_max': usdt_balance_max,  # usdt用户余额最大值
-        #         'usdt_lock_coin_max': usdt_lock_coin_max,  # usdt用户锁定金额最大值
-        #         'usdt_lock_present': usdt_lock_present,
-        #         'usdt_success': usdt_success,
-        #         'usdt_present': usdt_present,
-        #         'usdt_rest_num': usdt_rest_num,
-        #         'usdt_earn_gte_10': self.count_earn_coin(10),
-        #         'usdt_earn_gte_20': self.count_earn_coin(20),
-        #         'usdt_earn_gte_30': self.count_earn_coin(30),
-        #         'usdt_earn_gte_40': self.count_earn_coin(40),
-        #         'usdt_earn_gte_50': self.count_earn_coin(50),
-        #         'int_recharge_count': int_recharge_count,
-        #         'int_recharge': 0 if int_recharge == None else int_recharge,
-        #         'int_bet': int_bet,
-        #         'int_out': 0 if int_out == None else int_out,
-        #         'int_in': 0 if int_in == None else int_in,
-        #         'int_rest': int_rest,
-        #         'int_rest_num': int_rest_num,
-        #         'int_success': int_success,
-        #         'int_present': int_present,
-        #         'now_time': datetime.now().strftime('%Y年%m月%d日')
-        #         }
-        data = {
-            'register_num': register_num,  # 总注册用户数
-            'invite_0': invite_0,  # 邀请0个用户数
-            'gsg_0': gsg_eq_0_user,  # gsg余额为0用户数
-            'gsg_sent': gsg_sent,  # gsg发放的金额数
-            'gsg_rest': gsg_sum_integral,  # gsg余额
-            'invite_4': invite_4,  # 邀请4个以上的用户数
-            'recharge_sum': recharge_all_sum,  # 充值人数
-            'present_sum': present_all_sum,  # 提现人数
-            'now_time': datetime.now().strftime('%Y年%m月%d日'),
-            # 'results':results
-        }
+        sql = "select distinct(user_id) from users_userrecharge"
+        dt_recharge = list(get_sql(sql))
+
+        dt_all = list(set(dt_all+dt_recharge))
+        dd = []
+        for x in dt_all:
+            dd.append(x[0])
+        users = tuple(dd)
+        data = {'user_effect': len(users)}  # 有效注册用户
+        # --------------------------------
+        # 总注册用户
+        sql = "select count(id) from users_user "
+        sql += " where is_robot=0"
+        dt_all = get_sql(sql)
+        data['user_all'] = dt_all[0][0] if dt_all[0][0] else 0
+
+        # ---------------------------------
+        # 计算充值人数
+        sql = "select count(distinct(a.user_id)) from users_userrecharge a"
+        sql += " inner join users_user b on b.id = a.user_id"
+        sql += " where b.is_robot=0"
+        sql += " and a.confirmations > 0"
+        dt_all = get_sql(sql)
+        data['recharge_all'] = dt_all[0][0] if dt_all[0][0] else 0
+
+        # ---------------------------------
+        # 计算提现人数
+        # sql = "select count(distinct(a.user_id)) from users_userpresentation a"
+        # sql += " inner join users_user b on b.id = a.user_id"
+        # sql += " where b.is_robot=0"
+        # sql += " and a.status = 1"
+        # dt_all = get_sql(sql)
+        # data['recharge_all'] = dt_all[0][0] if dt_all[0][0] else 0
+
+        # ---------------------------------
+        # 计算GSG总数
+        sql = "select sources, sum(amount) from users_coindetail a"
+        sql += " where user_id in " + str(users)
+        sql += " and coin_name = 'GSG'"
+        sql += " and sources in " + str((CoinDetail.OTHER, CoinDetail.CASHBACK))
+        sql += " group by sources order by sources"
+        dt_all = get_sql(sql)
+        data['sig_gsg'] = float(normalize_fraction(dt_all[0][1] if dt_all[0][1] else 0, 8))
+        data['back_gsg'] = float(normalize_fraction(dt_all[1][1] if dt_all[1][1] else 0, 8))
+
+        sql = "select sum(amount) from users_coindetail a"
+        sql += " where user_id in " + str(users)
+        sql += " and coin_name = 'GSG'"
+        sql += " and sources = " + str(CoinDetail.ACTIVITY)
+        sql_gt_0 = " and amount > 0"
+        sql_lt_0 = " and amount < 0"
+        dt_gt_0 = get_sql(sql + sql_gt_0)
+        dt_lt_0 = get_sql(sql + sql_lt_0)
+        data['activity_out'] = dt_gt_0[0][0] if dt_gt_0[0][0] else 0
+        data['activity_in'] = dt_lt_0[0][0] if dt_lt_0[0][0] else 0
+
+        sql = "select sum(integral) from users_user"
+        sql += " where id in " + str(users)
+        dt_all = get_sql(sql)
+        data['integral_all'] = float(normalize_fraction(dt_all[0][0] if dt_all[0][0] else 0, 8))
+        data['now_time'] = datetime.now().strftime('%Y年%m月%d日')
+
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
@@ -903,12 +908,26 @@ class ClubSts(ListAPIView):
         if item == None:
             return 0
         else:
-            return float(normalize_fraction(item, 4))
+            return float(normalize_fraction(item, 8))
 
+    # from silk.profiling.profiler import silk_profile
+    # @silk_profile()
     def list(self, request, *args, **kwargs):
+
         cursor = connection.cursor()
-        club = int(kwargs['room_id'])
-        # clubs = Club.objects.all()
+        sql = "select a.id from users_user a"
+        sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+        sql += " where b.count <=3 "
+        sql += " and is_robot=0 and is_block=0"
+        sql += " union "
+        sql += " select a.user_id as id from users_userrecharge a "
+        sql += " join users_user b on a.user_id=b.id"
+        sql += " where b.is_robot=0"
+        vsql = sql
+
+        club = kwargs['r_id']
+        data = []
+        # clubs = Club.objects.all().select_related('coin').values('id', 'coin_id', 'coin__name')
         temp_dict = {}
         try:
             room = Club.objects.get(id=club)
@@ -920,11 +939,25 @@ class ClubSts(ListAPIView):
         temp_dict['coin_name'] = room.coin.name
         # -----------------------------------------------------------------------------------
         #         #已结算下注额
+        sql_q = "select id from quiz_quiz where status=5"
+        all_quiz = get_sql(sql_q)
+        if len(all_quiz)==0:
+            quizs = '(0)'
+        else:
+            quiz_all = []
+            for x in all_quiz:
+                quiz_all.append(str(x[0]))
+            quizs = '(' + ','.join(quiz_all) + ')'
+
         sql = "select sum(a.bet) from quiz_record a"
-        sql += " inner join quiz_quiz b on a.quiz_id=b.id"
-        sql += " where source <> " + str(Record.CONSOLE)
+        # sql += " inner join quiz_quiz b on a.quiz_id=b.id"
+        sql += " inner join ("+vsql+ ") c on c.id=a.user_id"
+        # sql += " inner join ("+sql_q+ ") d on d.id=a.quiz_id"
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        # sql += " and a.user_id in " + str(users)
+        sql += " and a.quiz_id in " + quizs
         sql += " and a.roomquiz_id= " + str(r_id)
-        sql += " and b.status=5"
+
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
         bet_total = dt_all[0][0] if dt_all[0][0] else 0
@@ -936,8 +969,11 @@ class ClubSts(ListAPIView):
 
         # -----------------------------------------------------------------------------------
         # 计算用户净放发
-        sql = "select sum(earn_coin) from quiz_record"
-        sql += " where source <> " + str(Record.CONSOLE)
+
+        sql = "select sum(earn_coin) from quiz_record a"
+        sql += " inner join (" + vsql + ") c on c.id=a.user_id"
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        # sql += " and user_id in " + str(users)
         sql += " and roomquiz_id= " + str(r_id)
         sql += " and earn_coin > 0"
         cursor.execute(sql, None)
@@ -956,85 +992,122 @@ class ClubSts(ListAPIView):
         # temp_dict['in'] = \
         #     self.ts_null_2_zero(
         #         records.filter(quiz__status=5, earn_coin__lt=0).aggregate(Sum('bet'))['bet__sum'])
-        temp_dict['earn'] = normalize_fraction(temp_dict['bet_end'] - temp_dict['out'], 8)
+        temp_dict['earn'] = self.ts_null_2_zero(normalize_fraction(temp_dict['bet_end'] - temp_dict['out'], 8))
         # temp_dict['bet_not_begin'] = self.ts_null_2_zero(
         #     records.filter(~Q(quiz__status=5)).aggregate(Sum('bet'))['bet__sum'])
         # -----------------------------------------------------------------------------------
         # 未结算下注额
-        sql = "select sum(bet) from quiz_record a"
-        sql += " inner join quiz_quiz b on a.quiz_id=b.id"
-        sql += " where roomquiz_id= " + str(r_id)
-        sql += " and source <> " + str(Record.CONSOLE)
-        sql += " and  b.status<> 5"
-        cursor.execute(sql, None)
-        dt_all = cursor.fetchall()
-        bet_total = dt_all[0][0] if dt_all[0][0] else 0
-        temp_dict['bet_not_begin'] = self.ts_null_2_zero(bet_total)
+        # sql = "select sum(bet) from quiz_record a"
+        # sql += " inner join quiz_quiz b on a.quiz_id=b.id"
+        # sql += " where roomquiz_id= " + str(r_id)
+        # sql += " and a.source <> " + str(Record.CONSOLE)
+        # sql += " and  b.status<> 5"
+        # cursor.execute(sql, None)
+        # dt_all = cursor.fetchall()
+        # bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        # temp_dict['bet_not_begin'] = self.ts_null_2_zero(bet_total)
         # temp_dict['bet_user_sum'] = records.values('user_id').distinct().count()
         # 计算下注用户数
         # -----------------------------------------------------------------------------------
-        sql = "select count(distinct(user_id)) from quiz_record "
-        sql += "where source <> " + str(Record.CONSOLE)
+        sql = "select count(distinct(user_id)), count(a.id) from quiz_record a "
+        sql += " inner join ("+vsql+ ") c on c.id=a.user_id"
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        # sql += " and a.user_id in " + str(users)
         sql += " and roomquiz_id= " + str(r_id)
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
         bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        bet_times = dt_all[0][1] if dt_all[0][1] else 0
         temp_dict['bet_user_sum'] = bet_total
+        temp_dict['bet_times'] = bet_times
         # -----------------------------------------------------------------------------------
         # 下注次数
-        sql = "select count(id) from quiz_record "
-        sql += "where source <> " + str(Record.CONSOLE)
-        sql += " and roomquiz_id= " + str(r_id)
-        cursor.execute(sql, None)
-        dt_all = cursor.fetchall()
-        bet_total = dt_all[0][0] if dt_all[0][0] else 0
-        temp_dict['bet_times'] = bet_total
+        # sql = "select count(a.id) from quiz_record a"
+        # sql += " where a.source <> " + str(Record.CONSOLE)
+        # sql += " and user_id in " + str(users)
+        # sql += " and roomquiz_id= " + str(r_id)
+        # cursor.execute(sql, None)
+        # dt_all = cursor.fetchall()
+        # bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        # temp_dict['bet_times'] = bet_total
         # temp_dict['bet_times'] = records.count()
         # -----------------------------------------------------------------------------------
         # 计算总余额
         sql = "select sum(a.balance) from users_usercoin a"
-        sql += " inner join users_user b on a.user_id=b.id"
-        sql += " where b.is_robot= 0"
-        sql += " and  coin_id=" + str(coin_id)
+        sql += " inner join (" + vsql + ") c on c.id=a.user_id"
+        # sql += " where user_id in " + str(users)
+        sql += " where  coin_id=" + str(coin_id)
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
         bet_total = dt_all[0][0] if dt_all[0][0] else 0
         temp_dict['rest'] = self.ts_null_2_zero(bet_total)
+
         # temp_dict['rest'] = self.ts_null_2_zero(user_coin.aggregate(Sum('balance'))['balance__sum'])
         # -----------------------------------------------------------------------------------
         # 计算余额大于0用户数
-        sql = "select count(a.user_id) from users_usercoin a"
-        sql += " inner join users_user b on a.user_id=b.id"
-        sql += " where b.is_robot= 0"
-        sql += " and  a.balance > 0"
-        sql += " and  coin_id=" + str(coin_id)
-        cursor.execute(sql, None)
-        dt_all = cursor.fetchall()
-        bet_total = dt_all[0][0] if dt_all[0][0] else 0
-        temp_dict['rest_gt_0'] = self.ts_null_2_zero(bet_total)
+        # sql = "select count(a.user_id) from users_usercoin a"
+        # sql += " inner join users_user b on a.user_id=b.id"
+        # sql += " where b.is_robot= 0"
+        # sql += " and  a.balance > 0"
+        # sql += " and  coin_id=" + str(coin_id)
+        # cursor.execute(sql, None)
+        # dt_all = cursor.fetchall()
+        # bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        # temp_dict['rest_gt_0'] = self.ts_null_2_zero(bet_total)
         # temp_dict['rest_gt_0'] = user_coin.filter(balance__gt=0).values('id').count()
         # -----------------------------------------------------------------------------------
         # user_coin = UserCoin.objects.filter(user__is_robot=0, coin_id=coin_id)
-        sql = "select count(a.user_id) from users_usercoin a"
-        sql += " inner join users_user b on a.user_id=b.id"
-        sql += " where b.is_robot= 0"
-        sql += " and  a.balance = 0"
-        sql += " and  coin_id=" + str(coin_id)
-        cursor.execute(sql, None)
-        dt_all = cursor.fetchall()
-        bet_total = dt_all[0][0] if dt_all[0][0] else 0
-        temp_dict['rest_eq_0'] = self.ts_null_2_zero(bet_total)
+        # sql = "select count(a.user_id) from users_usercoin a"
+        # sql += " inner join users_user b on a.user_id=b.id"
+        # sql += " where b.is_robot= 0"
+        # sql += " and  a.balance = 0"
+        # sql += " and  coin_id=" + str(coin_id)
+        # cursor.execute(sql, None)
+        # dt_all = cursor.fetchall()
+        # bet_total = dt_all[0][0] if dt_all[0][0] else 0
+        # temp_dict['rest_eq_0'] = self.ts_null_2_zero(bet_total)
         # -----------------------------------------------------------------------------------
         # temp_dict['rest_eq_0'] = user_coin.filter(balance=0).values('id').count()
-        recharge = UserRecharge.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
-        temp_dict['recharge_num'] = recharge.count()
-        temp_dict['recharge_user_num'] = recharge.values('user_id').distinct().count()
-        temp_dict['recharge_amount'] = self.ts_null_2_zero(recharge.aggregate(Sum('amount'))['amount__sum'])
-        present = UserPresentation.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
-        temp_dict['present_user_num'] = present.values('user_id').distinct().count()
-        temp_dict['present_amount'] = self.ts_null_2_zero(present.aggregate(Sum('amount'))['amount__sum'])
-        temp_dict['present_num'] = present.count()
-        temp_dict['present_success_num'] = present.select_related().filter(status=1).values('id').count()
+        # recharge = UserRecharge.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
+        # temp_dict['recharge_num'] = recharge.count()
+        # temp_dict['recharge_user_num'] = recharge.values('user_id').distinct().count()
+        # temp_dict['recharge_amount'] = self.ts_null_2_zero(recharge.aggregate(Sum('amount'))['amount__sum'])
+
+        sql = "select sum(a.amount), count(distinct(a.user_id)), count(a.user_id) from users_userrecharge a"
+        sql += " inner join users_user b on b.id = a.user_id"
+        sql += " where b.is_robot=0 and b.is_block=0"
+        sql += " and coin_id = " + str(coin_id)
+        dt_all = get_sql(sql)
+        recharge_amount = dt_all[0][0] if dt_all[0][0] else 0
+        recharge_user_num = dt_all[0][1] if dt_all[0][1] else 0
+        recharge_num = dt_all[0][2] if dt_all[0][2] else 0
+        temp_dict['recharge_num'] = recharge_num
+        temp_dict['recharge_user_num'] = recharge_user_num
+        temp_dict['recharge_amount'] = self.ts_null_2_zero(recharge_amount)
+        if coin_id != 9:
+            temp_dict['wallet'] = temp_dict['recharge_amount']
+        else:
+            temp_dict['wallet'] = self.ts_null_2_zero(temp_dict['recharge_amount'] - 14537.66)  # 钱包里直接扣的，需减去
+
+        #
+        # present = UserPresentation.objects.select_related().filter(user__is_robot=0, coin_id=coin_id)
+        # temp_dict['present_user_num'] = present.values('user_id').distinct().count()
+        # temp_dict['present_amount'] = self.ts_null_2_zero(present.aggregate(Sum('amount'))['amount__sum'])
+        # temp_dict['present_num'] = present.count()
+        # temp_dict['present_success_num'] = present.select_related().filter(status=1).values('id').count()
+
+        sql = "select sum(a.amount), count(distinct(a.user_id)), count(a.user_id) from users_userpresentation a"
+        sql += " inner join users_user b on b.id = a.user_id"
+        sql += " where b.is_robot=0"
+        sql += " and a.coin_id = " + str(coin_id)
+        sql += " and a.status = 1"
+        dt_all = get_sql(sql)
+        present_amount = dt_all[0][0] if dt_all[0][0] else 0
+        present_user_num = dt_all[0][1] if dt_all[0][1] else 0
+        present_num = dt_all[0][2] if dt_all[0][2] else 0
+        temp_dict['present_user_num'] = present_user_num
+        temp_dict['present_amount'] = self.ts_null_2_zero(present_amount)
+        temp_dict['present_num'] = present_num
         # if room.coin.name == 'USDT':
         #     usdt = CoinGiveRecords.objects.select_related().all()
         #     temp_dict['rest_gte_10'] = self.count_earn_coin(usdt, 10)
@@ -1043,7 +1116,17 @@ class ClubSts(ListAPIView):
         #     temp_dict['rest_gte_40'] = self.count_earn_coin(usdt, 40)
         #     temp_dict['rest_gte_50'] = self.count_earn_coin(usdt, 50)
         #     temp_dict['rest_gte_60'] = self.count_earn_coin(usdt, 60)
-        return JsonResponse({'data': [temp_dict]})
+        # import csv
+        # date_x = datetime.now().strftime('%Y%m%d')
+        # save_file = '/home/zhijiefong/sts/' + date_x + 'clubsts.csv'
+        # is_exist = os.path.exists(save_file)
+        # with open(save_file, 'a') as hf:
+        #     writer = csv.DictWriter(hf, temp_dict.keys())
+        #     if not is_exist:
+        #         writer.writeheader()
+        #     writer.writerow(temp_dict)
+        data.append(temp_dict)
+        return JsonResponse({'data': data})
 
 
 class LoginRateView(ListAPIView):
@@ -1121,25 +1204,47 @@ class UserSts(ListAPIView):
     #     else:
     #         return JsonResponse({'Error': '缺少天数'}, status=status.HTTP_400_BAD_REQUEST)
     def list(self, request, *args, **kwargs):
+
+        sql = "select a.id from users_user a"
+        sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+        sql += " where b.count <=3 "
+        sql += " and is_robot=0 and is_block=0"
+        dt_all = list(get_sql(sql))
+
+        sql = "select distinct(user_id) from users_userrecharge"
+        dt_recharge = list(get_sql(sql))
+
+        dt_all = list(set(dt_all + dt_recharge))
+        dd = []
+        for x in dt_all:
+            dd.append(x[0])
+        users = tuple(dd)
+
         new_register = User.objects.filter(is_robot=0, is_block=0).extra(select={'date': 'date(created_at)'}).values(
             'date').annotate(
             date_sum=Count('ip_address', distinct=True)).order_by('date')
         activy_user = LoginRecord.objects.annotate(date=Func(F('login_time'), function='date')).filter(
-            ~Q(user__created_at__date__contains=F('date')), user__is_robot=0).values('date').annotate(
-            date_sum=Count('user_id', distinct=True)).order_by('date')
+            ~Q(user__created_at__date__contains=F('date')), user__is_robot=0, user__is_block=0,
+            user_id__in=users).values('date').annotate(
+            date_sum=Count('ip', distinct=True)).order_by('date')
         presents = UserPresentation.objects.all().filter(status=1).extra(select={'date': 'date(created_at)'}).values(
             'date').annotate(
             date_sum=Count('user_id', distinct=True)).order_by('date')
         recharge = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
             date_sum=Count('user_id', distinct=True)).order_by('date')
-        recharge_time = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
+        recharge_times = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
             date_sum=Count('id')).order_by('date')
+        recharge_register = UserRecharge.objects.all().annotate(
+            date=Func(F('user__created_at'), function='date')).filter(
+            created_at__date=F('date')).values('date').annotate(date_sum=Count('user_id', distinct=True)).order_by(
+            'date')
         items = {
             'new_register': new_register,
             'activy_user': activy_user,
             'presents': presents,
             'recharge': recharge,
-            'recharge_times': recharge_time
+            'recharge_times': recharge_times,
+            'recharge_register': recharge_register
         }
         data = []
         # if club_room ==2:
@@ -1166,16 +1271,27 @@ class UserSts(ListAPIView):
                         items[v].insert(x, {'date': date_now, 'date_sum': 0})
                 if items[v][-1]['date'] < date_now:
                     items[v].append({'date': date_now, 'date_sum': 0})
-        for a, b, c, d, e in zip(*list(items.values())):
+        for a, b, c, d, e, f in zip(*list(items.values())):
             temp_dict = {
                 'date': a['date'].strftime('%m/%d'),
                 '新增有效用户数': float(a['date_sum']),
                 '活跃用户': float(b['date_sum']),
                 '提现人数': float(c['date_sum']),
                 '充值人数': float(d['date_sum']),
-                '充值人次': float(e['date_sum'])
+                '充值人次': float(e['date_sum']),
+                '新用户充值': float(f['date_sum'])
             }
             data.append(temp_dict)
+        # import csv
+        # date_x = datetime.now().strftime('%Y%m%d')
+        # save_file = '/home/zhijiefong/sts/' + date_x + 'user.csv'
+        # is_exist = os.path.exists(save_file)
+        # with open(save_file, 'a') as hf:
+        #     writer = csv.DictWriter(hf, data[0].keys())
+        #     if not is_exist:
+        #         writer.writeheader()
+        #     for info in data:
+        #         writer.writerow(info)
 
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
@@ -1197,6 +1313,7 @@ class CoinSts(ListAPIView):
     # def compute(self, a, b):
     #     return a * (b - 1)
 
+
     def list(self, request, *args, **kwargs):
         club_room = kwargs['club_room']
         try:
@@ -1204,29 +1321,56 @@ class CoinSts(ListAPIView):
         except Exception:
             return JsonResponse({'Error': '俱乐部不存在'}, status=status.HTTP_400_BAD_REQUEST)
         coin_name = club.coin.name
+        sql = "select a.id from users_user a"
+        sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+        sql += " where b.count <=3 "
+        sql += " and is_robot=0 and is_block=0"
+        dt_all = list(get_sql(sql))
+
+        sql = "select distinct(user_id) from users_userrecharge"
+        dt_recharge = list(get_sql(sql))
+
+        dt_all = list(set(dt_all + dt_recharge))
+        dd = []
+        for x in dt_all:
+            dd.append(str(x[0]))
+        users = '('+','.join(dd)+')'
 
         sql = "select date(b.begin_at) as day, sum(a.bet), count(distinct(a.user_id)), count(a.user_id) from quiz_record a"
         sql += " inner join quiz_quiz b on a.quiz_id=b.id"
-        sql += " where b.status=5 and a.source <> " + str(Record.CONSOLE)
+        sql += " inner join users_user c on c.id = a.user_id"
+        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " and c.is_block=0 and user_id in " + str(users)
         sql += " and roomquiz_id = " + str(club.id)
         sql += " group by day order by day"
         dt_sum = get_sql(sql)
         if len(dt_sum) == 0:
             return JsonResponse({'coin_name': coin_name, 'results': []}, status=status.HTTP_200_OK)
+
         sql = "select date(b.begin_at) as day, sum(earn_coin) from quiz_record a"
         sql += " inner join quiz_quiz b on a.quiz_id=b.id"
-        sql += " where b.status=5 and a.source <> " + str(Record.CONSOLE)
+        sql += " inner join users_user c on c.id = a.user_id"
+        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " and c.is_block=0 and user_id in " + str(users)
         sql += " and roomquiz_id = " + str(club.id)
         sql += " and earn_coin > 0"
         sql += " group by day order by day"
         dt_earn = get_sql(sql)
 
-        sql = 'select date(a.created_at) as day, sum(a.amount) as day from users_userrecharge a'
+        sql = 'select date(a.created_at) as day, sum(a.amount) as amount from users_userrecharge a'
         sql += ' inner join users_user b on b.id=a.user_id'
         sql += ' where b.is_robot=0'
         sql += ' and a.coin_id=' + str(club.coin_id)
         sql += ' group by day'
         dt_recharge = get_sql(sql)
+
+        sql = "select date(a.created_at) as day, sum(a.amount) as amount from users_userpresentation a"
+        sql += " inner join users_user b on b.id=a.user_id"
+        sql += " where b.is_block=0 and b.is_robot=0"
+        sql += " and a.status=1"
+        sql += " and a.coin_id=" + str(club.coin_id)
+        sql += " group by day"
+        dt_present = get_sql(sql)
 
         data = []
         for x, y in zip(*[dt_sum, dt_earn]):
@@ -1242,24 +1386,35 @@ class CoinSts(ListAPIView):
             temp_dict['净盈利'] = float(normalize_fraction(temp_dict['总投注额'] - temp_dict['净发放'], 8))
             data.append(temp_dict)
 
-        data_recharge=[]
+        data_recharge = []
         for x in dt_recharge:
             temp_dict2 = {
                 'date': x[0].strftime('%m/%d'),
-                '充值总额':float(normalize_fraction(x[1], 8))
+                'coin_name': coin_name,
+                '充值总额': float(normalize_fraction(x[1], 8))
             }
             data_recharge.append(temp_dict2)
+        data_present = []
+        for x in dt_present:
+            temp_dict3 = {
+                'date': x[0].strftime('%m/%d'),
+                'coin_name': coin_name,
+                '提现总额': float(normalize_fraction(x[1], 8))
+            }
+            data_present.append(temp_dict3)
         # import csv
         # date = datetime.now().strftime('%Y%m%d')
-        # save_file = '/home/zhijiefong/sts/' + date + 'gsg.csv'
+        # save_file = '/home/zhijiefong/sts/' + date + 'data.csv'
         # is_exist = os.path.exists(save_file)
         # with open(save_file, 'a') as hf:
         #     writer = csv.DictWriter(hf, data[0].keys())
         #     if not is_exist:
         #         writer.writeheader()
-        #     for info in data:
+        #     for info in data :
         #         writer.writerow(info)
-        return JsonResponse({'coin_name': coin_name, 'results': data, 'recharge':data_recharge}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {'coin_name': coin_name, 'results': data, 'recharge': data_recharge, 'present': data_present},
+            status=status.HTTP_200_OK)
 
 
 class CoinAllSts(ListAPIView):
@@ -1342,75 +1497,196 @@ class SameIPAddressView(ListAPIView):
         return users
 
 
-# class JJtest(ListCreateAPIView):
+class GSGStsView(ListAPIView):
     """
-    测试
+    GSG统计
     """
 
-    # def list(self, request, *args, **kwargs):
-    #     new_register = User.objects.filter(is_robot=0, is_block=0).extra(select={'date': 'date(created_at)'}).values(
-    #         'date').annotate(
-    #         date_sum=Count('ip_address',distinct=True)).order_by('date')
-    #     activy_user = LoginRecord.objects.annotate(date=Func(F('login_time'), function='date')).filter(
-    #         ~Q(user__created_at__date__contains=F('date')), user__is_robot=0).values('date').annotate(
-    #         date_sum=Count('user_id', distinct=True)).order_by('date')
-    #     presents = UserPresentation.objects.all().filter(status=1).extra(select={'date': 'date(created_at)'}).values('date').annotate(
-    #         date_sum=Count('user_id', distinct=True)).order_by('date')
-    #     recharge = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
-    #         date_sum=Count('user_id', distinct=True)).order_by('date')
-    #     recharge_time = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
-    #         date_sum=Count('id')).order_by('date')
-    #     items = {
-    #         'new_register': new_register,
-    #         'activy_user': activy_user,
-    #         'presents': presents,
-    #         'recharge': recharge,
-    #         'recharge_times':recharge_time
-    #     }
-    #     data = []
-    #     # if club_room ==2:
-    #     #     print(coin_out ,'|', coin_in ,'|', bet_user,'|', bet_times,'|', bet_sum)
-    #     min_date = date(2099, 1, 1)
-    #     max_date = date(1970, 1, 1)
-    #     for x in items:
-    #         if len(items[x]) > 0:
-    #             items[x] = [n for n in items[x]]
-    #             if items[x][0]['date'] < min_date:
-    #                 min_date = items[x][0]['date']
-    #             if items[x][-1]['date'] > max_date:
-    #                 max_date = items[x][-1]['date']
-    #     if min_date == date(2099, 1, 1) or max_date == date(1970, 1, 1):
-    #         return JsonResponse({'results': []}, status=status.HTTP_200_OK)
-    #     delta = (max_date - min_date).days
-    #     for x in range(delta + 1):
-    #         for v in items:
-    #             date_now = min_date + timedelta(x)
-    #             if len(items[v]) == 0:
-    #                 items[v] = [{'date': date_now, 'date_sum': 0}]
-    #             if items[v][-1]['date'] > date_now:
-    #                 if items[v][x]['date'] != date_now:
-    #                     items[v].insert(x, {'date': date_now, 'date_sum': 0})
-    #             if items[v][-1]['date'] < date_now:
-    #                 items[v].append({'date': date_now, 'date_sum': 0})
-    #     for a, b, c, d, e in zip(*list(items.values())):
-    #         temp_dict = {
-    #             'date': a['date'].strftime('%m/%d'),
-    #             '新增有效用户数': float(a['date_sum']),
-    #             '活跃用户': float(b['date_sum']),
-    #             '提现人数': float(c['date_sum']),
-    #             '充值人数': float(d['date_sum']),
-    #             '充值人次': float(e['date_sum'])
-    #         }
-    #         data.append(temp_dict)
-    #     import csv
-    #     date_x = datetime.now().strftime('%Y%m%d')
-    #     save_file = '/home/zhijiefong/sts/'+ date_x +'user.csv'
-    #     with open(save_file, 'w') as hf:
-    #         writer = csv.DictWriter(hf, data[0].keys())
-    #         writer.writeheader()
-    #         for info in data:
-    #             writer.writerow(info)
-    #     return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+    def list(self, request, *args, **kwargs):
+        sql = "select a.id from users_user a"
+        sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+        sql += " where b.count <=3 "
+        sql += " and is_robot=0 and is_block=0"
+        dt_all = list(get_sql(sql))
+
+        sql = "select distinct(user_id) from users_userrecharge"
+        dt_recharge = list(get_sql(sql))
+
+        dt_all = list(set(dt_all + dt_recharge))
+        dd = []
+        for x in dt_all:
+            dd.append(x[0])
+        users = tuple(dd)
+        user_all = len(users)
+
+
+        sql = "select sum(balance) from users_usercoin a"
+        sql += " where user_id in " + str(users)
+        sql += " and coin_id=6"
+        dt_all_sum = get_sql(sql)
+        integral_login = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
+
+
+        sql = "select sum(integral) from users_user a"
+        sql += " where a.id not in (select distinct(user_id) from users_usercoin where coin_id=6)"
+        sql += " and a.id in " +  str(users)
+        dt_all_sum = get_sql(sql)
+        integral_unlogin = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
+
+        sql = "select count(distinct(user_id)) from users_coindetail a"
+        sql += " inner join users_user b on a.user_id = b.id"
+        sql += " where a.user_id in " + str(users)
+        sql += " and coin_name = 'HAND'"
+        sql += " and sources = " + str(CoinDetail.OTHER)
+        sql += " and amount > 400"
+        dt_sig_count = get_sql(sql)
+        sig_all = dt_sig_count[0][0] if dt_sig_count[0][0] else 0
+
+        sql = "select count(distinct(user_id)) from users_userrecharge a"
+        sql += " inner join users_user b on a.user_id = b.id"
+        sql += " where b.is_robot=0 and b.is_block=0"
+        sql += " and a.confirmations > 0"
+        dt_recharge_count = get_sql(sql)
+        recharge_all = dt_recharge_count[0][0] if dt_recharge_count[0][0] else 0
+
+        sql = "select date(a.created_at) as day, count(a.user_id) from users_coindetail a"
+        sql += " inner join users_user b on a.user_id = b.id"
+        sql += " where b.is_robot=0 and coin_name='HAND'"
+        sql += " and a.sources = " + str(CoinDetail.OTHER)
+        sql += " and user_id in " + str(users)
+        sql_gt_0 = " and amount > 0 group by day"
+        sql_gt_3 = " and amount > 400 group by day"
+        dt_gt_0 = list(get_sql(sql + sql_gt_0))
+        dt_gt_3 = list(get_sql(sql + sql_gt_3))
+
+        sql = "select date(a.created_at) as day, sum(amount) from users_coindetail a"
+        sql += " inner join users_user b on a.user_id = b.id"
+        sql += " where b.is_robot=0 and coin_name='GSG'"
+        sql += " and user_id in " + str(users)
+        sql_sig = " and sources= " + str(CoinDetail.OTHER) + " group by day"
+        sql_back = " and sources= " + str(CoinDetail.CASHBACK) + " group by day"
+        sql_act_gt_0 = "and sources= " + str(CoinDetail.ACTIVITY) + " and amount > 0 group by day"
+        sql_act_lt_0 = "and sources= " + str(CoinDetail.ACTIVITY) + " and amount < 0 group by day"
+        dt_sig = list(get_sql(sql + sql_sig))
+        dt_back = list(get_sql(sql + sql_back))
+        dt_act_gt_0 = list(get_sql(sql + sql_act_gt_0))
+        dt_act_lt_0 = list(get_sql(sql + sql_act_lt_0))
+        items = [dt_gt_0, dt_gt_3, dt_sig, dt_back, dt_act_gt_0, dt_act_lt_0]
+        data = []
+        min_date = date(2099, 1, 1)
+        max_date = date(1970, 1, 1)
+        for i, x in enumerate(items):
+            if len(x) > 0:
+                if x[0][0] < min_date:
+                    min_date = x[0][0]
+                if x[-1][0] > max_date:
+                    max_date = x[-1][0]
+        if min_date == date(2099, 1, 1) or max_date == date(1970, 1, 1):
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+        delta = (max_date - min_date).days
+        for x in range(delta + 1):
+            for v in items:
+                date_now = min_date + timedelta(x)
+                if len(v) == 0:
+                    v = [(date_now, 0)]
+                if v[-1][0] > date_now:
+                    if v[x][0] != date_now:
+                        v.insert(x, (date_now, 0))
+                if v[-1][0] < date_now:
+                    v.append((date_now, 0))
+        for a, b, c, d, e, f in zip(*items):
+            temp_dict = {
+                'date': a[0].strftime('%m/%d'),
+                '签到人数': int(a[1]),
+                '连续签到大于3天人数': int(b[1]),
+                '签到赠送数量': float(normalize_fraction(c[1], 8)),
+                '返现赠送数量': float(normalize_fraction(d[1], 8)),
+                '抽奖赠送数量': float(normalize_fraction(e[1], 8)),
+                '抽奖回收数量': float(normalize_fraction(f[1], 8))
+            }
+            data.append(temp_dict)
+        # import csv
+        # date_x = datetime.now().strftime('%Y%m%d')
+        # save_file = '/home/zhijiefong/sts/'+ date_x +'xxgsg.csv'
+        # with open(save_file, 'w') as hf:
+        #     writer = csv.DictWriter(hf, data[0].keys())
+        #     writer.writeheader()
+        #     for info in data:
+        #         writer.writerow(info)
+        return JsonResponse(
+            {'user_all': user_all, 'integral_login': integral_login, 'integral_unlogin': integral_unlogin, 'sig_all': sig_all, 'recharge_all': recharge_all,
+             'results': data}, status=status.HTTP_200_OK)
+
+
+# class JJtest(ListCreateAPIView):
+#     """
+#     测试
+#     """
+
+# def list(self, request, *args, **kwargs):
+#     new_register = User.objects.filter(is_robot=0, is_block=0).extra(select={'date': 'date(created_at)'}).values(
+#         'date').annotate(
+#         date_sum=Count('ip_address',distinct=True)).order_by('date')
+#     activy_user = LoginRecord.objects.annotate(date=Func(F('login_time'), function='date')).filter(
+#         ~Q(user__created_at__date__contains=F('date')), user__is_robot=0).values('date').annotate(
+#         date_sum=Count('user_id', distinct=True)).order_by('date')
+#     presents = UserPresentation.objects.all().filter(status=1).extra(select={'date': 'date(created_at)'}).values('date').annotate(
+#         date_sum=Count('user_id', distinct=True)).order_by('date')
+#     recharge = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
+#         date_sum=Count('user_id', distinct=True)).order_by('date')
+#     recharge_time = UserRecharge.objects.all().extra(select={'date': 'date(created_at)'}).values('date').annotate(
+#         date_sum=Count('id')).order_by('date')
+#     items = {
+#         'new_register': new_register,
+#         'activy_user': activy_user,
+#         'presents': presents,
+#         'recharge': recharge,
+#         'recharge_times':recharge_time
+#     }
+#     data = []
+#     # if club_room ==2:
+#     #     print(coin_out ,'|', coin_in ,'|', bet_user,'|', bet_times,'|', bet_sum)
+#     min_date = date(2099, 1, 1)
+#     max_date = date(1970, 1, 1)
+#     for x in items:
+#         if len(items[x]) > 0:
+#             items[x] = [n for n in items[x]]
+#             if items[x][0]['date'] < min_date:
+#                 min_date = items[x][0]['date']
+#             if items[x][-1]['date'] > max_date:
+#                 max_date = items[x][-1]['date']
+#     if min_date == date(2099, 1, 1) or max_date == date(1970, 1, 1):
+#         return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+#     delta = (max_date - min_date).days
+#     for x in range(delta + 1):
+#         for v in items:
+#             date_now = min_date + timedelta(x)
+#             if len(items[v]) == 0:
+#                 items[v] = [{'date': date_now, 'date_sum': 0}]
+#             if items[v][-1]['date'] > date_now:
+#                 if items[v][x]['date'] != date_now:
+#                     items[v].insert(x, {'date': date_now, 'date_sum': 0})
+#             if items[v][-1]['date'] < date_now:
+#                 items[v].append({'date': date_now, 'date_sum': 0})
+#     for a, b, c, d, e in zip(*list(items.values())):
+#         temp_dict = {
+#             'date': a['date'].strftime('%m/%d'),
+#             '新增有效用户数': float(a['date_sum']),
+#             '活跃用户': float(b['date_sum']),
+#             '提现人数': float(c['date_sum']),
+#             '充值人数': float(d['date_sum']),
+#             '充值人次': float(e['date_sum'])
+#         }
+#         data.append(temp_dict)
+#     import csv
+#     date_x = datetime.now().strftime('%Y%m%d')
+#     save_file = '/home/zhijiefong/sts/'+ date_x +'user.csv'
+#     with open(save_file, 'w') as hf:
+#         writer = csv.DictWriter(hf, data[0].keys())
+#         writer.writeheader()
+#         for info in data:
+#             writer.writerow(info)
+#     return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 # #
 #     def list(self, request, *args, **kwargs):
 #         clubs = Club.objects.all()
@@ -1468,19 +1744,52 @@ class SameIPAddressView(ListAPIView):
 #         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
-    # @transaction.atomic()
-    # def post(self, request, *args, **kwargs):
-    #     user_id = int(request.data.get('user'))
-    #     count = request.data.get('count')
-    #     try:
-    #         user = User.objects.select_for_update().get(id=user_id)
-    #     except Exception:
-    #         raise
-    #     login_record = LoginRecord()
-    #     login_record.user_id= user.id
-    #     user.integral +=1
-    #     login_record.ip = user.integral
-    #     login_record.save()
-    #     user.save()
-    #
-    #     return JsonResponse({'data':count},status=status.HTTP_200_OK)
+# @transaction.atomic()
+# def post(self, request, *args, **kwargs):
+#     user_id = int(request.data.get('user'))
+#     count = request.data.get('count')
+#     try:
+#         user = User.objects.select_for_update().get(id=user_id)
+#     except Exception:
+#         raise
+#     login_record = LoginRecord()
+#     login_record.user_id= user.id
+#     user.integral +=1
+#     login_record.ip = user.integral
+#     login_record.save()
+#     user.save()
+#
+#     return JsonResponse({'data':count},status=status.HTTP_200_OK)
+
+class IpLoginView(ListAPIView):
+    """
+    显示每天登录第一个Ip地址
+    """
+
+    def list(self, request, *args, **kwargs):
+        user_id = kwargs['user_id']
+        # ips = LoginRecord.objects.filter(user_id=user_id).extra(select={'date': 'date(login_time)'}).values(
+        #     'user__username', 'date').annotate(ip=F('ip'),first_time=Min('login_time')).order_by('-date')[:15]
+        sql="select c.username, ip, first_time from users_loginrecord a"
+        sql+=" join  (select user_id , date(login_time)  as day, min(login_time)  as first_time " \
+             " from users_loginrecord  " \
+             " where user_id =" + str(user_id)+" group by user_id,day) b "
+        sql+=" on  a.login_time=b.first_time"
+        sql+=" join users_user c on a.user_id=c.id"
+        sql+=" order by first_time desc"
+        sql+=" limit 15"
+        dt_all=get_sql(sql)
+        # dt_all = LoginRecord.objects
+        if len(dt_all)==0:
+            return JsonResponse({'results':[]}, status=status.HTTP_200_OK)
+        else:
+            data=[]
+            for x in dt_all:
+                temp_dict={
+                    'username':x[0],
+                    'ip':x[1],
+                    'first_time':x[2].strftime('%Y-%m-%d %H:%M:%S'),
+                }
+                data.append(temp_dict)
+            return JsonResponse({'results':data}, status=status.HTTP_200_OK)
+

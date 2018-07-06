@@ -56,7 +56,10 @@ urlpatterns = [
     # 留存率统计
     path('remain_rate/', views.RemainRate.as_view(), name='user-backend-remain_rate'),
     # 俱乐部统计
-    path('run_data/club_sts/<int:room_id>/', views.ClubSts.as_view(), name='user-backend-run_data-clubsts'),
+    path('run_data/club_sts/<int:r_id>/', views.ClubSts.as_view(), name='user-backend-run_data-clubsts'),
+    # gsg统计
+    path('gsg_sts/', views.GSGStsView.as_view(), name='user-backend-gsg_sts'),
     # test
     # path('jjtest/', views.JJtest.as_view(), name='user-backend-test')
+    path('ip_first/<int:user_id>/', views.IpLoginView.as_view(), name='user-backend-ip_first')
 ]
