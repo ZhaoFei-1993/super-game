@@ -11,29 +11,34 @@ import os
 from django.conf import settings
 #from django_redis import get_redis_connection
 from redis import Redis
-
+from base.app import BaseView
 #base_url = "http://127.0.0.1:3001/api/v1/account/gethightblock"
 
-class Command(BaseCommand):
+class Command(BaseCommand,BaseView):
     help = "获取ETH_blocknum"
     cacheKey = 'pre_eth_block_num'
     listKey = 'pre_eth_block_list'
 
+    def add_arguments(self, parser):
+        parser.add_argument('blocknum', type=str)
+
+    #python manage.py eth_blocknum 0
+    #:param blocknum  default=0
     def handle(self, *args, **options):
+        redis_obj = Redis()
+        param_blocknum = int(options['blocknum'])  #从参数中传进
+        if param_blocknum != 0:
+            redis_obj.set(self.cacheKey, param_blocknum, 86400)
+
         eth_wallet = Wallet()
         #raise CommandError('name' + '无效')
         start_time = time()
-        #test
-        #h_data = {'name123': 'test', 'description123': 'some test repo'}
-        #h_data = {}
-        #response = requests.get(url=base_url, headers=h_data)
-        #json_data = eth_wallet.get(url='v1/chain/transactions/' + address)
         #obj = json.loads(response.text)
         obj = eth_wallet.get(url='/api/v1/account/gethightblock')
         content = obj['data']['blocknum']
         print('获取到block:',content)
         if not content:
-            print("获取blocknum失败", i)
+            print("获取blocknum失败")
             return
 
         os.chdir(settings.BASE_DIR + '/cache')
@@ -43,12 +48,13 @@ class Command(BaseCommand):
         #
         # f.close()
 
-        redis_obj = Redis()
         cache_blocknum = int(redis_obj.get(self.cacheKey).decode('utf-8'))
         #缓存中blocknum
         if cache_blocknum < content:
             redis_obj.set(self.cacheKey, content, 86400)
-            redis_obj.lpush(self.listKey, content)
+            for i in range(cache_blocknum,content):
+                redis_obj.lpush(self.listKey, i)
+
         #print(cache_blocknum)
 
         stop_time = time()
