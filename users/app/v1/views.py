@@ -1521,7 +1521,7 @@ class PresentationListView(ListAPIView):
                     'coin_icon': x['coin_icon'],
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
-                    'status': x['status'],
+                    'status_code': x['status'],
                     'created_at': x['created_at']
                 }
             )
