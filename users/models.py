@@ -260,6 +260,7 @@ class CoinDetail(models.Model):
     RETURN = 9
     CASHBACK = 10
     LOCK = 11
+    DEVIDEND = 12
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -272,7 +273,8 @@ class CoinDetail(models.Model):
         (INVITE, "邀请好友"),
         (RETURN, "返还"),
         (CASHBACK, "返现"),
-        (LOCK, "锁定")
+        (LOCK, "锁定"),
+        (DEVIDEND, "分红")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
@@ -309,9 +311,11 @@ class CoinLock(models.Model):
 class UserCoinLock(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
-    amount = models.IntegerField(verbose_name="锁定金额", default=0)
+    amount = models.DecimalField(verbose_name="锁定金额", max_digits=32, decimal_places=18,
+                                    default=0.000000000000000000)
     end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
     is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
+    is_divided = models.BooleanField(verbose_name="是否已分红",default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -663,3 +667,33 @@ class Robot(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "可疑用户表"
+
+
+@reversion.register()
+class Dividend(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    user_lock = models.ForeignKey(UserCoinLock, on_delete=models.CASCADE)
+    divide = models.DecimalField(verbose_name="分红额", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    created_at = models.DateTimeField(verbose_name="创建时间",auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红表"
+
+
+
+@reversion.register()
+class GSGAssetAccount(models.Model):
+    NORMAL = 0
+    LOCKED = 1
+    SUPER = 2
+    TYPE_CHOICE = (
+        (NORMAL, "普通账户"),
+        (LOCKED, "锁定账号"),
+        (SUPER, "总账户"),
+    )
+    account_name = models.CharField(verbose_name="账号名", max_length=32, default="")
+    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255,default="")
+    account_type = models.CharField(verbose_name="账户类型", choices=TYPE_CHOICE, max_length=1, default=NORMAL)
+    balance = models.DecimalField(verbose_name="余额", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)

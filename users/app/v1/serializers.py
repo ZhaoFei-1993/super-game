@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 import pytz
-from django.db.models import Q
+from django.db.models import Q, Sum
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
@@ -13,7 +13,7 @@ from base import code as error_code
 from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql, \
     gsg_coin_initialization
 from api import settings
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from django.utils import timezone
 from django.core.cache import caches
 from decimal import Decimal
@@ -101,7 +101,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
         else:
             is_user = 0
         return is_user
-
 
     @staticmethod
     def get_is_passcode(obj):  # 密保
@@ -295,43 +294,64 @@ class MessageListSerialize(serializers.ModelSerializer):
         return data
 
 
-class AssetSerialize(serializers.ModelSerializer):
+class LockSerialize(serializers.ModelSerializer):
     """
-    资产信息
+    GSG锁定列表序列化
     """
-    period = serializers.CharField(source='coin_lock.period')
-    profit = serializers.DecimalField(source='coin_lock.profit', max_digits=1000000, decimal_places=3)
-    time_delta = serializers.SerializerMethodField()
+    period = serializers.SerializerMethodField()
+    # time_delta = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     end_time = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
+    icon = serializers.CharField(source='coin_lock.coin.icon')
 
     class Meta:
         model = UserCoinLock
-        fields = ("id", "amount", "period", 'profit', 'created_at', 'end_time', 'time_delta', 'is_free')
+        fields = ("id", "amount", "period", "created_at", "icon", "end_time", "is_free", "is_divided", "status")
+
+    # @staticmethod
+    # def get_time_delta(obj):
+    #     now = datetime.now()
+    #     if obj.is_free:
+    #         return "已解锁"
+    #     else:
+    #         delta = obj.end_time - now
+    #         d = delta.days
+    #         h = int(delta.seconds / 3600)
+    #         m = int((delta.seconds % 3600) / 60)
+    #         # s = int(delta.seconds % 60)
+    #         value = '剩余锁定时间:%d天%d小时%d分' % (d, h, m)
+    #         # for item in {'0天': d, '0小时': h, '0分': m}.items():
+    #         #     if item[0] in value and item[1] == 0:
+    #         #         value = value.replace(item[0], '')
+    #         return value
 
     @staticmethod
-    def get_time_delta(obj):
-        now = datetime.utcnow()
-        now = now.replace(tzinfo=pytz.timezone('UTC'))
+    def get_amount(obj):
+        amount = normalize_fraction(obj.amount, 6)
+        return amount
+
+    @staticmethod
+    def get_status(obj):
         if obj.is_free:
-            return "已解锁"
+            if obj.is_divided:
+                return '到期已分红'
+            else:
+                return '到期未分红'
         else:
-            delta = obj.end_time - now
-            d = delta.days
-            h = int(delta.seconds / 3600)
-            m = int((delta.seconds % 3600) / 60)
-            # s = int(delta.seconds % 60)
-            value = '剩余锁定时间:%d天%d小时%d分' % (d, h, m)
-            # for item in {'0天': d, '0小时': h, '0分': m}.items():
-            #     if item[0] in value and item[1] == 0:
-            #         value = value.replace(item[0], '')
-            return value
+            return '锁定中'
+
+    @staticmethod
+    def get_period(obj):
+        period = obj.end_time.date() - obj.created_at.date()
+        return period.days
 
     @staticmethod
     def get_created_at(obj):
         # created_time = timezone.localtime(obj.created_at)
         created_time = obj.created_at
-        created_at = created_time.strftime("%Y/%m/%d")
+        created_at = created_time.strftime("%Y/%m/%d %H:%M")
         return created_at
 
     @staticmethod
@@ -522,6 +542,11 @@ class UserCoinSerialize(serializers.ModelSerializer):
             coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
             coin_lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
             lock_coin += coin_lock_coin
+        if obj.coin.name == "GSG":
+            coin_locks = UserCoinLock.objects.filter(user_id=obj.user.id, is_free=0).aggregate(Sum('amount'))[
+                'amount__sum']
+            coin_locks = coin_locks if coin_locks else 0
+            lock_coin = normalize_fraction(coin_locks, 8)
         return lock_coin
 
     @staticmethod
