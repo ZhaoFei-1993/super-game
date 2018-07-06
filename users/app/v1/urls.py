@@ -55,6 +55,12 @@ urlpatterns = [
     # 充值记录表明细
     path('asset/list_recharge/<int:coin_id>/<int:r_id>/', views.RechargeDetailView.as_view(),
          name='app-v1-user-asset-list_recharge-detail'),
+    # 用户GSG锁定
+    path('asset/lock/',views.AssetLock.as_view(), name='app-v1-user-asset-lock'),
+    # 用户GSG锁定记录列表
+    path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
+    # 用户GSG锁定记录详情及延长锁定设置
+    path('asset/lock_list/<int:id>/', views.LockDetailView.as_view(), name='app-v1-user-asset-lock_detail'),
     # 用户设置其他(index支持1-5)
     path('setting_others/<int:index>/', views.SettingOthersView.as_view(), name='app-v1-user-setting_others'),
     # 用户充值

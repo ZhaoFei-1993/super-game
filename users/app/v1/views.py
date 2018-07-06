@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
-    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, AssetSerialize, \
+    PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, LockSerialize, \
     CountriesSerialize, UserRechargeSerizlize
 import qrcode
 from django.core.cache import caches
@@ -10,10 +10,10 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries
+    UserCoinLock, Countries, Dividend
 from chat.models import Club
 from console.models import Address
-from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
+from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from base.function import LoginRequired
 from base.function import randomnickname, weight_choice
 from sms.models import Sms
@@ -301,10 +301,7 @@ class UserRegister(object):
         for coin in coins:
             user_id = userinfo.id
             coin_id = coin.id
-            if int(coin_id) == 6:
-                gsg_coin_initialization(user_id, coin_id)
-            else:
-                coin_initialization(user_id, coin_id)
+            coin_initialization(user_id, coin_id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -713,9 +710,9 @@ class InfoView(ListAPIView):
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
-            'is_passcode': int(items[0]["is_passcode"]),
+            'is_passcode': items[0]["is_passcode"],
             'is_message': is_message,
-            'is_sound': int(items[0]["is_sound"]),
+            'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
             'is_sign': is_sign}})
 
@@ -841,7 +838,7 @@ class RankingView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         user = request.user
-        user_gsg = UserCoin.objects.get(pk=6)
+        user_gsg = UserCoin.objects.get(user_id=user.id, coin_id=6)
         user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
         my_ran = "未上榜"
         if self.request.GET.get('language') == 'en':
@@ -1279,6 +1276,8 @@ class AssetView(ListAPIView):
                 'recharge_address': list["address"],
                 'balance': list["balance"],
                 'locked_coin': list["locked_coin"],
+                'is_reality': list["is_reality"],
+                'is_recharge': list["is_recharge"],
                 'service_charge': list["service_charge"],
                 'service_coin': list["service_coin"],
                 'min_present': list["min_present"],
@@ -1288,20 +1287,29 @@ class AssetView(ListAPIView):
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance, eth.coin.coin_accuracy)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
+            if temp_dict['coin_name']=='GSG':
+                coinlocks = CoinLock.objects.filter(coin__name='GSG').order_by('period')
+                if not coinlocks.exists():
+                    raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                else:
+                    for i, x in enumerate(coinlocks):
+                        s = 'day_' + str(i)
+                        temp_dict[s]=x.period
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
                               'user_integral': normalize_fraction(integral, 2), 'data': data})
 
 
-class AssetLockView(CreateAPIView):
+class AssetLock(CreateAPIView):
     """
-    资产锁定
+    GSG锁定
     """
     permission_classes = (LoginRequired,)
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, 'locked_days', 'amounts', 'coin_id')
+        value = value_judge(request, 'locked_days', 'amounts')
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -1311,18 +1319,18 @@ class AssetLockView(CreateAPIView):
             raise
         amounts = Decimal(str(request.data.get('amounts')))
         locked_days = int(request.data.get('locked_days'))
+        # coin_id = int(request.data.get('coin_id'))
+        coin_id=6
         try:
-            coin = Coin.objects.get()
+            coin = Coin.objects.get(id=coin_id)
             coin_configs = \
-                CoinLock.objects.get(period=locked_days, is_delete=0, Coin_id=coin.id)
-            user_coin = UserCoin.objects.get(user_id=userid, coin_id=coin.id)
+                CoinLock.objects.get(period=locked_days, is_delete=0, coin_id=coin.id)
+            user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin_id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-
-        if amounts > user_coin.balance \
-                or amounts == 0 \
-                or amounts > coin_configs.limit_end \
-                or amounts < coin_configs.limit_start:
+        if coin.name != 'GSG':
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if amounts <=0 or amounts > user_coin.balance:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance -= amounts
         user_coin.save()
@@ -1331,9 +1339,8 @@ class AssetLockView(CreateAPIView):
         ulcoin.amount = amounts
         ulcoin.coin_lock = coin_configs
         ulcoin.save()
-        new_log = UserCoinLock.objects.filter(user_id=userid).order_by('-created_at')[0]
-        new_log.end_time = new_log.created_at + timedelta(days=locked_days)
-        new_log.save()
+        ulcoin.end_time = ulcoin.created_at + timedelta(days=locked_days)
+        ulcoin.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
         coin_detail.coin_name = user_coin.coin.name
@@ -1376,6 +1383,9 @@ class UserPresentationView(CreateAPIView):
         p_address = request.data.get('p_address')
         p_address_name = request.data.get('p_address_name')
         c_id = request.data.get('c_id')
+        if int(c_id) == 6:
+            return self.response({'code': error_code.API_70109_USER_PRESENT_ADDRESS_ERROR})
+
         try:
             coin = Coin.objects.get(id=int(c_id))
             user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin.id)
@@ -1671,11 +1681,11 @@ class LockListView(ListAPIView):
     锁定记录
     """
     permission_classes = (LoginRequired,)
-    serializer_class = AssetSerialize
+    serializer_class = LockSerialize
 
     def get_queryset(self):
         userid = self.request.user.id
-        query = UserCoinLock.objects.filter(user_id=userid)
+        query = UserCoinLock.objects.filter(user_id=userid).order_by('-created_at')
         return query
 
     def list(self, request, *args, **kwargs):
@@ -1686,13 +1696,65 @@ class LockListView(ListAPIView):
             # if x['end_time'] >= x['created_at']:
             data.append(
                 {
-                    'id': x['id'],
-                    'created_at': x['created_at'],
-                    'amount': x['amount'],
-                    'time_delta': x['time_delta']
+                "id": x['id'],
+                "amount": x['amount'],
+                "period": x['period'],
+                "icon":x['icon'],
+                "created_at": x['created_at'],
+                "is_free": 1 if x['is_free'] else 0,
+                "status": x['status']
                 }
             )
         return self.response({'code': 0, 'data': data})
+
+class LockDetailView(RetrieveUpdateAPIView):
+    """
+    锁定记录
+    """
+    permission_classes = (LoginRequired,)
+
+
+    def retrieve(self, request, *args, **kwargs):
+        id = kwargs['id']
+        try:
+            coin_lock = UserCoinLock.objects.get(id=id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        sers = LockSerialize(coin_lock).data
+        data = {
+            "status":sers['status'],
+            "period":sers['period'],
+            "amount":sers['amount'],
+            "created_at":sers['created_at']
+        }
+        divided = Dividend.objects.filter(user_lock_id=coin_lock.id).values('coin__name','coin__icon').annotate(Sum('divide')).order_by('coin_id')
+        dividend = []
+        if divided.exists():
+            for x in divided:
+                dividend.append(
+                    {
+                        "coin_name":x['coin__name'],
+                        "coin_icon":x['coin__icon'],
+                        "divide:": normalize_fraction(x['divide__sum'], 8)
+                    }
+                )
+        data["dividend"] = dividend
+        return self.response({'code': 0, 'data': data})
+
+    def patch(self, request, *args, **kwargs):
+        id = int(kwargs['id'])
+        days_extra = int(request.data.get('days_extra'))
+        if not isinstance(days_extra, int):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        try:
+            user_lock = UserCoinLock.objects.get(id=id)
+        except Exception:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        user_lock.end_time += timedelta(days_extra)
+        user_lock.save()
+        return self.response({'code':0})
+
+
 
 
 # class DividendView(ListAPIView):
@@ -2479,13 +2541,13 @@ class LuckDrawListView(ListAPIView):
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         if number == None:
-            number = 6
+            number = 5
             is_gratis = 0
             set_cache(NUMBER_OF_PRIZES_PER_DAY, number, 86400)
             set_cache(NUMBER_OF_LOTTERY_AWARDS, is_gratis, 86400)
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
         is_gratis = get_cache(NUMBER_OF_LOTTERY_AWARDS)
-        user_gsg = UserCoin.objects.get(id=6)
+        user_gsg = UserCoin.objects.get(user_id=user_id, coin_id=6)
         results = super().list(request, *args, **kwargs)
         list = results.data.get('results')
         prize_consume = list[0]['prize_consume']
@@ -2538,7 +2600,7 @@ class ClickLuckDrawView(CreateAPIView):
         if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
-            user_gsg = UserCoin.objects.get(id=6)
+            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_gsg.balance -= Decimal(prize_consume)
             user_gsg.save()
@@ -2557,7 +2619,7 @@ class ClickLuckDrawView(CreateAPIView):
             incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
-            user_gsg = UserCoin.objects.get(id=6)
+            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             integral = Decimal(integral_prize.prize_number)
             user_gsg.balance += integral
             user_gsg.save()
@@ -2600,7 +2662,7 @@ class ClickLuckDrawView(CreateAPIView):
         integral_prize_record.is_receive = 1
         integral_prize_record.save()
         prize_number = integral_prize.prize_number
-        user_gsg = UserCoin.objects.get(id=6)
+        user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
         if int(integral_prize.prize_number) == 0:
             prize_number = ""
         prize_name = integral_prize.prize_name

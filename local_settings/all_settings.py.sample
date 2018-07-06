@@ -136,8 +136,15 @@ BTC_WALLET_API_URL = 'http://47.254.75.129:3000'
 BTC_WALLET_MAIN_PASSWORD = 'wecom$888'
 
 GOOGLE_RECAPTCHA_OPEN = 1
-IS_USER_CAPTCHA_ENABLE = True
+IS_USER_CAPTCHA_ENABLE = False            # 是否开启图形验证码
+CLUB_REVENUE = False           # 是否开启营收
+GSG_EXCHANGE_DATE = 50              # gsg兑换期限
+GSG_EXCHANGE_START_DATE = '2018-07-02 00:00:00'              # gsg兑换开始时间
+ETH_ONCE_EXCHANGE_LOWER_LIMIT = 0.01              # ETH单次兑换下限
+ETH_EXCHANGE_INSTRUCTION_ONE = '1.火车王颜值担当'
+ETH_EXCHANGE_INSTRUCTION_TWO = '2.上山打老虎'
+ETH_EXCHANGE_INSTRUCTION_THREE = '3.老虎都在加'
+ETH_EXCHANGE_INSTRUCTION_ONE_FOUR = '4.你好，你的美团外卖到了'
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 
-APP_API_KEY_IOS = ''

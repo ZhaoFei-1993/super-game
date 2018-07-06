@@ -389,9 +389,9 @@ def language_switch(language, parameter):
 
 
 def get_sql(sql):
-    cursor = connection.cursor()
-    cursor.execute(sql, None)
-    dt_all = cursor.fetchall()
+    with connection.cursor() as cursor:
+        cursor.execute(sql, None)
+        dt_all = cursor.fetchall()
     return dt_all
 
 def gsg_coin_initialization(user_id, coin_id):
@@ -404,12 +404,18 @@ def gsg_coin_initialization(user_id, coin_id):
         address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.ETH).first()
         address.user = user.pk
         address.save()
-    user_coin = UserCoin()
-    user_coin.coin = coin_info
-    user_coin.user = user
-    user_coin.balance = Decimal(user.integral)
-    user_coin.address = address.address
-    user_coin.save()
+    gsg_count = UserCoin.objects.filter(user_id=user_id, coin_id=6).count()
+    if gsg_count == 0:
+        user_coin = UserCoin()
+        user_coin.coin = coin_info
+        user_coin.user = user
+        user_coin.balance = Decimal(user.integral)
+        user_coin.address = address.address
+        user_coin.save()
+    else:
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=6)
+        user_coin.address = address.address
+        user_coin.save()
     return user_coin
 
 class RandomChar(object):
@@ -549,4 +555,3 @@ def string_to_list(str):
         return res
     else:
         return None
-
