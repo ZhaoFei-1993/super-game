@@ -1252,7 +1252,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
@@ -1288,12 +1288,12 @@ class AssetView(ListAPIView):
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             if temp_dict['coin_name']=='GSG':
-                coinlocks = CoinLock.objects.filter(coin__name='GSG')
+                coinlocks = CoinLock.objects.filter(coin__name='GSG').order_by('period')
                 if not coinlocks.exists():
                     raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
                 else:
-                    for x in coinlocks:
-                        s = 'day_' + str(x.period)
+                    for i, x in enumerate(coinlocks):
+                        s = 'day_' + str(i)
                         temp_dict[s]=x.period
             data.append(temp_dict)
 
@@ -1521,7 +1521,7 @@ class PresentationListView(ListAPIView):
                     'coin_icon': x['coin_icon'],
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
-                    'status': x['status'],
+                    'status_code': x['status'],
                     'created_at': x['created_at']
                 }
             )
@@ -1561,21 +1561,24 @@ class PresentationDetailView(RetrieveAPIView):
         if status == 0:
             if language == 'en':
                 data['status'] = 'Processing'
+                data['text'] = 'Processing...'
             else:
                 data['status'] = '提现申请中'
-            data['text'] = ''
+                data['text'] = '提现申请中...'
+
         elif status == 1:
             if language == 'en':
                 data['status'] = 'Success'
             else:
                 data['status'] = '提现成功'
-            data['text'] = sers['txid']
+            data['text'] = 'Txhash:' + sers['txid']
         else:
             if language == 'en':
                 data['status'] = 'Fail'
+                data['text'] = 'Reject:' + sers['feedback']
             else:
                 data['status'] = '提现失败'
-            data['text'] = sers['feedback']
+                data['text'] = '拒绝理由：' + sers['feedback']
         return self.response({'code': 0, 'data': data})
 
 

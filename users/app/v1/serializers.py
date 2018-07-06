@@ -336,11 +336,11 @@ class LockSerialize(serializers.ModelSerializer):
     def get_status(obj):
         if obj.is_free:
             if obj.is_divided:
-                return '到期已分红'
+                return 2
             else:
-                return '到期未分红'
+                return 1
         else:
-            return '锁定中'
+            return 0
 
     @staticmethod
     def get_period(obj):
@@ -768,7 +768,7 @@ class UserRechargeSerizlize(serializers.ModelSerializer):
 
     @staticmethod
     def get_status(obj):
-        status = '充值成功' if obj.confirmations > 0 else '待确认'
+        status = 1 if obj.confirmations > 0 else 0
         return status
 
     @staticmethod
