@@ -453,12 +453,13 @@ class UserCoinSerialize(serializers.ModelSerializer):
     is_reality = serializers.SerializerMethodField()  # 用于提现的币种
     is_recharge = serializers.SerializerMethodField()  # 用于提现的币种
     coin_order = serializers.IntegerField(source='coin.coin_order')  # 币种顺序
+    is_lock_valid = serializers.IntegerField(source='coin.is_lock_valid')
 
     class Meta:
         model = UserCoin
         fields = ("id", "coin_name", "icon", "coin", "balance",
                   "exchange_rate", "address", "coin_value", "locked_coin", "service_charge", "service_coin",
-                  "min_present", "coin_order", "recent_address", "is_reality", "is_recharge")
+                  "min_present", "coin_order", "recent_address", "is_reality", "is_recharge", "is_lock_valid")
 
     @staticmethod
     def get_balance(obj):

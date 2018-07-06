@@ -1296,6 +1296,7 @@ class AssetView(ListAPIView):
                     for i, x in enumerate(coinlocks):
                         s = 'day_' + str(i)
                         temp_dict[s]=x.period
+                temp_dict['is_lock_valid']=list['is_lock_valid']
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
