@@ -1252,7 +1252,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
