@@ -399,7 +399,9 @@ class GsgValue(models.Model):
 class EveryDayInjectionValue(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     injection_value = models.DecimalField(verbose_name="总投注值(rmb)", max_digits=18, decimal_places=8, default=0.00000000)
+    cash_back_gsg = models.DecimalField(verbose_name="返现的gsg", max_digits=18, decimal_places=8, default=0.00000000)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
+    order = models.IntegerField(verbose_name="当日总投注日排名", default=0)
     injection_time = models.DateTimeField(verbose_name="投注时间(年月日)")
 
     class Meta:
