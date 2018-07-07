@@ -27,6 +27,8 @@ def consumer_ethblock(block_num):
     items = json_obj['data']['data']
     print('items = ', items)
 
+    coin_all = Coin.objects.all() #所有币种
+    charge_all = UserRecharge.objects.all() #所有充值记录
     tmp_num = 0
     for i, val in enumerate(items):
         tmp_dict = val
@@ -34,7 +36,7 @@ def consumer_ethblock(block_num):
         tmp_dict['type'] = val['type'].upper()
 
         # 根据交易信息处理db数据
-        ret = deal_db_data(tmp_dict)
+        ret = deal_db_data(tmp_dict,coin_all,charge_all)
         if ret is True:
             tmp_num += 1
 
@@ -46,20 +48,27 @@ def consumer_ethblock(block_num):
     return True
 
 
-def deal_db_data(dict):
+def deal_db_data(trans_dict,coin_all,charge_all):
     # dict['type'] = 'INT'
-    info = Coin.objects.filter(name=dict['type'])
-    if not info:
-        print('type_not allow,type:', dict['type'])
+    #币种是否存在
+    coin_exists = False
+    for coin in coin_all:
+        if coin.name == trans_dict['type']:
+            coin_exists = True
+            coin_id = coin.id
+            break
+
+
+    if coin_exists is False:
+        print('type_not allow,type:', trans_dict['type'])
         return False
 
-    coin_id = info[0].id
-    txid = dict['hash']
-    addr = dict['to']
+    txid = trans_dict['hash']
+    addr = trans_dict['to']
 
     # addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
-    value = dict['value']
-    t_time = dict['t_time']
+    value = trans_dict['value']
+    t_time = trans_dict['t_time']
     usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
     if not usercoin_info:
         return False
@@ -67,14 +76,16 @@ def deal_db_data(dict):
     user_id = usercoin_info[0].user_id
 
     # 用户充值记录
-    charge_info = UserRecharge.objects.filter(address=addr, txid=txid)
-    if charge_info:
-        print('addr___', charge_info[0].address)
+    charge_exists = False
+    for charge_data in charge_all:
+        if charge_data.address == addr and charge_data.txid == txid:
+            charge_exists = True
+
 
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
-    if not charge_info:
+    if charge_exists is False:
         # 充值记录
         recharge_obj = UserRecharge()
         recharge_obj.address = addr
@@ -93,7 +104,7 @@ def deal_db_data(dict):
         # 用户余额变更记录
         coin_detail = CoinDetail()
         coin_detail.user_id = user_id
-        coin_detail.coin_name = dict['type']
+        coin_detail.coin_name = trans_dict['type']
         coin_detail.amount = value
         coin_detail.rest = usercoin_info[0].balance
         coin_detail.sources = CoinDetail.RECHARGE
