@@ -23,7 +23,7 @@ class Command(BaseCommand, BaseView):
             set_cache(self.cacheKey, param_blocknum, 86400)
 
         eth_wallet = Wallet()
-        obj = eth_wallet.get(url='/api/v1/account/gethightblock')
+        obj = eth_wallet.get(url='/v1/account/gethightblock')
         content = int(obj['data']['blocknum'])
 
         print('获取到block:', content)
