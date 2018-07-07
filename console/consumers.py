@@ -58,7 +58,6 @@ def deal_db_data(trans_dict,coin_all,charge_all):
             coin_id = coin.id
             break
 
-
     if coin_exists is False:
         print('type_not allow,type:', trans_dict['type'])
         return False
@@ -81,7 +80,6 @@ def deal_db_data(trans_dict,coin_all,charge_all):
         if charge_data.address == addr and charge_data.txid == txid:
             charge_exists = True
 
-
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
@@ -95,20 +93,7 @@ def deal_db_data(trans_dict,coin_all,charge_all):
         recharge_obj.amount = value
         recharge_obj.confirmations = 0
         recharge_obj.trade_at = time_dt
-        # recharge_obj.save()
-
-        # 刷新用户余额表
-        usercoin_info[0].balance += Decimal(value)
-        # usercoin_info[0].save()
-
-        # 用户余额变更记录
-        coin_detail = CoinDetail()
-        coin_detail.user_id = user_id
-        coin_detail.coin_name = trans_dict['type']
-        coin_detail.amount = value
-        coin_detail.rest = usercoin_info[0].balance
-        coin_detail.sources = CoinDetail.RECHARGE
-        # coin_detail.save()
+        recharge_obj.save()
         return True
 
     return False
