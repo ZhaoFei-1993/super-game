@@ -12,6 +12,7 @@ from utils.functions import normalize_fraction, gsg_coin_initialization
 from django.db import transaction
 import datetime
 from decimal import Decimal
+from .asia_tb_result import asia_result, asia_option
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
@@ -286,9 +287,14 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     else:
         pass
 
+    # 亚盘的正确选项
+    if rule_all.filter(type=8).exists():
+        rule_asia = rule_all.get(type=8)
+        asia_option(quiz, rule_asia)
+
     flag = False
     # 分配奖金
-    records = Record.objects.filter(quiz=quiz, is_distribution=False)
+    records = Record.objects.filter(~Q(rule__type=str(Rule.AISA_RESULTS)), quiz=quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
             # 用户增加对应币金额
@@ -369,6 +375,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             u_mes.save()
 
             record.save()
+    # 分配亚盘奖金
+    records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
+    if len(records_asia) > 0:
+        asia_result(quiz, records_asia)
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
