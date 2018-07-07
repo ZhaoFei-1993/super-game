@@ -48,9 +48,7 @@ def consumer_ethblock(block_num):
 
 
 def dealDbData(dict):
-    # test
     # dict['type'] = 'INT'
-    # print(dict)
     info = Coin.objects.filter(name=dict['type'])
     if not info:
         print('type_not allow,type:', dict['type'])
@@ -60,7 +58,6 @@ def dealDbData(dict):
     txid = dict['hash']
     addr = dict['to']
 
-    #test
     #addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
     value = dict['value']
     t_time = dict['t_time']
