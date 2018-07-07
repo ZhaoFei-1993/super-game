@@ -1745,7 +1745,7 @@ class LockDetailView(RetrieveUpdateAPIView):
         data["dividend"] = dividend
         return self.response({'code': 0, 'data': data})
 
-    def patch(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         id = int(kwargs['id'])
         days_extra = int(request.data.get('days_extra'))
         if not isinstance(days_extra, int):
