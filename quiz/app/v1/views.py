@@ -810,6 +810,7 @@ class ChangeGsg(ListAPIView):
     """
     permission_classes = (LoginRequired,)
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         user_id = str(request.user.id)
         value = value_judge(request, "wager", "convert_ratio")
@@ -830,19 +831,6 @@ class ChangeGsg(ListAPIView):
         coin_astrict = float(0.01)
         if coins < coin_astrict:
             raise ParamErrorException(error_code.API_70204_ETH_UNQUALIFIED_CONVERTIBILITY)  # 判断兑换值是否大于0.01
-
-        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
-        day = datetime.now().strftime('%Y-%m-%d')
-        start_time = str(day) + ' 00:00:00'  # 开始时间
-        end_time = str(day) + ' 23:59:59'  # 开始时间
-        sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
-        sql += " where created_at>= '" + start_time + "'"
-        sql += " and a.created_at<= '" + end_time + "'"
-        is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
-        if is_use==None or is_use=='':
-            is_use=0
-        left_gsg = toplimit - is_use
-        print("剩余可兑换GSG=============================", left_gsg)
 
         sql = "select sum(a.change_eth_value) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
@@ -868,6 +856,19 @@ class ChangeGsg(ListAPIView):
         print("用户拥有ETH============================", eth_balance)
         if eth_balance < coins:
             raise ParamErrorException(error_code.API_70205_ETH_NOT_SUFFICIENT_FUNDS)  # 判断用户ETH余额是否足
+
+        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        day = datetime.now().strftime('%Y-%m-%d')
+        start_time = str(day) + ' 00:00:00'  # 开始时间
+        end_time = str(day) + ' 23:59:59'  # 开始时间
+        sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
+        sql += " where created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'" + " for update"
+        is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
+        if is_use==None or is_use=='':
+            is_use=0
+        left_gsg = toplimit - is_use
+        print("剩余可兑换GSG=============================", left_gsg)
 
         gsg_ratio = convert_ratio * coins
         print("兑换GSG总值==========================", gsg_ratio)
