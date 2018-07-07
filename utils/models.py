@@ -12,6 +12,7 @@ class Image(models.Model):
 
 
 # Create your models here.
+@reversion.register()
 class CodeModel(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     name = models.CharField(verbose_name="图片名称", max_length=100)

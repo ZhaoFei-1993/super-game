@@ -81,6 +81,7 @@ class AdminManager(BaseUserManager):
 class Admin(AbstractBaseUser):
     """
     后台管理员
+    1.管理员 2.财务 3.股东
     """
     username = models.CharField(verbose_name="登录账号", max_length=25, unique=True)
     truename = models.CharField(verbose_name="真实姓名", max_length=25)

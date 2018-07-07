@@ -140,9 +140,13 @@ API_ERROR_MESSAGE = {
     API_70201_USER_RECHARGE_ADDRESS: '充值地址不能为空',
     API_70202_USER_RECHARGE_AMOUNT: '充值金额需大于0',
     API_70203_PROHIBIT_LOGIN: '该账号已禁止登录',
+<<<<<<< Updated upstream
     API_70204_ETH_UNQUALIFIED_CONVERTIBILITY: '单次兑换数量不得小于0.01',
     API_70205_ETH_NOT_SUFFICIENT_FUNDS: '用户ETH余额不足',
     API_70206_CONVERTIBLE_GSG_INSUFFICIENT: '可兑换GSG不足',
     API_70207_REACH_THE_UPPER_LIMIT: '一天兑换不能超过5个ETH',
     API_70208_NO_REDEMPTION: '没有兑换资格',
+=======
+
+>>>>>>> Stashed changes
 }

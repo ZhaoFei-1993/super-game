@@ -12,6 +12,7 @@ from captcha.models import CaptchaStore
 from django.conf import settings
 from base.error_code import get_code
 from utils.models import CodeModel
+import hashlib
 
 
 class UserManager(BaseUserManager):
@@ -42,8 +43,8 @@ class UserManager(BaseUserManager):
             challenge = request.data.get("challenge")
             challenge = challenge.lower()
 
-#             is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key,
-#                                                            expiration__gt=datetime.now()).count()
+            #             is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key,
+            #                                                            expiration__gt=datetime.now()).count()
             is_captcha_valid = CodeModel.objects.filter(key=key,
                                                         status=1).count()
             if is_captcha_valid == 0:

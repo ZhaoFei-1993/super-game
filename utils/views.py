@@ -181,7 +181,7 @@ def user_captcha_generate(request):
     prev = str(random.random()).replace('.', '') + '_' + str(time.time()).replace('.', '')
 
     img_name = prev + '.jpg'  # 生成图片名
-    url = settings.CAPTCHA_HTTP_PREFIX + request.get_host()+'/utils/img/' + img_name
+    url = settings.CAPTCHA_HTTP_PREFIX + request.get_host()+'/utils/img/' + img_name + '/'
 
     hash = hashlib.sha1()  # hash加密生成随机的key
     hash.update((prev + str(random.random())).encode('utf-8'))
@@ -211,7 +211,7 @@ class UserCaptchaValid(CreateAPIView):
     :param: key,user_position,
     :return:code,msg
     """
-    # authentication_classes = ()
+    authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
         # captcha_valid_code = User.objects.captcha_valid(request)
@@ -232,9 +232,11 @@ class UserCaptchaValid(CreateAPIView):
         name = codeinfo.name
 
         if count == 0:  # 第一次进行验证便删除存储的图片，验证码一次性存储
-            os.remove(os.path.join(SAVE_PATH, name))
-            codeinfo.delete = 1
-            codeinfo.save()
+            try:
+                os.remove(os.path.join(SAVE_PATH, name))
+            except:
+                pass
+            codeinfo.is_delete = 1
 
         if count == 3:  # 验证超过三次，无法继续验证
             return JsonResponse({'code': 500, 'message': '已验证失败三次，请刷新验证码！'})
