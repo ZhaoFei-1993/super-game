@@ -18,6 +18,12 @@ class Command(BaseCommand, BaseView):
 
     def handle(self, *args, **options):
         param_blocknum = int(options['blocknum'])
+
+        redis_conn = Redis()
+        q = Queue(connection=redis_conn)
+        q.enqueue(consumer_ethblock, param_blocknum)
+        raise CommandError('param_blocknum = ', param_blocknum)
+
         start_time = time()
         if param_blocknum != 0:
             set_cache(self.cacheKey, param_blocknum, 86400)

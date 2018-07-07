@@ -25,10 +25,13 @@ def consumer_ethblock(block_num):
         return True
 
     items = json_obj['data']['data']
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write(str(items))
+        f.write("\n")
     print('items = ', items)
 
-    coin_all = Coin.objects.all() #所有币种
-    charge_all = UserRecharge.objects.all() #所有充值记录
+    coin_all = Coin.objects.all()   # 所有币种
+    charge_all = UserRecharge.objects.all()     # 所有充值记录
     tmp_num = 0
     for i, val in enumerate(items):
         tmp_dict = val
@@ -36,7 +39,7 @@ def consumer_ethblock(block_num):
         tmp_dict['type'] = val['type'].upper()
 
         # 根据交易信息处理db数据
-        ret = deal_db_data(tmp_dict,coin_all,charge_all)
+        ret = deal_db_data(tmp_dict, coin_all, charge_all)
         if ret is True:
             tmp_num += 1
 
@@ -48,7 +51,7 @@ def consumer_ethblock(block_num):
     return True
 
 
-def deal_db_data(trans_dict,coin_all,charge_all):
+def deal_db_data(trans_dict, coin_all, charge_all):
     # dict['type'] = 'INT'
     #币种是否存在
     coin_exists = False
