@@ -7,6 +7,7 @@ from chat.models import Club
 from utils.functions import normalize_fraction, gsg_coin_initialization
 from django.db.models import Q
 import datetime
+from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 
 
 class Command(BaseCommand):
@@ -17,6 +18,7 @@ class Command(BaseCommand):
         rate = 0.001
 
         # 划分出时间区间
+        date_now = datetime.datetime.now().strftime('%Y-%m-%d')
         date_last = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 
         start_with = datetime.datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]),
@@ -97,6 +99,8 @@ class Command(BaseCommand):
 
         i = 1
         for obj in EveryDayInjectionValue.objects.filter(injection_time=date_last).order_by('-injection_value'):
+            EXCHANGE_QUALIFICATION = "exchange_qualification_" + str(obj.user_id) + '_' + str(date_now)  # key
+            set_cache(EXCHANGE_QUALIFICATION, i, 86400)   # 存储
             obj.order = i
             obj.save()
             i += 1
