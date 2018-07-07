@@ -1,12 +1,8 @@
 from base.eth import *
 from time import time
 import time as format_time
-from django.conf import settings
 from decimal import Decimal
-from base.app import BaseView
 from users.models import UserRecharge, Coin, UserCoin, CoinDetail, User
-#from utils.cache import redis_rpop
-#from sms.models import Sms
 
 
 def consumer_ethblock(block_num):
@@ -14,14 +10,9 @@ def consumer_ethblock(block_num):
     消费block_num队列
     """
     help = "消费ETH_blocknum获取取交易数据"
-    #listKey = 'pre_eth_block_list'
-
-    # coin_name = options['coin'].upper()
     eth_wallet = Wallet()
     start_time = time()
 
-    #block_num = redis_rpop(self.listKey)
-    # block_num = block_num.decode('utf-8')
     print(block_num)
     if block_num is 'None':
         print('队列暂时无数据')
@@ -36,6 +27,7 @@ def consumer_ethblock(block_num):
 
     list = json_obj['data']['data']
     print(list)
+
     tmp_num = 0
     for i, val in enumerate(list):
         tmp_dict = val
@@ -67,8 +59,9 @@ def dealDbData(dict):
     coin_id = info[0].id
     txid = dict['hash']
     addr = dict['to']
-    # test
-    # addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
+
+    #test
+    #addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
     value = dict['value']
     t_time = dict['t_time']
     usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
@@ -77,7 +70,7 @@ def dealDbData(dict):
 
     user_id = usercoin_info[0].user_id
 
-    # users_userrecharge 用户充值记录
+    #用户充值记录
     charge_info = UserRecharge.objects.filter(address=addr, txid=txid)
     if charge_info:
         print('addr___', charge_info[0].address)
@@ -111,4 +104,4 @@ def dealDbData(dict):
         coin_detail.save()
         return True
 
-    return False
+    return True
