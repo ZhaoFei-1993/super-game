@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
-from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord
+from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, EveryDayInjectionValue
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
 from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
@@ -18,6 +18,7 @@ from datetime import datetime, date, timedelta
 from django.conf import settings
 from utils.functions import normalize_fraction
 from django.db import connection
+from utils.cache import get_cache
 
 
 class CategoryView(ListAPIView):
@@ -815,6 +816,20 @@ class ChangeGsg(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         day = datetime.now().strftime('%Y-%m-%d')
+        day_all = datetime.strptime(day, "%Y-%m-%d")
+        yesterday = (day_all - timedelta(days=1)).strftime('%Y-%m-%d')
+        EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
+        number = get_cache(EXCHANGE_QUALIFICATION)
+        if number==None or number=='':
+            everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
+            print("everydayinjection================================", everydayinjection)
+            if len(everydayinjection) <= 0:
+                raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
+            else:
+                number = everydayinjection[0].order
+        if int(number)<1000:
+            raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
+
         gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
         gsg_exchange_date_all = datetime.strptime(gsg_exchange_date, "%Y-%m-%d %H:%M:%S")
         date_last_all = (gsg_exchange_date_all + timedelta(days=50)).strftime('%Y-%m-%d')
