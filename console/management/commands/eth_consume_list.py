@@ -11,6 +11,7 @@ import json
 import os
 from django.conf import settings
 #from django_redis import get_redis_connection
+from decimal import Decimal
 from redis import Redis
 from base.app import BaseView
 from users.models import UserRecharge, Coin, UserCoin, CoinDetail,User
@@ -18,8 +19,8 @@ from users.models import UserRecharge, Coin, UserCoin, CoinDetail,User
 
 def dealDbData(dict):
     #test
-    #dict['type'] = 'INT'
-    #print(dict)
+    dict['type'] = 'INT'
+    print(dict)
     info = Coin.objects.filter(name=dict['type'])
     if not info :
         print('type_not allow,type:',dict['type'])
@@ -59,7 +60,7 @@ def dealDbData(dict):
         recharge_obj.save()
 
         #刷新用户余额表
-        usercoin_info[0].balance +=value
+        usercoin_info[0].balance += Decimal(value)
         usercoin_info[0].save()
 
         #用户余额变更记录
@@ -70,8 +71,9 @@ def dealDbData(dict):
         coin_detail.rest = usercoin_info[0].balance
         coin_detail.sources = CoinDetail.RECHARGE
         coin_detail.save()
+        return True
 
-    return 1
+    return False
 
 
 class Command(BaseCommand,BaseView):
@@ -96,7 +98,7 @@ class Command(BaseCommand,BaseView):
         block_num = block_num.decode('utf-8')
         print(block_num)
         if block_num == 'None':
-            print('暂时无数据')
+            self.stdout.write(self.style.SUCCESS('队列暂时无数据'))
             return
 
 
@@ -109,25 +111,29 @@ class Command(BaseCommand,BaseView):
         json_obj = eth_wallet.get(url='/api/v1/chain/blocknum/' + str(block_num))
         print(json_obj)
         if json_obj['code'] != 0:
-            print('根据block_num获取数据失败')
+            self.stdout.write(self.style.SUCCESS('根据block_num获取数据失败'))
             return
 
         list = json_obj['data']['data']
         print(list)
+        tmp_num = 0
         for i, val in enumerate(list):
             tmp_dict = val
             tmp_dict['t_time'] = json_obj['data']['t_time']
             tmp_dict['type'] = val['type'].upper()
 
             #根据交易信息处理db数据
-            dealDbData(tmp_dict)
-            #self.stdout.write(self.style.SUCCESS('获取到' + str(len(eth_address)) + '条用户ETH地址信息'))
+            ret = dealDbData(tmp_dict)
+            if ret == True:
+                tmp_num+= 1
             """
             sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 100 ORDER BY cnt desc'
             aaaa = self.get_all_by_sql(sql)
             #address
                 raise CommandError('无地址信息')
             """
+
+        self.stdout.write(self.style.SUCCESS('获取到' + str(tmp_num) + '条交易信息'))
 
         stop_time = time()
         cost_time = str(round(stop_time - start_time)) + '秒'
