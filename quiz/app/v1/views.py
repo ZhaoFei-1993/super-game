@@ -757,6 +757,7 @@ class Change(ListAPIView):
         gsg_value = Decimal(0.3)
         convert_ratio = int(eth_vlue / gsg_value)  # 1 ETH 换多少 GSG
         toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        print("一天容许兑换的总数====================================", toplimit)
 
         day = datetime.now().strftime('%Y-%m-%d')
         if 'days' in self.request.GET:
@@ -780,10 +781,12 @@ class Change(ListAPIView):
         sql += " where created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
         is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
+        print("已经兑换了多少GSG==============================================", is_use)
         if is_use == None or is_use == 0:
             ratio = 0
         else:
             ratio = is_use / toplimit  # 兑换了的GSG占天当总数的百分比
+        print("兑换了的GSG占天当总数的百分比=================================", ratio)
 
         sql = "select count(*) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
