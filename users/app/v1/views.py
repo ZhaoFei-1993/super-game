@@ -1740,7 +1740,7 @@ class LockDetailView(RetrieveUpdateAPIView):
                     {
                         "coin_name":x['coin__name'],
                         "coin_icon":x['coin__icon'],
-                        "divide:": normalize_fraction(x['divide__sum'], 8)
+                        "divide": normalize_fraction(x['divide__sum'], 8)
                     }
                 )
         data["dividend"] = dividend
