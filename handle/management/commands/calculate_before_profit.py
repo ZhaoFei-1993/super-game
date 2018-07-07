@@ -86,9 +86,9 @@ class Command(BaseCommand):
 
                         profit_table.cash_back_sum = normalize_fraction(cash_back_sum, 2)
 
-                        # profit_table.save()
+                        profit_table.save()
                         profit_table.created_at = end_with
-                        # profit_table.save()
+                        profit_table.save()
 
                         print('=======================================>', club.room_title)
                         print('robot_platform_sum = ', normalize_fraction(robot_platform_sum, 3))
@@ -109,6 +109,6 @@ class Command(BaseCommand):
                     else:
                         profit_table = ClubProfitAbroad()
                         profit_table.roomquiz_id = club.id
-                        # profit_table.save()
+                        profit_table.save()
                         profit_table.created_at = end_with
-                        # profit_table.save()
+                        profit_table.save()
