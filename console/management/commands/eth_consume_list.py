@@ -6,43 +6,43 @@ from time import time
 import time as format_time
 from django.conf import settings
 from decimal import Decimal
-from redis import Redis
 from base.app import BaseView
-from users.models import UserRecharge, Coin, UserCoin, CoinDetail,User
+from users.models import UserRecharge, Coin, UserCoin, CoinDetail, User
+from utils.cache import redis_rpop
 
 
 def dealDbData(dict):
-    #test
-    #dict['type'] = 'INT'
-    #print(dict)
+    # test
+    # dict['type'] = 'INT'
+    # print(dict)
     info = Coin.objects.filter(name=dict['type'])
-    if not info :
-        print('type_not allow,type:',dict['type'])
+    if not info:
+        print('type_not allow,type:', dict['type'])
         return 0
 
     coin_id = info[0].id
     txid = dict['hash']
     addr = dict['to']
-    #test
-    #addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
+    # test
+    # addr = '0xbc188Cc44428b38e115a2C693C9D0a4fD0BDCc71'
     value = dict['value']
     t_time = dict['t_time']
-    usercoin_info = UserCoin.objects.filter(address=addr,coin_id=coin_id)
+    usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
     if not usercoin_info:
         return 0
 
     user_id = usercoin_info[0].user_id
 
-    #users_userrecharge 用户充值记录
-    charge_info = UserRecharge.objects.filter(address=addr,txid=txid)
+    # users_userrecharge 用户充值记录
+    charge_info = UserRecharge.objects.filter(address=addr, txid=txid)
     if charge_info:
-        print('addr___',charge_info[0].address)
+        print('addr___', charge_info[0].address)
 
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
     if not charge_info:
-        #充值记录
+        # 充值记录
         recharge_obj = UserRecharge()
         recharge_obj.address = addr
         recharge_obj.coin_id = coin_id
@@ -53,11 +53,11 @@ def dealDbData(dict):
         recharge_obj.trade_at = time_dt
         recharge_obj.save()
 
-        #刷新用户余额表
+        # 刷新用户余额表
         usercoin_info[0].balance += Decimal(value)
         usercoin_info[0].save()
 
-        #用户余额变更记录
+        # 用户余额变更记录
         coin_detail = CoinDetail()
         coin_detail.user_id = user_id
         coin_detail.coin_name = dict['type']
@@ -70,35 +70,25 @@ def dealDbData(dict):
     return False
 
 
-class Command(BaseCommand,BaseView):
+class Command(BaseCommand, BaseView):
     help = "消费ETH_blocknum获取取交易数据"
     listKey = 'pre_eth_block_list'
-    #base_url = "http://127.0.0.1:3001/api/v1/chain/blocknum/"
-
-    # def add_arguments(self, parser):
-    #     parser.add_argument('coin', type=str)
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        #coin_name = options['coin'].upper()
+        # coin_name = options['coin'].upper()
         eth_wallet = Wallet()
-        #raise CommandError('name' + '无效')
         start_time = time()
 
-        redis_obj = Redis()
-
         while True:
-            block_num = redis_obj.rpop(self.listKey)
-            block_num = block_num.decode('utf-8')
+            block_num = redis_rpop(self.listKey)
+            #block_num = block_num.decode('utf-8')
             print(block_num)
-            if block_num == 'None':
+            if block_num is 'None':
                 self.stdout.write(self.style.SUCCESS('队列暂时无数据'))
                 break
 
-
-            #根据block_num 获取交易数据
-            # test curl http://127.0.0.1:3001/api/v1/chain/blocknum/7
-            #url = self.base_url + str(block_num)j
+            # 根据block_num 获取交易数据
             json_obj = eth_wallet.get(url='/api/v1/chain/blocknum/' + str(block_num))
             print(json_obj)
             if json_obj['code'] != 0:
@@ -113,24 +103,13 @@ class Command(BaseCommand,BaseView):
                 tmp_dict['t_time'] = json_obj['data']['t_time']
                 tmp_dict['type'] = val['type'].upper()
 
-                #根据交易信息处理db数据
+                # 根据交易信息处理db数据
                 ret = dealDbData(tmp_dict)
                 if ret == True:
-                    tmp_num+= 1
-                """
-                sql = 'SELECT user_id,count(*) as cnt from users_loginrecord GROUP BY user_id HAVING cnt > 100 ORDER BY cnt desc'
-                aaaa = self.get_all_by_sql(sql)
-                #address
-                    raise CommandError('无地址信息')
-                """
+                    tmp_num += 1
 
             self.stdout.write(self.style.SUCCESS('获取到' + str(tmp_num) + '条交易信息'))
-
-
 
         stop_time = time()
         cost_time = str(round(stop_time - start_time)) + '秒'
         self.stdout.write(self.style.SUCCESS('执行完成。耗时：' + cost_time))
-
-
-

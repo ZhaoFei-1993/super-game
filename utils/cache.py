@@ -56,3 +56,10 @@ def delete_cache(key):
     :return:
     """
     return cache.delete(key)
+
+def redis_lpush(key,val):
+    return cache.lpush(key,val)
+
+def redis_rpop(key):
+    return cache.rpop(key)
+
