@@ -1,8 +1,7 @@
 from base.eth import *
 from time import time
 import time as format_time
-from decimal import Decimal
-from users.models import UserRecharge, Coin, UserCoin, CoinDetail
+from users.models import UserRecharge, Coin, UserCoin
 
 
 def consumer_ethblock(block_num):
@@ -25,10 +24,6 @@ def consumer_ethblock(block_num):
         return True
 
     items = json_obj['data']['data']
-    with open('/tmp/console_consumers.log', 'a+') as f:
-        f.write('items = ' + str(items))
-        f.write("\n")
-    print('items = ', items)
 
     coin_all = Coin.objects.all()   # 所有币种
     charge_all = UserRecharge.objects.all()     # 所有充值记录
@@ -65,10 +60,6 @@ def deal_db_data(trans_dict, coin_all, charge_all):
             coin_id = coin.id
             break
 
-    with open('/tmp/console_consumers.log', 'a+') as f:
-        f.write('coin_id = ' + str(coin_id))
-        f.write("\n")
-
     if coin_exists is False:
         print('type_not allow,type:', trans_dict['type'])
         return False
@@ -83,10 +74,6 @@ def deal_db_data(trans_dict, coin_all, charge_all):
     if not usercoin_info:
         return False
 
-    with open('/tmp/console_consumers.log', 'a+') as f:
-        f.write('sssssssss')
-        f.write("\n")
-
     user_id = usercoin_info[0].user_id
 
     # 用户充值记录
@@ -95,18 +82,10 @@ def deal_db_data(trans_dict, coin_all, charge_all):
         if charge_data.address == addr and charge_data.txid == txid:
             charge_exists = True
 
-    with open('/tmp/console_consumers.log', 'a+') as f:
-        f.write('bbbbbbbbb')
-        f.write("\n")
-
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
     if charge_exists is False:
-        with open('/tmp/console_consumers.log', 'a+') as f:
-            f.write('qqqqqqqqq')
-            f.write("\n")
-
         # 充值记录
         recharge_obj = UserRecharge()
         recharge_obj.address = addr
