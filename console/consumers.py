@@ -39,7 +39,7 @@ def consumer_ethblock(block_num):
         if ret is True:
             tmp_num += 1
 
-    #print('获取到' + str(tmp_num) + '条交易信息'))
+    print('blocknum:' + str(block_num) +'获取到' + str(tmp_num) + '条交易信息')
 
     stop_time = time()
     cost_time = str(round(stop_time - start_time)) + '秒'
@@ -54,7 +54,7 @@ def dealDbData(dict):
     info = Coin.objects.filter(name=dict['type'])
     if not info:
         print('type_not allow,type:', dict['type'])
-        return 0
+        return False
 
     coin_id = info[0].id
     txid = dict['hash']
@@ -66,7 +66,7 @@ def dealDbData(dict):
     t_time = dict['t_time']
     usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
     if not usercoin_info:
-        return 0
+        return False
 
     user_id = usercoin_info[0].user_id
 
@@ -104,4 +104,4 @@ def dealDbData(dict):
         coin_detail.save()
         return True
 
-    return True
+    return False
