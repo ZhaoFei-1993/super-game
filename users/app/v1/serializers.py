@@ -776,3 +776,24 @@ class UserRechargeSerizlize(serializers.ModelSerializer):
     def get_trade_at(obj):
         trade_time = obj.trade_at.strftime('%Y-%m-%d %H:%M') if obj.trade_at else ''
         return trade_time
+
+
+class HomeMessageSerialize(serializers.ModelSerializer):
+    """
+    首页公告序列化
+    """
+
+    message_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ('id', 'message_list')
+
+    def get_message_list(self, obj):
+        title = obj.title
+        content = obj.content
+        if self.context['request'].GET.get('language') == 'en':
+            title = obj.title_en
+            content = obj.content_en
+        list = str(title) + ": " + str(content)
+        return list

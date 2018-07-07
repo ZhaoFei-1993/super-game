@@ -2,7 +2,7 @@
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, LockSerialize, \
-    CountriesSerialize, UserRechargeSerizlize
+    CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize
 import qrcode
 from django.core.cache import caches
 from quiz.models import Quiz, Record
@@ -42,6 +42,7 @@ from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
 from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
+from utils.functions import value_judge, get_sql
 import requests
 import json
 from captcha.models import CaptchaStore
@@ -1739,7 +1740,7 @@ class LockDetailView(RetrieveUpdateAPIView):
                     {
                         "coin_name":x['coin__name'],
                         "coin_icon":x['coin__icon'],
-                        "divide:": normalize_fraction(x['divide__sum'], 8)
+                        "divide": normalize_fraction(x['divide__sum'], 8)
                     }
                 )
         data["dividend"] = dividend
@@ -2773,3 +2774,34 @@ class CountriesView(ListAPIView):
             })
 
         return self.response({'code': 0, 'data': data})
+
+
+class HomeMessageView(ListAPIView):
+    """
+    首页推送公告
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = HomeMessageSerialize
+
+    def get_queryset(self):
+        list = Message.objects.filter(type=4, is_deleted=0).order_by('-created_at')
+        return list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for list in items:
+            data.append(list["message_list"])
+        return self.response({'code': 0, 'data': data})
+
+    # def get_queryset(self):
+    #     pass
+    #
+    # def list(self, request, *args, **kwargs):
+    #     sql = "select concat(a.title,': ',a.content)from users_message a"
+    #     sql += " where a.type=4"
+    #     sql += " and a.is_deleted=0"
+    #     data = get_sql(sql)  # 用户拥有的ETH
+    #     return self.response({'code': 0, 'data': data})
+

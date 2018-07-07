@@ -18,7 +18,7 @@ def consumer_ethblock(block_num):
         return True
 
     # 根据block_num 获取交易数据
-    json_obj = eth_wallet.get(url='/api/v1/chain/blocknum/' + str(block_num))
+    json_obj = eth_wallet.get(url='v1/chain/blocknum/' + str(block_num))
     # print(json_obj)
     if json_obj['code'] != 0:
         print('根据block_num获取数据失败')

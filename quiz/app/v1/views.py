@@ -847,7 +847,7 @@ class ChangeGsg(ListAPIView):
         start_time = str(day) + ' 00:00:00'  # 开始时间
         end_time = str(day) + ' 23:59:59'  # 开始时间
         sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
-        sql += " where created_at>= '" + start_time + "'"
+        sql += " where a.created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'" + " for update"
         is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
         if is_use == None or is_use == '':
@@ -855,7 +855,7 @@ class ChangeGsg(ListAPIView):
         left_gsg = toplimit - is_use
 
         sql = "select sum(a.change_eth_value) from quiz_changerecord a"
-        sql += " where created_at>= '" + start_time + "'"
+        sql += " where a.created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
         sql += " and a.user_id=" + user_id
         has_user_change = get_sql(sql)[0][0]  # 用户当天已经兑换了多少GSG
@@ -868,7 +868,7 @@ class ChangeGsg(ListAPIView):
         convert_ratio = float(self.request.data['convert_ratio'])  # 获取兑换比例
 
         sql = "select a.balance from users_usercoin a"
-        sql += " where coin_id=2"
+        sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
         eth_balance = get_sql(sql)[0][0]  # 用户拥有的ETH
         if eth_balance < coins:
@@ -924,7 +924,7 @@ class ChangeTable(ListAPIView):
     def list(self, request, *args, **kwargs):
         user_id = str(request.user.id)
         sql = "select a.balance from users_usercoin a"
-        sql += " where coin_id=2"
+        sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
         eth_balance = normalize_fraction(get_sql(sql)[0][0], 3) # 用户拥有的ETH
         eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
