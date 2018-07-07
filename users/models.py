@@ -698,3 +698,6 @@ class GSGAssetAccount(models.Model):
     balance = models.DecimalField(verbose_name="余额", max_digits=32, decimal_places=18, default=0.000000000000000000)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "GSG账号表"

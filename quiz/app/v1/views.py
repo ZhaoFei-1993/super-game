@@ -816,13 +816,11 @@ class ChangeGsg(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         day = datetime.now().strftime('%Y-%m-%d')
-        day_all = datetime.strptime(day, "%Y-%m-%d")
-        yesterday = (day_all - timedelta(days=1)).strftime('%Y-%m-%d')
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
         number = get_cache(EXCHANGE_QUALIFICATION)
         if number==None or number=='':
             everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
-            print("everydayinjection================================", everydayinjection)
             if len(everydayinjection) <= 0:
                 raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
             else:

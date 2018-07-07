@@ -141,10 +141,10 @@ CLUB_REVENUE = False           # 是否开启营收
 GSG_EXCHANGE_DATE = 50              # gsg兑换期限
 GSG_EXCHANGE_START_DATE = '2018-07-02 00:00:00'              # gsg兑换开始时间
 ETH_ONCE_EXCHANGE_LOWER_LIMIT = 0.01              # ETH单次兑换下限
-ETH_EXCHANGE_INSTRUCTION_ONE = '1.火车王颜值担当'
-ETH_EXCHANGE_INSTRUCTION_TWO = '2.上山打老虎'
-ETH_EXCHANGE_INSTRUCTION_THREE = '3.老虎都在加'
-ETH_EXCHANGE_INSTRUCTION_ONE_FOUR = '4.你好，你的美团外卖到了'
+ETH_EXCHANGE_INSTRUCTION_ONE = '1.每天下注流水前1000名用户可参与GSG兑换活动。'
+ETH_EXCHANGE_INSTRUCTION_TWO = '2.俱乐部任意玩法的投注流水都可以。'
+ETH_EXCHANGE_INSTRUCTION_THREE = '3.HAND俱乐部投注流水不参与此次活动。'
+ETH_EXCHANGE_INSTRUCTION_ONE_FOUR = '4.每天兑换上限为5ETH。'
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 

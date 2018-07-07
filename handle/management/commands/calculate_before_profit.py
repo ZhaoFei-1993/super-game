@@ -13,9 +13,9 @@ class Command(BaseCommand):
     help = "计算以往盈利"
 
     def handle(self, *args, **options):
-        for i in range(1, 26):
-            start_with = datetime.datetime(2018, 6, i, 0, 0, 0)
-            end_with = datetime.datetime(2018, 6, i, 23, 59, 59)
+        for i in range(5, 6):
+            start_with = datetime.datetime(2018, 7, i, 0, 0, 0)
+            end_with = datetime.datetime(2018, 7, i, 23, 59, 59)
 
             print(start_with)
             print(end_with)
