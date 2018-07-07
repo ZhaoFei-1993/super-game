@@ -1711,14 +1711,14 @@ class LockListView(ListAPIView):
             )
         return self.response({'code': 0, 'data': data})
 
-class LockDetailView(RetrieveUpdateAPIView):
+class LockDetailView(ListCreateAPIView):
     """
     锁定记录
     """
     permission_classes = (LoginRequired,)
 
 
-    def retrieve(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         id = kwargs['id']
         try:
             coin_lock = UserCoinLock.objects.get(id=id)
@@ -1745,7 +1745,7 @@ class LockDetailView(RetrieveUpdateAPIView):
         data["dividend"] = dividend
         return self.response({'code': 0, 'data': data})
 
-    def put(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         id = int(kwargs['id'])
         days_extra = int(request.data.get('days_extra'))
         if not isinstance(days_extra, int):
