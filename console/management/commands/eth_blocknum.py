@@ -30,7 +30,7 @@ class Command(BaseCommand, BaseView):
         cache_blocknum = get_cache(self.cacheKey)
 
         if cache_blocknum is None:
-            cache_blocknum = 1
+            raise CommandError('首次运行设置blocknum')
 
         print('cache_blocknum:', cache_blocknum)
         # 缓存中blocknum
