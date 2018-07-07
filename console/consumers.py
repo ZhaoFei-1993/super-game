@@ -24,6 +24,10 @@ def consumer_ethblock(block_num):
         return True
 
     items = json_obj['data']['data']
+    if str(block_num) == '5921851':
+        with open('/tmp/console_consumers.log', 'a+') as f:
+            f.write('items = ' + str(items))
+            f.write("\n")
 
     coin_all = Coin.objects.all()   # 所有币种
     charge_all = UserRecharge.objects.all()     # 所有充值记录
