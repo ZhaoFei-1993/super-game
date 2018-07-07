@@ -92,6 +92,8 @@ urlpatterns = [
     path('usdt_act_image/', views.USDTActivityView.as_view(), name="app-v1-user-usdt_act_image"),
     # 电话区号列表
     path('countries/', views.CountriesView.as_view(), name="app-v1-user-countries"),
+    # 首页推送
+    path('home/message/', views.HomeMessageView.as_view(), name='app-v1-user-message-home'),
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

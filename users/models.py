@@ -355,16 +355,19 @@ class Message(models.Model):
     GLOBAL = 1
     PUBLIC = 2
     PRIVATE = 3
+    HOME = 4
     TYPE_CHOICE = (
         (GLOBAL, "系统消息"),
         (PUBLIC, "公共消息"),
         (PRIVATE, "私信"),
+        (HOME, "首页公告"),
     )
     type = models.CharField(verbose_name="消息类型", choices=TYPE_CHOICE, max_length=1, default=PUBLIC)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
     title_en = models.CharField(verbose_name="英文消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
     content_en = models.CharField(verbose_name="英文消息内容", max_length=255, default="")
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
