@@ -26,7 +26,7 @@ def consumer_ethblock(block_num):
 
     items = json_obj['data']['data']
     with open('/tmp/console_consumers.log', 'a+') as f:
-        f.write(str(items))
+        f.write('items = ' + str(items))
         f.write("\n")
     print('items = ', items)
 
@@ -37,6 +37,10 @@ def consumer_ethblock(block_num):
         tmp_dict = val
         tmp_dict['t_time'] = json_obj['data']['t_time']
         tmp_dict['type'] = val['type'].upper()
+
+        with open('/tmp/console_consumers.log', 'a+') as f:
+            f.write('tmp_dict = ' + str(tmp_dict))
+            f.write("\n")
 
         # 根据交易信息处理db数据
         ret = deal_db_data(tmp_dict, coin_all, charge_all)
@@ -61,6 +65,10 @@ def deal_db_data(trans_dict, coin_all, charge_all):
             coin_id = coin.id
             break
 
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('coin_id = ' + str(coin_id))
+        f.write("\n")
+
     if coin_exists is False:
         print('type_not allow,type:', trans_dict['type'])
         return False
@@ -75,6 +83,10 @@ def deal_db_data(trans_dict, coin_all, charge_all):
     if not usercoin_info:
         return False
 
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('sssssssss')
+        f.write("\n")
+
     user_id = usercoin_info[0].user_id
 
     # 用户充值记录
@@ -83,10 +95,18 @@ def deal_db_data(trans_dict, coin_all, charge_all):
         if charge_data.address == addr and charge_data.txid == txid:
             charge_exists = True
 
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('bbbbbbbbb')
+        f.write("\n")
+
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
     if charge_exists is False:
+        with open('/tmp/console_consumers.log', 'a+') as f:
+            f.write('qqqqqqqqq')
+            f.write("\n")
+
         # 充值记录
         recharge_obj = UserRecharge()
         recharge_obj.address = addr
