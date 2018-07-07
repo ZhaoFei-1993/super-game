@@ -34,6 +34,8 @@ urlpatterns = [
     path('configs/', include('config.urls')),
     #
     path('chat/', include('chat.urls')),
+    #
+    path('guess/', include('guess.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
