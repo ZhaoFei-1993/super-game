@@ -4,9 +4,10 @@ from base.eth import *
 from time import time
 from base.app import BaseView
 from utils.cache import get_cache, set_cache
-from console.consumers import  consumer_ethblock
+from console.consumers import consumer_ethblock
 from redis import Redis
 from rq import Queue
+
 
 class Command(BaseCommand, BaseView):
     help = "获取ETH_blocknum"
