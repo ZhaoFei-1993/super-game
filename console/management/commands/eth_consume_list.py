@@ -117,6 +117,7 @@ class Command(BaseCommand,BaseView):
         list = json_obj['data']['data']
         print(list)
         tmp_num = 0
+        start_time1 = time()
         for i, val in enumerate(list):
             tmp_dict = val
             tmp_dict['t_time'] = json_obj['data']['t_time']
@@ -132,6 +133,9 @@ class Command(BaseCommand,BaseView):
             #address
                 raise CommandError('无地址信息')
             """
+        stop_time1 = time()
+        cost_time1 = str(round(stop_time1 - start_time1)) + '秒'
+        self.stdout.write(self.style.SUCCESS('db处理完成。耗时：' + cost_time1))
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(tmp_num) + '条交易信息'))
 
