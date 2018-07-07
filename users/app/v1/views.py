@@ -1325,12 +1325,11 @@ class AssetLock(CreateAPIView):
         coin_id=6
         try:
             coin = Coin.objects.get(id=coin_id)
-            coin_configs = \
-                CoinLock.objects.get(period=locked_days, is_delete=0, coin_id=coin.id)
             user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin_id)
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if coin.name != 'GSG':
+        coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0, coin_id=coin.id)
+        if not coin_configs.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if amounts <=0 or amounts > user_coin.balance:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -1339,7 +1338,7 @@ class AssetLock(CreateAPIView):
         ulcoin = UserCoinLock()
         ulcoin.user = userinfo
         ulcoin.amount = amounts
-        ulcoin.coin_lock = coin_configs
+        ulcoin.coin_lock = coin_configs[0]
         ulcoin.save()
         ulcoin.end_time = ulcoin.created_at + timedelta(days=locked_days)
         ulcoin.save()
