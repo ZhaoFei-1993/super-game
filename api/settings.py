@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'users',
     'wc_auth',
     'quiz',
+    'guess',
     'setting',
     'sms',
     'config',
