@@ -62,6 +62,15 @@ def dealDbData(dict):
         usercoin_info[0].balance +=value
         usercoin_info[0].save()
 
+        #用户余额变更记录
+        coin_detail = CoinDetail()
+        coin_detail.user_id = user_id
+        coin_detail.coin_name = dict['type']
+        coin_detail.amount = value
+        coin_detail.rest = usercoin_info[0].balance
+        coin_detail.sources = CoinDetail.RECHARGE
+        coin_detail.save()
+
     return 1
 
 
