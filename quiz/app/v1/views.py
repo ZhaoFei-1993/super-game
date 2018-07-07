@@ -807,6 +807,7 @@ class ChangeGsg(ListAPIView):
     """
     permission_classes = (LoginRequired,)
 
+    @transaction.atomic()
     def post(self, request, *args, **kwargs):
         user_id = str(request.user.id)
         value = value_judge(request, "wager", "convert_ratio")
@@ -834,12 +835,11 @@ class ChangeGsg(ListAPIView):
         end_time = str(day) + ' 23:59:59'  # 开始时间
         sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
-        sql += " and a.created_at<= '" + end_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'" + " for update"
         is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
-        if is_use==None or is_use=='':
-            is_use=0
+        if is_use == None or is_use == '':
+            is_use = 0
         left_gsg = toplimit - is_use
-        print("剩余可兑换GSG=============================", left_gsg)
 
         sql = "select sum(a.change_eth_value) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
@@ -849,25 +849,19 @@ class ChangeGsg(ListAPIView):
         if has_user_change == None or has_user_change == '':
             has_user_change = 0
         user_change = Decimal(coins) + has_user_change
-        print("用户当天已经兑换了多少GSG=============================", has_user_change)
-        print("总数=============================", user_change)
         if user_change > 5:
             raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
 
         convert_ratio = float(self.request.data['convert_ratio'])  # 获取兑换比例
-        print("获取兑换比例==========================", convert_ratio)
-        print("获取兑换ETH==========================", coins)
 
         sql = "select a.balance from users_usercoin a"
         sql += " where coin_id=2"
         sql += " and a.user_id=" + user_id
         eth_balance = get_sql(sql)[0][0]  # 用户拥有的ETH
-        print("用户拥有ETH============================", eth_balance)
         if eth_balance < coins:
             raise ParamErrorException(error_code.API_70205_ETH_NOT_SUFFICIENT_FUNDS)  # 判断用户ETH余额是否足
 
         gsg_ratio = convert_ratio * coins
-        print("兑换GSG总值==========================", gsg_ratio)
         if left_gsg < gsg_ratio:
             raise ParamErrorException(error_code.API_70206_CONVERTIBLE_GSG_INSUFFICIENT)  # 判断是否有足够GSG供用户兑换
 
@@ -920,9 +914,7 @@ class ChangeTable(ListAPIView):
         sql += " where coin_id=2"
         sql += " and a.user_id=" + user_id
         eth_balance = normalize_fraction(get_sql(sql)[0][0], 3) # 用户拥有的ETH
-        print("eth_balance====================================", eth_balance)
         eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
-        print("eth_limit===================================", eth_limit)
         eth_exchange_instruction_one = settings.ETH_EXCHANGE_INSTRUCTION_ONE
         eth_exchange_instruction_two = settings.ETH_EXCHANGE_INSTRUCTION_TWO
         eth_exchange_instruction_three = settings.ETH_EXCHANGE_INSTRUCTION_THREE
