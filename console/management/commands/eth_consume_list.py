@@ -19,8 +19,8 @@ from users.models import UserRecharge, Coin, UserCoin, CoinDetail,User
 
 def dealDbData(dict):
     #test
-    dict['type'] = 'INT'
-    print(dict)
+    #dict['type'] = 'INT'
+    #print(dict)
     info = Coin.objects.filter(name=dict['type'])
     if not info :
         print('type_not allow,type:',dict['type'])
