@@ -32,7 +32,7 @@ class Command(BaseCommand, BaseView):
         obj = eth_wallet.get(url='v1/account/gethightblock')
         content = int(obj['data']['blocknum'])
 
-        print('获取到block:', content)
+        # print('获取到block:', content)
         if not content:
             raise CommandError('获取blocknum失败')
 
