@@ -24,10 +24,10 @@ def consumer_ethblock(block_num):
         return True
 
     items = json_obj['data']['data']
-    # if str(block_num) == '5921851':
-    #     with open('/tmp/console_consumers.log', 'a+') as f:
-    #         f.write('items = ' + str(items))
-    #         f.write("\n")
+    if str(block_num) == '5924839':
+        with open('/tmp/console_consumers.log', 'a+') as f:
+            f.write('items = ' + str(items))
+            f.write("\n")
 
     coin_all = Coin.objects.all()   # 所有币种
     charge_all = UserRecharge.objects.all()     # 所有充值记录
@@ -37,9 +37,10 @@ def consumer_ethblock(block_num):
         tmp_dict['t_time'] = json_obj['data']['t_time']
         tmp_dict['type'] = val['type'].upper()
 
-        with open('/tmp/console_consumers.log', 'a+') as f:
-            f.write('tmp_dict = ' + str(tmp_dict))
-            f.write("\n")
+        if str(block_num) == '5924839':
+            with open('/tmp/console_consumers.log', 'a+') as f:
+                f.write('tmp_dict = ' + str(tmp_dict))
+                f.write("\n")
 
         # 根据交易信息处理db数据
         ret = deal_db_data(tmp_dict, coin_all, charge_all)
