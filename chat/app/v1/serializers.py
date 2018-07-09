@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
 from users.models import User, Coin
-from chat.models import Club
+from chat.models import Club, ClubRule
 from quiz.models import Record
 from base.validators import PhoneValidator
 
@@ -53,3 +53,21 @@ class ClubListSerialize(serializers.ModelSerializer):
         coin_liat = Coin.objects.get(pk=obj.coin_id)
         coin_icon = coin_liat.icon
         return coin_icon
+
+
+class ClubRuleSerialize(serializers.ModelSerializer):
+    """
+    玩法序列化
+    """
+    name = serializers.SerializerMethodField()  # 玩法昵称
+
+    class Meta:
+        model = ClubRule
+        fields = ("id", "name", "room_number")
+
+
+    def get_name(self, obj):  # 货币名称
+        name = obj.title
+        if self.context['request'].GET.get('language') == 'en':
+            name = obj.title_en
+        return name

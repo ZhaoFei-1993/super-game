@@ -3,8 +3,9 @@ from base.app import ListCreateAPIView
 from . import serializers
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import ClubListSerialize
-from chat.models import Club
+from .serializers import ClubListSerialize, ClubRuleSerialize
+from chat.models import Club, ClubRule
+from  users.models import UserCoin
 from api.settings import MEDIA_DOMAIN_HOST
 from utils.functions import language_switch
 from base import code as error_code
@@ -76,3 +77,27 @@ class ClublistView(ListAPIView):
         return self.response({"code": 0, "banner": banner, "data": data})
 
 
+class ClubRuleView(ListAPIView):
+    """
+    玩法列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = ClubRuleSerialize
+
+    def get_queryset(self):
+        chat_rule_list = ClubRule.objects.filter(is_deleted=0).order_by('sort')
+        return chat_rule_list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            data.append(
+                {
+                    "clubrule_id": item['id'],
+                    "name": item['name'],
+                    "room_number": item['room_number']
+                }
+            )
+        return self.response({"code": 0, "data": data})

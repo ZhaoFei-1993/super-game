@@ -6,7 +6,7 @@ from users.models import User, Coin
 # Create your models here.
 
 class Club(models.Model):
-    PENDING = 2     # 人气
+    PENDING = 2  # 人气
     PUBLISHING = 3  # 热门
     CLOSE = 0  # 未开启
     NIL = 1
@@ -34,3 +34,17 @@ class Club(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "俱乐部表"
+
+
+class ClubRule(models.Model):
+    title = models.CharField(verbose_name="玩法昵称", max_length=25)
+    title_en = models.CharField(verbose_name="玩法昵称(en)", max_length=25, default='')
+    room_number = models.IntegerField(verbose_name="在线人数", default=0)
+    sort = models.IntegerField(verbose_name="排序", default=0)
+    is_dissolve = models.BooleanField(verbose_name="是否开放", default=True)
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "俱乐部玩法表"
