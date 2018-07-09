@@ -198,8 +198,11 @@ def user_captcha_generate(request):
         return JsonResponse({'code': 501, 'message': '服务器错误！'})
 
     try:
+        if not os.path.exists(SAVE_PATH):
+            os.makedirs(SAVE_PATH)
         ic.save(os.path.join(SAVE_PATH, img_name))
     except:
+
         return JsonResponse({'code': 502, 'message': '服务器错误！'})
 
     return JsonResponse({'code': 200, 'message': "请求成功！", 'data': {'key': key, 'url': url, 'hanz': char_list}})
