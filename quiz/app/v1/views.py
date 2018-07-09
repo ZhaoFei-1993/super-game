@@ -955,12 +955,11 @@ class PlatformList(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         sql = "select house from quiz_gsgvalue a group by house;"
-        price_list = get_sql(sql)  # 用户拥有的ETH
+        price_list = get_sql(sql)  # 交易所列表
         data = []
         for price in price_list:
             data.append(price[0])
         return self.response({'code': 0, "data": data})
-
 
 
 class GsgPrice(ListAPIView):
@@ -974,15 +973,23 @@ class GsgPrice(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        house = self.request.GET.get('house')
-        sql = "select date_format(a.created_at, '%m/%d') as date, avg(value)  as price from quiz_gsgvalue a"
+        if 'house' not in self.request.GET:
+            sql = "select house from quiz_gsgvalue a group by house;"
+            price_list = get_sql(sql)  # 用户拥有的ETH
+            if len(price_list) <= 0:
+                raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+            house = price_list[0][0]
+        else:
+            house = self.request.GET.get('house')
+        sql = "select date_format(a.created_at, '%m/%d') as date, date_format(a.created_at, '%Y-%m-%d') as date, avg(value)  as price from quiz_gsgvalue a"
         sql += " where a.house= '" + house + "'" + "group by date;"
-        price_list = get_sql(sql)  # 用户拥有的ETH
+        price_list = get_sql(sql)
         data = []
         for price in price_list:
             data.append({
                 "created_at": price[0],
-                "gsg_value": price[1],
+                "created_at_new": price[1],
+                "gsg_value": price[2],
                 "eth_value": "暂无数据",
                 "market_value": "暂无数据",
                 "Volume": "暂无数据"
