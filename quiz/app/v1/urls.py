@@ -35,6 +35,10 @@ urlpatterns = [
     # 点击兑换
     path('change/gsg/', views.ChangeGsg.as_view(), name="app-v1-change-gsg"),
     # 点击兑换页面
-    path('change/table/', views.ChangeTable.as_view(), name="app-v1-change-table")
+    path('change/table/', views.ChangeTable.as_view(), name="app-v1-change-table"),
+    # gsg价格曲线图
+    path('gsg/price/', views.GsgPrice.as_view(), name="app-v1-gsg-price"),
+    # gsg价格曲线图
+    path('platform/name/', views.PlatformList.as_view(), name="app-v1-platform-list")
 
 ]

@@ -4,7 +4,8 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
-from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, EveryDayInjectionValue
+from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, \
+    EveryDayInjectionValue
 from users.models import UserCoin, CoinValue, CoinDetail
 from chat.models import Club
 from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
@@ -819,13 +820,13 @@ class ChangeGsg(ListAPIView):
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
         number = get_cache(EXCHANGE_QUALIFICATION)
-        if number==None or number=='':
+        if number == None or number == '':
             everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
             if len(everydayinjection) <= 0:
                 raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
             else:
                 number = everydayinjection[0].order
-        if int(number)<1000:
+        if int(number) < 1000:
             raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
 
         gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
@@ -926,7 +927,7 @@ class ChangeTable(ListAPIView):
         sql = "select a.balance from users_usercoin a"
         sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
-        eth_balance = normalize_fraction(get_sql(sql)[0][0], 3) # 用户拥有的ETH
+        eth_balance = normalize_fraction(get_sql(sql)[0][0], 3)  # 用户拥有的ETH
         eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
         eth_exchange_instruction_one = settings.ETH_EXCHANGE_INSTRUCTION_ONE
         eth_exchange_instruction_two = settings.ETH_EXCHANGE_INSTRUCTION_TWO
@@ -940,3 +941,54 @@ class ChangeTable(ListAPIView):
             "eth_exchange_instruction_three": eth_exchange_instruction_three,
             "eth_exchange_instruction_four": eth_exchange_instruction_four
         }})
+
+
+class PlatformList(ListAPIView):
+    """
+    GSG交易所列表
+    """
+
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        sql = "select house from quiz_gsgvalue a group by house;"
+        price_list = get_sql(sql)  # 用户拥有的ETH
+        data = []
+        for price in price_list:
+            data.append({
+                "platform_name": price[0],
+            })
+        print("data============================", data)
+        return self.response({'code': 0, "data": data})
+
+
+
+class GsgPrice(ListAPIView):
+    """
+    GSG价格曲线图
+    """
+
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        house = self.request.GET.get('house')
+        sql = "select date_format(a.created_at, '%m/%d') as date, avg(value)  as price from quiz_gsgvalue a"
+        sql += " where a.house= '" + house + "'" + "group by date;"
+        price_list = get_sql(sql)  # 用户拥有的ETH
+        data = []
+        for price in price_list:
+            data.append({
+                "created_at": price[0],
+                "gsg_value": price[1],
+                "eth_value": "暂无数据",
+                "market_value": "暂无数据",
+                "Volume": "暂无数据"
+            })
+            print("eth_balance============================", price_list)
+        return self.response({'code': 0, "data": data})
