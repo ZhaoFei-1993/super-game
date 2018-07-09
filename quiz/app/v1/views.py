@@ -958,10 +958,7 @@ class PlatformList(ListAPIView):
         price_list = get_sql(sql)  # 用户拥有的ETH
         data = []
         for price in price_list:
-            data.append({
-                "platform_name": price[0],
-            })
-        print("data============================", data)
+            data.append(price[0])
         return self.response({'code': 0, "data": data})
 
 
@@ -990,5 +987,4 @@ class GsgPrice(ListAPIView):
                 "market_value": "暂无数据",
                 "Volume": "暂无数据"
             })
-            print("eth_balance============================", price_list)
         return self.response({'code': 0, "data": data})
