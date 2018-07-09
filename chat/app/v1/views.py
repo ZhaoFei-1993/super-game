@@ -97,6 +97,7 @@ class ClubRuleView(ListAPIView):
                 {
                     "clubrule_id": item['id'],
                     "name": item['name'],
+                    "icon": item['icon'],
                     "room_number": item['room_number']
                 }
             )

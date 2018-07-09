@@ -39,6 +39,7 @@ class Club(models.Model):
 class ClubRule(models.Model):
     title = models.CharField(verbose_name="玩法昵称", max_length=25)
     title_en = models.CharField(verbose_name="玩法昵称(en)", max_length=25, default='')
+    icon = models.CharField(verbose_name="图片", max_length=255)
     room_number = models.IntegerField(verbose_name="在线人数", default=0)
     sort = models.IntegerField(verbose_name="排序", default=0)
     is_dissolve = models.BooleanField(verbose_name="是否开放", default=True)

@@ -15,13 +15,13 @@ from decimal import Decimal
 
 # @reversion.register()
 # class GuessCategory(MPTTModel):
-#     name = models.CharField(verbose_name="分类名称", max_length=50)
-#     name_en = models.CharField(verbose_name="分类名称(英文)", max_length=50, default='')
-#     icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
+#     name = models.CharField(verbose_name="股票名称", max_length=50)
+#     name_en = models.CharField(verbose_name="股票名称(英文)", max_length=50, default='')
+#     icon = models.CharField(verbose_name="股票编号", max_length=50, default='')
 #     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
 #     order = models.IntegerField(verbose_name="排序", default=0)
 #     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 #
 #     class Meta:
 #         ordering = ['-id']
-#         verbose_name = verbose_name_plural = "猜涨跌分类表"
+#         verbose_name = verbose_name_plural = "股票表"
