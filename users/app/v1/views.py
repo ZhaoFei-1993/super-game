@@ -1026,6 +1026,8 @@ class DailyListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        user_id = request.user.id
+        is_sign = sign_confirmation(user_id)  # 是否签到
         data = []
         for list in items:
             data.append({
@@ -1037,7 +1039,7 @@ class DailyListView(ListAPIView):
                 "is_sign": list["is_sign"],
                 "is_selected": list["is_selected"]
             })
-        return self.response({'code': 0, 'data': data})
+        return self.response({'code': 0, 'data': data, 'sign': is_sign})
 
 
 class DailySignListView(ListCreateAPIView):
