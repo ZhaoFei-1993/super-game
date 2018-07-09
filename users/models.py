@@ -704,3 +704,25 @@ class GSGAssetAccount(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG账号表"
+
+@reversion.register()
+class FoundationAccount(models.Model):
+    CORNERSTONE = 0
+    ICO = 1
+    PRIVATE = 2
+
+    TYPE_CHOICE = (
+        (CORNERSTONE, "基石"),
+        (ICO, "ICO"),
+        (PRIVATE, "私募"),
+    )
+    account_name = models.CharField(verbose_name="账号名", max_length=32, default="")
+    coin = models.ForeignKey(Coin, on_deletd=models.CASCADE)
+    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255,default="")
+    type = models.CharField(verbose_name="集资类型", choices=TYPE_CHOICE, max_length=1, default=ICO)
+    balance = models.DecimalField(verbose_name="金额", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "私募ICO基石表"
