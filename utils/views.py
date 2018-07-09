@@ -174,7 +174,7 @@ def user_captcha_generate(request):
 
     style = request.language
     # style = request.GET.get('language')
-    if style not in ['en', 'cn']:
+    if style not in ['en', 'zh']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})
     ic = ImageChar()
     char_list, position = ic.randCH_or_EN(style=style)

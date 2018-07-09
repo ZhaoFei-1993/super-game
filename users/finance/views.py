@@ -263,3 +263,12 @@ class GSGView(RetrieveAPIView):
         return self.response({'code': 0, 'data': data})
 
 
+class SharesView(ListAPIView):
+    def get_queryset(self):
+        return JsonResponse({'1':1})
+
+    def list(self, request, *args, **kwargs):
+        return JsonResponse({'2': 1})
+
+
+

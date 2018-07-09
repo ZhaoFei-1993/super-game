@@ -1,8 +1,7 @@
 from base.eth import *
 from time import time
 import time as format_time
-from decimal import Decimal
-from users.models import UserRecharge, Coin, UserCoin, CoinDetail
+from users.models import UserRecharge, Coin, UserCoin
 
 
 def consumer_ethblock(block_num):
@@ -19,24 +18,35 @@ def consumer_ethblock(block_num):
 
     # 根据block_num 获取交易数据
     json_obj = eth_wallet.get(url='v1/chain/blocknum/' + str(block_num))
+    # with open('/tmp/console_consumers.log', 'a+') as f:
+    #     f.write('items = ' + str(json_obj))
+    #     f.write("\n")
     # print(json_obj)
     if json_obj['code'] != 0:
         print('根据block_num获取数据失败')
         return True
 
     items = json_obj['data']['data']
-    print('items = ', items)
+    # if str(block_num) == '5924839':
+    #     with open('/tmp/console_consumers.log', 'a+') as f:
+    #         f.write('items = ' + str(items))
+    #         f.write("\n")
 
-    coin_all = Coin.objects.all() #所有币种
-    charge_all = UserRecharge.objects.all() #所有充值记录
+    coin_all = Coin.objects.all()   # 所有币种
+    charge_all = UserRecharge.objects.all()     # 所有充值记录
     tmp_num = 0
     for i, val in enumerate(items):
         tmp_dict = val
         tmp_dict['t_time'] = json_obj['data']['t_time']
         tmp_dict['type'] = val['type'].upper()
 
+        # if str(block_num) == '5924839':
+        #     with open('/tmp/console_consumers.log', 'a+') as f:
+        #         f.write('tmp_dict = ' + str(tmp_dict))
+        #         f.write("\n")
+
         # 根据交易信息处理db数据
-        ret = deal_db_data(tmp_dict,coin_all,charge_all)
+        ret = deal_db_data(tmp_dict, coin_all, charge_all)
         if ret is True:
             tmp_num += 1
 
@@ -48,7 +58,7 @@ def consumer_ethblock(block_num):
     return True
 
 
-def deal_db_data(trans_dict,coin_all,charge_all):
+def deal_db_data(trans_dict, coin_all, charge_all):
     # dict['type'] = 'INT'
     #币种是否存在
     coin_exists = False
@@ -57,7 +67,6 @@ def deal_db_data(trans_dict,coin_all,charge_all):
             coin_exists = True
             coin_id = coin.id
             break
-
 
     if coin_exists is False:
         print('type_not allow,type:', trans_dict['type'])
@@ -81,7 +90,6 @@ def deal_db_data(trans_dict,coin_all,charge_all):
         if charge_data.address == addr and charge_data.txid == txid:
             charge_exists = True
 
-
     time_local = format_time.localtime(t_time)
     time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
@@ -95,20 +103,7 @@ def deal_db_data(trans_dict,coin_all,charge_all):
         recharge_obj.amount = value
         recharge_obj.confirmations = 0
         recharge_obj.trade_at = time_dt
-        # recharge_obj.save()
-
-        # 刷新用户余额表
-        usercoin_info[0].balance += Decimal(value)
-        # usercoin_info[0].save()
-
-        # 用户余额变更记录
-        coin_detail = CoinDetail()
-        coin_detail.user_id = user_id
-        coin_detail.coin_name = trans_dict['type']
-        coin_detail.amount = value
-        coin_detail.rest = usercoin_info[0].balance
-        coin_detail.sources = CoinDetail.RECHARGE
-        # coin_detail.save()
+        recharge_obj.save()
         return True
 
     return False

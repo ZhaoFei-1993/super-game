@@ -482,13 +482,13 @@ class ImageChar(object):
         for i in range(0, num):
             draw.line([self.randPoint(), self.randPoint()], self.lineRGB())
 
-    def randCH_or_EN(self, num=6, style='cn', select=4):  # 总共生成6个字，选取4个字
+    def randCH_or_EN(self, num=6, style='zh', select=4):  # 总共生成6个字，选取4个字
         co_list = []  # 坐标列表，存储已经生成的坐标保证不重叠
         char_list = []  # 汉字列表,存储汉字保证不重复
         res_co_list = []  # 存储返回结果的4个坐标
         res_char_list = []  # 存储返回结果的4个汉字
         for i in range(1, num + 1):
-            if style == 'cn':  # 中文
+            if style == 'zh':  # 中文
                 while True:
                     try:
                         char = RandomChar().GB2312()  # 随机生成中文字符串

@@ -100,7 +100,18 @@ class Command(BaseCommand):
         i = 1
         for obj in EveryDayInjectionValue.objects.filter(injection_time=date_last).order_by('-injection_value'):
             EXCHANGE_QUALIFICATION = "exchange_qualification_" + str(obj.user_id) + '_' + str(date_now)  # key
-            set_cache(EXCHANGE_QUALIFICATION, i, 86400)   # 存储
+            set_cache(EXCHANGE_QUALIFICATION, i, 86400)  # 存储
             obj.order = i
             obj.save()
+            if i <= 1000:
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = obj.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title_en = str(date_now) + 'GSG exchange qualification.'
+                u_mes.title = str(date_now) + 'GSG兑换资格。'
+                u_mes.content = '恭喜您获得了GSG的兑换资格。'
+                u_mes.content_en = 'Congratulations on your eligibility for GSG.'
+                u_mes.save()
             i += 1
