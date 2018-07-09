@@ -1,6 +1,6 @@
 from base.backend import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from django.http import JsonResponse
-from .authentication import TokenAuthentication
+from users.finance.authentication import TokenAuthentication
 from utils.functions import value_judge
 from rest_framework_jwt.settings import api_settings
 import hashlib
