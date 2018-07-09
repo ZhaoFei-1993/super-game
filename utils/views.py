@@ -173,6 +173,7 @@ def user_captcha_generate(request):
     # return Response(response)
 
     style = request.language
+    print('style:', style, style == 'zh', '---------------')
     # style = request.GET.get('language')
     if style not in ['en', 'zh']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})
@@ -181,7 +182,7 @@ def user_captcha_generate(request):
     prev = str(random.random()).replace('.', '') + '_' + str(time.time()).replace('.', '')
 
     img_name = prev + '.jpg'  # 生成图片名
-    url = settings.CAPTCHA_HTTP_PREFIX + request.get_host()+'/utils/img/' + img_name + '/'
+    url = settings.CAPTCHA_HTTP_PREFIX + request.get_host() + '/utils/img/' + img_name + '/'
 
     hash = hashlib.sha1()  # hash加密生成随机的key
     hash.update((prev + str(random.random())).encode('utf-8'))
