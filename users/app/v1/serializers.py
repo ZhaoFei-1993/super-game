@@ -10,8 +10,7 @@ from quiz.models import Record, Quiz
 from django.db import connection
 from base.exceptions import ParamErrorException
 from base import code as error_code
-from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql, \
-    gsg_coin_initialization
+from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql
 from api import settings
 from datetime import timedelta, datetime, date
 from django.utils import timezone
@@ -86,11 +85,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):  # GSG
-        gsg_count = UserCoin.objects.filter(user_id=obj.pk, coin_id=6).count()
-        if gsg_count == 0:
-            coin_gsg = gsg_coin_initialization(obj.pk, 6)
-        else:
-            coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
+        coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
         integral = coin_gsg.balance
         return integral
 

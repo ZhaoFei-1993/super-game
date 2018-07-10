@@ -26,7 +26,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, sign_confirmation, message_hints, language_switch, \
-    message_sign, gsg_coin_initialization, value_judge, resize_img, normalize_fraction, random_invitation_code, \
+    message_sign, resize_img, normalize_fraction, random_invitation_code, \
     coin_initialization
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
@@ -158,10 +158,7 @@ class UserRegister(object):
             for coin in coins:
                 user_id = user.id
                 coin_id = coin.id
-                if int(coin_id) == 6:
-                    gsg_coin_initialization(user_id, coin_id)
-                else:
-                    coin_initialization(user_id, coin_id)
+                coin_initialization(user_id, coin_id)
 
             # 更新用户的device_token
             if device_token is not None and device_token != '':
@@ -1131,66 +1128,66 @@ class DailySignListView(ListCreateAPIView):
             else:
                 fate = daily.number + 1
                 daily.number += 1
-        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
-        if date_last > end_date:
-            try:
-                dailysettings = DailySettings.objects.get(days=fate)
-            except DailySettings.DoesNotExist:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-            rewards = dailysettings.rewards
-            user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
-            user_coin.balance += Decimal(rewards)
-            user_coin.save()
-            daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
-            daily.user_id = user_id
-            daily.save()
-            coin_detail = CoinDetail()
-            coin_detail.user = user
-            coin_detail.coin_name = dailysettings.coin.name
-            coin_detail.amount = '+' + str(rewards)
-            coin_detail.rest = Decimal(user_coin.balance)
-            coin_detail.sources = 7
-            coin_detail.save()
+        # date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # end_date = "2018-06-24 00:00:00"
+        # if date_last > end_date:
+        try:
+            dailysettings = DailySettings.objects.get(days=fate)
+        except DailySettings.DoesNotExist:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        rewards = dailysettings.rewards
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
+        user_coin.balance += Decimal(rewards)
+        user_coin.save()
+        daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
+        daily.user_id = user_id
+        daily.save()
+        coin_detail = CoinDetail()
+        coin_detail.user = user
+        coin_detail.coin_name = dailysettings.coin.name
+        coin_detail.amount = '+' + str(rewards)
+        coin_detail.rest = Decimal(user_coin.balance)
+        coin_detail.sources = 7
+        coin_detail.save()
 
-            content = {'code': 0,
-                       'data': normalize_fraction(rewards, 2),
-                       'icon': dailysettings.coin.icon,
-                       'name': dailysettings.coin.name
-                       }
-        else:
-            if fate == 1:
-                rewards = 6
-            if fate == 2:
-                rewards = 8
-            if fate == 3:
-                rewards = 10
-            if fate == 4:
-                rewards = 12
-            if fate == 5:
-                rewards = 14
-            if fate == 6:
-                rewards = 16
-            if fate == 7:
-                rewards = 18
-            user.integral += rewards
-            user.save()
-            daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
-            daily.user_id = user_id
-            daily.save()
-            coin_detail = CoinDetail()
-            coin_detail.user = user
-            coin_detail.coin_name = 'GSG'
-            coin_detail.amount = '+' + str(rewards)
-            coin_detail.rest = Decimal(user.integral)
-            coin_detail.sources = 7
-            coin_detail.save()
-
-            content = {'code': 0,
-                       'data': normalize_fraction(rewards, 2),
-                       'icon': '',
-                       'name': ''
-                       }
+        content = {'code': 0,
+                   'data': normalize_fraction(rewards, 2),
+                   'icon': dailysettings.coin.icon,
+                   'name': dailysettings.coin.name
+                   }
+        # else:
+        #     if fate == 1:
+        #         rewards = 6
+        #     if fate == 2:
+        #         rewards = 8
+        #     if fate == 3:
+        #         rewards = 10
+        #     if fate == 4:
+        #         rewards = 12
+        #     if fate == 5:
+        #         rewards = 14
+        #     if fate == 6:
+        #         rewards = 16
+        #     if fate == 7:
+        #         rewards = 18
+        #     user.integral += rewards
+        #     user.save()
+        #     daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
+        #     daily.user_id = user_id
+        #     daily.save()
+        #     coin_detail = CoinDetail()
+        #     coin_detail.user = user
+        #     coin_detail.coin_name = 'GSG'
+        #     coin_detail.amount = '+' + str(rewards)
+        #     coin_detail.rest = Decimal(user.integral)
+        #     coin_detail.sources = 7
+        #     coin_detail.save()
+        #
+        #     content = {'code': 0,
+        #                'data': normalize_fraction(rewards, 2),
+        #                'icon': '',
+        #                'name': ''
+        #                }
 
         return self.response(content)
 
@@ -1309,18 +1306,18 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('-balance','coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
-        user = request.user.id
+        user_info = request.user
         Progress = results.data.get('results')
         data = []
         try:
-            user_info = User.objects.get(id=user)
-            eth = UserCoin.objects.get(user_id=user, coin__name='ETH')
-            integral = user_info.integral
+            # user_info = User.objects.get(id=user)
+            eth = UserCoin.objects.get(user_id=user_info.id, coin__name='ETH')
+            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
         except Exception:
             raise
 
@@ -1356,7 +1353,7 @@ class AssetView(ListAPIView):
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': normalize_fraction(integral, 2), 'data': data})
+                              'user_integral': normalize_fraction(user_gsg.balance, 2), 'data': data})
 
 
 class AssetLock(CreateAPIView):
@@ -2645,7 +2642,8 @@ class ClickLuckDrawView(CreateAPIView):
         number = int(number)
         integral_all = IntegralPrize.objects.filter()
         prize_consume = integral_all[0].prize_consume
-        if is_gratis != 1 and Decimal(user_info.integral) < Decimal(prize_consume):
+        user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
+        if is_gratis != 1 and Decimal(user_gsg.balance) < Decimal(prize_consume):
             raise ParamErrorException(error_code=error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
             raise ParamErrorException(error_code=error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
@@ -2659,7 +2657,6 @@ class ClickLuckDrawView(CreateAPIView):
         if int(is_gratis) == 1:
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
-            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
             user_gsg.balance -= Decimal(prize_consume)
             user_gsg.save()
@@ -2678,7 +2675,6 @@ class ClickLuckDrawView(CreateAPIView):
             incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
-            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
             integral = Decimal(integral_prize.prize_number)
             user_gsg.balance += integral
             user_gsg.save()

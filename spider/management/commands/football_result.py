@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
-from utils.functions import normalize_fraction, gsg_coin_initialization
+from utils.functions import normalize_fraction
 from django.db import transaction
 import datetime
 from decimal import Decimal
@@ -489,11 +489,7 @@ def cash_back(quiz):
                     gsg_cash_back = trunc(gsg_cash_back, 2)
                     if float(gsg_cash_back) > 0:
                         user = User.objects.get(pk=user_id)
-                        gsg_count = UserCoin.objects.filter(user_id=user.id, coin_id=6).count()
-                        if gsg_count == 0:
-                            user_coin_gsg = gsg_coin_initialization(user.id, 6)
-                        else:
-                            user_coin_gsg = UserCoin.objects.filter(user=user, coin_id=6).first()
+                        user_coin_gsg = UserCoin.objects.filter(user=user, coin_id=6).first()
 
                         user_coin_gsg.balance = float(user_coin_gsg.balance) + float(gsg_cash_back)
                         user_coin_gsg.save()
