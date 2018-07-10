@@ -8,11 +8,13 @@ from base import code as error_code
 from base.exceptions import ParamErrorException
 from wc_auth.models import Admin
 import time
-from .functions import get_now, get_range_time, verify_date,CountPage
-from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, UserMessage, User
+from .functions import get_now, get_range_time, verify_date, CountPage
+from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, UserMessage, User, FoundationAccount, \
+    GSGAssetAccount
 from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
+from users.finance.serializers import GSGSerializer
 
 
 class UserManager(object):
@@ -86,7 +88,8 @@ class PwdView(CreateAPIView):
 
 
 class CountView(RetrieveAPIView):
-    def get(self, request, type, pk, cycle):
+    def get(self, request, type, pk):
+        cycle = request.GET.get('cycle')
         start = request.GET.get('start')
         end = request.GET.get('end')
         if not verify_date(start) or not verify_date(end):
@@ -111,16 +114,15 @@ class CountView(RetrieveAPIView):
             record = Record.objects.filter(option__club_id=club_id)
 
             # 平台统计表
-            count_list = [] # 值列表
-            key_list = [] # 键列表
+            count_list = []  # 值列表
+            key_list = []  # 键列表
 
             # 返回日期的统计
-            time_list = get_range_time(cycle,start,end)
+            time_list = get_range_time(cycle, start, end)
 
             # 分页处理，每次返回七条数据
             c = CountPage()
             time_list = c.paginate_queryset(queryset=time_list, request=request, view=self)
-
 
             for t in time_list:
                 if cycle == 'd':  # 按天统计盈亏,键采用2018-06-06格式
@@ -136,12 +138,12 @@ class CountView(RetrieveAPIView):
 
                 else:  # 按年统计盈亏
                     key = str(t[0]).split(' ')[0].split('-')[0]
-            #     bets = record.exclude(type=3).filter(open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
-            #     bets_return = record.filter(type=1, open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
-            #     if not bets: bets = 0
-            #     if not bets_return: bets_return = 0
-            #     earn = bets - bets_return
-            #     earn = int(earn)
+                    #     bets = record.exclude(type=3).filter(open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
+                    #     bets_return = record.filter(type=1, open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
+                    #     if not bets: bets = 0
+                    #     if not bets_return: bets_return = 0
+                    #     earn = bets - bets_return
+                    #     earn = int(earn)
                 count_list.append(0)
                 key_list.append(key)
 
@@ -156,10 +158,10 @@ class CountView(RetrieveAPIView):
                 if item.type == '2':
                     total_earn += item.bet
                     for d in time_list:
-                        if  d[0]<=item.created_at<=d[1]:
+                        if d[0] <= item.created_at <= d[1]:
                             count_list[time_list.index(d)] += item.bet
-            count_list = map(int,count_list)
-            time_earn_list = dict(zip(key_list,count_list))
+            count_list = map(int, count_list)
+            time_earn_list = dict(zip(key_list, count_list))
 
             # # 下注总额
             # bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
@@ -264,11 +266,48 @@ class GSGView(RetrieveAPIView):
 
 
 class SharesView(ListAPIView):
+    serializer_class = GSGSerializer
+
     def get_queryset(self):
-        return JsonResponse({'1':1})
+        res = GSGAssetAccount.objects.filter(account_type=1)
+        return res
 
     def list(self, request, *args, **kwargs):
-        return JsonResponse({'2': 1})
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        total_balance = GSGAssetAccount.objects.filter(account_type=1).aggregate(Sum('balance')).get("balance__sum")
+        res_list = []
+        for i in items:
+            res_dict = {}
+            res_dict['name'] = i['account_name']
+            value = round(float(i['balance']) / float(total_balance), 4)
+            res_dict['proportion'] = value
+            res_list.append(res_dict)
+        return self.response({'code': 0, 'data': res_list})
 
 
+class FootstoneView(ListAPIView):
+    def queryset(self):
+        pass
 
+    def list(self, request, *args, **kwargs):
+        res = FoundationAccount.objects.values('type', 'coin__name').annotate(Sum('balance')).order_by('coin')
+        footstone_list = []
+        ICO_list = []
+        private_list = []
+
+        for i in res:
+            i['balance__sum'] = int(i['balance__sum'])
+            print(i)
+            if i['type'] == '0':  # 基石
+                footstone_list.append(i)
+            if i['type'] == '1':  # ICO
+                ICO_list.append(i)
+            if i['type'] == '2':  # 私募
+                private_list.append(i)
+        data = {
+            'footstone': footstone_list,
+            'ICO': ICO_list,
+            'private': private_list
+        }
+        return self.response({'code': 0, 'data': data})

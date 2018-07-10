@@ -173,7 +173,7 @@ def user_captcha_generate(request):
     # return Response(response)
 
     style = request.language
-    print('style:', style, style == 'zh', '---------------')
+    # print('style:', style, style == 'zh', '---------------')
     # style = request.GET.get('language')
     if style not in ['en', 'zh']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})

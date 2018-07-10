@@ -156,7 +156,7 @@ class Coin(models.Model):
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
     is_reality = models.BooleanField(verbose_name="是否容许提现", default=0)
     is_recharge = models.BooleanField(verbose_name="是否容许充值", default=0)
-    is_lock_valid = models.BooleanField(verbose_name="是否允许锁定分红",default=0)
+    is_lock_valid = models.BooleanField(verbose_name="是否允许锁定分红", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
@@ -314,10 +314,10 @@ class UserCoinLock(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="锁定金额", max_digits=32, decimal_places=18,
-                                    default=0.000000000000000000)
+                                 default=0.000000000000000000)
     end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
     is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
-    is_divided = models.BooleanField(verbose_name="是否已分红",default=False)
+    is_divided = models.BooleanField(verbose_name="是否已分红", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
@@ -679,11 +679,10 @@ class Dividend(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user_lock = models.ForeignKey(UserCoinLock, on_delete=models.CASCADE)
     divide = models.DecimalField(verbose_name="分红额", max_digits=32, decimal_places=18, default=0.000000000000000000)
-    created_at = models.DateTimeField(verbose_name="创建时间",auto_now_add=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "用户分红表"
-
 
 
 @reversion.register()
@@ -697,7 +696,7 @@ class GSGAssetAccount(models.Model):
         (SUPER, "总账户"),
     )
     account_name = models.CharField(verbose_name="账号名", max_length=32, default="")
-    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255,default="")
+    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255, default="")
     account_type = models.CharField(verbose_name="账户类型", choices=TYPE_CHOICE, max_length=1, default=NORMAL)
     balance = models.DecimalField(verbose_name="余额", max_digits=32, decimal_places=18, default=0.000000000000000000)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
@@ -705,6 +704,7 @@ class GSGAssetAccount(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG账号表"
+
 
 @reversion.register()
 class FoundationAccount(models.Model):
@@ -719,7 +719,7 @@ class FoundationAccount(models.Model):
     )
     account_name = models.CharField(verbose_name="账号名", max_length=32, default="")
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255,default="")
+    chain_address = models.CharField(verbose_name="链上账号地址", max_length=255, default="")
     type = models.CharField(verbose_name="集资类型", choices=TYPE_CHOICE, max_length=1, default=ICO)
     balance = models.DecimalField(verbose_name="金额", max_digits=32, decimal_places=18, default=0.000000000000000000)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
