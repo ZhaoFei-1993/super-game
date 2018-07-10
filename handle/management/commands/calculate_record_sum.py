@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from quiz.models import Record, EveryDayInjectionValue
 from users.models import CoinPrice, User, UserCoin, CoinDetail, UserMessage
 from chat.models import Club
-from utils.functions import normalize_fraction, gsg_coin_initialization
+from utils.functions import normalize_fraction
 from django.db.models import Q
 import datetime
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
