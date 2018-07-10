@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 from base.backend import ListCreateAPIView
-from . import serializers
+from sms.backend import serializers
 from wsms import sms
-from ...models import Sms
+from sms.models import Sms
 from base import code as error_code
 from datetime import datetime
 import time

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.urls import path
-from . import views
+from sms.backend import views
 
 urlpatterns = [
     # 发送手机短信验证码共用接口       已测试

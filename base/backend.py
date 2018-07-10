@@ -1,6 +1,6 @@
 from rest_framework import generics
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from .auth import CCSignatureAuthBackend
 
 from django.core.paginator import Paginator as DjangoPaginator
@@ -8,7 +8,7 @@ from django.core.paginator import InvalidPage
 from rest_framework.pagination import PageNumberPagination
 from django.db import connection
 import json
-
+from .code import API_ERROR_MESSAGE
 
 class BaseView(generics.GenericAPIView):
     authentication_classes = (CCSignatureAuthBackend,)
@@ -66,7 +66,13 @@ class BaseView(generics.GenericAPIView):
         :param data: 
         :return: 
         """
-        return HttpResponse(json.dumps(data), content_type='text/json')
+        response = {}
+        for k in data:
+            response[k] = data[k]
+            if k == 'code' and 'message' not in data:
+                response['message'] = API_ERROR_MESSAGE[data['code']]
+
+        return JsonResponse(response)
 
 
 class CreateAPIView(generics.CreateAPIView, BaseView):

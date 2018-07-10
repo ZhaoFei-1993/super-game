@@ -173,7 +173,7 @@ def user_captcha_generate(request):
     # return Response(response)
 
     style = request.language
-    print('style:', style, style == 'zh', '---------------')
+    # print('style:', style, style == 'zh', '---------------')
     # style = request.GET.get('language')
     if style not in ['en', 'zh']:
         return JsonResponse({'code': 500, 'msg': '无效参数！'})
@@ -243,7 +243,7 @@ class UserCaptchaValid(CreateAPIView):
             codeinfo.is_delete = 1
 
         if count == 3:  # 验证超过三次，无法继续验证
-            return JsonResponse({'code': 500, 'message': '已验证失败三次，请刷新验证码！'})
+            return JsonResponse({'code': 501, 'message': '已验证失败三次，请刷新验证码！'})
 
         res = map(lambda x, y: y[0][0] <= x[0] <= y[0][1] and y[1][0] <= x[1] <= y[1][1], user_position,
                   position)  # 判断用户点击坐标
