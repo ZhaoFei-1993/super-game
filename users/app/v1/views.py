@@ -836,16 +836,34 @@ class RankingView(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        user_id = request.user.id
+        user = request.user
+        user_id = user.id
+        sql = "SELECT balance from users_usercoin where coin_id = 6 and user_id=" + str(user_id)
+        user_coin = get_sql(sql)[0][0]  # 用户拥有的ETH
+        my_ranking = {
+            "user_id": user_id,
+            "avatar": user.avatar,
+            "nickname": user.nickname,
+            "win_ratio": normalize_fraction(user_coin, 2),
+            "ranking": "未上榜"
+        }
         if 'page' not in request.GET:
             page = 1
         else:
             page = int(request.GET.get('page'))
         i = page * 10
-        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit "+str(i-10)+","+str(i)+";"
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit " + str(
+            i - 10) + "," + str(i) + ";"
         lists = get_sql(sql)  # 用户拥有的ETH
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit 100"
+        user_lists = get_sql(sql)  # 用户拥有的ETH
+        a = 1
+        for i in user_lists:
+            if int(i[0]) == int(user_id):
+                my_ranking["ranking"] = a
+            a += 1
+
         data = []
-        my_ranking = {}
         s = (page - 1) * 10
         for list in lists:
             user_info = User.objects.get(id=int(list[0]))
@@ -853,23 +871,16 @@ class RankingView(ListAPIView):
             is_user = 0
             if int(user_id) == int(list[0]):
                 is_user = 1
-                my_ranking = {
-                    "user_id": list[0],
-                    "avatar": user_info.avatar,
-                    "nickname": user_info.nickname,
-                    "win_ratio": normalize_fraction(list[1], 2),
-                    "ranking": s
-                }
             data.append({
-                            'user_id': list[0],
-                            'avatar': user_info.avatar,
-                            'nickname': user_info.nickname,
-                            'is_user': is_user,
-                            'win_ratio': normalize_fraction(list[1], 2),
-                            'ranking': s,
-                        })
-        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': data, }})
+                'user_id': list[0],
+                'avatar': user_info.avatar,
+                'nickname': user_info.nickname,
+                'is_user': is_user,
+                'win_ratio': normalize_fraction(list[1], 2),
+                'ranking': s,
+            })
 
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': data, }})
 
     # serializer_class = UserInfoSerializer
     #
