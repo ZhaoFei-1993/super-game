@@ -13,7 +13,8 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserCoinLock, Countries, Dividend
 from chat.models import Club
 from console.models import Address
-from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
+    RetrieveUpdateAPIView
 from base.function import LoginRequired
 from base.function import randomnickname, weight_choice
 from sms.models import Sms
@@ -830,60 +831,101 @@ class RankingView(ListAPIView):
     排行榜
     """
     permission_classes = (LoginRequired,)
-    serializer_class = UserInfoSerializer
 
     def get_queryset(self):
-        return User.objects.filter(is_robot=0).order_by('-integral', 'id')[:100]
+        pass
 
     def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        Progress = results.data.get('results')
-        user = request.user
-        user_gsg = UserCoin.objects.get(user_id=user.id, coin_id=6)
-        user_arr = User.objects.filter(is_robot=0).values_list('id').order_by('-integral', 'id')[:100]
-        my_ran = "未上榜"
-        if self.request.GET.get('language') == 'en':
-            my_ran = "Not on the list"
-        index = 0
-        for i in user_arr:
-            index = index + 1
-            if i[0] == user.id:
-                my_ran = index
-        avatar = user.avatar
-        nickname = user.nickname
-        integral = user_gsg.balance
-        # win_ratio = user.victory
-        # if user.victory == 0:
-        #     win_ratio = 0
-        # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=1)
-        my_ranking = {
-            "user_id": user.id,
-            "avatar": avatar,
-            "nickname": nickname,
-            "win_ratio": normalize_fraction(integral, 2),
-            "ranking": my_ran
-        }
-        list = []
+        user_id = request.user.id
         if 'page' not in request.GET:
             page = 1
         else:
             page = int(request.GET.get('page'))
-        i = (page - 1) * 10
-        for fav in Progress:
-            i = i + 1
-            user_id = fav.get('id')
-            integral = fav.get('integral')
-            list.append({
-                'user_id': user_id,
-                'avatar': fav.get('avatar'),
-                'nickname': fav.get('nickname'),
-                'is_user': fav.get('is_user'),
-                'win_ratio': normalize_fraction(integral, 2),
-                'ranking': i,
-            })
-            list.sort(key=lambda x: x["ranking"])
+        i = page * 10
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit "+str(i-10)+","+str(i)+";"
+        lists = get_sql(sql)  # 用户拥有的ETH
+        data = []
+        my_ranking = {}
+        s = (page - 1) * 10
+        for list in lists:
+            user_info = User.objects.get(id=int(list[0]))
+            s = s + 1
+            is_user = 0
+            if int(user_id) == int(list[0]):
+                is_user = 1
+                my_ranking = {
+                    "user_id": list[0],
+                    "avatar": user_info.avatar,
+                    "nickname": user_info.nickname,
+                    "win_ratio": normalize_fraction(list[1], 2),
+                    "ranking": s
+                }
+            data.append({
+                            'user_id': list[0],
+                            'avatar': user_info.avatar,
+                            'nickname': user_info.nickname,
+                            'is_user': is_user,
+                            'win_ratio': normalize_fraction(list[1], 2),
+                            'ranking': s,
+                        })
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': data, }})
 
-        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list, }})
+
+    # serializer_class = UserInfoSerializer
+    #
+    # def get_queryset(self):
+    #     return User.objects.all().order_by('-integral', 'id')[:100]
+    #
+    # def list(self, request, *args, **kwargs):
+    #     results = super().list(request, *args, **kwargs)
+    #     Progress = results.data.get('results')
+    #     user = request.user
+    #     user_gsg = UserCoin.objects.get(user_id=user.id, coin_id=6)
+    #     user_arr = User.objects.all().values_list('id').order_by('-integral', 'id')[:100]
+    #     my_ran = "未上榜"
+    #     if self.request.GET.get('language') == 'en':
+    #         my_ran = "Not on the list"
+    #     index = 0
+    #     for i in user_arr:
+    #         index = index + 1
+    #         if i[0] == user.id:
+    #             my_ran = index
+    #     avatar = user.avatar
+    #     nickname = user.nickname
+    #     integral = user_gsg.balance
+    #     print("integral=========================", integral)
+    #     # win_ratio = user.victory
+    #     # if user.victory == 0:
+    #     #     win_ratio = 0
+    #     # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=1)
+    #     my_ranking = {
+    #         "user_id": user.id,
+    #         "avatar": avatar,
+    #         "nickname": nickname,
+    #         "win_ratio": normalize_fraction(integral, 2),
+    #         "ranking": my_ran
+    #     }
+    #     list = []
+    #     if 'page' not in request.GET:
+    #         page = 1
+    #     else:
+    #         page = int(request.GET.get('page'))
+    #     i = (page - 1) * 10
+    #     for fav in Progress:
+    #         i = i + 1
+    #         user_id = fav.get('id')
+    #         integral = fav.get('integral')
+    #         list.append({
+    #             'user_id': user_id,
+    #             'avatar': fav.get('avatar'),
+    #             'nickname': fav.get('nickname'),
+    #             'is_user': fav.get('is_user'),
+    #             'win_ratio': normalize_fraction(integral, 2),
+    #             'ranking': i,
+    #         })
+    #         list.sort(key=lambda x: x["ranking"])
+    #
+    #     return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': list, }})
 
 
 class PasscodeView(ListCreateAPIView):
@@ -1291,15 +1333,15 @@ class AssetView(ListAPIView):
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance, eth.coin.coin_accuracy)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
-            if temp_dict['coin_name']=='GSG':
+            if temp_dict['coin_name'] == 'GSG':
                 coinlocks = CoinLock.objects.filter(coin__name='GSG').order_by('period')
                 if not coinlocks.exists():
                     raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
                 else:
                     for i, x in enumerate(coinlocks):
                         s = 'day_' + str(i)
-                        temp_dict[s]=x.period
-                temp_dict['is_lock_valid']=list['is_lock_valid']
+                        temp_dict[s] = x.period
+                temp_dict['is_lock_valid'] = list['is_lock_valid']
             data.append(temp_dict)
 
         return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
@@ -1325,7 +1367,7 @@ class AssetLock(CreateAPIView):
         amounts = Decimal(str(request.data.get('amounts')))
         locked_days = int(request.data.get('locked_days'))
         # coin_id = int(request.data.get('coin_id'))
-        coin_id=6
+        coin_id = 6
         try:
             coin = Coin.objects.get(id=coin_id)
             user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin_id)
@@ -1334,7 +1376,7 @@ class AssetLock(CreateAPIView):
         coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0, coin_id=coin.id)
         if not coin_configs.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if amounts <=0 or amounts > user_coin.balance:
+        if amounts <= 0 or amounts > user_coin.balance:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance -= amounts
         user_coin.save()
@@ -1703,23 +1745,23 @@ class LockListView(ListAPIView):
             # if x['end_time'] >= x['created_at']:
             data.append(
                 {
-                "id": x['id'],
-                "amount": x['amount'],
-                "period": x['period'],
-                "icon":x['icon'],
-                "created_at": x['created_at'],
-                "is_free": 1 if x['is_free'] else 0,
-                "status": x['status']
+                    "id": x['id'],
+                    "amount": x['amount'],
+                    "period": x['period'],
+                    "icon": x['icon'],
+                    "created_at": x['created_at'],
+                    "is_free": 1 if x['is_free'] else 0,
+                    "status": x['status']
                 }
             )
         return self.response({'code': 0, 'data': data})
+
 
 class LockDetailView(RetrieveUpdateAPIView):
     """
     锁定记录
     """
     permission_classes = (LoginRequired,)
-
 
     def retrieve(self, request, *args, **kwargs):
         id = kwargs['id']
@@ -1729,19 +1771,20 @@ class LockDetailView(RetrieveUpdateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         sers = LockSerialize(coin_lock).data
         data = {
-            "status":sers['status'],
-            "period":sers['period'],
-            "amount":sers['amount'],
-            "created_at":sers['created_at']
+            "status": sers['status'],
+            "period": sers['period'],
+            "amount": sers['amount'],
+            "created_at": sers['created_at']
         }
-        divided = Dividend.objects.filter(user_lock_id=coin_lock.id).values('coin__name','coin__icon').annotate(Sum('divide')).order_by('coin_id')
+        divided = Dividend.objects.filter(user_lock_id=coin_lock.id).values('coin__name', 'coin__icon').annotate(
+            Sum('divide')).order_by('coin_id')
         dividend = []
         if divided.exists():
             for x in divided:
                 dividend.append(
                     {
-                        "coin_name":x['coin__name'],
-                        "coin_icon":x['coin__icon'],
+                        "coin_name": x['coin__name'],
+                        "coin_icon": x['coin__icon'],
                         "divide": normalize_fraction(x['divide__sum'], 8)
                     }
                 )
@@ -1759,8 +1802,7 @@ class LockDetailView(RetrieveUpdateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_lock.end_time += timedelta(days_extra)
         user_lock.save()
-        return self.response({'code':0})
-
+        return self.response({'code': 0})
 
 
 # class DividendView(ListAPIView):
@@ -2806,4 +2848,3 @@ class HomeMessageView(ListAPIView):
     #     sql += " and a.is_deleted=0"
     #     data = get_sql(sql)  # 用户拥有的ETH
     #     return self.response({'code': 0, 'data': data})
-
