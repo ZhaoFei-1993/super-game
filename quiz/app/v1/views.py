@@ -690,10 +690,13 @@ class ProfitView(ListAPIView):
         items = results.data.get('results')
         data = {}
         name = []
+        club_name = []
+        for i in Club.objects.filter(is_recommend=0):
+            club_name.append(i.coin.name)
         for item in items:
             if item['coin_name'] not in name:
                 type = self.request.GET.get('type')
-                if len(name) < int(type):
+                if len(name) < int(type) and item['coin_name'] not in club_name:
                     name.append(item['coin_name'])
                     date_key = item['coin_name']
                     if date_key not in data:
@@ -703,7 +706,7 @@ class ProfitView(ListAPIView):
                         data[date_key]["sum"] = 0
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
-            if item['coin_name'] in name:
+            if item['coin_name'] in name and item['coin_name'] not in club_name:
                 profit_total = float(item["profit_total"])
                 if profit_total < 0:
                     type = 1
