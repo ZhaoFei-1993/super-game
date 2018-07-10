@@ -40,8 +40,6 @@ class UserManager(BaseUserManager):
             if 'key' not in request.data:
                 return code.API_20405_CAPTCHA_ERROR
             key = request.data.get('key')
-            # challenge = request.data.get("challenge")
-            # challenge = challenge.lower()
 
             #             is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key,
             #                                                            expiration__gt=datetime.now()).count()
@@ -50,7 +48,8 @@ class UserManager(BaseUserManager):
             if is_captcha_valid == 0:
                 return code.API_20405_CAPTCHA_ERROR
 
-                # captcha.delete()
+            # 验证完后删除数据库记录，避免重复使用
+            CodeModel.objects.filter(key=key,status=1).delete()
         return 0
 
 
