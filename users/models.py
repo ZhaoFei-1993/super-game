@@ -105,7 +105,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
     ip_address = models.CharField(verbose_name='注册ip', max_length=48, default='')
     status = models.CharField(verbose_name="用户状态", choices=USER_STATUS, max_length=1, default=ENABLE)
-    integral = models.DecimalField(verbose_name='GSG', max_digits=15, decimal_places=3, default=0.000)
+    # integral = models.DecimalField(verbose_name='GSG', max_digits=15, decimal_places=3, default=0.000)
     is_robot = models.BooleanField(verbose_name="是否机器人", default=False)
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
