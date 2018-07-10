@@ -71,7 +71,6 @@ def get_transactions(addresses):
 class Command(BaseCommand):
     help = "BTC监视器"
 
-    @transaction.atomic()
     def handle(self, *args, **options):
         start_time = time()
 
@@ -108,6 +107,7 @@ class Command(BaseCommand):
         # 因URL有长度限制，这里分页处理，每页50条
         page_size = 80
         page_total = int(math.ceil(len(btc_addresses) / page_size))
+        transaction.set_autocommit(False)
         for i in range(1, page_total + 1):
             start = (i - 1) * page_size
             end = page_size * i
@@ -196,6 +196,8 @@ class Command(BaseCommand):
                     coin_detail.rest = user_coin.balance
                     coin_detail.sources = CoinDetail.RECHARGE
                     coin_detail.save()
+
+                    transaction.commit()
 
                 self.stdout.write(self.style.SUCCESS('共 ' + str(valid_trans) + ' 条有效交易记录'))
                 self.stdout.write(self.style.SUCCESS(''))
