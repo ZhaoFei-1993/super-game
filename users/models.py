@@ -40,8 +40,8 @@ class UserManager(BaseUserManager):
             if 'key' not in request.data:
                 return code.API_20405_CAPTCHA_ERROR
             key = request.data.get('key')
-            challenge = request.data.get("challenge")
-            challenge = challenge.lower()
+            # challenge = request.data.get("challenge")
+            # challenge = challenge.lower()
 
             #             is_captcha_valid = CaptchaStore.objects.filter(response=challenge, hashkey=key,
             #                                                            expiration__gt=datetime.now()).count()
