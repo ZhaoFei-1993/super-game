@@ -56,22 +56,18 @@ class ClublistView(ListAPIView):
                  + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
                  + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
         for item in items:
-            user_number = int(int(item['user_number']) * 0.3)
-            room_title = language_switch(self.request.GET.get('language'), 'room_title')
-            autograph = language_switch(self.request.GET.get('language'), 'autograph')
-            room_title = item[room_title]
-            autograph = item[autograph]
+            coin = item['coin']
             data.append(
                 {
                     "club_id": item['id'],
-                    "room_title": room_title,
-                    "autograph": autograph,
-                    "user_number": user_number,
+                    "room_title": item['title'],
+                    "autograph": item['club_autograph'],
+                    "user_number": item['user_number'],
                     "room_number": item['room_number'],
-                    "coin_name": item['coin_name'],
-                    "coin_key": item['coin_key'],
+                    "coin_name": coin.name,
+                    "coin_key": coin.pk,
                     "icon": item['icon'],
-                    "coin_icon": item['coin_icon'],
+                    "coin_icon": coin.icon,
                     "is_recommend": item['is_recommend']
                 }
             )

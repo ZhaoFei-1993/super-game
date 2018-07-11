@@ -556,17 +556,16 @@ class InfoView(ListAPIView):
         lr.ip = request.META.get("REMOTE_ADDR", '')
         lr.save()
 
+        # 发消息
         message = Message.objects.filter(type=1, created_at__gte=user.created_at)
         for i in message:
             message_id = i.id
-            user_message = UserMessage.objects.filter(message=message_id, user=user.id)
-            if len(user_message) == 0:
+            user_message = UserMessage.objects.filter(message=message_id, user=user.id).count()
+            if user_message == 0:
                 usermessage = UserMessage()
                 usermessage.user = user
                 usermessage.message = i
                 usermessage.save()
-
-        coins = Coin.objects.filter(is_disabled=False)
         is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
         if is_usermessage == 0:
             user_message = UserMessage()
@@ -575,11 +574,14 @@ class InfoView(ListAPIView):
             user_message.message_id = 12
             user_message.save()
 
+        # 创建usercoin
+        coins = Coin.objects.filter(is_disabled=False)
         for coin in coins:
             coin_pk = coin.id
             coin_initialization(user_id, coin_pk)
 
-        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        # 货币赠送活动
+        give_info = CoinGive.objects.get(pk=1)
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
@@ -608,7 +610,8 @@ class InfoView(ListAPIView):
                 coin_bankruptcy.sources = 4
                 coin_bankruptcy.save()
 
-        # usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")  # 破产赠送hand功能
+        # 破产赠送hand功能
+        # usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")
         # record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
         # if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot == 0:
         #     today = date.today()
@@ -740,7 +743,7 @@ class NicknameView(ListAPIView):
     修改用户昵称
     """
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request):
         user = request.user
         if "avatar" in request.data:
             user.avatar = request.data.get("avatar")
