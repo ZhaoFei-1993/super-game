@@ -1,17 +1,15 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListCreateAPIView
-from . import serializers
 from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize
 from chat.models import Club, ClubRule
-from  users.models import UserCoin
 from api.settings import MEDIA_DOMAIN_HOST
-from utils.functions import language_switch
 from base import code as error_code
 from datetime import datetime
 from base.exceptions import ParamErrorException
 from django.db.models import Q
+from utils.functions import sign_confirmation, language_switch, message_hints
+
 
 
 class ClublistView(ListAPIView):
@@ -40,6 +38,9 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
+        user_id = request.user.id
+        is_sign = sign_confirmation(user_id)  # 是否签到
+        is_message = message_hints(user_id)  # 是否有未读消息
         language = self.request.GET.get('language')
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
@@ -74,7 +75,7 @@ class ClublistView(ListAPIView):
                     "is_recommend": item['is_recommend']
                 }
             )
-        return self.response({"code": 0, "banner": banner, "data": data})
+        return self.response({"code": 0, "banner": banner, "data": data, "is_sign":is_sign, "is_message":is_message})
 
 
 class ClubRuleView(ListAPIView):

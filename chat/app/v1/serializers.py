@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from users.models import User, Coin
+from users.models import Coin
 from chat.models import Club, ClubRule
 from quiz.models import Record
-from base.validators import PhoneValidator
 
 
 class ClubListSerialize(serializers.ModelSerializer):

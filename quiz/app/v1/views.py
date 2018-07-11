@@ -1,24 +1,22 @@
 # -*- coding: UTF-8 -*-
-from base.app import FormatListAPIView, FormatRetrieveAPIView, CreateAPIView
 from django.db import transaction
 from django.db.models import Q, Sum
 from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, \
     EveryDayInjectionValue
-from users.models import UserCoin, CoinValue, CoinDetail
+from users.models import CoinDetail
 from chat.models import Club
-from users.models import UserCoin, CoinValue, Coin, BankruptcyRecords, UserMessage, CoinGiveRecords
+from users.models import UserCoin, CoinValue, Coin, CoinGiveRecords
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
 from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, QuizPushSerializer, \
     ClubProfitAbroadSerialize
 from utils.functions import value_judge, get_sql
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from django.conf import settings
 from utils.functions import normalize_fraction
-from django.db import connection
 from utils.cache import get_cache
 
 
