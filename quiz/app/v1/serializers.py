@@ -3,11 +3,9 @@ import time
 from datetime import timedelta, datetime
 from decimal import Decimal
 from time import strftime
-
 import pytz
 from django.db.models import Q
 from rest_framework import serializers
-
 from api import settings
 from chat.models import Club
 from users.models import User

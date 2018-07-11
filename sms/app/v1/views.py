@@ -10,7 +10,6 @@ import pytz
 from django.conf import settings
 from base.exceptions import ParamErrorException
 from users.models import User
-
 from rq import Queue
 from redis import Redis
 from sms.consumers import send_sms

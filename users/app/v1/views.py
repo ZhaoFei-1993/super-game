@@ -5,18 +5,17 @@ from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, Mes
     CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize
 import qrcode
 from django.core.cache import caches
-from quiz.models import Quiz, Record
+from quiz.models import Quiz
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
-    CoinOutServiceCharge, BankruptcyRecords, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
+    CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
     UserCoinLock, Countries, Dividend
 from chat.models import Club
-from console.models import Address
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
 from base.function import LoginRequired
-from base.function import randomnickname, weight_choice
+from base.function import weight_choice
 from sms.models import Sms
 from datetime import timedelta, datetime, date
 import time
@@ -34,19 +33,16 @@ import linecache
 import re
 import os
 import pygame
-from pygame.locals import *
 from config.models import AndroidVersion
 from config.serializers import AndroidSerializer
 from utils.forms import ImageForm
 from utils.models import Image as Im
-from api.settings import MEDIA_DOMAIN_HOST, BASE_DIR
+from api.settings import MEDIA_DOMAIN_HOST
 from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 from utils.functions import value_judge, get_sql
-import requests
-import json
-from captcha.models import CaptchaStore
+
 
 
 class UserRegister(object):
@@ -1076,8 +1072,6 @@ class DailyListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        user_id = request.user.id
-        is_sign = sign_confirmation(user_id)  # 是否签到
         data = []
         for list in items:
             data.append({
@@ -1089,7 +1083,7 @@ class DailyListView(ListAPIView):
                 "is_sign": list["is_sign"],
                 "is_selected": list["is_selected"]
             })
-        return self.response({'code': 0, 'data': data, 'sign': is_sign})
+        return self.response({'code': 0, 'data': data})
 
 
 class DailySignListView(ListCreateAPIView):

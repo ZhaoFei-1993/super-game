@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from users.models import User, Coin
+from users.models import Coin
 from chat.models import Club, ClubRule, ClubBanner
 from quiz.models import Record
-from base.validators import PhoneValidator
 
 
 class ClubListSerialize(serializers.ModelSerializer):
@@ -17,10 +16,8 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Club
-        fields = (
-        "id", "room_title", "room_title_en", "autograph", "autograph_en", "user_number", "room_number", "coin_name",
-        "coin_key", "is_recommend"
-        , "icon", "coin_icon")
+        fields = ("id", "room_title", "room_title_en", "autograph", "autograph_en", "user_number", "room_number", "coin_name", "coin_key", "is_recommend"
+                  , "icon", "coin_icon")
 
     @staticmethod
     def get_coin_name(obj):  # 货币名称
@@ -66,6 +63,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
     class Meta:
         model = ClubRule
         fields = ("id", "name", "room_number", "icon")
+
 
     def get_name(self, obj):  # 货币名称
         name = obj.title
