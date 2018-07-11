@@ -37,20 +37,20 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_user_number(obj):
-        # record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
-        # if int(obj.is_recommend) == 0:
-        #     record_number = 0
-        #     return record_number
-        # elif int(obj.is_recommend) == 3:
-        #     record_number += 10000
-        # elif int(obj.is_recommend) == 2:
-        #     record_number += 6000
-        # elif int(obj.is_recommend) == 1:
-        #     record_number += 4000
-        # record_number = record_number * 0.3
-        # return int(record_number)
-        record_number = 0
-        return record_number
+        record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
+        if int(obj.is_recommend) == 0:
+            record_number = 0
+            return record_number
+        elif int(obj.is_recommend) == 3:
+            record_number += 10000
+        elif int(obj.is_recommend) == 2:
+            record_number += 6000
+        elif int(obj.is_recommend) == 1:
+            record_number += 4000
+        record_number = record_number * 0.3
+        return int(record_number)
+        # record_number = 0
+        # return record_number
 
 
 class ClubRuleSerialize(serializers.ModelSerializer):
