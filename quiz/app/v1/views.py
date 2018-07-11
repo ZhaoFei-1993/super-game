@@ -389,21 +389,22 @@ class RuleView(ListAPIView):
 
             # 亚盘
             elif int(i.type) == Rule.AISA_RESULTS:
-                tips = i.tips
-                if self.request.GET.get('language') == 'en':
-                    tips = i.tips_en
-                    if tips == '' or tips == None:
-                        tips = i.tips
-                data.append({
-                    "quiz_id": i.quiz_id,
-                    "type": i.TYPE_CHOICE[int(i.type)][1],
-                    "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "handicap": i.handicap,
-                    "list": list
-                })
+                if settings.ASIA_GAME_OPEN:
+                    tips = i.tips
+                    if self.request.GET.get('language') == 'en':
+                        tips = i.tips_en
+                        if tips == '' or tips == None:
+                            tips = i.tips
+                    data.append({
+                        "quiz_id": i.quiz_id,
+                        "type": i.TYPE_CHOICE[int(i.type)][1],
+                        "tips": tips,
+                        "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "handicap": i.handicap,
+                        "list": list
+                    })
 
             else:
                 tips = i.tips

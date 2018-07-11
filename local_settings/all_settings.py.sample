@@ -148,3 +148,5 @@ ETH_EXCHANGE_INSTRUCTION_ONE_FOUR = '4.你好，你的美团外卖到了'
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 
+ASIA_GAME_OPEN = True              # 是否有开启亚盘玩法
+
