@@ -41,20 +41,20 @@ class ClublistView(ListAPIView):
         user_id = request.user.id
         is_sign = sign_confirmation(user_id)  # 是否签到
         is_message = message_hints(user_id)  # 是否有未读消息
-        # language = self.request.GET.get('language')
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+        language = self.request.GET.get('language')
         data = []
-        # date_now = datetime.now().strftime('%Y%m%d%H%M')
-        # int_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
-        # usdt_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
-        # int_act_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
-        # banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
-        #          + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
-        #          + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
+        date_now = datetime.now().strftime('%Y%m%d%H%M')
+        int_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
+        usdt_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
+        int_act_ban = '/'.join(
+            [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
+        banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
+                 + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
+                 + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
         for item in items:
             user_number = int(int(item['user_number']) * 0.3)
             room_title = language_switch(self.request.GET.get('language'), 'room_title')
@@ -75,7 +75,7 @@ class ClublistView(ListAPIView):
                     "is_recommend": item['is_recommend']
                 }
             )
-        return self.response({"code": 0, "data": data, "is_sign": is_sign, "is_message": is_message})
+        return self.response({"code": 0, "data": data, "is_sign": is_sign, "banner": banner, "is_message": is_message})
 
 
 class ClubRuleView(ListAPIView):
