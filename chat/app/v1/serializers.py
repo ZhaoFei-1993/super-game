@@ -49,8 +49,6 @@ class ClubListSerialize(serializers.ModelSerializer):
             record_number += 4000
         record_number = record_number * 0.3
         return int(record_number)
-        # record_number = 0
-        # return record_number
 
 
 class ClubRuleSerialize(serializers.ModelSerializer):
