@@ -38,7 +38,7 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
-        # is_sign = sign_confirmation(user.id)  # 是否签到
+        is_sign = sign_confirmation(user.id)  # 是否签到
         # is_message = message_hints(user.id)  # 是否有未读消息
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
