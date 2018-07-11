@@ -10,15 +10,12 @@ import time
 
 from django.core.cache import caches
 from django.core.management import call_command
-import redis
 
 
 class QuizConsumer(AsyncJsonWebsocketConsumer):
     """
     竞猜详情消费者处理类
     """
-    r = redis.Redis(host='localhost', port=6379, db=0)
-    r.set('connect_count', 0)
 
     async def connect(self):
         """
@@ -26,17 +23,6 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         :return:
         """
         query_string = dict(parse.parse_qs(self.scope['query_string']))
-
-        # print('********************************************')
-        # print('=====================> ', self.__dict__)
-        # print('=====================> ', self.scope['client'])
-        # print('=====================> ', query_string[b'time'])
-        # print('********************************************')
-
-        self.r.rpush('client' + ':' + str(self.scope['client'][0]) + ':' + str(self.scope['client'][1]),
-                     'connect      in ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-        connect_count = self.r.incr('connect_count')
-        print('count_count =======================> ', connect_count)
 
         # 是否传递当前时间
         if b'time' not in query_string:
@@ -108,12 +94,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
         :param code:
         :return:
         """
-        self.r.rpush('client' + ':' + str(self.scope['client'][0]) + ':' + str(self.scope['client'][1]),
-                     'disconnect in ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-        connect_count = self.r.decr('connect_count')
-        print('count_count =======================> ', connect_count)
-
-        print('call disconnect from ' + str(self.scope['client'][0]) + str(self.scope['client'][1]))
+        print('call disconnect')
 
     async def receive_json(self, content, **kwargs):
         """
