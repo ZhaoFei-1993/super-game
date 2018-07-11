@@ -388,8 +388,11 @@ class UserAllSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_integral(obj):
-        integral = round(float(obj.integral), 2)
-        return integral
+        try:
+            integral = UserCoin.objects.get(user_id = obj.id, coin_id=6)
+        except Exception:
+            return 0
+        return round(float(integral.balance),2)
 
     @staticmethod
     def get_ip_count(obj):
@@ -407,12 +410,7 @@ class UserAllSerializer(serializers.ModelSerializer):
             return ip_count
 
 
-class UserALLSerializer(object):
-    """
-    xxxx
-    """
 
-    pass
 
 
 class CoinDetailSerializer(serializers.ModelSerializer):

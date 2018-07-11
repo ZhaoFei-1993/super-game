@@ -517,7 +517,7 @@ class UserAllView(FormatListAPIView):
             userall.append(str(x[0]))
         users = '(' + ','.join(userall) + ')'
 
-        sql = "select a.id, a.telephone, a.nickname, a.created_at , c.login_time, a.ip_address, d.ip as login_address, a.integral, h.nickname as inviter, e.inviter_id, f.inviter_new,a.status, a.is_block, ip_count"
+        sql = "select a.id, a.telephone, a.nickname, a.created_at , c.login_time, a.ip_address, d.ip as login_address, i.integral, h.nickname as inviter, e.inviter_id, f.inviter_new,a.status, a.is_block, ip_count"
         sql += " from users_user a  "
         sql += " left join (select  user_id,max(login_time) as login_time from users_loginrecord where user_id in " + users + " group by user_id) c on a.id=c.user_id"
         sql += " left join users_loginrecord d on d.user_id = a.id and d.login_time = c.login_time"
@@ -527,12 +527,13 @@ class UserAllView(FormatListAPIView):
         sql += " union (select  inviter_id,count(id)  as inviter_new from users_intinvitation where inviter_id in " + users + " group by inviter_id)) f on f.inviter_id=a.id"
         sql += " left join(select b.id, count(a.ip_address) as ip_count from users_user a join (select  ip_address, id from users_user where id in " + users + ") b on a.ip_address=b.ip_address group by b.id) g on g.id=a.id"
         sql += " left join users_user h on h.id=e.inviter_id"
+        sql += " left join (select user_id, balance as integral from users_usercoin where coin_id = 6) i on i.user_id = a.id"
         sql += " where a.id in " + users
         sql += " order by id desc"
         dt_all = get_sql(sql)
-        fields = (
-            'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral',
-            'inviter', 'inviter_id', 'invite_new', 'status', 'is_block', 'ip_count')
+        # fields = (
+        #     'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral',
+        #     'inviter', 'inviter_id', 'invite_new', 'status', 'is_block', 'ip_count')
         data = []
         for x in dt_all:
             temp_dict = {
@@ -878,8 +879,9 @@ class RunningView(ListAPIView):
         data['activity_out'] = dt_gt_0[0][0] if dt_gt_0[0][0] else 0
         data['activity_in'] = dt_lt_0[0][0] if dt_lt_0[0][0] else 0
 
-        sql = "select sum(integral) from users_user"
-        sql += " where id in " + str(users)
+        sql = "select sum(balance) from users_usercoin"
+        sql += " where user_id in " + str(users)
+        sql += " and coin_id=6"
         dt_all = get_sql(sql)
         data['integral_all'] = float(normalize_fraction(dt_all[0][0] if dt_all[0][0] else 0, 8))
         data['now_time'] = datetime.now().strftime('%Y年%m月%d日')
@@ -1520,11 +1522,11 @@ class GSGStsView(ListAPIView):
         dt_all_sum = get_sql(sql)
         integral_login = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
 
-        sql = "select sum(integral) from users_user a"
-        sql += " where a.id not in (select distinct(user_id) from users_usercoin where coin_id=6)"
-        sql += " and a.id in " + str(users)
-        dt_all_sum = get_sql(sql)
-        integral_unlogin = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
+        # sql = "select sum(integral) from users_user a"
+        # sql += " where a.id not in (select distinct(user_id) from users_usercoin where coin_id=6)"
+        # sql += " and a.id in " + str(users)
+        # dt_all_sum = get_sql(sql)
+        # integral_unlogin = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
 
         sql = "select count(distinct(user_id)) from users_coindetail a"
         sql += " inner join users_user b on a.user_id = b.id"
@@ -1607,7 +1609,7 @@ class GSGStsView(ListAPIView):
         #     for info in data:
         #         writer.writerow(info)
         return JsonResponse(
-            {'user_all': user_all, 'integral_login': integral_login, 'integral_unlogin': integral_unlogin,
+            {'user_all': user_all, 'integral_login': integral_login,
              'sig_all': sig_all, 'recharge_all': recharge_all,
              'results': data}, status=status.HTTP_200_OK)
 

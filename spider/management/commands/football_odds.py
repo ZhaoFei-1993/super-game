@@ -17,6 +17,95 @@ headers = {
 }
 
 
+def update_asia_odds(json_dt, rule, quiz, change_time):
+    if rule.handicap != json_dt['result']['data'][0]['o3'].replace('\\', ''):
+        rule.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
+        rule.save()
+
+    if Option.objects.filter(rule=rule, order=1).exists() is not True and Option.objects.filter(rule=rule,
+                                                                                                order=2) is not True:
+        for i in range(1, 3):
+            option = Option()
+            option.rule = rule
+            if i == 1:
+                option.option = '主队'
+                option.option_en = 'Home'
+                option.odds = json_dt['result']['data'][0]['o1']
+            else:
+                option.option = '客队'
+                option.option_en = 'Guest'
+                option.odds = json_dt['result']['data'][0]['o2']
+            option.order = i
+            option.save()
+        # 记录初始赔率
+        change_time = get_time()
+        for option in Option.objects.filter(rule=rule):
+            quiz_odds_log = QuizOddsLog()
+            quiz_odds_log.quiz = quiz
+            quiz_odds_log.rule = rule
+            quiz_odds_log.option = option
+            quiz_odds_log.option_title = option.option
+            quiz_odds_log.odds = option.odds
+            quiz_odds_log.change_at = change_time
+            quiz_odds_log.save()
+
+            # 生成俱乐部选项赔率表
+            clubs = Club.objects.all()
+            for club in clubs:
+                option_odds = OptionOdds()
+                option_odds.club = club
+                option_odds.quiz = quiz
+                option_odds.option = option
+                option_odds.odds = option.odds
+                option_odds.save()
+
+    option_home = Option.objects.get(rule=rule, order=1)
+    option_guest = Option.objects.get(rule=rule, order=2)
+    if option_home.odds != Decimal(json_dt['result']['data'][0]['o1']) or option_guest.odds != Decimal(
+            json_dt['result']['data'][0]['o2']):
+
+        option_home.odds = json_dt['result']['data'][0]['o1']
+        option_home.save()
+
+        option_guest.odds = json_dt['result']['data'][0]['o2']
+        option_guest.save()
+
+        clubs = Club.objects.all()
+        for club in clubs:
+            option_odds_home = OptionOdds.objects.get(club=club, quiz=quiz, option=option_home)
+
+            quiz_odds_log_home = QuizOddsLog()
+            quiz_odds_log_home.quiz = quiz
+            quiz_odds_log_home.rule = rule
+            quiz_odds_log_home.option = option_home
+            quiz_odds_log_home.option_title = option_home.option
+            quiz_odds_log_home.odds = json_dt['result']['data'][0]['o1']
+            quiz_odds_log_home.change_at = change_time
+            quiz_odds_log_home.save()
+            # 对应选项赔率相应变化
+            option_odds_home.odds = json_dt['result']['data'][0]['o1']
+            option_odds_home.save()
+
+            option_odds_guest = OptionOdds.objects.get(club=club, quiz=quiz, option=option_guest)
+
+            quiz_odds_log_guest = QuizOddsLog()
+            quiz_odds_log_guest.quiz = quiz
+            quiz_odds_log_guest.rule = rule
+            quiz_odds_log_guest.option = option_guest
+            quiz_odds_log_guest.option_title = option_guest.option
+            quiz_odds_log_guest.odds = json_dt['result']['data'][0]['o2']
+            quiz_odds_log_guest.change_at = change_time
+            quiz_odds_log_guest.save()
+            # 对应选项赔率相应变化
+            option_odds_guest.odds = json_dt['result']['data'][0]['o2']
+            option_odds_guest.save()
+
+        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
+        print('=================================================')
+    else:
+        print('亚盘无变化')
+
+
 def update_odds(result, rule, quiz, change_time, flag):
     mark = False
     for dt in result:
@@ -330,7 +419,9 @@ def get_data_info(url):
                 #                    (flag_ah, title_ah, odd_ah), (flag_ad, title_ad, odd_ad), (flag_aa, title_aa, odd_aa)]
 
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
+                change_time = get_time()
                 quiz = Quiz.objects.get(match_flag=match_id)
+                print('=======================>', quiz.match_flag)
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
                 rule_had = rule_all.filter(type=0).first()
@@ -338,7 +429,28 @@ def get_data_info(url):
                 rule_ttg = rule_all.filter(type=3).first()
                 rule_crs = rule_all.filter(type=2).first()
 
-                change_time = get_time()
+                # 亚盘玩法
+                try:
+                    response_asia = requests.get(asia_url + match_id, headers=headers)
+                    dt = response_asia.text.encode("utf-8").decode('unicode_escape')
+                    json_dt = eval(dt[8:-2])
+                except requests.ConnectionError as e:
+                    print('Error', e.args)
+                else:
+                    if json_dt['status']['code'] == 0:
+                        if rule_all.filter(type=8).exists():
+                            rule_asia = rule_all.filter(type=8).first()
+                        else:
+                            rule_asia = Rule()
+                            rule_asia.quiz = quiz
+                            rule_asia.type = str(Rule.AISA_RESULTS)
+                            rule_asia.type_en = str(Rule.AISA_RESULTS)
+                            rule_asia.tips = '亚盘'
+                            rule_asia.tips_en = 'Asian Handicap'
+                            rule_asia.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
+                            rule_asia.save()
+                        update_asia_odds(json_dt, rule_asia, quiz, change_time)
+
                 for i in range(0, 4):
                     # 赛果
                     if i == 0:

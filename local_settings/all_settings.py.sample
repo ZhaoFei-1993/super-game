@@ -148,3 +148,5 @@ ETH_EXCHANGE_INSTRUCTION_ONE_FOUR = '4.每天兑换上限为5ETH。'
 CAPTCHA_HTTP_PREFIX = 'http://'
 CAPTCHA_GENERATOR = ['captcha.helpers.math_challenge', 'captcha.helpers.random_char_challenge']
 
+ASIA_GAME_OPEN = True              # 是否有开启亚盘玩法
+

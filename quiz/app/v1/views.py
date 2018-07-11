@@ -386,6 +386,26 @@ class RuleView(ListAPIView):
                     "list_win": win,
                     "list_loss": loss,
                 })
+
+            # 亚盘
+            elif int(i.type) == Rule.AISA_RESULTS:
+                if settings.ASIA_GAME_OPEN:
+                    tips = i.tips
+                    if self.request.GET.get('language') == 'en':
+                        tips = i.tips_en
+                        if tips == '' or tips == None:
+                            tips = i.tips
+                    data.append({
+                        "quiz_id": i.quiz_id,
+                        "type": i.TYPE_CHOICE[int(i.type)][1],
+                        "tips": tips,
+                        "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "handicap": i.handicap,
+                        "list": list
+                    })
+
             else:
                 tips = i.tips
                 if self.request.GET.get('language') == 'en':
@@ -586,6 +606,8 @@ class BetView(ListCreateAPIView):
             record.option = option_odds
             record.bet = coins
             record.odds = option_odds.odds
+            if int(option_odds.option.rule.type) == Rule.AISA_RESULTS:
+                record.handicap = option_odds.option.rule.handicap
             record.save()
             earn_coins = coins * option_odds.odds
             earn_coins = normalize_fraction(earn_coins, coin_accuracy)
