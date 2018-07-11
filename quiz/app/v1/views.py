@@ -925,6 +925,21 @@ class ChangeTable(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = str(request.user.id)
+        day = datetime.now().strftime('%Y-%m-%d')
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
+        number = get_cache(EXCHANGE_QUALIFICATION)
+        if number == None or number == '':
+            everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
+            if len(everydayinjection) <= 0:
+                number = 100000
+            else:
+                number = everydayinjection[0].order
+        if int(number) <= 1000:
+            is_right = 1
+        else:
+            is_right = 0
+
         sql = "select a.balance from users_usercoin a"
         sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
@@ -934,7 +949,7 @@ class ChangeTable(ListAPIView):
         eth_exchange_instruction_two = settings.ETH_EXCHANGE_INSTRUCTION_TWO
         eth_exchange_instruction_three = settings.ETH_EXCHANGE_INSTRUCTION_THREE
         eth_exchange_instruction_four = settings.ETH_EXCHANGE_INSTRUCTION_ONE_FOUR
-        return self.response({'code': 0, "data": {
+        return self.response({'code': 0, 'is_right': is_right, "data": {
             "eth_limit": eth_limit,
             "eth_balance": eth_balance,
             "eth_exchange_instruction_one": eth_exchange_instruction_one,
