@@ -215,7 +215,7 @@ class UserCaptchaValid(CreateAPIView):
     :param: key,user_position,
     :return:code,msg
     """
-    authentication_classes = ()
+    # authentication_classes = ()
 
     def post(self, request, *args, **kwargs):
         # captcha_valid_code = User.objects.captcha_valid(request)
