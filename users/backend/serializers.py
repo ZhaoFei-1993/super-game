@@ -4,7 +4,7 @@ from django.utils import timezone
 import time
 from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, \
     UserRecharge, \
-    CoinOutServiceCharge, IntInvitation, UserPresentation
+    CoinOutServiceCharge, IntInvitation, UserPresentation, Message
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
@@ -296,7 +296,7 @@ class UserAllSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_login_time(obj):
         # login_time = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time').first()
-        sql ="select ip, max(login_time) from users_loginrecord"
+        sql = "select ip, max(login_time) from users_loginrecord"
         sql += " where user_id=" + str(obj.id)
         sql += " group by ip"
         ip = get_sql(sql)
@@ -305,11 +305,10 @@ class UserAllSerializer(serializers.ModelSerializer):
         else:
             return ''
 
-
     @staticmethod
     def get_login_address(obj):
         # ip_address = LoginRecord.objects.select_related().filter(user_id=obj.id).order_by('-login_time').first()
-        sql ="select ip, max(login_time) from users_loginrecord"
+        sql = "select ip, max(login_time) from users_loginrecord"
         sql += " where user_id=" + str(obj.id)
         sql += " group by ip"
         ip = get_sql(sql)
@@ -324,7 +323,7 @@ class UserAllSerializer(serializers.ModelSerializer):
         sql = 'select nickname from users_user as a'
         sql += ' inner join users_userinvitation b on a.id=b.invitee_one'
         sql += ' where ' + str(obj.id) + '=b.inviter_id'
-        dt_all=get_sql(sql)
+        dt_all = get_sql(sql)
         if len(dt_all) == 0:
             # inv = UserInvitation.objects.filter(invitee_one=obj.id).values('inviter_id')
             sql = 'select nickname from users_user as a'
@@ -370,20 +369,20 @@ class UserAllSerializer(serializers.ModelSerializer):
     def get_invite_new(obj):
         # invitee_one = UserInvitation.objects.filter(inviter=obj).count()
         sql = 'select count(id) from users_userinvitation'
-        sql += ' where inviter_id='+ str(obj.id)
+        sql += ' where inviter_id=' + str(obj.id)
         dt1 = get_sql(sql)
         if len(dt1) > 0:
             dt1_count = dt1[0][0]
         else:
-            dt1_count =0
+            dt1_count = 0
 
         sql = 'select count(id) from users_intinvitation'
-        sql += ' where inviter_id='+ str(obj.id)
+        sql += ' where inviter_id=' + str(obj.id)
         dt2 = get_sql(sql)
         if len(dt2) > 0:
             dt2_count = dt2[0][0]
         else:
-            dt2_count =0
+            dt2_count = 0
         # invitee = IntInvitation.objects.filter(inviter=obj).count()
         return dt1_count + dt2_count
 
@@ -475,7 +474,8 @@ class UserRechargeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRecharge
         fields = (
-        'username', 'user', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at', 'confirm_at')
+            'username', 'user', 'coin', 'coin_name', 'amount', 'address', 'txid', 'confirmations', 'trade_at',
+            'confirm_at')
 
     @staticmethod
     def get_trade_at(obj):
@@ -527,4 +527,26 @@ class IPAddressSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_created_at(obj):
         created_time = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        return created_time
+
+
+class MessageBackendSerializer(serializers.ModelSerializer):
+    """
+    消息序列化
+    """
+    type = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ('id', 'type', 'title', 'title_en', 'content', 'content_en', 'is_deleted', 'created_at')
+
+    @staticmethod
+    def get_type(obj):
+        type = Message.TYPE_CHOICE[int(obj.type) - 1][1]
+        return type
+
+    @staticmethod
+    def get_created_at(obj):
+        created_time = obj.created_at.strftime('%Y-%m-%d %H:%M')
         return created_time

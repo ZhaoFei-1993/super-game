@@ -3,9 +3,9 @@ from base.app import ListCreateAPIView
 from . import serializers
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import ClubListSerialize, ClubRuleSerialize
-from chat.models import Club, ClubRule
-from  users.models import UserCoin
+from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
+from chat.models import Club, ClubRule, ClubBanner
+from users.models import UserCoin
 from api.settings import MEDIA_DOMAIN_HOST
 from utils.functions import language_switch
 from base import code as error_code
@@ -44,16 +44,16 @@ class ClublistView(ListAPIView):
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
-        date_now = datetime.now().strftime('%Y%m%d%H%M')
-        int_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
-        usdt_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
-        int_act_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
-        banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
-                 + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
-                 + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
+        # date_now = datetime.now().strftime('%Y%m%d%H%M')
+        # int_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
+        # usdt_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
+        # int_act_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
+        # banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
+        #          + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
+        #          + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
         for item in items:
             user_number = int(int(item['user_number']) * 0.3)
             room_title = language_switch(self.request.GET.get('language'), 'room_title')
@@ -74,7 +74,7 @@ class ClublistView(ListAPIView):
                     "is_recommend": item['is_recommend']
                 }
             )
-        return self.response({"code": 0, "banner": banner, "data": data})
+        return self.response({"code": 0, "data": data})
 
 
 class ClubRuleView(ListAPIView):
@@ -99,6 +99,34 @@ class ClubRuleView(ListAPIView):
                     "name": item['name'],
                     "icon": item['icon'],
                     "room_number": item['room_number']
+                }
+            )
+        return self.response({"code": 0, "data": data})
+
+
+class BannerView(ListAPIView):
+    """
+    俱乐部轮播图
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = ClubBannerSerialize
+
+    def get_queryset(self):
+        if self.request.GET.get('language') == 'en':
+            query = ClubBanner.objects.filter(is_delete=0, language='en')
+        else:
+            query = ClubBanner.objects.filter(~Q(language='en'), is_delete=0)
+        return query
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            data.append(
+                {
+                    "img_url": item['image'],
+                    "action": item['active']
                 }
             )
         return self.response({"code": 0, "data": data})

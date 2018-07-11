@@ -61,5 +61,9 @@ urlpatterns = [
     path('gsg_sts/', views.GSGStsView.as_view(), name='user-backend-gsg_sts'),
     # test
     # path('jjtest/', views.JJtest.as_view(), name='user-backend-test')
-    path('ip_first/<int:user_id>/', views.IpLoginView.as_view(), name='user-backend-ip_first')
+    path('ip_first/<int:user_id>/', views.IpLoginView.as_view(), name='user-backend-ip_first'),
+    # 消息列表
+    path('message_list/', views.MessageBackendList.as_view(), name='user-backend-message_list'),
+    # 消息明细
+    path('message_list/<int:pk>/', views.MessageBackendDetail.as_view(), name='user-backend-message_detail')
 ]

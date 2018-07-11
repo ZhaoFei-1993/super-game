@@ -12,7 +12,7 @@ from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
-    UserMessage, IntInvitation
+    UserMessage, IntInvitation, Message
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -26,7 +26,7 @@ import rest_framework_filters as filters
 from utils.filter import JsonFilter
 from base import backend
 from django.http import JsonResponse
-from utils.functions import reversion_Decorator
+from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
 from quiz.models import Record, Quiz
 
@@ -464,70 +464,68 @@ class UserAllView(FormatListAPIView):
     """
     所有用户资产表
     """
+
     # queryset = User.objects.filter(is_robot=0).order_by('-id')
     # serializer_class = serializers.UserAllSerializer
     # filter_backends = [DjangoFilterBackend]
     # filter_fields = ['id', 'username', 'is_block']
 
-
-
     def list(self, request, *args, **kwargs):
-        id = request.GET.get('id','')
-        username = request.GET.get('username__contains','')
-        is_block = request.GET.get('is_block','')
+        id = request.GET.get('id', '')
+        username = request.GET.get('username__contains', '')
+        is_block = request.GET.get('is_block', '')
         page_size = 10
-        page = request.GET.get('page','')
+        page = request.GET.get('page', '')
 
         sql = "select count(id) from users_user where is_robot=0"
-        if id !='':
-            sql +=' and id = '+ str(id)
+        if id != '':
+            sql += ' and id = ' + str(id)
         if username != '':
-            sql +=' and instr(username,' + str(username) + ') > 0'
+            sql += ' and instr(username,' + str(username) + ') > 0'
         if is_block != '':
-            sql +=' and is_block = ' + str(is_block)
+            sql += ' and is_block = ' + str(is_block)
         dt_all = get_sql(sql)
         total = dt_all[0][0] if dt_all[0][0] else 0
-        if total==0:
-            return JsonResponse({'total':0, 'results':[]},status=status.HTTP_200_OK)
+        if total == 0:
+            return JsonResponse({'total': 0, 'results': []}, status=status.HTTP_200_OK)
 
-        pages = int(total/page_size)
+        pages = int(total / page_size)
         if total % page_size != 0:
             pages = pages + 1
-        if page=='':
-            page=1
+        if page == '':
+            page = 1
         else:
-            page= int(page)
-        if page <=0:
-            page=1
+            page = int(page)
+        if page <= 0:
+            page = 1
         if page > pages:
             page = pages
-        start = page-1
-
+        start = page - 1
 
         sql = "select id from users_user where is_robot=0"
-        if id !='':
-            sql +=' and id = '+ str(id)
+        if id != '':
+            sql += ' and id = ' + str(id)
         if username != '':
-            sql +=' and instr(username,' + str(username) + ') > 0'
+            sql += ' and instr(username,' + str(username) + ') > 0'
         if is_block != '':
-            sql +=' and is_block = ' + str(is_block)
+            sql += ' and is_block = ' + str(is_block)
         sql += ' order by id desc'
-        sql += ' limit '+ str(start*page_size) + ', ' + str(page_size)
+        sql += ' limit ' + str(start * page_size) + ', ' + str(page_size)
         user_all = get_sql(sql)
-        userall=[]
+        userall = []
         for x in user_all:
             userall.append(str(x[0]))
-        users='('+','.join(userall) +')'
+        users = '(' + ','.join(userall) + ')'
 
         sql = "select a.id, a.telephone, a.nickname, a.created_at , c.login_time, a.ip_address, d.ip as login_address, a.integral, h.nickname as inviter, e.inviter_id, f.inviter_new,a.status, a.is_block, ip_count"
         sql += " from users_user a  "
-        sql += " left join (select  user_id,max(login_time) as login_time from users_loginrecord where user_id in " + users+ " group by user_id) c on a.id=c.user_id"
+        sql += " left join (select  user_id,max(login_time) as login_time from users_loginrecord where user_id in " + users + " group by user_id) c on a.id=c.user_id"
         sql += " left join users_loginrecord d on d.user_id = a.id and d.login_time = c.login_time"
-        sql += " left join ((select  invitee_one as idd ,inviter_id from users_userinvitation a where invitee_one in " + users+")"
-        sql += " union (select  invitee as idd,inviter_id from users_intinvitation a where invitee in " +users + " )) e on e.idd =a.id "
-        sql += " left join ((select  inviter_id ,count(id)  as inviter_new from users_userinvitation where inviter_id in "+ users+ " group by inviter_id)"
-        sql += " union (select  inviter_id,count(id)  as inviter_new from users_intinvitation where inviter_id in " + users +" group by inviter_id)) f on f.inviter_id=a.id"
-        sql += " left join(select b.id, count(a.ip_address) as ip_count from users_user a join (select  ip_address, id from users_user where id in "+ users +") b on a.ip_address=b.ip_address group by b.id) g on g.id=a.id"
+        sql += " left join ((select  invitee_one as idd ,inviter_id from users_userinvitation a where invitee_one in " + users + ")"
+        sql += " union (select  invitee as idd,inviter_id from users_intinvitation a where invitee in " + users + " )) e on e.idd =a.id "
+        sql += " left join ((select  inviter_id ,count(id)  as inviter_new from users_userinvitation where inviter_id in " + users + " group by inviter_id)"
+        sql += " union (select  inviter_id,count(id)  as inviter_new from users_intinvitation where inviter_id in " + users + " group by inviter_id)) f on f.inviter_id=a.id"
+        sql += " left join(select b.id, count(a.ip_address) as ip_count from users_user a join (select  ip_address, id from users_user where id in " + users + ") b on a.ip_address=b.ip_address group by b.id) g on g.id=a.id"
         sql += " left join users_user h on h.id=e.inviter_id"
         sql += " where a.id in " + users
         sql += " order by id desc"
@@ -535,29 +533,27 @@ class UserAllView(FormatListAPIView):
         fields = (
             'id', 'telephone', 'nickname', 'created_at', 'login_time', 'ip_address', 'login_address', 'integral',
             'inviter', 'inviter_id', 'invite_new', 'status', 'is_block', 'ip_count')
-        data=[]
+        data = []
         for x in dt_all:
-            temp_dict={
-                'id':x[0],
-                'telephone':x[1],
-                'nickname':x[2],
+            temp_dict = {
+                'id': x[0],
+                'telephone': x[1],
+                'nickname': x[2],
                 'created_at': x[3].strftime('%Y-%m-%d %H:%M:%S'),
                 'login_time': x[4].strftime('%Y-%m-%d %H:%M:%S') if x[4] else '',
                 'ip_address': x[5] if x[5] else '',
-                'login_address':x[6] if x[6] else '',
+                'login_address': x[6] if x[6] else '',
                 'integral': float(normalize_fraction(x[7], 6)) if x[7] else 0,
-                'inviter':x[8] if x[8] else '',
-                'inviter_id':x[9] if x[9] else '',
+                'inviter': x[8] if x[8] else '',
+                'inviter_id': x[9] if x[9] else '',
                 'inviter_new': x[10] if x[10] else 0,
-                'status':x[11],
-                'is_block':x[12],
-                'ip_count':x[13]
+                'status': x[11],
+                'is_block': x[12],
+                'ip_count': x[13]
             }
 
             data.append(temp_dict)
-        return JsonResponse({'total':total,'results':data}, status=status.HTTP_200_OK)
-
-
+        return JsonResponse({'total': total, 'results': data}, status=status.HTTP_200_OK)
 
     #     sql = 'select a.id, a.telephone, a.nickname, a.created_at, a.ip_address, b.ip, max(b.login_time), integral,'
     #     sql += ' c.inviter, c.inviter_id, count(c.inviter_id) as invite_new,status,is_block,ip_count'
@@ -829,7 +825,7 @@ class RunningView(ListAPIView):
         sql = "select distinct(user_id) from users_userrecharge"
         dt_recharge = list(get_sql(sql))
 
-        dt_all = list(set(dt_all+dt_recharge))
+        dt_all = list(set(dt_all + dt_recharge))
         dd = []
         for x in dt_all:
             dd.append(x[0])
@@ -941,7 +937,7 @@ class ClubSts(ListAPIView):
         #         #已结算下注额
         sql_q = "select id from quiz_quiz where status=5"
         all_quiz = get_sql(sql_q)
-        if len(all_quiz)==0:
+        if len(all_quiz) == 0:
             quizs = '(0)'
         else:
             quiz_all = []
@@ -951,9 +947,9 @@ class ClubSts(ListAPIView):
 
         sql = "select sum(a.bet) from quiz_record a"
         # sql += " inner join quiz_quiz b on a.quiz_id=b.id"
-        sql += " inner join ("+vsql+ ") c on c.id=a.user_id"
+        sql += " inner join (" + vsql + ") c on c.id=a.user_id"
         # sql += " inner join ("+sql_q+ ") d on d.id=a.quiz_id"
-        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) + ')'
         # sql += " and a.user_id in " + str(users)
         sql += " and a.quiz_id in " + quizs
         sql += " and a.roomquiz_id= " + str(r_id)
@@ -972,7 +968,7 @@ class ClubSts(ListAPIView):
 
         sql = "select sum(earn_coin) from quiz_record a"
         sql += " inner join (" + vsql + ") c on c.id=a.user_id"
-        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) + ')'
         # sql += " and user_id in " + str(users)
         sql += " and roomquiz_id= " + str(r_id)
         sql += " and earn_coin > 0"
@@ -1010,8 +1006,8 @@ class ClubSts(ListAPIView):
         # 计算下注用户数
         # -----------------------------------------------------------------------------------
         sql = "select count(distinct(user_id)), count(a.id) from quiz_record a "
-        sql += " inner join ("+vsql+ ") c on c.id=a.user_id"
-        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " inner join (" + vsql + ") c on c.id=a.user_id"
+        sql += " where a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) + ')'
         # sql += " and a.user_id in " + str(users)
         sql += " and roomquiz_id= " + str(r_id)
         cursor.execute(sql, None)
@@ -1313,7 +1309,6 @@ class CoinSts(ListAPIView):
     # def compute(self, a, b):
     #     return a * (b - 1)
 
-
     def list(self, request, *args, **kwargs):
         club_room = kwargs['club_room']
         try:
@@ -1334,12 +1329,12 @@ class CoinSts(ListAPIView):
         dd = []
         for x in dt_all:
             dd.append(str(x[0]))
-        users = '('+','.join(dd)+')'
+        users = '(' + ','.join(dd) + ')'
 
         sql = "select date(b.begin_at) as day, sum(a.bet), count(distinct(a.user_id)), count(a.user_id) from quiz_record a"
         sql += " inner join quiz_quiz b on a.quiz_id=b.id"
         sql += " inner join users_user c on c.id = a.user_id"
-        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) + ')'
         sql += " and c.is_block=0 and user_id in " + str(users)
         sql += " and roomquiz_id = " + str(club.id)
         sql += " group by day order by day"
@@ -1350,7 +1345,7 @@ class CoinSts(ListAPIView):
         sql = "select date(b.begin_at) as day, sum(earn_coin) from quiz_record a"
         sql += " inner join quiz_quiz b on a.quiz_id=b.id"
         sql += " inner join users_user c on c.id = a.user_id"
-        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) +')'
+        sql += " where b.status=5 and a.source in (" + str(Record.NORMAL) + ',' + str(Record.GIVE) + ')'
         sql += " and c.is_block=0 and user_id in " + str(users)
         sql += " and roomquiz_id = " + str(club.id)
         sql += " and earn_coin > 0"
@@ -1519,17 +1514,15 @@ class GSGStsView(ListAPIView):
         users = tuple(dd)
         user_all = len(users)
 
-
         sql = "select sum(balance) from users_usercoin a"
         sql += " where user_id in " + str(users)
         sql += " and coin_id=6"
         dt_all_sum = get_sql(sql)
         integral_login = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
 
-
         sql = "select sum(integral) from users_user a"
         sql += " where a.id not in (select distinct(user_id) from users_usercoin where coin_id=6)"
-        sql += " and a.id in " +  str(users)
+        sql += " and a.id in " + str(users)
         dt_all_sum = get_sql(sql)
         integral_unlogin = dt_all_sum[0][0] if dt_all_sum[0][0] else 0
 
@@ -1614,7 +1607,8 @@ class GSGStsView(ListAPIView):
         #     for info in data:
         #         writer.writerow(info)
         return JsonResponse(
-            {'user_all': user_all, 'integral_login': integral_login, 'integral_unlogin': integral_unlogin, 'sig_all': sig_all, 'recharge_all': recharge_all,
+            {'user_all': user_all, 'integral_login': integral_login, 'integral_unlogin': integral_unlogin,
+             'sig_all': sig_all, 'recharge_all': recharge_all,
              'results': data}, status=status.HTTP_200_OK)
 
 
@@ -1770,26 +1764,83 @@ class IpLoginView(ListAPIView):
         user_id = kwargs['user_id']
         # ips = LoginRecord.objects.filter(user_id=user_id).extra(select={'date': 'date(login_time)'}).values(
         #     'user__username', 'date').annotate(ip=F('ip'),first_time=Min('login_time')).order_by('-date')[:15]
-        sql="select c.username, ip, first_time from users_loginrecord a"
-        sql+=" join  (select user_id , date(login_time)  as day, min(login_time)  as first_time " \
-             " from users_loginrecord  " \
-             " where user_id =" + str(user_id)+" group by user_id,day) b "
-        sql+=" on  a.login_time=b.first_time"
-        sql+=" join users_user c on a.user_id=c.id"
-        sql+=" order by first_time desc"
-        sql+=" limit 15"
-        dt_all=get_sql(sql)
+        sql = "select c.username, ip, first_time from users_loginrecord a"
+        sql += " join  (select user_id , date(login_time)  as day, min(login_time)  as first_time " \
+               " from users_loginrecord  " \
+               " where user_id =" + str(user_id) + " group by user_id,day) b "
+        sql += " on  a.login_time=b.first_time"
+        sql += " join users_user c on a.user_id=c.id"
+        sql += " order by first_time desc"
+        sql += " limit 15"
+        dt_all = get_sql(sql)
         # dt_all = LoginRecord.objects
-        if len(dt_all)==0:
-            return JsonResponse({'results':[]}, status=status.HTTP_200_OK)
+        if len(dt_all) == 0:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
         else:
-            data=[]
+            data = []
             for x in dt_all:
-                temp_dict={
-                    'username':x[0],
-                    'ip':x[1],
-                    'first_time':x[2].strftime('%Y-%m-%d %H:%M:%S'),
+                temp_dict = {
+                    'username': x[0],
+                    'ip': x[1],
+                    'first_time': x[2].strftime('%Y-%m-%d %H:%M:%S'),
                 }
                 data.append(temp_dict)
-            return JsonResponse({'results':data}, status=status.HTTP_200_OK)
+            return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
+
+class MessageBackendList(ListCreateAPIView):
+    """
+    玩法列表
+    """
+    queryset = Message.objects.all()
+    serializer_class = serializers.MessageBackendSerializer
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['title', 'content', 'is_deleted']
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, ('type', 'title', 'title_en', 'content', 'content_en', 'is_deleted'))
+        if value:
+            return JsonResponse({'Error': '参数不正确'}, status=status.HTTP_400_BAD_REQUEST)
+        values = dict(request.data)
+        message = Message(**values)
+        message.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class MessageBackendDetail(RetrieveUpdateDestroyAPIView):
+    """
+    玩法详情
+    """
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        try:
+            message = Message.objects.get(id=pk)
+        except Exception:
+            return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        messages = serializers.MessageBackendSerializer(message)
+        return JsonResponse({'results': messages.data}, status=status.HTTP_200_OK)
+
+    @reversion_Decorator
+    def patch(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        try:
+            message = Message.objects.get(id=pk)
+        except Exception:
+            return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        values = dict(request.data)
+        message.__dict__.update(**values)
+        message.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    @reversion_Decorator
+    def delete(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        try:
+            message = Message.objects.get(id=pk)
+        except Exception:
+            return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        message.is_deleted = True
+        message.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)

@@ -49,3 +49,16 @@ class ClubRule(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "俱乐部玩法表"
+
+
+class ClubBanner(models.Model):
+    image = models.CharField(verbose_name="图像", max_length=255, default='')
+    active = models.CharField(verbose_name="活动标识", max_length=255, default='')
+    order = models.IntegerField(verbose_name="轮播顺序")
+    language = models.CharField(verbose_name="语言", max_length=32, default='')
+    is_delete = models.BooleanField(verbose_name="是否删除", default=0)
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = verbose_name_plural = "轮播图表"

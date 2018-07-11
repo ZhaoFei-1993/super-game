@@ -1,16 +1,17 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ..models import Club
+from ..models import Club, ClubBanner, ClubRule
+
 
 class ClubBackendSerializer(serializers.ModelSerializer):
-
     coin_name = serializers.CharField(source='coin.name')
     created_at = serializers.SerializerMethodField()
     is_recommend = serializers.SerializerMethodField()
 
     class Meta:
         model = Club
-        fields = ('id', 'room_title', 'autograph', 'icon', 'created_at', 'room_number', 'coin_name', 'is_recommend', 'is_dissolve')
+        fields = ('id', 'room_title', 'autograph', 'icon', 'created_at', 'room_number', 'coin_name', 'is_recommend',
+                  'is_dissolve')
 
     @staticmethod
     def get_created_at(obj):
@@ -24,3 +25,35 @@ class ClubBackendSerializer(serializers.ModelSerializer):
             if int(obj.is_recommend) == x[0]:
                 recommend = x[1]
                 return recommend
+
+
+class BannerImageSerializer(serializers.ModelSerializer):
+    """
+    轮播图
+    """
+    updated_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubBanner
+        fields = ('id', 'image', 'active', 'order', 'is_delete', 'updated_at', 'language')
+
+    @staticmethod
+    def get_updated_at(obj):
+        updated_at = obj.updated_at.strftime('%Y-%m-%d %H:%M')
+        return updated_at
+
+
+class ClubRuleBackendSerializer(serializers.ModelSerializer):
+    """
+    玩法序列化
+    """
+    created_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClubRule
+        fields = ('id', 'title', 'title_en', 'room_number', 'icon', 'sort', 'is_dissolve', 'is_deleted', 'created_at')
+
+    @staticmethod
+    def get_created_at(obj):
+        created_at = obj.created_at.strftime('%Y-%m-%d %H:%M')
+        return created_at
