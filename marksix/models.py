@@ -73,7 +73,6 @@ class Play(models.Model):
 @reversion.register()
 class Option(models.Model):
     option = models.CharField(verbose_name="结果id", max_length=25)
-    result_en = models.CharField(verbose_name="结果(en)", max_length=25, default='')
     play = models.ForeignKey(Play, on_delete=models.DO_NOTHING)
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2,
                                default=0.00)
