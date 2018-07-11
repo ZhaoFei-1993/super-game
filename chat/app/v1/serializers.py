@@ -9,27 +9,31 @@ class ClubListSerialize(serializers.ModelSerializer):
     """
     序列号
     """
-    coin_name = serializers.SerializerMethodField()  # 货币名称
-    coin_key = serializers.SerializerMethodField()  # 货币ID
+    coin = serializers.SerializerMethodField()  # 货币名称
     user_number = serializers.SerializerMethodField()  # 总下注数
-    coin_icon = serializers.SerializerMethodField()  # 货币头像
+    title = serializers.SerializerMethodField()  # 货币头像
+    club_autograph = serializers.SerializerMethodField()  # 货币头像
 
     class Meta:
         model = Club
-        fields = ("id", "room_title", "room_title_en", "autograph", "autograph_en", "user_number", "room_number", "coin_name", "coin_key", "is_recommend"
-                  , "icon", "coin_icon")
+        fields = ("id", "title", "club_autograph", "user_number", "room_number", "is_recommend", "coin", "icon")
+
+    def get_title(self, obj):  # 货币名称
+        room_title = obj.room_title
+        if self.context['request'].GET.get('language') == 'en':
+            room_title = obj.room_title_en
+        return room_title
+
+    def get_club_autograph(self, obj):  # 货币名称
+        room_title = obj.autograph
+        if self.context['request'].GET.get('language') == 'en':
+            room_title = obj.autograph_en
+        return room_title
 
     @staticmethod
-    def get_coin_name(obj):  # 货币名称
+    def get_coin(obj):  # 货币
         coin_liat = Coin.objects.get(pk=obj.coin_id)
-        coin_name = coin_liat.name
-        return coin_name
-
-    @staticmethod
-    def get_coin_key(obj):  # 货币ID
-        coin_list = Coin.objects.get(pk=obj.coin_id)
-        coin_key = coin_list.pk
-        return coin_key
+        return coin_liat
 
     @staticmethod
     def get_user_number(obj):
@@ -39,19 +43,14 @@ class ClubListSerialize(serializers.ModelSerializer):
             return record_number
         elif int(obj.is_recommend) == 3:
             record_number += 10000
-            return record_number
         elif int(obj.is_recommend) == 2:
             record_number += 6000
-            return record_number
         elif int(obj.is_recommend) == 1:
             record_number += 4000
-            return record_number
-
-    @staticmethod
-    def get_coin_icon(obj):  # 货币头像
-        coin_liat = Coin.objects.get(pk=obj.coin_id)
-        coin_icon = coin_liat.icon
-        return coin_icon
+        record_number = record_number * 0.3
+        return int(record_number)
+        # record_number = 0
+        # return record_number
 
 
 class ClubRuleSerialize(serializers.ModelSerializer):

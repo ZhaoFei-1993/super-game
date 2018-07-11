@@ -159,9 +159,8 @@ def sign_confirmation(user_id):
 
 def message_hints(user_id):
     # 是否有未读信息
-    user_message = UserMessage.objects.filter(user_id=user_id, status=0)
-    len(user_message)
-    if len(user_message) > 0:
+    user_message = UserMessage.objects.filter(user_id=user_id, status=0).count()
+    if user_message > 0:
         is_message = 1
     else:
         is_message = 0

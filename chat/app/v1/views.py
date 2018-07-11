@@ -38,44 +38,44 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
-        user_id = request.user.id
-        is_sign = sign_confirmation(user_id)  # 是否签到
-        is_message = message_hints(user_id)  # 是否有未读消息
+        # is_sign = sign_confirmation(user.id)  # 是否签到
+        # is_message = message_hints(user.id)  # 是否有未读消息
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
-        language = self.request.GET.get('language')
         data = []
-        date_now = datetime.now().strftime('%Y%m%d%H%M')
-        int_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
-        usdt_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
-        int_act_ban = '/'.join(
-            [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
-        banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
-                 + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
-                 + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
+        # language = self.request.GET.get('language')
+        # date_now = datetime.now().strftime('%Y%m%d%H%M')
+        # int_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
+        # usdt_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
+        # int_act_ban = '/'.join(
+        #     [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
+        # banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
+        #          + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
+        #          + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
         for item in items:
-            user_number = int(int(item['user_number']) * 0.3)
-            room_title = language_switch(self.request.GET.get('language'), 'room_title')
-            autograph = language_switch(self.request.GET.get('language'), 'autograph')
-            room_title = item[room_title]
-            autograph = item[autograph]
+            coin = item['coin']
             data.append(
                 {
                     "club_id": item['id'],
-                    "room_title": room_title,
-                    "autograph": autograph,
-                    "user_number": user_number,
+                    "room_title": item['title'],
+                    "autograph": item['club_autograph'],
+                    "user_number": item['user_number'],
                     "room_number": item['room_number'],
-                    "coin_name": item['coin_name'],
-                    "coin_key": item['coin_key'],
+                    "coin_name": coin.name,
+                    "coin_key": coin.pk,
                     "icon": item['icon'],
-                    "coin_icon": item['coin_icon'],
+                    "coin_icon": coin.icon,
                     "is_recommend": item['is_recommend']
                 }
             )
-        return self.response({"code": 0, "data": data, "is_sign": is_sign, "banner": banner, "is_message": is_message})
+        content = {"code": 0,
+                   "data": data,
+                   # "is_sign": is_sign,
+                   # "is_message": is_message
+                   }
+        return self.response(content)
 
 
 class ClubRuleView(ListAPIView):
