@@ -113,6 +113,7 @@ class Rule(models.Model):
     POLITENESS_RESULT = 5
     SIZE_POINTS = 6
     VICTORY_GAP = 7
+    AISA_RESULTS = 8
     TYPE_CHOICE = (
         (RESULTS, "赛果"),
         (POLITENESS_RESULTS, "让分赛果"),
@@ -122,6 +123,7 @@ class Rule(models.Model):
         (POLITENESS_RESULT, "让分胜负"),
         (SIZE_POINTS, "大小分"),
         (VICTORY_GAP, "胜分差"),
+        (AISA_RESULTS, "亚盘"),
     )
     TYPE_CHOICE_EN = (
         (RESULTS, "Winner"),
@@ -132,6 +134,7 @@ class Rule(models.Model):
         (POLITENESS_RESULT, "Handicap Results"),
         (SIZE_POINTS, "Compare the total score"),
         (VICTORY_GAP, "Wins the gap"),
+        (AISA_RESULTS, "Asian Handicap"),
     )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type = models.CharField(verbose_name="玩法", choices=TYPE_CHOICE, max_length=1, default=RESULTS)
@@ -142,6 +145,7 @@ class Rule(models.Model):
                                          default=0.00)
     guest_let_score = models.DecimalField(verbose_name="客队让分，让分赛果，让分胜负玩法适用", max_digits=10, decimal_places=2,
                                           default=0.00)
+    handicap = models.CharField(verbose_name="盘口", max_length=50, default='')
     estimate_score = models.DecimalField(verbose_name="预估分数，大小分玩法适用", max_digits=10, decimal_places=2, default=0.00)
     max_odd = models.DecimalField(verbose_name="最大赔率", max_digits=10, decimal_places=2, default=0.00)
     min_odd = models.DecimalField(verbose_name="最小赔率", max_digits=10, decimal_places=2, default=0.00)
@@ -328,6 +332,7 @@ class Record(models.Model):
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(OptionOdds, on_delete=models.CASCADE)
     roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
+    handicap = models.CharField(verbose_name="盘口", max_length=50, default='')
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
