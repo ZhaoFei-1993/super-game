@@ -435,7 +435,7 @@ def handle_delay_game(delay_quiz):
             record.is_distribution = True
             record.save()
 
-            print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
+        print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
 
 def handle_unusual_game(quiz_list):
