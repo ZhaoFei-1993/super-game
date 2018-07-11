@@ -331,7 +331,7 @@ class Record(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     rule = models.ForeignKey(Rule, on_delete=models.CASCADE)
     option = models.ForeignKey(OptionOdds, on_delete=models.CASCADE)
-    roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0)
+    roomquiz_id = models.IntegerField(verbose_name="俱乐部题目ID", default=0, db_index=True)
     handicap = models.CharField(verbose_name="盘口", max_length=50, default='')
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
     bet = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
