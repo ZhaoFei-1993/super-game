@@ -17,7 +17,7 @@ from utils.functions import value_judge, get_sql
 from datetime import datetime, timedelta
 from django.conf import settings
 from utils.functions import normalize_fraction
-from utils.cache import get_cache
+from utils.cache import get_cache, set_cache
 
 
 class CategoryView(ListAPIView):
@@ -701,23 +701,50 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        list = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-            'created_at', '-profit_total')
-        return list
+        end_time_all = str(datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+        data = get_cache(CLUB_PROFIT_DATA)
+        name = get_cache(CLUB_PROFIT_NAME)
+        if data is None and name is None:
+            lists = []
+        else:
+            lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
+                'created_at', '-profit_total')
+        return lists
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        data = {}
-        name = []
-        club_name = []
-        for i in Club.objects.filter(is_recommend=0):
-            club_name.append(i.coin.name)
-        for item in items:
-            if item['coin_name'] not in name:
-                type = self.request.GET.get('type')
-                if len(name) < int(type) and item['coin_name'] not in club_name:
-                    name.append(item['coin_name'])
+        days = self.request.GET.get('days')
+        date_last = (datetime.now() - timedelta(days=int(days))).strftime('%Y-%m-%d')
+        end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        start_time = str(date_last) + ' 00:00:00'  # 开始时间
+        type = self.request.GET.get('type')
+        if 'start_time' in self.request.GET:
+            start_time = self.request.GET.get('start_time')
+        if 'end_time' in self.request.GET:
+            end_time = self.request.GET.get('end_time')
+        end_time_all = str(datetime.strptime(end_time,'%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all)+"_data"  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all)+"_name"  # key
+        data = get_cache(CLUB_PROFIT_DATA)
+        name = get_cache(CLUB_PROFIT_NAME)
+        if data is None and name is None:
+            print("我的天，竟然没有放进缓存")
+            name = []
+            sums = []
+            sql = "SELECT uc.`name`, sum( cpb.profit_total ) AS sum_total FROM quiz_clubprofitabroad cpb "
+            sql += "LEFT JOIN chat_club c on cpb.roomquiz_id = c.id LEFT JOIN users_coin uc on uc.id = c.coin_id "
+            sql += "WHERE cpb.created_at>='"+start_time+"' AND cpb.created_at<='"+end_time+"' and c.is_recommend!=0 "
+            sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0"+ "," + str(type) + ";"
+            coins = get_sql(sql)
+            for club_coin in coins:
+                name.append(club_coin[0])
+                sums.append(club_coin[1])
+            data = {}
+            for item in items:
+                if item['coin_name'] in name:
                     date_key = item['coin_name']
                     if date_key not in data:
                         data[date_key] = {}
@@ -726,17 +753,23 @@ class ProfitView(ListAPIView):
                         data[date_key]["sum"] = 0
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
-            if item['coin_name'] in name and item['coin_name'] not in club_name:
-                profit_total = float(item["profit_total"])
-                if profit_total < 0:
-                    type = 1
-                else:
-                    type = 0
-                data[item['coin_name']]["icon"] = item["coin_icon"]
-                data[item['coin_name']]["type"].append(type)
-                data[item['coin_name']]["sum"] += normalize_fraction(profit_total, 2)
-                data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
-                data[item['coin_name']]['created_at'].append(item["created_at"])
+                if item['coin_name'] in name:
+                    profit_total = float(item["profit_total"])
+                    if profit_total < 0:
+                        type = 1
+                    else:
+                        type = 0
+                    data[item['coin_name']]["icon"] = item["coin_icon"]
+                    data[item['coin_name']]["type"].append(type)
+                    data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
+                    data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
+                    data[item['coin_name']]['created_at'].append(item["created_at"])
+            for club_info in coins:
+                data[club_info[0]]["sum"]=club_info[1]
+            CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
+            CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+            set_cache(CLUB_PROFIT_DATA, data)
+            set_cache(CLUB_PROFIT_NAME, name)
         return self.response({'code': 0, 'data': data, 'name': name})
 
 
