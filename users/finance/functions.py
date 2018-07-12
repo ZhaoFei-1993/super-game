@@ -119,8 +119,8 @@ def get_range_time(time_type, start, end):  # 获取年月日时间范围
 
 
 class CountPage(LimitOffsetPagination):
-    max_limit = 7  # 最大限制默认是None
-    default_limit = 7  # 设置每一页显示多少条
+    max_limit = 1  # 最大限制默认是None
+    default_limit = 1  # 设置每一页显示多少条
     limit_query_param = 'limit'  # 往后取几条
     offset_query_param = 'offset'  # 当前所在的位置
 

@@ -73,8 +73,7 @@ INSTALLED_APPS = [
     'spider',
     'console',
     'handle',
-    'marksix'
-
+    'marksix',
 ]
 
 MIDDLEWARE = [

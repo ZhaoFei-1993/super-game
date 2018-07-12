@@ -7,20 +7,7 @@ from chat.models import Club
 # Create your models here.
 @reversion.register()
 class Number(models.Model):
-    ANIMAL_CHOICE = (
-        (1, '鼠'),
-        (2, '牛'),
-        (3, '虎'),
-        (4, '兔'),
-        (5, '龙'),
-        (6, '蛇'),
-        (7, '马'),
-        (8, '羊'),
-        (9, '猴'),
-        (10, '鸡'),
-        (11, '狗'),
-        (12, '猪'),
-    )
+
     RED_WAVE = 1
     BLUE_WAVE = 2
     GREEN_WAVE = 3
@@ -49,8 +36,22 @@ class Number(models.Model):
 
 @reversion.register()
 class Animals(models.Model):
+    ANIMAL_CHOICE = (
+        (1, '鼠'),
+        (2, '牛'),
+        (3, '虎'),
+        (4, '兔'),
+        (5, '龙'),
+        (6, '蛇'),
+        (7, '马'),
+        (8, '羊'),
+        (9, '猴'),
+        (10, '鸡'),
+        (11, '狗'),
+        (12, '猪'),
+    )
     num = models.SmallIntegerField(verbose_name="号码", null=False)
-    animal = models.CharField(verbose_name="生肖", choices=Number.ANIMAL_CHOICE, max_length=2)
+    animal = models.CharField(verbose_name="生肖", choices=ANIMAL_CHOICE, max_length=2)
     year = models.CharField(verbose_name="年份", max_length=4)
 
     class Meta:
@@ -63,22 +64,21 @@ class Play(models.Model):
     title_en = models.CharField(verbose_name="玩法昵称(en)", max_length=25)
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    parent_id = models.CharField(verbose_name="父玩法id", max_length=25, default='')
 
     class Meta:
         ordering = ['-id']
-        verbose_name = verbose_name_plural = "六合彩玩法以及结果表"
+        verbose_name = verbose_name_plural = "六合彩玩法表"
 
 
 @reversion.register()
 class Option(models.Model):
-    option = models.CharField(verbose_name="结果id", max_length=25)
+    option = models.CharField(verbose_name="结果标题", max_length=25)
+    option_en = models.CharField(verbose_name="结果标题_英文", max_length=25)
     play = models.ForeignKey(Play, on_delete=models.DO_NOTHING)
     odds = models.DecimalField(verbose_name="赔率", max_digits=10, decimal_places=2,
                                default=0.00)
-    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    num = models.SmallIntegerField(verbose_name="特码号码", default='')  # 特码号码区分，49条数据
 
     class Meta:
         verbose_name = verbose_name_plural = "六合彩结果赔率表"
@@ -89,7 +89,7 @@ class OpenPrice(models.Model):
     issue = models.CharField(verbose_name="期号", max_length=3)
     flat_code = models.CharField(verbose_name="平码", max_length=100, default='')
     special_code = models.CharField(verbose_name="特码", max_length=2, default='')
-    animal = models.CharField(verbose_name="生肖", choices=Number.ANIMAL_CHOICE, max_length=2, default='')
+    animal = models.CharField(verbose_name="生肖", choices=Animals.ANIMAL_CHOICE, max_length=2, default='')
     color = models.CharField(verbose_name="波色", choices=Number.WAVE_CHOICE, max_length=1, default='')
     element = models.CharField(verbose_name="五行", choices=Number.ELEMENT_CHOICE, max_length=1, default='')
     closing = models.DateTimeField(verbose_name="封盘时间", default='')
