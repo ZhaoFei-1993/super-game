@@ -994,10 +994,15 @@ class ChangeTable(ListAPIView):
             is_right = 1
         else:
             is_right = 0
-
-        sql = "select a.balance from users_usercoin a"
+        GSG_ICON = "gsg_icon_in_cache"  # key
+        gsg_icon = get_cache(GSG_ICON)
+        if gsg_icon is None:
+            gsg_info = Coin.objects.get(id=6)
+            gsg_icon =gsg_info.icon
+        sql = "select a.balance, c.icon from users_usercoin a LEFT JOIN users_coin c on c.id = a.coin_id"
         sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
+        eth_icon = get_sql(sql)[0][1]
         eth_balance = normalize_fraction(get_sql(sql)[0][0], 3)  # 用户拥有的ETH
         eth_limit = settings.ETH_ONCE_EXCHANGE_LOWER_LIMIT
         eth_exchange_instruction_one = settings.ETH_EXCHANGE_INSTRUCTION_ONE
@@ -1007,6 +1012,8 @@ class ChangeTable(ListAPIView):
         return self.response({'code': 0, 'is_right': is_right, "data": {
             "eth_limit": eth_limit,
             "eth_balance": eth_balance,
+            "eth_icon": eth_icon,
+            "gsg_icon": gsg_icon,
             "eth_exchange_instruction_one": eth_exchange_instruction_one,
             "eth_exchange_instruction_two": eth_exchange_instruction_two,
             "eth_exchange_instruction_three": eth_exchange_instruction_three,

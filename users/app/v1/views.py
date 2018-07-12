@@ -704,6 +704,7 @@ class InfoView(ListAPIView):
             'usercoin': normalize_fraction(user_coin, int(usercoin.coin.coin_accuracy)),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
+            'gsg_icon': items[0]["gsg_icon"],
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
