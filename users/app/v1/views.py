@@ -1787,7 +1787,7 @@ class LockDetailView(RetrieveUpdateAPIView):
             "amount": sers['amount'],
             "created_at": sers['created_at']
         }
-        coins = Coin.objects.filter(~Q(id=6),is_criterion=0)
+        coins = Coin.objects.filter(~Q(id=6),is_criterion=0).order_by('coin_order')
         if not coins.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         dividend = []
