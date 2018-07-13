@@ -1,21 +1,15 @@
 # -*- coding: UTF-8 -*-
 
-import pytz
 from django.db.models import Q, Sum
 from rest_framework import serializers
-from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, CoinLock, \
+from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, \
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
     CoinGiveRecords, Countries
 from quiz.models import Record, Quiz
 from django.db import connection
-from base.exceptions import ParamErrorException
-from base import code as error_code
-from utils.functions import amount, sign_confirmation, amount_presentation, normalize_fraction, get_sql
-from api import settings
-from datetime import timedelta, datetime, date
-from django.utils import timezone
-from django.core.cache import caches
-from decimal import Decimal
+from utils.cache import get_cache, set_cache
+from utils.functions import sign_confirmation, amount_presentation, normalize_fraction, get_sql
+from datetime import timedelta, datetime
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -64,6 +58,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
     quiz_push = serializers.SerializerMethodField()
     is_user = serializers.SerializerMethodField()
     integral = serializers.SerializerMethodField()
+    gsg_icon = serializers.SerializerMethodField()
 
     # usercoin = serializers.SerializerMethodField()
     # usercoin_avatar = serializers.SerializerMethodField()
@@ -74,7 +69,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id", "nickname", "avatar", "integral", "telephone", "is_passcode",
-            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user", "area_code")
+            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user", "area_code", "gsg_icon")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
@@ -88,6 +83,16 @@ class UserInfoSerializer(serializers.ModelSerializer):
         coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
         integral = coin_gsg.balance
         return integral
+
+    @staticmethod
+    def get_gsg_icon(obj):  # GSG
+        GSG_ICON = "gsg_icon_in_cache"  # key
+        gsg_icon = get_cache(GSG_ICON)
+        if gsg_icon is None:
+            coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
+            gsg_icon = coin_gsg.coin.icon
+            set_cache(GSG_ICON, gsg_icon)
+        return gsg_icon
 
     def get_is_user(self, obj):  # 电话号码
         user = self.context['request'].user.id

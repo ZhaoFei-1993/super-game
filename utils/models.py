@@ -23,5 +23,5 @@ class CodeModel(models.Model):
     is_delete = models.BooleanField(verbose_name="是否删除",default=0) # 0未删除 1删除
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['id']
         verbose_name = verbose_name_plural = "验证码表"

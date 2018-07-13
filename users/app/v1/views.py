@@ -704,6 +704,7 @@ class InfoView(ListAPIView):
             'usercoin': normalize_fraction(user_coin, int(usercoin.coin.coin_accuracy)),
             'coin_name': coin_name,
             'usercoin_avatar': usercoin_avatar,
+            'gsg_icon': items[0]["gsg_icon"],
             'recharge_address': recharge_address,
             'integral': normalize_fraction(items[0]["integral"], 2),
             'area_code': items[0]["area_code"],
@@ -1764,9 +1765,15 @@ class LockListView(ListAPIView):
 
 class LockDetailView(RetrieveUpdateAPIView):
     """
-    锁定记录
+    锁定记录明细
     """
     permission_classes = (LoginRequired,)
+
+    def ts_null_2_zero(self, item):
+        if item == None:
+            return 0
+        else:
+            return float(normalize_fraction(item, 8))
 
     def retrieve(self, request, *args, **kwargs):
         id = kwargs['id']
@@ -1781,18 +1788,23 @@ class LockDetailView(RetrieveUpdateAPIView):
             "amount": sers['amount'],
             "created_at": sers['created_at']
         }
-        divided = Dividend.objects.filter(user_lock_id=coin_lock.id).values('coin__name', 'coin__icon').annotate(
-            Sum('divide')).order_by('coin_id')
+        coins = Coin.objects.filter(~Q(id=6),is_criterion=0).order_by('coin_order')
+        if not coins.exists():
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         dividend = []
-        if divided.exists():
-            for x in divided:
-                dividend.append(
-                    {
-                        "coin_name": x['coin__name'],
-                        "coin_icon": x['coin__icon'],
-                        "divide": normalize_fraction(x['divide__sum'], 8)
-                    }
-                )
+        for x in coins:
+            divided =self.ts_null_2_zero(Dividend.objects.filter(user_lock_id=coin_lock.id,coin_id=x.id).aggregate(divided=Sum('divide'))['divided'])
+            #     .values('coin__name', 'coin__icon').annotate(
+            # Sum('divide')).order_by('coin_id')
+            dividend.append(
+                {
+                    "coin_name": x.name,
+                    "coin_icon": x.icon,
+                    "divide": divided
+                }
+            )
+        # if divided.exists():
+        #     for x in divided:
         data["dividend"] = dividend
         return self.response({'code': 0, 'data': data})
 
