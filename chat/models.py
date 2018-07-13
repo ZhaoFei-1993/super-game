@@ -1,10 +1,11 @@
 from django.db import models
 from wc_auth.models import Admin
 from users.models import User, Coin
+import reversion
 
 
 # Create your models here.
-
+@reversion.register()
 class Club(models.Model):
     PENDING = 2  # 人气
     PUBLISHING = 3  # 热门
@@ -36,6 +37,7 @@ class Club(models.Model):
         verbose_name = verbose_name_plural = "俱乐部表"
 
 
+@reversion.register()
 class ClubRule(models.Model):
     title = models.CharField(verbose_name="玩法昵称", max_length=25)
     title_en = models.CharField(verbose_name="玩法昵称(en)", max_length=25, default='')
@@ -51,6 +53,7 @@ class ClubRule(models.Model):
         verbose_name = verbose_name_plural = "俱乐部玩法表"
 
 
+@reversion.register()
 class ClubBanner(models.Model):
     image = models.CharField(verbose_name="图像", max_length=255, default='')
     active = models.CharField(verbose_name="活动标识", max_length=255, default='')
