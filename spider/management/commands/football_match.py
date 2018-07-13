@@ -66,8 +66,14 @@ def get_data_info(url):
             response_guest_team = requests.get(guest_team_url, headers=headers)
             host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
             guest_team_dt = eval(response_guest_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
-            host_team_en = host_team_dt['result']['official_name']
-            guest_team_en = guest_team_dt['result']['official_name']
+            if host_team_dt['status'] == 0:
+                host_team_en = host_team_dt['result']['official_name']
+            else:
+                host_team_en = ''
+            if guest_team_dt['status'] == 0:
+                guest_team_en = guest_team_dt['result']['official_name']
+            else:
+                guest_team_en = ''
 
             time = data[1].get('date') + ' ' + data[1].get('time')
             created_at = get_time()
