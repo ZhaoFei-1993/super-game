@@ -368,6 +368,7 @@ class Command(BaseCommand):
         :return:
         """
         users = User.objects.filter(is_robot=True)
+        print("users=====================================", users)
         secure_random = random.SystemRandom()
         return secure_random.choice(users)
 
