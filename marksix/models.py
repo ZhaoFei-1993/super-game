@@ -7,7 +7,6 @@ from chat.models import Club
 # Create your models here.
 @reversion.register()
 class Number(models.Model):
-
     RED_WAVE = 1
     BLUE_WAVE = 2
     GREEN_WAVE = 3
@@ -55,6 +54,7 @@ class Animals(models.Model):
     year = models.CharField(verbose_name="年份", max_length=4)
 
     class Meta:
+        ordering = ['id']
         verbose_name = verbose_name_plural = "生肖表"
 
 
@@ -66,12 +66,39 @@ class Play(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['id']
         verbose_name = verbose_name_plural = "六合彩玩法表"
 
 
 @reversion.register()
 class Option(models.Model):
+    WAVE_CHOICE = {
+        '红波': 1,
+        '蓝波': 2,
+        '绿波': 3
+    }
+    ELEMENT_CHOICE = {
+        '金': 1,
+        '木': 2,
+        '水': 3,
+        '火': 4,
+        '土': 5,
+    }
+    ANIMAL_CHOICE = {
+        "鼠": 1,
+        "牛": 2,
+        "虎": 3,
+        "兔": 4,
+        "龙": 5,
+        "蛇": 6,
+        "马": 7,
+        "羊": 8,
+        "猴": 9,
+        "鸡": 10,
+        "狗": 11,
+        "猪": 12,
+    }
+
     option = models.CharField(verbose_name="结果标题", max_length=25)
     option_en = models.CharField(verbose_name="结果标题_英文", max_length=25)
     play = models.ForeignKey(Play, on_delete=models.DO_NOTHING)
@@ -110,6 +137,17 @@ class SixRecord(models.Model):
         (OPEN, "开奖"),
     )
 
+    H5 = 0
+    IOS = 1
+    ANDROID = 2
+    ROBOT = 3
+    SOURCE = (
+        (H5, 'H5'),
+        (IOS, '苹果系统'),
+        (ANDROID, '安卓系统'),
+        (ROBOT, '机器人')
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
@@ -122,6 +160,7 @@ class SixRecord(models.Model):
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
     issue = models.CharField(verbose_name="期数", max_length=3)
     content = models.CharField(verbose_name="下注内容", max_length=1000)
+    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1,default=H5)
 
     class Meta:
         ordering = ['-id']
