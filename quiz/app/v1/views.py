@@ -701,16 +701,17 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        end_time_all = str(datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
+        end_time_all = str(
+            (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None and name is None:
-            lists = []
-        else:
             lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
                 'created_at', '-profit_total')
+        else:
+            lists = []
         return lists
 
     def list(self, request, *args, **kwargs):
@@ -725,9 +726,12 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        end_time_all = str(datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
+        end_time_all = str(
+            (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+        print("CLUB_PROFIT_DATA=============================", CLUB_PROFIT_DATA)
+        print("CLUB_PROFIT_NAME=============================", CLUB_PROFIT_NAME)
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None and name is None:
@@ -764,7 +768,6 @@ class ProfitView(ListAPIView):
                     data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
                     data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
                     data[item['coin_name']]['created_at'].append(item["created_at"])
-
             for club_info in coins:
                 data[str(club_info[0])]["sum"] = club_info[1]
             CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
