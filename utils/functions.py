@@ -393,6 +393,8 @@ def get_sql(sql):
         cursor.execute(sql, None)
         dt_all = cursor.fetchall()
     return dt_all
+
+
 #
 # @transaction.atomic()
 # def gsg_coin_initialization(user_id, coin_id):
@@ -556,3 +558,18 @@ def string_to_list(str):
         return res
     else:
         return None
+
+
+def message_code(length=6, mode='digit'):
+    """
+    随机短信验证码,代替原先从外部导入的sms
+    :param length:  验证码长度，默认6位 
+    :param mode:    模式：默认纯数字，后期扩展字母数字混合
+    :return: 
+    """
+    rand_code = []
+    for i in range(0, length):
+        rand_code.append(str(random.randint(0, 10)))
+
+    codes = ''.join(rand_code)
+    return codes[0:length]

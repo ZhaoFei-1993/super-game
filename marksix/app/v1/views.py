@@ -3,10 +3,19 @@ from base.app import ListCreateAPIView, ListAPIView
 from .serializers import PlaySerializer, OpenPriceSerializer
 from base import code as error_code
 from django.conf import settings
-from users.models import User
-from marksix.models import Play, OpenPrice, Option
-from marksix.functions import CountPage
+from users.models import User, UserCoin
+from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord
 from django.http import JsonResponse
+from users.finance.functions import get_now
+from marksix.functions import date_exchange
+from django.db import transaction
+from datetime import datetime
+from utils.functions import value_judge
+from base.exceptions import ParamErrorException
+from base import code as error_code
+from chat.models import Club
+from marksix.functions import valied_content, CountPage
+from decimal import *
 
 
 class SortViews(ListAPIView):
@@ -14,7 +23,7 @@ class SortViews(ListAPIView):
     serializer_class = PlaySerializer
 
     def get_queryset(self):
-        res = Play.objects.filter(parent_id='', is_deleted=0)
+        res = Play.objects.filter(is_deleted=0)
         return res
 
     def list(self, request, *args, **kwargs):
@@ -44,17 +53,151 @@ class OddsViews(ListAPIView):
 
     def list(self, request, id):
         res = Option.objects.filter(play_id=id)
-        if id == '1':  # 特码，只要获取一个赔率，因为赔率都相等
+        if id == '1':  # 特码，暂时只要获取一个赔率，因为目前赔率都相等
             res = res[0]
-            item = Play.objects.get(id=id)
-            res['title'] = item['title']
-            res['title_en'] = item['title_en']
-            return self.response({'code': 0, 'data': res})
+            play = Play.objects.get(id=1)
+            print(play)
+            bet_odds = {
+                'id': res.id,
+                'option': play.title,
+                'option_en': play.title_en,
+                'odds': res.odds
+            }
         else:
+            bet_odds = []
+            three_to_three = {
+                'option': '三中二',
+                'option_en': 'Three Hit Two',
+                'result': []
+            }
             for item in res:
-                option = item['option']  # 获取结果id
-                play = Play.objects.filter(id=option)
-                item['title'] = play['title']
-                item['title_en'] = play['title_en']
+                res_dict = {}
+                res_dict['id'] = item.id
+                res_dict['option'] = item.option
+                res_dict['option_en'] = item.option_en
+                res_dict['odds'] = item.odds
 
-        return JsonResponse({'code': 0})
+                if id == '2':  # 波色
+                    color_id = Option.WAVE_CHOICE[item.option]
+                    num_list = Number.objects.filter(color=color_id).values_list('num', flat=True)
+                    res_dict['num_list'] = list(num_list)
+
+                # elif id == '4': # 两面
+                elif id == '3':  # 连码
+                    if three_to_three['option'] in res_dict['option']:
+                        three_to_three['result'].append(res_dict)
+                        continue
+                elif id == '5':  # 平特一肖
+                    # 获取当前年份
+                    year = datetime.now().year
+                    animal_id = Option.ANIMAL_CHOICE[item.option]
+                    num_list = Animals.objects.filter(animal=animal_id, year=year).values_list('num', flat=True)
+                    res_dict['num_list'] = list(num_list)
+                # elif id == '6': # 特头尾
+                elif id == '7':  # 五行
+                    element_id = Option.ELEMENT_CHOICE[item.option]
+                    num_list = Number.objects.filter(element=element_id).values_list('num', flat=True)
+                    res_dict['num_list'] = list(num_list)
+
+                bet_odds.append(res_dict)
+            if id == '3':
+                bet_odds.append(three_to_three)
+
+        # 获取上期开奖时间和本期开奖时间
+        now = get_now()
+        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        prev_issue = openprice.issue  # 上期开奖期数
+        prev_flat = openprice.flat_code  # 上期平码
+        prev_special = openprice.special_code  # 上期特码
+        current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
+        current_issue = (3 - len(current_issue)) * '0' + current_issue
+        current_open = date_exchange(openprice.next_open)  # 这期开奖时间
+        data = {
+            'bet_odds': bet_odds,
+            'prev_issue': prev_issue,
+            'prev_flat': prev_flat,
+            'prev_special': prev_special,
+            'current_issue': current_issue,
+            'current_open': current_open
+        }
+
+        return JsonResponse({'code': 0, 'data': data})
+
+
+class BetsViews(ListCreateAPIView):
+    authentication_classes = ()
+
+    def get_queryset(self):
+        pass
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的判断
+        user_id = 1806
+        res = value_judge(request, 'club_id', 'option_id', 'bet', 'bet_coin', 'issue', 'content')
+        if not res:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        club_id = request.data.get('club_id')
+        option_id = request.data.get('option_id')
+        bet = request.data.get('bet')
+        bet_coin = Decimal.from_float(float(request.data.get('bet_coin')))
+        issue = request.data.get('issue')
+        content = request.data.get('content')  # 号码以逗号分割
+
+        op = Option.objects.get(id=option_id)
+        if not op:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        odds = op.odds
+
+        # 判断用户下注是否合法,连码需要判断
+        op = Option.objects.get(id=option_id)
+        title_list = ['二中二', '三中二', '三中三']
+        print(op.option)
+        if op.option == title_list[0] or title_list[1] in op.option:  # 二中二，三中二，最低两个号码，不超过七个
+            res = valied_content(content, 2, 7)
+            print(res)
+            if not res:
+                raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+        if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
+            res = valied_content(content, 3, 10)
+            if not res:
+                raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+
+        # 获取币种
+        club = Club.objects.get(id=club_id)
+        coin_id = club.coin_id
+        # 查看用户余额是否足够
+        usercoin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
+        print(usercoin.balance)
+        # 判断用户金币是否足够
+        if float(usercoin.balance) < float(bet_coin):
+            raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+
+        # 更新下注表
+        sixcord = SixRecord()
+        sixcord.user_id = user_id
+        sixcord.club_id = club_id
+        sixcord.option_id = option_id
+        sixcord.odds = odds
+        sixcord.bet = bet
+        sixcord.betcoin = bet_coin
+        sixcord.issue = issue
+        sixcord.content = content
+        sixcord.save()
+
+        # 更新用户余额UserCoin
+        usercoin.balance = usercoin.balance - bet_coin
+        usercoin.save()
+        # 更新资金流向表 CoinDetail
+
+        # 修改coindetail表
+
+        return self.response({'code': 0})
+
+
+class BetsListViews(ListAPIView):
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        pass

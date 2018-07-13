@@ -10,7 +10,7 @@ class PlaySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Play
         fields = (
-            "title","title_en","is_deleted","parent_id","id")
+            "title","title_en","id")
 
 class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     """

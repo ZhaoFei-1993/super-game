@@ -8,5 +8,9 @@ urlpatterns = [
     # 往期开奖历史
     path('openprice/',views.OpenViews.as_view(),name='marksix-app-open'),
     # 玩法赔率接口
-    path('play/<str:id>/',views.OddsViews.as_view(),name='marksix-app-play')
+    path('play/<str:id>/',views.OddsViews.as_view(),name='marksix-app-play'),
+    # 六合彩下注接口
+    path('bets/',views.BetsViews.as_view(),name='marksix-app-bets'),
+    # 六合彩竞猜列表
+    path('list/',views.BetsListViews.as_view(),name='marksix-app-betslist')
 ]

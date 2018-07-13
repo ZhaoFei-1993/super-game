@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListCreateAPIView
 from . import serializers
-from wsms import sms
+from utils.functions import message_code as sms
 from ...models import Sms
 from base import code as error_code
 from datetime import datetime
