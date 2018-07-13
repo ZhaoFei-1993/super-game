@@ -725,9 +725,9 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
-        end_time_all = str(datetime.strptime(end_time,'%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
-        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all)+"_data"  # key
-        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all)+"_name"  # key
+        end_time_all = str(datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')) + ' 00:30:00'  # 开始时间
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None and name is None:
@@ -736,8 +736,8 @@ class ProfitView(ListAPIView):
             sums = []
             sql = "SELECT uc.`name`, sum( cpb.profit_total ) AS sum_total FROM quiz_clubprofitabroad cpb "
             sql += "LEFT JOIN chat_club c on cpb.roomquiz_id = c.id LEFT JOIN users_coin uc on uc.id = c.coin_id "
-            sql += "WHERE cpb.created_at>='"+start_time+"' AND cpb.created_at<='"+end_time+"' and c.is_recommend!=0 "
-            sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0"+ "," + str(type) + ";"
+            sql += "WHERE cpb.created_at>='" + start_time + "' AND cpb.created_at<='" + end_time + "' and c.is_recommend!=0 "
+            sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0" + "," + str(type) + ";"
             coins = get_sql(sql)
             for club_coin in coins:
                 name.append(club_coin[0])
@@ -764,8 +764,9 @@ class ProfitView(ListAPIView):
                     data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
                     data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
                     data[item['coin_name']]['created_at'].append(item["created_at"])
+
             for club_info in coins:
-                data[club_info[0]]["sum"]=club_info[1]
+                data[str(club_info[0])]["sum"] = club_info[1]
             CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
             CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
             set_cache(CLUB_PROFIT_DATA, data)
@@ -998,7 +999,7 @@ class ChangeTable(ListAPIView):
         gsg_icon = get_cache(GSG_ICON)
         if gsg_icon is None:
             gsg_info = Coin.objects.get(id=6)
-            gsg_icon =gsg_info.icon
+            gsg_icon = gsg_info.icon
         sql = "select a.balance, c.icon from users_usercoin a LEFT JOIN users_coin c on c.id = a.coin_id"
         sql += " where a.coin_id=2"
         sql += " and a.user_id=" + user_id
