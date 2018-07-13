@@ -44,7 +44,6 @@ from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cac
 from utils.functions import value_judge, get_sql
 
 
-
 class UserRegister(object):
     """
     用户公共处理类
@@ -835,8 +834,15 @@ class RankingView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user
         user_id = user.id
-        sql = "SELECT balance from users_usercoin where coin_id = 6 and user_id=" + str(user_id)
+        sql = "SELECT a.balance from users_usercoin a where coin_id = 6 and user_id=" + str(
+            user_id)
         user_coin = get_sql(sql)[0][0]  # 用户拥有的ETH
+
+        GSG_ICON = "gsg_icon_in_cache"  # key
+        gsg_icon = get_cache(GSG_ICON)
+        if gsg_icon is None:
+            gsg_info = Coin.objects.get(id=6)
+            gsg_icon = gsg_info.icon
         my_ranking = {
             "user_id": user_id,
             "avatar": user.avatar,
@@ -877,7 +883,7 @@ class RankingView(ListAPIView):
                 'ranking': s,
             })
 
-        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': data, }})
+        return self.response({'code': 0, 'data': {'my_ranking': my_ranking, 'list': data, }, 'gsg_icon': gsg_icon})
 
     # serializer_class = UserInfoSerializer
     #
@@ -1304,7 +1310,7 @@ class AssetView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('-balance','coin__coin_order')
+        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
         return list
 
     def list(self, request, *args, **kwargs):
@@ -1788,12 +1794,14 @@ class LockDetailView(RetrieveUpdateAPIView):
             "amount": sers['amount'],
             "created_at": sers['created_at']
         }
-        coins = Coin.objects.filter(~Q(id=6),is_criterion=0).order_by('coin_order')
+        coins = Coin.objects.filter(~Q(id=6), is_criterion=0).order_by('coin_order')
         if not coins.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         dividend = []
         for x in coins:
-            divided =self.ts_null_2_zero(Dividend.objects.filter(user_lock_id=coin_lock.id,coin_id=x.id).aggregate(divided=Sum('divide'))['divided'])
+            divided = self.ts_null_2_zero(
+                Dividend.objects.filter(user_lock_id=coin_lock.id, coin_id=x.id).aggregate(divided=Sum('divide'))[
+                    'divided'])
             #     .values('coin__name', 'coin__icon').annotate(
             # Sum('divide')).order_by('coin_id')
             dividend.append(
@@ -2605,6 +2613,11 @@ class LuckDrawListView(ListAPIView):
         NUMBER_OF_LOTTERY_AWARDS = "number_of_lottery_Awards_" + str(user_id) + str(date)  # 再来一次次数
         NUMBER_OF_PRIZES_PER_DAY = "number_of_prizes_per_day_" + str(user_id) + str(date)  # 每天抽奖次数
         number = get_cache(NUMBER_OF_PRIZES_PER_DAY)
+        GSG_ICON = "gsg_icon_in_cache"  # key
+        gsg_icon = get_cache(GSG_ICON)
+        if gsg_icon is None:
+            gsg_info = Coin.objects.get(id=6)
+            gsg_icon = gsg_info.icon
         if number == None:
             number = 5
             is_gratis = 0
@@ -2630,7 +2643,7 @@ class LuckDrawListView(ListAPIView):
                 }
             )
         return self.response(
-            {'code': 0, 'data': data, 'is_gratis': is_gratis, 'number': number,
+            {'code': 0, 'gsg_icon': gsg_icon, 'data': data, 'is_gratis': is_gratis, 'number': number,
              'integral': normalize_fraction(user_gsg.balance, 2),
              'prize_consume': normalize_fraction(prize_consume, 2)})
 

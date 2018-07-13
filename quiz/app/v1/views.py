@@ -730,8 +730,6 @@ class ProfitView(ListAPIView):
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
-        print("CLUB_PROFIT_DATA=============================", CLUB_PROFIT_DATA)
-        print("CLUB_PROFIT_NAME=============================", CLUB_PROFIT_NAME)
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None and name is None:
