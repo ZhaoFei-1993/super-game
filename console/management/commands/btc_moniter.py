@@ -51,12 +51,12 @@ def get_transactions(addresses):
             # usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
             usdt_resp = requests.post(usdt_api_url, {'txid': txid})
             usdt_data = json.loads(usdt_resp.text)
-            if usdt_data['type'] != 'Error - Not Found':
+            if usdt_data['data']['error'] is None:
                 transactions[addr].append({
                     'txid': txid,
                     'time': time_dt,
-                    'value': usdt_data['amount'],
-                    'confirmations': confirmations,
+                    'value': usdt_data['data']['result']['amount'],
+                    'confirmations': usdt_data['data']['result']['confirmations'],
                     'coin': 'USDT',
                 })
             else:
