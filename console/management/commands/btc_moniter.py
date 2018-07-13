@@ -11,6 +11,7 @@ import math
 
 base_url = 'https://blockchain.info/multiaddr?active='
 omni_url = 'https://api.omniexplorer.info/v1/transaction/tx/'
+usdt_api_url = 'http://47.52.18.81/index.php?r=usdt/gettransion'
 
 
 def get_transactions(addresses):
@@ -47,7 +48,8 @@ def get_transactions(addresses):
             time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
             # 判断是否USDT
-            usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
+            # usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
+            usdt_resp = requests.post(usdt_api_url, {'txid': txid})
             usdt_data = json.loads(usdt_resp.text)
             if usdt_data['type'] != 'Error - Not Found':
                 transactions[addr].append({
