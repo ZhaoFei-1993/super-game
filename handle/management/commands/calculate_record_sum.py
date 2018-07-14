@@ -98,12 +98,16 @@ class Command(BaseCommand):
             obj.save()
 
         i = 1
+        user_info_list = []
         for obj in EveryDayInjectionValue.objects.filter(injection_time=date_last).order_by('-injection_value'):
             EXCHANGE_QUALIFICATION = "exchange_qualification_" + str(obj.user_id) + '_' + str(date_now)  # key
             set_cache(EXCHANGE_QUALIFICATION, i, 86400)  # 存储
             obj.order = i
             obj.save()
             if i <= 1000:
+                if obj.user.is_robot == True:
+                    user_info_list.append(obj.user.id)
+                print("i==========================", i)
                 # 发送信息
                 u_mes = UserMessage()
                 u_mes.status = 0
@@ -115,3 +119,12 @@ class Command(BaseCommand):
                 u_mes.content_en = 'Congratulations on your eligibility for GSG.'
                 u_mes.save()
             i += 1
+        EXCHANGE_QUALIFICATION_INFO = "all_exchange_qualification__info" + str(date_now)  # key
+        set_cache(EXCHANGE_QUALIFICATION_INFO, user_info_list, 86400)  # 存储
+        user_info_list_all = get_cache(EXCHANGE_QUALIFICATION_INFO)
+        print("user_info_list================================", user_info_list_all)
+
+        EXCHANGE_QUALIFICATION_USER_ID_NUMBER = "all_exchange_qualification__info_number" + str(date_now)  # key
+        set_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER, len(user_info_list), 86400)  # 存储
+        user_info_list_number = get_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER)
+        print("user_info_list================================", user_info_list_number)
