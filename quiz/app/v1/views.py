@@ -845,7 +845,7 @@ class Change(ListAPIView):
         else:
             ratio = is_use / toplimit  # 兑换了的GSG占天当总数的百分比
 
-        sql = "select count(*) from quiz_changerecord a"
+        sql = "select count(a.user_id) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
         sql += " and a.created_at<= '" + end_time + "'"
         numbers = get_sql(sql)[0][0]  # 兑换总人数

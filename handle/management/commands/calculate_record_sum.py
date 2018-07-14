@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
         # 划分出时间区间
         date_now = datetime.datetime.now().strftime('%Y-%m-%d')
+        print("date_now================", date_now)
         date_last = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 
         start_with = datetime.datetime(int(date_last.split('-')[0]), int(date_last.split('-')[1]),
@@ -120,11 +121,8 @@ class Command(BaseCommand):
                 u_mes.save()
             i += 1
         EXCHANGE_QUALIFICATION_INFO = "all_exchange_qualification__info" + str(date_now)  # key
+        print("user_info_list================================", user_info_list)
         set_cache(EXCHANGE_QUALIFICATION_INFO, user_info_list, 86400)  # 存储
-        user_info_list_all = get_cache(EXCHANGE_QUALIFICATION_INFO)
-        print("user_info_list================================", user_info_list_all)
 
         EXCHANGE_QUALIFICATION_USER_ID_NUMBER = "all_exchange_qualification__info_number" + str(date_now)  # key
         set_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER, len(user_info_list), 86400)  # 存储
-        user_info_list_number = get_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER)
-        print("user_info_list================================", user_info_list_number)
