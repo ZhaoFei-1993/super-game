@@ -137,15 +137,15 @@ class SixRecord(models.Model):
         (OPEN, "开奖"),
     )
 
-    H5 = 0
     IOS = 1
     ANDROID = 2
-    ROBOT = 3
+    HTML5 = 3
+    ROBOT = 4
     SOURCE = (
-        (H5, 'H5'),
-        (IOS, '苹果系统'),
-        (ANDROID, '安卓系统'),
-        (ROBOT, '机器人')
+        (IOS, "iOS"),
+        (ANDROID, "Android"),
+        (HTML5, "HTML5"),
+        (ROBOT, "机器人"),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -160,7 +160,7 @@ class SixRecord(models.Model):
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
     issue = models.CharField(verbose_name="期数", max_length=3)
     content = models.CharField(verbose_name="下注内容", max_length=1000)
-    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1,default=H5)
+    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1,default=ROBOT)
 
     class Meta:
         ordering = ['-id']

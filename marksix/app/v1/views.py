@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListCreateAPIView, ListAPIView
-from .serializers import PlaySerializer, OpenPriceSerializer
+from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer
 from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
@@ -16,10 +16,12 @@ from base import code as error_code
 from chat.models import Club
 from marksix.functions import valied_content, CountPage
 from decimal import *
+from users.models import User, CoinDetail
+from django.db.models import Sum
 
 
 class SortViews(ListAPIView):
-    authentication_classes = ()
+    # authentication_classes = ()
     serializer_class = PlaySerializer
 
     def get_queryset(self):
@@ -34,7 +36,7 @@ class SortViews(ListAPIView):
 
 
 class OpenViews(ListAPIView):
-    authentication_classes = ()
+    # authentication_classes = ()
     serializer_class = OpenPriceSerializer
 
     def get_queryset(self):
@@ -49,32 +51,43 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    authentication_classes = ()
+    # authentication_classes = ()
 
     def list(self, request, id):
+        language = request.GET.get('language')
+        if not language:
+            language = 'zh'
         res = Option.objects.filter(play_id=id)
         if id == '1':  # 特码，暂时只要获取一个赔率，因为目前赔率都相等
             res = res[0]
             play = Play.objects.get(id=1)
-            print(play)
+            if language == 'zh':
+                option = play.title
+            else:
+                option = play.title_en
             bet_odds = {
                 'id': res.id,
-                'option': play.title,
-                'option_en': play.title_en,
+                'option': option,
                 'odds': res.odds
             }
         else:
             bet_odds = []
+            if language == 'zh':
+                option = '三中二'
+            else:
+                option = 'Three Hit Two'
             three_to_three = {
-                'option': '三中二',
-                'option_en': 'Three Hit Two',
+                'option':option ,
                 'result': []
             }
             for item in res:
+                if language == 'zh':
+                    option = item.option
+                else:
+                    option = item.option_en
                 res_dict = {}
                 res_dict['id'] = item.id
-                res_dict['option'] = item.option
-                res_dict['option_en'] = item.option_en
+                res_dict['option'] = option
                 res_dict['odds'] = item.odds
 
                 if id == '2':  # 波色
@@ -125,14 +138,17 @@ class OddsViews(ListAPIView):
 
 
 class BetsViews(ListCreateAPIView):
-    authentication_classes = ()
+    # authentication_classes = ()
 
     def get_queryset(self):
         pass
 
     @transaction.atomic()
-    def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的判断
-        user_id = 1806
+    def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的赔率判断
+        user = self.request.user
+        user_id = user.id
+        # user_id = 1806
+        # user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'option_id', 'bet', 'bet_coin', 'issue', 'content')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -152,10 +168,8 @@ class BetsViews(ListCreateAPIView):
         # 判断用户下注是否合法,连码需要判断
         op = Option.objects.get(id=option_id)
         title_list = ['二中二', '三中二', '三中三']
-        print(op.option)
         if op.option == title_list[0] or title_list[1] in op.option:  # 二中二，三中二，最低两个号码，不超过七个
             res = valied_content(content, 2, 7)
-            print(res)
             if not res:
                 raise ParamErrorException(error_code.API_50201_BET_LIMITED)
         if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
@@ -168,11 +182,11 @@ class BetsViews(ListCreateAPIView):
         coin_id = club.coin_id
         # 查看用户余额是否足够
         usercoin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
-        print(usercoin.balance)
         # 判断用户金币是否足够
         if float(usercoin.balance) < float(bet_coin):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
+        source = request.META.get('HTTP_X_API_KEY')  # 获取用户请求类型
         # 更新下注表
         sixcord = SixRecord()
         sixcord.user_id = user_id
@@ -183,21 +197,54 @@ class BetsViews(ListCreateAPIView):
         sixcord.betcoin = bet_coin
         sixcord.issue = issue
         sixcord.content = content
+        if source:  # 如果请求中存在source添加，否则默认为机器人
+            sixcord.source = sixcord.__getattribute__(source.upper())
         sixcord.save()
 
         # 更新用户余额UserCoin
         usercoin.balance = usercoin.balance - bet_coin
         usercoin.save()
         # 更新资金流向表 CoinDetail
-
-        # 修改coindetail表
+        coin_detail = CoinDetail()
+        coin_detail.user = user
+        coin_detail.coin_name = usercoin.coin.name
+        coin_detail.amount = '-' + str(bet_coin)
+        coin_detail.rest = usercoin.balance
+        coin_detail.sources = 3
+        coin_detail.save()
 
         return self.response({'code': 0})
 
 
 class BetsListViews(ListAPIView):
+    # authentication_classes = ()
+    serializer_class = RecordSerializer
+
     def get_queryset(self):
-        pass
+        user = self.request.user
+        user_id = user.id
+        # user_id = 1806
+        # user = User.objects.get(id=user_id)
+        res = SixRecord.objects.filter(user_id=user_id)
+        return res
 
     def list(self, request, *args, **kwargs):
-        pass
+        results = super().list(request, *args, **kwargs)
+        res = results.data.get('results')
+        # 获取下注记录，以期数分类，按时间顺序排列
+        issue_list = []
+        result_list = []
+        for item in res:
+            issue = item['issue']
+            if issue not in issue_list:
+                issue_list.append(issue)
+                del item['issue']
+                result_list.append({
+                    'issue':issue,
+                    'list':[item]
+                })
+            else:
+                index = issue_list.index(issue)
+                del item['issue']
+                result_list[index]['list'].append(item)
+        return self.response({'code': 0,'data':result_list})

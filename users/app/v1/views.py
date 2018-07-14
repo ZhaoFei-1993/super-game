@@ -396,7 +396,7 @@ class LoginView(CreateAPIView):
         return avatar_url
 
     def post(self, request, *args, **kwargs):
-        source = request.META.get('HTTP_X_API_KEY')
+
         ur = UserRegister()
         value = value_judge(request, "username", "type")
         if value == 0:
