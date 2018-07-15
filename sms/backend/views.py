@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.backend import ListCreateAPIView
 from sms.backend import serializers
-from utils.functions import message_code as sms
+from utils.functions import message_code
 from sms.models import Sms
 from base import code as error_code
 from datetime import datetime
@@ -42,7 +42,7 @@ class SmsView(ListCreateAPIView):
 
         sms_message = '【财务系统】尊敬的用户您好！您正在修改密码。验证码：{code}，如不是您本人的操作，请忽略。'
 
-        code = sms.code()
+        code = message_code()
         model = Sms()
         model.area_code = area_code
         model.telephone = telephone
