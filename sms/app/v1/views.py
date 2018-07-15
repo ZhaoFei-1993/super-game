@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListCreateAPIView
 from . import serializers
-from utils.functions import message_code as sms
+from utils.functions import message_code
 from ...models import Sms
 from base import code as error_code
 from datetime import datetime
@@ -89,7 +89,7 @@ class SmsView(ListCreateAPIView):
         if area_code is None or area_code == '':
             area_code = 86
 
-        code = sms.code()
+        code = message_code()
         model = Sms()
         model.area_code = area_code
         model.telephone = telephone
