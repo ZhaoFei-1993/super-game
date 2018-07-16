@@ -1,32 +1,24 @@
 # -*- coding: utf-8 -*-
 
+from django.db.models import Q
 from django.core.management.base import BaseCommand
-from users.models import DailySettings, Coin
-
+from users.models import CoinGiveRecords, UserCoin
 
 
 class Command(BaseCommand):
     help = "给机器人分配邀请码"
 
     def handle(self, *args, **options):
-      a=DailySettings.objects.get(id=8)
-      a.rewards = 200
-      a.save()
-      b=DailySettings.objects.get(id=9)
-      b.rewards = 300
-      b.save()
-      c=DailySettings.objects.get(id=10)
-      c.rewards = 400
-      c.save()
-      d=DailySettings.objects.get(id=11)
-      d.rewards = 900
-      d.save()
-      e=DailySettings.objects.get(id=12)
-      e.rewards = 1000
-      e.save()
-      f=DailySettings.objects.get(id=13)
-      f.rewards = 1100
-      f.save()
-      i=DailySettings.objects.get(id=14)
-      i.rewards = 2000
-      i.save()
+        give_len = CoinGiveRecords.objects.filter(~Q(lock_coin=0)).count()
+        give_len_two = CoinGiveRecords.objects.filter(lock_coin=0).count()
+        give_len_one = CoinGiveRecords.objects.filter(lock_coin__lt=0).count()
+        print("give_len=============================", give_len)
+        print("give_len_two=============================", give_len_two)
+        print("give_len_one=============================", give_len_one)
+        give_usdt = CoinGiveRecords.objects.filter(~Q(lock_coin=0))
+        for give in give_usdt:
+            user_usdt = UserCoin.objects.get(user_id=give.user.pk, coin_id=9)
+            user_usdt.balance -= give.lock_coin
+            user_usdt.save()
+            give.lock_coin = 0
+            give.save()
