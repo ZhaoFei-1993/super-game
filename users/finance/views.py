@@ -4,6 +4,7 @@ from users.finance.authentications import TokenAuthentication
 from utils.functions import value_judge
 from rest_framework_jwt.settings import api_settings
 import hashlib
+from datetime import datetime
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from wc_auth.models import Admin
@@ -15,7 +16,9 @@ from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
 from users.finance.serializers import GSGSerializer
-
+import pytz
+from sms.models import Sms
+from django.conf import settings
 
 class UserManager(object):
     """用户处理类"""
@@ -76,9 +79,52 @@ class PwdView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
-        value = value_judge(request, "password")
+        value = value_judge(request, "password","telephone")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        if 'area_code' not in request.data.get:
+            area_code = 86
+        area_code = request.data.get('area_code')
+
+        if "telephone" not in request.data:
+            message = Sms.objects.get(code=request.data.get('code'), type=7)
+        else:
+            message = Sms.objects.get(area_code=area_code, telephone=request.data.get('telephone'),
+                                      code=request.data.get('code'), type=7)
+
+        if request.data.get('telephone') is not None:
+            record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'), type=7).order_by(
+                '-id').first()
+            if not record:
+                raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
+            if int(record.degree) >= 5:
+                raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+            else:
+                record.degree += 1
+                record.save()
+
+        # 短信发送时间
+        code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        code_time = time.mktime(code_time.timetuple())
+        current_time = time.mktime(datetime.now().timetuple())
+
+        # 判断code_id有效性
+        if message is None:
+            raise ParamErrorException(error_code.API_40101_SMS_CODE_ID_INVALID)
+
+        # 判断code有效性
+        if message.code != request.data.get('code'):
+            raise ParamErrorException(error_code.API_40103_SMS_CODE_INVALID)
+
+        # 判断code是否过期
+        if (settings.SMS_CODE_EXPIRE_TIME > 0) and (current_time - code_time > settings.SMS_CODE_EXPIRE_TIME):
+            raise ParamErrorException(error_code.API_40102_SMS_CODE_EXPIRED)
+
+        # 若校验通过，则更新短信发送记录表状态为校验通过
+        message.is_passed = True
+        message.save()
+
         new_pwd = request.data.get("password")
         user.password = UserManager.verify_pwd(new_pwd)
         user.role.updated_at = get_now()
