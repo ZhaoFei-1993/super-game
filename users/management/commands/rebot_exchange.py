@@ -101,6 +101,9 @@ class Command(BaseCommand):
             "机器人：" + str(user.username) + "在" + str(changerecord.created_at) + "时候兑换了" + str(
                 changerecord.change_gsg_value) + "个GSG！"))
 
+        user_generated_datetime.append(current_generate_time)
+        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
+
         self.stdout.write(self.style.SUCCESS('兑换成功'))
 
     def gsg_time(self):

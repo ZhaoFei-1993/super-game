@@ -139,6 +139,9 @@ class Command(BaseCommand):
 
             idx += 1
 
+        user_generated_datetime.append(current_generate_time)
+        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
+
         self.stdout.write(self.style.SUCCESS('下注成功'))
 
     @staticmethod
