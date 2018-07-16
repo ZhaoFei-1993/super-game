@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListCreateAPIView, ListAPIView
-from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer
+from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer,ColorSerializer
 from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
@@ -262,3 +262,19 @@ class BetsListViews(ListAPIView):
                 del item['issue']
                 result_list[index]['list'].append(item)
         return self.response({'code': 0, 'data': result_list})
+
+
+class ColorViews(ListAPIView):
+    authentication_classes = ()
+    serializer_class = ColorSerializer
+
+    def get_queryset(self):
+        res = Number.objects.all()
+        return res
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        res = results.data.get('results')
+        for item in res:
+            print(item)
+        return JsonResponse({'1': 1,'data':res})

@@ -51,7 +51,7 @@ class SmsView(ListCreateAPIView):
         model.type = 7
         model.status = Sms.READY
         model.save()
-
+        print(model.id)
         # 消息队列
         redis_conn = Redis()
         q = Queue(connection=redis_conn)

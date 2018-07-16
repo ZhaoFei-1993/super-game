@@ -75,7 +75,7 @@ class LoginView(CreateAPIView):
 
 
 class PwdView(CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
+    # authentication_classes = (TokenAuthentication,)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
@@ -83,16 +83,15 @@ class PwdView(CreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        if 'area_code' not in request.data.get:
-            area_code = 86
-        area_code = request.data.get('area_code')
+        area_code = 86
 
         if "telephone" not in request.data:
-            message = Sms.objects.get(code=request.data.get('code'), type=7)
+            message = Sms.objects.filter(code=request.data.get('code'), type=7).first()
         else:
-            message = Sms.objects.get(area_code=area_code, telephone=request.data.get('telephone'),
-                                      code=request.data.get('code'), type=7)
-
+            message = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'),
+                                      code=request.data.get('code'), type=7).first()
+        if not message:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if request.data.get('telephone') is not None:
             record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'), type=7).order_by(
                 '-id').first()
@@ -262,6 +261,7 @@ class MessageDetailView(ListAPIView):
 
 
 class GSGView(RetrieveAPIView):
+    # authentication_classes = ()
     def get(self, request, *args, **kwargs):
         result = CoinDetail.objects.all()
         # 总资产
@@ -273,9 +273,8 @@ class GSGView(RetrieveAPIView):
         realisation = result.filter(sources=2, coin_name='GSG').aggregate(Sum('amount')).get("amount__sum")
         if not realisation: realisation = 0
         # 平台用户余额，user表integeal加上usercoin的余额,排除机器人
-        integrals = User.objects.filter(is_robot=0).aggregate(Sum('integral')).get('integral__sum')
         balances = UserCoin.objects.filter(coin__name='GSG').aggregate(Sum('balance')).get('balance__sum')
-        user_coin = float(integrals) + float(balances)
+        user_coin = float(balances)
         # 区域链上余额
         ETH_balance = user_coin
         # 平台回收总额,类型为活动的并且值为负数
@@ -312,6 +311,7 @@ class GSGView(RetrieveAPIView):
 
 
 class SharesView(ListAPIView):
+    authentication_classes = ()
     serializer_class = GSGSerializer
 
     def get_queryset(self):
@@ -326,18 +326,19 @@ class SharesView(ListAPIView):
         for i in items:
             res_dict = {}
             res_dict['name'] = i['account_name']
-            value = round(float(i['balance']) / float(total_balance), 4)
-            res_dict['proportion'] = value
+            value = round(float(i['balance']) / float(total_balance), 4)*100
+            res_dict['data'] = value
             res_list.append(res_dict)
         return self.response({'code': 0, 'data': res_list})
 
 
 class FootstoneView(ListAPIView):
+    authentication_classes = ()
     def queryset(self):
         pass
 
     def list(self, request, *args, **kwargs):
-        res = FoundationAccount.objects.values('type', 'coin__name').annotate(Sum('balance')).order_by('coin')
+        res = FoundationAccount.objects.values('type', 'coin__name','coin__icon').annotate(Sum('balance')).order_by('coin')
         footstone_list = []
         ICO_list = []
         private_list = []
