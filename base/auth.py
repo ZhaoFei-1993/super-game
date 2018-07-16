@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import exceptions
 from rest_framework import authentication
-from base.authentication import SignatureAuthentication
+from .authentication import SignatureAuthentication
 
 from django.conf import settings
 from users.models import User
