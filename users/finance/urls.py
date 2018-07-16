@@ -18,5 +18,7 @@ urlpatterns = [
     # 股份配置
     path('shares/',views.SharesView.as_view(),name='finance-user-shares'),
     # ICO/基石
-    path('footstone/',views.FootstoneView.as_view(),name='finance-user-footstone')
+    path('footstone/',views.FootstoneView.as_view(),name='finance-user-footstone'),
+    # 俱乐部列表
+    path('club/',views.ClubView.as_view(),name='finance-user-club')
 ]

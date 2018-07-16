@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListCreateAPIView, ListAPIView
-from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer,ColorSerializer
+from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer, ColorSerializer
 from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
@@ -93,6 +93,7 @@ class OddsViews(ListAPIView):
                 res_dict['id'] = item.id
                 res_dict['option'] = option
                 res_dict['odds'] = item.odds
+                res_dict['pitch'] = False
 
                 if id == '2':  # 波色
                     color_id = Option.WAVE_CHOICE[item.option]
@@ -100,8 +101,10 @@ class OddsViews(ListAPIView):
                     res_dict['num_list'] = list(num_list)
 
                 # elif id == '4': # 两面
+
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
+
                         three_to_three['result'].append(res_dict)
                         continue
                 elif id == '5':  # 平特一肖
@@ -277,4 +280,4 @@ class ColorViews(ListAPIView):
         res = results.data.get('results')
         for item in res:
             print(item)
-        return JsonResponse({'1': 1,'data':res})
+        return JsonResponse({'1': 1, 'data': res})
