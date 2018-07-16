@@ -19,6 +19,7 @@ from decimal import *
 from users.models import User, CoinDetail
 from django.db.models import Sum
 from base.function import LoginRequired
+from rest_framework.views import APIView
 
 
 class SortViews(ListAPIView):
@@ -104,7 +105,6 @@ class OddsViews(ListAPIView):
 
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
-
                         three_to_three['result'].append(res_dict)
                         continue
                 elif id == '5':  # 平特一肖
@@ -267,17 +267,15 @@ class BetsListViews(ListAPIView):
         return self.response({'code': 0, 'data': result_list})
 
 
-class ColorViews(ListAPIView):
-    authentication_classes = ()
-    serializer_class = ColorSerializer
-
-    def get_queryset(self):
+class ColorViews(APIView):
+    def get(self, request, *args, **kwargs):
         res = Number.objects.all()
-        return res
-
-    def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        res = results.data.get('results')
+        res_dict = {}
         for item in res:
-            print(item)
-        return JsonResponse({'1': 1, 'data': res})
+            res_dict[item.num] = item.color
+        color = {
+            1: '红波',
+            2: '蓝波',
+            3: '绿波'
+        }
+        return JsonResponse({'code': 0, 'data': {'num_dict':res_dict,'color_dict':color}})

@@ -10,6 +10,7 @@ from django.db import connection
 import json
 from .code import API_ERROR_MESSAGE
 
+
 class BaseView(generics.GenericAPIView):
     authentication_classes = (CCSignatureAuthBackend,)
 

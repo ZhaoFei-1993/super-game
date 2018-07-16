@@ -1,6 +1,6 @@
 from base.backend import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from django.http import JsonResponse
-from users.finance.authentications import TokenAuthentication
+from users.finance.authentications import CCSignatureAuthentication
 from utils.functions import value_judge
 from rest_framework_jwt.settings import api_settings
 import hashlib
@@ -19,6 +19,7 @@ from users.finance.serializers import GSGSerializer, ClubSerializer
 import pytz
 from sms.models import Sms
 from django.conf import settings
+from base.function import LoginRequired
 
 
 class UserManager(object):
@@ -46,23 +47,23 @@ class UserManager(object):
     def login(self, username, password):
         password = self.verify_pwd(password)
         try:
-            usr = Admin.objects.get(username=username, password=password)
-            usr.last_login = get_now()
-            usr.save()
+            user = Admin.objects.get(username=username, password=password)
+            user.last_login = get_now()
+            user.save()
         except:
             raise ParamErrorException(error_code.API_20104_LOGIN_ERROR)
             # return
-        user = Admin()
-        user.username = username
-        user.password = password
-        user.id = usr.id
-        user.role = usr.role
+        # user = Admin()
+        # user.username = username
+        # user.password = password
+        # user.id = usr.id
+        # user.role = usr.role
         token = self.get_access_token(user)
-        return token, usr
+        return token, user
 
 
 class LoginView(CreateAPIView):
-    authentication_classes = ()
+    authentication_classes = (CCSignatureAuthentication,)
 
     def post(self, request):
         usr = UserManager()
@@ -76,8 +77,8 @@ class LoginView(CreateAPIView):
 
 
 class PwdView(CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     def post(self, request, *args, **kwargs):
         user = self.request.user
         print(user.username)
@@ -130,8 +131,8 @@ class PwdView(CreateAPIView):
 
 
 class CountView(RetrieveAPIView):
-    authentication_classes = (TokenAuthentication,)
-
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     def get(self, request, type, pk):
         cycle = request.GET.get('cycle')
         start = request.GET.get('start')
@@ -260,8 +261,8 @@ class MessageDetailView(ListAPIView):
 
 
 class GSGView(RetrieveAPIView):
-    authentication_classes = (TokenAuthentication,)
-
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     def get(self, request, *args, **kwargs):
         result = CoinDetail.objects.all()
         # 总资产
@@ -311,7 +312,8 @@ class GSGView(RetrieveAPIView):
 
 
 class SharesView(ListAPIView):
-    authentication_classes = (TokenAuthentication,)
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     serializer_class = GSGSerializer
 
     def get_queryset(self):
@@ -333,8 +335,8 @@ class SharesView(ListAPIView):
 
 
 class FootstoneView(ListAPIView):
-    authentication_classes = (TokenAuthentication,)
-
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     def queryset(self):
         pass
 
@@ -363,7 +365,8 @@ class FootstoneView(ListAPIView):
 
 
 class ClubView(ListAPIView):
-    authentication_classes = (TokenAuthentication,)
+    permission_classes = (LoginRequired,)
+    authentication_classes = (CCSignatureAuthentication,)
     serializer_class = ClubSerializer
 
     def get_queryset(self):
@@ -374,4 +377,4 @@ class ClubView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
 
-        return self.response({'code':0,'data':res})
+        return self.response({'code': 0, 'data': res})
