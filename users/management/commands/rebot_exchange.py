@@ -64,7 +64,9 @@ class Command(BaseCommand):
         # change_eth_value = self.get_change_eth_value()  # 随机兑换ETH
         gsg_balance = self.get_gsg_balance()  # 剩余gsg
         # gsg_balance = 10000  # 剩余gsg
+        print("gsg_balance=============================================", gsg_balance)
         user_number = self.get_user_number()  # 剩余人数
+        print("user_number==========================================", user_number)
         # user_number = 1  # 剩余人数
         convert_ratio = self.get_eth_exchange_gsg_number()
         if user_number == 1:
