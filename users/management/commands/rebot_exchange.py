@@ -72,7 +72,7 @@ class Command(BaseCommand):
             change_gsg_value = gsg_balance
         else:
             change_eth_value = get_robot_exchange(gsg_balance, user_number,convert_ratio)  # 随机兑换ETH
-            change_gsg_value = change_eth_value / float(convert_ratio)  # 随机兑换GSG
+            change_gsg_value = change_eth_value * float(convert_ratio)  # 随机兑换GSG
         user = self.get_bet_user()  # 随机下注用户
 
         changerecord = ChangeRecord()
