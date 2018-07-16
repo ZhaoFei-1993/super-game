@@ -5,7 +5,7 @@ from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
 from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from users.finance.functions import get_now
 from marksix.functions import date_exchange
 from django.db import transaction
@@ -77,7 +77,7 @@ class OddsViews(ListAPIView):
             else:
                 option = 'Three Hit Two'
             three_to_three = {
-                'option':option ,
+                'option': option,
                 'result': []
             }
             for item in res:
@@ -225,7 +225,15 @@ class BetsListViews(ListAPIView):
         user_id = user.id
         # user_id = 1806
         # user = User.objects.get(id=user_id)
-        res = SixRecord.objects.filter(user_id=user_id)
+        type = self.kwargs['type']
+        if type == '0':  # 全部记录
+            res = SixRecord.objects.filter(user_id=user_id)
+        elif type == '1':  # 未开奖
+            res = SixRecord.objects.filter(user_id=user_id, status=0)
+        elif type == '2':  # 已开奖
+            res = SixRecord.objects.filter(user_id=user_id, status=1)
+        else:
+            return HttpResponse(status=404)
         return res
 
     def list(self, request, *args, **kwargs):
@@ -240,11 +248,11 @@ class BetsListViews(ListAPIView):
                 issue_list.append(issue)
                 del item['issue']
                 result_list.append({
-                    'issue':issue,
-                    'list':[item]
+                    'issue': issue,
+                    'list': [item]
                 })
             else:
                 index = issue_list.index(issue)
                 del item['issue']
                 result_list[index]['list'].append(item)
-        return self.response({'code': 0,'data':result_list})
+        return self.response({'code': 0, 'data': result_list})

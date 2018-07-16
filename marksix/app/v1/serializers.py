@@ -28,12 +28,16 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     """
     开奖历史
     """
+    # animal = serializers.SerializerMethodField()  # 货币名称
 
     class Meta:
         model = OpenPrice
         fields = (
             "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open'
         )
+
+    # def get_animal(self, obj):
+    #     animal_index = obj.animal
 
 
 class OddsPriceSerializer(serializers.HyperlinkedModelSerializer):

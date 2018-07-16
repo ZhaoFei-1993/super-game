@@ -12,5 +12,5 @@ urlpatterns = [
     # 六合彩下注接口
     path('bets/',views.BetsViews.as_view(),name='marksix-app-bets'),
     # 六合彩竞猜列表
-    path('list/',views.BetsListViews.as_view(),name='marksix-app-betslist')
+    path('list/<str:type>/',views.BetsListViews.as_view(),name='marksix-app-betslist')
 ]
