@@ -183,12 +183,12 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         nonce_header = self.header_canonical(self.API_NONCE_HEADER)
         sent_nonce = request.META.get(nonce_header)
         print('x-nonce = ', sent_nonce)
-        # if not sent_nonce:
-        #     raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
+        if not sent_nonce:
+            raise SystemParamException(code.API_10101_SYSTEM_PARAM_REQUIRE)
 
         # TODO: prevent replay request!!!，把nonce传入缓存中，60秒有效，60秒内如果有相同的nonce值，则deny
-        # if get_cache('api_nonce') == sent_nonce:
-        #     raise SystemParamException(code.API_10110_REQUEST_REPLY_DENY)
+        if get_cache('api_nonce') == sent_nonce:
+            raise SystemParamException(code.API_10110_REQUEST_REPLY_DENY)
         set_cache('api_nonce', sent_nonce, 60)
 
         # 登录验证
@@ -221,7 +221,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         if settings.VERIFY_SIGNATURE and computed_signature != sent_signature:
             print('computed_signature = ', computed_signature)
             print('sent_signature = ', sent_signature)
-            # raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
+            raise SignatureNotMatchException(code.API_10102_SIGNATURE_ERROR)
         return user, api_key
 
 class CCSignatureAuthentication(SignatureAuthentication):
