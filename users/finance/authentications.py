@@ -37,8 +37,11 @@ class TokenAuthentication(authentication.BaseAuthentication):
         # Check if request has a "Signature" request header.
         authorization_header = self.header_canonical('Authorization')
         # 登录验证
-        sent_token = request.META.get(authorization_header)
-        sent_token = self.get_signature_from_signature_string(sent_token)
+        try:
+            sent_token = request.META.get(authorization_header)
+            sent_token = self.get_signature_from_signature_string(sent_token)
+        except:
+            raise NotLoginException(error_code.API_406_LOGIN_REQUIRE)
 
         print('token = ', sent_token)
 
