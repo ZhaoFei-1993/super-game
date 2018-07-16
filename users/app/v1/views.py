@@ -211,8 +211,6 @@ class UserRegister(object):
 
             register_type = self.get_register_type(username)
             user = User()
-            print("source=====================================", source)
-            print("source=====================================", user.__getattribute__(source.upper()))
             if len(username) == 11:
                 user.telephone = username
             if area_code is None or area_code == '':
@@ -263,15 +261,13 @@ class UserRegister(object):
         else:
             register_type = self.get_register_type(username)
             user = User()
-            print("source=====================================", source)
-            print("source=====================================", user.__getattribute__(source.upper()))
 
             user.telephone = username
             if area_code is None:
                 area_code = 86
             user.area_code = area_code
             user.username = username
-            user.source = source
+            user.source = user.__getattribute__(source.upper())
             user.set_password(password)
             user.ip_address = ip_address
             user.register_type = register_type
