@@ -15,10 +15,11 @@ from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, U
 from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
-from users.finance.serializers import GSGSerializer
+from users.finance.serializers import GSGSerializer, ClubSerializer
 import pytz
 from sms.models import Sms
 from django.conf import settings
+
 
 class UserManager(object):
     """用户处理类"""
@@ -80,7 +81,7 @@ class PwdView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         user = self.request.user
         print(user.username)
-        value = value_judge(request, "password","telephone")
+        value = value_judge(request, "password", "telephone")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
@@ -90,7 +91,7 @@ class PwdView(CreateAPIView):
             message = Sms.objects.filter(code=request.data.get('code'), type=7).first()
         else:
             message = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'),
-                                      code=request.data.get('code'), type=7).first()
+                                         code=request.data.get('code'), type=7).first()
         if not message:
             raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
         if int(message.degree) >= 5:
@@ -129,6 +130,8 @@ class PwdView(CreateAPIView):
 
 
 class CountView(RetrieveAPIView):
+    authentication_classes = (TokenAuthentication,)
+
     def get(self, request, type, pk):
         cycle = request.GET.get('cycle')
         start = request.GET.get('start')
@@ -257,7 +260,8 @@ class MessageDetailView(ListAPIView):
 
 
 class GSGView(RetrieveAPIView):
-    # authentication_classes = ()
+    authentication_classes = (TokenAuthentication,)
+
     def get(self, request, *args, **kwargs):
         result = CoinDetail.objects.all()
         # 总资产
@@ -307,7 +311,7 @@ class GSGView(RetrieveAPIView):
 
 
 class SharesView(ListAPIView):
-    authentication_classes = ()
+    authentication_classes = (TokenAuthentication,)
     serializer_class = GSGSerializer
 
     def get_queryset(self):
@@ -322,19 +326,21 @@ class SharesView(ListAPIView):
         for i in items:
             res_dict = {}
             res_dict['name'] = i['account_name']
-            value = round(float(i['balance']) / float(total_balance), 4)*100
+            value = round(float(i['balance']) / float(total_balance), 4) * 100
             res_dict['data'] = value
             res_list.append(res_dict)
         return self.response({'code': 0, 'data': res_list})
 
 
 class FootstoneView(ListAPIView):
-    authentication_classes = ()
+    authentication_classes = (TokenAuthentication,)
+
     def queryset(self):
         pass
 
     def list(self, request, *args, **kwargs):
-        res = FoundationAccount.objects.values('type', 'coin__name','coin__icon').annotate(Sum('balance')).order_by('coin')
+        res = FoundationAccount.objects.values('type', 'coin__name', 'coin__icon').annotate(Sum('balance')).order_by(
+            'coin')
         footstone_list = []
         ICO_list = []
         private_list = []
@@ -356,3 +362,16 @@ class FootstoneView(ListAPIView):
         return self.response({'code': 0, 'data': data})
 
 
+class ClubView(ListAPIView):
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = ClubSerializer
+
+    def get_queryset(self):
+        res = Club.objects.all()
+        return res
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        res = results.data.get('results')
+
+        return self.response({'code':0,'data':res})

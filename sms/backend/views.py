@@ -14,6 +14,7 @@ from users.models import User
 from rq import Queue
 from redis import Redis
 from sms.consumers import send_sms
+from users.finance.authentications import TokenAuthentication
 
 
 class SmsView(ListCreateAPIView):
@@ -21,6 +22,7 @@ class SmsView(ListCreateAPIView):
     发送手机短信
     """
     serializer_class = serializers.SmsSerializer
+    authentication_classes = (TokenAuthentication,)
 
     def post(self, request, *args, **kwargs):
         """
