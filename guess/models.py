@@ -14,28 +14,16 @@ from decimal import Decimal
 
 
 
-# @reversion.register()
-# class GuessCategory(MPTTModel):
-#     name = models.CharField(verbose_name="股票名称", max_length=50)
-#     name_en = models.CharField(verbose_name="股票名称(英文)", max_length=50, default='')
-#     icon = models.CharField(verbose_name="股票编号", max_length=50, default='')
-#     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-#     order = models.IntegerField(verbose_name="排序", default=0)
-#     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
-#
-#     class Meta:
-#         ordering = ['-id']
-#         verbose_name = verbose_name_plural = "股票表"
-
 @reversion.register()
-class Stock(models.Model):
-    title = models.CharField(verbose_name='证券名称', max_length=255)
-    title_en = models.CharField(verbose_name='证券名称（英文）', max_length=255)
-    rotary_header_time = models.CharField(verbose_name='封盘时间，多个封盘时间以“,”号分隔', max_length=255)
-    lottery_time = models.CharField(verbose_name='开奖时间，多个开奖时间以“,”号分隔', max_length=255)
-    is_delete = models.BooleanField(verbose_name='是否删除', default=0)
-    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
-    update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+class Stock(MPTTModel):
+    title = models.CharField(verbose_name="证券名称", max_length=50, default='')
+    title_en = models.CharField(verbose_name="证券名称（英文）", max_length=50, default='')
+    rotary_header_time = models.CharField(verbose_name="封盘时间，多个封盘时间以“,”号分隔", max_length=100, default='')
+    lottery_time = models.CharField(verbose_name="开奖时间，多个开奖时间以“,”号分隔", max_length=100, default='')
+    order = models.IntegerField(verbose_name="排序", default=0)
+    is_delete = models.BooleanField(verbose_name="是否删除", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="修改时间", auto_now=True)
 
     class Meta:
         ordering = ['-id']

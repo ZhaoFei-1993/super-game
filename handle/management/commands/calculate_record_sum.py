@@ -41,25 +41,32 @@ class Command(BaseCommand):
             record_sum = 0
             # record_dic = {}
             for record_personal in records.filter(user_id=user_id):
-                club_name = Club.objects.get(pk=record_personal.roomquiz_id).room_title
-                coin_name = club_name.replace('俱乐部', '')
+                club_id = record_personal.roomquiz_id
+                club_nickname = 'club_nickname'+str(club_id)
+                coin_name = get_cache(club_nickname)
+                if coin_name is None:
+                    club_name = Club.objects.get(pk=club_id).room_title
+                    coin_name = club_name.replace('俱乐部', '')
+                    set_cache(club_nickname, coin_name, 24 * 3600)
+
                 # if coin_name in record_dic.keys():
                 #     record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bet)
                 # else:
                 #     record_dic[coin_name] = float(record_personal.bet)
-                coin_price = CoinPrice.objects.get(coin_name=coin_name)
-                record_sum = record_sum + record_personal.bet * coin_price.price
 
-            # # 返现值
+                rmb_price = 'currency_corresponds_to_rmb_price_'+str(coin_name)
+                price = get_cache(rmb_price)
+                if price is None:
+                    coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                    price = coin_price.price
+                    set_cache(rmb_price, coin_price.price, 24 * 3600)
+                record_sum = record_sum + record_personal.bet * price
+
+            # 返现值
             # cash_back_gsg = (float(record_sum) * rate) / 0.5
             # cash_back_gsg = normalize_fraction(cash_back_gsg, 4)
             #
-            # # 给用户user_coin加上gsg
-            # gsg_count = UserCoin.objects.filter(user_id=user_id, coin_id=6).count()
-            # if gsg_count == 0:
-            #     user_coin_gsg = gsg_coin_initialization(user_id, 6)
-            # else:
-            #     user_coin_gsg = UserCoin.objects.filter(user_id=user_id, coin_id=6).first()
+            # user_coin_gsg = UserCoin.objects.filter(user_id=user_id, coin_id=6).first()
             # user_coin_gsg.balance = float(user_coin_gsg.balance) + float(cash_back_gsg)
             # user_coin_gsg.save()
             #
@@ -86,9 +93,9 @@ class Command(BaseCommand):
             #     normalize_fraction(record_sum, 2)) + '，' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
             # u_mes.content_en = ''
             # u_mes.save()
-
+            #
             print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum)
-            # print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum, ' ,cash_back====> ', cash_back_gsg)
+            # # print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum, ' ,cash_back====> ', cash_back_gsg)
 
             obj = EveryDayInjectionValue()
             obj.user_id = user_id
