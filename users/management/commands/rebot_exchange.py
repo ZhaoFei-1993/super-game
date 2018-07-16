@@ -57,12 +57,13 @@ class Command(BaseCommand):
             if self.get_current_timestamp() >= dt:
                 current_generate_time = dt
                 break
+        gsg_balance = self.get_gsg_balance()  # 剩余gsg
 
-        if current_generate_time == '':
+        if current_generate_time == '' or gsg_balance <= 0:
             raise CommandError('非自动兑换时间')
 
         # change_eth_value = self.get_change_eth_value()  # 随机兑换ETH
-        gsg_balance = self.get_gsg_balance()  # 剩余gsg
+        # gsg_balance = self.get_gsg_balance()  # 剩余gsg
         # gsg_balance = 10000  # 剩余gsg
         print("gsg_balance=============================================", gsg_balance)
         user_number = self.get_user_number()  # 剩余人数
@@ -73,7 +74,7 @@ class Command(BaseCommand):
             change_eth_value = gsg_balance * convert_ratio
             change_gsg_value = gsg_balance
         else:
-            change_eth_value = get_robot_exchange(gsg_balance, user_number,convert_ratio)  # 随机兑换ETH
+            change_eth_value = get_robot_exchange(gsg_balance, user_number, convert_ratio)  # 随机兑换ETH
             change_gsg_value = change_eth_value * float(convert_ratio)  # 随机兑换GSG
         user = self.get_bet_user()  # 随机下注用户
 
@@ -137,9 +138,9 @@ class Command(BaseCommand):
         return gsg_balance
 
     def get_change_eth_value(self):
-        gsg_balance = self.get_gsg_balance()       # 剩余gsg
-        user_number = self.get_user_number()           # 剩余人数
-        convert_ratio = self.get_eth_exchange_gsg_number()                #
+        gsg_balance = self.get_gsg_balance()  # 剩余gsg
+        user_number = self.get_user_number()  # 剩余人数
+        convert_ratio = self.get_eth_exchange_gsg_number()  #
         change_eth_value = gsg_balance / user_number * convert_ratio
         return change_eth_value
 
@@ -210,20 +211,17 @@ class Command(BaseCommand):
         """
         user_number = self.get_bet_user_number()
         user_number_list = self.constrained_sum_sample_pos(3, user_number)
+        print("user_number_list====================", user_number_list)
         # user_numer_early = int(user_number * 0.3)
         user_numer_early = user_number_list[0]
         user_total_early = random.randint(user_numer_early, user_numer_early)
-        print("user_total_early===========================", user_total_early)
 
         # user_numer_late = user_number - (int(user_number * 0.3)*2)
         user_numer_late = user_number_list[1]
         user_total_late = random.randint(user_numer_late, user_numer_late)
-        print("user_total_late===========================", user_total_late)
 
         user_numer_late_a = user_number_list[2]
         user_total_late_a = random.randint(user_numer_late_a, user_numer_late_a)
-        print("user_total_late_a===========================", user_total_late_a)
-
 
         list = self.get_date_early()
         start_date_early_one = list[0]
@@ -232,7 +230,7 @@ class Command(BaseCommand):
         random_datetime_one = []
         for i in range(0, user_total_early):
             random_datetime_one.append(random.randint(start_date_early_one, end_date_early_one))
-        print("end_date_early_one=================================", end_date_early_one)
+        print("random_datetime_one=================================", len(random_datetime_one))
 
         start_date_early_two = list[2]
         end_date_early_two = list[3]
@@ -240,7 +238,7 @@ class Command(BaseCommand):
         random_datetime_two = []
         for i in range(0, user_total_late):
             random_datetime_two.append(random.randint(start_date_early_two, end_date_early_two))
-        print("random_datetime_two===================================", random_datetime_two)
+        print("random_datetime_two===================================", len(random_datetime_two))
 
         start_date_early_three = list[4]
         end_date_early_three = list[5]
@@ -248,11 +246,10 @@ class Command(BaseCommand):
         random_datetime_three = []
         for i in range(0, user_total_late_a):
             random_datetime_three.append(random.randint(start_date_early_three, end_date_early_three))
-        print("random_datetime_three================================", random_datetime_three)
+        print("random_datetime_three================================", len(random_datetime_three))
 
-
-        random_datetime = random_datetime_one + random_datetime_two+random_datetime_three
-        print("random_datetime====================================", random_datetime)
+        random_datetime = random_datetime_one + random_datetime_two + random_datetime_three
+        print("random_datetime====================================", len(random_datetime))
 
         set_cache(self.get_key(self.key_today_random), user_number, 24 * 3600)
         set_cache(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
