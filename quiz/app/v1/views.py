@@ -694,6 +694,7 @@ class ProfitView(ListAPIView):
 
     def get_queryset(self):
         days = self.request.GET.get('days')
+        type = self.request.GET.get('type')
         date_last = (datetime.now() - timedelta(days=int(days))).strftime('%Y-%m-%d')
         end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         start_time = str(date_last) + ' 00:00:00'  # 开始时间
@@ -704,8 +705,8 @@ class ProfitView(ListAPIView):
             end_time = str(end_time) + ' 23:59:59'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
-        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
-        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type) # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type) # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None or name is None:
@@ -730,8 +731,8 @@ class ProfitView(ListAPIView):
             end_time = str(end_time) + ' 23:59:59'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
-        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
-        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type) # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type) # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None or name is None:
