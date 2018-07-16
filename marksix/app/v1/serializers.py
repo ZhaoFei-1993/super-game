@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from marksix.models import Play, OpenPrice, Option, SixRecord,Number
+from marksix.models import Play, OpenPrice, Option, SixRecord, Number
 from base.validators import PhoneValidator
 from chat.models import Club
 from datetime import datetime
@@ -28,6 +28,7 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     """
     开奖历史
     """
+
     # animal = serializers.SerializerMethodField()  # 货币名称
 
     class Meta:
@@ -36,8 +37,8 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
             "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open'
         )
 
-    # def get_animal(self, obj):
-    #     animal_index = obj.animal
+        # def get_animal(self, obj):
+        #     animal_index = obj.animal
 
 
 class OddsPriceSerializer(serializers.HyperlinkedModelSerializer):
@@ -116,8 +117,9 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
 
         return status
 
+
 class ColorSerializer(serializers.HyperlinkedModelSerializer):
     model = Number
     fields = (
-        'num','color'
+        'num', 'color'
     )

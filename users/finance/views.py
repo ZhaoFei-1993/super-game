@@ -331,11 +331,12 @@ class SharesView(ListAPIView):
 
 
 class FootstoneView(ListAPIView):
+    authentication_classes = ()
     def queryset(self):
         pass
 
     def list(self, request, *args, **kwargs):
-        res = FoundationAccount.objects.values('type', 'coin__name').annotate(Sum('balance')).order_by('coin')
+        res = FoundationAccount.objects.values('type', 'coin__name','coin__icon').annotate(Sum('balance')).order_by('coin')
         footstone_list = []
         ICO_list = []
         private_list = []

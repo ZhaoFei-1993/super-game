@@ -268,6 +268,10 @@ class ColorViews(ListAPIView):
     authentication_classes = ()
     serializer_class = RecordSerializer
 
+    def get_queryset(self):
+        res = Number.objects.all()
+        return res
+
     def list(self, request):
 
         return JsonResponse({'1': 1})
