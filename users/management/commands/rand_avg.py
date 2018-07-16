@@ -61,12 +61,13 @@ def get_robot_exchange(total_exchange, total_robot, exchange_rate):
     print('兑换比例 exchange_rate = 1:', exchange_rate)
 
     avg = total_exchange / float(exchange_rate * total_robot)  # 平均值
+    avg = float(round(avg, 2))
     print('avg = ', avg)
     if avg >= 5:
         avg = random.randint(1, 4)
-        avg = float(round(avg, 2))
     if avg * exchange_rate > total_exchange:
         avg -= 0.01
+    avg = float(round(avg, 2))
     print('round avg = ', avg)
     print('')
     random_exchange = generate_random_float(total_robot, avg)
@@ -79,36 +80,35 @@ def get_robot_exchange(total_exchange, total_robot, exchange_rate):
 
     return float(current_exchange)
 
-# initial_sum = 2000000
-# initial_robot = 666
-# eth_price = 3000
-# gsg_price = 0.3
-#
-# # 模拟真实用户情况
-# real_users = random.randint(1, 5)
-#
-# len_robot = initial_robot + 1
-# for i in range(1, len_robot):
-#   exchange_rate = round(eth_price / gsg_price, 2)
-#
-#   # 模拟真实用户
-#   current_exchange = 0
-#   if i in [80, 90, 98]:
-#     current_exchange = random.randint(1, 300) / 100
-#   else:
-#     current_exchange = get_robot_exchange(initial_sum, initial_robot, exchange_rate)
-#
-#   if current_exchange is False:
-#       continue
-#
-#   initial_sum -= int(current_exchange * exchange_rate)
-#   initial_robot -= 1
-#
-#   # 调整eth_price、gsg_price
-#   eth_price += random.randint(-100, 100)
-#   gsg_price += random.randint(-100, 100) / 10000
-#
-# print('initial_sum = ', initial_sum)
-# print('initial_robot = ', initial_robot)
+initial_sum = 2000000
+initial_robot = 666
+eth_price = 3000
+gsg_price = 0.3
 
+# 模拟真实用户情况
+real_users = random.randint(1, 5)
+
+len_robot = initial_robot + 1
+for i in range(1, len_robot):
+  exchange_rate = round(eth_price / gsg_price, 2)
+
+  # 模拟真实用户
+  current_exchange = 0
+  if i in [80, 90, 98]:
+    current_exchange = random.randint(1, 300) / 100
+  else:
+    current_exchange = get_robot_exchange(initial_sum, initial_robot, exchange_rate)
+
+  if current_exchange is False:
+      continue
+
+  initial_sum -= int(current_exchange * exchange_rate)
+  initial_robot -= 1
+
+  # 调整eth_price、gsg_price
+  eth_price += random.randint(-100, 100)
+  gsg_price += random.randint(-100, 100) / 10000
+
+print('initial_sum = ', initial_sum)
+print('initial_robot = ', initial_robot)
 
