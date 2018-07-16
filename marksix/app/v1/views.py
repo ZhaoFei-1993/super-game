@@ -18,10 +18,12 @@ from marksix.functions import valied_content, CountPage
 from decimal import *
 from users.models import User, CoinDetail
 from django.db.models import Sum
+from base.function import LoginRequired
 
 
 class SortViews(ListAPIView):
     # authentication_classes = ()
+    permission_classes = (LoginRequired,)
     serializer_class = PlaySerializer
 
     def get_queryset(self):
@@ -37,6 +39,7 @@ class SortViews(ListAPIView):
 
 class OpenViews(ListAPIView):
     # authentication_classes = ()
+    permission_classes = (LoginRequired,)
     serializer_class = OpenPriceSerializer
 
     def get_queryset(self):
@@ -52,6 +55,7 @@ class OpenViews(ListAPIView):
 
 class OddsViews(ListAPIView):
     # authentication_classes = ()
+    permission_classes = (LoginRequired,)
 
     def list(self, request, id):
         language = request.GET.get('language')
@@ -139,6 +143,7 @@ class OddsViews(ListAPIView):
 
 class BetsViews(ListCreateAPIView):
     # authentication_classes = ()
+    permission_classes = (LoginRequired,)
 
     def get_queryset(self):
         pass
@@ -218,6 +223,7 @@ class BetsViews(ListCreateAPIView):
 
 class BetsListViews(ListAPIView):
     # authentication_classes = ()
+    permission_classes = (LoginRequired,)
     serializer_class = RecordSerializer
 
     def get_queryset(self):
