@@ -843,7 +843,10 @@ class Change(ListAPIView):
         if is_use == None or is_use == 0:
             ratio = 0
         else:
-            ratio = is_use / toplimit, 2  # 兑换了的GSG占天当总数的百分比
+            print("is_use====================================", is_use)
+            print("toplimit====================================", toplimit)
+            ratio = is_use / toplimit  # 兑换了的GSG占天当总数的百分比
+            print("ratio==========================", ratio)
 
         sql = "select count(distinct a.user_id) from quiz_changerecord a"
         sql += " where created_at>= '" + start_time + "'"
