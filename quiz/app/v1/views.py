@@ -701,6 +701,7 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
+            end_time = str(end_time) + ' 00:30:00'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
@@ -726,6 +727,7 @@ class ProfitView(ListAPIView):
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
+            end_time = str(end_time) + ' 00:30:00'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
