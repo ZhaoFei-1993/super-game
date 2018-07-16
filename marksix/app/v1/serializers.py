@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from marksix.models import Play, OpenPrice, Option, SixRecord
+from marksix.models import Play, OpenPrice, Option, SixRecord,Number
 from base.validators import PhoneValidator
 from chat.models import Club
 from datetime import datetime
@@ -115,3 +115,9 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                 status = '+' + str(int(earn_coin))
 
         return status
+
+class ColorSerializer(serializers.HyperlinkedModelSerializer):
+    model = Number
+    fields = (
+        'num','color'
+    )

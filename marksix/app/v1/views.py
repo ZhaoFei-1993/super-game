@@ -262,3 +262,12 @@ class BetsListViews(ListAPIView):
                 del item['issue']
                 result_list[index]['list'].append(item)
         return self.response({'code': 0, 'data': result_list})
+
+
+class ColorViews(ListAPIView):
+    authentication_classes = ()
+    serializer_class = RecordSerializer
+
+    def list(self, request):
+
+        return JsonResponse({'1': 1})
