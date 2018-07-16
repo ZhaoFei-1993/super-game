@@ -217,7 +217,7 @@ class UserRegister(object):
                 area_code = 86
             user.area_code = area_code
             user.username = username
-            user.source = user.__getattribute__(source.upper())
+            user.source = source
             user.set_password(password)
             user.register_type = register_type
             user.ip_address = ip_address
@@ -267,7 +267,7 @@ class UserRegister(object):
                 area_code = 86
             user.area_code = area_code
             user.username = username
-            user.source = user.__getattribute__(source.upper())
+            user.source = source
             user.set_password(password)
             user.ip_address = ip_address
             user.register_type = register_type
@@ -403,6 +403,7 @@ class LoginView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
+        source = request.META.get('HTTP_X_API_KEY')
         # register_type = ur.get_register_type(username)
         register_type = User.REGISTER_TELEPHONE
 
