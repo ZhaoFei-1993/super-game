@@ -75,7 +75,7 @@ class LoginView(CreateAPIView):
 
 
 class PwdView(CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
+    # authentication_classes = (TokenAuthentication,)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
@@ -90,7 +90,8 @@ class PwdView(CreateAPIView):
         else:
             message = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'),
                                       code=request.data.get('code'), type=7).first()
-
+        if not message:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if request.data.get('telephone') is not None:
             record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'), type=7).order_by(
                 '-id').first()
