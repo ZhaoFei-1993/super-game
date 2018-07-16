@@ -708,11 +708,11 @@ class ProfitView(ListAPIView):
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
-        if data is None and name is None:
-            lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-                'created_at', '-profit_total')
-        else:
-            lists = []
+        # if data is None and name is None:
+        lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
+            'created_at', '-profit_total')
+        # else:
+        #     lists = []
         return lists
 
     def list(self, request, *args, **kwargs):
@@ -734,46 +734,46 @@ class ProfitView(ListAPIView):
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
-        if data is None and name is None:
-            print("我的天，竟然没有放进缓存")
-            name = []
-            sums = []
-            sql = "SELECT uc.`name`, sum( cpb.profit_total ) AS sum_total FROM quiz_clubprofitabroad cpb "
-            sql += "LEFT JOIN chat_club c on cpb.roomquiz_id = c.id LEFT JOIN users_coin uc on uc.id = c.coin_id "
-            sql += "WHERE cpb.created_at>='" + start_time + "' AND cpb.created_at<='" + end_time + "' and c.is_recommend!=0 "
-            sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0" + "," + str(type) + ";"
-            coins = get_sql(sql)
-            for club_coin in coins:
-                name.append(club_coin[0])
-                sums.append(club_coin[1])
-            data = {}
-            for item in items:
-                if item['coin_name'] in name:
-                    date_key = item['coin_name']
-                    if date_key not in data:
-                        data[date_key] = {}
-                        data[date_key]["icon"] = ''
-                        data[date_key]["type"] = []
-                        data[date_key]["sum"] = 0
-                        data[date_key]["total"] = []
-                        data[date_key]['created_at'] = []
-                if item['coin_name'] in name:
-                    profit_total = float(item["profit_total"])
-                    if profit_total < 0:
-                        type = 1
-                    else:
-                        type = 0
-                    data[item['coin_name']]["icon"] = item["coin_icon"]
-                    data[item['coin_name']]["type"].append(type)
-                    data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
-                    data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
-                    data[item['coin_name']]['created_at'].append(item["created_at"])
-            for club_info in coins:
-                data[str(club_info[0])]["sum"] = club_info[1]
-            CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
-            CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
-            set_cache(CLUB_PROFIT_DATA, data)
-            set_cache(CLUB_PROFIT_NAME, name)
+        # if data is None and name is None:
+        print("我的天，竟然没有放进缓存")
+        name = []
+        sums = []
+        sql = "SELECT uc.`name`, sum( cpb.profit_total ) AS sum_total FROM quiz_clubprofitabroad cpb "
+        sql += "LEFT JOIN chat_club c on cpb.roomquiz_id = c.id LEFT JOIN users_coin uc on uc.id = c.coin_id "
+        sql += "WHERE cpb.created_at>='" + start_time + "' AND cpb.created_at<='" + end_time + "' and c.is_recommend!=0 "
+        sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0" + "," + str(type) + ";"
+        coins = get_sql(sql)
+        for club_coin in coins:
+            name.append(club_coin[0])
+            sums.append(club_coin[1])
+        data = {}
+        for item in items:
+            if item['coin_name'] in name:
+                date_key = item['coin_name']
+                if date_key not in data:
+                    data[date_key] = {}
+                    data[date_key]["icon"] = ''
+                    data[date_key]["type"] = []
+                    data[date_key]["sum"] = 0
+                    data[date_key]["total"] = []
+                    data[date_key]['created_at'] = []
+            if item['coin_name'] in name:
+                profit_total = float(item["profit_total"])
+                if profit_total < 0:
+                    type = 1
+                else:
+                    type = 0
+                data[item['coin_name']]["icon"] = item["coin_icon"]
+                data[item['coin_name']]["type"].append(type)
+                data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
+                data[item['coin_name']]["total"].append(normalize_fraction(item["profit_total"], 18))
+                data[item['coin_name']]['created_at'].append(item["created_at"])
+        for club_info in coins:
+            data[str(club_info[0])]["sum"] = club_info[1]
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data"  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name"  # key
+        set_cache(CLUB_PROFIT_DATA, data)
+        set_cache(CLUB_PROFIT_NAME, name)
         return self.response({'code': 0, 'data': data, 'name': name})
 
 
