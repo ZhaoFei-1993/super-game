@@ -119,7 +119,8 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ColorSerializer(serializers.HyperlinkedModelSerializer):
-    model = Number
-    fields = (
-        'num', 'color'
-    )
+    class Meta:
+        model = Number
+        fields = (
+            'num', 'color'
+        )

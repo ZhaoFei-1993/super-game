@@ -310,6 +310,7 @@ class GSGView(RetrieveAPIView):
 
 
 class SharesView(ListAPIView):
+    authentication_classes = ()
     serializer_class = GSGSerializer
 
     def get_queryset(self):
@@ -324,8 +325,8 @@ class SharesView(ListAPIView):
         for i in items:
             res_dict = {}
             res_dict['name'] = i['account_name']
-            value = round(float(i['balance']) / float(total_balance), 4)
-            res_dict['proportion'] = value
+            value = round(float(i['balance']) / float(total_balance), 4)*100
+            res_dict['data'] = value
             res_list.append(res_dict)
         return self.response({'code': 0, 'data': res_list})
 
