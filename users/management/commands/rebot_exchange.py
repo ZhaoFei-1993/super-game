@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction
-from django.db.models import Q
 
-from quiz.models import ChangeRecord, Record
-from users.models import User, UserCoin, CoinValue, Coin
+from quiz.models import ChangeRecord
+from users.models import User, UserCoin
 from decimal import Decimal
-from utils.weight_choice import WeightChoice
-from utils.functions import value_judge, get_sql
+
+from utils.functions import get_sql
 from .rand_avg import get_robot_exchange
 
 
