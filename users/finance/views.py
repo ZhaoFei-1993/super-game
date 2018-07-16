@@ -91,17 +91,12 @@ class PwdView(CreateAPIView):
             message = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'),
                                       code=request.data.get('code'), type=7).first()
         if not message:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if request.data.get('telephone') is not None:
-            record = Sms.objects.filter(area_code=area_code, telephone=request.data.get('telephone'), type=7).order_by(
-                '-id').first()
-            if not record:
-                raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
-            if int(record.degree) >= 5:
-                raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
-            else:
-                record.degree += 1
-                record.save()
+            raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
+        if int(message.degree) >= 5:
+            raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+        else:
+            message.degree += 1
+            message.save()
 
         # 短信发送时间
         code_time = message.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
