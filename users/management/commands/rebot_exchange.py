@@ -200,6 +200,7 @@ class Command(BaseCommand):
         ts_end_three = time.strptime(end_date_three, "%Y-%m-%d %H:%M:%S")
         list = [int(time.mktime(ts_start_one)), int(time.mktime(ts_end_one)), int(time.mktime(ts_start_two)),
                 int(time.mktime(ts_end_two)), int(time.mktime(ts_start_three)), int(time.mktime(ts_end_three))]
+        print("list=============================================", list)
         return list
 
     def set_today_random(self):
@@ -212,13 +213,16 @@ class Command(BaseCommand):
         # user_numer_early = int(user_number * 0.3)
         user_numer_early = user_number_list[0]
         user_total_early = random.randint(user_numer_early, user_numer_early)
+        print("user_total_early===========================", user_total_early)
 
         # user_numer_late = user_number - (int(user_number * 0.3)*2)
         user_numer_late = user_number_list[1]
         user_total_late = random.randint(user_numer_late, user_numer_late)
+        print("user_total_late===========================", user_total_late)
 
         user_numer_late_a = user_number_list[2]
         user_total_late_a = random.randint(user_numer_late_a, user_numer_late_a)
+        print("user_total_late_a===========================", user_total_late_a)
 
 
         list = self.get_date_early()
@@ -228,6 +232,7 @@ class Command(BaseCommand):
         random_datetime_one = []
         for i in range(0, user_total_early):
             random_datetime_one.append(random.randint(start_date_early_one, end_date_early_one))
+        print("end_date_early_one=================================", end_date_early_one)
 
         start_date_early_two = list[2]
         end_date_early_two = list[3]
@@ -235,6 +240,7 @@ class Command(BaseCommand):
         random_datetime_two = []
         for i in range(0, user_total_late):
             random_datetime_two.append(random.randint(start_date_early_two, end_date_early_two))
+        print("random_datetime_two===================================", random_datetime_two)
 
         start_date_early_three = list[4]
         end_date_early_three = list[5]
@@ -242,8 +248,11 @@ class Command(BaseCommand):
         random_datetime_three = []
         for i in range(0, user_total_late_a):
             random_datetime_three.append(random.randint(start_date_early_three, end_date_early_three))
+        print("random_datetime_three================================", random_datetime_three)
+
 
         random_datetime = random_datetime_one + random_datetime_two+random_datetime_three
+        print("random_datetime====================================", random_datetime)
 
         set_cache(self.get_key(self.key_today_random), user_number, 24 * 3600)
         set_cache(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)

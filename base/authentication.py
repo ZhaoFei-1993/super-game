@@ -74,7 +74,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
 
         item_keys = self.get_item_keys(request)
         date_key = 'date'
-        if api_key == 'HTML5':
+        if api_key == 'HTML5' or api_key == 'MINIPROGRAM':
             date_key = 'x-date'
 
         headers_string = [date_key, 'x-nonce'] + item_keys
@@ -168,7 +168,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
-            # raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
             pass  # TODO: remove it!!!!
 
         # Check if request has a "Signature" request header.
