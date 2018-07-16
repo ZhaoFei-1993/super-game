@@ -208,16 +208,18 @@ class UserRegister(object):
             invitation_user = User.objects.get(invitation_code=invitation_code)
             inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
                                                            is_effective=1, coin=9).count()
+            print("source=====================================", source)
 
             register_type = self.get_register_type(username)
             user = User()
+            print("source=====================================", user.__getattribute__(source.upper()))
             if len(username) == 11:
                 user.telephone = username
             if area_code is None or area_code == '':
                 area_code = 86
             user.area_code = area_code
             user.username = username
-            user.source = source
+            user.source =  user.__getattribute__(source.upper())
             user.set_password(password)
             user.register_type = register_type
             user.ip_address = ip_address
@@ -404,6 +406,7 @@ class LoginView(CreateAPIView):
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
         source = request.META.get('HTTP_X_API_KEY')
+        source =  user.__getattribute__(source.upper())
         # register_type = ur.get_register_type(username)
         register_type = User.REGISTER_TELEPHONE
 
