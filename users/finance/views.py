@@ -75,10 +75,11 @@ class LoginView(CreateAPIView):
 
 
 class PwdView(CreateAPIView):
-    # authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication,)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
+        print(user.username)
         value = value_judge(request, "password","telephone")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -353,3 +354,5 @@ class FootstoneView(ListAPIView):
             'private': private_list
         }
         return self.response({'code': 0, 'data': data})
+
+
