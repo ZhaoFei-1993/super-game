@@ -709,18 +709,13 @@ class ProfitView(ListAPIView):
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
         CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type) # key
         CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type) # key
-        print("start_time=========================", start_time)
-        print("end_time=========================", end_time)
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
-        print("data=============================", data)
-        print("name=============================", name)
         if data is None or name is None:
             lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
                 'created_at', '-profit_total')
         else:
             lists = []
-        print("lists======================================", lists)
         return lists
 
     def list(self, request, *args, **kwargs):
