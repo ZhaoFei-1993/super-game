@@ -16,9 +16,12 @@ class Command(BaseCommand):
         print("give_len_two=============================", give_len_two)
         print("give_len_one=============================", give_len_one)
         give_usdt = CoinGiveRecords.objects.filter(~Q(lock_coin=0))
+        i = 1
         for give in give_usdt:
             user_usdt = UserCoin.objects.get(user_id=give.user.pk, coin_id=9)
             user_usdt.balance -= give.lock_coin
             user_usdt.save()
             give.lock_coin = 0
             give.save()
+            print("i=================================", i, "====================================", user_usdt.user.pk)
+            i += 1

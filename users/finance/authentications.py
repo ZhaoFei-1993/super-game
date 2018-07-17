@@ -162,10 +162,14 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         date_key = 'date'
         if api_key == 'HTML5':
             date_key = 'x-date'
+        print("date_key==================================", date_key)
         date_header = self.header_canonical(date_key)
+        print("date_header==================================", date_header)
         api_date = request.META.get(date_header)
         print('date = ', api_date)
+        print("api_date==================================", api_date)
         api_date_dt = dateparser.parse(api_date)
+        print("api_date_dt==================================", api_date_dt)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
             # raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
