@@ -58,13 +58,6 @@ class Command(BaseCommand):
         for dt in diff_random_datetime:
             if self.get_current_timestamp() >= dt:
                 current_generate_time = dt
-                time_list = [dt]
-                lists = get_cache(self.get_key(self.key_today_generated))
-                if lists is None:
-                    time_lists = time
-                else:
-                    time_lists = list(set(lists) | set(time_list))
-                set_cache(self.get_key(self.key_today_generated), time_lists, 24 * 3600)
                 break
         gsg_balance = self.get_gsg_balance()  # 剩余gsg
 
@@ -102,7 +95,7 @@ class Command(BaseCommand):
                 changerecord.change_gsg_value) + "个GSG！"))
 
         user_generated_datetime.append(current_generate_time)
-        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
+        set_cache(self.get_key(self.key_today_generated), user_generated_datetime, 24 * 3600)
 
         self.stdout.write(self.style.SUCCESS('兑换成功'))
 
