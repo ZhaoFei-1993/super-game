@@ -1,4 +1,4 @@
-from base.backend import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
+from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from django.http import JsonResponse
 # from users.finance.authentications import CCSignatureAuthentication
 from utils.functions import value_judge
@@ -204,6 +204,12 @@ class CountView(RetrieveAPIView):
                             count_list[time_list.index(d)] += item.bet
             count_list = map(int, count_list)
             time_earn_list = dict(zip(key_list, count_list))
+            res_earn_list = []
+            for item in time_earn_list:
+                time_dict = {}
+                time_dict['time'] = item
+                time_dict['date'] = time_earn_list[item]
+                res_earn_list.append(time_dict)
 
             # # 下注总额
             # bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
@@ -221,7 +227,7 @@ class CountView(RetrieveAPIView):
                 'bets': int(bets_total),
                 'bets_return': int(bets_return_total),
                 'total_earn': int(total_earn),
-                'count_list': time_earn_list
+                'count_list': res_earn_list
             }
 
             return self.response({'code': 0, 'data': data})
