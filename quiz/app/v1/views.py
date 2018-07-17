@@ -701,6 +701,8 @@ class ProfitView(ListAPIView):
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
+            if 'start_time' not in  self.request.GET:
+                start_time = '2018-06-01 00:30:00'
             end_time = self.request.GET.get('end_time')
             end_time = str(end_time) + ' 23:59:59'
         end_time_all = str(
