@@ -161,7 +161,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
 
         # 60秒以前的请求不再处理
         date_key = 'date'
-        if api_key == 'HTML5':
+        if api_key == 'HTML5' or api_key == 'MINIPROGRAM':
             date_key = 'x-date'
         date_header = self.header_canonical(date_key)
         api_date = request.META.get(date_header)
