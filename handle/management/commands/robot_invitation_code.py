@@ -19,7 +19,10 @@ class Command(BaseCommand):
         i = 1
         for give in give_usdt:
             user_usdt = UserCoin.objects.get(user_id=give.user.pk, coin_id=9)
-            user_usdt.balance -= give.lock_coin
+            if user_usdt.balance < give.lock_coin:
+                user_usdt.balance = 0
+            else:
+                user_usdt.balance -= give.lock_coin
             user_usdt.save()
             give.lock_coin = 0
             give.save()
