@@ -169,7 +169,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
         if api_date_timestamp + 60 < time.time():
-            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            # raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
             pass  # TODO: remove it!!!!
 
         # Check if request has a "Signature" request header.
@@ -202,8 +202,11 @@ class SignatureAuthentication(authentication.BaseAuthentication):
             try:
                 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
                 token = jwt_decode_handler(sent_token)
-                if api_key == 'MINIPROGRAM' and 'OP' not in request.META:
-                    request.user = Admin.objects.get(pk=token['user_id'])
+                if api_key == 'MINIPROGRAM':
+                    if 'HTTP_OP' in request.META:
+                        request.user = Admin.objects.get(pk=token['user_id'])
+                    else:
+                        request.user = User.objects.get(pk=token['user_id'])
                 else:
                     request.user = User.objects.get(pk=token['user_id'])
             except Exception:
