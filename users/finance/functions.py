@@ -58,8 +58,8 @@ def get_range_time(time_type, start, end):  # 获取年月日时间范围
     e = datetime.strptime(end, "%Y-%m-%d")
     if time_type == 'd':
         num = days(start, end)
-        today_start = datetime.combine(s, datetime.min.time())
-        today_end = datetime.combine(s, datetime.max.time())
+        today_start = datetime.combine(e, datetime.min.time())
+        today_end = datetime.combine(e, datetime.max.time())
         time_list.append([today_start, today_end])
         for i in range(1, num + 1):
             prev_start = today_start - timedelta(days=i)
@@ -127,5 +127,5 @@ class CountPage(LimitOffsetPagination):
 
 if __name__ == '__main__':
     # print(get_now())
-    print(get_range_time('w', '2018-06-10', '2018-09-09'))
-    print(weeks('2018-06-10', '2018-09-09'))
+    print(get_range_time('m', '2018-06-10', '2018-09-09'))
+    # print(weeks('2018-06-10', '2018-09-09'))

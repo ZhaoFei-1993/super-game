@@ -15,11 +15,12 @@ from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, U
 from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
-from users.finance.serializers import GSGSerializer, ClubSerializer
+from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer
 import pytz
 from sms.models import Sms
 from django.conf import settings
 from base.function import LoginRequired
+from chat.models import ClubRule
 
 
 class UserManager(object):
@@ -63,7 +64,6 @@ class UserManager(object):
 
 
 class LoginView(CreateAPIView):
-
     def post(self, request):
         usr = UserManager()
         value = value_judge(request, "username", "password")
@@ -77,6 +77,7 @@ class LoginView(CreateAPIView):
 
 class PwdView(CreateAPIView):
     permission_classes = (LoginRequired,)
+
     def post(self, request, *args, **kwargs):
         user = self.request.user
         print(user.username)
@@ -130,14 +131,9 @@ class PwdView(CreateAPIView):
 
 class CountView(RetrieveAPIView):
     permission_classes = (LoginRequired,)
-    # authentication_classes = ()
+
     def get(self, request, type, pk):
-        cycle = request.GET.get('cycle')
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-        if not verify_date(start) or not verify_date(end):
-            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        if type not in ['club', 'game'] or cycle not in ['d', 'w', 'm', 'y']:
+        if type not in ['club', 'game']:
             raise ParamErrorException(error_code.API_404_NOT_FOUND)
         if type == 'club':  # 按俱乐部分类
             club = Club.objects.get(id=pk)
@@ -156,71 +152,12 @@ class CountView(RetrieveAPIView):
 
             record = Record.objects.filter(option__club_id=club_id)
 
-            # 平台统计表
-            count_list = []  # 值列表
-            key_list = []  # 键列表
-
-            # 返回日期的统计
-            time_list = get_range_time(cycle, start, end)
-
-            # 分页处理，每次返回七条数据
-            c = CountPage()
-            time_list = c.paginate_queryset(queryset=time_list, request=request, view=self)
-
-            for t in time_list:
-                if cycle == 'd':  # 按天统计盈亏,键采用2018-06-06格式
-                    key = str(t[0]).split(' ')[0]
-                elif cycle == 'w':  # 按周统计盈亏,键采用2018-06-06/2018-06-12
-                    key_prev = str(t[0]).split(' ')[0]
-                    key_end = str(t[1]).split(' ')[0]
-                    key = key_prev + '/' + key_end
-                    pass
-                elif cycle == 'm':  # 按月统计盈亏,键采用 2018-06
-                    key = str(t[0]).split(' ')[0].split('-')
-                    key = '-'.join([key[0], key[1]])
-
-                else:  # 按年统计盈亏
-                    key = str(t[0]).split(' ')[0].split('-')[0]
-                    #     bets = record.exclude(type=3).filter(open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
-                    #     bets_return = record.filter(type=1, open_prize_time__range=t).aggregate(Sum('bet')).get('bet__sum')
-                    #     if not bets: bets = 0
-                    #     if not bets_return: bets_return = 0
-                    #     earn = bets - bets_return
-                    #     earn = int(earn)
-                count_list.append(0)
-                key_list.append(key)
-
-            bets_total = 0
-            bets_return_total = 0
-            total_earn = 0
-            for item in record:  # 优化数据库请求
-                if item.type != '3':
-                    bets_total += item.bet
-                if item.type == '1':
-                    bets_return_total += item.bet
-                if item.type == '2':
-                    total_earn += item.bet
-                    for d in time_list:
-                        if d[0] <= item.created_at <= d[1]:
-                            count_list[time_list.index(d)] += item.bet
-            # count_list = map(int, count_list)
-            # time_earn_list = dict(zip(key_list, count_list))
-            res_earn_list = []
-            for item in count_list:
-                print(item)
-                time_dict = {}
-                index = count_list.index(item)
-                time_dict['time'] = key_list[index]
-                time_dict['data'] = int(item)
-                res_earn_list.append(time_dict)
-
-            # # 下注总额
-            # bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
-            # # 下注发放额
-            # bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum')
-            # # 平台总盈利
-            # total_earn = bets_total - bets_return_total
-
+            # 下注总额
+            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
+            # 下注发放额
+            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum')
+            # 平台总盈利
+            total_earn = bets_total - bets_return_total
 
             data = {
                 'recharge': int(recharge),
@@ -230,12 +167,67 @@ class CountView(RetrieveAPIView):
                 'bets': int(bets_total),
                 'bets_return': int(bets_return_total),
                 'total_earn': int(total_earn),
-                'count_list': res_earn_list
             }
 
             return self.response({'code': 0, 'data': data})
         else:  # 按游戏分类
             pass
+
+
+class DateCountView(ListAPIView):
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self, *args, **kwargs):
+        print(args, kwargs)
+        return {'1': 1}
+
+    def list(self, request, type, pk):
+        cycle = request.GET.get('cycle')
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        if not verify_date(start) or not verify_date(end) or cycle not in ['d', 'w', 'm', 'y'] or type not in ['club',
+                                                                                                               'game']:
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+
+        # 平台统计表
+        count_list = []  # 值列表
+        key_list = []  # 键列表
+
+        # 返回日期的统计
+        time_list = get_range_time(cycle, start, end)
+
+        # 分页处理，每次返回七条数据
+        c = CountPage()
+        time_list = c.paginate_queryset(queryset=time_list, request=request, view=self)
+
+        for t in time_list:
+            if cycle == 'd':  # 按天统计盈亏,键采用2018-06-06格式
+                key = str(t[0]).split(' ')[0]
+            elif cycle == 'w':  # 按周统计盈亏,键采用2018-06-06/2018-06-12
+                key_prev = str(t[0]).split(' ')[0]
+                key_end = str(t[1]).split(' ')[0]
+                key = key_prev + '/' + key_end
+                pass
+            elif cycle == 'm':  # 按月统计盈亏,键采用 2018-06
+                key = str(t[0]).split(' ')[0].split('-')
+                key = '-'.join([key[0], key[1]])
+
+            else:  # 按年统计盈亏
+                key = str(t[0]).split(' ')[0].split('-')[0]
+            # count_list.append(0)
+            key_list.append(key)
+
+        if type == 'club':
+            club = Club.objects.get(id=pk)
+            club_id = club.id
+            print(club_id)
+            record = Record.objects.filter(option__club_id=club_id, type=2)
+            for d in time_list:
+                bet = record.filter(created_at__lte=d[1], created_at__gte=d[0]).aggregate(Sum('bet')).get('bet__sum')
+                if not bet:
+                    bet = 0
+                count_list.append(int(bet))
+        return self.response({'code': 0, 'data': [key_list, count_list]})
 
 
 class MassageView(ListAPIView):  # 没有独立的后台消息表，无法区分，pass
@@ -268,6 +260,7 @@ class MessageDetailView(ListAPIView):
 
 class GSGView(RetrieveAPIView):
     permission_classes = (LoginRequired,)
+
     def get(self, request, *args, **kwargs):
         result = CoinDetail.objects.all()
         # 总资产
@@ -340,6 +333,7 @@ class SharesView(ListAPIView):
 
 class FootstoneView(ListAPIView):
     permission_classes = (LoginRequired,)
+
     def queryset(self):
         pass
 
@@ -379,4 +373,18 @@ class ClubView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
 
+        return self.response({'code': 0, 'data': res})
+
+
+class GameView(ListAPIView):
+    permission_classes = (LoginRequired,)
+    serializer_class = GameSerializer
+
+    def get_queryset(self):
+        res = ClubRule.objects.all()
+        return res
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        res = results.data.get('results')
         return self.response({'code': 0, 'data': res})

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from users.models import GSGAssetAccount
-from chat.models import Club
+from chat.models import Club,ClubRule
 
 class GSGSerializer(serializers.HyperlinkedModelSerializer):
     """
@@ -27,3 +27,19 @@ class ClubSerializer(serializers.HyperlinkedModelSerializer):
         else:
             room_title = obj.room_title
         return room_title
+
+class GameSerializer(serializers.HyperlinkedModelSerializer):
+
+    title = serializers.SerializerMethodField()
+    class Meta:
+        model = ClubRule
+        fields = (
+            "id", "title", "icon")
+
+    def get_title(self,obj):
+        language = self.context['request'].GET.get('language')
+        if language == 'en':
+            title = obj.title_en
+        else:
+            title = obj.title
+        return title
