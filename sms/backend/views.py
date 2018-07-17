@@ -14,7 +14,6 @@ from users.models import User
 from rq import Queue
 from redis import Redis
 from sms.consumers import send_sms
-from users.finance.authentications import CCSignatureAuthentication
 from base.function import LoginRequired
 
 
@@ -24,7 +23,6 @@ class SmsView(ListCreateAPIView):
     """
     permission_classes = (LoginRequired,)
     serializer_class = serializers.SmsSerializer
-    authentication_classes = (CCSignatureAuthentication,)
 
 
     def post(self, request, *args, **kwargs):

@@ -17,6 +17,7 @@ from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from utils.cache import get_cache, set_cache
+from wc_auth.models import Admin
 
 
 class SignatureAuthentication(authentication.BaseAuthentication):
@@ -201,11 +202,15 @@ class SignatureAuthentication(authentication.BaseAuthentication):
             try:
                 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
                 token = jwt_decode_handler(sent_token)
-                request.user = User.objects.get(pk=token['user_id'])
+                if api_key == 'MINIPROGRAM' and 'OP' not in request.META:
+                    request.user = Admin.objects.get(pk=token['user_id'])
+                else:
+                    request.user = User.objects.get(pk=token['user_id'])
             except Exception:
                 raise NotLoginException(code.API_403_ACCESS_DENY)
-            if request.user.is_block == 1:
-                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+            if api_key != 'MINIPROGRAM':
+                if request.user.is_block == 1:
+                    raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
 
         # Fetch credentials for API key from the data store.
         try:
