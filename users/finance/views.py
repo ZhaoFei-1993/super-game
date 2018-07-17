@@ -1,6 +1,6 @@
 from base.backend import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
 from django.http import JsonResponse
-from users.finance.authentications import CCSignatureAuthentication
+# from users.finance.authentications import CCSignatureAuthentication
 from utils.functions import value_judge
 from rest_framework_jwt.settings import api_settings
 import hashlib
@@ -63,7 +63,6 @@ class UserManager(object):
 
 
 class LoginView(CreateAPIView):
-    authentication_classes = (CCSignatureAuthentication,)
 
     def post(self, request):
         usr = UserManager()
@@ -78,7 +77,6 @@ class LoginView(CreateAPIView):
 
 class PwdView(CreateAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     def post(self, request, *args, **kwargs):
         user = self.request.user
         print(user.username)
@@ -132,7 +130,6 @@ class PwdView(CreateAPIView):
 
 class CountView(RetrieveAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     def get(self, request, type, pk):
         cycle = request.GET.get('cycle')
         start = request.GET.get('start')
@@ -262,7 +259,6 @@ class MessageDetailView(ListAPIView):
 
 class GSGView(RetrieveAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     def get(self, request, *args, **kwargs):
         result = CoinDetail.objects.all()
         # 总资产
@@ -313,7 +309,6 @@ class GSGView(RetrieveAPIView):
 
 class SharesView(ListAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     serializer_class = GSGSerializer
 
     def get_queryset(self):
@@ -336,7 +331,6 @@ class SharesView(ListAPIView):
 
 class FootstoneView(ListAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     def queryset(self):
         pass
 
@@ -366,7 +360,6 @@ class FootstoneView(ListAPIView):
 
 class ClubView(ListAPIView):
     permission_classes = (LoginRequired,)
-    authentication_classes = (CCSignatureAuthentication,)
     serializer_class = ClubSerializer
 
     def get_queryset(self):
