@@ -55,26 +55,34 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    # authentication_classes = ()
-    permission_classes = (LoginRequired,)
+    authentication_classes = ()
+
+    # permission_classes = (LoginRequired,)
 
     def list(self, request, id):
         language = request.GET.get('language')
+        play_name = ''
         if not language:
             language = 'zh'
         res = Option.objects.filter(play_id=id)
         if id == '1':  # 特码，暂时只要获取一个赔率，因为目前赔率都相等
-            res = res[0]
             play = Play.objects.get(id=1)
             if language == 'zh':
                 option = play.title
             else:
                 option = play.title_en
             bet_odds = {
-                'id': res.id,
                 'option': option,
-                'odds': res.odds
+                'id':1
             }
+            bet_num = []
+            for item in res:
+                bet_dict = {}
+                bet_dict['id'] = item.id
+                bet_dict['num'] = item.option
+                bet_dict['pitch'] = False
+                bet_num.append(bet_dict)
+            bet_odds['num'] = bet_num
         else:
             bet_odds = []
             if language == 'zh':
@@ -278,4 +286,4 @@ class ColorViews(APIView):
             2: '蓝波',
             3: '绿波'
         }
-        return JsonResponse({'code': 0, 'data': {'num_dict':res_dict,'color_dict':color}})
+        return JsonResponse({'code': 0, 'data': {'num_dict': res_dict, 'color_dict': color}})

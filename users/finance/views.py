@@ -130,6 +130,7 @@ class PwdView(CreateAPIView):
 
 class CountView(RetrieveAPIView):
     permission_classes = (LoginRequired,)
+    # authentication_classes = ()
     def get(self, request, type, pk):
         cycle = request.GET.get('cycle')
         start = request.GET.get('start')
@@ -202,13 +203,15 @@ class CountView(RetrieveAPIView):
                     for d in time_list:
                         if d[0] <= item.created_at <= d[1]:
                             count_list[time_list.index(d)] += item.bet
-            count_list = map(int, count_list)
-            time_earn_list = dict(zip(key_list, count_list))
+            # count_list = map(int, count_list)
+            # time_earn_list = dict(zip(key_list, count_list))
             res_earn_list = []
-            for item in time_earn_list:
+            for item in count_list:
+                print(item)
                 time_dict = {}
-                time_dict['time'] = item
-                time_dict['date'] = time_earn_list[item]
+                index = count_list.index(item)
+                time_dict['time'] = key_list[index]
+                time_dict['data'] = int(item)
                 res_earn_list.append(time_dict)
 
             # # 下注总额
