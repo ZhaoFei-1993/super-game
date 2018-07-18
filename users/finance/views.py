@@ -152,30 +152,43 @@ class CountView(RetrieveAPIView):
             # 用户余额
             usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum', 0)
             if not usercoin: usercoin = 0
-            record = Record.objects.filter(option__club_id=club_id)
-
-            # 下注总额
-            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum', 0)
-            if not bets_total: bets_total = 0
-            # 下注发放额
-            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum', 0)
-            if not bets_return_total: bets_return_total = 0
-            # 平台总盈利
-            total_earn = bets_total - bets_return_total
 
             data = {
                 'recharge': int(recharge),
                 'ETH_Coin': int(ETH_Coin),
                 'presentation': int(presentation),
                 'usercoin': int(usercoin),
-                'bets': int(bets_total),
-                'bets_return': int(bets_return_total),
-                'total_earn': int(total_earn),
             }
 
             return self.response({'code': 0, 'data': data})
         else:  # 按游戏分类
             pass
+
+
+class BetCountView(RetrieveAPIView):
+    # authentication_classes = ()
+    permission_classes = (LoginRequired,)
+
+    def get(self, request, type, pk):
+        if type not in ['club', 'game']:
+            raise ParamErrorException(error_code.API_404_NOT_FOUND)
+        record = Record.objects.filter(option__club_id=pk)
+
+        # 下注总额
+        bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum', 0)
+        if not bets_total: bets_total = 0
+        # 下注发放额
+        bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum', 0)
+        if not bets_return_total: bets_return_total = 0
+        # 平台总盈利
+        total_earn = bets_total - bets_return_total
+
+        data = {
+            'bets': int(bets_total),
+            'bets_return': int(bets_return_total),
+            'total_earn': int(total_earn),
+        }
+        return self.response({'code': 0, 'data': data})
 
 
 class DateCountView(ListAPIView):
@@ -285,13 +298,13 @@ class GSGView(RetrieveAPIView):
         # 平台支出总额,返还+系统增加+活动正数
         activ = result.filter(sources=4, amount__lt=0).aggregate(Sum('amount')).get(
             "amount__sum")
-        if not activ:activ=0
+        if not activ: activ = 0
         other = result.filter(sources=7).aggregate(Sum('amount')).get(
             "amount__sum")
-        if not other:other=0
+        if not other: other = 0
         ret = result.filter(sources=9).aggregate(Sum('amount')).get(
             "amount__sum")
-        if not ret:ret=0
+        if not ret: ret = 0
         pay_total = activ + other + ret
 
         # 计算占比支出
