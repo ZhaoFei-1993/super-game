@@ -143,19 +143,19 @@ class CountView(RetrieveAPIView):
 
             # 用户充值，区块链余额
             recharge = ETH_Coin = UserRecharge.objects.filter(coin_id=coin_id).aggregate(Sum('amount')).get(
-                "amount__sum")
+                "amount__sum",0)
             # 用户提现
             presentation = CoinDetail.objects.filter(sources=2, coin_name=coin_name).aggregate(Sum('amount')).get(
-                "amount__sum")
+                "amount__sum",0)
             # 用户余额
-            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum')
+            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum',0)
 
             record = Record.objects.filter(option__club_id=club_id)
 
             # 下注总额
-            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
+            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum',0)
             # 下注发放额
-            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum')
+            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum',0)
             # 平台总盈利
             total_earn = bets_total - bets_return_total
 
