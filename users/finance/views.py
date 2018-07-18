@@ -194,7 +194,7 @@ class DateCountView(ListAPIView):
         key_list = []  # 键列表
 
         # 返回日期的统计
-        time_list = get_range_time(cycle, start, end)
+        time_list = get_range_time(cycle, start, end)[::-1]
 
         # 分页处理，每次返回七条数据
         c = CountPage()
