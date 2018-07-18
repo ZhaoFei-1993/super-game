@@ -143,19 +143,23 @@ class CountView(RetrieveAPIView):
 
             # 用户充值，区块链余额
             recharge = ETH_Coin = UserRecharge.objects.filter(coin_id=coin_id).aggregate(Sum('amount')).get(
-                "amount__sum",0)
+                "amount__sum")
+            if not recharge: recharge = 0;ETH_Coin = 0
             # 用户提现
             presentation = CoinDetail.objects.filter(sources=2, coin_name=coin_name).aggregate(Sum('amount')).get(
-                "amount__sum",0)
+                "amount__sum", 0)
+            if not presentation: presentation = 0
             # 用户余额
-            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum',0)
-
+            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum', 0)
+            if not usercoin: usercoin = 0
             record = Record.objects.filter(option__club_id=club_id)
 
             # 下注总额
-            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum',0)
+            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum', 0)
+            if not bets_total: bets_total = 0
             # 下注发放额
-            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum',0)
+            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum', 0)
+            if not bets_return_total: bets_return_total = 0
             # 平台总盈利
             total_earn = bets_total - bets_return_total
 
@@ -281,10 +285,13 @@ class GSGView(RetrieveAPIView):
         # 平台支出总额,返还+系统增加+活动正数
         activ = result.filter(sources=4, amount__lt=0).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not activ:activ=0
         other = result.filter(sources=7).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not other:other=0
         ret = result.filter(sources=9).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not ret:ret=0
         pay_total = activ + other + ret
 
         # 计算占比支出
