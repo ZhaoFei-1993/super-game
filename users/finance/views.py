@@ -80,7 +80,6 @@ class PwdView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
-        print(user.username)
         value = value_judge(request, "password", "telephone")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)

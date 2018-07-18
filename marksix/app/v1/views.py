@@ -55,10 +55,8 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    authentication_classes = ()
-
     # permission_classes = (LoginRequired,)
-
+    authentication_classes = ()
     def list(self, request, id):
         language = request.GET.get('language')
         play_name = ''
@@ -73,7 +71,8 @@ class OddsViews(ListAPIView):
                 option = play.title_en
             bet_odds = {
                 'option': option,
-                'id':1
+                'id': 1,
+                'odds':res[0].odds
             }
             bet_num = []
             for item in res:
@@ -233,7 +232,6 @@ class BetsViews(ListCreateAPIView):
 
 
 class BetsListViews(ListAPIView):
-    # authentication_classes = ()
     permission_classes = (LoginRequired,)
     serializer_class = RecordSerializer
 
