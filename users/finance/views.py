@@ -80,7 +80,6 @@ class PwdView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
-        print(user.username)
         value = value_judge(request, "password", "telephone")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -144,34 +143,51 @@ class CountView(RetrieveAPIView):
             # 用户充值，区块链余额
             recharge = ETH_Coin = UserRecharge.objects.filter(coin_id=coin_id).aggregate(Sum('amount')).get(
                 "amount__sum")
+            if not recharge: recharge = 0;ETH_Coin = 0
             # 用户提现
             presentation = CoinDetail.objects.filter(sources=2, coin_name=coin_name).aggregate(Sum('amount')).get(
-                "amount__sum")
+                "amount__sum", 0)
+            if not presentation: presentation = 0
             # 用户余额
-            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum')
-
-            record = Record.objects.filter(option__club_id=club_id)
-
-            # 下注总额
-            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum')
-            # 下注发放额
-            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum')
-            # 平台总盈利
-            total_earn = bets_total - bets_return_total
+            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum', 0)
+            if not usercoin: usercoin = 0
 
             data = {
                 'recharge': int(recharge),
                 'ETH_Coin': int(ETH_Coin),
                 'presentation': int(presentation),
                 'usercoin': int(usercoin),
-                'bets': int(bets_total),
-                'bets_return': int(bets_return_total),
-                'total_earn': int(total_earn),
             }
 
             return self.response({'code': 0, 'data': data})
         else:  # 按游戏分类
             pass
+
+
+class BetCountView(RetrieveAPIView):
+    # authentication_classes = ()
+    permission_classes = (LoginRequired,)
+
+    def get(self, request, type, pk):
+        if type not in ['club', 'game']:
+            raise ParamErrorException(error_code.API_404_NOT_FOUND)
+        record = Record.objects.filter(option__club_id=pk)
+
+        # 下注总额
+        bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum', 0)
+        if not bets_total: bets_total = 0
+        # 下注发放额
+        bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum', 0)
+        if not bets_return_total: bets_return_total = 0
+        # 平台总盈利
+        total_earn = bets_total - bets_return_total
+
+        data = {
+            'bets': int(bets_total),
+            'bets_return': int(bets_return_total),
+            'total_earn': int(total_earn),
+        }
+        return self.response({'code': 0, 'data': data})
 
 
 class DateCountView(ListAPIView):
@@ -281,10 +297,13 @@ class GSGView(RetrieveAPIView):
         # 平台支出总额,返还+系统增加+活动正数
         activ = result.filter(sources=4, amount__lt=0).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not activ: activ = 0
         other = result.filter(sources=7).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not other: other = 0
         ret = result.filter(sources=9).aggregate(Sum('amount')).get(
             "amount__sum")
+        if not ret: ret = 0
         pay_total = activ + other + ret
 
         # 计算占比支出

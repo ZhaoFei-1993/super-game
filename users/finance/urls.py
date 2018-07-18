@@ -11,6 +11,8 @@ urlpatterns = [
     path('count/<str:type>/<int:pk>/', views.CountView.as_view(),name='finance-user-count'),
     # 日期统计
     path('date/count/<str:type>/<int:pk>/', views.DateCountView.as_view(),name='finance-user-datecount'),
+    # 盈利统计
+    path('bet/count/<str:type>/<int:pk>/',views.BetCountView.as_view(),name = 'finance-user_bet'),
     # 获取当前用户系统消息,无表，pass
     path('public_massage/',views.MassageView.as_view(),name='finance-user-message'),
     # 获取后台消息表详情

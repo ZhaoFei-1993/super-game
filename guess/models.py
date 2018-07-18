@@ -111,7 +111,7 @@ class Record(models.Model):
         (OPEN, "开奖"),
         (ERROR, "异常")
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='guess_user')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guess_user')
     periods = models.ForeignKey(Periods, on_delete=models.CASCADE)
     options = models.ForeignKey(Options, on_delete=models.CASCADE)
     play = models.ForeignKey(Play, on_delete=models.CASCADE)
