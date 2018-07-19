@@ -1,7 +1,9 @@
-from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView
+from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
+    RetrieveUpdateAPIView
 from django.http import JsonResponse
 # from users.finance.authentications import CCSignatureAuthentication
-from utils.functions import value_judge
+from rest_framework import status
+from utils.functions import value_judge, reversion_Decorator
 from rest_framework_jwt.settings import api_settings
 import hashlib
 from datetime import datetime
@@ -11,16 +13,19 @@ from wc_auth.models import Admin
 import time
 from .functions import get_now, get_range_time, verify_date, CountPage
 from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, UserMessage, User, FoundationAccount, \
-    GSGAssetAccount
+    GSGAssetAccount, CoinOutServiceCharge
 from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
 from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer
+from users.app.v1.serializers import PresentationSerialize
 import pytz
 from sms.models import Sms
 from django.conf import settings
 from base.function import LoginRequired
 from chat.models import ClubRule
+from url_filter.integrations.drf import DjangoFilterBackend
+
 
 
 class UserManager(object):
@@ -143,19 +148,19 @@ class CountView(RetrieveAPIView):
 
             # 用户充值，区块链余额
             recharge = ETH_Coin = UserRecharge.objects.filter(coin_id=coin_id).aggregate(Sum('amount')).get(
-                "amount__sum",0)
+                "amount__sum", 0)
             # 用户提现
             presentation = CoinDetail.objects.filter(sources=2, coin_name=coin_name).aggregate(Sum('amount')).get(
-                "amount__sum",0)
+                "amount__sum", 0)
             # 用户余额
-            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum',0)
+            usercoin = UserCoin.objects.filter(coin_id=coin_id).aggregate(Sum('balance')).get('balance__sum', 0)
 
             record = Record.objects.filter(option__club_id=club_id)
 
             # 下注总额
-            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum',0)
+            bets_total = record.exclude(type=3).aggregate(Sum('bet')).get('bet__sum', 0)
             # 下注发放额
-            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum',0)
+            bets_return_total = record.filter(type=1).aggregate(Sum('bet')).get('bet__sum', 0)
             # 平台总盈利
             total_earn = bets_total - bets_return_total
 
@@ -388,3 +393,132 @@ class GameView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
         return self.response({'code': 0, 'data': res})
+
+
+class PresentView(ListAPIView):
+    permission_classes = (LoginRequired,)
+    queryset = UserPresentation.objects.all().order_by('-created_at')
+    serializer_class = PresentationSerialize
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ['user', 'status', 'coin', 'is_bill']
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append({
+                'id': x['id'],
+                'amount': x['amount'],
+                'coin_name': x['coin_name'],
+                'user_name': x['user_name'],
+                'status': x['status'],
+                'created_at': x['created_at'],
+                'is_bill':x['is_bill']
+            })
+        return self.response({'code': 0, 'data': data})
+
+
+class PresentDetailView(RetrieveUpdateAPIView):
+    permission_classes = (LoginRequired,)
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = int(kwargs['pk'])
+        try:
+            object = UserPresentation.objects.get(pk=pk)
+        except Exception:
+            return JsonResponse({'Error':'对象不存在'},status=status.HTTP_400_BAD_REQUEST)
+        sers = PresentationSerialize(object).data
+        data = {
+            'id':sers['id'],
+            'user_name':sers['user_name'],
+            'coin_name':sers['coin_name'],
+            'amount':sers['amount'],
+            'is_block':sers['is_block'],
+            'address':sers['address'],
+            'status':sers['status'],
+            'feedback':sers['feedback'],
+            'txid':sers['txid'],
+            'is_bill':sers['is_bill']
+        }
+        return self.response({'code':0, 'data':data})
+
+
+
+
+    # @reversion_Decorator
+    def patch(self, request, *args, **kwargs):
+        id = kwargs['pk']  # 提现记录id
+
+        if 'status' not in request.data \
+                and 'feedback' not in request.data \
+                and 'is_bill' not in request.data \
+                and 'txid' not in request.data \
+                and 'language' not in request.data:
+            return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            item = UserPresentation.objects.get(pk=id)
+        except Exception:
+            return JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'status' in request.data:
+            sts = int(request.data.get('status'))
+            item.status = sts
+            if sts == 2:
+                try:
+                    user_coin = UserCoin.objects.get(user=item.user, coin=item.coin)
+                    coin_out = CoinOutServiceCharge.objects.get(coin_out=user_coin.coin)
+                except Exception:
+                    raise
+                if user_coin.coin.name == 'HAND':
+                    try:
+                        eth_coin = UserCoin.objects.get(user=item.user, coin__name='ETH')
+                    except Exception:
+                        raise
+                    eth_coin.balance += coin_out.value
+                    eth_coin.save()
+                    user_coin.balance += item.amount
+                else:
+                    user_coin.balance = user_coin.balance + item.amount + coin_out.value
+                user_coin.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user_coin.user
+                coin_detail.name = user_coin.coin.name
+                coin_detail.amount = item.amount
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.RETURN
+                coin_detail.save()
+                if 'feedback' in request.data:
+                    text = request.data.get('feedback')
+                    language = request.data.get('language', '')
+                    item.feedback = text
+                    user_message = UserMessage()
+                    user_message.status = 0
+                    if language == 'en':
+                        user_message.content = 'Reason for:' + item.feedback
+                        user_message.title = 'Present Reject'
+                    else:
+                        user_message.content = '拒绝提现理由:' + item.feedback
+                        user_message.title = '提现失败公告'
+                    user_message.user = item.user
+                    user_message.message_id = 6  # 修改密码
+                    user_message.save()
+        if 'is_bill' in request.data:
+            bill = request.data.get('is_bill')
+            item.is_bill = bill
+        if 'txid' in request.data:
+            language = request.data.get('language', '')
+            txid = request.data.get('txid')
+            item.txid = txid
+            user_message = UserMessage()
+            user_message.status = 0
+            if language == 'en':
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = 'Present Success'
+            else:
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = '提现成功公告'
+            user_message.user = item.user
+            user_message.message_id = 6  # 修改密码
+            user_message.save()
+        item.save()
+        return self.response({'code':0})

@@ -24,5 +24,9 @@ urlpatterns = [
     # 俱乐部列表
     path('club/',views.ClubView.as_view(),name='finance-user-club'),
     # 游戏列表
-    path('game/',views.GameView.as_view(),name='finance-user-game')
+    path('game/',views.GameView.as_view(),name='finance-user-game'),
+    # 提现列表
+    path('present/', views.PresentView.as_view(), name='finance-user-present'),
+    # 提现审核及打款操作
+    path('present/<int:pk>/', views.PresentDetailView.as_view(), name='finance-user-present')
 ]
