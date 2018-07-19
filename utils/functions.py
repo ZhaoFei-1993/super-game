@@ -306,7 +306,7 @@ def genarate_plist(version, file_path):
     """
     temp_x = {'items': [{'assets': [{'kind': 'software-package',
                                      'url': file_path}],
-                         'metadata': {'bundle-identifier': 'iPhone Developer: shenghong liu (K7AC5W2PGD)',
+                         'metadata': {'bundle-identifier': 'com.appvv.guessball',
                                       'bundle-version': version,
                                       'kind': 'software',
                                       'title': u'\u8d85\u7ea7\u6e38\u620f'}}]}
