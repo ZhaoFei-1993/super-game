@@ -13,6 +13,11 @@ class Command(BaseCommand):
         with open(self.btc_address_file) as addresses:
             import_count = 0
             for line in addresses:
+                line = line.strip('\n')
+
+                if line == '':
+                    continue
+
                 index, address, private_key = line.split(',')
                 address = address.replace('"', '')
                 private_key = private_key.replace('"', '')
@@ -28,7 +33,7 @@ class Command(BaseCommand):
                 mdl_address.coin_id = Coin.BTC
                 mdl_address.address = address
                 mdl_address.passphrase = private_key
-                mdl_address.save()
+                # mdl_address.save()
 
                 import_count += 1
 
