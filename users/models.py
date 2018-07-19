@@ -726,3 +726,28 @@ class FoundationAccount(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "私募ICO基石表"
+
+
+@reversion.register()
+class Expenditure(models.Model):
+    WAGES = 0
+    WATER = 1
+    ELECTRIC = 2
+    OTHER = 3
+
+    TYPE_CHOICE = (
+        (WAGES, '工资'),
+        (WATER, '水费'),
+        (ELECTRIC, '电费'),
+        (OTHER, '其他')
+    )
+
+    month = models.DateTimeField(verbose_name="年月", blank=True ,null=True,default=None)
+    type = models.CharField(verbose_name="类型", choices=TYPE_CHOICE, max_length=1, default="")
+    in_out = models.BooleanField(verbose_name="收入(1)支出(0)", default=0)
+    amount = models.DecimalField(verbose_name="金额(RMB)", max_digits=32, decimal_places=2, default=0.00)
+    text = models.CharField(verbose_name="说明", max_length=32, default="")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "公司财务"
