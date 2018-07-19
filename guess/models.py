@@ -1,25 +1,41 @@
-from django.db import models, transaction
+from django.db import models
 from wc_auth.models import Admin
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel
 from users.models import Coin, User, CoinValue
 from chat.models import Club
 import reversion
-from django.conf import settings
-from django.db.models import Sum, F, FloatField
-
-from decimal import Decimal
-
-
-# Create your models here.
 
 
 
 @reversion.register()
-class Stock(MPTTModel):
-    title = models.CharField(verbose_name="证券名称", max_length=50, default='')
-    title_en = models.CharField(verbose_name="证券名称（英文）", max_length=50, default='')
-    rotary_header_time = models.CharField(verbose_name="封盘时间，多个封盘时间以“,”号分隔", max_length=100, default='')
-    lottery_time = models.CharField(verbose_name="开奖时间，多个开奖时间以“,”号分隔", max_length=100, default='')
+class Stock(models.Model):
+    SSE = 0
+    SHENZHEN = 1
+    HANGSENG = 2
+    DOWJONES = 3
+
+    STOCK = (
+        (SSE, "上证指数"),
+        (SHENZHEN, "深证成指"),
+        (HANGSENG, "恒⽣指数"),
+        (DOWJONES, "道琼斯")
+    )
+
+    SSE = 0
+    SHENZHEN = 1
+    HANGSENG = 2
+    DOWJONES = 3
+
+    STOCK_EN = (
+        (SSE, "上证指数"),
+        (SHENZHEN, "深证成指"),
+        (HANGSENG, "恒⽣指数"),
+        (DOWJONES, "道琼斯")
+    )
+    stock_id = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
+    stock_id_en = models.CharField(verbose_name="证券名称(英语)", choices=STOCK_EN, max_length=1, default=SSE)
+    rotary_header_time = models.DateTimeField(verbose_name="封盘时间")
+    lottery_time = models.DateTimeField(verbose_name="开奖时间")
     order = models.IntegerField(verbose_name="排序", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now_add=True)
@@ -32,7 +48,33 @@ class Stock(MPTTModel):
 
 @reversion.register()
 class Play(models.Model):
+    SIZE = 0
+    POINTS = 1
+    PAIR = 2
+    SUM = 3
+
+    PLAY = (
+        (SIZE, "⼤⼩"),
+        (POINTS, "点数"),
+        (PAIR, "对⼦"),
+        (SUM, "总和")
+    )
+
+    SIZE = 0
+    POINTS = 1
+    PAIR = 2
+    SUM = 3
+
+    PLAY_EN = (
+        (SIZE, "Size"),
+        (POINTS, "Points"),
+        (PAIR, "Pair"),
+        (SUM, "Sum")
+    )
+
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    play_name = models.CharField(verbose_name="玩法", choices=PLAY, max_length=1, default=SIZE)
+    play_name_en = models.CharField(verbose_name="玩法(英语)", choices=PLAY_EN, max_length=1, default=SIZE)
     bets = models.CharField(verbose_name='下注值', max_length=255)
     bets_min = models.IntegerField(verbose_name='最小下注值')
     bets_max = models.IntegerField(verbose_name='最大下注值')
@@ -65,10 +107,11 @@ class Options(models.Model):
 class Periods(models.Model):
     periods = models.IntegerField(verbose_name='期数，递增，不中断')
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    lottery_value = models.DecimalField(verbose_name='当期开奖值，初始为0', max_digits=10, decimal_places=2)
+    lottery_value = models.DecimalField(verbose_name='当期开奖指数', max_digits=10, decimal_places=2)
     lottery_time = models.DateTimeField(verbose_name='当前开奖时间', auto_now_add=True)
     start_time = models.DateTimeField(verbose_name='开始下注时间', auto_now_add=True)
     rotary_header_time = models.DateTimeField(verbose_name='封盘时间', auto_now_add=True)
+    is_seal = models.BooleanField(verbose_name="是否封盘", default=False)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 

@@ -1,15 +1,32 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListCreateAPIView
-from . import serializers
-from base import code as error_code
-from datetime import datetime
-import time
-import pytz
-from django.conf import settings
-from base.exceptions import ParamErrorException
-from users.models import User
+from base.app import ListAPIView
+from base.function import LoginRequired
+from .serializers import StockListSerialize
 
-from rq import Queue
-from redis import Redis
-from sms.consumers import send_sms
 
+class StockList(ListAPIView):
+    """
+    股票列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = StockListSerialize
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        user = self.request.user.id
+        data = []
+        for list in items:
+            data.append({
+                "id": list["id"],
+                "days": list["days"],
+                "icon": list["icon"],
+                "name": list["name"],
+                "rewards": list["rewards"],
+                "is_sign": list["is_sign"],
+                "is_selected": list["is_selected"]
+            })
+        return self.response({'code': 0, 'data': data})
