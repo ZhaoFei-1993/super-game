@@ -13,11 +13,11 @@ from wc_auth.models import Admin
 import time
 from .functions import get_now, get_range_time, verify_date, CountPage
 from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, UserMessage, User, FoundationAccount, \
-    GSGAssetAccount, CoinOutServiceCharge
+    GSGAssetAccount, CoinOutServiceCharge, Expenditure
 from chat.models import Club
 from django.db.models import Sum, Q
 from quiz.models import Record, OptionOdds
-from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer
+from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer, ExpenditureSerializer
 from users.app.v1.serializers import PresentationSerialize
 import pytz
 from sms.models import Sms
@@ -25,7 +25,6 @@ from django.conf import settings
 from base.function import LoginRequired
 from chat.models import ClubRule
 from url_filter.integrations.drf import DjangoFilterBackend
-
 
 
 class UserManager(object):
@@ -433,7 +432,7 @@ class PresentView(ListAPIView):
                 'user_name': x['user_name'],
                 'status': x['status'],
                 'created_at': x['created_at'],
-                'is_bill':x['is_bill']
+                'is_bill': x['is_bill']
             })
         return self.response({'code': 0, 'data': data})
 
@@ -446,24 +445,21 @@ class PresentDetailView(RetrieveUpdateAPIView):
         try:
             object = UserPresentation.objects.get(pk=pk)
         except Exception:
-            return JsonResponse({'Error':'对象不存在'},status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'Error': '对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
         sers = PresentationSerialize(object).data
         data = {
-            'id':sers['id'],
-            'user_name':sers['user_name'],
-            'coin_name':sers['coin_name'],
-            'amount':sers['amount'],
-            'is_block':sers['is_block'],
-            'address':sers['address'],
-            'status':sers['status'],
-            'feedback':sers['feedback'],
-            'txid':sers['txid'],
-            'is_bill':sers['is_bill']
+            'id': sers['id'],
+            'user_name': sers['user_name'],
+            'coin_name': sers['coin_name'],
+            'amount': sers['amount'],
+            'is_block': sers['is_block'],
+            'address': sers['address'],
+            'status': sers['status'],
+            'feedback': sers['feedback'],
+            'txid': sers['txid'],
+            'is_bill': sers['is_bill']
         }
-        return self.response({'code':0, 'data':data})
-
-
-
+        return self.response({'code': 0, 'data': data})
 
     # @reversion_Decorator
     def patch(self, request, *args, **kwargs):
@@ -540,4 +536,22 @@ class PresentDetailView(RetrieveUpdateAPIView):
             user_message.message_id = 6  # 修改密码
             user_message.save()
         item.save()
-        return self.response({'code':0})
+        return self.response({'code': 0})
+
+
+class FinanceView(ListAPIView):
+    # authentication_classes = ()
+    serializer_class = ExpenditureSerializer
+    permission_classes = (LoginRequired,)
+
+    def paginate_queryset(self, queryset):
+        return queryset
+
+    def get_queryset(self):
+        res = Expenditure.objects.all()
+        return res
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        results = items.data.get('results')
+        return self.response({'code': 0, 'data': results})

@@ -751,4 +751,5 @@ class Expenditure(models.Model):
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
+        ordering = ['-id']
         verbose_name = verbose_name_plural = "公司财务"

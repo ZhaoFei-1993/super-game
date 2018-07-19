@@ -30,5 +30,7 @@ urlpatterns = [
     # 提现列表
     path('present/', views.PresentView.as_view(), name='finance-user-present'),
     # 提现审核及打款操作
-    path('present/<int:pk>/', views.PresentDetailView.as_view(), name='finance-user-present')
+    path('present/<int:pk>/', views.PresentDetailView.as_view(), name='finance-user-present'),
+    # 财务报表
+    path('finance/',views.FinanceView.as_view(),name='finance-user-finance')
 ]

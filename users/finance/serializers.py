@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models import GSGAssetAccount
+from users.models import GSGAssetAccount,Expenditure
 from chat.models import Club,ClubRule
 
 class GSGSerializer(serializers.HyperlinkedModelSerializer):
@@ -43,3 +43,25 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
         else:
             title = obj.title
         return title
+
+class ExpenditureSerializer(serializers.HyperlinkedModelSerializer):
+    type = serializers.SerializerMethodField()
+    in_out = serializers.SerializerMethodField()
+    class Meta:
+        model = Expenditure
+        fields = (
+            'year','month','type','in_out','amount','text')
+
+    def get_type(self,obj):
+        type = obj.type
+        type = Expenditure.TYPE_CHOICE[int(type)][1]
+        return type
+
+    def get_in_out(self,obj):
+        in_out = obj.in_out
+
+        if not in_out:
+            in_out = '支出'
+        else:
+            in_out = '收入'
+        return in_out

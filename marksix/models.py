@@ -119,9 +119,9 @@ class OpenPrice(models.Model):
     animal = models.CharField(verbose_name="生肖", choices=Animals.ANIMAL_CHOICE, max_length=2, default='')
     color = models.CharField(verbose_name="波色", choices=Number.WAVE_CHOICE, max_length=1, default='')
     element = models.CharField(verbose_name="五行", choices=Number.ELEMENT_CHOICE, max_length=1, default='')
-    closing = models.DateTimeField(verbose_name="封盘时间", null=True, blank=True, default=None)
-    open = models.DateTimeField(verbose_name="开奖时间", null=True, blank=True, default=None)
-    next_open = models.DateTimeField(verbose_name="下期开奖时间", null=True, blank=True, default=None)
+    closing = models.DateTimeField(verbose_name="封盘时间", null=True)
+    open = models.DateTimeField(verbose_name="开奖时间", null=True)
+    next_open = models.DateTimeField(verbose_name="下期开奖时间", null=True)
     is_open = models.BooleanField(verbose_name="是否开奖", default=0)
 
     class Meta:
