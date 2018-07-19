@@ -548,7 +548,11 @@ class FinanceView(ListAPIView):
         return queryset
 
     def get_queryset(self):
-        res = Expenditure.objects.all()
+        type = self.request.GET.get('type')
+        if not type:
+            res = Expenditure.objects.all()
+        else:
+            res = Expenditure.objects.filter(type=type)
         return res
 
     def list(self, request, *args, **kwargs):
