@@ -742,7 +742,8 @@ class Expenditure(models.Model):
         (OTHER, '其他')
     )
 
-    month = models.DateTimeField(verbose_name="年月", blank=True ,null=True,default=None)
+    year = models.CharField(verbose_name="年",max_length=20, default="")
+    month = models.CharField(verbose_name="月", max_length=20, default="")
     type = models.CharField(verbose_name="类型", choices=TYPE_CHOICE, max_length=1, default="")
     in_out = models.BooleanField(verbose_name="收入(1)支出(0)", default=0)
     amount = models.DecimalField(verbose_name="金额(RMB)", max_digits=32, decimal_places=2, default=0.00)
