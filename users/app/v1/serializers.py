@@ -790,11 +790,10 @@ class HomeMessageSerialize(serializers.ModelSerializer):
         fields = ('id', 'message_list')
 
     def get_message_list(self, obj):
-        # title = obj.title
+        title = obj.title
         content = obj.content
         if self.context['request'].GET.get('language') == 'en':
-            # title = obj.title_en
+            title = obj.title_en
             content = obj.content_en
-        # list = str(title) + ": " + str(content)
-        list = str(content)
+        list = str(title) + ": " + str(content)
         return list
