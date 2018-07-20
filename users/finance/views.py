@@ -51,10 +51,14 @@ class UserManager(object):
 
     def login(self, username, password):
         password = self.verify_pwd(password)
+        print("password==========================", password)
         try:
             user = Admin.objects.get(username=username, password=password)
+            print("user==============================", user)
             user.last_login = get_now()
             user.save()
+            print("user==========================", user)
+
         except:
             raise ParamErrorException(error_code.API_20104_LOGIN_ERROR)
             # return
