@@ -143,6 +143,14 @@ class OddsViews(ListAPIView):
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
                         three_to_three['result'].append(res_dict)
+                        bet_num = []
+                        for item in res:
+                            bet_dict = {}
+                            bet_dict['id'] = item.id
+                            bet_dict['num'] = item.option
+                            bet_dict['pitch'] = False
+                            bet_num.append(bet_dict)
+                        bet_odds['num'] = bet_num
                         continue
                 elif id == '5':  # 平特一肖
                     # 获取当前年份
