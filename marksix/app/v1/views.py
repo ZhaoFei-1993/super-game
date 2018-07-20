@@ -133,6 +133,7 @@ class OddsViews(ListAPIView):
         # 获取上期开奖时间和本期开奖时间
         now = get_now()
         openprice = OpenPrice.objects.filter(open__lt=now).first()
+        print("openprice========================", openprice)
         prev_issue = openprice.issue  # 上期开奖期数
         prev_flat = openprice.flat_code  # 上期平码
         prev_special = openprice.special_code  # 上期特码
