@@ -20,9 +20,8 @@ from users.models import User, CoinDetail
 from django.db.models import Sum
 from base.function import LoginRequired
 from rest_framework.views import APIView
-import time
-from api import settings
 import pytz
+import time
 
 
 class SortViews(ListAPIView):
@@ -46,15 +45,17 @@ class SortViews(ListAPIView):
             prev_special = ""  # 上期特码
             current_issue = ""
             current_open = ""  # 这期开奖时间
+            begin_at = ""  # 这期开奖时间
         else:
             prev_issue = openprice.issue  # 上期开奖期数
             prev_flat = openprice.flat_code  # 上期平码
             prev_special = openprice.special_code  # 上期特码
             current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
             current_issue = (3 - len(current_issue)) * '0' + current_issue
+            current_open = date_exchange(openprice.next_open)  # 这期开奖时间
             begin_at = openprice.next_open.astimezone(pytz.timezone(settings.TIME_ZONE))
             begin_at = time.mktime(begin_at.timetuple())
-            current_open = int(begin_at) # 这期开奖时间
+            begin_at = int(begin_at)  # 这期开奖时间
 
         return self.response({'code': 0,
             'data': items,
@@ -62,7 +63,8 @@ class SortViews(ListAPIView):
             'prev_flat': prev_flat,
             'prev_special': prev_special,
             'current_issue': current_issue,
-            'current_open': current_open
+            'current_open': current_open,
+            'begin_at': begin_at
                             })
 
 
