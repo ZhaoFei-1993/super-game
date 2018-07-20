@@ -121,6 +121,7 @@ class OpenPrice(models.Model):
     element = models.CharField(verbose_name="五行", choices=Number.ELEMENT_CHOICE, max_length=1, default='')
     closing = models.DateTimeField(verbose_name="封盘时间", null=True)
     open = models.DateTimeField(verbose_name="开奖时间", null=True)
+    starting = models.DateTimeField(verbose_name="下期开始投注时间", null=True)
     next_open = models.DateTimeField(verbose_name="下期开奖时间", null=True)
     is_open = models.BooleanField(verbose_name="是否开奖", default=0)
 
