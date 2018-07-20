@@ -134,12 +134,19 @@ class OddsViews(ListAPIView):
         now = get_now()
         openprice = OpenPrice.objects.filter(open__lt=now).first()
         print("openprice========================", openprice)
-        prev_issue = openprice.issue  # 上期开奖期数
-        prev_flat = openprice.flat_code  # 上期平码
-        prev_special = openprice.special_code  # 上期特码
-        current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
-        current_issue = (3 - len(current_issue)) * '0' + current_issue
-        current_open = date_exchange(openprice.next_open)  # 这期开奖时间
+        if openprice == None or openprice == '':
+            prev_issue = ""  # 上期开奖期数
+            prev_flat = ""  # 上期平码
+            prev_special = ""  # 上期特码
+            current_issue = ""
+            current_open = ""  # 这期开奖时间
+        else:
+            prev_issue = openprice.issue  # 上期开奖期数
+            prev_flat = openprice.flat_code  # 上期平码
+            prev_special = openprice.special_code  # 上期特码
+            current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
+            current_issue = (3 - len(current_issue)) * '0' + current_issue
+            current_open = date_exchange(openprice.next_open)  # 这期开奖时间
         data = {
             'bet_odds': bet_odds,
             'prev_issue': prev_issue,
