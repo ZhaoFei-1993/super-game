@@ -150,7 +150,7 @@ class OddsViews(ListAPIView):
                             bet_dict['num'] = item.option
                             bet_dict['pitch'] = False
                             bet_num.append(bet_dict)
-                        bet_odds['num'] = bet_num
+                        bet_odds.append(bet_num)
                         continue
                 elif id == '5':  # 平特一肖
                     # 获取当前年份
