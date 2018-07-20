@@ -17,16 +17,20 @@ class StockList(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        user = self.request.user.id
         data = []
         for list in items:
             data.append({
-                "id": list["id"],
-                "days": list["days"],
-                "icon": list["icon"],
-                "name": list["name"],
-                "rewards": list["rewards"],
-                "is_sign": list["is_sign"],
-                "is_selected": list["is_selected"]
+                "id": list["pk"],
+                "title": list["title"],
+                "periods": list["periods"],
+                "closing_time": list["closing_time"],
+                "previous_result": list["previous_result"],
+                "previous_result_colour": list["previous_result_colour"],
+                "last_result": list["last_result"],
+                "index": list["index"],
+                "index_colour": list["index_colour"],
+                "rise": list["rise"],
+                "fall": list["fall"]
             })
+
         return self.response({'code': 0, 'data': data})
