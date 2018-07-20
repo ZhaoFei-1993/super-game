@@ -22,6 +22,7 @@ from base.function import LoginRequired
 from rest_framework.views import APIView
 import pytz
 import time
+from utils.cache import set_cache, get_cache
 
 
 class SortViews(ListAPIView):
@@ -89,7 +90,20 @@ class OddsViews(ListAPIView):
     authentication_classes = ()
     def list(self, request, id):
         language = request.GET.get('language')
-        play_name = ''
+        marksix_all_code = "marksix_all_code"  # key
+        bet_num = get_cache(marksix_all_code)
+        if bet_num == None or bet_num == '':
+            ress = Option.objects.filter(play_id=1)
+            bet_num = []
+            for item in ress:
+                bet_dict = {}
+                bet_dict['id'] = item.id
+                bet_dict['num'] = item.option
+                bet_dict['pitch'] = False
+                bet_num.append(bet_dict)
+            set_cache(marksix_all_code, bet_num)
+
+
         if not language:
             language = 'zh'
         res = Option.objects.filter(play_id=id)
@@ -104,13 +118,6 @@ class OddsViews(ListAPIView):
                 'id': 1,
                 'odds':res[0].odds
             }
-            bet_num = []
-            for item in res:
-                bet_dict = {}
-                bet_dict['id'] = item.id
-                bet_dict['num'] = item.option
-                bet_dict['pitch'] = False
-                bet_num.append(bet_dict)
             bet_odds['num'] = bet_num
         else:
             bet_odds = []
@@ -123,15 +130,6 @@ class OddsViews(ListAPIView):
                 'result': []
             }
 
-            ress = Option.objects.filter(play_id=1)
-            bet_num = []
-            for item in ress:
-                bet_dict = {}
-                bet_dict['id'] = item.id
-                bet_dict['num'] = item.option
-                bet_dict['pitch'] = False
-                bet_num.append(bet_dict)
-                print("bet_num===========================", bet_num)
             for item in res:
                 if language == 'zh':
                     option = item.option
