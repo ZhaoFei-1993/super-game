@@ -439,10 +439,10 @@ class PresentView(ListAPIView):
         return self.response({'code': 0, 'data': data})
 
 
-class PresentDetailView(RetrieveUpdateAPIView):
+class PresentDetailView(ListCreateAPIView):
     permission_classes = (LoginRequired,)
 
-    def retrieve(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         pk = int(kwargs['pk'])
         try:
             object = UserPresentation.objects.get(pk=pk)
@@ -463,8 +463,8 @@ class PresentDetailView(RetrieveUpdateAPIView):
         }
         return self.response({'code': 0, 'data': data})
 
-    # @reversion_Decorator
-    def patch(self, request, *args, **kwargs):
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
 
         if 'status' not in request.data \
