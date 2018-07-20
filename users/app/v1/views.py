@@ -2866,7 +2866,6 @@ class HomeMessageView(ListAPIView):
         data = []
         for list in items:
             data.append(list["message_list"])
-        print("data=========================", data)
         return self.response({'code': 0, 'data': data})
 
     # def get_queryset(self):
