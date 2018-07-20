@@ -107,7 +107,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         item_keys = self.get_item_keys(request)
 
         for k in item_keys:
-            tmp = request.data[k]
+            tmp = str(request.data[k])
             tmp = tmp.replace(' ', '_is_space_')
             tmp = quote_plus(tmp)
             d[k] = tmp.replace('_is_space_', '%20')
