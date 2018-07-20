@@ -122,6 +122,16 @@ class OddsViews(ListAPIView):
                 'option': option,
                 'result': []
             }
+
+            ress = Option.objects.filter(play_id=1)
+            bet_num = []
+            for item in ress:
+                bet_dict = {}
+                bet_dict['id'] = item.id
+                bet_dict['num'] = item.option
+                bet_dict['pitch'] = False
+                bet_num.append(bet_dict)
+                print("bet_num===========================", bet_num)
             for item in res:
                 if language == 'zh':
                     option = item.option
@@ -142,14 +152,6 @@ class OddsViews(ListAPIView):
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
                         three_to_three['result'].append(res_dict)
-                        bet_num = []
-                        for item in res:
-                            bet_dict = {}
-                            bet_dict['id'] = item.id
-                            bet_dict['num'] = item.option
-                            bet_dict['pitch'] = False
-                            bet_num.append(bet_dict)
-                        three_to_three['num'] = bet_num
                         continue
                 elif id == '5':  # 平特一肖
                     # 获取当前年份
@@ -183,14 +185,26 @@ class OddsViews(ListAPIView):
             current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
             current_issue = (3 - len(current_issue)) * '0' + current_issue
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
-        data = {
-            'bet_odds': bet_odds,
-            'prev_issue': prev_issue,
-            'prev_flat': prev_flat,
-            'prev_special': prev_special,
-            'current_issue': current_issue,
-            'current_open': current_open
-        }
+
+        if id == '3':
+            data = {
+                'bet_odds': bet_odds,
+                'prev_issue': prev_issue,
+                'prev_flat': prev_flat,
+                'prev_special': prev_special,
+                'current_issue': current_issue,
+                'current_open': current_open,
+                'bet_num': bet_num
+            }
+        else:
+            data = {
+                'bet_odds': bet_odds,
+                'prev_issue': prev_issue,
+                'prev_flat': prev_flat,
+                'prev_special': prev_special,
+                'current_issue': current_issue,
+                'current_open': current_open
+            }
 
         return JsonResponse({'code': 0, 'data': data})
 
