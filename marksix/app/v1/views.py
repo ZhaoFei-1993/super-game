@@ -34,8 +34,31 @@ class SortViews(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+        # 获取上期开奖时间和本期开奖时间
+        now = get_now()
+        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        if openprice == None or openprice == '':
+            prev_issue = ""  # 上期开奖期数
+            prev_flat = ""  # 上期平码
+            prev_special = ""  # 上期特码
+            current_issue = ""
+            current_open = ""  # 这期开奖时间
+        else:
+            prev_issue = openprice.issue  # 上期开奖期数
+            prev_flat = openprice.flat_code  # 上期平码
+            prev_special = openprice.special_code  # 上期特码
+            current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
+            current_issue = (3 - len(current_issue)) * '0' + current_issue
+            current_open = date_exchange(openprice.next_open)  # 这期开奖时间
 
-        return self.response({'code': 0, 'data': items})
+        return self.response({'code': 0,
+            'data': items,
+            'prev_issue': prev_issue,
+            'prev_flat': prev_flat,
+            'prev_special': prev_special,
+            'current_issue': current_issue,
+            'current_open': current_open
+                            })
 
 
 class OpenViews(ListAPIView):
@@ -133,7 +156,6 @@ class OddsViews(ListAPIView):
         # 获取上期开奖时间和本期开奖时间
         now = get_now()
         openprice = OpenPrice.objects.filter(open__lt=now).first()
-        print("openprice========================", openprice)
         if openprice == None or openprice == '':
             prev_issue = ""  # 上期开奖期数
             prev_flat = ""  # 上期平码
