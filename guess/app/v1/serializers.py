@@ -13,11 +13,13 @@ class PeriodsListSerialize(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()  # 股票标题
     rotary_header_time = serializers.SerializerMethodField()  # 股票封盘时间
     previous_result = serializers.SerializerMethodField()  # 上期开奖指数
+    previous_result_colour = serializers.SerializerMethodField()  # 上期开奖指数
 
     class Meta:
         model = Periods
         fields = (
-        "title", "periods", "rotary_header_time", "previous_result", "rotary_header_time", "rotary_header_time")
+            "title", "periods", "rotary_header_time", "previous_result", "previous_result_colour", "up_and_down",
+            "size", "points", "pair")
 
     def get_title(self, obj):  # 货币名称
         title = obj.stock.stock_id
@@ -32,9 +34,16 @@ class PeriodsListSerialize(serializers.ModelSerializer):
         start = int(begin_at)
         return start
 
-
     @staticmethod
     def get_previous_result(obj):
+        periods = int(obj.periods) - 1
+        previous_period = Periods.objects.get(periods=periods)
+        previous_result = previous_period.lottery_value
+        return previous_result
+
+
+    @staticmethod
+    def get_previous_result_colour(obj):
         periods = int(obj.periods) - 1
         previous_period = Periods.objects.get(periods=periods)
         previous_result = previous_period.lottery_value

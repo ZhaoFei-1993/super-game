@@ -2846,7 +2846,7 @@ class CountriesView(ListAPIView):
                 "name_zh_CN": list["name_zh_CN"],
                 "language": list["language"]
             })
-
+        print("data=========================", data)
         return self.response({'code': 0, 'data': data})
 
 
