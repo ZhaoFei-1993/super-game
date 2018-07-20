@@ -127,7 +127,7 @@ class PwdView(CreateAPIView):
         message.save()
 
         new_pwd = request.data.get("password")
-        user.password = UserManager.verify_pwd(new_pwd)
+        user.set_password(new_pwd)
         user.role.updated_at = get_now()
         user.role.save()
         user.save()
