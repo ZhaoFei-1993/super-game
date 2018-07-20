@@ -1,7 +1,7 @@
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
 from django.http import JsonResponse
-# from users.finance.authentications import CCSignatureAuthentication
+from base.exceptions import UserLoginException
 from rest_framework import status
 from utils.functions import value_judge, reversion_Decorator
 from rest_framework_jwt.settings import api_settings
@@ -50,25 +50,23 @@ class UserManager(object):
         return password
 
     def login(self, username, password):
-        password = self.verify_pwd(password)
-        print("password==========================", password)
         try:
-            user = Admin.objects.get(username=username, password=password)
-            print("user==============================", user)
+            user = Admin.objects.get(username=username)
             user.last_login = get_now()
             user.save()
-            print("user==========================", user)
-
-        except:
-            raise ParamErrorException(error_code.API_20104_LOGIN_ERROR)
-            # return
+        except Exception:
+            raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
         # user = Admin()
         # user.username = username
         # user.password = password
         # user.id = usr.id
         # user.role = usr.role
-        token = self.get_access_token(user)
-        return token, user
+        if user.check_password(password):
+            token = self.get_access_token(user=user)
+            return token, user
+        else:
+            raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
+
 
 
 class LoginView(CreateAPIView):
