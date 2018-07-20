@@ -137,12 +137,19 @@ class OddsViews(ListAPIView):
                     color_id = Option.WAVE_CHOICE[item.option]
                     num_list = Number.objects.filter(color=color_id).values_list('num', flat=True)
                     res_dict['num_list'] = list(num_list)
-
                 # elif id == '4': # 两面
 
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
                         three_to_three['result'].append(res_dict)
+                        bet_num = []
+                        for item in res:
+                            bet_dict = {}
+                            bet_dict['id'] = item.id
+                            bet_dict['num'] = item.option
+                            bet_dict['pitch'] = False
+                            bet_num.append(bet_dict)
+                        three_to_three['num'] = bet_num
                         continue
                 elif id == '5':  # 平特一肖
                     # 获取当前年份
