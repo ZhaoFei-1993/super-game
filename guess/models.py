@@ -48,28 +48,28 @@ class Stock(models.Model):
 
 @reversion.register()
 class Play(models.Model):
-    SIZE = 0
-    POINTS = 1
-    PAIR = 2
-    SUM = 3
+    SIZE = 1
+    POINTS = 2
+    PAIR = 3
+    UP_AND_DOWN = 0
 
     PLAY = (
         (SIZE, "⼤⼩"),
         (POINTS, "点数"),
         (PAIR, "对⼦"),
-        (SUM, "总和")
+        (UP_AND_DOWN, "总和")
     )
 
-    SIZE = 0
-    POINTS = 1
-    PAIR = 2
-    SUM = 3
+    SIZE = 1
+    POINTS = 2
+    PAIR = 3
+    UP_AND_DOWN = 0
 
     PLAY_EN = (
         (SIZE, "Size"),
         (POINTS, "Points"),
         (PAIR, "Pair"),
-        (SUM, "Sum")
+        (UP_AND_DOWN, "up_and_down")
     )
 
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
@@ -112,6 +112,10 @@ class Periods(models.Model):
     start_time = models.DateTimeField(verbose_name='开始下注时间', auto_now_add=True)
     rotary_header_time = models.DateTimeField(verbose_name='封盘时间', auto_now_add=True)
     is_seal = models.BooleanField(verbose_name="是否封盘", default=False)
+    up_and_down = models.CharField(verbose_name='涨跌正确选项', max_length=20, default='')
+    size = models.CharField(verbose_name='大小正确选项', max_length=20, default='')
+    points = models.CharField(verbose_name='点数正确选项', max_length=20, default='')
+    pair = models.CharField(verbose_name='对子正确选项', max_length=20, default='')
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize
+from .serializers import PeriodsListSerialize
 
 
 class StockList(ListAPIView):
@@ -9,7 +9,7 @@ class StockList(ListAPIView):
     股票列表
     """
     permission_classes = (LoginRequired,)
-    serializer_class = StockListSerialize
+    serializer_class = PeriodsListSerialize
 
     def get_queryset(self):
         pass
