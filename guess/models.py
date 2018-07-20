@@ -107,7 +107,8 @@ class Options(models.Model):
 class Periods(models.Model):
     periods = models.IntegerField(verbose_name='期数，递增，不中断')
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    lottery_value = models.DecimalField(verbose_name='当期开奖指数', max_digits=10, decimal_places=2)
+    start_value = models.DecimalField(verbose_name='当期开盘指数', max_digits=10, decimal_places=2, null=True)
+    lottery_value = models.DecimalField(verbose_name='当期开奖指数', max_digits=10, decimal_places=2, null=True)
     lottery_time = models.DateTimeField(verbose_name='当前开奖时间', auto_now_add=True)
     start_time = models.DateTimeField(verbose_name='开始下注时间', auto_now_add=True)
     rotary_header_time = models.DateTimeField(verbose_name='封盘时间', auto_now_add=True)
