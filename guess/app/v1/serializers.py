@@ -138,9 +138,3 @@ class GuessPushSerializer(serializers.ModelSerializer):
             username = user_info.nickname
             user_name = str(username[0]) + "**"
             return user_name
-
-
-class PlayListSerializer(serializers.ModelSerializer):
-    """
-    股票玩法选项目序列化
-    """
