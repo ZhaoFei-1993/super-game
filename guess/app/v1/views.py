@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize, GuessPushSerializer, PlayListSerializer
+from .serializers import StockListSerialize, GuessPushSerializer
 from ...models import Stock, Record, Play, BetLimit, Options, Periods
 from chat.models import Club
 from users.models import UserCoin
