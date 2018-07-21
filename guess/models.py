@@ -76,7 +76,7 @@ class Play(models.Model):
         (SIZE, "⼤⼩"),
         (POINTS, "点数"),
         (PAIR, "对⼦"),
-        (UP_AND_DOWN, "总和")
+        (UP_AND_DOWN, "涨跌")
     )
 
     SIZE = 1
