@@ -16,7 +16,7 @@ from django.db import transaction
 from django.conf import settings
 from django.db.models import Sum
 from base.exceptions import ParamErrorException
-from api.settings import MEDIA_ROOT
+from api.settings import MEDIA_ROOT, MEDIA_DOMAIN_HOST
 import os
 from django.db.models import Q
 from config.models import Admin_Operation
@@ -310,9 +310,13 @@ def genarate_plist(version, file_path):
                                       'bundle-version': version,
                                       'kind': 'software',
                                       'title': u'\u8d85\u7ea7\u6e38\u620f'}}]}
-    save_file = os.path.join(MEDIA_ROOT, 'apps/IOS', 'version_%s_IOS.plist' % version)
+    now_time = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    file = '%s_version_%s_IOS.plist' % (now_time, version)
+    save_file = os.path.join(MEDIA_ROOT, 'apps/IOS', file)
     with open(save_file, 'wb') as fp:
         plistlib.dump(temp_x, fp)
+    file_url = os.path.join(MEDIA_DOMAIN_HOST, 'apps/IOS', file)
+    return file_url
 
 
 @transaction.atomic()
