@@ -131,7 +131,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
         if type ==1:
-            genarate_plist(version, config.upload_url)
+            plist_url=genarate_plist(version, config.upload_url)
+            config.plist_url=plist_url
         config.save()
         return self.response({"code": 0})
 
@@ -155,6 +156,9 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
                 files = files.split('\\')[-1]
                 date = datetime.now().strftime('%Y%m%d')
                 item.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
+                if type == 1:
+                    plist_url=genarate_plist(item.version, item.upload_url)
+                    item.plist_url=plist_url
         if "version" in request.data:
             version = request.data.get('version')
             version_exist = AndroidVersion.objects.filter(version=version, is_delete=0, mobile_type=type)
