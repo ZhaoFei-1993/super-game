@@ -34,5 +34,5 @@ urlpatterns = [
     # 财务报表
     path('finance/',views.FinanceView.as_view(),name='finance-user-finance'),
     # 提现打款操作
-    path('bill/<int:pk>/', views.PresentDetailView.as_view(), name= 'finance-user-bill')
+    path('bill/<int:pk>/', views.BillView.as_view(), name= 'finance-user-bill')
 ]
