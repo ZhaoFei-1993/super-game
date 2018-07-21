@@ -95,6 +95,7 @@ class Play(models.Model):
     play_name = models.CharField(verbose_name="玩法", choices=PLAY, max_length=1, default=SIZE)
     play_name_en = models.CharField(verbose_name="玩法(英语)", choices=PLAY_EN, max_length=1, default=SIZE)
     tips = models.CharField(verbose_name='提示短语', max_length=255)
+    tips = models.CharField(verbose_name='提示短语(英语)', max_length=255)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 
