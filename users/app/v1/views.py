@@ -2470,7 +2470,7 @@ class InvitationInfoView(ListAPIView):
                                                             coin=4).aggregate(
             Sum('money'))
         user_invitation_one = UserInvitation.objects.filter(invitee_two=0, inviter=user.id, is_deleted=1,
-                                                            coin=9).aggregate(
+                                                            coin=4).aggregate(
             Sum('money'))
         user_invitation_twos = user_invitation_two['money__sum']  # T2获得总钱数
         if user_invitation_twos == None:
