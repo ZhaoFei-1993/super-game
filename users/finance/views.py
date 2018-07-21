@@ -440,7 +440,7 @@ class PresentView(ListAPIView):
 
 
 class PresentDetailView(ListCreateAPIView):
-    permission_classes = (LoginRequired,)
+    # permission_classes = (LoginRequired,)
 
     def get(self, request, *args, **kwargs):
         pk = int(kwargs['pk'])
@@ -463,14 +463,11 @@ class PresentDetailView(ListCreateAPIView):
         }
         return self.response({'code': 0, 'data': data})
 
-    @reversion_Decorator
+    # @reversion_Decorator
     def post(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
-
         if 'status' not in request.data \
                 and 'feedback' not in request.data \
-                and 'is_bill' not in request.data \
-                and 'txid' not in request.data \
                 and 'language' not in request.data:
             return JsonResponse({'Error': '请传递参数'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -519,24 +516,6 @@ class PresentDetailView(ListCreateAPIView):
                     user_message.user = item.user
                     user_message.message_id = 6  # 修改密码
                     user_message.save()
-        if 'is_bill' in request.data:
-            bill = request.data.get('is_bill')
-            item.is_bill = bill
-        if 'txid' in request.data:
-            language = request.data.get('language', '')
-            txid = request.data.get('txid')
-            item.txid = txid
-            user_message = UserMessage()
-            user_message.status = 0
-            if language == 'en':
-                user_message.content = 'TXID:' + item.txid
-                user_message.title = 'Present Success'
-            else:
-                user_message.content = 'TXID:' + item.txid
-                user_message.title = '提现成功公告'
-            user_message.user = item.user
-            user_message.message_id = 6  # 修改密码
-            user_message.save()
         item.save()
         return self.response({'code': 0})
 
@@ -561,3 +540,36 @@ class FinanceView(ListAPIView):
         items = super().list(request, *args, **kwargs)
         results = items.data.get('results')
         return self.response({'code': 0, 'data': results})
+
+class BillView(ListCreateAPIView):
+    """
+    打款操作
+    """
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        id = kwargs['pk']  # 提现记录id
+        try:
+            item = UserPresentation.objects.get(pk=id)
+        except Exception:
+            return JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+        txid ='11111'
+        state=1
+        if state==1:
+            item.is_bill = 1
+            language = request.data.get('language', '')
+            item.txid = txid
+            user_message = UserMessage()
+            user_message.status = 0
+            if language == 'en':
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = 'Present Success'
+            else:
+                user_message.content = 'TXID:' + item.txid
+                user_message.title = '提现成功公告'
+            user_message.user = item.user
+            user_message.message_id = 6  # 修改密码
+            user_message.save()
+            item.save()
+            return self.response({'code': 0})
+        else:
+            return JsonResponse({'Error': 'Present Fail'}, status=status.HTTP_400_BAD_REQUEST)

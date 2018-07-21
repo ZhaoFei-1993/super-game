@@ -29,8 +29,10 @@ urlpatterns = [
     path('game/',views.GameView.as_view(),name='finance-user-game'),
     # 提现列表
     path('present/', views.PresentView.as_view(), name='finance-user-present'),
-    # 提现审核及打款操作
+    # 提现审核操作
     path('present/<int:pk>/', views.PresentDetailView.as_view(), name='finance-user-present'),
     # 财务报表
-    path('finance/',views.FinanceView.as_view(),name='finance-user-finance')
+    path('finance/',views.FinanceView.as_view(),name='finance-user-finance'),
+    # 提现打款操作
+    path('bill/<int:pk>/', views.PresentDetailView.as_view(), name= 'finance-user-bill')
 ]
