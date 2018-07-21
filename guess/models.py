@@ -75,9 +75,6 @@ class Play(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     play_name = models.CharField(verbose_name="玩法", choices=PLAY, max_length=1, default=SIZE)
     play_name_en = models.CharField(verbose_name="玩法(英语)", choices=PLAY_EN, max_length=1, default=SIZE)
-    bets = models.CharField(verbose_name='下注值', max_length=255)
-    bets_min = models.IntegerField(verbose_name='最小下注值')
-    bets_max = models.IntegerField(verbose_name='最大下注值')
     tips = models.CharField(verbose_name='提示短语', max_length=255)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
@@ -86,6 +83,42 @@ class Play(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "玩法表"
 
+@reversion.register()
+class BetLimit(models.Model):
+    SIZE = 1
+    POINTS = 2
+    PAIR = 3
+    UP_AND_DOWN = 0
+
+    PLAY = (
+        (SIZE, "⼤⼩"),
+        (POINTS, "点数"),
+        (PAIR, "对⼦"),
+        (UP_AND_DOWN, "总和")
+    )
+
+    SIZE = 1
+    POINTS = 2
+    PAIR = 3
+    UP_AND_DOWN = 0
+
+    PLAY_EN = (
+        (SIZE, "Size"),
+        (POINTS, "Points"),
+        (PAIR, "Pair"),
+        (UP_AND_DOWN, "up_and_down")
+    )
+    club = models.ForeignKey(Club, on_delete=models.DO_NOTHING)
+    play_name = models.CharField(verbose_name="玩法", choices=PLAY, max_length=1, default=SIZE)
+    play_name_en = models.CharField(verbose_name="玩法(英语)", choices=PLAY_EN, max_length=1, default=SIZE)
+    bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
+    bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
+    bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
+    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=2, null=True)
+    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=2, null=True)
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "下注值控制表"
 
 @reversion.register()
 class Options(models.Model):
@@ -160,6 +193,7 @@ class Record(models.Model):
         (ERROR, "异常")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guess_user')
+    club = models.ForeignKey(Club, on_delete=models.DO_NOTHING)
     periods = models.ForeignKey(Periods, on_delete=models.CASCADE)
     options = models.ForeignKey(Options, on_delete=models.CASCADE)
     play = models.ForeignKey(Play, on_delete=models.CASCADE)
