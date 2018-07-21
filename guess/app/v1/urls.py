@@ -8,5 +8,7 @@ urlpatterns = [
     # 详情页面推送
     path('guess/', views.GuessPushView.as_view(), name="app-v1-guess-push"),
     # 股票选项
-    path('play/', views.PlayView.as_view(), name="app-v1-quiz-rule"),
+    path('play/', views.PlayView.as_view(), name="app-v1-guess-play"),
+    # 股票下注
+    path('bet/', views.BetView.as_view(), name="app-v1-guess-bet"),
 ]

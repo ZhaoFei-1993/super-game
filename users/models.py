@@ -252,6 +252,7 @@ class CoinDetail(models.Model):
     RECHARGE = 1
     REALISATION = 2
     BETS = 3
+    GUESS_BETS = 13
     ACTIVITY = 4
     OPEB_PRIZE = 5
     REGISTER = 6
@@ -266,6 +267,7 @@ class CoinDetail(models.Model):
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
         (BETS, "下注"),
+        (GUESS_BETS, "股票下注"),
         (ACTIVITY, "活动"),
         (OPEB_PRIZE, "开奖"),
         (REGISTER, "注册"),

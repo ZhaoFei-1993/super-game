@@ -1,11 +1,21 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListAPIView
+from django.db import transaction
+from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from .serializers import StockListSerialize, GuessPushSerializer
 from ...models import Stock, Record, Play, BetLimit, Options, Periods
 from chat.models import Club
-from users.models import UserCoin
+from base import code as error_code
+from base.exceptions import ParamErrorException
+from users.models import UserCoin, CoinDetail, Coin
+from utils.functions import value_judge
 from utils.functions import normalize_fraction
+from decimal import Decimal
+from datetime import datetime
+import time
+from api import settings
+import pytz
+from django.db.models import Q, Sum
 
 
 class StockList(ListAPIView):
@@ -153,3 +163,123 @@ class PlayView(ListAPIView):
                               'data': data,
                               'balance': balance
                               })
+
+
+class BetView(ListCreateAPIView):
+    """
+    股票下注
+    """
+    def get_queryset(self):
+        pass
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, "periods_id", "option_id", "play_id", "bet", "club_id")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        user = request.user
+        periods_id = self.request.data['periods_id']  # 获取周期ID
+        club_id = self.request.data['club_id']  # 获取俱乐部ID
+        play_id = self.request.data['play_id']  # 获取俱乐部ID
+        option = self.request.data['option_id']  # 获取选项ID
+        coins = self.request.data['bet']  # 获取投注金额
+        coins = float(coins)
+
+        periods_info = Periods.objects.get(pk=periods_id)
+        clubinfo = Club.objects.get(pk=club_id)
+        coin_id = clubinfo.coin.pk  # 破产赠送hand功能
+        coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
+
+        try:  # 判断选项ID是否有效
+            option_odds = Options.objects.get(pk=option)
+        except Exception:
+            raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+
+        if int(option_odds.play.pk) != int(play_id):
+            raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
+        i = 0
+        Decimal(i)
+        # 判断赌注是否有效
+        if i >= Decimal(coins):
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+        try:
+            periods = Periods.objects.get(pk=periods_id)  # 判断比赛
+        except Exception:
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+        nowtime = datetime.now()
+        begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        begin_at = time.mktime(begin_at.timetuple())
+        start = int(begin_at)-600
+        if nowtime >= start:    # 是否已封盘
+            raise ParamErrorException(error_code.API_80101_STOP_BETTING)
+
+        try:
+            bet_limit = BetLimit.objects.get(club_id=club_id, play_id=play_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+
+        coin_betting_control = float(bet_limit.bets_min)
+        coin_betting_toplimit = float(bet_limit.bets_max)
+        if coin_betting_control > coins or coin_betting_toplimit < coins:
+            raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+
+        # 单场比赛最大下注
+        bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
+            Sum('bet'))
+        if coin_id == Coin.HAND:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.INT:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.ETH:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.BTC:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        elif coin_id == Coin.USDT:
+            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
+                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+
+        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        # 判断用户金币是否足够
+        if float(usercoin.balance) < coins:
+            raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+        play_info = option_odds.play
+
+        coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
+        record = Record()
+        record.user = user
+        record.periods = periods_info
+        record.club = clubinfo
+        record.play = play_info
+        record.options = option_odds
+        record.bets = coins
+        record.odds = option_odds.odds
+        record.source = request.META.get('HTTP_X_API_KEY')
+        record.save()
+        earn_coins = coins * option_odds.odds
+        earn_coins = normalize_fraction(earn_coins, coin_accuracy)
+        # 用户减少金币
+        balance = normalize_fraction(usercoin.balance, coin_accuracy)
+        usercoin.balance = balance - coins
+        usercoin.save()
+
+        coin_detail = CoinDetail()
+        coin_detail.user = user
+        coin_detail.coin_name = usercoin.coin.name
+        coin_detail.amount = '-' + str(coins)
+        coin_detail.rest = usercoin.balance
+        coin_detail.sources = 13
+        coin_detail.save()
+        response = {
+            'code': 0,
+            'data': {
+                'message': '下注成功，金额总数为 ' + str(
+                    normalize_fraction(coins, int(usercoin.coin.coin_accuracy))) + '，预计可得猜币 ' + str(
+                    normalize_fraction(earn_coins, int(usercoin.coin.coin_accuracy))),
+                'balance': normalize_fraction(usercoin.balance, int(usercoin.coin.coin_accuracy))
+            }
+        }
+        return self.response(response)
