@@ -170,6 +170,7 @@ class AndroidVersion(models.Model):
 
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
+    plist_url = models.CharField("plist地址",max_length=150,default="")#只有IOS才有，默认为空
     mobile_type = models.IntegerField("手机类型", choices=TYPE_CHOICE,default=ANDROID)
     comment = models.CharField("版本说明", max_length=100, default='')
     comment_en = models.CharField("版本说明英文版", max_length=200, default='')
