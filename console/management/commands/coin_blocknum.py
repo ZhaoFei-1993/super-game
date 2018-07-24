@@ -22,18 +22,11 @@ class Command(BaseCommand, BaseView):
         param_blocknum = int(options['blocknum'])
 
         self.cacheKey = self.cacheKey.replace('xxx',coin)
-        #redis_conn = Redis()
-        #print(dir(redis_conn))
-        # q = Queue(connection=redis_conn)
-        # q.enqueue(consumer_ethblock, param_blocknum)
-        # raise CommandError('param_blocknum = ', param_blocknum)
 
         start_time = time()
         if param_blocknum != 0:
             set_cache(self.cacheKey, param_blocknum, 86400)
 
-        #eth_wallet = Wallet()
-        #obj = eth_wallet.get(url='v1/account/gethightblock')
         #获取最大blocknum
         obj = curl_get(url='https://blockdozer.com/api/status')
         content = int(obj['info']['blocks'])

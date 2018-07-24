@@ -10,8 +10,8 @@ from .exceptions import NotLoginException
 from .code import API_403_ACCESS_DENY
 import random
 import bisect
+import requests
 from datetime import datetime, date, timedelta
-
 
 class LoginRequired(IsAuthenticated):
     """
@@ -106,3 +106,16 @@ def time_data(start_date, day, data, days):
     if day<days:
         data=time_data(start_date, day, data, days)
     return data
+
+def curl_get(url):
+    """
+    发起get请求
+    :return:
+    """
+    result = requests.get(url, headers={})
+    response = {'code': 0, 'message': 'success', 'data': {}}
+    try:
+        response = result.json()
+    except Exception:
+        pass
+    return response
