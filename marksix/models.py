@@ -167,3 +167,14 @@ class SixRecord(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户下注表"
+
+
+class MarkSixBetLimit(models.Model):
+    options = models.ForeignKey(Option, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    max_limit= models.DecimalField(verbose_name="投注上限", max_digits=15, decimal_places=3, default=0.000)
+    min_limit = models.DecimalField(verbose_name="投注下限", max_digits=15, decimal_places=3, default=0.000)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "投注限制表"
