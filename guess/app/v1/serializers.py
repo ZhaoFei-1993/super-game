@@ -24,7 +24,7 @@ class StockListSerialize(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = (
-        "pk", "title", "periods", "closing_time", "previous_result", "previous_result_colour",
+        "pk", "title", "closing_time", "previous_result", "previous_result_colour",
          "index", "index_colour", "rise", "fall", "periods_id")
 
     def get_title(self, obj):  # 股票标题

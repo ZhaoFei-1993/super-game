@@ -38,7 +38,6 @@ class StockList(ListAPIView):
                 "stock_id": list["pk"],
                 "periods_id": list["periods_id"],
                 "title": list["title"],
-                "periods": list["periods"],
                 "closing_time": list["closing_time"],
                 "previous_result": list["previous_result"],
                 "previous_result_colour": list["previous_result_colour"],
