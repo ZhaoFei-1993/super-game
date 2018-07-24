@@ -102,6 +102,7 @@ class PlayView(ListAPIView):
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         coin_icon = user_coin.coin.icon
+        coin_name = user_coin.coin.name
         balance = normalize_fraction(user_coin.balance, int(user_coin.coin.coin_accuracy))  # 用户余额
 
         data = []
@@ -160,11 +161,12 @@ class PlayView(ListAPIView):
                 'bets_max': bets_max,
                 "list": list
             })
-
+        coin_list = [ {'balance': balance,
+                       'coin_name': coin_name,
+                       'coin_icon': coin_icon}]
         return self.response({'code': 0,
                               'data': data,
-                              'balance': balance,
-                              'coin_icon': coin_icon
+                              'coin_list': coin_list
                               })
 
 
