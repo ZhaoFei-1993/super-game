@@ -289,7 +289,9 @@ class RecordSerialize(serializers.ModelSerializer):
         size = previous_period.size
         points = previous_period.points
         pair = previous_period.pair
-        if pair==None or pair=='':
+        if up_and_down==None or up_and_down=='':
+            list = ''
+        elif pair==None or pair=='':
             list = str(up_and_down)+", "+str(size)+", "+str(points)
         else:
             list = str(up_and_down)+", "+str(size)+", "+str(points)+", "+str(pair)
