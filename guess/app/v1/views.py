@@ -353,22 +353,20 @@ class RecordsListView(ListCreateAPIView):
                 pecific_dates = ""
             else:
                 tmp = pecific_date
-            bet = fav.get('bet')
             data.append({
                 "id": fav.get('id'),
-                "quiz_id": fav.get('quiz_id'),
-                "type": fav.get('type'),
-                'host_team': fav.get('host_team'),
-                'guest_team': fav.get('guest_team'),
-                'earn_coin': fav.get('earn_coin'),
+                "guess_title": fav.get('guess_title'),       # 股票昵称
+                'earn_coin': fav.get('earn_coin'),  # 竞猜结果
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
-                'my_option': fav.get('my_option')[0].get('my_option'),
-                'is_right': fav.get('my_option')[0].get('is_right'),
-                'coin_avatar': fav.get('coin_avatar'),
-                'category_name': fav.get('quiz_category'),
-                'coin_name': fav.get('coin_name'),
-                'bet': fav.get('bets')
+                'my_option': fav.get('my_option'),   # 投注选项
+                'is_right': fav.get('is_right'),         # 是否为正确答案
+                'coin_avatar': fav.get('coin_avatar'),          # 货币图标
+                'index': fav.get('index'),             # 指数
+                'index_colour': fav.get('index_colour'),      # 指数颜色
+                'guess_result': fav.get('guess_result'),    # 当期结果
+                'coin_name': fav.get('coin_name'),       # 货币昵称
+                'bet': fav.get('bet')  # 下注金额
             })
         return self.response({'code': 0, 'data': data})
