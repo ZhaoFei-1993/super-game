@@ -140,6 +140,14 @@ class PlayView(ListAPIView):
                 if int(is_record) > 0:
                     is_choice = 1
 
+                up_and_down = periods.up_and_down
+                size = periods.size
+                points = periods.points
+                pair = periods.pair
+                right_list = [up_and_down, size, points, pair]
+                is_right = 0
+                if options.title in right_list:
+                    is_right = 1
                 options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
                 if options_number == 0:
@@ -162,6 +170,7 @@ class PlayView(ListAPIView):
                     "sub_title": sub_title,
                     "odds": odds,
                     "is_choice": is_choice,
+                    "is_right": is_right,
                     "support_number": support_number
                 })
             data.append({
