@@ -44,7 +44,8 @@ class StockList(ListAPIView):
                 "index": list["index"],
                 "index_colour": list["index_colour"],
                 "rise": list["rise"],
-                "fall": list["fall"]
+                "fall": list["fall"],
+                "result_list": list["result_list"]
             })
 
         return self.response({'code': 0, 'data': data})
@@ -70,7 +71,7 @@ class GuessPushView(ListAPIView):
         for item in items:
             data.append(
                 {
-                    "quiz_id": item['id'],
+                    "record_id": item['pk'],
                     "username": item['username'],
                     "my_play": item['my_play'],
                     "my_option": item['my_option'],
@@ -93,7 +94,7 @@ class PlayView(ListAPIView):
         user = request.user
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
         periods_id = int(self.request.GET.get('periods_id'))  # 周期表ID
-        stock_id = int(self.request.GET.get('stock_id'))  # 周期表ID
+        stock_id = int(self.request.GET.get('stock_id'))  # 股票配置表ID
         plays = Play.objects.filter(stock_id=stock_id).order_by('type')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
