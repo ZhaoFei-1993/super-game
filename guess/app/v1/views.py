@@ -132,7 +132,7 @@ class PlayView(ListAPIView):
             bets_max = betlimit.bets_max  # 最大下注值
 
             list = []
-            options_list = Options.objects.filter(play_id=play.pk)
+            options_list = Options.objects.filter(play_id=play.pk).order_by("order")
             for options in options_list:
                 is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
