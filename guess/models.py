@@ -126,6 +126,7 @@ class Options(models.Model):
     odds = models.DecimalField(verbose_name='赔率', max_digits=10, decimal_places=2, default=0.00)
     sub_title = models.CharField(verbose_name='选项子标题', max_length=255, default='')
     sub_title_en = models.CharField(verbose_name='选项子标题(英文)', max_length=255, default='')
+    order = models.IntegerField(verbose_name="排序", default=0)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 

@@ -5,6 +5,8 @@ from users.models import User
 import time
 from api import settings
 import pytz
+from datetime import datetime
+from utils.functions import guess_is_seal, normalize_fraction
 
 
 class StockListSerialize(serializers.ModelSerializer):
@@ -21,12 +23,13 @@ class StockListSerialize(serializers.ModelSerializer):
     fall = serializers.SerializerMethodField()  # 看跌人数
     periods_id = serializers.SerializerMethodField()  # 看跌人数
     result_list = serializers.SerializerMethodField()  # 上期结果
+    is_seal = serializers.SerializerMethodField()  # 是否封盘
 
     class Meta:
         model = Stock
         fields = (
         "pk", "title", "icon", "closing_time", "previous_result", "previous_result_colour",
-         "index", "index_colour", "rise", "fall", "periods_id", "result_list")
+         "index", "index_colour", "rise", "fall", "periods_id", "result_list", "is_seal")
 
     def get_title(self, obj):  # 股票标题
         name = obj.name
@@ -56,6 +59,12 @@ class StockListSerialize(serializers.ModelSerializer):
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
         return start
+
+    @staticmethod
+    def get_is_seal(obj):    # 股票封盘时间
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        is_seal = guess_is_seal(periods)
+        return is_seal
 
     @staticmethod
     def get_index(obj):      # 本期指数
@@ -160,3 +169,122 @@ class GuessPushSerializer(serializers.ModelSerializer):
             username = user_info.nickname
             user_name = str(username[0]) + "**"
             return user_name
+
+
+class RecordSerialize(serializers.ModelSerializer):
+    """
+    竞猜记录表序列化
+    """
+    host_team = serializers.SerializerMethodField()  # 主队
+    guest_team = serializers.SerializerMethodField()  # 竞猜副队
+    created_at = serializers.SerializerMethodField()  # 竞猜时间
+    my_option = serializers.SerializerMethodField()  # 投注选项
+    coin_avatar = serializers.SerializerMethodField()  # 投注选项
+    coin_name = serializers.SerializerMethodField()  # 投注选项
+    earn_coin = serializers.SerializerMethodField()  # 竞猜结果
+    quiz_category = serializers.SerializerMethodField()  # 竞猜结果
+    bets = serializers.SerializerMethodField()  # 竞猜结果
+
+    class Meta:
+        model = Record
+        fields = ("id", "quiz_id", "host_team", "guest_team", "created_at", "my_option", "earn_coin", "coin_avatar",
+                  "quiz_category", "type", "bets", "coin_name")
+
+    @staticmethod
+    def get_bets(obj):  # 主队
+        club = Club.objects.get(pk=obj.roomquiz_id)
+        coin_accuracy = club.coin.coin_accuracy
+        bet = normalize_fraction(obj.bet, int(coin_accuracy))
+        return bet
+
+    def get_host_team(self, obj):  # 主队
+        if obj.quiz_id == 0:
+            return None
+        quiz = Quiz.objects.get(pk=obj.quiz_id)
+        host_team = quiz.host_team
+        if self.context['request'].GET.get('language') == 'en':
+            host_team = quiz.host_team_en
+            if host_team == '' or host_team == None:
+                host_team = quiz.host_team
+        return host_team
+
+    def get_guest_team(self, obj):  # 副队
+        if obj.quiz_id == 0:
+            return None
+        quiz = Quiz.objects.get(pk=obj.quiz_id)
+        guest_team = quiz.guest_team
+        if self.context['request'].GET.get('language') == 'en':
+            guest_team = quiz.guest_team_en
+            if guest_team == '' or guest_team == None:
+                guest_team = quiz.guest_team
+        return guest_team
+
+    @staticmethod
+    def get_created_at(obj):  # 时间
+        years = obj.created_at.strftime('%Y')
+        year = obj.created_at.strftime('%m/%d')
+        time = obj.created_at.strftime('%H:%M')
+        data = [{
+            'years': years,
+            'year': year,
+            'time': time,
+        }]
+        return data
+
+    def get_my_option(self, obj):  # 我的选项
+        # option_info = Option.objects.get(pk=obj.option_id)
+        options = OptionOdds.objects.get(pk=obj.option_id)
+
+        rule_list = Rule.objects.get(pk=options.option.rule_id)
+        my_rule = rule_list.tips
+        option = options.option.option
+        if self.context['request'].GET.get('language') == 'en':
+            my_rule = rule_list.tips_en
+            if my_rule == '' or my_rule == None:
+                my_rule = rule_list.tips
+            option = options.option.option_en
+            if option == '' or option == None:
+                option = options.option.option
+        my_option = my_rule + ":" + option + "/" + str(
+            normalize_fraction(obj.odds, 2))
+
+        data = [{
+            'my_option': my_option,  # 我的选项
+            'is_right': options.option.is_right,  # 是否为正确答案
+        }]
+        return data
+
+    @staticmethod
+    def get_coin_avatar(obj):
+        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        coin_avatar = club_info.coin.icon
+        return coin_avatar
+
+    @staticmethod
+    def get_coin_name(obj):
+        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        coin_name = club_info.coin.name
+        return coin_name
+
+    def get_earn_coin(self, obj):
+        club = Club.objects.get(pk=obj.roomquiz_id)
+        i = [0, 1, 2, 3]
+        if int(obj.quiz.status) in i:
+            earn_coin = "待开奖"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Wait results"
+        elif int(obj.quiz.status) == 4 or int(obj.quiz.status) == 5 and Decimal(float(obj.earn_coin)) <= 0:
+            earn_coin = "猜错"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Guess wrong"
+        else:
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(club.coin.coin_accuracy)))
+        return earn_coin
+
+    @staticmethod
+    def get_quiz_category(obj):
+        category_parent = obj.quiz.category.parent_id
+        category = Category.objects.get(pk=category_parent)
+        category_icon = category.name
+        return category_icon
+

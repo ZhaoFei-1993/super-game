@@ -2,13 +2,13 @@
 from django.db import transaction
 from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize, GuessPushSerializer
+from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize
 from ...models import Stock, Record, Play, BetLimit, Options, Periods
 from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserCoin, CoinDetail, Coin
-from utils.functions import value_judge
+from utils.functions import value_judge, guess_is_seal
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime
@@ -46,6 +46,7 @@ class StockList(ListAPIView):
                 "index_colour": list["index_colour"],
                 "rise": list["rise"],
                 "fall": list["fall"],
+                "is_seal": list["is_seal"],
                 "result_list": list["result_list"]
             })
 
@@ -96,6 +97,12 @@ class PlayView(ListAPIView):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
         periods_id = int(self.request.GET.get('periods_id'))  # 周期表ID
         stock_id = int(self.request.GET.get('stock_id'))  # 股票配置表ID
+        try:
+            periods = Periods.objects.get(pk=periods_id)  # 判断比赛
+        except Exception:
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+        is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
+
         plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
@@ -174,7 +181,8 @@ class PlayView(ListAPIView):
                      }
         return self.response({'code': 0,
                               'data': data,
-                              'coin_list': coin_list
+                              'coin_list': coin_list,
+                              'is_seal': is_seal
                               })
 
 
@@ -219,14 +227,8 @@ class BetView(ListCreateAPIView):
             periods = Periods.objects.get(pk=periods_id)  # 判断比赛
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
-        begin_at = time.mktime(begin_at.timetuple())
-        start = int(begin_at)-600
-        timeArray = time.localtime(start)
-        otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-        if nowtime >= otherStyleTime:    # 是否已封盘
+        is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
+        if is_seal==True:
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
         try:
@@ -278,9 +280,9 @@ class BetView(ListCreateAPIView):
             source=1
         elif source=="android":
             source=2
-        elif source=="html5":
+        else:
             source=3
-        elif user.is_robot==True:
+        if user.is_robot==True:
             source=4
         record.source = source
         record.save()
@@ -314,7 +316,7 @@ class RecordsListView(ListCreateAPIView):
     竞猜记录
     """
     permission_classes = (LoginRequired,)
-    # serializer_class = RecordSerialize
+    serializer_class = RecordSerialize
 
     def get_queryset(self):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
@@ -327,11 +329,11 @@ class RecordsListView(ListCreateAPIView):
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
                     return Record.objects.filter(
-                        Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
+                        quiz__status=1,
                         user_id=user_id,
                         roomquiz_id=club_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
+                    return Record.objects.filter(quiz__status=4,
                                                  user_id=user_id,
                                                  roomquiz_id=club_id).order_by('-created_at')
         else:
