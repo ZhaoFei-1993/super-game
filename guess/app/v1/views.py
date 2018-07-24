@@ -37,6 +37,7 @@ class StockList(ListAPIView):
             data.append({
                 "stock_id": list["pk"],
                 "periods_id": list["periods_id"],
+                "icon": list["icon"],
                 "title": list["title"],
                 "closing_time": list["closing_time"],
                 "previous_result": list["previous_result"],

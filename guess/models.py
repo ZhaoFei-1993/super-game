@@ -17,7 +17,7 @@ class Stock(models.Model):
     STOCK = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
-        (HANGSENG, "恒⽣指数"),
+        (HANGSENG, "恒生指数"),
         (DOWJONES, "道琼斯")
     )
 
@@ -29,10 +29,11 @@ class Stock(models.Model):
     STOCK_EN = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
-        (HANGSENG, "恒⽣指数"),
+        (HANGSENG, "恒生指数"),
         (DOWJONES, "道琼斯")
     )
     name = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
+    icon = models.CharField(verbose_name="股票图标", max_length=255, default='')
     name_en = models.CharField(verbose_name="证券名称(英语)", choices=STOCK_EN, max_length=1, default=SSE)
     order = models.IntegerField(verbose_name="排序", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
