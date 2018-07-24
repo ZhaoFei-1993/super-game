@@ -127,7 +127,13 @@ class PlayView(ListAPIView):
             list = []
             options_list = Options.objects.filter(play_id=play.pk)
             for options in options_list:
-                options_number = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                                                       options_id=options.pk).count()
+                is_choice = 0
+                if int(is_record) > 0:
+                    is_choice = 1
+
+                options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
                 if options_number == 0:
                     support_number = 0
@@ -148,6 +154,7 @@ class PlayView(ListAPIView):
                     "title": title,
                     "sub_title": sub_title,
                     "odds": odds,
+                    "is_choice": is_choice,
                     "support_number": support_number
                 })
             data.append({
@@ -219,8 +226,6 @@ class BetView(ListCreateAPIView):
         start = int(begin_at)-600
         timeArray = time.localtime(start)
         otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-        print("nowtime================================", nowtime)
-        print("start================================", otherStyleTime)
         if nowtime >= otherStyleTime:    # 是否已封盘
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
@@ -303,3 +308,65 @@ class BetView(ListCreateAPIView):
             }
         }
         return self.response(response)
+
+class RecordsListView(ListCreateAPIView):
+    """
+    竞猜记录
+    """
+    permission_classes = (LoginRequired,)
+    # serializer_class = RecordSerialize
+
+    def get_queryset(self):
+        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+        if 'user_id' not in self.request.GET:
+            user_id = self.request.user.id
+            if 'is_end' not in self.request.GET:
+                record = Record.objects.filter(user_id=user_id, roomquiz_id=club_id).order_by('-created_at')
+                return record
+            else:
+                is_end = self.request.GET.get('is_end')
+                if int(is_end) == 1:
+                    return Record.objects.filter(
+                        Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
+                        user_id=user_id,
+                        roomquiz_id=club_id).order_by('-created_at')
+                else:
+                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
+                                                 user_id=user_id,
+                                                 roomquiz_id=club_id).order_by('-created_at')
+        else:
+            user_id = self.request.GET.get('user_id')
+            return Record.objects.filter(user_id=user_id, roomquiz_id=club_id).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        data = []
+        tmp = ''
+        for fav in Progress:
+            pecific_dates = fav.get('created_at')[0].get('years')
+            pecific_date = fav.get('created_at')[0].get('year')
+            if tmp == pecific_date:
+                pecific_date = ""
+                pecific_dates = ""
+            else:
+                tmp = pecific_date
+            bet = fav.get('bet')
+            data.append({
+                "id": fav.get('id'),
+                "quiz_id": fav.get('quiz_id'),
+                "type": fav.get('type'),
+                'host_team': fav.get('host_team'),
+                'guest_team': fav.get('guest_team'),
+                'earn_coin': fav.get('earn_coin'),
+                'pecific_dates': pecific_dates,
+                'pecific_date': pecific_date,
+                'pecific_time': fav.get('created_at')[0].get('time'),
+                'my_option': fav.get('my_option')[0].get('my_option'),
+                'is_right': fav.get('my_option')[0].get('is_right'),
+                'coin_avatar': fav.get('coin_avatar'),
+                'category_name': fav.get('quiz_category'),
+                'coin_name': fav.get('coin_name'),
+                'bet': fav.get('bets')
+            })
+        return self.response({'code': 0, 'data': data})
