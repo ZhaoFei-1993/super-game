@@ -225,7 +225,9 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        if int(option_odds.play.pk) != int(play_id):
+        print("option_odds.play_id===================================", int(option_odds.play_id))
+        print("play_id===================================", play_id)
+        if int(option_odds.play_id) != int(play_id):
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
         i = 0
         Decimal(i)
