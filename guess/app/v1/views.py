@@ -161,9 +161,10 @@ class PlayView(ListAPIView):
                 'bets_max': bets_max,
                 "list": list
             })
-        coin_list = [ {'balance': balance,
-                       'coin_name': coin_name,
-                       'coin_icon': coin_icon}]
+        coin_list = {'balance': balance,
+                     'coin_name': coin_name,
+                     'coin_icon': coin_icon
+                     }
         return self.response({'code': 0,
                               'data': data,
                               'coin_list': coin_list
