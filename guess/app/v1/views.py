@@ -101,6 +101,7 @@ class PlayView(ListAPIView):
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        coin_icon = user_coin.coin.icon
         balance = normalize_fraction(user_coin.balance, int(user_coin.coin.coin_accuracy))  # 用户余额
 
         data = []
@@ -162,7 +163,8 @@ class PlayView(ListAPIView):
 
         return self.response({'code': 0,
                               'data': data,
-                              'balance': balance
+                              'balance': balance,
+                              'coin_icon': coin_icon
                               })
 
 
@@ -207,11 +209,16 @@ class BetView(ListCreateAPIView):
             periods = Periods.objects.get(pk=periods_id)  # 判断比赛
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        nowtime = datetime.now()
+        nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)-600
-        if nowtime >= start:    # 是否已封盘
+        timeArray = time.localtime(start)
+        otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+        print("nowtime================================", nowtime)
+        print("start================================", otherStyleTime)
+        if nowtime >= otherStyleTime:    # 是否已封盘
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
         try:
@@ -226,21 +233,21 @@ class BetView(ListCreateAPIView):
 
         # 单场比赛最大下注
         bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
-            Sum('bet'))
+            Sum('bets'))
         if coin_id == Coin.HAND:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.INT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 20000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.ETH:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 6:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.BTC:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 0.5:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.USDT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 3100:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -258,7 +265,16 @@ class BetView(ListCreateAPIView):
         record.options = option_odds
         record.bets = coins
         record.odds = option_odds.odds
-        record.source = request.META.get('HTTP_X_API_KEY')
+        source = request.META.get('HTTP_X_API_KEY')
+        if source=="ios":
+            source=1
+        elif source=="android":
+            source=2
+        elif source=="html5":
+            source=3
+        elif user.is_robot==True:
+            source=4
+        record.source = source
         record.save()
         earn_coins = coins * option_odds.odds
         earn_coins = normalize_fraction(earn_coins, coin_accuracy)

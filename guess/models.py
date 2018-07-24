@@ -74,10 +74,11 @@ class Play(models.Model):
     UP_AND_DOWN = 0
 
     PLAY = (
-        (SIZE, "⼤⼩"),
+
+        (UP_AND_DOWN, "涨跌"),
+        (SIZE, "大小"),
         (POINTS, "点数"),
-        (PAIR, "对⼦"),
-        (UP_AND_DOWN, "涨跌")
+        (PAIR, "对子")
     )
 
     SIZE = 1
@@ -86,10 +87,10 @@ class Play(models.Model):
     UP_AND_DOWN = 0
 
     PLAY_EN = (
+        (UP_AND_DOWN, "up_and_down"),
         (SIZE, "Size"),
         (POINTS, "Points"),
-        (PAIR, "Pair"),
-        (UP_AND_DOWN, "up_and_down")
+        (PAIR, "Pair")
     )
 
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
