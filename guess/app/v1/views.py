@@ -96,7 +96,7 @@ class PlayView(ListAPIView):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
         periods_id = int(self.request.GET.get('periods_id'))  # 周期表ID
         stock_id = int(self.request.GET.get('stock_id'))  # 股票配置表ID
-        plays = Play.objects.filter(stock_id=stock_id).order_by('type')  # 所有玩法
+        plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
@@ -112,9 +112,9 @@ class PlayView(ListAPIView):
             if self.request.GET.get('language') == 'en':
                 play_name = Play.PLAY_EN[int(play.play_name_en)][1]
 
-            tips = Play.tips  # 提示短语
+            tips = play.tips  # 提示短语
             if self.request.GET.get('language') == 'en':
-                tips = Play.tips_en
+                tips = play.tips_en
 
             bets_one = betlimit.bets_one  # 下注值1
             bets_two = betlimit.bets_two  # 下注值2
@@ -149,7 +149,7 @@ class PlayView(ListAPIView):
                     "support_number": support_number
                 })
             data.append({
-                "play_id": play,
+                "play_id": play.pk,
                 "play_name": play_name,
                 "tips": tips,
                 'bets_one': bets_one,
