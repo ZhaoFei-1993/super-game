@@ -190,12 +190,12 @@ class RecordSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ("id", "bet", "created_at", "my_option", "coin_avatar", "coin_name", "earn_coin", "guess_title",
+        fields = ("id", "periods_id", "bet", "created_at", "my_option", "coin_avatar", "coin_name", "earn_coin", "guess_title",
                   "index", "index_colour", "guess_result", "is_right")
 
     @staticmethod
     def get_bet(obj):  # 下注金额
-        club = Club.objects.get(pk=obj.roomquiz_id)
+        club = Club.objects.get(pk=obj.club_id)
         coin_accuracy = club.coin.coin_accuracy
         bet = normalize_fraction(obj.bets, int(coin_accuracy))
         return bet
@@ -221,18 +221,18 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_coin_avatar(obj):   # 货币图标
-        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        club_info = Club.objects.get(pk=int(obj.club_id))
         coin_avatar = club_info.coin.icon
         return coin_avatar
 
     @staticmethod
     def get_coin_name(obj):   # 货币昵称
-        club_info = Club.objects.get(pk=int(obj.roomquiz_id))
+        club_info = Club.objects.get(pk=int(obj.club_id))
         coin_name = club_info.coin.name
         return coin_name
 
     def get_earn_coin(self, obj):   # 结果
-        club = Club.objects.get(pk=obj.roomquiz_id)
+        club = Club.objects.get(pk=obj.club_id)
         if obj.earn_coin == 0 or obj.earn_coin == '':
             earn_coin = "待开奖"
             if self.context['request'].GET.get('language') == 'en':
@@ -255,9 +255,9 @@ class RecordSerialize(serializers.ModelSerializer):
         return is_right
 
     def get_guess_title(self, obj):        # 股票昵称
-       guess_title = obj.periods.stock.name
+       guess_title = Stock.STOCK[int(obj.periods.stock.name)][1]
        if self.context['request'].GET.get('language') == 'en':
-           guess_title = obj.periods.stock.name_en
+           guess_title = Stock.STOCK_EN[int(obj.periods.stock.name_en)][1]
        return guess_title
 
     @staticmethod

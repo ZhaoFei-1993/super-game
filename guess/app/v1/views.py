@@ -323,7 +323,7 @@ class RecordsListView(ListCreateAPIView):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
-                record = Record.objects.filter(user_id=user_id, roomquiz_id=club_id).order_by('-created_at')
+                record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
@@ -331,14 +331,14 @@ class RecordsListView(ListCreateAPIView):
                     return Record.objects.filter(
                         quiz__status=1,
                         user_id=user_id,
-                        roomquiz_id=club_id).order_by('-created_at')
+                        club_id=club_id).order_by('-created_at')
                 else:
                     return Record.objects.filter(quiz__status=4,
                                                  user_id=user_id,
-                                                 roomquiz_id=club_id).order_by('-created_at')
+                                                 club_id=club_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            return Record.objects.filter(user_id=user_id, roomquiz_id=club_id).order_by('-created_at')
+            return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -355,6 +355,7 @@ class RecordsListView(ListCreateAPIView):
                 tmp = pecific_date
             data.append({
                 "id": fav.get('id'),
+                "periods_id": fav.get('periods_id'),
                 "guess_title": fav.get('guess_title'),       # 股票昵称
                 'earn_coin': fav.get('earn_coin'),  # 竞猜结果
                 'pecific_dates': pecific_dates,
