@@ -60,13 +60,13 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
     coin_name = serializers.SerializerMethodField()  # 货币名称
     option_name = serializers.SerializerMethodField()  # 玩法名称
     created_time = serializers.SerializerMethodField()  # 下注时间处理，保留到分钟
-    status = serializers.SerializerMethodField()  # 投注状态，下注结果，下注正确，错误，或者挣钱
+    earn = serializers.SerializerMethodField()  # 投注状态，下注结果，下注正确，错误，或者挣钱
 
     class Meta:
         model = SixRecord
         fields = (
             "bet", "bet_coin", "status", "created_time", "issue",
-            "content", 'coin_name', 'option_name'
+            "content", 'coin_name', 'option_name', 'earn'
         )
 
     def get_coin_name(self, obj):
@@ -76,21 +76,21 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_option_name(self, obj):
         option_id = obj.option_id
-        res = Option.objects.get(id=option_id)
-        three_to_two = '三中二'
-        option_name = res.option
-        if three_to_two in option_name:
-            option_name = three_to_two
-        if self.context['request'].GET.get('language') == 'en':
-            three_to_two = 'Three Hit Two'
-            option_name = res.option_en
+        if option_id:
+            res = Option.objects.get(id=option_id)
+            three_to_two = '三中二'
+            option_name = res.option
             if three_to_two in option_name:
                 option_name = three_to_two
-        # 特码处理
-        if res.play_id == 1:
-            option_name = res.play.title
             if self.context['request'].GET.get('language') == 'en':
-                option_name = res.play.title_en
+                three_to_two = 'Three Hit Two'
+                option_name = res.option_en
+                if three_to_two in option_name:
+                    option_name = three_to_two
+        else:
+            option_name = obj.play.title
+            if self.context['request'].GET.get('language') == 'en':
+                option_name = obj.play.title_en
 
         return option_name
 
@@ -98,7 +98,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         created_time = obj.created_at.strftime('%Y-%m-%d %H:%M')
         return created_time
 
-    def get_status(self, obj):
+    def get_earn(self, obj):
         language = 'zh'
         if self.context['request'].GET.get('language') == 'en':
             language = 'en'
@@ -106,16 +106,16 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         earn_coin = obj.earn_coin
         if result == '0':
             if language == 'zh':
-                status = '待开奖'
+                earn = '待开奖'
             else:
-                status = 'AWAIT OPEN'
+                earn = 'AWAIT OPEN'
         else:
             if earn_coin == 0:
-                status = 'GUESSING ERROR'
+                earn = 'GUESSING ERROR'
             else:
-                status = '+' + str(int(earn_coin))
+                earn = '+' + str(int(earn_coin))
 
-        return status
+        return earn
 
 
 class ColorSerializer(serializers.HyperlinkedModelSerializer):

@@ -4,7 +4,7 @@ from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer, 
 from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
-from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord
+from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord,MarkSixBetLimit
 from django.http import JsonResponse, HttpResponse
 from users.finance.functions import get_now
 from marksix.functions import date_exchange
@@ -23,6 +23,7 @@ from rest_framework.views import APIView
 import pytz
 import time
 from utils.cache import set_cache, get_cache
+from users.models import Coin
 
 
 class SortViews(ListAPIView):
@@ -59,14 +60,14 @@ class SortViews(ListAPIView):
             begin_at = int(begin_at)  # 这期开奖时间
 
         return self.response({'code': 0,
-            'data': items,
-            'prev_issue': prev_issue,
-            'prev_flat': prev_flat,
-            'prev_special': prev_special,
-            'current_issue': current_issue,
-            'current_open': current_open,
-            'begin_at': begin_at
-                            })
+                              'data': items,
+                              'prev_issue': prev_issue,
+                              'prev_flat': prev_flat,
+                              'prev_special': prev_special,
+                              'current_issue': current_issue,
+                              'current_open': current_open,
+                              'begin_at': begin_at
+                              })
 
 
 class OpenViews(ListAPIView):
@@ -86,10 +87,15 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    # permission_classes = (LoginRequired,)
-    authentication_classes = ()
+    permission_classes = (LoginRequired,)
+    # authentication_classes = ()
+
     def list(self, request, id):
         language = request.GET.get('language')
+        club_id = request.GET.get('club_id')
+        if not club_id:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         marksix_all_code = "marksix_all_code"  # key
         bet_num = get_cache(marksix_all_code)
         if bet_num == None or bet_num == '':
@@ -103,7 +109,6 @@ class OddsViews(ListAPIView):
                 bet_num.append(bet_dict)
             set_cache(marksix_all_code, bet_num)
 
-
         if not language:
             language = 'zh'
         res = Option.objects.filter(play_id=id)
@@ -113,10 +118,13 @@ class OddsViews(ListAPIView):
                 option = play.title
             else:
                 option = play.title_en
+            limit = MarkSixBetLimit.objects.get(club_id=club_id,options_id=id)
             bet_odds = {
                 'option': option,
+                'max_limit':limit.max_limit,
+                'min_limit':limit.min_limit,
                 'id': 1,
-                'odds':res[0].odds
+                'odds': res[0].odds
             }
             bet_odds['num'] = bet_num
         else:
@@ -135,7 +143,10 @@ class OddsViews(ListAPIView):
                     option = item.option
                 else:
                     option = item.option_en
+                limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
                 res_dict = {}
+                res_dict['max_limit'] = limit.max_limit
+                res_dict['min_limit'] = limit.min_limit
                 res_dict['id'] = item.id
                 res_dict['option'] = option
                 res_dict['odds'] = item.odds
@@ -219,34 +230,79 @@ class BetsViews(ListCreateAPIView):
         user = self.request.user
         user_id = user.id
         # user_id = 1806
-        # user = User.objects.get(id=user_id)
-        res = value_judge(request, 'club_id', 'option_id', 'bet', 'bet_coin', 'issue', 'content')
+        user = User.objects.get(id=user_id)
+        res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         club_id = request.data.get('club_id')
-        option_id = request.data.get('option_id')
+        play_id = request.data.get('play')
         bet = request.data.get('bet')
         bet_coin = Decimal.from_float(float(request.data.get('bet_coin')))
         issue = request.data.get('issue')
-        content = request.data.get('content')  # 号码以逗号分割
+        content = request.data.get('content')  # 以逗号分割，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
-        op = Option.objects.get(id=option_id)
-        if not op:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        odds = op.odds
+        if play_id == '1':  # 为特码
+            option_id = ''
+            odds = Option.objects.filter(play_id=play_id)[0].odds
 
-        # 判断用户下注是否合法,连码需要判断
-        op = Option.objects.get(id=option_id)
-        title_list = ['二中二', '三中二', '三中三']
-        if op.option == title_list[0] or title_list[1] in op.option:  # 二中二，三中二，最低两个号码，不超过七个
-            res = valied_content(content, 2, 7)
-            if not res:
-                raise ParamErrorException(error_code.API_50201_BET_LIMITED)
-        if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
-            res = valied_content(content, 3, 10)
-            if not res:
-                raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+        elif play_id == '3':  # 为连码时，赔率唯一
+            try:
+                option_id = request.data.get('option')
+            except:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if not option_id:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            try:
+                op = Option.objects.get(id=option_id, play_id=play_id)
+            except:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            # 判断用户下注是否合法,连码需要判断
+            title_list = ['二中二', '三中二', '三中三']
+            if op.option == title_list[0] or title_list[1] in op.option:  # 二中二，三中二，最低两个号码，不超过七个
+                res = valied_content(content, 2, 7)
+                if not res:
+                    raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+            if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
+                res = valied_content(content, 3, 10)
+                if not res:
+                    raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+            if not op:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            odds = op.odds
+
+        else:  # 当为其他类型时，赔率多个
+            option_id = ''
+            content_list = content.split(',')
+            odd_list = []
+            for id in content_list:
+                try:
+                    op = Option.objects.get(id=int(id), play_id=play_id)
+                except:
+                    raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                odd_list.append(str(op.odds))
+            odds = ','.join(odd_list)
+
+        # 判断投注是否上限
+        clubinfo = Club.objects.get(pk=club_id)
+        coin_id = clubinfo.coin.pk
+        bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, play_id=play_id).aggregate(
+            Sum('bet_coin'))
+        if coin_id == Coin.HAND:
+            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 5000000:
+                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        elif coin_id == Coin.INT:
+            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 20000:
+                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        elif coin_id == Coin.ETH:
+            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 6:
+                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        elif coin_id == Coin.BTC:
+            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 0.5:
+                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        elif coin_id == Coin.USDT:
+            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 3100:
+                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
 
         # 获取币种
         club = Club.objects.get(id=club_id)
@@ -257,9 +313,12 @@ class BetsViews(ListCreateAPIView):
         if float(usercoin.balance) < float(bet_coin):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
+        # 判断用户
+
         source = request.META.get('HTTP_X_API_KEY')  # 获取用户请求类型
         # 更新下注表
         sixcord = SixRecord()
+        sixcord.play_id = play_id
         sixcord.user_id = user_id
         sixcord.club_id = club_id
         sixcord.option_id = option_id
@@ -289,12 +348,13 @@ class BetsViews(ListCreateAPIView):
 
 class BetsListViews(ListAPIView):
     permission_classes = (LoginRequired,)
+    # authentication_classes = ()
     serializer_class = RecordSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        user_id = user.id
-        # user_id = 1806
+        # user = self.request.user
+        # user_id = user.id
+        user_id = 1806
         # user = User.objects.get(id=user_id)
         type = self.kwargs['type']
         if type == '0':  # 全部记录
