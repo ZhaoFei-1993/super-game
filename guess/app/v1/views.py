@@ -355,6 +355,7 @@ class RecordsListView(ListCreateAPIView):
                 tmp = pecific_date
             data.append({
                 "id": fav.get('id'),
+                "stock_id": fav.get('stock_id'),
                 "periods_id": fav.get('periods_id'),
                 "guess_title": fav.get('guess_title'),       # 股票昵称
                 'earn_coin': fav.get('earn_coin'),  # 竞猜结果

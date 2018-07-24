@@ -188,10 +188,11 @@ class RecordSerialize(serializers.ModelSerializer):
     guess_result = serializers.SerializerMethodField()  # 当期结果
     is_right = serializers.SerializerMethodField()  # 是否为正确答案
     type = serializers.SerializerMethodField()  # 是否为正确答案
+    stock_id = serializers.SerializerMethodField()  # 是否为正确答案
 
     class Meta:
         model = Record
-        fields = ("id", "type", "periods_id", "bet", "created_at", "my_option", "coin_avatar", "coin_name", "earn_coin", "guess_title",
+        fields = ("id", "type", "periods_id", "stock_id", "bet", "created_at", "my_option", "coin_avatar", "coin_name", "earn_coin", "guess_title",
                   "index", "index_colour", "guess_result", "is_right")
 
     @staticmethod
@@ -200,6 +201,11 @@ class RecordSerialize(serializers.ModelSerializer):
         coin_accuracy = club.coin.coin_accuracy
         bet = normalize_fraction(obj.bets, int(coin_accuracy))
         return bet
+
+    @staticmethod
+    def get_stock_id(obj):  # 下注金额
+        stock_id = obj.periods.stock_id
+        return stock_id
 
     @staticmethod
     def get_type(obj):  # 下注金额
