@@ -329,11 +329,11 @@ class RecordsListView(ListCreateAPIView):
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
                     return Record.objects.filter(
-                        quiz__status=1,
+                        status=0,
                         user_id=user_id,
                         club_id=club_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(quiz__status=4,
+                    return Record.objects.filter(status=1,
                                                  user_id=user_id,
                                                  club_id=club_id).order_by('-created_at')
         else:
@@ -358,6 +358,7 @@ class RecordsListView(ListCreateAPIView):
                 "periods_id": fav.get('periods_id'),
                 "guess_title": fav.get('guess_title'),       # 股票昵称
                 'earn_coin': fav.get('earn_coin'),  # 竞猜结果
+                'type': fav.get('type'),  # 竞猜结果
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
