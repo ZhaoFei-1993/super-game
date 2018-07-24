@@ -112,8 +112,8 @@ class BetLimit(models.Model):
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
-    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=2, null=True)
-    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=2, null=True)
+    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=3, null=True)
+    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=3, null=True)
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "下注值控制表"
