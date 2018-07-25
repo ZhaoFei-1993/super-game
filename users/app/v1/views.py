@@ -861,7 +861,7 @@ class RankingView(ListAPIView):
         sql = "SELECT user_id,sum(balance) as aaa from users_usercoin uc left join users_user u on u.id = uc.user_id where coin_id = 6 and u.is_robot = 0 GROUP BY user_id ORDER BY aaa desc limit " + str(
             i - 10) + "," + str(i) + ";"
         lists = get_sql(sql)  # 用户拥有的ETH
-        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin left join users_user u on u.id = uc.user_id where coin_id = 6 and u.is_robot = 0 GROUP BY user_id ORDER BY aaa desc limit 100"
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin uc left join users_user u on u.id = uc.user_id where coin_id = 6 and u.is_robot = 0 GROUP BY user_id ORDER BY aaa desc limit 100"
         user_lists = get_sql(sql)  # 用户拥有的ETH
         a = 1
         for i in user_lists:
