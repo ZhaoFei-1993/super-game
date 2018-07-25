@@ -5,6 +5,7 @@ from guess.models import Index, Periods
 from .stock_result import ergodic_record
 import requests
 import datetime
+from utils.cache import *
 
 url_HSI = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=aff194940ee6db5fcb462df18a36f9fd'
 # url_DJA = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=4a952b2e6c8f78cb7956a505727f39c0'
@@ -55,10 +56,17 @@ def get_index(base_url):
 
 def open_prize(period, dt):
     if dt['type'] == str(1):
-        index = Index()
-        index.periods = period
-        index.index_value = float(dt['num'])
-        index.save()
+        if dt['date'] == get_cache(period.stock.STOCK[int(period.stock.name)][1]):
+            print('时间相同不存储')
+            # pass
+        else:
+            print('时间不同开始存储')
+            set_cache(period.stock.STOCK[int(period.stock.name)][1], dt['date'])
+            index = Index()
+            index.periods = period
+            index.index_value = float(dt['num'])
+            index.save()
+
     elif dt['type'] == str(2):
         date_hour = dt['date'].split(' ')[0] + ' ' + dt['date'].split(' ')[1].split(':')[0]
         # print(date_hour)
@@ -100,7 +108,7 @@ class Command(BaseCommand):
         """
         道琼斯指数
         """
-        print('道琼斯指数：')
+        print('道琼斯：')
         dt_dja = get_index(url_DJA)
         print(dt_dja)
         if Periods.objects.filter(is_result=False, stock__name='3').exists():
