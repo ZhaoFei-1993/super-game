@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from ...models import Stock, Periods, Index, Record, Play, Options
+from ...models import Stock, Periods, Index, Record, Play, Options, Index_day
 from users.models import User
 import time
 from api import settings
@@ -170,6 +170,36 @@ class GuessPushSerializer(serializers.ModelSerializer):
             username = user_info.nickname
             user_name = str(username[0]) + "**"
             return user_name
+
+class GraphSerialize(serializers.ModelSerializer):
+        """
+        指数记录表(时分)
+        """
+        time = serializers.SerializerMethodField()
+
+        class Meta:
+            model = Index
+            fields = ("pk", "index_value", "time")
+
+        @staticmethod
+        def get_time(obj):
+            time = obj.index_time.strftime('%H:%M')
+            return time
+
+class GraphDaySerialize(serializers.ModelSerializer):
+        """
+        指数记录表(天)
+        """
+        index_day = serializers.SerializerMethodField()
+
+        class Meta:
+            model = Index_day
+            fields = ("pk", "index_value", "index_day")
+
+        @staticmethod
+        def get_index_day(obj):
+            index_day = obj.index_time.strftime('%m/%d')
+            return index_day
 
 
 class RecordSerialize(serializers.ModelSerializer):
