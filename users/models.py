@@ -262,6 +262,7 @@ class CoinDetail(models.Model):
     CASHBACK = 10
     LOCK = 11
     DEVIDEND = 12
+    EXCHANGE = 13
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -276,7 +277,8 @@ class CoinDetail(models.Model):
         (RETURN, "返还"),
         (CASHBACK, "返现"),
         (LOCK, "锁定"),
-        (DEVIDEND, "分红")
+        (DEVIDEND, "分红"),
+        (EXCHANGE, "兑换")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')

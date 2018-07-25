@@ -7,7 +7,7 @@ import random
 from django.db import transaction
 
 from quiz.models import ChangeRecord
-from users.models import User, UserCoin
+from users.models import User, UserCoin, CoinDetail
 from decimal import Decimal
 
 from utils.functions import get_sql
@@ -89,6 +89,13 @@ class Command(BaseCommand):
         user_coin = UserCoin.objects.get(user=user, coin_id=6)
         user_coin.balance += Decimal(change_gsg_value)
         user_coin.save()
+        coin_detail = CoinDetail()
+        coin_detail.user = user
+        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.amount = '+' + str(change_gsg_value)
+        coin_detail.rest = Decimal(user_coin.balance)
+        coin_detail.sources = 13
+        coin_detail.save()
 
         self.stdout.write(self.style.SUCCESS(
             "机器人：" + str(user.username) + "在" + str(changerecord.created_at) + "时候兑换了" + str(
