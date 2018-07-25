@@ -6,6 +6,7 @@ from .stock_result import ergodic_record
 import requests
 import datetime
 from utils.cache import *
+from time import sleep
 
 url_HSI = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=aff194940ee6db5fcb462df18a36f9fd'
 # url_DJA = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=4a952b2e6c8f78cb7956a505727f39c0'
@@ -46,6 +47,7 @@ def get_index(base_url):
     # print(response.json()['data'][0]['disp_data'][0]['code'])
     dt_dic = {
         'num': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['cur']['num'],
+        'start_value': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['info'][0]['value'],
         'status': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['cur']['status'],
         'date': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update']['text'].replace(
             '/', '-'),
@@ -56,6 +58,9 @@ def get_index(base_url):
 
 def open_prize(period, dt):
     if dt['type'] == str(1):
+        if period.start_value is None:
+            period.start_value = float(dt['start_value'])
+            period.save()
         if dt['date'] == get_cache(period.stock.STOCK[int(period.stock.name)][1]):
             print('时间相同不存储')
             # pass
@@ -79,62 +84,64 @@ class Command(BaseCommand):
     help = "抓取证券指数"
 
     def handle(self, *args, **options):
-        """
-        上证指数，深证成指
-        """
-        print('上证指数：')
-        dt_shang = get_index(url_SHANG)
-        print(dt_shang)
-        if Periods.objects.filter(is_result=False, stock__name='0').exists():
-            period = Periods.objects.filter(is_result=False, stock__name='0').first()
-            open_prize(period, dt_shang)
+        for i in range(999999999999):
+            sleep(25)
+            """
+            上证指数，深证成指
+            """
+            print('上证指数：')
+            dt_shang = get_index(url_SHANG)
+            print(dt_shang)
+            if Periods.objects.filter(is_result=False, stock__name='0').exists():
+                period = Periods.objects.filter(is_result=False, stock__name='0').first()
+                open_prize(period, dt_shang)
 
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+            print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
-        print('深证成指：')
-        dt_sheng = get_index(url_SHENG)
-        print(dt_sheng)
-        if Periods.objects.filter(is_result=False, stock__name='1').exists():
-            period = Periods.objects.filter(is_result=False, stock__name='1').first()
-            open_prize(period, dt_sheng)
+            print('深证成指：')
+            dt_sheng = get_index(url_SHENG)
+            print(dt_sheng)
+            if Periods.objects.filter(is_result=False, stock__name='1').exists():
+                period = Periods.objects.filter(is_result=False, stock__name='1').first()
+                open_prize(period, dt_sheng)
 
-        # 开奖后放出题目，先判断明天是否休市
-        if market_rest_cn():
-            print('放出题目')
-        else:
-            print('中国股市明天休市')
-        print('------------------------------------------------------------------------------------')
+            # 开奖后放出题目，先判断明天是否休市
+            if market_rest_cn():
+                print('放出题目')
+            else:
+                print('中国股市明天休市')
+            print('------------------------------------------------------------------------------------')
 
-        """
-        道琼斯指数
-        """
-        print('道琼斯：')
-        dt_dja = get_index(url_DJA)
-        print(dt_dja)
-        if Periods.objects.filter(is_result=False, stock__name='3').exists():
-            period = Periods.objects.filter(is_result=False, stock__name='3').first()
-            open_prize(period, dt_dja)
+            """
+            道琼斯指数
+            """
+            print('道琼斯：')
+            dt_dja = get_index(url_DJA)
+            print(dt_dja)
+            if Periods.objects.filter(is_result=False, stock__name='3').exists():
+                period = Periods.objects.filter(is_result=False, stock__name='3').first()
+                open_prize(period, dt_dja)
 
-        # 开奖后放出题目，先判断明天是否休市
-        if market_rest_en():
-            print('放出题目')
-        else:
-            print('美国股市明天休市')
-        print('------------------------------------------------------------------------------------')
+            # 开奖后放出题目，先判断明天是否休市
+            if market_rest_en():
+                print('放出题目')
+            else:
+                print('美国股市明天休市')
+            print('------------------------------------------------------------------------------------')
 
-        """
-        恒生指数
-        """
-        print('恒生指数：')
-        dt_hsi = get_index(url_HSI)
-        print(dt_hsi)
-        if Periods.objects.filter(is_result=False, stock__name='2').exists():
-            period = Periods.objects.filter(is_result=False, stock__name='2').first()
-            open_prize(period, dt_hsi)
+            """
+            恒生指数
+            """
+            print('恒生指数：')
+            dt_hsi = get_index(url_HSI)
+            print(dt_hsi)
+            if Periods.objects.filter(is_result=False, stock__name='2').exists():
+                period = Periods.objects.filter(is_result=False, stock__name='2').first()
+                open_prize(period, dt_hsi)
 
-        # 开奖后放出题目，先判断明天是否休市
-        if market_rest_cn():
-            print('放出题目')
-        else:
-            print('中国股市明天休市')
-        print('------------------------------------------------------------------------------------')
+            # 开奖后放出题目，先判断明天是否休市
+            if market_rest_cn():
+                print('放出题目')
+            else:
+                print('中国股市明天休市')
+            print('------------------------------------------------------------------------------------')

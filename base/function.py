@@ -155,7 +155,7 @@ def add_user_coin(user_id, coin_id, earn_coin):
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
     except UserCoin.DoesNotExist:
         user_coin = UserCoin()
-    user_coin.coin_id = user_coin.coin_id
+    user_coin.coin_id = coin_id
     user_coin.user_id = user_id
     user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
     user_coin.save()
