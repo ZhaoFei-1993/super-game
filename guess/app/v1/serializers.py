@@ -299,11 +299,14 @@ class RecordSerialize(serializers.ModelSerializer):
                 index_colour = 3
         return index_colour
 
-    @staticmethod
-    def get_guess_result(obj):    # 开奖结果
+    def get_guess_result(self,obj):    # 开奖结果
         previous_period = Periods.objects.get(pk=obj.periods_id)
         up_and_down = previous_period.up_and_down
+        if self.context['request'].GET.get('language') == 'en':
+            up_and_down = previous_period.up_and_down_en
         size = previous_period.size
+        if self.context['request'].GET.get('language') == 'en':
+            size = previous_period.size_en
         points = previous_period.points
         pair = previous_period.pair
         if up_and_down==None or up_and_down=='':

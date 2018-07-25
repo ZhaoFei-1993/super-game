@@ -141,12 +141,21 @@ class PlayView(ListAPIView):
                     is_choice = 1
 
                 up_and_down = periods.up_and_down
+                if self.request.GET.get('language') == 'en':
+                    up_and_down = periods.up_and_down_en
                 size = periods.size
-                points = periods.points
+                if self.request.GET.get('language') == 'en':
+                    size = periods.size_en
+                points = periods.points.split(',')
                 pair = periods.pair
-                right_list = [up_and_down, size, points, pair]
+                right_list = [up_and_down, size, pair]
+
+                title = options.title  # 选项标题
+                if self.request.GET.get('language') == 'en':
+                    title = options.title_en
+
                 is_right = 0
-                if options.title in right_list:
+                if title in right_list or title in points:
                     is_right = 1
                 options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
@@ -156,10 +165,6 @@ class PlayView(ListAPIView):
                     support_number = int(options_number)/int(user_number)    # 支持人数
 
                 odds = options.odds  # 赔率
-
-                title = options.title  # 选项标题
-                if self.request.GET.get('language') == 'en':
-                    title = options.title_en
 
                 sub_title = options.sub_title  # 选项子标题
                 if self.request.GET.get('language') == 'en':
