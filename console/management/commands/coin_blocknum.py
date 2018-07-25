@@ -26,10 +26,14 @@ class Command(BaseCommand, BaseView):
         start_time = time()
         if param_blocknum != 0:
             set_cache(self.cacheKey, param_blocknum, 86400)
-
-        #获取最大blocknum
-        obj = curl_get(url='https://blockdozer.com/api/status')
-        content = int(obj['info']['blocks'])
+        url = ''
+        if coin=='bch':
+            url = "http://47.52.18.81/?r=bch/gethighblock"
+        elif coin=='ltc':
+            url = "http://47.52.18.81/?r=ltc/gethighblock"
+        #获取最大blocknum bch
+        obj = curl_get(url=url)
+        content = int(obj['data']['block'])
 
         # print('获取到block:', content)
         if not content:
