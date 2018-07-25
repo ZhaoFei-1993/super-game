@@ -2,7 +2,7 @@ from base.eth import *
 from time import time
 import time as format_time
 from users.models import UserRecharge, Coin, UserCoin
-
+from base.function import curl_get
 
 def consumer_ethblock(block_num):
     """
@@ -107,3 +107,41 @@ def deal_db_data(trans_dict, coin_all, charge_all):
         return True
 
     return False
+
+
+
+def consumer_bchblock(block_num):
+    """
+    消费block_num队列
+    """
+    start_time = time()
+
+    print('block_num = ', block_num)
+    if block_num is 'None':
+        print('队列暂时无数据')
+        return True
+
+    # 根据block_num 获取交易数据
+    json_obj = curl_get(url='http://47.52.18.81/?r=bch/getblock&block' + str(block_num))
+
+    items = json_obj['data']['data']
+
+    coin_all = Coin.objects.all()   # 所有币种
+    charge_all = UserRecharge.objects.all()     # 所有充值记录
+    tmp_num = 0
+    for i, val in enumerate(items):
+        tmp_dict = val
+        tmp_dict['t_time'] = json_obj['data']['t_time']
+        tmp_dict['type'] = json_obj['data']['type'].upper()
+
+        # 根据交易信息处理db数据
+        ret = deal_db_data(tmp_dict, coin_all, charge_all)
+        if ret is True:
+            tmp_num += 1
+
+    print('blocknum:' + str(block_num) + '获取到' + str(tmp_num) + '条交易信息')
+
+    stop_time = time()
+    cost_time = str(round(stop_time - start_time)) + '秒'
+    print('执行完成。耗时：' + cost_time)
+    return True

@@ -2,13 +2,13 @@
 from django.db import transaction
 from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize, GuessPushSerializer
+from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize
 from ...models import Stock, Record, Play, BetLimit, Options, Periods
 from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserCoin, CoinDetail, Coin
-from utils.functions import value_judge
+from utils.functions import value_judge, guess_is_seal
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime
@@ -37,6 +37,7 @@ class StockList(ListAPIView):
             data.append({
                 "stock_id": list["pk"],
                 "periods_id": list["periods_id"],
+                "icon": list["icon"],
                 "title": list["title"],
                 "closing_time": list["closing_time"],
                 "previous_result": list["previous_result"],
@@ -44,7 +45,9 @@ class StockList(ListAPIView):
                 "index": list["index"],
                 "index_colour": list["index_colour"],
                 "rise": list["rise"],
-                "fall": list["fall"]
+                "fall": list["fall"],
+                "is_seal": list["is_seal"],
+                "result_list": list["result_list"]
             })
 
         return self.response({'code': 0, 'data': data})
@@ -70,7 +73,7 @@ class GuessPushView(ListAPIView):
         for item in items:
             data.append(
                 {
-                    "quiz_id": item['id'],
+                    "record_id": item['pk'],
                     "username": item['username'],
                     "my_play": item['my_play'],
                     "my_option": item['my_option'],
@@ -93,12 +96,20 @@ class PlayView(ListAPIView):
         user = request.user
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
         periods_id = int(self.request.GET.get('periods_id'))  # 周期表ID
-        stock_id = int(self.request.GET.get('stock_id'))  # 周期表ID
-        plays = Play.objects.filter(stock_id=stock_id).order_by('type')  # 所有玩法
+        stock_id = int(self.request.GET.get('stock_id'))  # 股票配置表ID
+        try:
+            periods = Periods.objects.get(pk=periods_id)  # 判断比赛
+        except Exception:
+            raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+        is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
+
+        plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
+        coin_icon = user_coin.coin.icon
+        coin_name = user_coin.coin.name
         balance = normalize_fraction(user_coin.balance, int(user_coin.coin.coin_accuracy))  # 用户余额
 
         data = []
@@ -110,9 +121,9 @@ class PlayView(ListAPIView):
             if self.request.GET.get('language') == 'en':
                 play_name = Play.PLAY_EN[int(play.play_name_en)][1]
 
-            tips = Play.tips  # 提示短语
+            tips = play.tips  # 提示短语
             if self.request.GET.get('language') == 'en':
-                tips = Play.tips_en
+                tips = play.tips_en
 
             bets_one = betlimit.bets_one  # 下注值1
             bets_two = betlimit.bets_two  # 下注值2
@@ -121,9 +132,23 @@ class PlayView(ListAPIView):
             bets_max = betlimit.bets_max  # 最大下注值
 
             list = []
-            options_list = Options.objects.filter(play_id=play.pk)
+            options_list = Options.objects.filter(play_id=play.pk).order_by("order")
             for options in options_list:
-                options_number = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                                                       options_id=options.pk).count()
+                is_choice = 0
+                if int(is_record) > 0:
+                    is_choice = 1
+
+                up_and_down = periods.up_and_down
+                size = periods.size
+                points = periods.points
+                pair = periods.pair
+                right_list = [up_and_down, size, points, pair]
+                is_right = 0
+                if options.title in right_list:
+                    is_right = 1
+                options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
                 if options_number == 0:
                     support_number = 0
@@ -144,10 +169,12 @@ class PlayView(ListAPIView):
                     "title": title,
                     "sub_title": sub_title,
                     "odds": odds,
+                    "is_choice": is_choice,
+                    "is_right": is_right,
                     "support_number": support_number
                 })
             data.append({
-                "play_id": play,
+                "play_id": play.pk,
                 "play_name": play_name,
                 "tips": tips,
                 'bets_one': bets_one,
@@ -157,10 +184,14 @@ class PlayView(ListAPIView):
                 'bets_max': bets_max,
                 "list": list
             })
-
+        coin_list = {'balance': balance,
+                     'coin_name': coin_name,
+                     'coin_icon': coin_icon
+                     }
         return self.response({'code': 0,
                               'data': data,
-                              'balance': balance
+                              'coin_list': coin_list,
+                              'is_seal': is_seal
                               })
 
 
@@ -194,7 +225,9 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        if int(option_odds.play.pk) != int(play_id):
+        print("option_odds.play_id===================================", int(option_odds.play_id))
+        print("play_id===================================", play_id)
+        if int(option_odds.play_id) != int(play_id):
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
         i = 0
         Decimal(i)
@@ -205,11 +238,8 @@ class BetView(ListCreateAPIView):
             periods = Periods.objects.get(pk=periods_id)  # 判断比赛
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        nowtime = datetime.now()
-        begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
-        begin_at = time.mktime(begin_at.timetuple())
-        start = int(begin_at)-600
-        if nowtime >= start:    # 是否已封盘
+        is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
+        if is_seal==True:
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
         try:
@@ -224,21 +254,21 @@ class BetView(ListCreateAPIView):
 
         # 单场比赛最大下注
         bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
-            Sum('bet'))
+            Sum('bets'))
         if coin_id == Coin.HAND:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.INT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 20000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.ETH:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 6:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.BTC:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 0.5:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.USDT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
+            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 3100:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -256,7 +286,16 @@ class BetView(ListCreateAPIView):
         record.options = option_odds
         record.bets = coins
         record.odds = option_odds.odds
-        record.source = request.META.get('HTTP_X_API_KEY')
+        source = request.META.get('HTTP_X_API_KEY')
+        if source=="ios":
+            source=1
+        elif source=="android":
+            source=2
+        else:
+            source=3
+        if user.is_robot==True:
+            source=4
+        record.source = source
         record.save()
         earn_coins = coins * option_odds.odds
         earn_coins = normalize_fraction(earn_coins, coin_accuracy)
@@ -282,3 +321,66 @@ class BetView(ListCreateAPIView):
             }
         }
         return self.response(response)
+
+class RecordsListView(ListCreateAPIView):
+    """
+    竞猜记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = RecordSerialize
+
+    def get_queryset(self):
+        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+        if 'user_id' not in self.request.GET:
+            user_id = self.request.user.id
+            if 'is_end' not in self.request.GET:
+                record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+                return record
+            else:
+                is_end = self.request.GET.get('is_end')
+                if int(is_end) == 1:
+                    return Record.objects.filter(
+                        status=0,
+                        user_id=user_id,
+                        club_id=club_id).order_by('-created_at')
+                else:
+                    return Record.objects.filter(status=1,
+                                                 user_id=user_id,
+                                                 club_id=club_id).order_by('-created_at')
+        else:
+            user_id = self.request.GET.get('user_id')
+            return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        data = []
+        tmp = ''
+        for fav in Progress:
+            pecific_dates = fav.get('created_at')[0].get('years')
+            pecific_date = fav.get('created_at')[0].get('year')
+            if tmp == pecific_date:
+                pecific_date = ""
+                pecific_dates = ""
+            else:
+                tmp = pecific_date
+            data.append({
+                "id": fav.get('id'),
+                "stock_id": fav.get('stock_id'),
+                "periods_id": fav.get('periods_id'),
+                "guess_title": fav.get('guess_title'),       # 股票昵称
+                'earn_coin': fav.get('earn_coin'),  # 竞猜结果
+                'type': fav.get('type'),  # 竞猜结果
+                'pecific_dates': pecific_dates,
+                'pecific_date': pecific_date,
+                'pecific_time': fav.get('created_at')[0].get('time'),
+                'my_option': fav.get('my_option'),   # 投注选项
+                'is_right': fav.get('is_right'),         # 是否为正确答案
+                'coin_avatar': fav.get('coin_avatar'),          # 货币图标
+                'index': fav.get('index'),             # 指数
+                'index_colour': fav.get('index_colour'),      # 指数颜色
+                'guess_result': fav.get('guess_result'),    # 当期结果
+                'coin_name': fav.get('coin_name'),       # 货币昵称
+                'bet': fav.get('bet')  # 下注金额
+            })
+        return self.response({'code': 0, 'data': data})

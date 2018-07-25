@@ -5,6 +5,9 @@ from users.models import User
 import time
 from api import settings
 import pytz
+from datetime import datetime
+from chat.models import Club
+from utils.functions import guess_is_seal, normalize_fraction
 
 
 class StockListSerialize(serializers.ModelSerializer):
@@ -20,22 +23,24 @@ class StockListSerialize(serializers.ModelSerializer):
     rise = serializers.SerializerMethodField()  # 看涨人数
     fall = serializers.SerializerMethodField()  # 看跌人数
     periods_id = serializers.SerializerMethodField()  # 看跌人数
+    result_list = serializers.SerializerMethodField()  # 上期结果
+    is_seal = serializers.SerializerMethodField()  # 是否封盘
 
     class Meta:
         model = Stock
         fields = (
-        "pk", "title", "closing_time", "previous_result", "previous_result_colour",
-         "index", "index_colour", "rise", "fall", "periods_id")
+        "pk", "title", "icon", "closing_time", "previous_result", "previous_result_colour",
+         "index", "index_colour", "rise", "fall", "periods_id", "result_list", "is_seal")
 
     def get_title(self, obj):  # 股票标题
         name = obj.name
-        title = obj.STOCK[int(name)][1]
+        title = Stock.STOCK[int(name)][1]
         if self.context['request'].GET.get('language') == 'en':
             title = obj.STOCK_EN[int(name)][1]
         return title
 
     def get_periods_id(self, obj):  # 股票标题
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         return periods.id
 
     def get_rise(self, obj):      # 看涨人数
@@ -50,23 +55,35 @@ class StockListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_closing_time(obj):    # 股票封盘时间
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
         return start
 
     @staticmethod
+    def get_is_seal(obj):    # 股票封盘时间
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        is_seal = guess_is_seal(periods)
+        return is_seal
+
+    @staticmethod
     def get_index(obj):      # 本期指数
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         index_info = Index.objects.filter(periods=periods.pk).first()
-        index = index_info.index_value
+        if index_info==None or index_info=='':
+            index = 0
+        else:
+            index = index_info.index_value
         return index
 
     @staticmethod
     def get_index_colour(obj):          # 本期指数颜色
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         index_info = Index.objects.filter(periods=periods.pk).first()
+        if index_info == None or index_info == '':
+           index_colour = 3
+           return index_colour
         index = index_info.index_value
         if index > periods.start_value:
             index_colour = 1
@@ -78,17 +95,32 @@ class StockListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_previous_result(obj):            # 上期开奖指数
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         last_periods = int(periods.periods) - 1
-        previous_period = Periods.objects.get(periods=last_periods)
+        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
         previous_result = previous_period.lottery_value
         return previous_result
 
     @staticmethod
-    def get_previous_result_colour(obj):           # 上期开奖指数颜色
-        periods = Periods.objects.filter(stock_id=obj.id).first()
+    def get_result_list(obj):            # 上期开奖指数
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         last_periods = int(periods.periods) - 1
-        previous_period = Periods.objects.get(periods=last_periods)
+        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
+        up_and_down = previous_period.up_and_down
+        size = previous_period.size
+        points = previous_period.points
+        pair = previous_period.pair
+        if pair==None or pair=='':
+            list = str(up_and_down)+", "+str(size)+", "+str(points)
+        else:
+            list = str(up_and_down)+", "+str(size)+", "+str(points)+", "+str(pair)
+        return list
+
+    @staticmethod
+    def get_previous_result_colour(obj):           # 上期开奖指数颜色
+        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        last_periods = int(periods.periods) - 1
+        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
         lottery_value = previous_period.lottery_value
         start_value = previous_period.start_value
         if lottery_value > start_value:
@@ -111,7 +143,7 @@ class GuessPushSerializer(serializers.ModelSerializer):
 
         class Meta:
             model = Record
-            fields = ("id", "username", "my_play", "my_option", "bet")
+            fields = ("pk", "username", "my_play", "my_option", "bet")
 
         def get_my_play(self, obj):
             play = Play.objects.get(pk=obj.play_id)
@@ -138,3 +170,146 @@ class GuessPushSerializer(serializers.ModelSerializer):
             username = user_info.nickname
             user_name = str(username[0]) + "**"
             return user_name
+
+
+class RecordSerialize(serializers.ModelSerializer):
+    """
+    竞猜记录表序列化
+    """
+    bet = serializers.SerializerMethodField()   # 下注金额
+    created_at = serializers.SerializerMethodField()  # 竞猜时间
+    my_option = serializers.SerializerMethodField()  # 投注选项
+    coin_avatar = serializers.SerializerMethodField()   # 货币图标
+    coin_name = serializers.SerializerMethodField()   # 货币昵称
+    earn_coin = serializers.SerializerMethodField()  # 竞猜结果
+    guess_title = serializers.SerializerMethodField()  # 股票昵称
+    index = serializers.SerializerMethodField()  # 指数
+    index_colour = serializers.SerializerMethodField()  # 指数颜色
+    guess_result = serializers.SerializerMethodField()  # 当期结果
+    is_right = serializers.SerializerMethodField()  # 是否为正确答案
+    type = serializers.SerializerMethodField()  # 是否为正确答案
+    stock_id = serializers.SerializerMethodField()  # 是否为正确答案
+
+    class Meta:
+        model = Record
+        fields = ("id", "type", "periods_id", "stock_id", "bet", "created_at", "my_option", "coin_avatar", "coin_name", "earn_coin", "guess_title",
+                  "index", "index_colour", "guess_result", "is_right")
+
+    @staticmethod
+    def get_bet(obj):  # 下注金额
+        club = Club.objects.get(pk=obj.club_id)
+        coin_accuracy = club.coin.coin_accuracy
+        bet = normalize_fraction(obj.bets, int(coin_accuracy))
+        return bet
+
+    @staticmethod
+    def get_stock_id(obj):  # 下注金额
+        stock_id = obj.periods.stock_id
+        return stock_id
+
+    @staticmethod
+    def get_type(obj):  # 下注金额
+        if obj.earn_coin == 0 or obj.earn_coin == '':
+            type = 0
+        elif obj.earn_coin>0:
+            type = 1
+        else:
+            type = 2
+        return type
+
+    @staticmethod
+    def get_created_at(obj):  # 时间
+        years = obj.created_at.strftime('%Y')
+        year = obj.created_at.strftime('%m/%d')
+        time = obj.created_at.strftime('%H:%M')
+        data = [{
+            'years': years,
+            'year': year,
+            'time': time,
+        }]
+        return data
+
+    def get_my_option(self, obj):  # 我的选项
+        options = Options.objects.get(pk=obj.options_id)
+        title = options.title
+        if self.context['request'].GET.get('language') == 'en':
+            title = options.title_en
+        return title
+
+    @staticmethod
+    def get_coin_avatar(obj):   # 货币图标
+        club_info = Club.objects.get(pk=int(obj.club_id))
+        coin_avatar = club_info.coin.icon
+        return coin_avatar
+
+    @staticmethod
+    def get_coin_name(obj):   # 货币昵称
+        club_info = Club.objects.get(pk=int(obj.club_id))
+        coin_name = club_info.coin.name
+        return coin_name
+
+    def get_earn_coin(self, obj):   # 结果
+        club = Club.objects.get(pk=obj.club_id)
+        if obj.earn_coin == 0 or obj.earn_coin == '':
+            earn_coin = "待开奖"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Wait results"
+        elif obj.earn_coin < 0:
+            earn_coin = "猜错"
+            if self.context['request'].GET.get('language') == 'en':
+                earn_coin = "Guess wrong"
+        else:
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(club.coin.coin_accuracy)))
+        return earn_coin
+
+    @staticmethod
+    def get_is_right(obj):
+        is_right = 0
+        if obj.earn_coin > 0:
+            is_right = 1
+        elif obj.earn_coin < 0:
+            is_right = 2
+        return is_right
+
+    def get_guess_title(self, obj):        # 股票昵称
+       guess_title = Stock.STOCK[int(obj.periods.stock.name)][1]
+       if self.context['request'].GET.get('language') == 'en':
+           guess_title = Stock.STOCK_EN[int(obj.periods.stock.name_en)][1]
+       return guess_title
+
+    @staticmethod
+    def get_index(obj):  # 本期开奖指数
+        index = ''
+        if obj.earn_coin > 0:
+            periods = Periods.objects.get(pk=obj.periods_id)
+            index = periods.lottery_value
+        return index
+
+    @staticmethod
+    def get_index_colour(obj):  # 本期指数颜色
+        index_colour = ''
+        if obj.earn_coin > 0:
+            periods = Periods.objects.get(pk=obj.periods_id)
+            index = periods.lottery_value
+            if index > periods.start_value:
+                index_colour = 1
+            elif index < periods.start_value:
+                index_colour = 2
+            else:
+                index_colour = 3
+        return index_colour
+
+    @staticmethod
+    def get_guess_result(obj):    # 开奖结果
+        previous_period = Periods.objects.get(pk=obj.periods_id)
+        up_and_down = previous_period.up_and_down
+        size = previous_period.size
+        points = previous_period.points
+        pair = previous_period.pair
+        if up_and_down==None or up_and_down=='':
+            list = ''
+        elif pair==None or pair=='':
+            list = str(up_and_down)+", "+str(size)+", "+str(points)
+        else:
+            list = str(up_and_down)+", "+str(size)+", "+str(points)+", "+str(pair)
+        return list

@@ -152,9 +152,9 @@ class SixRecord(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    option = models.ForeignKey(Option, on_delete=models.CASCADE)
-    odds = models.DecimalField(verbose_name="下注时的赔率", max_digits=10, decimal_places=2,
-                               default=0.00)
+    option = models.ForeignKey(Option, on_delete=models.CASCADE, null=True)
+    play = models.ForeignKey(Play, on_delete=models.CASCADE, null=True)
+    odds = models.CharField(verbose_name="下注时的赔率", max_length=100)  # 单次下注可能有多个不同的赔率
     bet = models.IntegerField(verbose_name="下注数目", default=0)
     bet_coin = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="实际赚取金额", max_digits=18, decimal_places=8, default=0.00000000)
@@ -162,8 +162,19 @@ class SixRecord(models.Model):
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
     issue = models.CharField(verbose_name="期数", max_length=3)
     content = models.CharField(verbose_name="下注内容", max_length=1000)
-    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1,default=ROBOT)
+    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户下注表"
+
+
+class MarkSixBetLimit(models.Model):
+    options = models.ForeignKey(Option, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    max_limit= models.DecimalField(verbose_name="投注上限", max_digits=15, decimal_places=3, default=0.000)
+    min_limit = models.DecimalField(verbose_name="投注下限", max_digits=15, decimal_places=3, default=0.000)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "投注限制表"

@@ -17,7 +17,7 @@ class Stock(models.Model):
     STOCK = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
-        (HANGSENG, "恒⽣指数"),
+        (HANGSENG, "恒生指数"),
         (DOWJONES, "道琼斯")
     )
 
@@ -29,10 +29,11 @@ class Stock(models.Model):
     STOCK_EN = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
-        (HANGSENG, "恒⽣指数"),
+        (HANGSENG, "恒生指数"),
         (DOWJONES, "道琼斯")
     )
     name = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
+    icon = models.CharField(verbose_name="股票图标", max_length=255, default='')
     name_en = models.CharField(verbose_name="证券名称(英语)", choices=STOCK_EN, max_length=1, default=SSE)
     order = models.IntegerField(verbose_name="排序", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
@@ -75,10 +76,11 @@ class Play(models.Model):
     UP_AND_DOWN = 0
 
     PLAY = (
-        (SIZE, "⼤⼩"),
+
+        (UP_AND_DOWN, "涨跌"),
+        (SIZE, "大小"),
         (POINTS, "点数"),
-        (PAIR, "对⼦"),
-        (UP_AND_DOWN, "涨跌")
+        (PAIR, "对子")
     )
 
     SIZE = 1
@@ -87,10 +89,10 @@ class Play(models.Model):
     UP_AND_DOWN = 0
 
     PLAY_EN = (
+        (UP_AND_DOWN, "up_and_down"),
         (SIZE, "Size"),
         (POINTS, "Points"),
-        (PAIR, "Pair"),
-        (UP_AND_DOWN, "up_and_down")
+        (PAIR, "Pair")
     )
 
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
@@ -112,8 +114,8 @@ class BetLimit(models.Model):
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
-    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=2, null=True)
-    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=2, null=True)
+    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=3, null=True)
+    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=3, null=True)
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "下注值控制表"
@@ -126,6 +128,7 @@ class Options(models.Model):
     odds = models.DecimalField(verbose_name='赔率', max_digits=10, decimal_places=2, default=0.00)
     sub_title = models.CharField(verbose_name='选项子标题', max_length=255, default='')
     sub_title_en = models.CharField(verbose_name='选项子标题(英文)', max_length=255, default='')
+    order = models.IntegerField(verbose_name="排序", default=0)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 

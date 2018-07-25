@@ -577,3 +577,16 @@ def message_code(length=6, mode='digit'):
 
     codes = ''.join(rand_code)
     return codes[0:length]
+
+
+def guess_is_seal(info):
+    nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    begin_at = info.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+    begin_at = time.mktime(begin_at.timetuple())
+    start = int(begin_at) - 600
+    timeArray = time.localtime(start)
+    otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+    if nowtime >= otherStyleTime:  # 是否已封盘
+        info.is_seal == 1
+        info.save()
+    return info.is_seal
