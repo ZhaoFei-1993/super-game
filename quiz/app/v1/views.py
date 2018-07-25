@@ -959,7 +959,7 @@ class ChangeGsg(ListAPIView):
         coin_detail.coin_name = user_coin_gsg.coin.name
         coin_detail.amount = '+' + str(gsg_ratio)
         coin_detail.rest = user_coin_gsg.balance
-        coin_detail.sources = 3
+        coin_detail.sources = 13
         coin_detail.save()
 
         user_coin_ETH = UserCoin.objects.get(user_id=request.user.id, coin_id=2)
@@ -970,7 +970,7 @@ class ChangeGsg(ListAPIView):
         coin_detail.coin_name = user_coin_ETH.coin.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = user_coin_ETH.balance
-        coin_detail.sources = 4
+        coin_detail.sources = 13
         coin_detail.save()
 
         content = {'code': 0, 'user_coin_ETH': normalize_fraction(user_coin_ETH.balance, 4)}
