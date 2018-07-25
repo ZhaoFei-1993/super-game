@@ -84,64 +84,62 @@ class Command(BaseCommand):
     help = "抓取证券指数"
 
     def handle(self, *args, **options):
-        for i in range(999999999999):
-            sleep(25)
-            """
-            上证指数，深证成指
-            """
-            print('上证指数：')
-            dt_shang = get_index(url_SHANG)
-            print(dt_shang)
-            if Periods.objects.filter(is_result=False, stock__name='0').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='0').first()
-                open_prize(period, dt_shang)
+        """
+        上证指数，深证成指
+        """
+        print('上证指数：')
+        dt_shang = get_index(url_SHANG)
+        print(dt_shang)
+        if Periods.objects.filter(is_result=False, stock__name='0').exists():
+            period = Periods.objects.filter(is_result=False, stock__name='0').first()
+            open_prize(period, dt_shang)
 
-            print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
-            print('深证成指：')
-            dt_sheng = get_index(url_SHENG)
-            print(dt_sheng)
-            if Periods.objects.filter(is_result=False, stock__name='1').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='1').first()
-                open_prize(period, dt_sheng)
+        print('深证成指：')
+        dt_sheng = get_index(url_SHENG)
+        print(dt_sheng)
+        if Periods.objects.filter(is_result=False, stock__name='1').exists():
+            period = Periods.objects.filter(is_result=False, stock__name='1').first()
+            open_prize(period, dt_sheng)
 
-            # 开奖后放出题目，先判断明天是否休市
-            if market_rest_cn():
-                print('放出题目')
-            else:
-                print('中国股市明天休市')
-            print('------------------------------------------------------------------------------------')
+        # 开奖后放出题目，先判断明天是否休市
+        if market_rest_cn():
+            print('放出题目')
+        else:
+            print('中国股市明天休市')
+        print('------------------------------------------------------------------------------------')
 
-            """
-            道琼斯指数
-            """
-            print('道琼斯：')
-            dt_dja = get_index(url_DJA)
-            print(dt_dja)
-            if Periods.objects.filter(is_result=False, stock__name='3').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='3').first()
-                open_prize(period, dt_dja)
+        """
+        道琼斯指数
+        """
+        print('道琼斯：')
+        dt_dja = get_index(url_DJA)
+        print(dt_dja)
+        if Periods.objects.filter(is_result=False, stock__name='3').exists():
+            period = Periods.objects.filter(is_result=False, stock__name='3').first()
+            open_prize(period, dt_dja)
 
-            # 开奖后放出题目，先判断明天是否休市
-            if market_rest_en():
-                print('放出题目')
-            else:
-                print('美国股市明天休市')
-            print('------------------------------------------------------------------------------------')
+        # 开奖后放出题目，先判断明天是否休市
+        if market_rest_en():
+            print('放出题目')
+        else:
+            print('美国股市明天休市')
+        print('------------------------------------------------------------------------------------')
 
-            """
-            恒生指数
-            """
-            print('恒生指数：')
-            dt_hsi = get_index(url_HSI)
-            print(dt_hsi)
-            if Periods.objects.filter(is_result=False, stock__name='2').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='2').first()
-                open_prize(period, dt_hsi)
+        """
+        恒生指数
+        """
+        print('恒生指数：')
+        dt_hsi = get_index(url_HSI)
+        print(dt_hsi)
+        if Periods.objects.filter(is_result=False, stock__name='2').exists():
+            period = Periods.objects.filter(is_result=False, stock__name='2').first()
+            open_prize(period, dt_hsi)
 
-            # 开奖后放出题目，先判断明天是否休市
-            if market_rest_cn():
-                print('放出题目')
-            else:
-                print('中国股市明天休市')
-            print('------------------------------------------------------------------------------------')
+        # 开奖后放出题目，先判断明天是否休市
+        if market_rest_cn():
+            print('放出题目')
+        else:
+            print('中国股市明天休市')
+        print('------------------------------------------------------------------------------------')
