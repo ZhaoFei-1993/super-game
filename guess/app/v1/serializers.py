@@ -280,7 +280,7 @@ class RecordSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_index(obj):  # 本期开奖指数
         index = ''
-        if obj.earn_coin > 0:
+        if obj.earn_coin > 0 or obj.earn_coin < 0:
             periods = Periods.objects.get(pk=obj.periods_id)
             index = periods.lottery_value
         return index
@@ -288,7 +288,7 @@ class RecordSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_index_colour(obj):  # 本期指数颜色
         index_colour = ''
-        if obj.earn_coin > 0:
+        if obj.earn_coin > 0 or obj.earn_coin < 0:
             periods = Periods.objects.get(pk=obj.periods_id)
             index = periods.lottery_value
             if index > periods.start_value:
