@@ -11,6 +11,8 @@ from .code import API_403_ACCESS_DENY
 import random
 import bisect
 from datetime import datetime, date, timedelta
+from users.models import CoinDetail, UserCoin
+from decimal import Decimal
 
 
 class LoginRequired(IsAuthenticated):
@@ -106,3 +108,41 @@ def time_data(start_date, day, data, days):
     if day<days:
         data=time_data(start_date, day, data, days)
     return data
+
+
+def add_coin_detail(user_id, coin_id, earn_coin):
+    """
+    添加用户资金明细表
+    :param user_id: user表id
+    :param coin_id: 对应那个俱乐部的币的coin_id:
+    :param earn_coin: 赚到的钱
+    :return:
+    """
+    # 用户资金明细表
+    user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
+    coin_detail = CoinDetail()
+    coin_detail.user_id = user_id
+    coin_detail.coin_name = user_coin.coin.name
+    coin_detail.amount = Decimal(earn_coin)
+    coin_detail.rest = user_coin.balance
+    coin_detail.sources = CoinDetail.OPEB_PRIZE
+    coin_detail.save()
+
+
+def add_user_coin(user_id, coin_id, earn_coin):
+    """
+    添加用户资金
+    :param user_id: user表id
+    :param coin_id: 对应那个俱乐部的币的coin_id
+    :param earn_coin: 赚到的钱
+    :return:
+    """
+    try:
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
+    except UserCoin.DoesNotExist:
+        user_coin = UserCoin()
+    user_coin.coin_id = user_coin.coin_id
+    user_coin.user_id = user_id
+    user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
+    user_coin.save()
+

@@ -60,6 +60,8 @@ class Periods(models.Model):
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
 
+    is_result = models.BooleanField(verbose_name='是否已开奖', default=False)
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "期数，开奖后生成下一期记录"
