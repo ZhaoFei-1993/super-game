@@ -844,6 +844,7 @@ class RankingView(ListAPIView):
         if gsg_icon is None:
             gsg_info = Coin.objects.get(id=6)
             gsg_icon = gsg_info.icon
+
         my_ranking = {
             "user_id": user_id,
             "avatar": user.avatar,
@@ -851,15 +852,16 @@ class RankingView(ListAPIView):
             "win_ratio": normalize_fraction(user_coin, 2),
             "ranking": "未上榜"
         }
+
         if 'page' not in request.GET:
             page = 1
         else:
             page = int(request.GET.get('page'))
         i = page * 10
-        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit " + str(
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin uc left join users_user u on u.id = uc.user_id where coin_id = 6 and u.is_robot = 0 GROUP BY user_id ORDER BY aaa desc limit " + str(
             i - 10) + "," + str(i) + ";"
         lists = get_sql(sql)  # 用户拥有的ETH
-        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin where coin_id = 6 GROUP BY user_id ORDER BY aaa desc limit 100"
+        sql = "SELECT user_id,sum(balance) as aaa from users_usercoin uc left join users_user u on u.id = uc.user_id where coin_id = 6 and u.is_robot = 0 GROUP BY user_id ORDER BY aaa desc limit 100"
         user_lists = get_sql(sql)  # 用户拥有的ETH
         a = 1
         for i in user_lists:

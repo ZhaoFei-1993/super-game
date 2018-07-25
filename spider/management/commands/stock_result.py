@@ -97,10 +97,14 @@ def ergodic_record(period, dt):
     # 涨跌玩法
     if dt['status'] == 'up':
         period.up_and_down = '涨'
+        period.up_and_down_en = 'up'
     elif dt['status'] == 'down':
         period.up_and_down = '跌'
+        period.up_and_down_en = 'down'
     else:
         period.up_and_down = '和'
+        period.up_and_down_en = 'draw'
+
     period.save()
 
     # 大小玩法
@@ -108,8 +112,10 @@ def ergodic_record(period, dt):
     num_sum = int(num_spilt[0]) + int(num_spilt[1])
     if num_sum >= 11:
         period.size = '大'
+        period.size_en = 'big'
     else:
         period.size = '小'
+        period.size_en = 'small'
     period.save()
 
     # 点数玩法
