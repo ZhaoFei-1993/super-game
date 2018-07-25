@@ -13,4 +13,8 @@ urlpatterns = [
     path('bet/', views.BetView.as_view(), name="app-v1-guess-bet"),
     # 竞猜记录
     path('records/', views.RecordsListView.as_view(), name="app-v1-guess-records"),
+    # 曲线图(时)
+    path('graph/time/', views.StockGraphListView.as_view(), name="app-v1-guess-graph-time"),
+    # 曲线图(日)
+    path('graph/day/', views.StockGraphDayListView.as_view(), name="app-v1-guess-graph-day"),
 ]

@@ -149,7 +149,19 @@ class Index(models.Model):
 
     class Meta:
         ordering = ['-id']
-        verbose_name = verbose_name_plural = "指数记录表"
+        verbose_name = verbose_name_plural = "指数记录表(时分)"
+
+@reversion.register()
+class Index_day(models.Model):
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    index_value = models.DecimalField(verbose_name='指数值', max_digits=10, decimal_places=2)
+    index_time = models.DateTimeField(verbose_name='指数时间', auto_now_add=True)
+    created_at = models.DateTimeField(verbose_name='创建时间(年月日)', auto_now_add=True)
+    update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "指数记录表(天)"
 
 
 @reversion.register()

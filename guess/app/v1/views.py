@@ -2,8 +2,8 @@
 from django.db import transaction
 from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize
-from ...models import Stock, Record, Play, BetLimit, Options, Periods
+from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize, GraphSerialize, GraphDaySerialize
+from ...models import Stock, Record, Play, BetLimit, Options, Periods, Index, Index_day
 from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -11,7 +11,7 @@ from users.models import UserCoin, CoinDetail, Coin
 from utils.functions import value_judge, guess_is_seal
 from utils.functions import normalize_fraction
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from api import settings
 import pytz
@@ -135,7 +135,7 @@ class PlayView(ListAPIView):
             options_list = Options.objects.filter(play_id=play.pk).order_by("order")
             for options in options_list:
                 is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
-                                                       options_id=options.pk).count()
+                                                  options_id=options.pk).count()
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
@@ -162,7 +162,7 @@ class PlayView(ListAPIView):
                 if options_number == 0:
                     support_number = 0
                 else:
-                    support_number = int(options_number)/int(user_number)    # 支持人数
+                    support_number = int(options_number) / int(user_number)  # 支持人数
 
                 odds = options.odds  # 赔率
 
@@ -204,6 +204,7 @@ class BetView(ListCreateAPIView):
     """
     股票下注
     """
+
     def get_queryset(self):
         pass
 
@@ -242,7 +243,7 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
-        if is_seal==True:
+        if is_seal == True:
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
         try:
@@ -290,14 +291,14 @@ class BetView(ListCreateAPIView):
         record.bets = coins
         record.odds = option_odds.odds
         source = request.META.get('HTTP_X_API_KEY')
-        if source=="ios":
-            source=1
-        elif source=="android":
-            source=2
+        if source == "ios":
+            source = 1
+        elif source == "android":
+            source = 2
         else:
-            source=3
-        if user.is_robot==True:
-            source=4
+            source = 3
+        if user.is_robot == True:
+            source = 4
         record.source = source
         record.save()
         earn_coins = coins * option_odds.odds
@@ -324,6 +325,7 @@ class BetView(ListCreateAPIView):
             }
         }
         return self.response(response)
+
 
 class RecordsListView(ListCreateAPIView):
     """
@@ -371,19 +373,110 @@ class RecordsListView(ListCreateAPIView):
                 "id": fav.get('id'),
                 "stock_id": fav.get('stock_id'),
                 "periods_id": fav.get('periods_id'),
-                "guess_title": fav.get('guess_title'),       # 股票昵称
+                "guess_title": fav.get('guess_title'),  # 股票昵称
                 'earn_coin': fav.get('earn_coin'),  # 竞猜结果
                 'type': fav.get('type'),  # 竞猜结果
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
-                'my_option': fav.get('my_option'),   # 投注选项
-                'is_right': fav.get('is_right'),         # 是否为正确答案
-                'coin_avatar': fav.get('coin_avatar'),          # 货币图标
-                'index': fav.get('index'),             # 指数
-                'index_colour': fav.get('index_colour'),      # 指数颜色
-                'guess_result': fav.get('guess_result'),    # 当期结果
-                'coin_name': fav.get('coin_name'),       # 货币昵称
+                'my_option': fav.get('my_option'),  # 投注选项
+                'is_right': fav.get('is_right'),  # 是否为正确答案
+                'coin_avatar': fav.get('coin_avatar'),  # 货币图标
+                'index': fav.get('index'),  # 指数
+                'index_colour': fav.get('index_colour'),  # 指数颜色
+                'guess_result': fav.get('guess_result'),  # 当期结果
+                'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
-        return self.response({'code': 0, 'data': data})
+
+
+class StockGraphListView(ListCreateAPIView):
+    """
+    曲线图(时)
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = GraphSerialize
+
+    def get_queryset(self):
+        periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
+        info = Index.objects.filter(periods_id=periods_id)
+        return info
+
+    def list(self, request, *args, **kwargs):
+        periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
+        periods_info = Periods.objects.get(pk=periods_id)
+        new_start_value = periods_info.start_value
+        index_info = Index.objects.filter(periods_id=periods_id).first()
+        new_index = index_info.index_value
+        if new_index > new_start_value:
+            index_colour = 1
+            old_amplitude = (new_index - new_start_value) / new_start_value
+            new_amplitude = normalize_fraction(old_amplitude, 2)
+            amplitude = "+" + str(new_amplitude*100) + "%"
+        elif new_index < new_start_value:
+            index_colour = 2             # 股票颜色
+            old_amplitude = (new_start_value - new_index) / new_start_value
+            new_amplitude = normalize_fraction(old_amplitude, 2)
+            amplitude = "-" + str(new_amplitude * 100) + "%"            #幅度
+        else:
+            index_colour = 3
+            amplitude = "0.00%"
+
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        index_value_list = []
+        index_time_list = []
+        for fav in Progress:
+            index_value_list.append(fav.get('index_value'))
+            index_time_list.append(fav.get('time'))
+
+
+        return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
+                              'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour})
+
+class StockGraphDayListView(ListCreateAPIView):
+    """
+    曲线图(日)
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = GraphDaySerialize
+
+    def get_queryset(self):
+        stock_id = int(self.request.GET.get('stock_id'))  # 期数ID
+        now_datetime = datetime.now()
+        now_str_datetime = datetime.strptime(now_datetime, "%Y-%m-%d %H:%M:%S")
+        old_datetime = (now_str_datetime - timedelta(days=90)).strftime('%Y-%m-%d')
+        starting_time = str(old_datetime) + ' 00:00:00'  # 结束时间
+        info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time)
+        return info
+
+    def list(self, request, *args, **kwargs):
+        periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
+        periods_info = Periods.objects.get(pk=periods_id)
+        new_start_value = periods_info.start_value
+        index_info = Index.objects.filter(periods_id=periods_id).first()
+        new_index = index_info.index_value
+        if new_index > new_start_value:
+            index_colour = 1
+            old_amplitude = (new_index - new_start_value) / new_start_value
+            new_amplitude = normalize_fraction(old_amplitude, 2)
+            amplitude = "+" + str(new_amplitude * 100) + "%"
+        elif new_index < new_start_value:
+            index_colour = 2  # 股票颜色
+            old_amplitude = (new_start_value - new_index) / new_start_value
+            new_amplitude = normalize_fraction(old_amplitude, 2)
+            amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
+        else:
+            index_colour = 3
+            amplitude = "0.00%"
+
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        index_value_list = []
+        index_time_list = []
+        for fav in Progress:
+            index_value_list.append(fav.get('index_value'))
+            index_time_list.append(fav.get('index_day'))
+
+        return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
+                              'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour})
