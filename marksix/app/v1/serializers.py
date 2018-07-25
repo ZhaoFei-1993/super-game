@@ -34,7 +34,7 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = OpenPrice
         fields = (
-            "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open'
+            "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open','starting'
         )
 
         # def get_animal(self, obj):
