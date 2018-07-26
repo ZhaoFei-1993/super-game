@@ -236,6 +236,10 @@ class Command(BaseCommand):
                             count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
                             if count == 1:
                                 next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1], '%Y-%m-%d %H:%M:%S')
+                                if open_date in ['2018-12-24', '2018-12-31']:
+                                    next = datetime.datetime.strptime(open_date + ' ' +market_hk_end_time[0],'%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                    while next.isoweekday(self) >= 6 or next in market_rese_hk_dic:
+                                        next += datetime.timedelta(1)
                             else:
                                 next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                                   '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
