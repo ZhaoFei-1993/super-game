@@ -159,7 +159,7 @@ class PlayView(ListAPIView):
                     is_right = 1
                 options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
-                if options_number == 0:
+                if options_number == 0 or user_number == 0:
                     support_number = 0
                 else:
                     support_number = int(options_number) / int(user_number)  # 支持人数
