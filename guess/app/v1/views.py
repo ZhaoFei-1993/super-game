@@ -415,6 +415,9 @@ class StockGraphListView(ListCreateAPIView):
         periods_info = Periods.objects.get(pk=periods_id)
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
+        if index_info == None or index_info == '':
+            return self.response({'code': 0, 'index_value_list': [], 'index_time_list': [],
+                                  'new_index': 0, 'amplitude': 0, 'index_colour': 3})
         new_index = index_info.index_value
         if new_index > new_start_value:
             index_colour = 1
