@@ -142,8 +142,11 @@ def ergodic_record(period, dt):
         rule_dic[record.play.play_name](record)
 
 
-def newobject(periods, stock_name, next_time):
+def newobject(periods, stock_id, next_time):
     start_time = next_time + timedelta(minutes=Guess_Starting)
     rotary_header_time = next_time - timedelta(hours=Guess_Closing)
-    object = Periods(periods=periods, stock_id=stock_id, lottery_time=next_time, start_time=start_time, rotary_header_time=rotary_header_time)
+    object = Periods(periods=periods, stock_id=stock_id, lottery_time=next_time, start_time=start_time,
+                     rotary_header_time=rotary_header_time)
+    object.save()
+    object.lottery_time = next_time
     object.save()
