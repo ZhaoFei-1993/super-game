@@ -400,7 +400,7 @@ class StockGraphListView(ListCreateAPIView):
 
     def get_queryset(self):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
-        info = Index.objects.filter(periods_id=periods_id)
+        info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
@@ -470,7 +470,7 @@ class StockGraphDayListView(ListCreateAPIView):
         stock_id = int(self.request.GET.get('stock_id'))  # 期数ID
         old_datetime = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
         starting_time = str(old_datetime) + ' 00:00:00'  # 结束时间
-        info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time)
+        info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
