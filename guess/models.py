@@ -145,7 +145,7 @@ class Index(models.Model):
     index_value = models.DecimalField(verbose_name='指数值', max_digits=10, decimal_places=2)
     index_time = models.DateTimeField(verbose_name='指数时间', auto_now_add=True)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
-    update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+    update_at = models.DateTimeField(verbose_name='更新时间', auto_now=True)
 
     class Meta:
         ordering = ['-id']
@@ -157,7 +157,7 @@ class Index_day(models.Model):
     index_value = models.DecimalField(verbose_name='指数值', max_digits=10, decimal_places=2)
     index_time = models.DateTimeField(verbose_name='指数时间', auto_now_add=True)
     created_at = models.DateTimeField(verbose_name='创建时间(年月日)', auto_now_add=True)
-    update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+    update_at = models.DateTimeField(verbose_name='更新时间', auto_now=True)
 
     class Meta:
         ordering = ['-id']
