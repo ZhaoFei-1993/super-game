@@ -468,9 +468,7 @@ class StockGraphDayListView(ListCreateAPIView):
 
     def get_queryset(self):
         stock_id = int(self.request.GET.get('stock_id'))  # 期数ID
-        now_datetime = datetime.now()
-        now_str_datetime = now_datetime.strptime("%Y-%m-%d %H:%M:%S")
-        old_datetime = (now_str_datetime - timedelta(days=90)).strftime('%Y-%m-%d')
+        old_datetime = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
         starting_time = str(old_datetime) + ' 00:00:00'  # 结束时间
         info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time)
         return info
