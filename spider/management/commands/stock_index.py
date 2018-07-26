@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from guess.models import Index, Periods
-from .stock_result import ergodic_record
+from .stock_result import ergodic_record, newobject
 import requests
 import datetime
 from utils.cache import *
@@ -19,6 +19,9 @@ headers = {
 }
 market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04', '2018-10-05']
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
+market_rest_cn_end_time=['11:30:00', '15:00:00']
+market_hk_end_time = ['12:00:00', '16:10:00']
+market_en_end_time= ['4:00:00']
 
 
 def market_rest_cn():
@@ -93,6 +96,18 @@ class Command(BaseCommand):
         if Periods.objects.filter(is_result=False, stock__name='0').exists():
             period = Periods.objects.filter(is_result=False, stock__name='0').first()
             open_prize(period, dt_shang)
+            open_date = dt_shang['date'].split(' ')[0]
+            now_date = datetime.datetime.now().date()
+            count = Periods.objects.filter(stock__name='0', lottery_time__date=now_date).count()
+            if count == 1:
+                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1], '%Y-%m-%d %H:%M:%S')
+            else:
+                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
+                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                while next.isoweekday(self) >= 6 or next in market_rest_cn_list:
+                    next += datetime.timedelta(1)
+            per = int(period.period) + 1
+            newobject(str(per), period.stock_id, next)
 
         print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
@@ -102,6 +117,19 @@ class Command(BaseCommand):
         if Periods.objects.filter(is_result=False, stock__name='1').exists():
             period = Periods.objects.filter(is_result=False, stock__name='1').first()
             open_prize(period, dt_sheng)
+            open_date = dt_sheng['date'].split(' ')[0]
+            now_date = datetime.datetime.now().date()
+            count = Periods.objects.filter(stock__name='1', lottery_time__date=now_date).count()
+            if count==1:
+                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1], '%Y-%m-%d %H:%M:%S')
+            else:
+                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0], '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                while next.isoweekday(self) >=6 or next in market_rest_cn_list:
+                    next += datetime.timedelta(1)
+            per = int(period.period)+1
+            newobject(str(per), period.stock_id, next)
+
+
 
         # 开奖后放出题目，先判断明天是否休市
         if market_rest_cn():
@@ -119,7 +147,17 @@ class Command(BaseCommand):
         if Periods.objects.filter(is_result=False, stock__name='3').exists():
             period = Periods.objects.filter(is_result=False, stock__name='3').first()
             open_prize(period, dt_dja)
-
+            open_date = dt_dja['date'].split(' ')[0]
+            now_date = datetime.datetime.now().date()
+            count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
+            if count==0:
+                next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0], '%Y-%m-%d %H:%M:%S')
+            else:
+                next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0], '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                while next.isoweekday(self) >=6 or next in market_rest_cn_list:
+                    next += datetime.timedelta(1)
+            per = int(period.period)+1
+            newobject(str(per), period.stock_id, next)
         # 开奖后放出题目，先判断明天是否休市
         if market_rest_en():
             print('放出题目')
@@ -136,7 +174,17 @@ class Command(BaseCommand):
         if Periods.objects.filter(is_result=False, stock__name='2').exists():
             period = Periods.objects.filter(is_result=False, stock__name='2').first()
             open_prize(period, dt_hsi)
-
+            open_date = dt_hsi['date'].split(' ')[0]
+            now_date = datetime.datetime.now().date()
+            count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
+            if count==1:
+                next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1], '%Y-%m-%d %H:%M:%S')
+            else:
+                next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0], '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                while next.isoweekday(self) >=6 or next in market_rest_cn_list:
+                    next += datetime.timedelta(1)
+            per = int(period.period)+1
+            newobject(str(per), period.stock_id, next)
         # 开奖后放出题目，先判断明天是否休市
         if market_rest_cn():
             print('放出题目')

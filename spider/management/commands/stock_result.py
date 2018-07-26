@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-from guess.models import Record, Options
+from guess.models import Record, Options, Periods
 from users.models import Coin, UserCoin
 from utils.functions import normalize_fraction
 from base.function import add_coin_detail, add_user_coin
+from datetime import datetime, timedelta
+
+Guess_Closing = 1
+Guess_Starting = 5
 
 
 def base_functions(user_id, coin_id, earn_coin):
@@ -137,3 +141,9 @@ def ergodic_record(period, dt):
     for record in Record.objects.filter(periods=period, status='0'):
         rule_dic[record.play.play_name](record)
 
+
+def newobject(periods, stock_name, next_time):
+    start_time = next_time + timedelta(minutes=Guess_Starting)
+    rotary_header_time = next_time - timedelta(hours=Guess_Closing)
+    object = Periods(periods=periods, stock_id=stock_id, lottery_time=next_time, start_time=start_time, rotary_header_time=rotary_header_time)
+    object.save()
