@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from guess.models import Index, Periods
+from guess.models import Index, Periods, Index_day
 from .stock_result import ergodic_record, newobject
 import requests
 import datetime
@@ -70,6 +70,8 @@ def get_index(base_url):
 
 
 def get_dja(period, url, dt):
+    date = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                      "%Y-%m-%d %H:%M:%S")
     if dt['type'] == str(1):
         response = requests.get(url, headers=headers)
         if period.start_value is None:
@@ -86,16 +88,36 @@ def get_dja(period, url, dt):
             index.index_value = float(response.text.split(',')[3])
             index.save()
 
+            if Index_day.objects.filter(stock_id=period.stock.id, created_at=date).exists():
+                index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+                index_day.index_value = float(dt['num'])
+                index_day.save()
+            else:
+                index_day = Index_day()
+                index_day.stock_id = period.stock.id
+                index_day.index_value = float(response.text.split(',')[3])
+                index_day.save()
+                index_day.created_at = date
+                index_day.save()
+
     elif dt['type'] == str(2):
         date_hour = dt['date'].split(' ')[0] + ' ' + dt['date'].split(' ')[1].split(':')[0]
         # print(date_hour)
         # print(period.lottery_time.strftime('%Y-%m-%d %H'))
         if date_hour == period.lottery_time.strftime('%Y-%m-%d %H'):
             ergodic_record(period, dt)
+
+            index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+            index_day.index_value = float(dt['num'])
+            index_day.index_time = period.lottery_time
+            index_day.save()
+
             return True
 
 
 def open_prize(period, dt):
+    date = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                      "%Y-%m-%d %H:%M:%S")
     if dt['type'] == str(1):
         if period.start_value is None:
             period.start_value = float(dt['start_value'])
@@ -111,12 +133,30 @@ def open_prize(period, dt):
             index.index_value = float(dt['num'])
             index.save()
 
+            if Index_day.objects.filter(stock_id=period.stock.id, created_at=date).exists():
+                index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+                index_day.index_value = float(dt['num'])
+                index_day.save()
+            else:
+                index_day = Index_day()
+                index_day.stock_id = period.stock.id
+                index_day.index_value = float(dt['num'])
+                index_day.save()
+                index_day.created_at = date
+                index_day.save()
+
     elif dt['type'] == str(2):
         date_hour = dt['date'].split(' ')[0] + ' ' + dt['date'].split(' ')[1].split(':')[0]
         # print(date_hour)
         # print(period.lottery_time.strftime('%Y-%m-%d %H'))
         if date_hour == period.lottery_time.strftime('%Y-%m-%d %H'):
             ergodic_record(period, dt)
+
+            index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+            index_day.index_value = float(dt['num'])
+            index_day.index_time = period.lottery_time
+            index_day.save()
+
             return True
 
 
@@ -235,9 +275,11 @@ class Command(BaseCommand):
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
                         if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1], '%Y-%m-%d %H:%M:%S')
+                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1],
+                                                              '%Y-%m-%d %H:%M:%S')
                             if open_date in ['2018-12-24', '2018-12-31']:
-                                next = datetime.datetime.strptime(open_date + ' ' +market_hk_end_time[0],'%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
+                                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                                 while next.isoweekday() >= 6 or next in market_rese_hk_dic:
                                     next += datetime.timedelta(1)
                         else:
@@ -261,14 +303,15 @@ class Command(BaseCommand):
                     dt_dja = get_index(url_DJA)
                     print(dt_dja)
                     flag = get_dja(period, url_DJA_other, dt_dja)
-                    if flag is  True:
+                    if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = dt_dja['date'].split(' ')[0]
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
                         if count == 0:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0], '%Y-%m-%d %H:%M:%S')
+                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                                                              '%Y-%m-%d %H:%M:%S')
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
@@ -277,4 +320,3 @@ class Command(BaseCommand):
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
             print('------------------------------------------------------------------------------------')
-
