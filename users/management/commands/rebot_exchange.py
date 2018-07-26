@@ -50,8 +50,6 @@ class Command(BaseCommand):
             user_generated_datetime = []
 
         # 算出随机注册时间与已注册时间差集
-        print("random_datetime======================", random_datetime)
-        print("user_generated_datetime======================", user_generated_datetime)
         diff_random_datetime = list(set(random_datetime) - set(user_generated_datetime))
 
         current_generate_time = ''

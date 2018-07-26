@@ -336,24 +336,31 @@ class RecordsListView(ListCreateAPIView):
 
     def get_queryset(self):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+        print("club_id============================================", club_id)
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
+            print("user_id================================", user_id)
             if 'is_end' not in self.request.GET:
                 record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+                print("record=================================", record)
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
+                print("id_end=================================", is_end)
                 if int(is_end) == 1:
+                    print("000000000000000000000000000000000000000")
                     return Record.objects.filter(
                         status=0,
                         user_id=user_id,
                         club_id=club_id).order_by('-created_at')
                 else:
+                    print("111111111111111111111111111111111111111111111")
                     return Record.objects.filter(status=1,
                                                  user_id=user_id,
                                                  club_id=club_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
+            print("user_id-------------------------------------------------", user_id)
             return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
@@ -388,6 +395,7 @@ class RecordsListView(ListCreateAPIView):
                 'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
+        return self.response({'code': 0, 'data': data})
 
 
 class StockGraphListView(ListCreateAPIView):
@@ -407,6 +415,9 @@ class StockGraphListView(ListCreateAPIView):
         periods_info = Periods.objects.get(pk=periods_id)
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
+        if index_info == None or index_info == '':
+            return self.response({'code': 0, 'index_value_list': [], 'index_time_list': [],
+                                  'new_index': 0, 'amplitude': 0, 'index_colour': 3})
         new_index = index_info.index_value
         if new_index > new_start_value:
             index_colour = 1
