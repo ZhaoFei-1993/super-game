@@ -3,6 +3,7 @@ from rest_framework import serializers
 from ..models import Play, Option, OpenPrice, Number, Animals
 from datetime import datetime
 
+
 class PlayBackendSerializer(serializers.ModelSerializer):
     """
     玩法序列化
@@ -36,6 +37,7 @@ class OptionBackendSerializer(serializers.ModelSerializer):
         created_at = obj.created_at.strftime('%Y-%m-%d %H:%M') if obj.created_at else ''
         return created_at
 
+
 class OpenPriceBackendSerializer(serializers.ModelSerializer):
     """
     开奖结果
@@ -43,7 +45,7 @@ class OpenPriceBackendSerializer(serializers.ModelSerializer):
     closing = serializers.SerializerMethodField()
     open = serializers.SerializerMethodField()
     next_open = serializers.SerializerMethodField()
-    is_timeout = serializers.SerializerMethodField() #是否到时
+    is_timeout = serializers.SerializerMethodField()  # 是否到时
     animal = serializers.SerializerMethodField()
     color = serializers.SerializerMethodField()
     element = serializers.SerializerMethodField()
@@ -51,23 +53,23 @@ class OpenPriceBackendSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OpenPrice
-        fields = ('id', 'issue', 'flat_code', 'special_code', 'animal', 'color', 'element', 'closing', 'starting', 'open', 'next_open', 'is_open','is_timeout')
-
+        fields = (
+        'id', 'issue', 'flat_code', 'special_code', 'animal', 'color', 'element', 'closing', 'starting', 'open',
+        'next_open', 'is_open', 'is_timeout')
 
     @staticmethod
     def get_animal(obj):
         if obj.animal:
             for x in Animals.ANIMAL_CHOICE:
-                if x[0]==int(obj.animal):
+                if x[0] == int(obj.animal):
                     return x[1]
         return ''
-
 
     @staticmethod
     def get_color(obj):
         if obj.color:
             for x in Number.WAVE_CHOICE:
-                if x[0]==int(obj.color):
+                if x[0] == int(obj.color):
                     return x[1]
         return ''
 
@@ -75,7 +77,7 @@ class OpenPriceBackendSerializer(serializers.ModelSerializer):
     def get_element(obj):
         if obj.element:
             for x in Number.ELEMENT_CHOICE:
-                if x[0]==int(obj.color):
+                if x[0] == int(obj.color):
                     return x[1]
         return ''
 
