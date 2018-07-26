@@ -456,8 +456,8 @@ class StockGraphListView(ListCreateAPIView):
 
         return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
                               'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour,
-                              'max_index_value':max_index_value, 'min_index_value':min_index_value
-                              })
+                              'max_index_value':max_index_value, 'min_index_value':min_index_value,
+                              "new_start_value":new_start_value})
 
 class StockGraphDayListView(ListCreateAPIView):
     """
