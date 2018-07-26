@@ -19,6 +19,7 @@ headers = {
 }
 market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04', '2018-10-05']
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
+market_rese_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
 market_rest_cn_end_time = ['11:30:00', '15:00:00']
 market_hk_end_time = ['12:00:00', '16:10:00']
 market_en_end_time = ['4:00:00']
@@ -238,7 +239,7 @@ class Command(BaseCommand):
                             else:
                                 next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                                   '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                                while next.isoweekday(self) >= 6 or next in market_rest_cn_list:
+                                while next.isoweekday(self) >= 6 or next in market_rese_hk_dic:
                                     next += datetime.timedelta(1)
                             per = int(period.periods) + 1
                             newobject(str(per), period.stock_id, next)
