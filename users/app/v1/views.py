@@ -2167,6 +2167,19 @@ class VersionUpdateView(RetrieveAPIView):
     """
     版本更新
     """
+    # def max_version(self, m_version, version):
+    #     """
+    #     版本号转换为数字
+    #     :param version: 版本号
+    #     :return: 数字
+    #     """
+    #     version_list1=m_version.split('.')
+    #     version_list2=version.split('.')
+    #     for x in range(0,3):
+    #         if version_list1[x] < version_list2[x]:
+    #             return version
+    #     return m_version
+
 
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
@@ -2180,15 +2193,18 @@ class VersionUpdateView(RetrieveAPIView):
         if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
         else:
-            last_version = versions.order_by('-create_at')[0]
+            # m_version = version
+            # for x in versions:
+            #     m_version = self.max_version(m_version, x.version)
+            # last_version = versions.filter(version=m_version).order_by('-update_at').first()
+             last_version = versions.order_by('-create_at').first()
         if last_version.version == version:
             return self.response({'code': 0, 'is_new': 0})
         else:
             serialize = AndroidSerializer(last_version)
             if type == 1:
                 data = serialize.data
-                ul_url = data['upload_url'].rsplit('/', 1)[0] + '/version_%s_IOS.plist' % last_version.version
-                data['upload_url'] = ul_url
+                data['plist_url'] = data['plist_url']
             else:
                 data = serialize.data
                 data['is_update'] = True if data['is_update'] else False

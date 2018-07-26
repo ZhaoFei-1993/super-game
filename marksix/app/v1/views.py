@@ -4,7 +4,7 @@ from .serializers import PlaySerializer, OpenPriceSerializer, RecordSerializer, 
 from base import code as error_code
 from django.conf import settings
 from users.models import User, UserCoin
-from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord,MarkSixBetLimit
+from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord, MarkSixBetLimit
 from django.http import JsonResponse, HttpResponse
 from users.finance.functions import get_now
 from marksix.functions import date_exchange
@@ -88,6 +88,7 @@ class OpenViews(ListAPIView):
 
 class OddsViews(ListAPIView):
     permission_classes = (LoginRequired,)
+
     # authentication_classes = ()
 
     def list(self, request, id):
@@ -118,11 +119,11 @@ class OddsViews(ListAPIView):
                 option = play.title
             else:
                 option = play.title_en
-            limit = MarkSixBetLimit.objects.get(club_id=club_id,options_id=id)
+            limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
             bet_odds = {
                 'option': option,
-                'max_limit':limit.max_limit,
-                'min_limit':limit.min_limit,
+                'max_limit': limit.max_limit,
+                'min_limit': limit.min_limit,
                 'id': 1,
                 'odds': res[0].odds
             }
@@ -230,7 +231,7 @@ class BetsViews(ListCreateAPIView):
         user = self.request.user
         user_id = user.id
         # user_id = 1806
-        user = User.objects.get(id=user_id)
+        # user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -238,9 +239,30 @@ class BetsViews(ListCreateAPIView):
         club_id = request.data.get('club_id')
         play_id = request.data.get('play')
         bet = request.data.get('bet')
-        bet_coin = Decimal.from_float(float(request.data.get('bet_coin')))
+        bet_coin = Decimal(request.data.get('bet_coin'))
         issue = request.data.get('issue')
-        content = request.data.get('content')  # 以逗号分割，当为特码或者连码时，传入号码串；当为其他类型时，传入id
+        content = ','.join(map(str,eval(request.data.get('content'))))  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
+
+        # 注数判断
+        if play_id == '3': # 连码
+            try:
+                option_id = request.data.get('option')
+            except:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if not option_id:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            op = Option.objects.get(id=option_id)
+            # 二中二: n(n-1)/2 ,三中二或三中三: n(n-1)(n-2)/6
+            n = len(content.split(','))
+            if op.option == '二中二':
+                if int(bet) != n*(n-1)/2:
+                    raise ParamErrorException(error_code.API_50203_BET_ERROR)
+            else:
+                if int(bet) != n*(n-1)*(n-2)/6:
+                    raise ParamErrorException(error_code.API_50203_BET_ERROR)
+        else:
+            if int(bet) != len(content.split(',')):
+                raise ParamErrorException(error_code.API_50203_BET_ERROR)
 
         if play_id == '1':  # 为特码
             option_id = ''
@@ -316,6 +338,14 @@ class BetsViews(ListCreateAPIView):
         # 判断用户
 
         source = request.META.get('HTTP_X_API_KEY')  # 获取用户请求类型
+        if source == "ios":
+            source = 1
+        elif source == "android":
+            source = 2
+        else:
+            source = 3
+        if user.is_robot == True:
+            source = 4
         # 更新下注表
         sixcord = SixRecord()
         sixcord.play_id = play_id
@@ -324,11 +354,10 @@ class BetsViews(ListCreateAPIView):
         sixcord.option_id = option_id
         sixcord.odds = odds
         sixcord.bet = bet
-        sixcord.betcoin = bet_coin
+        sixcord.bet_coin = bet_coin
         sixcord.issue = issue
         sixcord.content = content
-        if source:  # 如果请求中存在source添加，否则默认为机器人
-            sixcord.source = sixcord.__getattribute__(source.upper())
+        sixcord.source = source
         sixcord.save()
 
         # 更新用户余额UserCoin
