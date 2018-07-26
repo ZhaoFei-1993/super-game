@@ -928,7 +928,7 @@ class ChangeGsg(ListAPIView):
         if has_user_change == None or has_user_change == '':
             has_user_change = 0
         user_change = Decimal(coins) + has_user_change
-        if user_change > 100:
+        if user_change > 5:
             raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
 
         convert_ratio = float(self.request.data['convert_ratio'])  # 获取兑换比例
@@ -1143,7 +1143,7 @@ class ChangeRemainder(ListAPIView):
         if has_user_change == None or has_user_change == '':
             has_user_change = 0
         user_change = Decimal(coins) + has_user_change
-        if user_change > 100:
+        if user_change > 5:
             raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
 
         convert_ratio = float(self.request.GET.get('convert_ratio'))  # 获取兑换比例
