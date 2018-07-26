@@ -336,31 +336,24 @@ class RecordsListView(ListCreateAPIView):
 
     def get_queryset(self):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
-        print("club_id============================================", club_id)
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
-            print("user_id================================", user_id)
             if 'is_end' not in self.request.GET:
                 record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
-                print("record=================================", record)
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
-                print("id_end=================================", is_end)
                 if int(is_end) == 1:
-                    print("000000000000000000000000000000000000000")
                     return Record.objects.filter(
                         status=0,
                         user_id=user_id,
                         club_id=club_id).order_by('-created_at')
                 else:
-                    print("111111111111111111111111111111111111111111111")
                     return Record.objects.filter(status=1,
                                                  user_id=user_id,
                                                  club_id=club_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            print("user_id-------------------------------------------------", user_id)
             return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
@@ -416,34 +409,55 @@ class StockGraphListView(ListCreateAPIView):
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
-            return self.response({'code': 0, 'index_value_list': [], 'index_time_list': [],
-                                  'new_index': 0, 'amplitude': 0, 'index_colour': 3})
-        new_index = index_info.index_value
-        if new_index > new_start_value:
-            index_colour = 1
-            old_amplitude = (new_index - new_start_value) / new_start_value
-            new_amplitude = normalize_fraction(old_amplitude, 2)
-            amplitude = "+" + str(new_amplitude*100) + "%"
-        elif new_index < new_start_value:
-            index_colour = 2             # 股票颜色
-            old_amplitude = (new_start_value - new_index) / new_start_value
-            new_amplitude = normalize_fraction(old_amplitude, 2)
-            amplitude = "-" + str(new_amplitude * 100) + "%"            #幅度
-        else:
+            new_index = 0
             index_colour = 3
             amplitude = "0.00%"
+        else:
+            new_index = index_info.index_value
+            if new_index > new_start_value:
+                index_colour = 1
+                old_amplitude = (new_index - new_start_value) / new_start_value
+                new_amplitude = normalize_fraction(old_amplitude, 2)
+                amplitude = "+" + str(new_amplitude*100) + "%"
+            elif new_index < new_start_value:
+                index_colour = 2             # 股票颜色
+                old_amplitude = (new_start_value - new_index) / new_start_value
+                new_amplitude = normalize_fraction(old_amplitude, 2)
+                amplitude = "-" + str(new_amplitude * 100) + "%"            #幅度
+            else:
+                index_colour = 3
+                amplitude = "0.00%"
 
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         index_value_list = []
         index_time_list = []
+        i = 0
         for fav in Progress:
+            index_value = float(fav.get('index_value'))
+            index_value = float(index_value)
+            if index_value > i:
+                i=index_value
             index_value_list.append(fav.get('index_value'))
             index_time_list.append(fav.get('time'))
-
+        len_number = len(str(i))
+        if len_number == 8:
+            max_index_value = i+10000
+            min_index_value = i-10000
+        elif len_number == 7:
+            max_index_value = i + 1000
+            min_index_value = i - 1000
+        elif len_number == 9:
+            max_index_value = i + 100000
+            min_index_value = i - 100000
+        else:
+            max_index_value = i + 100
+            min_index_value = i - 100
 
         return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
-                              'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour})
+                              'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour,
+                              'max_index_value':max_index_value, 'min_index_value':min_index_value
+                              })
 
 class StockGraphDayListView(ListCreateAPIView):
     """
@@ -455,7 +469,7 @@ class StockGraphDayListView(ListCreateAPIView):
     def get_queryset(self):
         stock_id = int(self.request.GET.get('stock_id'))  # 期数ID
         now_datetime = datetime.now()
-        now_str_datetime = datetime.strptime(now_datetime, "%Y-%m-%d %H:%M:%S")
+        now_str_datetime = now_datetime.strptime("%Y-%m-%d %H:%M:%S")
         old_datetime = (now_str_datetime - timedelta(days=90)).strftime('%Y-%m-%d')
         starting_time = str(old_datetime) + ' 00:00:00'  # 结束时间
         info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time)
@@ -466,28 +480,52 @@ class StockGraphDayListView(ListCreateAPIView):
         periods_info = Periods.objects.get(pk=periods_id)
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
-        new_index = index_info.index_value
-        if new_index > new_start_value:
-            index_colour = 1
-            old_amplitude = (new_index - new_start_value) / new_start_value
-            new_amplitude = normalize_fraction(old_amplitude, 2)
-            amplitude = "+" + str(new_amplitude * 100) + "%"
-        elif new_index < new_start_value:
-            index_colour = 2  # 股票颜色
-            old_amplitude = (new_start_value - new_index) / new_start_value
-            new_amplitude = normalize_fraction(old_amplitude, 2)
-            amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
-        else:
+        if index_info == None or index_info == '':
+            new_index = 0
             index_colour = 3
             amplitude = "0.00%"
+        else:
+            new_index = index_info.index_value
+            if new_index > new_start_value:
+                index_colour = 1
+                old_amplitude = (new_index - new_start_value) / new_start_value
+                new_amplitude = normalize_fraction(old_amplitude, 2)
+                amplitude = "+" + str(new_amplitude * 100) + "%"
+            elif new_index < new_start_value:
+                index_colour = 2  # 股票颜色
+                old_amplitude = (new_start_value - new_index) / new_start_value
+                new_amplitude = normalize_fraction(old_amplitude, 2)
+                amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
+            else:
+                index_colour = 3
+                amplitude = "0.00%"
 
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         index_value_list = []
         index_time_list = []
+        i = 0
         for fav in Progress:
+            index_value = float(fav.get('index_value'))
+            index_value = float(index_value)
+            if index_value > i:
+                i=index_value
             index_value_list.append(fav.get('index_value'))
             index_time_list.append(fav.get('index_day'))
+        len_number = len(str(i))
+        if len_number == 8:
+            max_index_value = i+10000
+            min_index_value = i-10000
+        elif len_number == 7:
+            max_index_value = i + 1000
+            min_index_value = i - 1000
+        elif len_number == 9:
+            max_index_value = i + 100000
+            min_index_value = i - 100000
+        else:
+            max_index_value = i + 100
+            min_index_value = i - 100
 
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
-                              'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour})
+                              'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
+                              'max_index_value':max_index_value, 'min_index_value':min_index_value})
