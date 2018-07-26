@@ -395,6 +395,7 @@ class RecordsListView(ListCreateAPIView):
                 'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
+        return self.response({'code': 0, 'data': data})
 
 
 class StockGraphListView(ListCreateAPIView):
