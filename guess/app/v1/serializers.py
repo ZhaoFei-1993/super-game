@@ -123,12 +123,15 @@ class StockListSerialize(serializers.ModelSerializer):
         previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
         lottery_value = previous_period.lottery_value
         start_value = previous_period.start_value
-        if lottery_value > start_value:
-            previous_result_colour = 1
-        elif lottery_value < start_value:
-            previous_result_colour = 2
-        else:
+        if lottery_value == None or start_value == None:
             previous_result_colour = 3
+        else:
+            if lottery_value > start_value:
+                previous_result_colour = 1
+            elif lottery_value < start_value:
+                previous_result_colour = 2
+            else:
+                previous_result_colour = 3
         return previous_result_colour
 
 
