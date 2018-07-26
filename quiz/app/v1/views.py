@@ -1082,3 +1082,85 @@ class GsgPrice(ListAPIView):
                 "Volume": "暂无数据"
             })
         return self.response({'code': 0, "data": data})
+
+
+class ChangeRemainder(ListAPIView):
+    """
+    兑换检测
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user_id = str(request.user.id)
+
+        day = datetime.now().strftime('%Y-%m-%d')
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
+        number = get_cache(EXCHANGE_QUALIFICATION)
+        if number == None or number == '':
+            everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
+            if len(everydayinjection) <= 0:
+                raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
+            else:
+                number = everydayinjection[0].order
+        if int(number) < 1000:
+            raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
+
+        gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
+        gsg_exchange_date_all = datetime.strptime(gsg_exchange_date, "%Y-%m-%d %H:%M:%S")
+        date_last_all = (gsg_exchange_date_all + timedelta(days=50)).strftime('%Y-%m-%d')
+        end_time_all = str(date_last_all) + ' 23:59:59'  # 结束时间
+        if day > end_time_all:
+            raise ParamErrorException(error_code.API_408_ACTIVITY_ENDS)  # 活动已结束
+        if day < gsg_exchange_date:
+            raise ParamErrorException(error_code.API_407_ACTIVITY_HAS_NOT_STARTED)  # 活动未开始
+
+        coins = float(self.request.GET.get('wager'))  # 获取兑换ETH
+        coin_astrict = float(0.01)
+        if coins < coin_astrict:
+            raise ParamErrorException(error_code.API_70204_ETH_UNQUALIFIED_CONVERTIBILITY)  # 判断兑换值是否大于0.01
+
+        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        day = datetime.now().strftime('%Y-%m-%d')
+        start_time = str(day) + ' 00:00:00'  # 开始时间
+        end_time = str(day) + ' 23:59:59'  # 开始时间
+        sql = "select sum(a.change_gsg_value) from quiz_changerecord a"
+        sql += " where a.created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'" + " for update"
+        is_use = get_sql(sql)[0][0]  # 已经兑换了多少GSG
+        if is_use == None or is_use == '':
+            is_use = 0
+        left_gsg = toplimit - is_use
+
+        sql = "select sum(a.change_eth_value) from quiz_changerecord a"
+        sql += " where a.created_at>= '" + start_time + "'"
+        sql += " and a.created_at<= '" + end_time + "'"
+        sql += " and a.user_id=" + user_id
+        has_user_change = get_sql(sql)[0][0]  # 用户当天已经兑换了多少GSG
+        if has_user_change == None or has_user_change == '':
+            has_user_change = 0
+        user_change = Decimal(coins) + has_user_change
+        if user_change > 5:
+            raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
+
+        convert_ratio = float(self.request.GET.get('convert_ratio'))  # 获取兑换比例
+
+        sql = "select a.balance from users_usercoin a"
+        sql += " where a.coin_id=2"
+        sql += " and a.user_id=" + user_id
+        eth_balance = get_sql(sql)[0][0]  # 用户拥有的ETH
+        if eth_balance < coins:
+            raise ParamErrorException(error_code.API_70205_ETH_NOT_SUFFICIENT_FUNDS)  # 判断用户ETH余额是否足
+
+        gsg_ratio = convert_ratio * coins
+
+        if left_gsg < gsg_ratio:
+            coin_number = left_gsg/convert_ratio
+        else:
+            coin_number = coins
+
+        return self.response({'code': 0, "coin_number": coin_number})
+
