@@ -159,7 +159,7 @@ class PlayView(ListAPIView):
                     is_right = 1
                 options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
-                if options_number == 0:
+                if options_number == 0 or user_number == 0:
                     support_number = 0
                 else:
                     support_number = int(options_number) / int(user_number)  # 支持人数
@@ -400,7 +400,7 @@ class StockGraphListView(ListCreateAPIView):
 
     def get_queryset(self):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
-        info = Index.objects.filter(periods_id=periods_id)
+        info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
@@ -456,8 +456,8 @@ class StockGraphListView(ListCreateAPIView):
 
         return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
                               'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour,
-                              'max_index_value':max_index_value, 'min_index_value':min_index_value
-                              })
+                              'max_index_value':max_index_value, 'min_index_value':min_index_value,
+                              "new_start_value":new_start_value})
 
 class StockGraphDayListView(ListCreateAPIView):
     """
@@ -470,7 +470,7 @@ class StockGraphDayListView(ListCreateAPIView):
         stock_id = int(self.request.GET.get('stock_id'))  # 期数ID
         old_datetime = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
         starting_time = str(old_datetime) + ' 00:00:00'  # 结束时间
-        info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time)
+        info = Index_day.objects.filter(stock_id=stock_id, created_at__gte=starting_time).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
