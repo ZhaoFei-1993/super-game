@@ -97,7 +97,10 @@ class OddsViews(ListAPIView):
         if not club_id:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        coin_name = Club.objects.get(id=club_id).coin.name
+        try:
+            coin_name = Club.objects.get(id=club_id).coin.name
+        except:
+            coin_name = ''
 
         marksix_all_code = "marksix_all_code"  # key
         bet_num = get_cache(marksix_all_code)
