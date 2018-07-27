@@ -216,6 +216,7 @@ class OddsViews(ListAPIView):
                 'current_open': current_open
             }
 
+        print("data========================", data)
         return JsonResponse({'code': 0, 'data': data})
 
 
