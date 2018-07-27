@@ -264,9 +264,12 @@ class RecordSerialize(serializers.ModelSerializer):
 
     def get_my_option(self, obj):  # 我的选项
         options = Options.objects.get(pk=obj.options_id)
-        title = options.title
+        play = Play.objects.get(pk=options.play.id)
+        play_name =  Play.PLAY[int(play.play_name)][1]
+        title = str(play_name)+"："+str(options.title)
         if self.context['request'].GET.get('language') == 'en':
-            title = options.title_en
+            play_name = Play.PLAY_EN[int(play.play_name_en)][1]
+            title = str(play_name)+"："+str(options.title_en)
         return title
 
     @staticmethod
