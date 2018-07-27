@@ -71,7 +71,7 @@ class StockListSerialize(serializers.ModelSerializer):
     def get_index(obj):      # 本期指数
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info==None or index_info=='':
+        if index_info==None or index_info=='' or periods.start_value==None or periods.start_value=='':
             index = 0
         else:
             index = index_info.index_value
@@ -80,12 +80,9 @@ class StockListSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_index_colour(obj):          # 本期指数颜色
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        print("obj.id=================================", obj.id)
-        print("periods_id===========================", periods)
         start_value = periods.start_value
-        print("start_value========================", start_value)
         index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info == None or index_info == '':
+        if index_info == None or index_info == '' or start_value==None or start_value=='':
            index_colour = 3
            return index_colour
         index = index_info.index_value
