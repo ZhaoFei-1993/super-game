@@ -97,6 +97,8 @@ class OddsViews(ListAPIView):
         if not club_id:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
+        coin_name = Club.objects.get(id=club_id).coin.name
+
         marksix_all_code = "marksix_all_code"  # key
         bet_num = get_cache(marksix_all_code)
         if bet_num == None or bet_num == '':
@@ -204,7 +206,8 @@ class OddsViews(ListAPIView):
                 'prev_special': prev_special,
                 'current_issue': current_issue,
                 'current_open': current_open,
-                'bet_num': bet_num
+                'bet_num': bet_num,
+                'coin_name':coin_name
             }
         else:
             data = {
@@ -213,10 +216,10 @@ class OddsViews(ListAPIView):
                 'prev_flat': prev_flat,
                 'prev_special': prev_special,
                 'current_issue': current_issue,
-                'current_open': current_open
+                'current_open': current_open,
+                'coin_name': coin_name
             }
 
-        print("data========================", data)
         return JsonResponse({'code': 0, 'data': data})
 
 
