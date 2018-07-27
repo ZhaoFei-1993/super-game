@@ -7,16 +7,18 @@ import requests
 import datetime
 from utils.cache import *
 import time
+import re
+import local_settings
 
-url_HSI = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=aff194940ee6db5fcb462df18a36f9fd'
-url_DJA = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF&hilight=disp_data.*.title&sitesign=57f039002f70ed02eec684164dad4e7d'
-url_DJA_other = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery17202690225701728284_1532446114928&type=CT&cmd=DJIA_UI&sty=OCGIFO&st=z&js=((x))&token=4f1862fc3b5e77c150a2b985b12db0fd'
-url_SHANG = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8190&from_mid=1&query=%E4%B8%8A%E8%AF%81%E6%8C%87%E6%95%B0&hilight=disp_data.*.title'
-url_SHENG = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8190&from_mid=1&query=%E6%B7%B1%E8%AF%81%E6%88%90%E6%8C%87&hilight=disp_data.*.title'
+url_HSI = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery172010717678041953493_1532447528063&type=CT&cmd=HSI5&sty=OCGIFO&st=z&js=((x))&token=4f1862fc3b5e77c150a2b985b12db0fd'
+url_DJA = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery17202690225701728284_1532446114928&type=CT&cmd=DJIA_UI&sty=OCGIFO&st=z&js=((x))&token=4f1862fc3b5e77c150a2b985b12db0fd'
+url_SHANG = 'http://pdfm.eastmoney.com/EM_UBG_PDTI_Fast/api/js?rtntype=5&token=4f1862fc3b5e77c150a2b985b12db0fd&cb=jQuery18302986275421321969_1532447305292&id=0000011'
+url_SHENG = 'http://pdfm.eastmoney.com/EM_UBG_PDTI_Fast/api/js?rtntype=5&token=4f1862fc3b5e77c150a2b985b12db0fd&cb=jQuery18306190742815473158_1532447588005&id=3990012'
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
+
 market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04', '2018-10-05']
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
 market_rese_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
@@ -34,130 +36,148 @@ market_hk_end_time = ['12:00:00', '16:10:00']
 market_en_end_time = ['04:00:00']
 
 
-def market_rest_cn():
-    tomorrow_cn = datetime.datetime.now() + datetime.timedelta(days=1)
-    if tomorrow_cn.strftime('%Y-%m-%d') in market_rest_cn_list:
-        return False
-    if tomorrow_cn.isoweekday() >= 6:
-        return False
-    return True
-
-
-def market_rest_en():
-    tomorrow_en = datetime.datetime.now() - datetime.timedelta(hours=12) + datetime.timedelta(days=1)
-    if tomorrow_en.strftime('%Y-%m-%d') in market_rest_cn_list:
-        return False
-    if tomorrow_en.isoweekday() >= 6:
-        return False
-    return True
-
-
-def get_index(base_url):
+def get_index_cn(period, base_url):
+    date_now = datetime.datetime.now()
+    date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
+    date_day = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                          "%Y-%m-%d %H:%M:%S")
+    stock_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd
     response = requests.get(base_url, headers=headers)
-    # print(response.json()['data'][0]['disp_data'][0]['status'])
-    # print(response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['cur'])
-    # print(response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update'])
-    # print(response.json()['data'][0]['disp_data'][0]['code'])
-    dt_dic = {
-        'num': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['cur']['num'],
-        'start_value': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['info'][0]['value'],
-        'status': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['cur']['status'],
-        'date': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update']['text'].replace(
-            '/', '-'),
-        'type': response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update']['type'],
+    dt_dic = eval(re.findall('\(.*?\)', response.text)[0][1:-1])
+    data_list = dt_dic['data']
+    if period.start_value is None:
+        period.start_value = float(dt_dic['info']['o'])
+        period.save()
+    if date_now < period.lottery_time:
+        if data_list[0].split(' ') == date_ymd:
+            if get_cache(stock_cache_name) is None:
+                for data in data_list:
+                    dt = data.split(',')
+                    index = Index()
+                    index.periods = period
+                    index.index_value = float(dt[1])
+                    index.save()
+                    index.index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                    index.save()
+                index_day = Index_day()
+                index_day.stock_id = period.stock.id
+                index_day.index_value = float(data_list[-1].split(',')[1])
+                index_day.save()
+                index_day.created_at = date_day
+                index_day.save()
+                set_cache(stock_cache_name, '@'.join(data_list))
+            else:
+                result_list = get_cache(stock_cache_name).split('@')
+                if data_list != result_list:
+                    for data in data_list:
+                        if data not in result_list:
+                            dt = data.split(',')
+                            index = Index()
+                            index.periods = period
+                            index.index_value = float(dt[1])
+                            index.save()
+                            index.index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                            index.save()
+
+                            if data_list.index(data) == len(data_list) - 1:
+                                index_day = Index_day.objects.filter(stock_id=period.stock.id,
+                                                                     created_at=date_day).first()
+                                index_day.index_value = float(dt['num'])
+                                index_day.save()
+                    set_cache(stock_cache_name, '@'.join(data_list))
+    else:
+        num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
+        num = data_list[-1].split(',')[1]
+        time = data_list[-1].split(',')[0]
+        if get_cache(num_cache_name) is None:
+            set_cache(num_cache_name, num + ',' + time + ',1', 3600)
+        else:
+            cache_dt = get_cache(num_cache_name)
+            print(cache_dt)
+            if cache_dt.split(',')[0] == num:
+                count = int(cache_dt.split(',')[2]) + 1
+                if count >= 6:
+                    if float(period.start_value) > float(num):
+                        status = 'up'
+                    elif float(period.start_value) == float(num):
+                        status = 'draw'
+                    elif float(period.start_value) < float(num):
+                        status = 'down'
+
+                    param_dic = {
+                        'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
+                    }
+                    ergodic_record(period, param_dic, date_day)
+                    return True
+                else:
+                    set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
+            else:
+                set_cache(num_cache_name, num + ',' + time + ',1', 3600)
+
+
+def get_index_hk_en(period, base_url):
+    date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
+    date_day = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                          "%Y-%m-%d %H:%M:%S")
+    stock_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd
+    response = requests.get(base_url, headers=headers)
+    dt_list = re.findall('\(.*?\)', response.text)[0][1:-1].split(',')
+    param_dic = {
+        'num': dt_list[3], 'start_value': dt_list[6], 'date': dt_list[-1][:-1], 'type': dt_list[-2],
     }
-    return dt_dic
-
-
-def get_dja(period, url, dt):
-    date = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
-                                      "%Y-%m-%d %H:%M:%S")
-    if dt['type'] == str(1):
-        response = requests.get(url, headers=headers)
-        if period.start_value is None:
-            period.start_value = response.text.split(',')[-5]
-            period.save()
-        if response.text.split(',')[-1][:-2] == get_cache(period.stock.STOCK[int(period.stock.name)][1]):
+    if period.start_value is None:
+        period.start_value = float(param_dic['start_value'])
+        period.save()
+    if int(param_dic['type']) == 0:
+        if dt_list[-1] == get_cache(stock_cache_name):
             print('时间相同不存储')
-            # pass
         else:
             print('时间不同开始存储')
-            set_cache(period.stock.STOCK[int(period.stock.name)][1], response.text.split(',')[-1][:-2])
+            set_cache(stock_cache_name, param_dic['date'])
             index = Index()
             index.periods = period
-            index.index_value = float(response.text.split(',')[3])
+            index.index_value = float(param_dic['num'])
             index.save()
 
-            if Index_day.objects.filter(stock_id=period.stock.id, created_at=date).exists():
-                index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-                index_day.index_value = float(dt['num'])
+            if Index_day.objects.filter(stock_id=period.stock.id, created_at=date_day).exists():
+                index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date_day).first()
+                index_day.index_value = float(param_dic['num'])
                 index_day.save()
             else:
                 index_day = Index_day()
                 index_day.stock_id = period.stock.id
-                index_day.index_value = float(response.text.split(',')[3])
+                index_day.index_value = float(param_dic['num'])
                 index_day.save()
-                index_day.created_at = date
+                index_day.created_at = date_day
                 index_day.save()
-
-    elif dt['type'] == str(2):
-        date_hour = dt['date'].split(' ')[0] + ' ' + dt['date'].split(' ')[1].split(':')[0]
-        # print(date_hour)
-        # print(period.lottery_time.strftime('%Y-%m-%d %H'))
-        if date_hour == period.lottery_time.strftime('%Y-%m-%d %H'):
-            ergodic_record(period, dt)
-
-            index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-            index_day.index_value = float(dt['num'])
-            index_day.index_time = period.lottery_time
-            index_day.save()
-
-            return True
-
-
-def open_prize(period, dt):
-    date = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
-                                      "%Y-%m-%d %H:%M:%S")
-    if dt['type'] == str(1):
-        if period.start_value is None:
-            period.start_value = float(dt['start_value'])
-            period.save()
-        if dt['date'] == get_cache(period.stock.STOCK[int(period.stock.name)][1]):
-            print('时间相同不存储')
-            # pass
+    elif int(param_dic['type']) == 1:
+        num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
+        num = param_dic['num']
+        time = param_dic['date']
+        if get_cache(num_cache_name) is None:
+            set_cache(num_cache_name, num + ',' + time + ',1', 3600)
         else:
-            print('时间不同开始存储')
-            set_cache(period.stock.STOCK[int(period.stock.name)][1], dt['date'])
-            index = Index()
-            index.periods = period
-            index.index_value = float(dt['num'])
-            index.save()
+            cache_dt = get_cache(num_cache_name)
+            print(cache_dt)
+            if cache_dt.split(',')[0] == num:
+                count = int(cache_dt.split(',')[2]) + 1
+                if count >= 6:
+                    if float(period.start_value) > float(num):
+                        status = 'up'
+                    elif float(period.start_value) == float(num):
+                        status = 'draw'
+                    elif float(period.start_value) < float(num):
+                        status = 'down'
 
-            if Index_day.objects.filter(stock_id=period.stock.id, created_at=date).exists():
-                index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-                index_day.index_value = float(dt['num'])
-                index_day.save()
+                    param_dic = {
+                        'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
+                    }
+                    ergodic_record(period, param_dic, date_day)
+                    return True
+                else:
+                    set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
             else:
-                index_day = Index_day()
-                index_day.stock_id = period.stock.id
-                index_day.index_value = float(dt['num'])
-                index_day.save()
-                index_day.created_at = date
-                index_day.save()
-
-    elif dt['type'] == str(2):
-        date_hour = dt['date'].split(' ')[0] + ' ' + dt['date'].split(' ')[1].split(':')[0]
-        # print(date_hour)
-        # print(period.lottery_time.strftime('%Y-%m-%d %H'))
-        if date_hour == period.lottery_time.strftime('%Y-%m-%d %H'):
-            ergodic_record(period, dt)
-
-            index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-            index_day.index_value = float(dt['num'])
-            index_day.index_time = period.lottery_time
-            index_day.save()
-
-            return True
+                set_cache(num_cache_name, num + ',' + time + ',1', 3600)
 
 
 def confirm_time(period):
@@ -177,7 +197,7 @@ def confirm_time(period):
         date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time[i]
 
     start = datetime.datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(minutes=15)
-    end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(minutes=50)
+    end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
     if period.stock.name == '3':
         start = start - datetime.timedelta(days=1)
 
@@ -192,7 +212,6 @@ class Command(BaseCommand):
     help = "抓取证券指数"
 
     def handle(self, *args, **options):
-
         if Periods.objects.filter(is_result=False).exists() is not True:
             print('暂无行情')
         else:
@@ -202,17 +221,17 @@ class Command(BaseCommand):
             print('上证指数：')
             if Periods.objects.filter(is_result=False, stock__name='0').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='0').first()
-                if confirm_time(period) is not True:
+                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
+                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
-                    dt_shang = get_index(url_SHANG)
-                    print(dt_shang)
-                    flag = open_prize(period, dt_shang)
-
+                    # dt_shang = get_index_cn(period, url_SHANG)
+                    # print(dt_shang)
+                    flag = get_index_cn(period, url_SHANG)
                     if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
-                        open_date = dt_shang['date'].split(' ')[0]
+                        open_date = period.lottery_time.strftime('%Y-%m-%d')
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='0', lottery_time__date=now_date).count()
                         if count == 1:
@@ -231,17 +250,17 @@ class Command(BaseCommand):
             print('深证成指：')
             if Periods.objects.filter(is_result=False, stock__name='1').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='1').first()
-                if confirm_time(period) is not True:
+                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='1',
+                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
-                    dt_sheng = get_index(url_SHENG)
-                    print(dt_sheng)
-                    flag = open_prize(period, dt_sheng)
-
+                    # dt_sheng = get_index_cn(period, url_SHENG)
+                    # print(dt_sheng)
+                    flag = get_index_cn(period, url_SHENG)
                     if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
-                        open_date = dt_sheng['date'].split(' ')[0]
+                        open_date = period.lottery_time.strftime('%Y-%m-%d')
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='1', lottery_time__date=now_date).count()
                         if count == 1:
@@ -262,16 +281,17 @@ class Command(BaseCommand):
             print('恒生指数：')
             if Periods.objects.filter(is_result=False, stock__name='2').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='2').first()
-                if confirm_time(period) is not True:
+                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='2',
+                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
-                    dt_hsi = get_index(url_HSI)
-                    print(dt_hsi)
-                    flag = open_prize(period, dt_hsi)
+                    # dt_hsi = get_index_hk_en(period, url_HSI)
+                    # print(dt_hsi)
+                    flag = get_index_hk_en(period, url_HSI)
                     if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
-                        open_date = dt_hsi['date'].split(' ')[0]
+                        open_date = period.lottery_time.strftime('%Y-%m-%d')
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
                         if count == 1:
@@ -297,16 +317,17 @@ class Command(BaseCommand):
             print('道琼斯：')
             if Periods.objects.filter(is_result=False, stock__name='3').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='3').first()
-                if confirm_time(period) is not True:
+                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='3',
+                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
-                    dt_dja = get_index(url_DJA)
-                    print(dt_dja)
-                    flag = get_dja(period, url_DJA_other, dt_dja)
+                    # dt_dja = get_index_hk_en(period, url_DJA)
+                    # print(dt_dja)
+                    flag = get_index_hk_en(period, url_DJA)
                     if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
-                        open_date = dt_dja['date'].split(' ')[0]
+                        open_date = period.lottery_time.strftime('%Y-%m-%d')
                         now_date = datetime.datetime.now().date()
                         count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
                         if count == 0:
