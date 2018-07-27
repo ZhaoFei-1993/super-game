@@ -65,7 +65,7 @@ def get_index_cn(period, base_url):
                 index_day.save()
                 index_day.created_at = date_day
                 index_day.save()
-                set_cache(stock_cache_name, '@'.join(data_list))
+                set_cache(stock_cache_name, '@'.join(data_list), 86400)
             else:
                 result_list = get_cache(stock_cache_name).split('@')
                 if data_list != result_list:
@@ -84,7 +84,7 @@ def get_index_cn(period, base_url):
                                                                      created_at=date_day).first()
                                 index_day.index_value = float(dt['num'])
                                 index_day.save()
-                    set_cache(stock_cache_name, '@'.join(data_list))
+                    set_cache(stock_cache_name, '@'.join(data_list), 86400)
     else:
         num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         num = data_list[-1].split(',')[1]
@@ -133,7 +133,7 @@ def get_index_hk_en(period, base_url):
             print('时间相同不存储')
         else:
             print('时间不同开始存储')
-            set_cache(stock_cache_name, param_dic['date'])
+            set_cache(stock_cache_name, param_dic['date'], 86400)
             index = Index()
             index.periods = period
             index.index_value = float(param_dic['num'])
