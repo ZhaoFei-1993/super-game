@@ -80,14 +80,18 @@ class StockListSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_index_colour(obj):          # 本期指数颜色
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        print("obj.id=================================", obj.id)
+        print("periods_id===========================", periods)
+        start_value = periods.start_value
+        print("start_value========================", start_value)
         index_info = Index.objects.filter(periods=periods.pk).first()
         if index_info == None or index_info == '':
            index_colour = 3
            return index_colour
         index = index_info.index_value
-        if index > periods.start_value:
+        if index > start_value:
             index_colour = 1
-        elif index < periods.start_value:
+        elif index < start_value:
             index_colour = 2
         else:
             index_colour = 3
