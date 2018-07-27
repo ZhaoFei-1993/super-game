@@ -71,7 +71,7 @@ class StockListSerialize(serializers.ModelSerializer):
     def get_index(obj):      # 本期指数
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info==None or index_info=='':
+        if index_info==None or index_info=='' or periods.start_value==None or periods.start_value=='':
             index = 0
         else:
             index = index_info.index_value
@@ -80,14 +80,15 @@ class StockListSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_index_colour(obj):          # 本期指数颜色
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        start_value = periods.start_value
         index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info == None or index_info == '':
+        if index_info == None or index_info == '' or start_value==None or start_value=='':
            index_colour = 3
            return index_colour
         index = index_info.index_value
-        if index > periods.start_value:
+        if index > start_value:
             index_colour = 1
-        elif index < periods.start_value:
+        elif index < start_value:
             index_colour = 2
         else:
             index_colour = 3
@@ -264,9 +265,12 @@ class RecordSerialize(serializers.ModelSerializer):
 
     def get_my_option(self, obj):  # 我的选项
         options = Options.objects.get(pk=obj.options_id)
-        title = options.title
+        play = Play.objects.get(pk=options.play.id)
+        play_name =  Play.PLAY[int(play.play_name)][1]
+        title = str(play_name)+"："+str(options.title)
         if self.context['request'].GET.get('language') == 'en':
-            title = options.title_en
+            play_name = Play.PLAY_EN[int(play.play_name_en)][1]
+            title = str(play_name)+"："+str(options.title_en)
         return title
 
     @staticmethod

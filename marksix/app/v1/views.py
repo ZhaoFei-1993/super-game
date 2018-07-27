@@ -97,6 +97,11 @@ class OddsViews(ListAPIView):
         if not club_id:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
+        try:
+            coin_name = Club.objects.get(id=club_id).coin.name
+        except:
+            coin_name = ''
+
         marksix_all_code = "marksix_all_code"  # key
         bet_num = get_cache(marksix_all_code)
         if bet_num == None or bet_num == '':
@@ -204,7 +209,9 @@ class OddsViews(ListAPIView):
                 'prev_special': prev_special,
                 'current_issue': current_issue,
                 'current_open': current_open,
-                'bet_num': bet_num
+                'bet_num': bet_num,
+                'coin_name':coin_name,
+                'play_id':id
             }
         else:
             data = {
@@ -213,7 +220,9 @@ class OddsViews(ListAPIView):
                 'prev_flat': prev_flat,
                 'prev_special': prev_special,
                 'current_issue': current_issue,
-                'current_open': current_open
+                'current_open': current_open,
+                'coin_name': coin_name,
+                'play_id': id
             }
 
         return JsonResponse({'code': 0, 'data': data})
@@ -241,7 +250,7 @@ class BetsViews(ListCreateAPIView):
         bet = request.data.get('bet')
         bet_coin = Decimal(request.data.get('bet_coin'))
         issue = request.data.get('issue')
-        content = ','.join(map(str,eval(request.data.get('content'))))  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
+        content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
         # 注数判断
         if play_id == '3': # 连码

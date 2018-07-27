@@ -48,8 +48,8 @@ def get_transactions(addresses):
             time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
             # 判断是否USDT
-            # usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
-            usdt_resp = requests.post(usdt_api_url, {'txid': txid})
+            usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
+            # usdt_resp = requests.post(usdt_api_url, {'txid': txid})
             usdt_data = json.loads(usdt_resp.text)
             if usdt_data['data']['error'] is None:
                 transactions[addr].append({

@@ -456,7 +456,7 @@ class StockGraphListView(ListCreateAPIView):
 
         return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
                               'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour,
-                              'max_index_value':max_index_value, 'min_index_value':min_index_value,
+                              'max_index_value':int(max_index_value), 'min_index_value':int(min_index_value),
                               "new_start_value":new_start_value})
 
 class StockGraphDayListView(ListCreateAPIView):
@@ -512,18 +512,18 @@ class StockGraphDayListView(ListCreateAPIView):
             index_time_list.append(fav.get('index_day'))
         len_number = len(str(i))
         if len_number == 8:
-            max_index_value = i+10000
-            min_index_value = i-10000
+            max_index_value = i+3000
+            min_index_value = i-3000
         elif len_number == 7:
-            max_index_value = i + 1000
-            min_index_value = i - 1000
+            max_index_value = i + 500
+            min_index_value = i - 500
         elif len_number == 9:
-            max_index_value = i + 100000
-            min_index_value = i - 100000
+            max_index_value = i + 30000
+            min_index_value = i - 30000
         else:
             max_index_value = i + 100
             min_index_value = i - 100
 
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
                               'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
-                              'max_index_value':max_index_value, 'min_index_value':min_index_value})
+                              'max_index_value':int(max_index_value), 'min_index_value':int(min_index_value)})
