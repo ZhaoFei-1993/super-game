@@ -241,7 +241,7 @@ class BetsViews(ListCreateAPIView):
         bet = request.data.get('bet')
         bet_coin = Decimal(request.data.get('bet_coin'))
         issue = request.data.get('issue')
-        content = ','.join(map(str,eval(request.data.get('content'))))  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
+        content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
         # 注数判断
         if play_id == '3': # 连码
