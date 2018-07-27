@@ -210,7 +210,8 @@ class OddsViews(ListAPIView):
                 'current_issue': current_issue,
                 'current_open': current_open,
                 'bet_num': bet_num,
-                'coin_name':coin_name
+                'coin_name':coin_name,
+                'play_id':id
             }
         else:
             data = {
@@ -220,7 +221,8 @@ class OddsViews(ListAPIView):
                 'prev_special': prev_special,
                 'current_issue': current_issue,
                 'current_open': current_open,
-                'coin_name': coin_name
+                'coin_name': coin_name,
+                'play_id': id
             }
 
         return JsonResponse({'code': 0, 'data': data})
