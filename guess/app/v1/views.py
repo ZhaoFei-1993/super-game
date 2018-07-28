@@ -291,19 +291,19 @@ class BetView(ListCreateAPIView):
         bet_sum = float(bet_sum) + float(coins)
 
         if coin_id == Coin.HAND:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 5000000:
+            if bet_sum['bets__sum'] is not None and bet_sum >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.INT:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 20000:
+            if bet_sum['bets__sum'] is not None and bet_sum >= 20000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.ETH:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 6:
+            if bet_sum['bets__sum'] is not None and bet_sum >= 6:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.BTC:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 0.5:
+            if bet_sum['bets__sum'] is not None and bet_sum >= 0.5:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.USDT:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 3100:
+            if bet_sum['bets__sum'] is not None and bet_sum >= 3100:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
