@@ -74,15 +74,15 @@ class StockListSerialize(serializers.ModelSerializer):
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         return periods.id
 
-    def get_rise(self, obj):      # 看涨人数
-        club_id = self.context['request'].GET.get('club_id')
-        number = 100
-        return number
+    def get_rise(self, obj):      # 猜大人数
+        period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
+        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[1,2,3,4]).count()
+        return count()
 
-    def get_fall(self, obj):      # 看跌人数
-        club_id = self.context['request'].GET.get('club_id')
-        number = 100
-        return number
+    def get_fall(self, obj):      # 猜小人数
+        period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
+        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[5,6,7,8]).count()
+        return count()
 
     @staticmethod
     def get_closing_time(obj):    # 股票封盘时间
