@@ -141,7 +141,8 @@ class PlayView(ListAPIView):
 
         data = []
         for play in plays:
-            user_number = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id).count()
+            user_number = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                                                play_id=play.id).count()
             betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
 
             play_name = Play.PLAY[int(play.play_name)][1]  # 玩法名字
@@ -190,8 +191,6 @@ class PlayView(ListAPIView):
                     support_number = 0
                 else:
                     support_number = int(options_number) / int(user_number)  # 支持人数
-
-                print('support_number=============', support_number)
 
                 odds = options.odds  # 赔率
 
