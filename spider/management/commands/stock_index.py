@@ -240,7 +240,7 @@ class Command(BaseCommand):
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next in market_rest_cn_list:
+                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
                                 next += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
@@ -269,7 +269,7 @@ class Command(BaseCommand):
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next in market_rest_cn_list:
+                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
                                 next += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
@@ -305,7 +305,7 @@ class Command(BaseCommand):
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next in market_rest_cn_list:
+                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
                                 next += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
@@ -336,8 +336,9 @@ class Command(BaseCommand):
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next in market_en_end_time:
+                            while (next-datetime.timedelta(hours=12)).isoweekday() >= 6 or (next-datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
                                 next += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
             print('------------------------------------------------------------------------------------')
+
