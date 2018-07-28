@@ -10,6 +10,28 @@ from chat.models import Club
 from utils.functions import guess_is_seal, normalize_fraction
 
 
+class PeriodsListSerialize(serializers.ModelSerializer):
+    """
+    期数列表序列化
+    """
+    date = serializers.SerializerMethodField()
+    index_value = serializers.SerializerMethodField()
+    is_result = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Periods
+        fields = ('date', 'index_value', 'is_result')
+
+    def get_date(self, obj):
+        return obj.lottery_time.strftime('%Y-%m-%d %H:%M')
+
+    def get_index_value(self, obj):
+        return obj.lottery_value
+
+    def get_is_result(self, obj):
+        return obj.is_result
+
+
 class StockListSerialize(serializers.ModelSerializer):
     """
     股票配置表序列化

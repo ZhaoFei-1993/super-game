@@ -8,7 +8,7 @@ url = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery1
 
 
 class Command(BaseCommand):
-    help = "发送消息"
+    help = "爬取日曲线指数"
 
     def handle(self, *args, **options):
         shang_data = ts.get_k_data('000001', index=True).tail(90)

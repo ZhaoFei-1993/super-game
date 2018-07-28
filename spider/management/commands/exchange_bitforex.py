@@ -19,9 +19,9 @@ class Command(BaseCommand):
         json_dt = response.json()
         for dt in json_dt['data']:
             if dt['busitype'] == 'coin-usdt-etc':
-                value_etc = dt['last']
+                value_etc = float(dt['last'])
             elif dt['busitype'] == 'coin-usdt-eth':
-                value_eth = dt['last']
+                value_eth = float(dt['last'])
 
         gsg_value = GsgValue()
         gsg_value.coin = Coin.objects.get(name='ETC')
