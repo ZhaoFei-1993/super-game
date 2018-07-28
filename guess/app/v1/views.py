@@ -189,7 +189,7 @@ class PlayView(ListAPIView):
                 if options_number == 0 or user_number == 0:
                     support_number = 0
                 else:
-                    support_number = int(options_number) / int(user_number)  # 支持人数
+                    support_number = round(int(options_number) / int(user_number), 2) * 100  # 支持人数
 
                 odds = options.odds  # 赔率
 
