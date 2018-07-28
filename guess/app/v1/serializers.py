@@ -55,7 +55,9 @@ class StockListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_closing_time(obj):    # 股票封盘时间
+        print("obj.od==============================", obj.id)
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        print("periods==============================", periods)
         begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
