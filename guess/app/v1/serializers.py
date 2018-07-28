@@ -31,7 +31,10 @@ class PeriodsListSerialize(serializers.ModelSerializer):
             if self.context['request'].GET.get('language') == 'en':
                 dt = 'Waiting for the draw'
         else:
-            dt = obj.lottery_value
+            if len(str(obj.lottery_value).split('.')) < 2:
+                dt = str(obj.lottery_value) + '0'
+            else:
+                dt = str(obj.lottery_value)
         return dt
 
     def get_is_result(self, obj):
