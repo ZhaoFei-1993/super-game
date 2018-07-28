@@ -105,7 +105,7 @@ class StockListSerialize(serializers.ModelSerializer):
             previous_result = ''
         except Periods.MultipleObjectsReturned:
             previous_result = ''
-        
+
         return previous_result
 
     @staticmethod
@@ -127,10 +127,19 @@ class StockListSerialize(serializers.ModelSerializer):
     def get_previous_result_colour(obj):           # 上期开奖指数颜色
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         last_periods = int(periods.periods) - 1
-        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
-        lottery_value = previous_period.lottery_value
-        start_value = previous_period.start_value
-        if lottery_value == None or start_value == None:
+
+        lottery_value = None
+        start_value = None
+        try:
+            previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
+            lottery_value = previous_period.lottery_value
+            start_value = previous_period.start_value
+        except Periods.DoesNotExist:
+            pass
+        except Periods.MultipleObjectsReturned:
+            pass
+
+        if lottery_value is None or start_value is None:
             previous_result_colour = 3
         else:
             if lottery_value > start_value:
