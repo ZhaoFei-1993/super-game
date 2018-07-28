@@ -286,6 +286,7 @@ class BetView(ListCreateAPIView):
         # 单场比赛最大下注
         bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
             Sum('bets'))
+        bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
         bet_sum = float(bet_sum['bets__sum']) + float(coins)
 
         if coin_id == Coin.HAND:
