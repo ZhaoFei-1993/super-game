@@ -464,10 +464,10 @@ class UserCoinSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_balance(obj):
         balance = normalize_fraction(obj.balance, 8)
-        if obj.coin.name == "USDT":
-            coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
-            lock_coin = normalize_fraction(coin_give.lock_coin, 6)
-            balance -= lock_coin
+        # if obj.coin.name == "USDT":
+        #     coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
+        #     lock_coin = normalize_fraction(coin_give.lock_coin, 6)
+        #     balance -= lock_coin
         return balance
 
     @staticmethod
