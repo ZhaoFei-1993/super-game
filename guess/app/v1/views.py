@@ -191,6 +191,8 @@ class PlayView(ListAPIView):
                 else:
                     support_number = int(options_number) / int(user_number)  # 支持人数
 
+                print('support_number=============', support_number)
+
                 odds = options.odds  # 赔率
 
                 sub_title = options.sub_title  # 选项子标题
