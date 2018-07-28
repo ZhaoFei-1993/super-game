@@ -93,6 +93,7 @@ def status_result(record):
 
 
 def ergodic_record(period, dt, date):
+    print(dt)
     if dt['auto'] is True:
         """
         遍历下注表， 填入正确选项
@@ -114,7 +115,6 @@ def ergodic_record(period, dt, date):
 
         # 大小玩法
         num_spilt = str(num).split('.')[1]
-        print(num_spilt)
         num_sum = int(num_spilt[0]) + int(num_spilt[1])
         if num_sum >= 11:
             period.size = '大'
@@ -143,10 +143,11 @@ def ergodic_record(period, dt, date):
         for record in Record.objects.filter(periods=period, status='0'):
             rule_dic[record.play.play_name](record)
 
-        index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-        index_day.index_value = float(dt['num'])
-        index_day.index_time = period.lottery_time
-        index_day.save()
+        # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+        # print(index_day.id)
+        # index_day.index_value = float(dt['num'])
+        # index_day.index_time = period.lottery_time
+        # index_day.save()
 
 
 def newobject(periods, stock_id, next_time):
