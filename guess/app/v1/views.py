@@ -289,7 +289,7 @@ class BetView(ListCreateAPIView):
         bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
 
         print('--------------------------------------')
-        print('bet_sum=========', bet_sum['bets__sum'])
+        print('bet_sum=========', bet_sum)
         print('--------------------------------------')
 
         bet_sum = float(bet_sum['bets__sum']) + float(coins)
