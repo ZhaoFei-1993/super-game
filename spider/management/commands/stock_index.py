@@ -207,6 +207,7 @@ def confirm_time(period):
     print('start=====', start)
     print('date_now========', date_now)
     print('end========', end)
+    print(start <= date_now <= end)
     if start <= date_now <= end:
         return True
 
