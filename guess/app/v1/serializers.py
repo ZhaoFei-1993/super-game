@@ -98,8 +98,14 @@ class StockListSerialize(serializers.ModelSerializer):
     def get_previous_result(obj):            # 上期开奖指数
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         last_periods = int(periods.periods) - 1
-        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
-        previous_result = previous_period.lottery_value
+        try:
+            previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
+            previous_result = previous_period.lottery_value
+        except Periods.DoesNotExist:
+            previous_result = ''
+        except Periods.MultipleObjectsReturned:
+            previous_result = ''
+        
         return previous_result
 
     @staticmethod
