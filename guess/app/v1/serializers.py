@@ -115,6 +115,9 @@ class StockListSerialize(serializers.ModelSerializer):
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         last_periods = int(periods.periods) - 1
         previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
+        if previous_period==None or previous_period=='':
+            list = ''
+            return list
         up_and_down = previous_period.up_and_down
         size = previous_period.size
         points = previous_period.points
