@@ -204,6 +204,10 @@ def confirm_time(period):
     start = time.mktime(start.timetuple())
     end = time.mktime(end.timetuple())
 
+    print('now=====', datetime.datetime.now())
+    print('lottery_time========', lottery_time)
+    print('date_start========', date_start)
+    print('date_end========', date_end)
     if start <= date_now <= end:
         return True
 
