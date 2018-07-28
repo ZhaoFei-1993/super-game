@@ -2,7 +2,8 @@
 from django.db import transaction
 from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
-from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize, GraphSerialize, GraphDaySerialize
+from .serializers import StockListSerialize, GuessPushSerializer, RecordSerialize, GraphSerialize, GraphDaySerialize, \
+    PeriodsListSerialize
 from ...models import Stock, Record, Play, BetLimit, Options, Periods, Index, Index_day
 from chat.models import Club
 from base import code as error_code
@@ -48,6 +49,32 @@ class StockList(ListAPIView):
                 "fall": list["fall"],
                 "is_seal": list["is_seal"],
                 "result_list": list["result_list"]
+            })
+
+        return self.response({'code': 0, 'data': data})
+
+
+class PeriodsList(ListAPIView):
+    """
+    期数列表
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = PeriodsListSerialize
+
+    def get_queryset(self):
+        stock_id = self.request.GET.get('stock_id')
+        periods_list = Periods.objects.filter(stock_id=stock_id).order_by('-lottery_time')[:15]
+        return periods_list
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for list in items:
+            data.append({
+                "date": list["date"],
+                "index_value": list["index_value"],
+                "is_result": list["is_result"],
             })
 
         return self.response({'code': 0, 'data': data})
@@ -418,12 +445,12 @@ class StockGraphListView(ListCreateAPIView):
                 index_colour = 1
                 old_amplitude = (new_index - new_start_value) / new_start_value
                 new_amplitude = normalize_fraction(old_amplitude, 2)
-                amplitude = "+" + str(new_amplitude*100) + "%"
+                amplitude = "+" + str(new_amplitude * 100) + "%"
             elif new_index < new_start_value:
-                index_colour = 2             # 股票颜色
+                index_colour = 2  # 股票颜色
                 old_amplitude = (new_start_value - new_index) / new_start_value
                 new_amplitude = normalize_fraction(old_amplitude, 2)
-                amplitude = "-" + str(new_amplitude * 100) + "%"            #幅度
+                amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
             else:
                 index_colour = 3
                 amplitude = "0.00%"
@@ -437,13 +464,13 @@ class StockGraphListView(ListCreateAPIView):
             index_value = float(fav.get('index_value'))
             index_value = float(index_value)
             if index_value > i:
-                i=index_value
+                i = index_value
             index_value_list.append(fav.get('index_value'))
             index_time_list.append(fav.get('time'))
         len_number = len(str(i))
         if len_number == 8:
-            max_index_value = i+10000
-            min_index_value = i-10000
+            max_index_value = i + 10000
+            min_index_value = i - 10000
         elif len_number == 7:
             max_index_value = i + 1000
             min_index_value = i - 1000
@@ -454,10 +481,11 @@ class StockGraphListView(ListCreateAPIView):
             max_index_value = i + 100
             min_index_value = i - 100
 
-        return self.response({'code': 0, 'index_value_list':index_value_list, 'index_time_list':index_time_list,
-                              'new_index':new_index, 'amplitude':amplitude, 'index_colour':index_colour,
-                              'max_index_value':int(max_index_value), 'min_index_value':int(min_index_value),
-                              "new_start_value":new_start_value})
+        return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
+                              'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
+                              'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value),
+                              "new_start_value": new_start_value})
+
 
 class StockGraphDayListView(ListCreateAPIView):
     """
@@ -507,13 +535,13 @@ class StockGraphDayListView(ListCreateAPIView):
             index_value = float(fav.get('index_value'))
             index_value = float(index_value)
             if index_value > i:
-                i=index_value
+                i = index_value
             index_value_list.append(fav.get('index_value'))
             index_time_list.append(fav.get('index_day'))
         len_number = len(str(i))
         if len_number == 8:
-            max_index_value = i+3000
-            min_index_value = i-3000
+            max_index_value = i + 3000
+            min_index_value = i - 3000
         elif len_number == 7:
             max_index_value = i + 500
             min_index_value = i - 500
@@ -526,4 +554,4 @@ class StockGraphDayListView(ListCreateAPIView):
 
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
                               'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
-                              'max_index_value':int(max_index_value), 'min_index_value':int(min_index_value)})
+                              'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value)})

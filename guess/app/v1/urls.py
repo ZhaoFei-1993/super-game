@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     # 股票列表
     path('stock/list/', views.StockList.as_view(), name="app-v1-stock-list"),
+    # 期数列表
+    path('stock/periods/', views.PeriodsList.as_view(), name="app-v1-periods-list"),
     # 详情页面推送
     path('guess/list/', views.GuessPushView.as_view(), name="app-v1-guess-push"),
     # 股票选项
