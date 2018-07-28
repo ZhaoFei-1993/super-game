@@ -26,7 +26,13 @@ class PeriodsListSerialize(serializers.ModelSerializer):
         return obj.lottery_time.strftime('%Y-%m-%d %H:%M')
 
     def get_index_value(self, obj):
-        return obj.lottery_value
+        if obj.lottery_value is None:
+            dt = '等待开奖'
+            if self.context['request'].GET.get('language') == 'en':
+                dt = 'Waiting for the draw'
+        else:
+            dt = obj.lottery_value
+        return dt
 
     def get_is_result(self, obj):
         return obj.is_result
