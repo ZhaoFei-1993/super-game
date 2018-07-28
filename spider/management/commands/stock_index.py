@@ -204,10 +204,6 @@ def confirm_time(period):
     start = time.mktime(start.timetuple())
     end = time.mktime(end.timetuple())
 
-    print('start=====', start)
-    print('date_now========', date_now)
-    print('end========', end)
-    print(start <= date_now <= end)
     if start <= date_now <= end:
         return True
 
