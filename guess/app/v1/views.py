@@ -286,7 +286,13 @@ class BetView(ListCreateAPIView):
         # 单场比赛最大下注
         bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
             Sum('bets'))
-        bet_sum = float(bet_sum) + float(self.request.data['bet'])
+        print('---------------------------')
+        print('coins============', coins)
+        print('bet==============', request.data['bet'])
+        print('get_bet==============', request.data.get('bet'))
+        print('---------------------------')
+
+        bet_sum = float(bet_sum) + float(coins)
         if coin_id == Coin.HAND:
             if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
