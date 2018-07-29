@@ -155,7 +155,7 @@ class QuizSerialize(serializers.ModelSerializer):
         sql = "select sum(a.bet) from quiz_record a"
         sql += " where a.quiz_id= '" + obj.pk + "'"
         sql += " and a.roomquiz_id<= '" + roomquiz_id + "'"
-        total_coin = get_sql(sql)[0][0]  # 投注总金额
+        total_coin = get_sql(sql)[0][0]  # 投注金额
         # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
         club = Club.objects.get(pk=roomquiz_id)
         # total_coin = 0
