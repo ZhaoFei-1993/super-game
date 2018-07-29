@@ -11,6 +11,7 @@ from chat.models import Club
 from users.models import User
 from utils.functions import normalize_fraction
 from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
+from utils.cache import get_cache, check_key, set_cache
 
 
 
@@ -84,48 +85,60 @@ class QuizSerialize(serializers.ModelSerializer):
         return total_coin_avatar
 
     def get_win_rate(self, obj):
-        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
-        odds = 0
-        for rule in rule_obj:
-            try:
-                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="h", club_id=roomquiz_id)
-                odds = option.odds
-            except OptionOdds.DoesNotExist:
-                odds = 0
-        return odds
+        quiz_KEY = "QUIZ_LIST_KEY_WIN_RATE" + str(obj.pk)  # key
+        win_rate = check_key(quiz_KEY)
+        if win_rate == 1:
+            roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            win_rate = 0
+            for rule in rule_obj:
+                try:
+                    option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="h", club_id=roomquiz_id)
+                    win_rate = option.odds
+                except OptionOdds.DoesNotExist:
+                    win_rate = 0
+                set_cache(quiz_KEY, win_rate)
+        return win_rate
 
     def get_planish_rate(self, obj):
-        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        quiz_KEY = "QUIZ_LIST_KEY_PLANISH_RATE" + str(obj.pk)  # key
+        planish_rate = check_key(quiz_KEY)
+        if planish_rate == 1:
+            roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
-        vv = Category.objects.get(pk=obj.category_id)
-        type_id = vv.parent_id
-        quiz_type = Category.objects.get(pk=type_id)
-        odds = 0
-        if quiz_type.name == "篮球":
-            odds = ''
-            return odds
-        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
-        for rule in rule_obj:
-            try:
-                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="d", club_id=roomquiz_id)
-                odds = option.odds
-            except OptionOdds.DoesNotExist:
-                odds = 0
-        return odds
+            vv = Category.objects.get(pk=obj.category_id)
+            type_id = vv.parent_id
+            quiz_type = Category.objects.get(pk=type_id)
+            planish_rate = 0
+            if quiz_type.name == "篮球":
+                odds = ''
+                return odds
+            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            for rule in rule_obj:
+                try:
+                    option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="d", club_id=roomquiz_id)
+                    planish_rate = option.odds
+                except OptionOdds.DoesNotExist:
+                    planish_rate = 0
+                set_cache(quiz_KEY, planish_rate)
+        return planish_rate
 
     def get_lose_rate(self, obj):
-        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+        quiz_KEY = "QUIZ_LIST_KEY_LOSE_RATE" + str(obj.pk)  # key
+        quiz_lose_rate = check_key(quiz_KEY)
+        if quiz_lose_rate == 1:
+            roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
-        rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
-        odds = 0
-        for rule in rule_obj:
-            try:
-                option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="a", club_id=roomquiz_id)
-                odds = option.odds
-            except OptionOdds.DoesNotExist:
-                odds = 0
-        return odds
+            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            quiz_lose_rate = 0
+            for rule in rule_obj:
+                try:
+                    option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="a", club_id=roomquiz_id)
+                    quiz_lose_rate = option.odds
+                except OptionOdds.DoesNotExist:
+                    quiz_lose_rate = 0
+                set_cache(quiz_KEY, quiz_lose_rate)
+        return quiz_lose_rate
 
     @staticmethod
     def get_is_end(obj):
@@ -157,10 +170,15 @@ class QuizSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_category(obj):
-        vv = Category.objects.get(pk=obj.category_id)
-        type_id = vv.parent_id
-        quiz_type = Category.objects.get(pk=type_id)
-        return quiz_type.name
+        CATEGORY_KEY = "QUIZ_CATEGORY_KEY" + str(obj.category_id)  # key
+        quiz_type_name = check_key(CATEGORY_KEY)
+        if quiz_type_name == 1:
+            vv = Category.objects.get(pk=obj.category_id)
+            type_id = vv.parent_id
+            quiz_type = Category.objects.get(pk=type_id)
+            quiz_type_name = quiz_type.name
+            set_cache(CATEGORY_KEY, quiz_type_name)
+        return quiz_type_name
 
 
 class RecordSerialize(serializers.ModelSerializer):
