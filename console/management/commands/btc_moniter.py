@@ -48,17 +48,25 @@ def get_transactions(addresses):
             time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
             # 判断是否USDT
-            usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
-            # usdt_resp = requests.post(usdt_api_url, {'txid': txid})
-            usdt_data = json.loads(usdt_resp.text)
-            print('usdt_data = ', usdt_data)
-            # if usdt_data['data']['error'] is None:
+            usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})       # this is for omni api
+            # usdt_resp = requests.post(usdt_api_url, {'txid': txid})       # this is for self servce
+            usdt_data = json.loads(usdt_resp.text)      # this is for omni api
+            # if usdt_data['data']['error'] is None:        # this is for self servce
             if usdt_data['type'] != 'Error - Not Found':
+                # this is for self servce
+                # transactions[addr].append({
+                #     'txid': txid,
+                #     'time': time_dt,
+                #     'value': usdt_data['data']['result']['amount'],
+                #     'confirmations': usdt_data['data']['result']['confirmations'],
+                #     'coin': 'USDT',
+                # })
+                # this is for omni api
                 transactions[addr].append({
                     'txid': txid,
                     'time': time_dt,
-                    'value': usdt_data['data']['result']['amount'],
-                    'confirmations': usdt_data['data']['result']['confirmations'],
+                    'value': usdt_data['amount'],
+                    'confirmations': usdt_data['confirmations'],
                     'coin': 'USDT',
                 })
             else:
