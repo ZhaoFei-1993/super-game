@@ -12,6 +12,7 @@ from users.models import User
 from utils.functions import normalize_fraction
 from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
 from utils.cache import get_cache, check_key, set_cache
+from utils.functions import get_sql
 
 
 
@@ -151,11 +152,15 @@ class QuizSerialize(serializers.ModelSerializer):
 
     def get_total_coin(self, obj):  # 投注总金额
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
+        sql = "select sum(a.bet) from quiz_record a"
+        sql += " where a.quiz_id= '" + obj.pk + "'"
+        sql += " and a.roomquiz_id<= '" + roomquiz_id + "'"
+        total_coin = get_sql(sql)[0][0]  # 投注总金额
+        # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
         club = Club.objects.get(pk=roomquiz_id)
-        total_coin = 0
-        for coin in record:
-            total_coin = total_coin + coin.bet
+        # total_coin = 0
+        # for coin in record:
+        #     total_coin = total_coin + coin.bet
         total_coin = normalize_fraction(total_coin, int(club.coin.coin_accuracy))
         return total_coin
 
