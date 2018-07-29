@@ -58,4 +58,15 @@ def delete_cache(key):
     return cache.delete(key)
 
 
-
+def check_key(key):
+    """
+    检查key值
+    :param key:
+    :return:
+    """
+    name = get_cache(key)
+    if name == None or name == "":
+        list = 0
+    else:
+        list = name
+    return list
