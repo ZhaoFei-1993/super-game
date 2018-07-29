@@ -141,7 +141,7 @@ class PlayView(ListAPIView):
 
         data = []
         for play in plays:
-            user_number = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id).count()
+            user_number = Record.objects.filter(club_id=club_id, periods_id=periods_id, play_id=play.id).count()
             betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
 
             play_name = Play.PLAY[int(play.play_name)][1]  # 玩法名字
@@ -189,7 +189,7 @@ class PlayView(ListAPIView):
                 if options_number == 0 or user_number == 0:
                     support_number = 0
                 else:
-                    support_number = int(options_number) / int(user_number)  # 支持人数
+                    support_number = round((int(options_number) / int(user_number)) * 100, 2)  # 支持人数
 
                 odds = options.odds  # 赔率
 
@@ -286,20 +286,24 @@ class BetView(ListCreateAPIView):
         # 单场比赛最大下注
         bet_sum = Record.objects.filter(user_id=user.id, club_id=club_id, periods_id=periods_id).aggregate(
             Sum('bets'))
+
+        bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
+        bet_sum = float(bet_sum) + float(coins)
+
         if coin_id == Coin.HAND:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 5000000:
+            if bet_sum >= 5000000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.INT:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 20000:
+            if bet_sum >= 20000:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.ETH:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 6:
+            if bet_sum >= 6:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.BTC:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 0.5:
+            if bet_sum >= 0.5:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
         elif coin_id == Coin.USDT:
-            if bet_sum['bets__sum'] is not None and bet_sum['bets__sum'] >= 3100:
+            if bet_sum >= 3100:
                 raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
