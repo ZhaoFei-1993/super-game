@@ -438,7 +438,7 @@ class RandomChar(object):
     def GB2312():
         head = random.randint(0xb0, 0xf7)
         body = random.randint(0xa1, 0xf9)  # 在head区号为55的那一块最后5个汉字是乱码,为了方便缩减下范围
-        val = '{head:x}{body:x}'
+        val = f'{head:x}{body:x}'
         str = bytes.fromhex(val).decode('gb2312')
         return str
 
