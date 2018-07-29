@@ -87,7 +87,7 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_win_rate(self, obj):
         quiz_KEY = "QUIZ_LIST_KEY_WIN_RATE" + str(obj.pk)  # key
         win_rate = check_key(quiz_KEY)
-        if win_rate == 1:
+        if win_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
             rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
             win_rate = 0
@@ -103,7 +103,7 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_planish_rate(self, obj):
         quiz_KEY = "QUIZ_LIST_KEY_PLANISH_RATE" + str(obj.pk)  # key
         planish_rate = check_key(quiz_KEY)
-        if planish_rate == 1:
+        if planish_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
             vv = Category.objects.get(pk=obj.category_id)
@@ -126,7 +126,7 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_lose_rate(self, obj):
         quiz_KEY = "QUIZ_LIST_KEY_LOSE_RATE" + str(obj.pk)  # key
         quiz_lose_rate = check_key(quiz_KEY)
-        if quiz_lose_rate == 1:
+        if quiz_lose_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
             rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
@@ -172,7 +172,7 @@ class QuizSerialize(serializers.ModelSerializer):
     def get_category(obj):
         CATEGORY_KEY = "QUIZ_CATEGORY_KEY" + str(obj.category_id)  # key
         quiz_type_name = check_key(CATEGORY_KEY)
-        if quiz_type_name == 1:
+        if quiz_type_name == 0:
             vv = Category.objects.get(pk=obj.category_id)
             type_id = vv.parent_id
             quiz_type = Category.objects.get(pk=type_id)
