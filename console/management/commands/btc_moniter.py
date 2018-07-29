@@ -50,6 +50,7 @@ def get_transactions(addresses):
             # 判断是否USDT
             usdt_resp = requests.get(omni_url + txid, headers={'content-type': 'application/json'})
             # usdt_resp = requests.post(usdt_api_url, {'txid': txid})
+            print('usdt_data = ', usdt_data.__dict__)
             usdt_data = json.loads(usdt_resp.text)
             if usdt_data['data']['error'] is None:
                 transactions[addr].append({
