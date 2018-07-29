@@ -317,6 +317,8 @@ class UserCoinLock(models.Model):
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="锁定金额", max_digits=32, decimal_places=18,
                                  default=0.000000000000000000)
+    total_amount= models.DecimalField(verbose_name="锁定总金额(不变)", max_digits=32, decimal_places=18,
+                                 default=0.000000000000000000)
     end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
     is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
     is_divided = models.BooleanField(verbose_name="是否已分红", default=False)
