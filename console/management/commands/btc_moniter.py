@@ -52,7 +52,8 @@ def get_transactions(addresses):
             # usdt_resp = requests.post(usdt_api_url, {'txid': txid})
             usdt_data = json.loads(usdt_resp.text)
             print('usdt_data = ', usdt_data)
-            if usdt_data['data']['error'] is None:
+            # if usdt_data['data']['error'] is None:
+            if usdt_data['type'] != 'Error - Not Found':
                 transactions[addr].append({
                     'txid': txid,
                     'time': time_dt,
