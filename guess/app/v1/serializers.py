@@ -76,12 +76,12 @@ class StockListSerialize(serializers.ModelSerializer):
 
     def get_rise(self, obj):      # 猜大人数
         period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
-        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[1,2,3,4]).count()
+        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[49,50,51,52]).count()
         return count
 
     def get_fall(self, obj):      # 猜小人数
         period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
-        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[5,6,7,8]).count()
+        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id, options_id__in=[53,54,55,56]).count()
         return count
 
     @staticmethod
