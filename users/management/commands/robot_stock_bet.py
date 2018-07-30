@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction
 from django.db.models import Q
 
 from guess.models import Stock, Periods, Record, Play, Options, BetLimit
-from users.models import User, UserCoin, CoinValue, Coin
+from users.models import User, Coin
 from chat.models import Club
 from utils.weight_choice import WeightChoice
 
@@ -30,6 +30,38 @@ class Command(BaseCommand):
     key_today_generated = 'robot_stock_bet_quiz_datetime'
 
     robot_bet_change_odds = False
+
+    @staticmethod
+    def get_stock(stock_id):
+        """
+        获取股票名称
+        :param stock_id
+        :return:
+        """
+        stock_name = ''
+        for stock in Stock.STOCK:
+            sid, sname = stock
+            if int(sid) == int(stock_id):
+                stock_name = sname
+                break
+
+        return stock_name
+
+    @staticmethod
+    def get_play(play_id):
+        """
+        获取玩法名称
+        :param play_id:
+        :return:
+        """
+        play_name = ''
+        for play in Play.PLAY:
+            pid, pname = play
+            if int(pid) == int(play_id):
+                play_name = pname
+                break
+
+        return play_name
 
     @transaction.atomic()
     def handle(self, *args, **options):
@@ -101,7 +133,7 @@ class Command(BaseCommand):
                     continue
 
                 # 随机下注选项
-                option = self.get_bet_option(club.id, rule.id)
+                option = self.get_bet_option(rule.id)
                 if option is False:
                     continue
 
@@ -109,7 +141,7 @@ class Command(BaseCommand):
                 user = self.get_bet_user()
 
                 # 随机下注币、赌注
-                wager = self.get_bet_wager(club.coin_id)
+                wager = self.get_bet_wager(club.id, rule.id)
                 current_odds = option.odds
 
                 record = Record()
@@ -123,9 +155,9 @@ class Command(BaseCommand):
                 record.source = Record.ROBOT
                 record.save()
 
-                coin = Coin.objects.get(pk=club.coin_id)
-                vs_info = quiz.host_team + ' VS ' + quiz.guest_team + ' - ' + str(quiz.begin_at)
-                self.stdout.write(self.style.SUCCESS(club.room_title + '(' + vs_info + ') ' + rule.tips + '玩法' + '下注' + str(wager) + '个' + coin.name))
+                bet_message = club.room_title + '-' + self.get_stock(stock.name) + '-' + self.get_play(rule.play_name) + '投注' + option.title + '：金额=' + str(wager)
+                self.stdout.write(self.style.SUCCESS(bet_message))
+                self.stdout.write(self.style.SUCCESS(''))
 
             idx += 1
 
@@ -244,7 +276,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 200)
+        user_total = random.randint(200, 200)
         start_date, end_date = self.get_date()
 
         random_datetime = []
@@ -305,7 +337,7 @@ class Command(BaseCommand):
         :param stock_id:
         :return:
         """
-        plays = Play.objects.get(stock_id=stock_id)
+        plays = Play.objects.filter(stock_id=stock_id)
         plays_weight = {
             1: 70,  # 大小
             2: 20,  # 点数
@@ -326,14 +358,13 @@ class Command(BaseCommand):
         return choice
 
     @staticmethod
-    def get_bet_option(club_id, rule_id):
+    def get_bet_option(play_id):
         """
         获取下注选项，目前随机获取
-        :param club_id 俱乐部ID
-        :param rule_id 玩法ID
+        :param play_id 玩法ID
         :return:
         """
-        options = Options.objects.filter(club_id=club_id, option__rule_id=rule_id).order_by('odds')
+        options = Options.objects.filter(play_id=play_id).order_by('odds')
         if len(options) == 0:
             return False
 
@@ -363,9 +394,9 @@ class Command(BaseCommand):
         coin_id = club.coin_id
 
         bet_limit = BetLimit.objects.get(club_id=club_id, play_id=play_id)
-        bets_one = bet_limit['bets_one']
-        bets_two = bet_limit['bets_two']
-        bets_three = bet_limit['bets_three']
+        bets_one = bet_limit.bets_one
+        bets_two = bet_limit.bets_two
+        bets_three = bet_limit.bets_three
 
         choices = {
             bets_one: 334,
