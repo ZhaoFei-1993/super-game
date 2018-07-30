@@ -187,7 +187,7 @@ class QuizListView(ListCreateAPIView):
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
         print("quiz_id_list=================================", quiz_id_list)
         print("quiz_id_list==============================", len(quiz_id_list))
-        if quiz_id_list != ():
+        if len(quiz_id_list) > 2:
             sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
             sql += " where a.quiz_id in " + str(quiz_id_list)
             sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
@@ -789,14 +789,14 @@ class ProfitView(ListAPIView):
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
-            if 'start_time' not in  self.request.GET:
+            if 'start_time' not in self.request.GET:
                 start_time = '2018-06-01 00:30:00'
             end_time = self.request.GET.get('end_time')
             end_time = str(end_time) + ' 23:59:59'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
-        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type) # key
-        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type) # key
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type)  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type)  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None or name is None:
@@ -817,14 +817,14 @@ class ProfitView(ListAPIView):
         if 'start_time' in self.request.GET:
             start_time = self.request.GET.get('start_time')
         if 'end_time' in self.request.GET:
-            if 'start_time' not in  self.request.GET:
+            if 'start_time' not in self.request.GET:
                 start_time = '2018-06-01 00:30:00'
             end_time = self.request.GET.get('end_time')
             end_time = str(end_time) + ' 23:59:59'
         end_time_all = str(
             (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')).strftime('%Y-%m-%d')) + ' 00:30:00'  # 开始时间
-        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type) # key
-        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type) # key
+        CLUB_PROFIT_DATA = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_data_" + str(type)  # key
+        CLUB_PROFIT_NAME = "club_profit_" + str(start_time) + '_' + str(end_time_all) + "_name_" + str(type)  # key
         data = get_cache(CLUB_PROFIT_DATA)
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None or name is None:
@@ -1246,9 +1246,8 @@ class ChangeRemainder(ListAPIView):
         gsg_ratio = convert_ratio * coins
 
         if left_gsg < gsg_ratio:
-            coin_number = left_gsg/convert_ratio
+            coin_number = left_gsg / convert_ratio
         else:
             coin_number = coins
 
         return self.response({'code': 0, "coin_number": coin_number})
-
