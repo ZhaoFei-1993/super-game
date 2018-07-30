@@ -82,7 +82,8 @@ def get_index_cn(period, base_url):
                             for i in result_list:
                                 result_dt = i.split(',')
                                 result_value = float(result_dt[1])
-                                result_index_time = datetime.datetime.strptime(result_dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                                result_index_time = datetime.datetime.strptime(result_dt[0] + ':00',
+                                                                               "%Y-%m-%d %H:%M:%S")
                                 print(index_time)
                                 print(result_index_time)
                                 if index_time == result_index_time:
@@ -181,7 +182,8 @@ def get_index_hk_en(period, base_url):
                 index_day.save()
                 index_day.created_at = date_day
                 index_day.save()
-    elif int(param_dic['type']) == 1 or int(param_dic['type']) == 2:
+    elif (int(param_dic['type']) == 1 or int(param_dic['type']) == 2) and (
+            datetime.datetime.now() > period.lottery_time):
         num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         num = param_dic['num']
         time = param_dic['date']
@@ -368,9 +370,9 @@ class Command(BaseCommand):
                         else:
                             next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while (next-datetime.timedelta(hours=12)).isoweekday() >= 6 or (next-datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                            while (next - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
+                                    next - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
                                 next += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next)
             print('------------------------------------------------------------------------------------')
-
