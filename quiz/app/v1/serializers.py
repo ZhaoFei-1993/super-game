@@ -156,12 +156,14 @@ class QuizSerialize(serializers.ModelSerializer):
         sql += " where a.quiz_id= '" + str(obj.pk) + "'"
         sql += " and a.roomquiz_id<= '" + str(roomquiz_id) + "'"
         total_coin = get_sql(sql)[0][0]  # 投注金额
+        if total_coin==None or total_coin=='':
+            return 0
         # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
         club = Club.objects.get(pk=roomquiz_id)
         # total_coin = 0
         # for coin in record:
         #     total_coin = total_coin + coin.bet
-        total_coin = normalize_fraction(total_coin, int(club.coin.coin_accuracy))
+        total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
         return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
