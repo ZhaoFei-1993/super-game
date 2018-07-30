@@ -97,8 +97,9 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_total(self, obj):
         flat_code = obj.flat_code.split(',')
+        special_code = obj.special_code
         language = self.context['request'].GET.get('language', 'zh')
-        sum = 0
+        sum = int(special_code)
         for num in flat_code:
             sum += int(num)
         if sum >= 175:
