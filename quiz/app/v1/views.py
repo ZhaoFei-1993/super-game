@@ -102,6 +102,8 @@ class HotestView(ListAPIView):
 
         quiz_id_list = '(' + quiz_id_list + ')'
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+        print("roomquiz_id==========================================", roomquiz_id)
+        print("quiz_id_list===================================", quiz_id_list)
         sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
         sql += " where a.quiz_id in " + str(quiz_id_list)
         sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
