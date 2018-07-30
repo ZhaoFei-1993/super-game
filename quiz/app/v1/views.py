@@ -187,7 +187,7 @@ class QuizListView(ListCreateAPIView):
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
         print("quiz_id_list=================================", quiz_id_list)
         print("quiz_id_list==============================", len(quiz_id_list))
-        if quiz_id_list != ( ) or quiz_id_list != None or quiz_id_list != '':
+        if quiz_id_list != ():
             sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
             sql += " where a.quiz_id in " + str(quiz_id_list)
             sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
