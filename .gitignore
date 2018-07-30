@@ -10,3 +10,4 @@ images
 authentication.py
 captcha_img
 .DS_Store
+nohup.out

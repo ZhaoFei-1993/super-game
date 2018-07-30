@@ -13,9 +13,7 @@ from utils.functions import value_judge, guess_is_seal
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
-import time
-from api import settings
-import pytz
+from utils.functions import value_judge, get_sql
 from django.db.models import Q, Sum
 
 
@@ -163,6 +161,7 @@ class PlayView(ListAPIView):
             for options in options_list:
                 is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
                                                   options_id=options.pk).count()
+
                 is_choice = 0
                 if int(is_record) > 0:
                     is_choice = 1
@@ -196,15 +195,38 @@ class PlayView(ListAPIView):
                 sub_title = options.sub_title  # 选项子标题
                 if self.request.GET.get('language') == 'en':
                     sub_title = options.sub_title_en
-                list.append({
-                    "option_id": options.pk,
-                    "title": title,
-                    "sub_title": sub_title,
-                    "odds": odds,
-                    "is_choice": is_choice,
-                    "is_right": is_right,
-                    "support_number": support_number
-                })
+
+                if int(play.play_name) == 0:
+                    club = Club.objects.get(pk=club_id)
+                    sql = "select sum(a.bets) from guess_record a"
+                    sql += " where a.club_id = '" + str(club_id) + "'"
+                    sql += " and a.periods_id = '" + str(periods_id) + "'"
+                    sql += " and a.options_id = '" + str(options.pk) + "'"
+                    total_coin = get_sql(sql)[0][0]  # 投注金额
+                    if total_coin == None or total_coin == '':
+                        total_coin = 0
+                    else:
+                        total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
+                    list.append({
+                        "option_id": options.pk,
+                        "title": title,
+                        "sub_title": sub_title,
+                        "total_coin": total_coin,
+                        "odds": odds,
+                        "is_choice": is_choice,
+                        "is_right": is_right,
+                        "support_number": support_number
+                    })
+                else:
+                    list.append({
+                        "option_id": options.pk,
+                        "title": title,
+                        "sub_title": sub_title,
+                        "odds": odds,
+                        "is_choice": is_choice,
+                        "is_right": is_right,
+                        "support_number": support_number
+                    })
             data.append({
                 "play_id": play.pk,
                 "play_name": play_name,
