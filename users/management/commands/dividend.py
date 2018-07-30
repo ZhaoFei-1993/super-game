@@ -18,6 +18,7 @@ class Command(BaseCommand):
 
     @transaction.atomic()
     def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS('-----分红脚本开始运行-----'))
         total_gsg = 1000000000
         now_date = datetime.now().date()
         count_date = now_date - timedelta(1)
@@ -126,7 +127,7 @@ class Command(BaseCommand):
                                     'profit':temp_dict[y]
                                 }
                         )
-            print('各种主要币种营收情况：', coins)
+            print('各种主要币种(除垃圾币)营收情况：', coins)
             if coin_locks.exists():
                 for x in coin_locks:
                     for y in coins:
@@ -138,10 +139,10 @@ class Command(BaseCommand):
                             divide.save()
                 self.stdout.write(self.style.SUCCESS('分红完成'))
             else:
-                raise CommandError('当前无锁定记录')
+                self.stdout.write(self.style.SUCCESS('当前无锁定记录'))
         else:
             self.stdout.write(self.style.SUCCESS('今日无开奖无分红'))
-
+        self.stdout.write(self.style.SUCCESS('-----分红脚本结束运行-----'))
 
     def list2dict(self, result):
         temp={}
