@@ -3,6 +3,7 @@ from rest_framework import serializers
 from users.models import Coin
 from chat.models import Club, ClubRule, ClubBanner
 from quiz.models import Record
+from guess.models import Record as Guess_Record
 
 
 class ClubListSerialize(serializers.ModelSerializer):
@@ -47,16 +48,27 @@ class ClubRuleSerialize(serializers.ModelSerializer):
     玩法序列化
     """
     name = serializers.SerializerMethodField()  # 玩法昵称
+    number = serializers.SerializerMethodField()  # 玩法昵称
 
     class Meta:
         model = ClubRule
-        fields = ("id", "name", "room_number", "icon")
+        fields = ("id", "name", "number", "icon")
 
     def get_name(self, obj):  # 货币名称
         name = obj.title
         if self.context['request'].GET.get('language') == 'en':
             name = obj.title_en
         return name
+
+    def get_number(self, obj):
+        club_id = self.context['request'].GET.get('club_id')
+        record_number = 0
+        if obj.id == 1:
+            record_number = Record.objects.filter(roomquiz_id=club_id).count()
+            record_number = record_number * 0.3
+        if obj.id == 3:
+            record_number = Guess_Record.objects.filter(club_id=club_id).count()
+        return int(record_number)
 
 
 class ClubBannerSerialize(serializers.ModelSerializer):
