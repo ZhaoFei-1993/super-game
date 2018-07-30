@@ -78,7 +78,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         res = obj.content
         language = self.context['request'].GET.get('language','zh')
         res_list = res.split(',')
-        if play != '1' and option_id == '':
+        if play != '1' and not option_id:
             content_list = []
             for pk in res_list:
                 if language == 'zh':

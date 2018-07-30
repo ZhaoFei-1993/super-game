@@ -380,13 +380,14 @@ class BetsViews(ListCreateAPIView):
 
 
 class BetsListViews(ListAPIView):
+    # authentication_classes = ()
     permission_classes = (LoginRequired,)
     serializer_class = RecordSerializer
 
     def get_queryset(self):
         user = self.request.user
         user_id = user.id
-        # user_id = 1806
+        # user_id = 52120
         # user = User.objects.get(id=user_id)
         type = self.kwargs['type']
         if type == '0':  # 全部记录
