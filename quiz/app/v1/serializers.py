@@ -12,8 +12,6 @@ from users.models import User
 from utils.functions import normalize_fraction
 from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
 from utils.cache import get_cache, check_key, set_cache
-from utils.functions import get_sql
-
 
 
 class QuizSerialize(serializers.ModelSerializer):
@@ -21,7 +19,6 @@ class QuizSerialize(serializers.ModelSerializer):
     全民竞猜题目列表
     """
 
-    total_coin = serializers.SerializerMethodField()  # 投注总人数
     total_coin_avatar = serializers.SerializerMethodField()  # 投注总金额图标
     is_bet = serializers.SerializerMethodField()  # 是否已投注
     begin_at = serializers.SerializerMethodField()  # 是否已投注
@@ -39,7 +36,7 @@ class QuizSerialize(serializers.ModelSerializer):
         model = Quiz
         fields = (
             "id", "match_name", "host_team", "host_team_avatar", "host_team_score", "guest_team", "guest_team_avatar",
-            "guest_team_score", "begin_at", "total_people", "total_coin", "is_bet", "category", "is_end", "win_rate",
+            "guest_team_score", "begin_at", "total_people", "is_bet", "category", "is_end", "win_rate",
             "planish_rate", "lose_rate", "total_coin_avatar", "status")
 
     @staticmethod
@@ -150,21 +147,21 @@ class QuizSerialize(serializers.ModelSerializer):
 
         return is_end
 
-    def get_total_coin(self, obj):  # 投注总金额
-        roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        sql = "select sum(a.bet) from quiz_record a"
-        sql += " where a.quiz_id= '" + str(obj.pk) + "'"
-        sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
-        total_coin = get_sql(sql)[0][0]  # 投注金额
-        if total_coin==None or total_coin=='':
-            return 0
-        # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
-        club = Club.objects.get(pk=roomquiz_id)
-        # total_coin = 0
-        # for coin in record:
-        #     total_coin = total_coin + coin.bet
-        total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
-        return total_coin
+    # def get_total_coin(self, obj):  # 投注总金额
+    #     roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
+    #     sql = "select sum(a.bet) from quiz_record a"
+    #     sql += " where a.quiz_id= '" + str(obj.pk) + "'"
+    #     sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
+    #     total_coin = get_sql(sql)[0][0]  # 投注金额
+    #     if total_coin==None or total_coin=='':
+    #         return 0
+    #     # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
+    #     club = Club.objects.get(pk=roomquiz_id)
+    #     # total_coin = 0
+    #     # for coin in record:
+    #     #     total_coin = total_coin + coin.bet
+    #     total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
+    #     return total_coin
 
     def get_is_bet(self, obj):  # 是否已投注
         user = self.context['request'].user.id
