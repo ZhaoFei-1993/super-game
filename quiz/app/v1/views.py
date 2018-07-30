@@ -102,13 +102,10 @@ class HotestView(ListAPIView):
 
         quiz_id_list = '(' + quiz_id_list + ')'
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-        print("roomquiz_id==========================================", roomquiz_id)
-        print("quiz_id_list===================================", quiz_id_list)
         sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
         sql += " where a.quiz_id in " + str(quiz_id_list)
         sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
         sql += " group by a.quiz_id"
-        print("sql==========================================", sql)
         total_coin = get_sql(sql)  # 投注金额
         club = Club.objects.get(pk=roomquiz_id)
         for s in total_coin:
@@ -188,10 +185,13 @@ class QuizListView(ListCreateAPIView):
 
         quiz_id_list = '(' + quiz_id_list + ')'
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+        print("roomquiz_id==========================================", roomquiz_id)
+        print("quiz_id_list===================================", quiz_id_list)
         sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
         sql += " where a.quiz_id in " + str(quiz_id_list)
         sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
         sql += " group by a.quiz_id"
+        print("sql==========================================", sql)
         total_coin = get_sql(sql)  # 投注金额
         club = Club.objects.get(pk=roomquiz_id)
         for s in total_coin:
