@@ -52,7 +52,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = ClubRule
-        fields = ("id", "name", "room_number", "icon")
+        fields = ("id", "name", "number", "icon")
 
     def get_name(self, obj):  # 货币名称
         name = obj.title
