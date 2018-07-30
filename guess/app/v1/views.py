@@ -295,6 +295,10 @@ class BetView(ListCreateAPIView):
         if is_seal == True:
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
+        nowtime = datetime.now()
+        if nowtime > periods_info.rotary_header_time:
+            raise ParamErrorException(error_code.API_80101_STOP_BETTING)
+
         try:
             bet_limit = BetLimit.objects.get(club_id=club_id, play_id=play_id)
         except Exception:
