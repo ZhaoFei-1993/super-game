@@ -62,12 +62,14 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
     created_time = serializers.SerializerMethodField()  # 下注时间处理，保留到分钟
     earn = serializers.SerializerMethodField()  # 投注状态，下注结果，下注正确，错误，或者挣钱
     content = serializers.SerializerMethodField() # 下注内容
+    coin_avartar = serializers.SerializerMethodField() # 币种图标
+
 
     class Meta:
         model = SixRecord
         fields = (
             "bet", "bet_coin", "status", "created_time", "issue",
-            "content", 'coin_name', 'option_name', 'earn'
+            "content", 'coin_name', 'option_name', 'earn','coin_avartar'
         )
 
     def get_content(self,obj):
@@ -76,7 +78,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         res = obj.content
         language = self.context['request'].GET.get('language','zh')
         res_list = res.split(',')
-        if play != '1' and option_id != '':
+        if play != '1' and option_id == '':
             content_list = []
             for pk in res_list:
                 if language == 'zh':
@@ -134,6 +136,11 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                 earn = '+' + str(int(earn_coin))
 
         return earn
+
+    def get_coin_avartar(self,obj):
+        club_id = obj.club_id
+        coin_avartar = Club.objects.get(id=club_id).coin.icon
+        return coin_avartar
 
 
 class ColorSerializer(serializers.HyperlinkedModelSerializer):

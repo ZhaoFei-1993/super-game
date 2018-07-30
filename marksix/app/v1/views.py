@@ -27,7 +27,6 @@ from users.models import Coin
 
 
 class SortViews(ListAPIView):
-    # authentication_classes = ()
     permission_classes = (LoginRequired,)
     serializer_class = PlaySerializer
 
@@ -71,7 +70,6 @@ class SortViews(ListAPIView):
 
 
 class OpenViews(ListAPIView):
-    # authentication_classes = ()
     permission_classes = (LoginRequired,)
     serializer_class = OpenPriceSerializer
 
@@ -87,9 +85,7 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    # permission_classes = (LoginRequired,)
-
-    authentication_classes = ()
+    permission_classes = (LoginRequired,)
 
     def list(self, request, id):
         language = request.GET.get('language')
@@ -229,7 +225,6 @@ class OddsViews(ListAPIView):
 
 
 class BetsViews(ListCreateAPIView):
-    # authentication_classes = ()
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
@@ -386,7 +381,6 @@ class BetsViews(ListCreateAPIView):
 
 class BetsListViews(ListAPIView):
     permission_classes = (LoginRequired,)
-    # authentication_classes = ()
     serializer_class = RecordSerializer
 
     def get_queryset(self):
