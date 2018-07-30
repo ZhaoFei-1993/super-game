@@ -4,6 +4,8 @@ from users.models import Coin, UserCoin
 from utils.functions import normalize_fraction
 from base.function import add_coin_detail, add_user_coin
 from datetime import datetime, timedelta
+from chat.models import Club
+from django.db.models import Sum
 
 Guess_Closing = 1
 Guess_Starting = 5
@@ -73,13 +75,17 @@ def pair_result(record):
     base_functions(record.user_id, coin.id, earn_coin)
 
 
-def status_result(record):
+def status_result(record, win_sum_dic, lose_sum_dic):
     """
     玩法：涨跌
     """
+    club_name = record.club.room_title
+    lose_sum = lose_sum_dic[club_name]
+    win_sum = win_sum_dic[club_name]
+
     coin = Coin.objects.get(pk=record.club.coin_id)
     if record.periods.up_and_down == record.options.title:
-        earn_coin = record.bets * record.odds
+        earn_coin = lose_sum * (float(record.bets) / win_sum)
         earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
         record.earn_coin = earn_coin
         record.status = Record.OPEN
@@ -111,17 +117,55 @@ def ergodic_record(period, dt, date):
             period.up_and_down = '和'
             period.up_and_down_en = 'draw'
 
+        # lose_sum_dic = {}
+        # win_sum_dic = {}
+        # if period.up_and_down == '涨':
+        #     lose_option = '跌'
+        # else:
+        #     lose_option = '涨'
+        # for club in Club.objects.all():
+        #     win_sum = Record.objects.filter(club=club, periods=period, play__play_name=str(0),
+        #                                     options__title=period.up_and_down).aggregate(Sum('bets'))
+        #     lose_sum = Record.objects.filter(club=club, periods=period, play__play_name=str(0),
+        #                                      options__title=lose_option).aggregate(Sum('bets'))
+        #     win_bet_sum = float(win_sum['bets__sum'])
+        #     lose_bet_sum = float(lose_sum['bets__sum'])
+        #
+        #     club_name = club.room_title
+        #     lose_sum_dic.update({club_name: lose_bet_sum})
+        #     win_sum_dic.update({club_name: win_bet_sum})
+
+        win_sum_dic = {}
+        lose_sum_dic = {}
+        club_list = []
+        if period.up_and_down == '涨':
+            lose_option = '跌'
+        else:
+            lose_option = '涨'
+        for club in Club.objects.all():
+            club_list.append(club.id)
+            club_name = club.room_title
+            win_sum_dic.update({club_name: 0})
+            lose_sum_dic.update({club_name: 0})
+
+        win_sum_objects = Record.objects.filter(club__in=club_list, periods=period, play__play_name=str(0),
+                                                options__title=period.up_and_down)
+        lose_sum_objects = Record.objects.filter(club__in=club_list, periods=period, play__play_name=str(0),
+                                                 options__title=lose_option)
+        for dt in win_sum_objects:
+            win_sum_dic[dt.club.room_title] = float(win_sum_dic[dt.club.room_title]) + float(dt.bets)
+
+        for dt in lose_sum_objects:
+            lose_sum_dic[dt.club.room_title] = float(lose_sum_dic[dt.club.room_title]) + float(dt.bets)
+
         period.save()
 
         # 大小玩法
         num_spilt = str(num).split('.')[1]
         num_sum = int(num_spilt[1])
-        if num_sum > 5:
+        if num_sum >= 5:
             period.size = '大'
             period.size_en = 'big'
-        elif num_sum == 5:
-            period.size = '5'
-            period.size_en = '5'
         elif num_sum < 5:
             period.size = '小'
             period.size_en = 'small'
@@ -144,7 +188,10 @@ def ergodic_record(period, dt, date):
             '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
         }
         for record in Record.objects.filter(periods=period, status='0'):
-            rule_dic[record.play.play_name](record)
+            if record.play.play_name == str(0):
+                rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
+            else:
+                rule_dic[record.play.play_name](record)
 
         index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
         print(index_day.id)
@@ -160,4 +207,5 @@ def newobject(periods, stock_id, next_time):
                      rotary_header_time=rotary_header_time)
     object.save()
     object.lottery_time = next_time
+    object.rotary_header_time = next_time - datetime.timedelta(hour=1)
     object.save()

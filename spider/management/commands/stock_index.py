@@ -148,6 +148,7 @@ def get_index_cn(period, base_url):
 
 
 def get_index_hk_en(period, base_url):
+    date_now = datetime.datetime.now()
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
     date_day = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                           "%Y-%m-%d %H:%M:%S")
@@ -182,8 +183,7 @@ def get_index_hk_en(period, base_url):
                 index_day.save()
                 index_day.created_at = date_day
                 index_day.save()
-    elif (int(param_dic['type']) == 1 or int(param_dic['type']) == 2) and (
-            datetime.datetime.now() > period.lottery_time):
+    elif (int(param_dic['type']) == 1 or int(param_dic['type']) == 2) and (date_now > period.lottery_time):
         num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         num = param_dic['num']
         time = param_dic['date']
