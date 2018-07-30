@@ -86,7 +86,6 @@ class OpenViews(ListAPIView):
 
 class OddsViews(ListAPIView):
     permission_classes = (LoginRequired,)
-
     def list(self, request, id):
         language = request.GET.get('language')
         club_id = request.GET.get('club_id')
@@ -123,8 +122,6 @@ class OddsViews(ListAPIView):
             limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
             bet_odds = {
                 'option': option,
-                'max_limit': limit.max_limit,
-                'min_limit': limit.min_limit,
                 'id': 1,
                 'odds': res[0].odds
             }
@@ -145,10 +142,8 @@ class OddsViews(ListAPIView):
                     option = item.option
                 else:
                     option = item.option_en
-                limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
+
                 res_dict = {}
-                res_dict['max_limit'] = limit.max_limit
-                res_dict['min_limit'] = limit.min_limit
                 res_dict['id'] = item.id
                 res_dict['option'] = option
                 res_dict['odds'] = item.odds
@@ -197,6 +192,7 @@ class OddsViews(ListAPIView):
             current_issue = (3 - len(current_issue)) * '0' + current_issue
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
 
+        limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
         if id == '3':
             data = {
                 'bet_odds': bet_odds,
@@ -207,7 +203,9 @@ class OddsViews(ListAPIView):
                 'current_open': current_open,
                 'bet_num': bet_num,
                 'coin_name':coin_name,
-                'play_id':id
+                'play_id':id,
+                'max_limit':limit.max_limit,
+                'min_limit':limit.min_limit
             }
         else:
             data = {
@@ -218,24 +216,27 @@ class OddsViews(ListAPIView):
                 'current_issue': current_issue,
                 'current_open': current_open,
                 'coin_name': coin_name,
-                'play_id': id
+                'play_id': id,
+                'max_limit': limit.max_limit,
+                'min_limit': limit.min_limit
             }
 
         return JsonResponse({'code': 0, 'data': data})
 
 
 class BetsViews(ListCreateAPIView):
-    permission_classes = (LoginRequired,)
+    # permission_classes = (LoginRequired,)
+    authentication_classes = ()
 
     def get_queryset(self):
         pass
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的赔率判断
-        user = self.request.user
-        user_id = user.id
-        # user_id = 1806
-        # user = User.objects.get(id=user_id)
+        # user = self.request.user
+        # user_id = user.id
+        user_id = 1806
+        user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -267,6 +268,16 @@ class BetsViews(ListCreateAPIView):
         else:
             if int(bet) != len(content.split(',')):
                 raise ParamErrorException(error_code.API_50203_BET_ERROR)
+            else:
+                option_id = content.split(',')[0]
+
+        # 判断最大最小金额
+        limit = MarkSixBetLimit.objects.get(options_id=option_id,club_id=club_id)
+        limit_max = limit.max_limit
+        limit_min = limit.min_limit
+        if float(bet_coin) > int(bet) * limit_max or float(bet_coin) < int(bet) * limit_min:
+            raise ParamErrorException(error_code.API_50204_BET_ERROR)
+
 
         if play_id == '1':  # 为特码
             option_id = ''
@@ -340,7 +351,6 @@ class BetsViews(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         # 判断用户
-
         source = request.META.get('HTTP_X_API_KEY')  # 获取用户请求类型
         if source == "ios":
             source = 1
@@ -380,7 +390,6 @@ class BetsViews(ListCreateAPIView):
 
 
 class BetsListViews(ListAPIView):
-    # authentication_classes = ()
     permission_classes = (LoginRequired,)
     serializer_class = RecordSerializer
 

@@ -23,6 +23,7 @@ class Number(models.Model):
         (4, '火'),
         (5, '土'),
     )
+
     num = models.SmallIntegerField(verbose_name="号码", null=False)
     color = models.CharField(verbose_name="波色", choices=WAVE_CHOICE, max_length=1)
     element = models.CharField(verbose_name="五行", choices=ELEMENT_CHOICE, max_length=1)
@@ -49,6 +50,7 @@ class Animals(models.Model):
         (11, '狗'),
         (12, '猪'),
     )
+
     num = models.SmallIntegerField(verbose_name="号码", null=False)
     animal = models.CharField(verbose_name="生肖", choices=ANIMAL_CHOICE, max_length=2)
     year = models.CharField(verbose_name="年份", max_length=4)
@@ -119,6 +121,7 @@ class OpenPrice(models.Model):
     animal = models.CharField(verbose_name="生肖", choices=Animals.ANIMAL_CHOICE, max_length=2, default='')
     color = models.CharField(verbose_name="波色", choices=Number.WAVE_CHOICE, max_length=1, default='')
     element = models.CharField(verbose_name="五行", choices=Number.ELEMENT_CHOICE, max_length=1, default='')
+
     closing = models.DateTimeField(verbose_name="封盘时间", null=True)
     open = models.DateTimeField(verbose_name="开奖时间", null=True)
     starting = models.DateTimeField(verbose_name="下期开始投注时间", null=True)
