@@ -70,6 +70,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
             record_number = Guess_Record.objects.filter(club_id=club_id).count()
         return record_number
 
+
 class ClubBannerSerialize(serializers.ModelSerializer):
     """
     轮播图
