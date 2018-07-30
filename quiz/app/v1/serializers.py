@@ -154,7 +154,7 @@ class QuizSerialize(serializers.ModelSerializer):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
         sql = "select sum(a.bet) from quiz_record a"
         sql += " where a.quiz_id= '" + str(obj.pk) + "'"
-        sql += " and a.roomquiz_id<= '" + str(roomquiz_id) + "'"
+        sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
         total_coin = get_sql(sql)[0][0]  # 投注金额
         if total_coin==None or total_coin=='':
             return 0

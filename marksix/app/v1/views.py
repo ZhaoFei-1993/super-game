@@ -87,9 +87,9 @@ class OpenViews(ListAPIView):
 
 
 class OddsViews(ListAPIView):
-    permission_classes = (LoginRequired,)
+    # permission_classes = (LoginRequired,)
 
-    # authentication_classes = ()
+    authentication_classes = ()
 
     def list(self, request, id):
         language = request.GET.get('language')
