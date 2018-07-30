@@ -93,14 +93,15 @@ class QuizListView(ListCreateAPIView):
                     return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
                                                is_delete=False).order_by(
                         '-begin_at')
-            category_id = str(self.request.GET.get('category'))
-            category_arr = category_id.split(',')
-            if int(self.request.GET.get('type')) == 1:  # 未开始
-                return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
-                                           is_delete=False, category__in=category_arr).order_by('begin_at')
-            elif int(self.request.GET.get('type')) == 2:  # 已结束
-                return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
-                                           is_delete=False, category__in=category_arr).order_by('-begin_at')
+            else:
+                category_id = str(self.request.GET.get('category'))
+                category_arr = category_id.split(',')
+                if int(self.request.GET.get('type')) == 1:  # 未开始
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
+                                               is_delete=False, category__in=category_arr).order_by('begin_at')
+                elif int(self.request.GET.get('type')) == 2:  # 已结束
+                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
+                                               is_delete=False, category__in=category_arr).order_by('-begin_at')
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
@@ -112,7 +113,49 @@ class QuizListView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         value = results.data.get('results')
-        return self.response({"code": 0, "data": value})
+        data = []
+        quiz_id_list = ''
+        for fav in value:
+            if quiz_id_list == '':
+                quiz_id_list = fav.get('id')
+            else:
+                quiz_id_list = str(quiz_id_list) + ',' + str(fav.get('id'))
+            data.append({
+                "id": fav.get('id'),
+                "match_name": fav.get('match_name'),
+                "host_team": fav.get('host_team'),
+                'host_team_avatar': fav.get('host_team_avatar'),
+                'guest_team': fav.get('guest_team'),
+                'guest_team_avatar': fav.get('guest_team_avatar'),
+                'guest_team_score': fav.get('guest_team_score'),
+                'begin_at': fav.get('begin_at'),
+                'total_people': fav.get('total_people'),
+                'total_coin': '',
+                'is_bet': fav.get('is_bet'),
+                'category': fav.get('category'),
+                'is_end': fav.get('is_end'),
+                'win_rate': fav.get('win_rate'),
+                'planish_rate': fav.get('planish_rate'),
+                'lose_rate': fav.get('lose_rate'),
+                'total_coin_avatar': fav.get('total_coin_avatar'),
+                'status': fav.get('status'),
+            })
+
+        quiz_id_list = '(' + quiz_id_list + ')'
+        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+        sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
+        sql += " where a.quiz_id in " + str(quiz_id_list)
+        sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
+        sql += " group by a.quiz_id"
+        total_coin = get_sql(sql)  # 投注金额
+        club = Club.objects.get(pk=roomquiz_id)
+        for s in total_coin:
+            for a in data:
+                if a['id'] == s[0]:
+                    a['total_coin'] = int(s[1])
+                    a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+
+        return self.response({"code": 0, "data": data})
 
 
 class RecordsListView(ListCreateAPIView):
