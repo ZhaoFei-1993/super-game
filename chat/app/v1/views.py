@@ -11,7 +11,6 @@ from django.db.models import Q
 from utils.functions import sign_confirmation, language_switch, message_hints
 
 
-
 class ClublistView(ListAPIView):
     """
     俱乐部列表
@@ -43,17 +42,6 @@ class ClublistView(ListAPIView):
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
-        # language = self.request.GET.get('language')
-        # date_now = datetime.now().strftime('%Y%m%d%H%M')
-        # int_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "INT_BAN") + ".jpg?t=%s" % date_now])
-        # usdt_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, language_switch(self.request.GET.get('language'), "USDT") + ".jpg?t=%s" % date_now])
-        # int_act_ban = '/'.join(
-        #     [MEDIA_DOMAIN_HOST, "INT_ACT.jpg?t=%s" % date_now])
-        # banner = ([] if language == 'en' else [{"img_url": int_ban, "action": 'Invite_New'}]) \
-        #          + [{"img_url": usdt_ban, "action": 'USDT_ACTIVE'}] \
-        #          + ([] if language == 'en' else [{"img_url": int_act_ban, "action": 'INT_COIN_ACTIVITY'}])  # 活动轮播图
         for item in items:
             coin = item['coin']
             data.append(

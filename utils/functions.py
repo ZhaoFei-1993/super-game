@@ -14,11 +14,11 @@ from PIL import Image
 from decimal import Decimal
 from django.db import transaction
 from django.conf import settings
-from django.db.models import Sum
+from django.db.models import Sum, Q
+from chat.models import Club
 from base.exceptions import ParamErrorException
 from api.settings import MEDIA_ROOT, MEDIA_DOMAIN_HOST
 import os
-from django.db.models import Q
 from config.models import Admin_Operation
 from quiz.models import Record
 from base import code
@@ -590,3 +590,20 @@ def guess_is_seal(info):
         info.is_seal == 1
         info.save()
     return info.is_seal
+
+
+def effect_user():
+    sql = "select a.id from users_user a"
+    sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+    sql += " where b.count <=3 "
+    sql += " and is_robot=0 and is_block=0"
+    dt_all = list(get_sql(sql))
+
+    sql = "select distinct(user_id) from users_userrecharge"
+    dt_recharge = list(get_sql(sql))
+
+    dt_all = list(set(dt_all + dt_recharge))
+    dd = []
+    for x in dt_all:
+        dd.append((x[0]))
+    return dd

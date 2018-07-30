@@ -52,7 +52,6 @@ class ClubRuleSerialize(serializers.ModelSerializer):
         model = ClubRule
         fields = ("id", "name", "room_number", "icon")
 
-
     def get_name(self, obj):  # 货币名称
         name = obj.title
         if self.context['request'].GET.get('language') == 'en':

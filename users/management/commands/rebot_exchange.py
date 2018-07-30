@@ -268,11 +268,11 @@ class Command(BaseCommand):
         users = get_cache(EXCHANGE_QUALIFICATION_INFO)
         EXCHANGE_QUALIFICATION_USER_ID_NUMBER = "all_exchange_qualification__info_number" + str(date_now)  # key
         user_info_list_number = get_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER)
-        if user_info_list_number < 500:
+        if user_info_list_number is None or user_info_list_number < 500:
             users = User.objects.filter(is_robot=True)[:800]
         secure_random = random.SystemRandom()
-        user_id = secure_random.choice(users)
-        user_info = User.objects.get(pk=user_id)
+        user_choice = secure_random.choice(users)
+        user_info = User.objects.get(pk=user_choice.id)
         return user_info
 
     @staticmethod
@@ -284,7 +284,7 @@ class Command(BaseCommand):
         date_now = datetime.now().strftime('%Y-%m-%d')
         EXCHANGE_QUALIFICATION_USER_ID_NUMBER = "all_exchange_qualification__info_number" + str(date_now)  # key
         user_info_list_number = get_cache(EXCHANGE_QUALIFICATION_USER_ID_NUMBER)
-        if user_info_list_number < 500:
+        if user_info_list_number is None or user_info_list_number < 500:
             user_info_list_number = 800
         return user_info_list_number
 
