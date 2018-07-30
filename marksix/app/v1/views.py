@@ -225,18 +225,18 @@ class OddsViews(ListAPIView):
 
 
 class BetsViews(ListCreateAPIView):
-    # permission_classes = (LoginRequired,)
-    authentication_classes = ()
+    permission_classes = (LoginRequired,)
+    # authentication_classes = ()
 
     def get_queryset(self):
         pass
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的赔率判断
-        # user = self.request.user
-        # user_id = user.id
-        user_id = 1806
-        user = User.objects.get(id=user_id)
+        user = self.request.user
+        user_id = user.id
+        # user_id = 1806
+        # user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
