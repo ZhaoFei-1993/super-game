@@ -141,7 +141,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS('当前无锁定记录'))
         else:
-            self.stdout.write(self.style.SUCCESS('今日无开奖无分红'))
+            self.stdout.write(self.style.SUCCESS('昨日无开奖无分红'))
         self.stdout.write(self.style.SUCCESS('-----分红脚本结束运行-----'))
 
     def list2dict(self, result):
