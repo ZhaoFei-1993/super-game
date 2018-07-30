@@ -372,7 +372,7 @@ class Message(models.Model):
     title_en = models.CharField(verbose_name="英文消息标题", max_length=100, default="")
     content = models.CharField(verbose_name="消息内容", max_length=255, default="")
     content_en = models.CharField(verbose_name="英文消息内容", max_length=255, default="")
-    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
+    # is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
