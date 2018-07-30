@@ -60,7 +60,8 @@ def handle_activity(record, coin, earn_coin):
                     u_mes.user_id = record.user_id
                     u_mes.message_id = 6  # 私人信息
                     u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
-                    u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(coin=coin).room_title_en
+                    u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(
+                        coin=coin).room_title_en
                     u_mes.content = '恭喜您获得USDT活动奖励共 ' + str(trunc(lock_coin, 2)) + 'USDT，祝贺您。'
                     u_mes.content_en = 'Congratulations on your USDT event award, ' + str(
                         trunc(lock_coin, 2)) + 'in total.Congratulations for you.'
@@ -103,8 +104,9 @@ def handle_activity(record, coin, earn_coin):
 
 
 def get_data(url):
+    print('正在发起请求,竞彩网')
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=20)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[12:-2])
@@ -126,6 +128,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     try:
         result_list = []
         new_url = 'http://www.310win.com/jingcaizuqiu/kaijiang_jc_all.html'
+        print('正在发起请求,彩客网')
         response = requests.get(new_url, headers=headers, timeout=20)
         soup = BeautifulSoup(response.text, 'lxml')
         data = list(soup.select('div[id="lottery_container"]')[0].children)
@@ -297,6 +300,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     records = Record.objects.filter(~Q(rule__type=str(Rule.AISA_RESULTS)), quiz=quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
+            print('正在处理record_id为:', record.id)
             # 用户增加对应币金额
             club = Club.objects.get(pk=record.roomquiz_id)
 
@@ -390,6 +394,7 @@ def handle_delay_game(delay_quiz):
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
+            print('正在处理record_id为:', record.id)
             # 延迟比赛，返回用户投注的钱
             return_coin = record.bet
             record.earn_coin = return_coin
@@ -556,11 +561,13 @@ class Command(BaseCommand):
     #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
+        print('进入脚本')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                category__parent_id=2).exists():
-            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                                                  category__parent_id=2):
+            delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                                              category__parent_id=2)
+            for delay_quiz in delay_quizs:
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
                 delay_quiz.save()

@@ -23,10 +23,6 @@ market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
 market_rese_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
 
-market_rest_cn_end_time = ['11:30:00', '15:00:00']
-market_hk_end_time = ['12:00:00', '16:10:00']
-market_en_end_time = ['4:00:00']
-
 market_rest_cn_start_time = ['09:30:00', '13:00:00']
 market_hk_start_time = ['09:30:00', '13:00:00']
 market_en_start_time = ['21:30:00']
@@ -49,15 +45,22 @@ def get_index_cn(period, base_url):
         period.start_value = float(dt_dic['info']['o'])
         period.save()
     if date_now < period.lottery_time:
-        if data_list[0].split(' ') == date_ymd:
+        if data_list[0].split(' ')[0] == date_ymd:
             if get_cache(stock_cache_name) is None:
                 for data in data_list:
                     dt = data.split(',')
+                    value = float(dt[1])
+                    index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+
+                    print('第一次次开始存储 ')
+                    print('value===> ', value)
+                    print('time====>', index_time)
+
                     index = Index()
                     index.periods = period
-                    index.index_value = float(dt[1])
+                    index.index_value = value
                     index.save()
-                    index.index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                    index.index_time = index_time
                     index.save()
                 index_day = Index_day()
                 index_day.stock_id = period.stock.id
@@ -70,19 +73,47 @@ def get_index_cn(period, base_url):
                 result_list = get_cache(stock_cache_name).split('@')
                 if data_list != result_list:
                     for data in data_list:
+                        dt = data.split(',')
+                        value = float(dt[1])
+                        index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+
+                        flag = False
                         if data not in result_list:
-                            dt = data.split(',')
-                            index = Index()
-                            index.periods = period
-                            index.index_value = float(dt[1])
-                            index.save()
-                            index.index_time = datetime.datetime.strptime(dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
-                            index.save()
+                            for i in result_list:
+                                result_dt = i.split(',')
+                                result_value = float(result_dt[1])
+                                result_index_time = datetime.datetime.strptime(result_dt[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                                print(index_time)
+                                print(result_index_time)
+                                if index_time == result_index_time:
+                                    print('再次开始存储,已存储时间但数值变动')
+                                    print('value===> ', value)
+                                    print('time====>', index_time)
+
+                                    index = Index.objects.filter(periods=period, index_time=result_index_time).first()
+                                    index.index_value = result_value
+                                    index.save()
+                                    flag = True
+                                    break
+
+                            if flag is True:
+                                pass
+                            else:
+                                print('再次开始存储,新时间')
+                                print('value===> ', value)
+                                print('time====>', index_time)
+
+                                index = Index()
+                                index.periods = period
+                                index.index_value = value
+                                index.save()
+                                index.index_time = index_time
+                                index.save()
 
                             if data_list.index(data) == len(data_list) - 1:
                                 index_day = Index_day.objects.filter(stock_id=period.stock.id,
                                                                      created_at=date_day).first()
-                                index_day.index_value = float(dt['num'])
+                                index_day.index_value = float(dt[1])
                                 index_day.save()
                     set_cache(stock_cache_name, '@'.join(data_list), 86400)
     else:
@@ -150,7 +181,7 @@ def get_index_hk_en(period, base_url):
                 index_day.save()
                 index_day.created_at = date_day
                 index_day.save()
-    elif int(param_dic['type']) == 1:
+    elif int(param_dic['type']) == 1 or int(param_dic['type']) == 2:
         num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         num = param_dic['num']
         time = param_dic['date']
@@ -163,6 +194,7 @@ def get_index_hk_en(period, base_url):
                 count = int(cache_dt.split(',')[2]) + 1
                 if count >= 6:
                     if float(period.start_value) > float(num):
+
                         status = 'up'
                     elif float(period.start_value) == float(num):
                         status = 'draw'
@@ -212,133 +244,136 @@ class Command(BaseCommand):
     help = "抓取证券指数"
 
     def handle(self, *args, **options):
-        if Periods.objects.filter(is_result=False).exists() is not True:
-            print('暂无行情')
-        else:
-            """
-            上证指数，深证成指
-            """
-            print('上证指数：')
-            if Periods.objects.filter(is_result=False, stock__name='0').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='0').first()
-                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
-                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    # dt_shang = get_index_cn(period, url_SHANG)
-                    # print(dt_shang)
-                    flag = get_index_cn(period, url_SHANG)
-                    if flag is True:
-                        # 开奖后放出题目
-                        print('放出题目')
-                        open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='0', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
-                        per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
+        for i in range(99999):
+            time.sleep(61)
 
-            print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+            if Periods.objects.filter(is_result=False).exists() is not True:
+                print('暂无行情')
+            else:
+                """
+                上证指数，深证成指
+                """
+                print('上证指数：')
+                if Periods.objects.filter(is_result=False, stock__name='0').exists():
+                    period = Periods.objects.filter(is_result=False, stock__name='0').first()
+                    if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
+                                                                                      lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        # dt_shang = get_index_cn(period, url_SHANG)
+                        # print(dt_shang)
+                        flag = get_index_cn(period, url_SHANG)
+                        if flag is True:
+                            # 开奖后放出题目
+                            print('放出题目')
+                            open_date = period.lottery_time.strftime('%Y-%m-%d')
+                            now_date = datetime.datetime.now().date()
+                            count = Periods.objects.filter(stock__name='0', lottery_time__date=now_date).count()
+                            if count == 1:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
+                                                                  '%Y-%m-%d %H:%M:%S')
+                            else:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
+                                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
+                                    next += datetime.timedelta(1)
+                            per = int(period.periods) + 1
+                            newobject(str(per), period.stock_id, next)
 
-            print('深证成指：')
-            if Periods.objects.filter(is_result=False, stock__name='1').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='1').first()
-                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='1',
-                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    # dt_sheng = get_index_cn(period, url_SHENG)
-                    # print(dt_sheng)
-                    flag = get_index_cn(period, url_SHENG)
-                    if flag is True:
-                        # 开奖后放出题目
-                        print('放出题目')
-                        open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='1', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
-                        per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
-            print('------------------------------------------------------------------------------------')
+                print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
-            """
-            恒生指数
-            """
-            print('恒生指数：')
-            if Periods.objects.filter(is_result=False, stock__name='2').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='2').first()
-                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='2',
-                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    # dt_hsi = get_index_hk_en(period, url_HSI)
-                    # print(dt_hsi)
-                    flag = get_index_hk_en(period, url_HSI)
-                    if flag is True:
-                        # 开奖后放出题目
-                        print('放出题目')
-                        open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                            if open_date in ['2018-12-24', '2018-12-31']:
+                print('深证成指：')
+                if Periods.objects.filter(is_result=False, stock__name='1').exists():
+                    period = Periods.objects.filter(is_result=False, stock__name='1').first()
+                    if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='1',
+                                                                                      lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        # dt_sheng = get_index_cn(period, url_SHENG)
+                        # print(dt_sheng)
+                        flag = get_index_cn(period, url_SHENG)
+                        if flag is True:
+                            # 开奖后放出题目
+                            print('放出题目')
+                            open_date = period.lottery_time.strftime('%Y-%m-%d')
+                            now_date = datetime.datetime.now().date()
+                            count = Periods.objects.filter(stock__name='1', lottery_time__date=now_date).count()
+                            if count == 1:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
+                                                                  '%Y-%m-%d %H:%M:%S')
+                            else:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
+                                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
+                                    next += datetime.timedelta(1)
+                            per = int(period.periods) + 1
+                            newobject(str(per), period.stock_id, next)
+                print('------------------------------------------------------------------------------------')
+
+                """
+                恒生指数
+                """
+                print('恒生指数：')
+                if Periods.objects.filter(is_result=False, stock__name='2').exists():
+                    period = Periods.objects.filter(is_result=False, stock__name='2').first()
+                    if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='2',
+                                                                                      lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        # dt_hsi = get_index_hk_en(period, url_HSI)
+                        # print(dt_hsi)
+                        flag = get_index_hk_en(period, url_HSI)
+                        if flag is True:
+                            # 开奖后放出题目
+                            print('放出题目')
+                            open_date = period.lottery_time.strftime('%Y-%m-%d')
+                            now_date = datetime.datetime.now().date()
+                            count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
+                            if count == 1:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1],
+                                                                  '%Y-%m-%d %H:%M:%S')
+                                if open_date in ['2018-12-24', '2018-12-31']:
+                                    next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
+                                                                      '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                    while next.isoweekday() >= 6 or next in market_rese_hk_dic:
+                                        next += datetime.timedelta(1)
+                            else:
                                 next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                                   '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                                while next.isoweekday() >= 6 or next in market_rese_hk_dic:
+                                while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
                                     next += datetime.timedelta(1)
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
-                        per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
-            print('------------------------------------------------------------------------------------')
+                            per = int(period.periods) + 1
+                            newobject(str(per), period.stock_id, next)
+                print('------------------------------------------------------------------------------------')
 
-            """
-            道琼斯指数
-            """
-            print('道琼斯：')
-            if Periods.objects.filter(is_result=False, stock__name='3').exists():
-                period = Periods.objects.filter(is_result=False, stock__name='3').first()
-                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='3',
-                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    # dt_dja = get_index_hk_en(period, url_DJA)
-                    # print(dt_dja)
-                    flag = get_index_hk_en(period, url_DJA)
-                    if flag is True:
-                        # 开奖后放出题目
-                        print('放出题目')
-                        open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
-                        if count == 0:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while (next-datetime.timedelta(hours=12)).isoweekday() >= 6 or (next-datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
-                                next += datetime.timedelta(1)
-                        per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
-            print('------------------------------------------------------------------------------------')
+                """
+                道琼斯指数
+                """
+                print('道琼斯：')
+                if Periods.objects.filter(is_result=False, stock__name='3').exists():
+                    period = Periods.objects.filter(is_result=False, stock__name='3').first()
+                    if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='3',
+                                                                                      lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        # dt_dja = get_index_hk_en(period, url_DJA)
+                        # print(dt_dja)
+                        flag = get_index_hk_en(period, url_DJA)
+                        if flag is True:
+                            # 开奖后放出题目
+                            print('放出题目')
+                            open_date = period.lottery_time.strftime('%Y-%m-%d')
+                            now_date = datetime.datetime.now().date()
+                            count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
+                            if count == 0:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                                                                  '%Y-%m-%d %H:%M:%S')
+                            else:
+                                next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                                while (next-datetime.timedelta(hours=12)).isoweekday() >= 6 or (next-datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                                    next += datetime.timedelta(1)
+                            per = int(period.periods) + 1
+                            newobject(str(per), period.stock_id, next)
+                print('------------------------------------------------------------------------------------')
 
