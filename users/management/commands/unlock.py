@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        special_user = [1546, 3635]
+        special_user = []
         if special_user:
             self.special_handle(special_user)
             self.stdout.write(self.style.SUCCESS('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'))
