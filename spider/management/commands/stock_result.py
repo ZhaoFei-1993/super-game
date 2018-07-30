@@ -146,11 +146,11 @@ def ergodic_record(period, dt, date):
         for record in Record.objects.filter(periods=period, status='0'):
             rule_dic[record.play.play_name](record)
 
-        # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-        # print(index_day.id)
-        # index_day.index_value = float(dt['num'])
-        # index_day.index_time = period.lottery_time
-        # index_day.save()
+        index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+        print(index_day.id)
+        index_day.index_value = float(dt['num'])
+        index_day.index_time = period.lottery_time
+        index_day.save()
 
 
 def newobject(periods, stock_id, next_time):
