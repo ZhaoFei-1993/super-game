@@ -185,20 +185,18 @@ class QuizListView(ListCreateAPIView):
 
         quiz_id_list = '(' + quiz_id_list + ')'
         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-        print("roomquiz_id==========================================", roomquiz_id)
-        print("quiz_id_list===================================", quiz_id_list)
-        sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
-        sql += " where a.quiz_id in " + str(quiz_id_list)
-        sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
-        sql += " group by a.quiz_id"
-        print("sql==========================================", sql)
-        total_coin = get_sql(sql)  # 投注金额
-        club = Club.objects.get(pk=roomquiz_id)
-        for s in total_coin:
-            for a in data:
-                if a['id'] == s[0]:
-                    a['total_coin'] = int(s[1])
-                    a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+        if quiz_id_list != () or quiz_id_list != None or quiz_id_list != '':
+            sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
+            sql += " where a.quiz_id in " + str(quiz_id_list)
+            sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
+            sql += " group by a.quiz_id"
+            total_coin = get_sql(sql)  # 投注金额
+            club = Club.objects.get(pk=roomquiz_id)
+            for s in total_coin:
+                for a in data:
+                    if a['id'] == s[0]:
+                        a['total_coin'] = int(s[1])
+                        a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
 
         return self.response({"code": 0, "data": data})
 
