@@ -68,7 +68,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
             record_number = record_number * 0.3
         if obj.id == 3:
             record_number = Guess_Record.objects.filter(club_id=club_id).count()
-        return record_number
+        return int(record_number)
 
 
 class ClubBannerSerialize(serializers.ModelSerializer):
