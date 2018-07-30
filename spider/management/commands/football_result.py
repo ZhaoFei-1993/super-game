@@ -13,6 +13,7 @@ from django.db import transaction
 import datetime
 from decimal import Decimal
 from .asia_tb_result import asia_result, asia_option
+import time
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
@@ -299,6 +300,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     # 分配奖金
     records = Record.objects.filter(~Q(rule__type=str(Rule.AISA_RESULTS)), quiz=quiz, is_distribution=False)
     if len(records) > 0:
+        start_time = time()
         for record in records:
             print('正在处理record_id为:', record.id)
             # 用户增加对应币金额
@@ -379,6 +381,11 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             u_mes.save()
 
             record.save()
+
+        end_time = time()
+        cost_time = str(round(end_time - start_time)) + '秒'
+        print('执行完成。耗时：' + cost_time)
+
     # 分配亚盘奖金
     records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
     if len(records_asia) > 0:
@@ -393,6 +400,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 def handle_delay_game(delay_quiz):
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
     if len(records) > 0:
+        start_time = time()
         for record in records:
             print('正在处理record_id为:', record.id)
             # 延迟比赛，返回用户投注的钱
@@ -439,6 +447,10 @@ def handle_delay_game(delay_quiz):
 
             record.is_distribution = True
             record.save()
+
+        end_time = time()
+        cost_time = str(round(end_time - start_time)) + '秒'
+        print('执行完成。耗时：' + cost_time)
 
         print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
