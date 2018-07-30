@@ -106,6 +106,7 @@ class HotestView(ListAPIView):
         sql += " where a.quiz_id in " + str(quiz_id_list)
         sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
         sql += " group by a.quiz_id"
+        print("sql==========================================", sql)
         total_coin = get_sql(sql)  # 投注金额
         club = Club.objects.get(pk=roomquiz_id)
         for s in total_coin:
