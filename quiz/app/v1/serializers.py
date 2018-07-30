@@ -12,8 +12,6 @@ from users.models import User
 from utils.functions import normalize_fraction
 from ...models import Quiz, Record, Rule, Category, OptionOdds, ClubProfitAbroad
 from utils.cache import get_cache, check_key, set_cache
-from utils.functions import get_sql
-
 
 
 class QuizSerialize(serializers.ModelSerializer):
