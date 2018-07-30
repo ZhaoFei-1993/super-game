@@ -142,6 +142,8 @@ class PlayView(ListAPIView):
         data = []
         for play in plays:
             user_number = Record.objects.filter(club_id=club_id, periods_id=periods_id, play_id=play.id).count()
+            print("club_id===============================", club_id)
+            print("play_id===============================", play.pk)
             betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
 
             play_name = Play.PLAY[int(play.play_name)][1]  # 玩法名字
