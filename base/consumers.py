@@ -122,6 +122,11 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
                 "type": "basketball_time.message",
                 "quiz_id": content.get("quiz_id"),
             })
+        elif command == 'stock_seal':
+            await self.channel_layer.group_send(group_name, {
+                "type": "stock_time.message",
+                "period_id": content.get("period_id"),
+            })
 
         # elif command == 'send':
         #     await self.channel_layer.group_send(group_name, {
@@ -173,6 +178,20 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    async def stock_message(self, event):
+        """
+        推送比分数据至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "stock_seal",
+                "period_id": event["period_id"],
+                "is_seal": event["is_seal"],
+            }
+        )
+
     async def football_time_message(self, event):
         with open('/tmp/debug_mseeage', 'a+') as f:
             f.write(str(event))
@@ -192,3 +211,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             pass
         else:
             call_command('basketball_synctime', quiz_id)
+
+    async def stock_time_message(self, event):
+        period_id = event['period_id']
+        call_command('stock_synctime', period_id)

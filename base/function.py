@@ -133,14 +133,15 @@ def add_coin_detail(user_id, coin_id, earn_coin):
     :return:
     """
     # 用户资金明细表
-    user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
-    coin_detail = CoinDetail()
-    coin_detail.user_id = user_id
-    coin_detail.coin_name = user_coin.coin.name
-    coin_detail.amount = Decimal(earn_coin)
-    coin_detail.rest = user_coin.balance
-    coin_detail.sources = CoinDetail.OPEB_PRIZE
-    coin_detail.save()
+    if Decimal(earn_coin) > 0:
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
+        coin_detail = CoinDetail()
+        coin_detail.user_id = user_id
+        coin_detail.coin_name = user_coin.coin.name
+        coin_detail.amount = Decimal(earn_coin)
+        coin_detail.rest = user_coin.balance
+        coin_detail.sources = CoinDetail.OPEB_PRIZE
+        coin_detail.save()
 
 
 def add_user_coin(user_id, coin_id, earn_coin):
@@ -155,8 +156,9 @@ def add_user_coin(user_id, coin_id, earn_coin):
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
     except UserCoin.DoesNotExist:
         user_coin = UserCoin()
-    user_coin.coin_id = coin_id
-    user_coin.user_id = user_id
-    user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
-    user_coin.save()
+    if Decimal(earn_coin) > 0:
+        user_coin.coin_id = coin_id
+        user_coin.user_id = user_id
+        user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
+        user_coin.save()
 

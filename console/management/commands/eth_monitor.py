@@ -66,6 +66,8 @@ class Command(BaseCommand, BaseView):
             set_cache(self.cacheKey, block_height, 86400)
 
         cache_block_height = int(cache_block_height)
+        print('cache_block_height = ', cache_block_height)
+        print('block_height = ', block_height)
         for block in range(cache_block_height, block_height + 1):
             self.set_queue(block)
 
