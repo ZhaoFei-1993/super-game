@@ -5,6 +5,7 @@ from utils.functions import normalize_fraction
 from base.function import add_coin_detail, add_user_coin
 from datetime import datetime, timedelta
 from chat.models import Club
+import datetime
 from django.db.models import Sum
 
 Guess_Closing = 1
@@ -207,5 +208,5 @@ def newobject(periods, stock_id, next_time):
                      rotary_header_time=rotary_header_time)
     object.save()
     object.lottery_time = next_time
-    object.rotary_header_time = next_time - datetime.timedelta(hour=1)
+    object.rotary_header_time = next_time - datetime.timedelta(hours=1)
     object.save()
