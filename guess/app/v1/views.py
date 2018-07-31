@@ -9,12 +9,13 @@ from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserCoin, CoinDetail, Coin
-from utils.functions import value_judge, guess_is_seal
+from utils.functions import value_judge, guess_is_seal, language_switch
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
 from utils.functions import value_judge, get_sql
 from django.db.models import Q, Sum
+from api.settings import MEDIA_DOMAIN_HOST
 
 
 class StockList(ListAPIView):
@@ -585,3 +586,18 @@ class StockGraphDayListView(ListCreateAPIView):
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
                               'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
                               'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value)})
+
+
+class PlayRuleImage(ListAPIView):
+    """
+    玩法规则图
+    """
+    permission_classes = (LoginRequired,)
+
+    def get(self, request, *args, **kwargs):
+        now_time = datetime.now().strftime('%Y%m%d%H%M')
+        language = self.request.GET.get('language')
+        rule_img = '/'.join(
+            [MEDIA_DOMAIN_HOST, language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time])
+        return self.response(
+            {'code': 0, 'data': {'image': rule_img}})
