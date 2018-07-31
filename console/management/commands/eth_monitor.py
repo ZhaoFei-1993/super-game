@@ -59,7 +59,7 @@ class Command(BaseCommand, BaseView):
         # 获取缓存中的块高度值，若缓存未设置，则首次设置的值为当前区块链块高
         cache_block_height = get_cache(self.cacheKey)
         if cache_block_height is None:
-            cache_block_height = block_height
+            cache_block_height = chain_block_height
             set_cache(self.cacheKey, block_height, 86400)
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
