@@ -19,4 +19,6 @@ urlpatterns = [
     path('graph/time/', views.StockGraphListView.as_view(), name="app-v1-guess-graph-time"),
     # 曲线图(日)
     path('graph/day/', views.StockGraphDayListView.as_view(), name="app-v1-guess-graph-day"),
+    # 玩法规则图
+    path('guess/play_rule/', views.PlayRuleImage.as_view(), name="app-v1-guess-play_rule")
 ]

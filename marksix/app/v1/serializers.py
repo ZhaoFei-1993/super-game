@@ -161,7 +161,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         res = obj.content
         language = self.context['request'].GET.get('language', 'zh')
         res_list = res.split(',')
-        if play != '1' and not option_id:
+        if play.id != 1 and not option_id: # 排除连码和特码
             content_list = []
             for pk in res_list:
                 if language == 'zh':
@@ -170,6 +170,28 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                     title = Option.objects.get(id=pk).option_en
                 content_list.append(title)
             res = ','.join(content_list)
+
+        # 判断注数
+        if language == 'zh':
+            last = '注'
+        else:
+            last = 'notes'
+        title = ''
+        if option_id:
+            title = Option.objects.get(id=option_id).option
+
+        if play.id != 3 or title == '平码':
+            print(title,play)
+            next = str(len(res.split(','))) + last
+            res = res + '/' + next
+        else:
+            n = len(res.split(','))
+            if title == '二中二':
+                sum = int(n * (n - 1) / 2)
+            else:
+                sum = int(n * (n - 1) * (n - 2) / 6)
+            next = str(sum) + last
+            res = res + '/' + next
         return res
 
     def get_coin_name(self, obj):
