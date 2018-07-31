@@ -333,11 +333,11 @@ class Command(BaseCommand):
     @staticmethod
     def get_bet_rule(stock_id):
         """
-        获取下注玩法，随机获取
+        获取下注玩法，随机获取，猜涨跌不下注
         :param stock_id:
         :return:
         """
-        plays = Play.objects.filter(stock_id=stock_id)
+        plays = Play.objects.filter(stock_id=stock_id, pk__not_in=[4, 8, 12, 16])
         plays_weight = {
             1: 70,  # 大小
             2: 20,  # 点数
