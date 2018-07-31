@@ -15,6 +15,9 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from utils.functions import value_judge, get_sql
 from django.db.models import Q, Sum
+import time
+from api import settings
+import pytz
 from api.settings import MEDIA_DOMAIN_HOST
 
 
@@ -127,6 +130,12 @@ class PlayView(ListAPIView):
             periods = Periods.objects.get(pk=periods_id)  # 判断比赛
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
+        begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        begin_at = time.mktime(begin_at.timetuple())
+        rotary_header_time = int(begin_at)
+        created_at = periods.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        created_at = time.mktime(created_at.timetuple())
+        lottery_time = int(created_at)
         is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
 
         plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
@@ -228,6 +237,9 @@ class PlayView(ListAPIView):
                         "is_right": is_right,
                         "support_number": support_number
                     })
+            if int(play.play_name) == 0:
+                coin_number = list[0]['total_coin'] + list[1]['total_coin']
+                tips = "猜涨跌当前总奖池 " + str(coin_number) + " " + str(coin_name) + ','
             data.append({
                 "play_id": play.pk,
                 "play_name": play_name,
@@ -245,6 +257,8 @@ class PlayView(ListAPIView):
                      }
         return self.response({'code': 0,
                               'data': data,
+                              'rotary_header_time': rotary_header_time,
+                              'lottery_time': lottery_time,
                               'coin_list': coin_list,
                               'is_seal': is_seal
                               })
@@ -464,6 +478,18 @@ class StockGraphListView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
         periods_info = Periods.objects.get(pk=periods_id)
+        day = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        lottery_time = periods_info.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
+        start_time = periods_info.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
+        rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
+        if day > start_time and day < rotary_header_time:
+            status = 0  # 开始投注
+        elif day > rotary_header_time and day < lottery_time:
+            status = 1  # 封盘中
+        elif periods_info.is_result == True:
+            status = 3  # 已开奖
+        else:
+            status = 2  # 开奖中
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
@@ -515,7 +541,7 @@ class StockGraphListView(ListCreateAPIView):
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
                               'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
                               'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value),
-                              "new_start_value": new_start_value})
+                              "new_start_value": new_start_value, 'status': status})
 
 
 class StockGraphDayListView(ListCreateAPIView):
@@ -535,6 +561,18 @@ class StockGraphDayListView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
         periods_info = Periods.objects.get(pk=periods_id)
+        day = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        lottery_time = periods_info.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
+        start_time = periods_info.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
+        rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
+        if day > start_time and day < rotary_header_time:
+            status = 0  # 开始投注
+        elif day > rotary_header_time and day < lottery_time:
+            status = 1  # 封盘中
+        elif periods_info.is_result == True:
+            status = 3  # 已开奖
+        else:
+            status = 2  # 开奖中
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
@@ -585,7 +623,8 @@ class StockGraphDayListView(ListCreateAPIView):
 
         return self.response({'code': 0, 'index_value_list': index_value_list, 'index_time_list': index_time_list,
                               'new_index': new_index, 'amplitude': amplitude, 'index_colour': index_colour,
-                              'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value)})
+                              'max_index_value': int(max_index_value), 'min_index_value': int(min_index_value),
+                              'status': status})
 
 
 class PlayRuleImage(ListAPIView):
