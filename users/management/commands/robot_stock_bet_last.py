@@ -33,7 +33,7 @@ class Command(BaseCommand):
         current_period = None
         periods = Periods.objects.filter(is_seal=False, is_result=False)
         for period in periods:
-            if period.rotary_header_time < current_time:
+            if str(period.rotary_header_time) < str(current_time):
                 rotary_header = period
                 current_period = period
 
