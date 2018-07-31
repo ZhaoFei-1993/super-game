@@ -162,7 +162,9 @@ def get_index_hk_en(period, base_url):
         period.start_value = float(param_dic['start_value'])
         period.save()
     if int(param_dic['type']) == 0:
-        if dt_list[-1] == get_cache(stock_cache_name):
+        rest_start = datetime.datetime.strptime(date_ymd + ' ' + '12:00:00', "%Y-%m-%d %H:%M:%S")
+        rest_end = datetime.datetime.strptime(date_ymd + ' ' + '13:00:00', "%Y-%m-%d %H:%M:%S")
+        if dt_list[-1] == get_cache(stock_cache_name) or (rest_start <= date_now <= rest_end):
             print('时间相同不存储')
         else:
             print('时间不同开始存储')
