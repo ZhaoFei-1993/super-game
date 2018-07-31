@@ -23,19 +23,19 @@ market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
 market_rese_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
 
-market_rest_cn_start_time = ['09:30:00', '13:00:00']
-market_hk_start_time = ['09:30:00', '13:00:00']
+market_rest_cn_start_time = ['09:30:00']
+market_hk_start_time = ['09:30:00']
 market_en_start_time = ['21:30:00']
 
-market_rest_cn_end_time = ['11:30:00', '15:00:00']
-market_hk_end_time = ['12:00:00', '16:10:00']
+market_rest_cn_end_time = ['15:00:00']
+market_hk_end_time = ['16:10:00']
 market_en_end_time = ['04:00:00']
 
 
 def get_index_cn(period, base_url):
     date_now = datetime.datetime.now()
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
-    date_day = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+    date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                           "%Y-%m-%d %H:%M:%S")
     stock_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd
     response = requests.get(base_url, headers=headers)
@@ -150,7 +150,7 @@ def get_index_cn(period, base_url):
 def get_index_hk_en(period, base_url):
     date_now = datetime.datetime.now()
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
-    date_day = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d') + ' ' + '23:59:59',
+    date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                           "%Y-%m-%d %H:%M:%S")
     stock_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd
     response = requests.get(base_url, headers=headers)
@@ -215,28 +215,22 @@ def get_index_hk_en(period, base_url):
 
 
 def confirm_time(period):
-    date_now = time.mktime(datetime.datetime.now().timetuple())
+    date_now = datetime.datetime.now()
     lottery_time = period.lottery_time.strftime('%Y-%m-%d %H:%M:%S')
     if period.stock.name == '0' or period.stock.name == '1':
-        i = market_rest_cn_end_time.index(lottery_time.split(' ')[1])
-        date_start = lottery_time.split(' ')[0] + ' ' + market_rest_cn_start_time[i]
-        date_end = lottery_time.split(' ')[0] + ' ' + market_rest_cn_end_time[i]
+        date_start = lottery_time.split(' ')[0] + ' ' + market_rest_cn_start_time[0]
+        date_end = lottery_time.split(' ')[0] + ' ' + market_rest_cn_end_time[0]
     elif period.stock.name == '2':
-        i = market_hk_end_time.index(lottery_time.split(' ')[1])
-        date_start = lottery_time.split(' ')[0] + ' ' + market_hk_start_time[i]
-        date_end = lottery_time.split(' ')[0] + ' ' + market_hk_end_time[i]
+        date_start = lottery_time.split(' ')[0] + ' ' + market_hk_start_time[0]
+        date_end = lottery_time.split(' ')[0] + ' ' + market_hk_end_time[0]
     elif period.stock.name == '3':
-        i = market_en_end_time.index(lottery_time.split(' ')[1])
-        date_start = lottery_time.split(' ')[0] + ' ' + market_en_start_time[i]
-        date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time[i]
+        date_start = lottery_time.split(' ')[0] + ' ' + market_en_start_time[0]
+        date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time[0]
 
-    start = datetime.datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S") - datetime.timedelta(minutes=15)
+    start = datetime.datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
     if period.stock.name == '3':
         start = start - datetime.timedelta(days=1)
-
-    start = time.mktime(start.timetuple())
-    end = time.mktime(end.timetuple())
 
     if start <= date_now <= end:
         return True
@@ -268,18 +262,14 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='0', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_start_time[0],
+                                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
+                        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+                            next_end += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
+                        newobject(str(per), period.stock_id, next_start, next_end)
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
@@ -297,18 +287,14 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='1', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_start_time[0],
+                                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_rest_cn_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
+                        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+                            next_end += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
+                        newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
 
             """
@@ -328,23 +314,14 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='2', lottery_time__date=now_date).count()
-                        if count == 1:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[1],
-                                                              '%Y-%m-%d %H:%M:%S')
-                            if open_date in ['2018-12-24', '2018-12-31']:
-                                next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
-                                                                  '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                                while next.isoweekday() >= 6 or next in market_rese_hk_dic:
-                                    next += datetime.timedelta(1)
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_hk_start_time[0],
+                                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while next.isoweekday() >= 6 or next.strftime('%Y-%m-%d') in market_rest_cn_list:
-                                next += datetime.timedelta(1)
+                        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+                            next_end += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
+                        newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
 
             """
@@ -364,17 +341,13 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        now_date = datetime.datetime.now().date()
-                        count = Periods.objects.filter(stock__name='3', lottery_time__date=now_date).count()
-                        if count == 0:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
-                                                              '%Y-%m-%d %H:%M:%S')
-                        else:
-                            next = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                                                                '%Y-%m-%d %H:%M:%S')
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                            while (next - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
-                                    next - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
-                                next += datetime.timedelta(1)
+                        while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
+                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                            next_end += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next)
+                        newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')

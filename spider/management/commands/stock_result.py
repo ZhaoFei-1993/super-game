@@ -3,12 +3,10 @@ from guess.models import Record, Options, Periods, Index_day
 from users.models import Coin, UserCoin
 from utils.functions import normalize_fraction
 from base.function import add_coin_detail, add_user_coin
-from datetime import datetime, timedelta
+from datetime import timedelta
 from chat.models import Club
-import datetime
-from django.db.models import Sum
 
-Guess_Closing = 1
+Guess_Closing = 1.5
 Guess_Starting = 5
 
 
@@ -201,12 +199,10 @@ def ergodic_record(period, dt, date):
         # index_day.save()
 
 
-def newobject(periods, stock_id, next_time):
-    start_time = next_time + timedelta(minutes=Guess_Starting)
-    rotary_header_time = next_time - timedelta(hours=Guess_Closing)
-    object = Periods(periods=periods, stock_id=stock_id, lottery_time=next_time, start_time=start_time,
-                     rotary_header_time=rotary_header_time)
-    object.save()
-    object.lottery_time = next_time
-    object.rotary_header_time = next_time - datetime.timedelta(hours=1)
-    object.save()
+def newobject(periods, stock_id, next_start, next_end):
+    rotary_header_time = next_start - timedelta(hours=Guess_Closing)
+    new_object = Periods(periods=periods, stock_id=stock_id)
+    new_object.save()
+    new_object.lottery_time = next_end
+    new_object.rotary_header_time = rotary_header_time
+    new_object.save()
