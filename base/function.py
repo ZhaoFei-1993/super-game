@@ -23,8 +23,8 @@ class LoginRequired(IsAuthenticated):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
-        # if has_permission is not True:
-        #     raise NotLoginException(API_403_ACCESS_DENY)
+        if has_permission is not True:
+            raise NotLoginException(API_403_ACCESS_DENY)
 
         return has_permission
 

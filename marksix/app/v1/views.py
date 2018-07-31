@@ -86,6 +86,8 @@ class OpenViews(ListAPIView):
 
 class OddsViews(ListAPIView):
     permission_classes = (LoginRequired,)
+    # authentication_classes = ()
+
     def list(self, request, id):
         language = request.GET.get('language')
         club_id = request.GET.get('club_id')
@@ -119,7 +121,6 @@ class OddsViews(ListAPIView):
                 option = play.title
             else:
                 option = play.title_en
-            limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
             bet_odds = {
                 'option': option,
                 'id': 1,
@@ -134,8 +135,9 @@ class OddsViews(ListAPIView):
                 option = 'Three Hit Two'
             three_to_three = {
                 'option': option,
-                'result': []
             }
+
+            tag = 0  # 标记
 
             for item in res:
                 if language == 'zh':
@@ -157,7 +159,12 @@ class OddsViews(ListAPIView):
 
                 elif id == '3':  # 连码
                     if three_to_three['option'] in res_dict['option']:
-                        three_to_three['result'].append(res_dict)
+                        if tag == 0:
+                            three_to_three['id'] = item.id
+                            three_to_three['odds'] = item.odds
+                            three_to_three['pitch'] = False
+                            bet_odds.append(three_to_three)
+                            tag = 1
                         continue
                 elif id == '5':  # 平特一肖
                     # 获取当前年份
@@ -172,8 +179,8 @@ class OddsViews(ListAPIView):
                     res_dict['num_list'] = list(num_list)
 
                 bet_odds.append(res_dict)
-            if id == '3':
-                bet_odds.append(three_to_three)
+            # if id == '3':
+            #     bet_odds.append(three_to_three)
 
         # 获取上期开奖时间和本期开奖时间
         now = get_now()
@@ -202,10 +209,10 @@ class OddsViews(ListAPIView):
                 'current_issue': current_issue,
                 'current_open': current_open,
                 'bet_num': bet_num,
-                'coin_name':coin_name,
-                'play_id':id,
-                'max_limit':limit.max_limit,
-                'min_limit':limit.min_limit
+                'coin_name': coin_name,
+                'play_id': id,
+                'max_limit': limit.max_limit,
+                'min_limit': limit.min_limit
             }
         else:
             data = {
@@ -226,7 +233,7 @@ class OddsViews(ListAPIView):
 
 class BetsViews(ListCreateAPIView):
     permission_classes = (LoginRequired,)
-    # authentication_classes = ()
+
 
     def get_queryset(self):
         pass
@@ -249,7 +256,7 @@ class BetsViews(ListCreateAPIView):
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
         # 注数判断
-        if play_id == '3': # 连码
+        if play_id == '3':  # 连码
             try:
                 option_id = request.data.get('option')
             except:
@@ -260,10 +267,10 @@ class BetsViews(ListCreateAPIView):
             # 二中二: n(n-1)/2 ,三中二或三中三: n(n-1)(n-2)/6
             n = len(content.split(','))
             if op.option == '二中二':
-                if int(bet) != n*(n-1)/2:
+                if int(bet) != n * (n - 1) / 2:
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
             else:
-                if int(bet) != n*(n-1)*(n-2)/6:
+                if int(bet) != n * (n - 1) * (n - 2) / 6:
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
         else:
             if int(bet) != len(content.split(',')):
@@ -272,12 +279,11 @@ class BetsViews(ListCreateAPIView):
                 option_id = content.split(',')[0]
 
         # 判断最大最小金额
-        limit = MarkSixBetLimit.objects.get(options_id=option_id,club_id=club_id)
+        limit = MarkSixBetLimit.objects.get(options_id=option_id, club_id=club_id)
         limit_max = limit.max_limit
         limit_min = limit.min_limit
         if float(bet_coin) > int(bet) * limit_max or float(bet_coin) < int(bet) * limit_min:
             raise ParamErrorException(error_code.API_50204_BET_ERROR)
-
 
         if play_id == '1':  # 为特码
             option_id = ''
