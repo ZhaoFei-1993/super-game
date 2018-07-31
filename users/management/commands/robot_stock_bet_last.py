@@ -89,6 +89,8 @@ class Command(BaseCommand):
         if rotary_header is None:
             raise CommandError('暂无封盘股指数据')
 
+        raise CommandError('Done')
+
         clubs = Club.objects.filter(is_dissolve=False)
         for club in clubs:
             up_down_ids = {
