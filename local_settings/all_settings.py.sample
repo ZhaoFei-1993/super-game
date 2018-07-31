@@ -138,6 +138,7 @@ BTC_WALLET_MAIN_PASSWORD = 'wecom$888'
 GOOGLE_RECAPTCHA_OPEN = 1
 IS_USER_CAPTCHA_ENABLE = False            # 是否开启图形验证码
 CLUB_REVENUE = False           # 是否开启营收
+REVENUE = False
 GSG_EXCHANGE_DATE = 50              # gsg兑换期限
 GSG_EXCHANGE_START_DATE = '2018-07-02 00:00:00'              # gsg兑换开始时间
 ETH_ONCE_EXCHANGE_LOWER_LIMIT = 0.01              # ETH单次兑换下限

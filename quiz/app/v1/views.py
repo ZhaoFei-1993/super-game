@@ -1131,7 +1131,10 @@ class PlatformList(ListAPIView):
         price_list = get_sql(sql)  # 交易所列表
         data = []
         for price in price_list:
-            data.append(price[0])
+            if price[0] == 'bitforex':
+                pass
+            else:
+                data.append(price[0])
         return self.response({'code': 0, "data": data})
 
 

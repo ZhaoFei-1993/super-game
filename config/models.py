@@ -170,8 +170,8 @@ class AndroidVersion(models.Model):
 
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
-    plist_url = models.CharField("plist地址",max_length=150,default="")#只有IOS才有，默认为空
-    mobile_type = models.IntegerField("手机类型", choices=TYPE_CHOICE,default=ANDROID)
+    plist_url = models.CharField("plist地址", max_length=150, default="")  # 只有IOS才有，默认为空
+    mobile_type = models.IntegerField("手机类型", choices=TYPE_CHOICE, default=ANDROID)
     comment = models.CharField("版本说明", max_length=100, default='')
     comment_en = models.CharField("版本说明英文版", max_length=200, default='')
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
@@ -228,3 +228,24 @@ class Admin_Operation(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "管理员操作记录"
+
+#
+# @reversion.register()
+# class Gsg_Switch(models.Model):
+#     CAPTCHA = 0
+#     REVENUE = 1
+#     EXCHANGE = 2
+#     LOCK_DIVIDEND = 3
+#     TYPE_CHOICE = (
+#         (CAPTCHA, "图形验证码"),
+#         (REVENUE, "营收"),
+#         (EXCHANGE, "兑换"),
+#         (LOCK_DIVIDEND, "锁定分红"),
+#     )
+#     title = models.CharField(verbose_name="开关名称", choices=TYPE_CHOICE, max_length=1, default=CAPTCHA)
+#     switch = models.BooleanField(verbose_name="开关", default=False)
+#     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
+#
+#     class Meta:
+#         ordering = ['-updated_at']
+#         verbose_name = verbose_name_plural = '功能开关表'
