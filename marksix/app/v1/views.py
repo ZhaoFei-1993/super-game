@@ -309,7 +309,11 @@ class BetsViews(ListCreateAPIView):
                 res = valied_content(content, 2, 7)
                 if not res:
                     raise ParamErrorException(error_code.API_50201_BET_LIMITED)
-            if op.option == title_list[2] or title_list[1] in op.option:  # 三中三,三中二,最低三个号码，不超过十个
+            if title_list[1] in op.option: # 三中二,最低三个号码，不超过七个
+                res = valied_content(content, 3, 7)
+                if not res:
+                    raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+            if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
                 res = valied_content(content, 3, 10)
                 if not res:
                     raise ParamErrorException(error_code.API_50201_BET_LIMITED)
