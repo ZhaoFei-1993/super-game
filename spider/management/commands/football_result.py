@@ -13,7 +13,7 @@ from django.db import transaction
 import datetime
 from decimal import Decimal
 from .asia_tb_result import asia_result, asia_option
-import time
+from time import time
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
