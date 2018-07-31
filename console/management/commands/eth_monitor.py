@@ -44,10 +44,12 @@ class Command(BaseCommand, BaseView):
         return block_height
 
     def handle(self, *args, **options):
+        chain_block_height = self.get_block_height()
+
         if options['block_height']:
             block_height = options['block_height']
         else:
-            block_height = self.get_block_height()
+            block_height = chain_block_height
 
         # 只监控某个块高度数据
         if options['only_one_block']:
@@ -62,11 +64,11 @@ class Command(BaseCommand, BaseView):
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
-        if cache_block_height > block_height:
+        if cache_block_height > chain_block_height:
             set_cache(self.cacheKey, block_height, 86400)
 
         cache_block_height = int(cache_block_height)
-        for block in range(cache_block_height, block_height + 1):
+        for block in range(cache_block_height, chain_block_height + 1):
             self.set_queue(block)
 
         self.stdout.write(self.style.SUCCESS('ok'))
