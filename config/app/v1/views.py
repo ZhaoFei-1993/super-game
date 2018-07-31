@@ -23,5 +23,5 @@ class Html5ConfigView(ListAPIView):
             'code': 0,
             'is_captcha_enable': 1 if settings.IS_USER_CAPTCHA_ENABLE else 0,
             'is_club_profit_enable': 1 if settings.CLUB_REVENUE else 0,
-            'revenue': 1 if settings.CLUB_REVENUE else 0
+            'is_exchange': 1 if settings.EXCHANGE else 0
         })
