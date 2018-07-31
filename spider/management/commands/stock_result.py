@@ -162,7 +162,7 @@ def ergodic_record(period, dt, date):
         period.save()
 
         # 大小玩法
-        num_spilt = str(num).split('.')[1]
+        num_spilt = str(dt['num']).split('.')[1]
         num_sum = int(num_spilt[1])
         if num_sum >= 5:
             period.size = '大'
