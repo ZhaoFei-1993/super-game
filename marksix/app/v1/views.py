@@ -305,11 +305,11 @@ class BetsViews(ListCreateAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             # 判断用户下注是否合法,连码需要判断
             title_list = ['二中二', '三中二', '三中三']
-            if op.option == title_list[0] or title_list[1] in op.option:  # 二中二，三中二，最低两个号码，不超过七个
+            if op.option == title_list[0]:  # 二中二，最低两个号码，不超过七个
                 res = valied_content(content, 2, 7)
                 if not res:
                     raise ParamErrorException(error_code.API_50201_BET_LIMITED)
-            if op.option == title_list[2]:  # 三中三,最低三个号码，不超过十个
+            if op.option == title_list[2] or title_list[1] in op.option:  # 三中三,三中二,最低三个号码，不超过十个
                 res = valied_content(content, 3, 10)
                 if not res:
                     raise ParamErrorException(error_code.API_50201_BET_LIMITED)
@@ -400,12 +400,13 @@ class BetsViews(ListCreateAPIView):
 
 class BetsListViews(ListAPIView):
     permission_classes = (LoginRequired,)
+    # authentication_classes = ()
     serializer_class = RecordSerializer
 
     def get_queryset(self):
         user = self.request.user
         user_id = user.id
-        # user_id = 52120
+        # user_id = 2476
         # user = User.objects.get(id=user_id)
         type = self.kwargs['type']
         if type == '0':  # 全部记录

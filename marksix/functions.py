@@ -20,13 +20,14 @@ def valied_content(content, min=0, max=0):
     :return: 判断结果
     """
     content_list = content.strip(',').split(',')
-    # 判断是否是合法号码
-    for num in content_list:
-        if not '01' <= num <= '49':
-            print(num)
-            return 0
+    # # 判断是否是合法号码
+    # for num in content_list:
+    #     if not '01' <= num <= '49':
+    #         print(num)
+    #         return 0
 
     if not min <= len(content_list) <= max:
+        print(content_list,'----------')
         return 0
 
     return 1
