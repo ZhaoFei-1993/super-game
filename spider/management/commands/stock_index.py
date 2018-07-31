@@ -240,6 +240,8 @@ def confirm_time(period):
 
     if start <= date_now <= end:
         return True
+    else:
+        return False
 
 
 class Command(BaseCommand):

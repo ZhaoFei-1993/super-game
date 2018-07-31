@@ -5,6 +5,7 @@ from utils.functions import normalize_fraction
 from base.function import add_coin_detail, add_user_coin
 from datetime import datetime, timedelta
 from chat.models import Club
+import datetime
 from django.db.models import Sum
 
 Guess_Closing = 1
@@ -152,16 +153,16 @@ def ergodic_record(period, dt, date):
                                                 options__title=period.up_and_down)
         lose_sum_objects = Record.objects.filter(club__in=club_list, periods=period, play__play_name=str(0),
                                                  options__title=lose_option)
-        for dt in win_sum_objects:
-            win_sum_dic[dt.club.room_title] = float(win_sum_dic[dt.club.room_title]) + float(dt.bets)
+        for data in win_sum_objects:
+            win_sum_dic[data.club.room_title] = float(win_sum_dic[data.club.room_title]) + float(data.bets)
 
-        for dt in lose_sum_objects:
-            lose_sum_dic[dt.club.room_title] = float(lose_sum_dic[dt.club.room_title]) + float(dt.bets)
+        for data in lose_sum_objects:
+            lose_sum_dic[data.club.room_title] = float(lose_sum_dic[data.club.room_title]) + float(data.bets)
 
         period.save()
 
         # 大小玩法
-        num_spilt = str(num).split('.')[1]
+        num_spilt = str(dt['num']).split('.')[1]
         num_sum = int(num_spilt[1])
         if num_sum >= 5:
             period.size = '大'
@@ -207,5 +208,5 @@ def newobject(periods, stock_id, next_time):
                      rotary_header_time=rotary_header_time)
     object.save()
     object.lottery_time = next_time
-    object.rotary_header_time = next_time - datetime.timedelta(hour=1)
+    object.rotary_header_time = next_time - datetime.timedelta(hours=1)
     object.save()
