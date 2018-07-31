@@ -575,10 +575,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('进入脚本')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
+        print('----------------------------------------')
+        print('delay delay delay delay')
+        print(Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                                  category__parent_id=2).exists())
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                category__parent_id=2).exists():
             delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                               category__parent_id=2)
+
+            print(delay_quizs)
+            print('----------------------------------------')
+
             for delay_quiz in delay_quizs:
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
