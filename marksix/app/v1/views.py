@@ -272,6 +272,9 @@ class BetsViews(ListCreateAPIView):
             elif op.option != '平码':
                 if int(bet) != n * (n - 1) * (n - 2) / 6:
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
+            else:
+                if int(bet) != len(content.split(',')):
+                    raise ParamErrorException(error_code.API_50203_BET_ERROR)
         else:
             if int(bet) != len(content.split(',')):
                 raise ParamErrorException(error_code.API_50203_BET_ERROR)
