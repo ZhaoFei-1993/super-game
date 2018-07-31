@@ -240,6 +240,8 @@ def confirm_time(period):
 
     if start <= date_now <= end:
         return True
+    else:
+        return False
 
 
 class Command(BaseCommand):
@@ -255,9 +257,6 @@ class Command(BaseCommand):
             print('上证指数：')
             if Periods.objects.filter(is_result=False, stock__name='0').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='0').first()
-                print(period.id)
-                print(confirm_time(period))
-                print(Periods.objects.filter(is_result=False, stock__name='0', lottery_time__lt=datetime.datetime.now()).exists())
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
                                                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')

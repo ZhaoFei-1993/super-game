@@ -153,11 +153,11 @@ def ergodic_record(period, dt, date):
                                                 options__title=period.up_and_down)
         lose_sum_objects = Record.objects.filter(club__in=club_list, periods=period, play__play_name=str(0),
                                                  options__title=lose_option)
-        for dt in win_sum_objects:
-            win_sum_dic[dt.club.room_title] = float(win_sum_dic[dt.club.room_title]) + float(dt.bets)
+        for data in win_sum_objects:
+            win_sum_dic[data.club.room_title] = float(win_sum_dic[data.club.room_title]) + float(data.bets)
 
-        for dt in lose_sum_objects:
-            lose_sum_dic[dt.club.room_title] = float(lose_sum_dic[dt.club.room_title]) + float(dt.bets)
+        for data in lose_sum_objects:
+            lose_sum_dic[data.club.room_title] = float(lose_sum_dic[data.club.room_title]) + float(data.bets)
 
         period.save()
 
