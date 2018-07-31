@@ -233,7 +233,7 @@ class OddsViews(ListAPIView):
 
 class BetsViews(ListCreateAPIView):
     permission_classes = (LoginRequired,)
-
+    # authentication_classes = ()
 
     def get_queryset(self):
         pass
@@ -242,7 +242,7 @@ class BetsViews(ListCreateAPIView):
     def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的赔率判断
         user = self.request.user
         user_id = user.id
-        # user_id = 1806
+        # user_id = 2476
         # user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
@@ -258,7 +258,7 @@ class BetsViews(ListCreateAPIView):
         # 注数判断
         if play_id == '3':  # 连码
             try:
-                option_id = request.data.get('option')
+                option_id = request.data.get('option_id')
             except:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             if not option_id:
@@ -269,7 +269,7 @@ class BetsViews(ListCreateAPIView):
             if op.option == '二中二':
                 if int(bet) != n * (n - 1) / 2:
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
-            else:
+            elif op.option != '平码':
                 if int(bet) != n * (n - 1) * (n - 2) / 6:
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
         else:
@@ -291,7 +291,7 @@ class BetsViews(ListCreateAPIView):
 
         elif play_id == '3':  # 为连码时，赔率唯一
             try:
-                option_id = request.data.get('option')
+                option_id = request.data.get('option_id')
             except:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             if not option_id:
