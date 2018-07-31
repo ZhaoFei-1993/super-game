@@ -43,6 +43,7 @@ class StockList(ListAPIView):
                 "icon": list["icon"],
                 "title": list["title"],
                 "closing_time": list["closing_time"],
+                "lottery_time": list["lottery_time"],
                 "previous_result": list["previous_result"],
                 "previous_result_colour": list["previous_result_colour"],
                 "index": list["index"],
