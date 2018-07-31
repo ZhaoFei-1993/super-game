@@ -13,7 +13,7 @@ from django.db import transaction
 import datetime
 from decimal import Decimal
 from .asia_tb_result import asia_result, asia_option
-import time
+from time import time
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
@@ -575,10 +575,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('进入脚本')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
+        print('----------------------------------------')
+        print('delay delay delay delay')
+        print(Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                                  category__parent_id=2).exists())
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                category__parent_id=2).exists():
             delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                               category__parent_id=2)
+
+            print(delay_quizs)
+            print('----------------------------------------')
+
             for delay_quiz in delay_quizs:
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
