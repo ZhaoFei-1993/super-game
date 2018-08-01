@@ -3,9 +3,10 @@ from django.core.management.base import BaseCommand, CommandError
 from base.app import BaseView
 from utils.cache import get_cache, set_cache
 from redis import Redis
-from rq import Queue
+from rq import Queue, use_connection
 from base.function import curl_get
 from console.consumers.eth_monitor import etheruem_monitor, get_api_url
+import local_settings
 
 
 class Command(BaseCommand, BaseView):
@@ -23,7 +24,10 @@ class Command(BaseCommand, BaseView):
         :param block_height:
         :return:
         """
-        redis_conn = Redis()
+        config = local_settings.CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
+        host, port = config
+
+        redis_conn = Redis(host, port)
         q = Queue(connection=redis_conn)
         q.enqueue(etheruem_monitor, block_height)
 
