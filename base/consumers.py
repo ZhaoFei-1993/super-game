@@ -183,7 +183,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             {
                 "msg_type": "stock_seal",
                 "period_id": event["period_id"],
-                "period_status": event["stock_status"],
+                "period_status": event["period_status"],
             }
         )
 
