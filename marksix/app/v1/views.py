@@ -424,12 +424,14 @@ class BetsViews(ListCreateAPIView):
 
 
 class BetsListViews(ListAPIView):
-    permission_classes = (LoginRequired,)
+    # permission_classes = (LoginRequired,)
+    authentication_classes = ()
     serializer_class = RecordSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        user_id = user.id
+        # user = self.request.user
+        # user_id = user.id
+        user_id = 2476
         type = self.kwargs['type']
         if type == '0':  # 全部记录
             res = SixRecord.objects.filter(user_id=user_id)

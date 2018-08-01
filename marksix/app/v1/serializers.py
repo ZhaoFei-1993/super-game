@@ -40,6 +40,7 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     single_double = serializers.SerializerMethodField()  # 单双
     special_head = serializers.SerializerMethodField()  # 特头
     special_tail = serializers.SerializerMethodField()  # 特尾
+    color = serializers.SerializerMethodField()  # 波色
 
     class Meta:
         model = OpenPrice
@@ -48,6 +49,16 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
             'starting',
             'home_field', 'total', 'special_head', 'special_tail', 'single_double'
         )
+
+    def get_color(self, obj):
+        color = obj.color
+        language = self.context['request'].GET.get('language', 'zh')
+        if language == 'zh':
+            color = Number.WAVE_CHOICE[int(color)-1][1]
+        else:
+            color_list = ['RED', 'BLUE', 'GREEN']
+            color = color_list[int(color)-1]
+        return color
 
     def get_single_double(self, obj):
         language = self.context['request'].GET.get('language', 'zh')
@@ -67,12 +78,22 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     def get_special_head(self, obj):
         special_code = obj.special_code
         special_code = change_num(special_code)
-        return special_code[0]
+        language = self.context['request'].GET.get('language', 'zh')
+        if language == 'zh':
+            next = '头'
+        else:
+            next = 'head'
+        return str(special_code[0]) + next
 
     def get_special_tail(self, obj):
         special_code = obj.special_code
         special_code = change_num(special_code)
-        return special_code[1]
+        language = self.context['request'].GET.get('language', 'zh')
+        if language == 'zh':
+            next = '尾'
+        else:
+            next = 'tail'
+        return str(special_code[1]) + next
 
     def get_flat_code(self, obj):
         flat_code = obj.flat_code
