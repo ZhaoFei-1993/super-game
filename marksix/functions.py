@@ -25,13 +25,19 @@ def valied_content(content, min=0, max=0):
     #     if not '01' <= num <= '49':
     #         print(num)
     #         return 0
-
     if not min <= len(content_list) <= max:
         print(content_list,'----------')
         return 0
 
     return 1
 
+def change_num(num):
+    num = str(num)
+    if len(num) == 1:
+        num = '0' + num
+    return num
+
 
 if __name__ == '__main__':
-    print(valied_content('01,02,03,', 3, 10))
+    # print(valied_content('01,02,03,', 3, 10))
+    print(change_num(1))
