@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
         periods = Periods.objects.filter(is_result=False)
         for period in periods:
-            cache_key = 'period_seal_' + period.id
+            cache_key = 'period_seal_' + str(period.id)
             if get_cache(cache_key) is None:
                 set_cache(cache_key, 0, 86400)
             dt = int(get_cache(cache_key))
