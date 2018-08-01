@@ -447,22 +447,14 @@ class BetsListViews(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
         # 获取下注记录，以期数分类，按时间顺序排列
-        issue_list = []
-        result_list = []
+        issue_tag = ''
         for item in res:
             issue = item['issue']
-            if issue not in issue_list:
-                issue_list.append(issue)
-                del item['issue']
-                result_list.append({
-                    'issue': issue,
-                    'list': [item]
-                })
+            if issue != issue_tag:
+                issue_tag = issue
             else:
-                index = issue_list.index(issue)
-                del item['issue']
-                result_list[index]['list'].append(item)
-        return self.response({'code': 0, 'data': result_list})
+                item['issue'] = ''
+        return self.response({'code': 0, 'data': res})
 
 
 class ColorViews(APIView):

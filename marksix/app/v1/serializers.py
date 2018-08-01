@@ -41,26 +41,27 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     special_head = serializers.SerializerMethodField()  # 特头
     special_tail = serializers.SerializerMethodField()  # 特尾
     color = serializers.SerializerMethodField()  # 波色
-    pitch = serializers.SerializerMethodField() # 前端标记
+    pitch = serializers.SerializerMethodField()  # 前端标记
 
     class Meta:
         model = OpenPrice
         fields = (
             "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open',
             'starting',
-            'home_field', 'total', 'special_head', 'special_tail', 'single_double','pitch'
+            'home_field', 'total', 'special_head', 'special_tail', 'single_double', 'pitch'
         )
-    def get_pitch(self,obj):
+
+    def get_pitch(self, obj):
         return True
 
     def get_color(self, obj):
         color = obj.color
         language = self.context['request'].GET.get('language', 'zh')
         if language == 'zh':
-            color = Number.WAVE_CHOICE[int(color)-1][1]
+            color = Number.WAVE_CHOICE[int(color) - 1][1]
         else:
             color_list = ['RED', 'BLUE', 'GREEN']
-            color = color_list[int(color)-1]
+            color = color_list[int(color) - 1]
         return color
 
     def get_single_double(self, obj):
@@ -243,7 +244,6 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
             title = Option.objects.get(id=option_id).option
 
         if play.id != 3 or title == '平码':
-            print(title, play)
             next = str(len(res.split(','))) + last
             res = res + '/' + next
         else:
