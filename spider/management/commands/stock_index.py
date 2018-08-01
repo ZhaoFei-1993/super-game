@@ -41,7 +41,7 @@ def get_index_cn(period, base_url):
     response = requests.get(base_url, headers=headers)
     dt_dic = eval(re.findall('\(.*?\)', response.text)[0][1:-1])
     data_list = dt_dic['data']
-    if period.start_value is None:
+    if period.start_value is None or float(period.start_value) != float(dt_dic['info']['o']):
         period.start_value = float(dt_dic['info']['o'])
         period.save()
     if date_now < period.lottery_time:
@@ -158,7 +158,7 @@ def get_index_hk_en(period, base_url):
     param_dic = {
         'num': dt_list[3], 'start_value': dt_list[6], 'date': dt_list[-1][:-1], 'type': dt_list[-2],
     }
-    if period.start_value is None:
+    if period.start_value is None or float(period.start_value) != float(param_dic['start_value']):
         period.start_value = float(param_dic['start_value'])
         period.save()
     if int(param_dic['type']) == 0:
