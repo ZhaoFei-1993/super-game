@@ -45,8 +45,8 @@ class ClubListSerialize(serializers.ModelSerializer):
         initial_online_user_number = get_cache(number_key)
         period = number_time_judgment()
         key_one = "'" + str(period) + "'"
-        coin_name_key = "'" + str(coin_name_key) + "'"
-        quiz_number = int(initial_online_user_number[key_one][coin_name_key]['quiz'])
+        # coin_name_key = "'" + str(coin_name_key) + "'"
+        quiz_number = int(initial_online_user_number[period][coin_name_key]['quiz'])
         guess_number = int(initial_online_user_number[key_one][coin_name_key]['guess'])
         user_number = quiz_number + guess_number
         print("user_number=============================", user_number)
