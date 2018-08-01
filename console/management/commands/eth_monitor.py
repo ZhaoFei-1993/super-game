@@ -3,9 +3,10 @@ from django.core.management.base import BaseCommand, CommandError
 from base.app import BaseView
 from utils.cache import get_cache, set_cache
 from redis import Redis
-from rq import Queue
+from rq import Queue, use_connection
 from base.function import curl_get
 from console.consumers.eth_monitor import etheruem_monitor, get_api_url
+import local_settings
 
 
 class Command(BaseCommand, BaseView):
@@ -23,7 +24,10 @@ class Command(BaseCommand, BaseView):
         :param block_height:
         :return:
         """
-        redis_conn = Redis()
+        config = local_settings.CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
+        host, port = config
+
+        redis_conn = Redis(host, port)
         q = Queue(connection=redis_conn)
         q.enqueue(etheruem_monitor, block_height)
 
@@ -60,15 +64,16 @@ class Command(BaseCommand, BaseView):
         cache_block_height = get_cache(self.cacheKey)
         if cache_block_height is None:
             cache_block_height = block_height
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, chain_block_height)
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
         if cache_block_height > chain_block_height:
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)
         for block in range(cache_block_height, chain_block_height + 1):
             self.set_queue(block)
 
+        set_cache(self.cacheKey, chain_block_height)
         self.stdout.write(self.style.SUCCESS('ok'))

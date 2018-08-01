@@ -47,7 +47,7 @@ class StockListSerialize(serializers.ModelSerializer):
     """
     title = serializers.SerializerMethodField()  ## 股票标题
     closing_time = serializers.SerializerMethodField()  ## 股票封盘时间
-    lottery_time = serializers.SerializerMethodField()  ## 股票开奖时间
+    # lottery_time = serializers.SerializerMethodField()  ## 股票开奖时间
     previous_result = serializers.SerializerMethodField()  ## 上期开奖指数
     previous_result_colour = serializers.SerializerMethodField()  ## 上期开奖指数颜色
     index = serializers.SerializerMethodField()  ## 本期指数颜色
@@ -62,7 +62,7 @@ class StockListSerialize(serializers.ModelSerializer):
         model = Stock
         fields = (
         "pk", "title", "icon", "closing_time", "previous_result", "previous_result_colour",
-         "index", "index_colour", "rise", "fall", "periods_id", "result_list", "is_seal", "lottery_time")
+         "index", "index_colour", "rise", "fall", "periods_id", "result_list", "is_seal")
 
     def get_title(self, obj):  # 股票标题
         name = obj.name
@@ -91,15 +91,35 @@ class StockListSerialize(serializers.ModelSerializer):
         begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
-        return start
+        created_at = periods.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        created_at = time.mktime(created_at.timetuple())
+        start_at = int(created_at)
+        day = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        lottery_time = periods.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
+        start_time = periods.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
+        rotary_header_time = periods.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
+        if day > start_time and day < rotary_header_time:
+            status = 0  # 开始投注
+        elif day > rotary_header_time and day < lottery_time:
+            status = 1  # 封盘中
+        elif periods.is_result == True:
+            status = 3  # 已开奖
+        else:
+            status = 2  # 开奖中
+        data = [{
+            "start": start,
+            "start_at": start_at,
+            "status": status
+        }]
+        return data
 
-    @staticmethod
-    def get_lottery_time(obj):    # 股票开奖时间
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        begin_at = periods.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
-        begin_at = time.mktime(begin_at.timetuple())
-        start = int(begin_at)
-        return start
+    # @staticmethod
+    # def get_lottery_time(obj):    # 股票开奖时间
+    #     periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     begin_at = periods.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+    #     begin_at = time.mktime(begin_at.timetuple())
+    #     start = int(begin_at)
+    #     return start
 
     @staticmethod
     def get_is_seal(obj):    # 是否封盘
