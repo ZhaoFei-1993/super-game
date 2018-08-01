@@ -486,7 +486,7 @@ class StockGraphListView(ListCreateAPIView):
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods_info.is_seal is True and periods_info.is_result is not True:
+        elif periods_info.is_seal is True and periods_info.is_result is not True and datetime.now() < periods_info.lottery_time:
             status = 1  # 封盘中
         elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
             status = 2  # 结算中
@@ -569,7 +569,7 @@ class StockGraphDayListView(ListCreateAPIView):
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods_info.is_seal is True and periods_info.is_result is not True:
+        elif periods_info.is_seal is True and periods_info.is_result is not True and datetime.now() < periods_info.lottery_time:
             status = 1  # 封盘中
         elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
             status = 2  # 结算中
