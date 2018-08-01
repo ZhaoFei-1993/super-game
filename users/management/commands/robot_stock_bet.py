@@ -240,9 +240,6 @@ class Command(BaseCommand):
             items[index] = obj[idx]
             index += 1
 
-        print('date_index = ', date_index)
-        print('items = ', items)
-
         return items[date_index]
 
     @staticmethod
@@ -340,7 +337,7 @@ class Command(BaseCommand):
         :param stock_id:
         :return:
         """
-        plays = Play.objects.filter(stock_id=stock_id, pk__not_in=[4, 8, 12, 16])
+        plays = Play.objects.filter(stock_id=stock_id)
         plays_weight = {
             1: 70,  # 大小
             2: 20,  # 点数
