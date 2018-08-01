@@ -636,9 +636,12 @@ class PlayRuleImage(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get(self, request, *args, **kwargs):
-        now_time = datetime.now().strftime('%Y%m%d%H%M')
-        language = self.request.GET.get('language')
+        # now_time = datetime.now().strftime('%Y%m%d%H%M')
+        # language = self.request.GET.get('language')
+        # print("now_time========================", now_time)
+        # print("now_time========================", language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time)
         rule_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time])
+            [MEDIA_DOMAIN_HOST, "smstp.png"])
+        print("rule_img===========================", rule_img)
         return self.response(
             {'code': 0, 'data': {'image': rule_img}})
