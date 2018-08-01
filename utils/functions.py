@@ -618,6 +618,24 @@ def number_time_judgment():
     if initial_online_user_time == None or initial_online_user_time == '':
         key = 1
     else:
-        time_one = initial_online_user_time['time_one']
-
+        time_one = str(day) + str(initial_online_user_time['time_one'])
+        time_two = str(day) + str(initial_online_user_time['time_two'])
+        time_three = str(day) + str(initial_online_user_time['time_three'])
+        time_four = str(day) + str(initial_online_user_time['time_four'])
+        time_five = str(day) + str(initial_online_user_time['time_five'])
+        time_six = str(day) + str(initial_online_user_time['time_six'])
+        time_seven = str(day) + str(initial_online_user_time['time_seven'])
+        time_eight = str(day) + str(initial_online_user_time['time_eight'])
+        # time_nine = str(day) + str(initial_online_user_time['time_nine'])
+        # time_ten = str(day) + str(initial_online_user_time['time_ten'])
+        if nowtime >= time_one and nowtime <= time_two:
+            key = 1
+        elif nowtime >= time_three and nowtime <= time_four:
+            key = 2
+        elif nowtime >= time_five and nowtime <= time_six:
+            key = 3
+        elif nowtime >= time_seven and nowtime <= time_eight:
+            key = 4
+        else:
+            key = 5
     return key

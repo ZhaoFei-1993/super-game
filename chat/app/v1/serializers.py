@@ -4,6 +4,9 @@ from users.models import Coin
 from chat.models import Club, ClubRule, ClubBanner
 from quiz.models import Record
 from guess.models import Record as Guess_Record
+from datetime import datetime
+from utils.functions import number_time_judgment
+from utils.cache import get_cache, set_cache, delete_cache
 
 
 class ClubListSerialize(serializers.ModelSerializer):
@@ -34,12 +37,25 @@ class ClubListSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_coin(obj):  # 货币
         coin_liat = Coin.objects.get(pk=obj.coin_id)
+
+        coin_name = coin_liat.name
+        coin_name_key = coin_name.lower()
+        day = datetime.now().strftime('%Y_%m_%d')
+        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        initial_online_user_number = get_cache(number_key)
+        period = number_time_judgment()
+        key_one = "'" + str(period) + "'"
+        coin_name_key = "'" + str(coin_name_key) + "'"
+        quiz_number = int(initial_online_user_number[key_one][coin_name_key]['quiz'])
+        guess_number = int(initial_online_user_number[key_one][coin_name_key]['guess'])
+        user_number = quiz_number + guess_number
+        print("user_number=============================", user_number)
         return coin_liat
 
     @staticmethod
     def get_user_number(obj):
-        record_number = Record.objects.filter(roomquiz_id=obj.pk).count()
-        record_number = record_number * 0.3
+        record_number = Record.objects.filter(roomquiz_id=obj.id).count()
+        record_number = int(record_number)*0.3
         return int(record_number)
 
 
