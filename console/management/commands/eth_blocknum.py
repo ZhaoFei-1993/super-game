@@ -40,6 +40,7 @@ class Command(BaseCommand, BaseView):
         cache_block_height = get_cache(self.cacheKey)
         if cache_block_height is None:
             cache_block_height = content
+            set_cache(self.cacheKey, content, 86400)
 
         cache_blocknum = int(cache_block_height)
 
@@ -56,7 +57,6 @@ class Command(BaseCommand, BaseView):
                 config = local_settings.CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
                 host, port = config
                 redis_conn = Redis(host, port)
-                q = Queue(connection=redis_conn)
                 q = Queue(connection=redis_conn)
                 q.enqueue(consumer_ethblock, block_number)
 
