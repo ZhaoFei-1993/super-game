@@ -18,6 +18,6 @@ def confirm_period(period_id, period_status):
         {
             "type": "stock.message",
             "period_id": period_id,
-            "is_seal": period_status,
+            "period_status": period_status,
         },
     )
