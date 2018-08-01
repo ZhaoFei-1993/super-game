@@ -301,8 +301,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     records = Record.objects.filter(~Q(rule__type=str(Rule.AISA_RESULTS)), quiz=quiz, is_distribution=False)
     if len(records) > 0:
         start_time = time()
+        i = 0
         for record in records:
-            print('正在处理record_id为:', record.id)
+            i += 1
+            print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
             # 用户增加对应币金额
             club = Club.objects.get(pk=record.roomquiz_id)
 
@@ -401,8 +403,10 @@ def handle_delay_game(delay_quiz):
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
     if len(records) > 0:
         start_time = time()
+        i = 0
         for record in records:
-            print('正在处理record_id为:', record.id)
+            i += 1
+            print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
             # 延迟比赛，返回用户投注的钱
             return_coin = record.bet
             record.earn_coin = return_coin
