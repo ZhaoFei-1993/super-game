@@ -240,6 +240,9 @@ class Command(BaseCommand):
             items[index] = obj[idx]
             index += 1
 
+        print('date_index = ', date_index)
+        print('items = ', items)
+
         return items[date_index]
 
     @staticmethod
