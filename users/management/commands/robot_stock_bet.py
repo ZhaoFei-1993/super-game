@@ -176,71 +176,8 @@ class Command(BaseCommand):
         :param items:
         :return:
         """
-        item_choice = {
-            0: 5,
-            1: 5,
-        }
-        if len(items) == 3:
-            item_choice = {
-                0: 344,
-                1: 333,
-                2: 333,
-            }
-        elif len(items) == 10:
-            item_choice = {
-                0: 1,
-                1: 1,
-                2: 1,
-                3: 1,
-                4: 1,
-                5: 1,
-                6: 1,
-                7: 1,
-                8: 1,
-                9: 1,
-            }
-        elif len(items) >= 11:
-            item_choice = {
-                0: 1,
-                1: 1,
-                2: 1,
-                3: 1,
-                4: 1,
-                5: 1,
-                6: 1,
-                7: 1,
-                8: 1,
-                9: 1,
-                10: 8,
-            }
-
-        weight_choice = WeightChoice()
-        weight_choice.set_choices(item_choice)
-        date_index = weight_choice.choice()
-
-        # 竞猜以日期分组
-        obj = {}
-        for item in items:
-            dt = item.rotary_header_time.strftime('%Y%m%d')
-
-            dt_len = 0
-            try:
-                dt_len = len(obj[dt])
-            except Exception:
-                pass
-
-            if dt_len == 0:
-                obj[dt] = []
-
-            obj[dt].append(item)
-
-        items = {}
-        index = 0
-        for idx in sorted(obj):
-            items[index] = obj[idx]
-            index += 1
-
-        return items[date_index]
+        secure_random = random.SystemRandom()
+        return secure_random.choice(items)
 
     @staticmethod
     def get_key(prefix):
