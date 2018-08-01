@@ -28,7 +28,7 @@ def deal_db_data(trans_dict, coin_all, charge_all):
 
     value = trans_dict['value']
     t_time = trans_dict['t_time']
-    usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
+    usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id, user__is_robot=False, user__is_block=False)
     if not usercoin_info:
         return False
 
