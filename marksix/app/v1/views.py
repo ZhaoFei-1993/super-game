@@ -7,7 +7,7 @@ from users.models import User, UserCoin
 from marksix.models import Play, OpenPrice, Option, Number, Animals, SixRecord, MarkSixBetLimit
 from django.http import JsonResponse, HttpResponse
 from users.finance.functions import get_now
-from marksix.functions import date_exchange
+from marksix.functions import date_exchange,change_num
 from django.db import transaction
 from datetime import datetime
 from utils.functions import value_judge
@@ -22,7 +22,7 @@ from base.function import LoginRequired
 from rest_framework.views import APIView
 import pytz
 import time
-from utils.cache import set_cache, get_cache
+from utils.cache import set_cache, get_cache,delete_cache
 from users.models import Coin
 
 
@@ -100,6 +100,7 @@ class OddsViews(ListAPIView):
             coin_name = ''
 
         marksix_all_code = "marksix_all_code"  # key
+        delete_cache(marksix_all_code)
         bet_num = get_cache(marksix_all_code)
         if bet_num == None or bet_num == '':
             ress = Option.objects.filter(play_id=1)
@@ -107,7 +108,7 @@ class OddsViews(ListAPIView):
             for item in ress:
                 bet_dict = {}
                 bet_dict['id'] = item.id
-                bet_dict['num'] = item.option
+                bet_dict['num'] = change_num(item.option)
                 bet_dict['pitch'] = False
                 bet_num.append(bet_dict)
             set_cache(marksix_all_code, bet_num)
@@ -178,6 +179,11 @@ class OddsViews(ListAPIView):
                     num_list = Number.objects.filter(element=element_id).values_list('num', flat=True)
                     res_dict['num_list'] = list(num_list)
 
+                if res_dict.get('num_list',''):
+                    num_list = res_dict['num_list']
+                    for i in num_list:
+                        res_dict['num_list'][num_list.index(i)] = change_num(i)
+
                 bet_odds.append(res_dict)
             # if id == '3':
             #     bet_odds.append(three_to_three)
@@ -242,8 +248,6 @@ class BetsViews(ListCreateAPIView):
     def post(self, request, *args, **kwargs):  # 两面的三中二玩法有两个赔率，记录只记录一个赔率，开奖的时候再进行具体的赔率判断
         user = self.request.user
         user_id = user.id
-        # user_id = 2476
-        # user = User.objects.get(id=user_id)
         res = value_judge(request, 'club_id', 'bet', 'bet_coin', 'issue', 'content', 'play')
         if not res:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -404,14 +408,11 @@ class BetsViews(ListCreateAPIView):
 
 class BetsListViews(ListAPIView):
     permission_classes = (LoginRequired,)
-    # authentication_classes = ()
     serializer_class = RecordSerializer
 
     def get_queryset(self):
         user = self.request.user
         user_id = user.id
-        # user_id = 2476
-        # user = User.objects.get(id=user_id)
         type = self.kwargs['type']
         if type == '0':  # 全部记录
             res = SixRecord.objects.filter(user_id=user_id)
@@ -450,7 +451,7 @@ class ColorViews(APIView):
         res = Number.objects.all()
         res_dict = {}
         for item in res:
-            res_dict[item.num] = item.color
+            res_dict[change_num(item.num)] = item.color
         color = {
             1: '红波',
             2: '蓝波',
