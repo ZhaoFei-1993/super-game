@@ -484,14 +484,14 @@ class StockGraphListView(ListCreateAPIView):
         lottery_time = periods_info.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
         start_time = periods_info.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
-        if day > start_time and day < rotary_header_time:
+        if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif day > rotary_header_time and day < lottery_time:
+        elif periods_info.is_seal is True:
             status = 1  # 封盘中
-        elif periods_info.is_result == True:
+        elif periods_info.is_result is True:
             status = 3  # 已开奖
-        else:
-            status = 2  # 开奖中
+        elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
+            status = 2  # 结算中
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
@@ -567,14 +567,14 @@ class StockGraphDayListView(ListCreateAPIView):
         lottery_time = periods_info.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
         start_time = periods_info.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
-        if day > start_time and day < rotary_header_time:
+        if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif day > rotary_header_time and day < lottery_time:
+        elif periods_info.is_seal is True:
             status = 1  # 封盘中
-        elif periods_info.is_result == True:
+        elif periods_info.is_result is True:
             status = 3  # 已开奖
-        else:
-            status = 2  # 开奖中
+        elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
+            status = 2  # 结算中
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
