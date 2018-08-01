@@ -82,9 +82,10 @@ class Command(BaseCommand):
                 current_period = period
 
                 # 更新该期数为封盘状态
-                period.is_seal = True
-                period.save()
-                self.stdout.write(self.style.SUCCESS(self.get_stock(period.stock_id) + '-' + str(period.id)) + ' 封盘成功')
+                prd = Periods.objects.get(pk=period.id)
+                prd.is_seal = True
+                prd.save()
+                self.stdout.write(self.style.SUCCESS(self.get_stock(prd.stock_id) + '-' + str(prd.id)) + ' 封盘成功')
                 break
 
         if rotary_header is None:
