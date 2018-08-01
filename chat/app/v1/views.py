@@ -43,13 +43,13 @@ class ClublistView(ListAPIView):
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
         data = []
         for item in items:
-            coin = item['coin']
+            coin = item['coin'][0]['coin_list']
             data.append(
                 {
                     "club_id": item['id'],
                     "room_title": item['title'],
                     "autograph": item['club_autograph'],
-                    "user_number": item['user_number'],
+                    "user_number": item['coin'][0]['user_number'],
                     "room_number": item['room_number'],
                     "coin_name": coin.name,
                     "coin_key": coin.pk,

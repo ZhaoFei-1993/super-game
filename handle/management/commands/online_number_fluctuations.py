@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "在线人数波动"
 
     def handle(self, *args, **options):
-        day = datetime.now().strftime('%Y_%m_%d')
+        day = datetime.now().strftime('%Y-%m-%d')
         fluctuation = int(random.randint(1, 5))       # 波动人数
         number_key = "INITIAL_ONLINE_USER_" + str(day)       # 在线人数key
         # fluctuation_key = "ONLINE_NUMBER_FLUCTUATIONS_" + str(day)    # 波动时间key

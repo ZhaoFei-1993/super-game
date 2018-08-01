@@ -14,13 +14,13 @@ class ClubListSerialize(serializers.ModelSerializer):
     序列号
     """
     coin = serializers.SerializerMethodField()  # 货币名称
-    user_number = serializers.SerializerMethodField()  # 总下注数
+    # user_number = serializers.SerializerMethodField()  # 总下注数
     title = serializers.SerializerMethodField()  # 货币头像
     club_autograph = serializers.SerializerMethodField()  # 货币头像
 
     class Meta:
         model = Club
-        fields = ("id", "title", "club_autograph", "user_number", "room_number", "is_recommend", "coin", "icon")
+        fields = ("id", "title", "club_autograph", "user_number", "is_recommend", "coin", "icon")
 
     def get_title(self, obj):  # 货币名称
         room_title = obj.room_title
@@ -38,25 +38,38 @@ class ClubListSerialize(serializers.ModelSerializer):
     def get_coin(obj):  # 货币
         coin_liat = Coin.objects.get(pk=obj.coin_id)
 
-        # coin_name = coin_liat.name
-        # coin_name_key = coin_name.lower()
-        # day = datetime.now().strftime('%Y_%m_%d')
-        # number_key = "INITIAL_ONLINE_USER_" + str(day)
-        # initial_online_user_number = get_cache(number_key)
-        # period = number_time_judgment()
-        # key_one = "'" + str(period) + "'"
-        # # coin_name_key = "'" + str(coin_name_key) + "'"
-        # quiz_number = int(initial_online_user_number[period][coin_name_key]['quiz'])
-        # guess_number = int(initial_online_user_number[key_one][coin_name_key]['guess'])
-        # user_number = quiz_number + guess_number
+        coin_name = coin_liat.name
+        coin_name_key = str(coin_name.lower())
+        if coin_name_key == "eos":
+            user_number = 0
+        else:
+            # print("coin_name_key==========================", coin_name_key)
+            day = datetime.now().strftime('%Y_%m_%d')
+            number_key = "INITIAL_ONLINE_USER_" + str(day)
+            initial_online_user_number = get_cache(number_key)
+            # print("initial_online_user_number=======================", initial_online_user_number)
+            period = str(number_time_judgment())
+            # print("period=======================", period)
+            # key_one = "'" + str(period) + "'"
+            # coin_name_key = "'" + str(coin_name_key) + "'"
+            # print("1===================================", initial_online_user_number[0][period])
+            # print("1===================================", initial_online_user_number[0][period][coin_name_key])
+            # print("1===================================", initial_online_user_number[0][period][coin_name_key]['quiz'])
+            quiz_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
+            guess_number = int(initial_online_user_number[0][period][coin_name_key]['guess'])
+            user_number = quiz_number + guess_number
         # print("user_number=============================", user_number)
-        return coin_liat
+        data = [{
+            "coin_list": coin_liat,
+            "user_number": user_number
+        }]
+        return data
 
-    @staticmethod
-    def get_user_number(obj):
-        record_number = Record.objects.filter(roomquiz_id=obj.id).count()
-        record_number = int(record_number)*0.3
-        return int(record_number)
+    # @staticmethod
+    # def get_user_number(obj):
+    #     record_number = Record.objects.filter(roomquiz_id=obj.id).count()
+    #     record_number = int(record_number)*0.3
+    #     return int(record_number)
 
 
 class ClubRuleSerialize(serializers.ModelSerializer):
@@ -78,13 +91,19 @@ class ClubRuleSerialize(serializers.ModelSerializer):
 
     def get_number(self, obj):
         club_id = self.context['request'].GET.get('club_id')
-        record_number = 0
-        if obj.id == 1:
-            record_number = Record.objects.filter(roomquiz_id=club_id).count()
-            record_number = record_number * 0.3
-        if obj.id == 3:
-            record_number = Guess_Record.objects.filter(club_id=club_id).count()
-        return int(record_number)
+        club_liat = Club.objects.get(pk=club_id)
+
+        coin_name = club_liat.coin.name
+        coin_name_key = str(coin_name.lower())
+        day = datetime.now().strftime('%Y_%m_%d')
+        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        initial_online_user_number = get_cache(number_key)
+        period = str(number_time_judgment())
+        if int(obj.id) == 1:
+            user_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
+        else:
+            user_number = int(initial_online_user_number[0][period][coin_name_key]['guess'])
+        return user_number
 
 
 class ClubBannerSerialize(serializers.ModelSerializer):
