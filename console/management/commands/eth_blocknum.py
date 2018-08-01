@@ -37,7 +37,11 @@ class Command(BaseCommand, BaseView):
         if not content:
             raise CommandError('获取blocknum失败')
 
-        cache_blocknum = int(get_cache(self.cacheKey))
+        cache_block_height = get_cache(self.cacheKey)
+        if cache_block_height is None:
+            cache_block_height = content
+
+        cache_blocknum = int(cache_block_height)
 
         if cache_blocknum is None:
             raise CommandError('首次运行设置blocknum')
