@@ -147,12 +147,12 @@ class StockListSerialize(serializers.ModelSerializer):
         rotary_header_time = periods.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods.is_seal is True:
+        elif periods.is_seal is True and periods.is_result is not True:
             status = 1  # 封盘中
-        elif periods.is_result is True:
-            status = 3  # 已开奖
         elif datetime.now() > periods.lottery_time and periods.is_result is not True:
             status = 2  # 结算中
+        elif periods.is_result is True:
+            status = 3  # 已开奖
         data = [{
             "start": start,
             "start_at": start_at,
