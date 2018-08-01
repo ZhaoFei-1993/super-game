@@ -446,17 +446,11 @@ class BetsListViews(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
-        language = request.GET.get('language', 'zh')
         # 获取下注记录，以期数分类，按时间顺序排列
-        if language == 'zh':
-            next = '期'
-        else:
-            next = 'phase'
         issue_tag = ''
         for item in res:
             issue = item['issue']
             if issue != issue_tag:
-                item['issue'] = str(issue) + next
                 issue_tag = issue
             else:
                 item['issue'] = ''
