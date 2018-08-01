@@ -39,7 +39,7 @@ class StockList(ListAPIView):
         for list in items:
             data.append({
                 "stock_id": list["pk"],
-                "periods_id": list["periods_id"],
+                "periods_id": list["periods_id"][0]["period_id"],
                 "icon": list["icon"],
                 "title": list["title"],
                 "closing_time": list["closing_time"][0]["start"],
@@ -47,11 +47,11 @@ class StockList(ListAPIView):
                 "status": list["closing_time"][0]["status"],
                 "previous_result": list["previous_result"],
                 "previous_result_colour": list["previous_result_colour"],
-                "index": list["index"],
+                "index": list["periods_id"][0]["index"],
                 "index_colour": list["index_colour"],
-                "rise": list["rise"],
-                "fall": list["fall"],
-                "is_seal": list["is_seal"],
+                "rise": list["periods_id"][0]["rise"],
+                "fall": list["periods_id"][0]["fall"],
+                "is_seal": list["periods_id"][0]["is_seal"],
                 "result_list": list["result_list"]
             })
 
@@ -140,7 +140,7 @@ class PlayView(ListAPIView):
         lottery_time = int(created_at)
         is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
 
-        plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
+        plays = Play.objects.filter(~Q(play_name=0), stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
@@ -636,9 +636,12 @@ class PlayRuleImage(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get(self, request, *args, **kwargs):
-        now_time = datetime.now().strftime('%Y%m%d%H%M')
-        language = self.request.GET.get('language')
+        # now_time = datetime.now().strftime('%Y%m%d%H%M')
+        # language = self.request.GET.get('language')
+        # print("now_time========================", now_time)
+        # print("now_time========================", language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time)
         rule_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time])
+            [MEDIA_DOMAIN_HOST, "smstp.png"])
+        print("rule_img===========================", rule_img)
         return self.response(
             {'code': 0, 'data': {'image': rule_img}})
