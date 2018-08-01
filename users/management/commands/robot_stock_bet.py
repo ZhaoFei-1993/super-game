@@ -94,7 +94,7 @@ class Command(BaseCommand):
         if len(items) == 0:
             raise CommandError('当前无进行中的竞猜')
 
-        items = self.get_get_quiz(items)
+        # items = self.get_get_quiz(items)
         item_len = len(items)
 
         idx = 0
