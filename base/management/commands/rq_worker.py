@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from rq import Connection, Worker
+from redis import Redis
 
 
 class Command(BaseCommand):
@@ -10,6 +11,7 @@ class Command(BaseCommand):
         with Connection():
             qs = args[1:] or ['default']
 
-            w = Worker(qs)
+            redis_conn = Redis()
+            w = Worker(qs, connection=redis_conn)
             w.work()
 
