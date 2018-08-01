@@ -29,6 +29,7 @@ from wc_auth.functions import save_operation
 from django.db import connection
 from PIL import Image, ImageDraw, ImageFont
 import random
+from utils.cache import get_cache, set_cache
 
 
 def random_string(length=16):
@@ -607,3 +608,16 @@ def effect_user():
     for x in dt_all:
         dd.append((x[0]))
     return dd
+
+
+def number_time_judgment():
+    day = datetime.datetime.now().strftime('%Y-%m-%d')
+    nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    time_key = "INITIAL_ONLINE_TIME_" + str(day)
+    initial_online_user_time = get_cache(time_key)
+    if initial_online_user_time == None or initial_online_user_time == '':
+        key = 1
+    else:
+        time_one = initial_online_user_time['time_one']
+
+    return key
