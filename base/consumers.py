@@ -175,7 +175,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
 
     async def stock_message(self, event):
         """
-        推送比分数据至客户端
+        推送封盘状态至客户端
         :param event:
         :return:
         """
@@ -183,7 +183,7 @@ class QuizConsumer(AsyncJsonWebsocketConsumer):
             {
                 "msg_type": "stock_seal",
                 "period_id": event["period_id"],
-                "is_seal": event["is_seal"],
+                "period_status": event["period_status"],
             }
         )
 

@@ -171,7 +171,7 @@ def ergodic_record(period, dt, date):
         period.save()
 
         # 点数玩法
-        period.points = num_spilt[0] + ',' + num_spilt[1]
+        period.points = num_spilt[0] + num_spilt[1]
         period.save()
 
         # 对子玩法
