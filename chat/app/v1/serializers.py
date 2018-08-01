@@ -42,7 +42,7 @@ class ClubListSerialize(serializers.ModelSerializer):
         if coin_name_key == "eos":
             user_number = 0
         else:
-            day = datetime.now().strftime('%Y_%m_%d')
+            day = datetime.now().strftime('%Y-%m-%d')
             number_key = "INITIAL_ONLINE_USER_" + str(day)
             initial_online_user_number = get_cache(number_key)
             period = str(number_time_judgment())
@@ -79,7 +79,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
 
         coin_name = club_liat.coin.name
         coin_name_key = str(coin_name.lower())
-        day = datetime.now().strftime('%Y_%m_%d')
+        day = datetime.now().strftime('%Y-%m-%d')
         number_key = "INITIAL_ONLINE_USER_" + str(day)
         initial_online_user_number = get_cache(number_key)
         period = str(number_time_judgment())
