@@ -486,12 +486,12 @@ class StockGraphListView(ListCreateAPIView):
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods_info.is_seal is True:
+        elif periods_info.is_seal is True and periods_info.is_result is not True:
             status = 1  # 封盘中
-        elif periods_info.is_result is True:
-            status = 3  # 已开奖
         elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
             status = 2  # 结算中
+        elif periods_info.is_result is True:
+            status = 3  # 已开奖
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
@@ -569,12 +569,12 @@ class StockGraphDayListView(ListCreateAPIView):
         rotary_header_time = periods_info.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods_info.is_seal is True:
+        elif periods_info.is_seal is True and periods_info.is_result is not True:
             status = 1  # 封盘中
-        elif periods_info.is_result is True:
-            status = 3  # 已开奖
         elif datetime.now() > periods_info.lottery_time and periods_info.is_result is not True:
             status = 2  # 结算中
+        elif periods_info.is_result is True:
+            status = 3  # 已开奖
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
