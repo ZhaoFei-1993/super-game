@@ -216,9 +216,9 @@ class StockListSerialize(serializers.ModelSerializer):
         pair = previous_period.pair
         if pair == None or pair == '':
             # list = str(up_and_down)+", "+str(size)+", "+str(points)
-            list = str(size) + ", " + str(points)
+            list = str(size) + ",  " + str(points)
         else:
-            list = str(size) + ", " + str(points) + ", " + str(pair)
+            list = str(size) + ",  " + str(points) + ",  " + str(pair)
         return list
 
     @staticmethod
