@@ -140,7 +140,7 @@ class PlayView(ListAPIView):
         lottery_time = int(created_at)
         is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
 
-        plays = Play.objects.filter(stock_id=stock_id).order_by('play_name')  # 所有玩法
+        plays = Play.objects.filter(~Q(play_name=0), stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
