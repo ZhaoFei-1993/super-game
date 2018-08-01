@@ -14,7 +14,6 @@ class ClubListSerialize(serializers.ModelSerializer):
     序列号
     """
     coin = serializers.SerializerMethodField()  # 货币名称
-    # user_number = serializers.SerializerMethodField()  # 总下注数
     title = serializers.SerializerMethodField()  # 货币头像
     club_autograph = serializers.SerializerMethodField()  # 货币头像
 
@@ -43,33 +42,18 @@ class ClubListSerialize(serializers.ModelSerializer):
         if coin_name_key == "eos":
             user_number = 0
         else:
-            # print("coin_name_key==========================", coin_name_key)
             day = datetime.now().strftime('%Y_%m_%d')
             number_key = "INITIAL_ONLINE_USER_" + str(day)
             initial_online_user_number = get_cache(number_key)
-            # print("initial_online_user_number=======================", initial_online_user_number)
             period = str(number_time_judgment())
-            # print("period=======================", period)
-            # key_one = "'" + str(period) + "'"
-            # coin_name_key = "'" + str(coin_name_key) + "'"
-            # print("1===================================", initial_online_user_number[0][period])
-            # print("1===================================", initial_online_user_number[0][period][coin_name_key])
-            # print("1===================================", initial_online_user_number[0][period][coin_name_key]['quiz'])
             quiz_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
             guess_number = int(initial_online_user_number[0][period][coin_name_key]['guess'])
             user_number = quiz_number + guess_number
-        # print("user_number=============================", user_number)
         data = [{
             "coin_list": coin_liat,
             "user_number": user_number
         }]
         return data
-
-    # @staticmethod
-    # def get_user_number(obj):
-    #     record_number = Record.objects.filter(roomquiz_id=obj.id).count()
-    #     record_number = int(record_number)*0.3
-    #     return int(record_number)
 
 
 class ClubRuleSerialize(serializers.ModelSerializer):
