@@ -38,18 +38,18 @@ class ClubListSerialize(serializers.ModelSerializer):
     def get_coin(obj):  # 货币
         coin_liat = Coin.objects.get(pk=obj.coin_id)
 
-        coin_name = coin_liat.name
-        coin_name_key = coin_name.lower()
-        day = datetime.now().strftime('%Y_%m_%d')
-        number_key = "INITIAL_ONLINE_USER_" + str(day)
-        initial_online_user_number = get_cache(number_key)
-        period = number_time_judgment()
-        key_one = "'" + str(period) + "'"
-        # coin_name_key = "'" + str(coin_name_key) + "'"
-        quiz_number = int(initial_online_user_number[period][coin_name_key]['quiz'])
-        guess_number = int(initial_online_user_number[key_one][coin_name_key]['guess'])
-        user_number = quiz_number + guess_number
-        print("user_number=============================", user_number)
+        # coin_name = coin_liat.name
+        # coin_name_key = coin_name.lower()
+        # day = datetime.now().strftime('%Y_%m_%d')
+        # number_key = "INITIAL_ONLINE_USER_" + str(day)
+        # initial_online_user_number = get_cache(number_key)
+        # period = number_time_judgment()
+        # key_one = "'" + str(period) + "'"
+        # # coin_name_key = "'" + str(coin_name_key) + "'"
+        # quiz_number = int(initial_online_user_number[period][coin_name_key]['quiz'])
+        # guess_number = int(initial_online_user_number[key_one][coin_name_key]['guess'])
+        # user_number = quiz_number + guess_number
+        # print("user_number=============================", user_number)
         return coin_liat
 
     @staticmethod
