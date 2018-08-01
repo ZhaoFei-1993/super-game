@@ -4,6 +4,8 @@ from marksix.models import Play, OpenPrice, Option, SixRecord, Number, Animals
 from base.validators import PhoneValidator
 from chat.models import Club
 from datetime import datetime
+from marksix.functions import change_num
+from utils.cache import set_cache, get_cache
 
 
 class PlaySerializer(serializers.HyperlinkedModelSerializer):
@@ -34,18 +36,54 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     home_field = serializers.SerializerMethodField()  # 家野
     total = serializers.SerializerMethodField()  # 总数
     flat_code = serializers.SerializerMethodField()  # 平码
+    special_code = serializers.SerializerMethodField()  # 特码
+    single_double = serializers.SerializerMethodField()  # 单双
+    special_head = serializers.SerializerMethodField()  # 特头
+    special_tail = serializers.SerializerMethodField()  # 特尾
 
     class Meta:
         model = OpenPrice
         fields = (
             "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open',
             'starting',
-            'home_field', 'total'
+            'home_field', 'total', 'special_head', 'special_tail', 'single_double'
         )
+
+    def get_single_double(self, obj):
+        language = self.context['request'].GET.get('language', 'zh')
+        special_code = int(obj.special_code)
+        if special_code % 2 == 0:
+            if language == 'zh':
+                res = '单'
+            else:
+                res = 'single'
+        else:
+            if language == 'zh':
+                res = '双'
+            else:
+                res = 'double'
+        return res
+
+    def get_special_head(self, obj):
+        special_code = obj.special_code
+        special_code = change_num(special_code)
+        return special_code[0]
+
+    def get_special_tail(self, obj):
+        special_code = obj.special_code
+        special_code = change_num(special_code)
+        return special_code[1]
 
     def get_flat_code(self, obj):
         flat_code = obj.flat_code
-        return flat_code.split(',')
+        flat_list = flat_code.split(',')
+        for num in flat_list:
+            flat_list[flat_list.index(num)] = change_num(num)
+        return flat_list
+
+    def get_special_code(self, obj):
+        special_code = obj.special_code
+        return change_num(special_code)
 
     def get_animal(self, obj):
         animal_index = obj.animal
@@ -161,7 +199,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         res = obj.content
         language = self.context['request'].GET.get('language', 'zh')
         res_list = res.split(',')
-        if play.id != 1 and not option_id: # 排除连码和特码
+        if play.id != 1 and not option_id:  # 排除连码和特码
             content_list = []
             for pk in res_list:
                 if language == 'zh':
@@ -181,7 +219,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
             title = Option.objects.get(id=option_id).option
 
         if play.id != 3 or title == '平码':
-            print(title,play)
+            print(title, play)
             next = str(len(res.split(','))) + last
             res = res + '/' + next
         else:
