@@ -4,9 +4,10 @@ from base.eth import *
 from time import time
 from base.app import BaseView
 from utils.cache import get_cache, set_cache
-from console.consumers import consumer_ethblock
+from console.consumers.eth_blocknum import consumer_ethblock
 from redis import Redis
 from rq import Queue
+import local_settings
 
 
 class Command(BaseCommand, BaseView):
@@ -48,7 +49,10 @@ class Command(BaseCommand, BaseView):
             print('content:', content)
             for block_number in range(cache_blocknum, content):
                 # 消息队列
-                redis_conn = Redis()
+                config = local_settings.CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]
+                host, port = config
+                redis_conn = Redis(host, port)
+                q = Queue(connection=redis_conn)
                 q = Queue(connection=redis_conn)
                 q.enqueue(consumer_ethblock, block_number)
 
