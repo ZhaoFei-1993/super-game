@@ -20,7 +20,7 @@ class ClubListSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Club
-        fields = ("id", "title", "club_autograph", "user_number", "is_recommend", "coin", "icon")
+        fields = ("id", "title", "club_autograph", "room_number", "is_recommend", "coin", "icon")
 
     def get_title(self, obj):  # 货币名称
         room_title = obj.room_title
