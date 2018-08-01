@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 import random
 from base.app import BaseView
 from datetime import datetime
-from utils.cache import get_cache, set_cache
+from utils.cache import get_cache, set_cache, delete_cache
 
 
 class Command(BaseCommand, BaseView):
@@ -13,7 +13,8 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         day = datetime.now().strftime('%Y_%m_%d')
         number_key = "INITIAL_ONLINE_USER_" + str(day)
-        time_key = "INITIAL_ONLINE_TIME_" + str(day)
+        time_key = "NOW_INITIAL_ONLINE_TIME_" + str(day)
+        delete_cache(time_key)
         initial_online_user_time = get_cache(time_key)
         if initial_online_user_time == None or initial_online_user_time == "":
             list = [{
@@ -24,7 +25,7 @@ class Command(BaseCommand, BaseView):
                 "time_five": " 12:00:00",
                 "time_six": " 19:59:59",
                 "time_seven": " 20:00:00",
-                "time_eight": "22:59:59",
+                "time_eight": " 22:59:59",
                 "time_nine": " 23:00:00",
                 "time_ten": " 23:59:59"
             }]
