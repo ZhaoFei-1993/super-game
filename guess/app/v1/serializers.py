@@ -50,19 +50,20 @@ class StockListSerialize(serializers.ModelSerializer):
     # lottery_time = serializers.SerializerMethodField()  ## 股票开奖时间
     previous_result = serializers.SerializerMethodField()  ## 上期开奖指数
     previous_result_colour = serializers.SerializerMethodField()  ## 上期开奖指数颜色
-    index = serializers.SerializerMethodField()  ## 本期指数颜色
+    # index = serializers.SerializerMethodField()  ## 本期指数颜色
     index_colour = serializers.SerializerMethodField()  ## 本期指数颜色
-    rise = serializers.SerializerMethodField()  # 看涨人数
-    fall = serializers.SerializerMethodField()  # 看跌人数
+    # rise = serializers.SerializerMethodField()  # 看涨人数
+    # fall = serializers.SerializerMethodField()  # 看跌人数
     periods_id = serializers.SerializerMethodField()  # 看跌人数
     result_list = serializers.SerializerMethodField()  # 上期结果
-    is_seal = serializers.SerializerMethodField()  # 是否封盘
+
+    # is_seal = serializers.SerializerMethodField()  # 是否封盘
 
     class Meta:
         model = Stock
         fields = (
             "pk", "title", "icon", "closing_time", "previous_result", "previous_result_colour",
-            "index", "index_colour", "rise", "fall", "periods_id", "result_list", "is_seal")
+            "index_colour", "periods_id", "result_list")
 
     def get_title(self, obj):  # 股票标题
         name = obj.name
@@ -73,23 +74,63 @@ class StockListSerialize(serializers.ModelSerializer):
 
     def get_periods_id(self, obj):  # 股票标题
         periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        return periods.id
+        # rise = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+        #                               options_id__in=[49, 50, 51, 52]).count()           # 看涨人数
+        rise = Record.objects.filter(periods_id=periods.id, options__play__stock_id=obj.id,
+                                     options_id__in=[1, 2, 3, 4]).count()  # 看涨人数
+        # fall = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+        #                               options_id__in=[53, 54, 55, 56]).count()         # 看跌人数
+        fall = Record.objects.filter(periods_id=periods.id, options__play__stock_id=obj.id,
+                                     options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
 
-    def get_rise(self, obj):  # 猜大人数
-        period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
-        # count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
-        #                               options_id__in=[49, 50, 51, 52]).count()
-        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
-                                      options_id__in=[1, 2, 3, 4]).count()
-        return count
+        is_seal = guess_is_seal(periods)  # 是否封盘
 
-    def get_fall(self, obj):  # 猜小人数
-        period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
-        # count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
-        #                               options_id__in=[53, 54, 55, 56]).count()
-        count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
-                                      options_id__in=[5, 6, 7, 8]).count()
-        return count
+        index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
+        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
+            index = 0
+        else:
+            index = index_info.index_value
+
+        data = [{
+            "period_id": periods.id,
+            "rise": rise,
+            "is_seal": is_seal,
+            "fall": fall,
+            "index": index
+        }]
+        return data
+
+    # # @staticmethod
+    # def get_is_seal(obj):  # 是否封盘
+    #     periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     is_seal = guess_is_seal(periods)
+    #     return is_seal
+
+    # @staticmethod
+    # def get_index(obj):  # 本期指数
+    #     periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     index_info = Index.objects.filter(periods=periods.pk).first()
+    #     if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
+    #         index = 0
+    #     else:
+    #         index = index_info.index_value
+    #     return index
+
+    # def get_rise(self, obj):  # 猜大人数
+    #     period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
+    #     # count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+    #     #                               options_id__in=[49, 50, 51, 52]).count()
+    #     count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+    #                                   options_id__in=[1, 2, 3, 4]).count()
+    #     return count
+    #
+    # def get_fall(self, obj):  # 猜小人数
+    #     period = Periods.objects.filter(stock_id=obj.id).order_by('-periods').first()
+    #     # count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+    #     #                               options_id__in=[53, 54, 55, 56]).count()
+    #     count = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
+    #                                   options_id__in=[5, 6, 7, 8]).count()
+    #     return count
 
     @staticmethod
     def get_closing_time(obj):  # 股票封盘时间
@@ -126,22 +167,6 @@ class StockListSerialize(serializers.ModelSerializer):
     #     begin_at = time.mktime(begin_at.timetuple())
     #     start = int(begin_at)
     #     return start
-
-    @staticmethod
-    def get_is_seal(obj):  # 是否封盘
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        is_seal = guess_is_seal(periods)
-        return is_seal
-
-    @staticmethod
-    def get_index(obj):  # 本期指数
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
-            index = 0
-        else:
-            index = index_info.index_value
-        return index
 
     @staticmethod
     def get_index_colour(obj):  # 本期指数颜色

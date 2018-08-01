@@ -39,7 +39,7 @@ class StockList(ListAPIView):
         for list in items:
             data.append({
                 "stock_id": list["pk"],
-                "periods_id": list["periods_id"],
+                "periods_id": list["periods_id"][0]["period_id"],
                 "icon": list["icon"],
                 "title": list["title"],
                 "closing_time": list["closing_time"][0]["start"],
@@ -47,11 +47,11 @@ class StockList(ListAPIView):
                 "status": list["closing_time"][0]["status"],
                 "previous_result": list["previous_result"],
                 "previous_result_colour": list["previous_result_colour"],
-                "index": list["index"],
+                "index": list["periods_id"][0]["index"],
                 "index_colour": list["index_colour"],
-                "rise": list["rise"],
-                "fall": list["fall"],
-                "is_seal": list["is_seal"],
+                "rise": list["periods_id"][0]["rise"],
+                "fall": list["periods_id"][0]["fall"],
+                "is_seal": list["periods_id"][0]["is_seal"],
                 "result_list": list["result_list"]
             })
 
