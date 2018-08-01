@@ -6,6 +6,7 @@ from guess.consumers import confirm_period
 from rq import Queue
 from redis import Redis
 import datetime
+from utils.cache import *
 
 
 class Command(BaseCommand):
@@ -17,13 +18,23 @@ class Command(BaseCommand):
 
         periods = Periods.objects.filter(is_result=False)
         for period in periods:
-            # period_id = period.id
-            # is_seal = period.is_seal
-            # now_time = datetime.datetime.now()
-            # end_time = period.rotary_header_time + datetime.timedelta(minutes=5)
-            # if period.is_seal is True and end_time > now_time:
-            #     q.enqueue(confirm_period, period_id, is_seal)
-            print('开始发送')
-            q.enqueue(confirm_period, 136, True)
-            print('发送结束')
-            print('----------------------------------')
+            cache_key = 'period_seal_' + period.id
+            if get_cache(cache_key) is None:
+                set_cache(cache_key, 0, 86400)
+            dt = int(get_cache(cache_key))
+            print('cache_key == ', cache_key)
+            print('cache_value == ', dt)
+            if period.is_seal is True and dt == 0:
+                print('推送状态')
+                period_status = 1
+                q.enqueue(confirm_period, period.id, period_status)
+                set_cache(cache_key, period_status, 86400)
+                print('推送状态结束')
+            elif datetime.datetime.now() > period.lottery_time and dt == 1:
+                print('推送状态')
+                period_status = 2
+                q.enqueue(confirm_period, period.id, period_status)
+                set_cache(cache_key, period_status, 86400)
+                print('推送状态结束')
+        print('----------------------------------------------')
+

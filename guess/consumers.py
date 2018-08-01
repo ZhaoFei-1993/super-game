@@ -3,11 +3,11 @@ from channels.consumer import get_channel_layer
 from asgiref.sync import async_to_sync
 
 
-def confirm_period(period_id, is_seal):
+def confirm_period(period_id, period_status):
     """
     发送确认
     :param period_id 期数ID
-    :param is_seal 是否封盘
+    :param period_status 状态
     :return:
     """
     group = 'period_' + str(period_id)
@@ -18,6 +18,6 @@ def confirm_period(period_id, is_seal):
         {
             "type": "stock.message",
             "period_id": period_id,
-            "is_seal": is_seal,
+            "is_seal": period_status,
         },
     )
