@@ -72,6 +72,9 @@ class Command(BaseCommand, BaseView):
             set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)
+        if cache_block_height == chain_block_height:
+            raise CommandError('暂无新块高生成')
+
         for block in range(cache_block_height, chain_block_height + 1):
             self.set_queue(block)
 
