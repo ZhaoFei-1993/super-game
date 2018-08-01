@@ -41,14 +41,17 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     special_head = serializers.SerializerMethodField()  # 特头
     special_tail = serializers.SerializerMethodField()  # 特尾
     color = serializers.SerializerMethodField()  # 波色
+    pitch = serializers.SerializerMethodField() # 前端标记
 
     class Meta:
         model = OpenPrice
         fields = (
             "issue", "flat_code", "special_code", "animal", "color", 'element', 'closing', 'open', 'next_open',
             'starting',
-            'home_field', 'total', 'special_head', 'special_tail', 'single_double'
+            'home_field', 'total', 'special_head', 'special_tail', 'single_double','pitch'
         )
+    def get_pitch(self,obj):
+        return True
 
     def get_color(self, obj):
         color = obj.color
