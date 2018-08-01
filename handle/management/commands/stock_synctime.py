@@ -23,4 +23,7 @@ class Command(BaseCommand):
             # end_time = period.rotary_header_time + datetime.timedelta(minutes=5)
             # if period.is_seal is True and end_time > now_time:
             #     q.enqueue(confirm_period, period_id, is_seal)
-            q.enqueue(confirm_period, 133, True)
+            print('开始发送')
+            q.enqueue(confirm_period, 136, True)
+            print('发送结束')
+            print('----------------------------------')
