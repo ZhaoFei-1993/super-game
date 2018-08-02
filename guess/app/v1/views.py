@@ -499,14 +499,12 @@ class StockGraphListView(ListCreateAPIView):
             status = 2  # 结算中
         elif periods_info.is_result is True:
             status = 3  # 已开奖
-        index_number = Index.objects.filter(periods_id=periods_id).count()
-        if index_number == 0:
-            periods_info = Periods.objects.get(id=periods_id)
-            periods_periods = periods_info.periods - 1
-            periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
-        else:
-            periods_info = Periods.objects.get(pk=periods_id)
-        new_start_value = periods_info.start_value
+        # index_number = Index.objects.filter(periods_id=periods_id).count()
+        # periods_info = Periods.objects.get(id=periods_id)
+        periods_periods = periods_info.periods - 1
+        periods_info_old = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
+
+        new_start_value = periods_info_old.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
             new_index = 0
@@ -517,16 +515,12 @@ class StockGraphListView(ListCreateAPIView):
             if new_index > new_start_value:
                 index_colour = 1
                 old_amplitude = (new_index - new_start_value) / new_start_value
-                print("old_amplitude==========================", old_amplitude)
                 new_amplitude = normalize_fraction(old_amplitude, 2)
-                print("new_amplitude=========================", new_amplitude)
                 amplitude = "+" + str(new_amplitude * 100) + "%"
             elif new_index < new_start_value:
                 index_colour = 2  # 股票颜色
                 old_amplitude = (new_start_value - new_index) / new_start_value
-                print("old_amplitude==========================", old_amplitude)
                 new_amplitude = normalize_fraction(old_amplitude, 2)
-                print("new_amplitude=========================", new_amplitude)
                 amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
             else:
                 index_colour = 3
@@ -594,7 +588,10 @@ class StockGraphDayListView(ListCreateAPIView):
             status = 2  # 结算中
         elif periods_info.is_result is True:
             status = 3  # 已开奖
-        new_start_value = periods_info.start_value
+        # periods_info = Periods.objects.get(id=periods_id)
+        periods_periods = periods_info.periods - 1
+        periods_info_old = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
+        new_start_value = periods_info_old.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
             new_index = 0
