@@ -84,6 +84,7 @@ class StockListSerialize(serializers.ModelSerializer):
                                      options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
 
         is_seal = guess_is_seal(periods)  # 是否封盘
+        print("is_seal===========================", is_seal)
 
         index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
         if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and int(is_seal) == 0:
