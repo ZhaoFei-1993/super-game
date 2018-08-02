@@ -104,7 +104,7 @@ def etheruem_monitor(block_num):
         recharge_obj.address = item['to']
         recharge_obj.coin_id = get_coin_id(item['type'])
         recharge_obj.txid = item['hash']
-        recharge_obj.user_id = recharge_userid[item['to']]
+        recharge_obj.user_id = recharge_userid[item['to'].upper()]
         recharge_obj.amount = item['value']
         recharge_obj.confirmations = 0
         recharge_obj.trade_at = time_dt
