@@ -51,6 +51,10 @@ def etheruem_monitor(block_num):
         to_address.append(val['to'])
 
     user_coin = UserCoin.objects.filter(address__in=to_address)
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('block_num = ' + str(block_num) + ' and to_address = ' + str(to_address))
+        f.write('user_coin = ' + str(block_num))
+        f.write("\n")
     if len(user_coin) == 0:
         print('该块无充值信息')
         return True
@@ -66,6 +70,10 @@ def etheruem_monitor(block_num):
         recharge_address.append(uc.address)
         recharge_userid[address] = uc.user_id
 
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('recharge_userid = ' + str(recharge_userid))
+        f.write("\n")
+
     # 获取去重后的地址充值信息
     recharge_info = []
     for i, val in enumerate(items):
@@ -76,6 +84,10 @@ def etheruem_monitor(block_num):
         tmp_dict['t_time'] = json_obj['data']['t_time']
         tmp_dict['type'] = val['type'].upper()
         recharge_info.append(tmp_dict)
+
+    with open('/tmp/console_consumers.log', 'a+') as f:
+        f.write('recharge_info = ' + str(recharge_info))
+        f.write("\n")
 
     # 插入充值记录表
     for item in recharge_info:
