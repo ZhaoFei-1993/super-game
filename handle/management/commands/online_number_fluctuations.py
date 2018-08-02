@@ -12,8 +12,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         day = datetime.now().strftime('%Y-%m-%d')
         fluctuation = int(random.randint(1, 5))       # 波动人数
+        now_number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)       # 在线人数key
         number_key = "INITIAL_ONLINE_USER_" + str(day)       # 在线人数key
-        lists = get_cache(number_key)
+        lists = get_cache(now_number_key)
         for list in lists:
             for i in list:
                 list_i = list[i]

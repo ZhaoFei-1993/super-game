@@ -12,7 +12,7 @@ class Command(BaseCommand, BaseView):
 
     def handle(self, *args, **options):
         day = datetime.now().strftime('%Y-%m-%d')
-        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
         # delete_cache(time_key)
         initial_online_user_time = get_cache(time_key)
