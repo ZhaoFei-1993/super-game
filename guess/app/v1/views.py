@@ -474,7 +474,14 @@ class StockGraphListView(ListCreateAPIView):
 
     def get_queryset(self):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
-        info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
+        index_number = Index.objects.filter(periods_id=periods_id).count()
+        if index_number == 0:
+            periods_info = Periods.objects.get(id=periods_id)
+            periods_periods = periods_info.periods-1
+            old_periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
+            info = Index.objects.filter(periods_id=old_periods_info.pk).order_by("index_time")
+        else:
+            info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
@@ -493,6 +500,13 @@ class StockGraphListView(ListCreateAPIView):
             status = 2  # 结算中
         elif periods_info.is_result is True:
             status = 3  # 已开奖
+        index_number = Index.objects.filter(periods_id=periods_id).count()
+        if index_number == 0:
+            periods_info = Periods.objects.get(id=periods_id)
+            periods_periods = periods_info.periods - 1
+            periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
+        else:
+            periods_info = Periods.objects.get(pk=periods_id)
         new_start_value = periods_info.start_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':

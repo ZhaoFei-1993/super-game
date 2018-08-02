@@ -82,20 +82,20 @@ class OpenViews(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
 
-        animals = Animals.objects.all()
-        marksix_all_code = "marksix_animal_dict"  # key
-        animals_dict = get_cache(marksix_all_code)
-        if animals_dict == None or animals_dict == '':
-            animals_dict = {}
-            for item in animals:
-                animals_dict[change_num(item.num)] = Animals.ANIMAL_CHOICE[int(item.animal) - 1][1]
-            set_cache(marksix_all_code, animals_dict)
-        data = {
-            'open_list': items,
-            'animals_dict': animals_dict
-        }
+        # animals = Animals.objects.all()
+        # marksix_all_code = "marksix_animal_dict"  # key
+        # animals_dict = get_cache(marksix_all_code)
+        # if animals_dict == None or animals_dict == '':
+        #     animals_dict = {}
+        #     for item in animals:
+        #         animals_dict[change_num(item.num)] = Animals.ANIMAL_CHOICE[int(item.animal) - 1][1]
+        #     set_cache(marksix_all_code, animals_dict)
+        # data = {
+        #     'open_list': items,
+        #     'animals_dict': animals_dict
+        # }
 
-        return self.response({'code': 0, 'data': data})
+        return self.response({'code': 0, 'data': items})
 
 
 class OddsViews(ListAPIView):
@@ -276,6 +276,13 @@ class BetsViews(ListCreateAPIView):
         issue = request.data.get('issue')
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
+        # 期数判断
+        now = get_now()
+        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        prev_issue = openprice.issue  # 上期开奖期数
+        if not int(prev_issue) + 1 == int(issue):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         # 注数判断
         if play_id == '3':  # 连码
             try:
@@ -355,25 +362,25 @@ class BetsViews(ListCreateAPIView):
             odds = ','.join(odd_list)
 
         # 判断投注是否上限
-        clubinfo = Club.objects.get(pk=club_id)
-        coin_id = clubinfo.coin.pk
-        bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, play_id=play_id).aggregate(
-            Sum('bet_coin'))
-        if coin_id == Coin.HAND:
-            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 5000000:
-                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
-        elif coin_id == Coin.INT:
-            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 20000:
-                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
-        elif coin_id == Coin.ETH:
-            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 6:
-                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
-        elif coin_id == Coin.BTC:
-            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 0.5:
-                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
-        elif coin_id == Coin.USDT:
-            if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 3100:
-                raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        # clubinfo = Club.objects.get(pk=club_id)
+        # coin_id = clubinfo.coin.pk
+        # bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, play_id=play_id).aggregate(
+        #     Sum('bet_coin'))
+        # if coin_id == Coin.HAND:
+        #     if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 5000000:
+        #         raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        # elif coin_id == Coin.INT:
+        #     if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 20000:
+        #         raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        # elif coin_id == Coin.ETH:
+        #     if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 6:
+        #         raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        # elif coin_id == Coin.BTC:
+        #     if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 0.5:
+        #         raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
+        # elif coin_id == Coin.USDT:
+        #     if bet_sum['bet_coin__sum'] is not None and bet_sum['bet_coin__sum'] >= 3100:
+        #         raise ParamErrorException(error_code.API_50202_MARKSIX_BET_LIMITED)
 
         # 获取币种
         club = Club.objects.get(id=club_id)
