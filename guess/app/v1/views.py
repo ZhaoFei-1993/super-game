@@ -504,7 +504,7 @@ class StockGraphListView(ListCreateAPIView):
         periods_periods = periods_info.periods - 1
         periods_info_old = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
 
-        new_start_value = periods_info_old.start_value
+        new_start_value = periods_info_old.lottery_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
             new_index = 0
@@ -591,7 +591,7 @@ class StockGraphDayListView(ListCreateAPIView):
         # periods_info = Periods.objects.get(id=periods_id)
         periods_periods = periods_info.periods - 1
         periods_info_old = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
-        new_start_value = periods_info_old.start_value
+        new_start_value = periods_info_old.lottery_value
         index_info = Index.objects.filter(periods_id=periods_id).first()
         if index_info == None or index_info == '':
             new_index = 0
