@@ -87,7 +87,7 @@ class StockListSerialize(serializers.ModelSerializer):
 
         index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
         if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
-            index = 0
+            index = "竞猜中"
         else:
             index = index_info.index_value
 
@@ -175,7 +175,7 @@ class StockListSerialize(serializers.ModelSerializer):
         start_value = periods.start_value
         index_info = Index.objects.filter(periods=periods.pk).first()
         if index_info == None or index_info == '' or start_value == None or start_value == '':
-            index_colour = 3
+            index_colour = 4
             return index_colour
         index = index_info.index_value
         if index > start_value:
