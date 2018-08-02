@@ -89,7 +89,7 @@ class StockListSerialize(serializers.ModelSerializer):
         if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == False:
             index = "竞猜中"
         elif is_seal == True:
-            index = "待开盘"
+            index = "待开市"
         else:
             index = index_info.index_value
 
