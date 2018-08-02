@@ -474,7 +474,14 @@ class StockGraphListView(ListCreateAPIView):
 
     def get_queryset(self):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
-        info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
+        index_number = Index.objects.filter(periods_id=periods_id).count()
+        if index_number == 0:
+            periods_info = Periods.objects.get(id=periods_id)
+            periods_periods = periods_info.periods-1
+            old_periods_info = Periods.objects.get(periods=periods_periods)
+            info = Index.objects.filter(periods_id=old_periods_info.pk).order_by("index_time")
+        else:
+            info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
         return info
 
     def list(self, request, *args, **kwargs):
