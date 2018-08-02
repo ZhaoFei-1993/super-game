@@ -478,7 +478,7 @@ class StockGraphListView(ListCreateAPIView):
         if index_number == 0:
             periods_info = Periods.objects.get(id=periods_id)
             periods_periods = periods_info.periods-1
-            old_periods_info = Periods.objects.get(periods=periods_periods)
+            old_periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
             info = Index.objects.filter(periods_id=old_periods_info.pk).order_by("index_time")
         else:
             info = Index.objects.filter(periods_id=periods_id).order_by("index_time")
