@@ -40,7 +40,6 @@ def etheruem_monitor(block_num):
     charge_all = UserRecharge.objects.all()  # 所有充值记录
     txids = []
     for charge in charge_all:
-        print('charge = ', charge)
         txids.append(charge.txid)
 
     to_address = []
@@ -60,12 +59,12 @@ def etheruem_monitor(block_num):
     recharge_address = []
     recharge_userid = {}
     for uc in user_coin:
-        address = uc['address']
+        address = uc.address
         if address in recharge_address:
             continue
 
-        recharge_address.append(uc['address'])
-        recharge_userid[uc['address']] = uc['user_id']
+        recharge_address.append(uc.address)
+        recharge_userid[address] = uc.user_id
 
     # 获取去重后的地址充值信息
     recharge_info = []
