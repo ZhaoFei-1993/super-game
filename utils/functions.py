@@ -613,11 +613,30 @@ def effect_user():
 def number_time_judgment():
     day = datetime.datetime.now().strftime('%Y-%m-%d')
     nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    time_key = "INITIAL_ONLINE_TIME_" + str(day)
+    time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
     initial_online_user_time = get_cache(time_key)
-    if initial_online_user_time == None or initial_online_user_time == '':
+    # if initial_online_user_time == None or initial_online_user_time == '':
+    #     key = 1
+    # else:
+    # time_one = initial_online_user_time['time_one']
+    time_one = day + str(initial_online_user_time[0]['time_one'])
+    time_two = day + str(initial_online_user_time[0]['time_two'])
+    time_three = day + str(initial_online_user_time[0]['time_three'])
+    time_four = day + str(initial_online_user_time[0]['time_four'])
+    time_five = day + str(initial_online_user_time[0]['time_five'])
+    time_six = day + str(initial_online_user_time[0]['time_six'])
+    time_seven = day + str(initial_online_user_time[0]['time_seven'])
+    time_eight = day + str(initial_online_user_time[0]['time_eight'])
+    # time_nine = str(day) + str(initial_online_user_time['time_nine'])
+    # time_ten = str(day) + str(initial_online_user_time['time_ten'])
+    if nowtime >= time_one and nowtime <= time_two:
         key = 1
+    elif nowtime >= time_three and nowtime <= time_four:
+        key = 2
+    elif nowtime >= time_five and nowtime <= time_six:
+        key = 3
+    elif nowtime >= time_seven and nowtime <= time_eight:
+        key = 4
     else:
-        time_one = initial_online_user_time['time_one']
-
+        key = 5
     return key

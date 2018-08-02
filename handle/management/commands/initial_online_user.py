@@ -11,9 +11,9 @@ class Command(BaseCommand, BaseView):
     help = "明天初始在线用户设置"
 
     def handle(self, *args, **options):
-        day = datetime.now().strftime('%Y_%m_%d')
+        day = datetime.now().strftime('%Y-%m-%d')
         number_key = "INITIAL_ONLINE_USER_" + str(day)
-        time_key = "NOW_INITIAL_ONLINE_TIME_" + str(day)
+        time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
         # delete_cache(time_key)
         initial_online_user_time = get_cache(time_key)
         if initial_online_user_time == None or initial_online_user_time == "":
