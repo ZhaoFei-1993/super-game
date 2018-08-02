@@ -276,6 +276,13 @@ class BetsViews(ListCreateAPIView):
         issue = request.data.get('issue')
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
+        # 期数判断
+        now = get_now()
+        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        prev_issue = openprice.issue  # 上期开奖期数
+        if not int(prev_issue) + 1 == int(issue):
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         # 注数判断
         if play_id == '3':  # 连码
             try:
