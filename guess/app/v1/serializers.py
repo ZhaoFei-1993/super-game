@@ -88,9 +88,9 @@ class StockListSerialize(serializers.ModelSerializer):
         index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
         if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == False:
             index = "竞猜中"
-        elif is_seal == True:
+        elif index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == True:
             index = "待开市"
-        if index_info != None or index_info != '' or periods.start_value != None or periods.start_value != '':
+        else:
             index = index_info.index_value
 
         data = [{
