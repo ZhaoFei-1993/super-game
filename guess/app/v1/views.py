@@ -54,7 +54,6 @@ class StockList(ListAPIView):
                 "is_seal": list["periods_id"][0]["is_seal"],
                 "result_list": list["result_list"]
             })
-        print("data=====================================", data)
         return self.response({'code': 0, 'data': data})
 
 
