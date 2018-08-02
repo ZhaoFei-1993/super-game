@@ -486,7 +486,14 @@ class StockGraphListView(ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
-        periods_info = Periods.objects.get(pk=periods_id)
+        periods_id = int(self.request.GET.get('periods_id'))  # 期数ID
+        index_number = Index.objects.filter(periods_id=periods_id).count()
+        if index_number == 0:
+            periods_info = Periods.objects.get(id=periods_id)
+            periods_periods = periods_info.periods - 1
+            periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
+        else:
+            periods_info = Periods.objects.get(pk=periods_id)
         day = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         lottery_time = periods_info.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
         start_time = periods_info.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
