@@ -517,12 +517,16 @@ class StockGraphListView(ListCreateAPIView):
             if new_index > new_start_value:
                 index_colour = 1
                 old_amplitude = (new_index - new_start_value) / new_start_value
+                print("old_amplitude==========================", old_amplitude)
                 new_amplitude = normalize_fraction(old_amplitude, 2)
+                print("new_amplitude=========================", new_amplitude)
                 amplitude = "+" + str(new_amplitude * 100) + "%"
             elif new_index < new_start_value:
                 index_colour = 2  # 股票颜色
                 old_amplitude = (new_start_value - new_index) / new_start_value
+                print("old_amplitude==========================", old_amplitude)
                 new_amplitude = normalize_fraction(old_amplitude, 2)
+                print("new_amplitude=========================", new_amplitude)
                 amplitude = "-" + str(new_amplitude * 100) + "%"  # 幅度
             else:
                 index_colour = 3
