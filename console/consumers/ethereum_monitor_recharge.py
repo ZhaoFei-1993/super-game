@@ -40,7 +40,8 @@ def etheruem_monitor(block_num):
     charge_all = UserRecharge.objects.all()  # 所有充值记录
     txids = []
     for charge in charge_all:
-        txids.append(charge['txid'])
+        print('charge = ', charge)
+        txids.append(charge.txid)
 
     to_address = []
     for i, val in enumerate(items):
