@@ -86,7 +86,7 @@ class StockListSerialize(serializers.ModelSerializer):
         is_seal = guess_is_seal(periods)  # 是否封盘
 
         index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
-        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
+        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == 0:
             index = "竞猜中"
         elif is_seal == 1:
             index = "待开盘"
