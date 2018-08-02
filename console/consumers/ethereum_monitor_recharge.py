@@ -63,23 +63,23 @@ def etheruem_monitor(block_num):
     recharge_address = []
     recharge_userid = {}
     for uc in user_coin:
-        address = uc.address
+        address = uc.address.upper()
         if address in recharge_address:
             continue
 
-        recharge_address.append(uc.address)
+        recharge_address.append(address)
         recharge_userid[address] = uc.user_id
 
     if block_num == 6072299:
         with open('/tmp/console_consumers.log', 'a+') as f:
             f.write('recharge_userid = ' + str(recharge_userid))
-            f.write('recharge_address = ' + str(recharge_address))
+            f.write('      recharge_address = ' + str(recharge_address))
             f.write("\n")
 
     # 获取去重后的地址充值信息
     recharge_info = []
     for i, val in enumerate(items):
-        if val['to'] not in recharge_address or val['hash'] in txids:
+        if val['to'].upper() not in recharge_address or val['hash'] in txids:
             continue
 
         tmp_dict = val
