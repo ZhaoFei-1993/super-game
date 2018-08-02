@@ -44,9 +44,6 @@ def etheruem_monitor(block_num):
 
     to_address = []
     for i, val in enumerate(items):
-        # tmp_dict = val
-        # tmp_dict['t_time'] = json_obj['data']['t_time']
-        # tmp_dict['type'] = val['type'].upper()
         to_address.append(val['to'])
 
     user_coin = UserCoin.objects.filter(address__in=to_address)
@@ -55,6 +52,7 @@ def etheruem_monitor(block_num):
             f.write('block_num = ' + str(block_num) + ' and to_address = ' + str(to_address))
             f.write('user_coin = ' + str(block_num))
             f.write("\n")
+
     if len(user_coin) == 0:
         print('该块无充值信息')
         return True
@@ -94,6 +92,11 @@ def etheruem_monitor(block_num):
 
     # 插入充值记录表
     for item in recharge_info:
+        if block_num == 6072299:
+            with open('/tmp/console_consumers.log', 'a+') as f:
+                f.write('item = ' + str(item))
+                f.write("\n")
+
         time_local = format_time.localtime(item['t_time'])
         time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
 
