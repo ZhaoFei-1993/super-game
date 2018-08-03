@@ -246,7 +246,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(1, 200)
+        user_total = random.randint(200, 300)
         start_date, end_date = self.get_date()
 
         random_datetime = []
@@ -321,10 +321,11 @@ class Command(BaseCommand):
             足球
             """
             rules_weight = {
-                0: 70,      # 赛果
+                0: 60,      # 赛果
                 1: 20,      # 让分赛果
                 2: 5,       # 比分
                 3: 5,       # 总进球
+                8: 10
             }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
