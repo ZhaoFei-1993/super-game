@@ -243,6 +243,7 @@ class UserCoin(models.Model):
     address = models.CharField(verbose_name="充值地址", max_length=50, default='')
 
     class Meta:
+        unique_together = ["coin", "user"]
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户代币余额表"
 
@@ -327,6 +328,21 @@ class UserCoinLock(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户货币锁定记录表"
+
+
+class UserCoinLockLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_coin_lock = models.ForeignKey(UserCoinLock, on_delete=models.DO_NOTHING)
+    coin_lock_days = models.IntegerField(verbose_name="锁定天数", default=0)
+    amount = models.DecimalField(verbose_name="锁定金额", max_digits=10, decimal_places=10,
+                                 default=0.0000000000)
+    start_time = models.DateTimeField(verbose_name="锁定开始时间")
+    end_time = models.DateTimeField(verbose_name="锁定结束时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户货币锁定日志表"
 
 
 @reversion.register()
