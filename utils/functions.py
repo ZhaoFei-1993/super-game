@@ -584,7 +584,7 @@ def guess_is_seal(info):
     nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     begin_at = info.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
     begin_at = time.mktime(begin_at.timetuple())
-    start = int(begin_at) - 600
+    start = int(begin_at)
     timeArray = time.localtime(start)
     otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
     if nowtime >= otherStyleTime:  # 是否已封盘

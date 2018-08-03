@@ -86,8 +86,10 @@ class StockListSerialize(serializers.ModelSerializer):
         is_seal = guess_is_seal(periods)  # 是否封盘
 
         index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
-        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '':
+        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == False:
             index = "竞猜中"
+        elif index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == True:
+            index = "待开市"
         else:
             index = index_info.index_value
 
@@ -217,9 +219,9 @@ class StockListSerialize(serializers.ModelSerializer):
         pair = previous_period.pair
         if pair == None or pair == '':
             # list = str(up_and_down)+", "+str(size)+", "+str(points)
-            list = str(size) + ",  " + str(points)
+            list = str(size) + "、  " + str(points)
         else:
-            list = str(size) + ",  " + str(points) + ",  " + str(pair)
+            list = str(size) + "、  " + str(points) + "、  " + str(pair)
         return list
 
     @staticmethod
@@ -466,7 +468,7 @@ class RecordSerialize(serializers.ModelSerializer):
         if up_and_down == None or up_and_down == '':
             list = ''
         elif pair == None or pair == '':
-            list = str(up_and_down) + ", " + str(size) + ", " + str(points)
+            list = str(size) + "、 " + str(points)
         else:
-            list = str(up_and_down) + ", " + str(size) + ", " + str(points) + ", " + str(pair)
+            list = str(size) + "、 " + str(points) + "、 " + str(pair)
         return list
