@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 if coin_name in record_dic.keys():
                     record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bet)
                 else:
-                    record_dic[coin_name] = float(normalize_fraction(record_personal.bet, 8))
+                    record_dic[coin_name] = float(record_personal.bet)
 
                 rmb_price = 'currency_corresponds_to_rmb_price_'+str(coin_name)
                 usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
@@ -99,8 +99,8 @@ class Command(BaseCommand):
             u_mes.title_en = 'Cash-back announcement'
             content = ''
             for key, value in record_dic.items():
+                value = normalize_fraction(value, 8)
                 content = content + str(value) + '个' + key + '，'
-            print(content)
             u_mes.content = '您在' + date_last + '投注了' + content + '投注总价值约为' + str(
                 normalize_fraction(record_sum_usd, 2)) + 'USD ,' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
             u_mes.content_en = ''
