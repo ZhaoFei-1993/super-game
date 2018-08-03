@@ -32,8 +32,10 @@ class Command(BaseCommand):
             if json_CNY['symbol'] in coin_list:
                 symbol = json_CNY['symbol']
                 price = float(trunc(json_CNY['price_cny'], 4))
+                price_usd = float(trunc(json_CNY['price_usd'], 4))
 
                 coin_price = CoinPrice.objects.get(coin_name=symbol)
                 coin_price.price = float(trunc(price, 4))
+                coin_price.price_usd = float(trunc(price_usd, 4))
                 coin_price.save()
 
