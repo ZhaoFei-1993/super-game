@@ -40,6 +40,7 @@ class Command(BaseCommand):
 
         for user_id in user_list:
             record_sum = 0
+            record_sum_usd = 0
             record_dic = {}
             for record_personal in records.filter(user_id=user_id):
                 club_id = record_personal.roomquiz_id
@@ -56,12 +57,19 @@ class Command(BaseCommand):
                     record_dic[coin_name] = float(record_personal.bet)
 
                 rmb_price = 'currency_corresponds_to_rmb_price_'+str(coin_name)
+                usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
                 price = get_cache(rmb_price)
+                price_usd = get_cache(usd_price)
                 if price is None:
                     coin_price = CoinPrice.objects.get(coin_name=coin_name)
                     price = coin_price.price
                     set_cache(rmb_price, coin_price.price, 24 * 3600)
+                if price_usd is None:
+                    coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                    price_usd = coin_price.price_usd
+                    set_cache(usd_price, price_usd, 24 * 3600)
                 record_sum = record_sum + record_personal.bet * price
+                record_sum_usd = record_sum + record_personal.bet * price_usd
 
             # 返现值
             if float(gsg_to_rmb) < float(0.65):
@@ -93,7 +101,7 @@ class Command(BaseCommand):
             for key, value in record_dic.items():
                 content = content + str(value) + '个' + key + '，'
             u_mes.content = '您在' + date_last + '投注了' + content + '根据coinmarketcap上的实时价格，您的投注总价值约为' + str(
-                normalize_fraction(record_sum, 2)) + '，' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
+                normalize_fraction(record_sum_usd, 2)) + 'USD，' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
             u_mes.content_en = ''
             u_mes.save()
 
