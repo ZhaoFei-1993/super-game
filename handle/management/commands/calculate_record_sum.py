@@ -100,8 +100,8 @@ class Command(BaseCommand):
             content = ''
             for key, value in record_dic.items():
                 content = content + str(value) + '个' + key + '，'
-            u_mes.content = '您在' + date_last + '投注了' + content + '根据coinmarketcap上的实时价格，您的投注总价值约为' + str(
-                normalize_fraction(record_sum_usd, 2)) + 'USD，' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
+            u_mes.content = '您在' + date_last + '投注了' + content + '投注总价值约为' + str(
+                normalize_fraction(record_sum_usd, 2)) + 'USD ,' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
             u_mes.content_en = ''
             u_mes.save()
 
