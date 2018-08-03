@@ -33,7 +33,7 @@ class Command(BaseCommand, BaseView):
         initial_online_user_number = get_cache(number_key)
         if initial_online_user_number == None or initial_online_user_number == '':
             int_quiz_1 = int(random.uniform(6, 8))
-            int_guess_1 = int(random.uniform(3, 4))
+            int_guess_1 = int(random.uniform(5, 8))
             usdt_quiz_1 = int(random.uniform(30, 40))
             usdt_guess_1 = int(random.uniform(15, 20))
             btc_quiz_1 = int(random.uniform(10, 15))
@@ -53,7 +53,7 @@ class Command(BaseCommand, BaseView):
             eth_quiz_2 = int(random.uniform(50, 60))
             eth_guess_2 = int(random.uniform(30, 35))  # 09.00 - 12.00
             int_quiz_3 = int(random.uniform(6, 8))
-            int_guess_3 = int(random.uniform(3, 4))
+            int_guess_3 = int(random.uniform(5, 8))
             usdt_quiz_3 = int(random.uniform(30, 40))
             usdt_guess_3 = int(random.uniform(15, 20))
             btc_quiz_3 = int(random.uniform(15, 19))
