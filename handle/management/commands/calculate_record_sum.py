@@ -54,8 +54,7 @@ class Command(BaseCommand):
                 if coin_name in record_dic.keys():
                     record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bet)
                 else:
-                    record_dic[coin_name] = normalize_fraction(record_personal.bet,
-                                                               int(record_personal.club.coin.coin_accuracy))
+                    record_dic[coin_name] = normalize_fraction(record_personal.bet, 8)
 
                 rmb_price = 'currency_corresponds_to_rmb_price_'+str(coin_name)
                 usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
