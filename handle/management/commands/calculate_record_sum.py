@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     price_usd = coin_price.price_usd
                     set_cache(usd_price, price_usd, 24 * 3600)
                 record_sum = record_sum + record_personal.bet * price
-                record_sum_usd = record_sum + record_personal.bet * price_usd
+                record_sum_usd = record_sum_usd + record_personal.bet * price_usd
 
             # 返现值
             if float(gsg_to_rmb) < float(0.65):
@@ -100,6 +100,7 @@ class Command(BaseCommand):
             content = ''
             for key, value in record_dic.items():
                 content = content + str(value) + '个' + key + '，'
+            print(content)
             u_mes.content = '您在' + date_last + '投注了' + content + '投注总价值约为' + str(
                 normalize_fraction(record_sum_usd, 2)) + 'USD ,' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
             u_mes.content_en = ''
