@@ -82,20 +82,20 @@ class OpenViews(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
 
-        # animals = Animals.objects.all()
-        # marksix_all_code = "marksix_animal_dict"  # key
-        # animals_dict = get_cache(marksix_all_code)
-        # if animals_dict == None or animals_dict == '':
-        #     animals_dict = {}
-        #     for item in animals:
-        #         animals_dict[change_num(item.num)] = Animals.ANIMAL_CHOICE[int(item.animal) - 1][1]
-        #     set_cache(marksix_all_code, animals_dict)
-        # data = {
-        #     'open_list': items,
-        #     'animals_dict': animals_dict
-        # }
+        animals = Animals.objects.all()
+        marksix_all_code = "marksix_animal_dict"  # key
+        animals_dict = get_cache(marksix_all_code)
+        if animals_dict == None or animals_dict == '':
+            animals_dict = {}
+            for item in animals:
+                animals_dict[change_num(item.num)] = Animals.ANIMAL_CHOICE[int(item.animal) - 1][1]
+            set_cache(marksix_all_code, animals_dict)
+        data = {
+            'open_list': items,
+            'animals_dict': animals_dict
+        }
 
-        return self.response({'code': 0, 'data': items})
+        return self.response({'code': 0, 'data': data})
 
 
 class OddsViews(ListAPIView):
