@@ -190,7 +190,7 @@ APP_API_KEY = {
     'ios': local_settings.APP_API_KEY_IOS,
     'android': local_settings.APP_API_KEY_ANDROID,
     'HTML5': local_settings.APP_API_KEY_HTML5,
-    # 'MINIPROGRAM': local_settings.APP_API_KEY_MINIPROGRAM,
+    'MINIPROGRAM': local_settings.APP_API_KEY_MINIPROGRAM,
 }
 
 ROLEPERMISSIONS_MODULE = 'api.roles'

@@ -168,7 +168,7 @@ class SixRecord(models.Model):
     source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
 
     class Meta:
-        ordering = ['-issue',]
+        ordering = ['-issue','-created_at']
         verbose_name = verbose_name_plural = "用户下注表"
 
 

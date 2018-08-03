@@ -67,7 +67,7 @@ class OpenPriceSerializer(serializers.HyperlinkedModelSerializer):
     def get_single_double(self, obj):
         language = self.context['request'].GET.get('language', 'zh')
         special_code = int(obj.special_code)
-        if special_code % 2 == 0:
+        if special_code % 2 != 0:
             if language == 'zh':
                 res = '单'
             else:
