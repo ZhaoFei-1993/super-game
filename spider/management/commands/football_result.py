@@ -14,6 +14,8 @@ import datetime
 from decimal import Decimal
 from .asia_tb_result import asia_result, asia_option
 from time import time
+from utils.cache import *
+from django.db import connection
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
@@ -614,7 +616,8 @@ class Command(BaseCommand):
                         # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                         if int(Quiz.objects.get(
                                 match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
-                            cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
+                            # cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
+                            pass
         else:
             print('暂无比赛需要开奖')
 
