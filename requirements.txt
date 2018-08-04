@@ -66,3 +66,4 @@ urllib3==1.22
 watchdog==0.8.3
 zope.interface==4.5.0
 dateparser==0.7.0
+numpy==1.15.0
