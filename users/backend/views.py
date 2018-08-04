@@ -12,7 +12,7 @@ from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
-    UserMessage, IntInvitation, Message
+    UserMessage, IntInvitation, Message, CoinPrice
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -29,6 +29,8 @@ from django.http import JsonResponse
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
 from quiz.models import Record, Quiz
+import numpy as np
+from chat.models import Club
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -1846,3 +1848,126 @@ class MessageBackendDetail(RetrieveUpdateDestroyAPIView):
         message.is_deleted = True
         message.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class CoinProfitView(ListAPIView):
+    """
+    锁定分红-真实收益数据
+    """
+
+    def list(self, request, *args, **kwargs):
+        open_prize_time = '2018-08-04'
+
+        sql = "SELECT roomquiz_id, SUM( bet ) AS sum_bet FROM quiz_record "
+        sql += "WHERE open_prize_time >= '" + open_prize_time + "' AND open_prize_time < '" + open_prize_time + "' "
+        sql += "AND earn_coin < 0 AND is_distribution = 1 AND source != '" + str(Record.CONSOLE) + "'"
+        sql += "GROUP BY roomquiz_id"
+        items = get_sql(sql)
+        if len(items) == 0:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
+        coins = Coin.objects.filter(is_disabled=False)
+        map_coin_id_name = {}
+        for coin in coins:
+            map_coin_id_name[coin.id] = coin.name
+
+        clubs = Club.objects.filter(is_dissolve=False)
+        map_club_coin = {}
+        for club in clubs:
+            map_club_coin[club.id] = club.coin_id
+
+        data = []
+        for item in items:
+            data.append({
+                'coin_name': map_coin_id_name[map_club_coin[item[0]]],
+                'profit': item[1]
+            })
+        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+
+class CoinDividendProposalView(ListAPIView):
+    """
+    锁定分红-分红方案
+    """
+    @staticmethod
+    def get_coin_id_by_name(coin_name):
+        """
+        获取货币ID
+        :param  coin_name
+        :return:
+        """
+        coin_id = 0
+        if coin_name == 'BTC':
+            coin_id = Coin.BTC
+        elif coin_name == 'ETH':
+            coin_id = Coin.ETH
+        elif coin_name == 'INT':
+            coin_id = Coin.INT
+        elif coin_name == 'USDT':
+            coin_id = Coin.USDT
+
+        return coin_id
+
+    @staticmethod
+    def get_coin_name_by_id(coin_id):
+        """
+        获取货币名称
+        :param  coin_id
+        :return:
+        """
+        coin_name = ''
+        if coin_id == Coin.BTC:
+            coin_name = 'BTC'
+        elif coin_id == Coin.ETH:
+            coin_name = 'ETH'
+        elif coin_id == Coin.USDT:
+            coin_name = 'USDT'
+        elif coin_id == Coin.INT:
+            coin_name = 'INT'
+
+        return coin_name
+
+    def list(self, request, *args, **kwargs):
+        total_dividend = float(request.data.get('total_dividend'))     # 总分红金额
+        if total_dividend == 0:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
+        dividend_decimal = 1000000  # 分红精度
+
+        # 获取当前货币价格
+        coin_price = CoinPrice.objects.all()
+        map_coin_id_price = {}
+        if len(coin_price) == 0:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+        for cprice in coin_price:
+            map_coin_id_price[self.get_coin_id_by_name(cprice.coin_name)] = cprice.price
+
+        clubs = Club.objects.filter(is_dissolve=False, is_recommend__in=[1, 2, 3])
+
+        # 随机生成货币分配比例
+        scale_sum = 100
+        scale_number = len(clubs)
+        scale_coin = np.random.multinomial(scale_sum, np.ones(scale_number)/scale_number, size=1)[0]
+
+        # 计算出各个俱乐部币种分红数量
+        coin_dividend = {}
+        coin_scale = {}
+        idx = 0
+        for club in clubs:
+            coin_id = club.coin_id
+            coin_dividend[coin_id] = int((total_dividend * scale_coin[idx] / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
+            coin_scale[coin_id] = scale_coin[idx]
+            idx += 1
+
+        items = []
+        for coinid in coin_scale:
+            items.append({
+                'coin_id': coinid,
+                'coin_name': self.get_coin_name_by_id(coinid),
+                'scale': coin_scale[coinid],
+                'dividend_price': total_dividend * coin_scale[coinid],
+                'price': map_coin_id_price[coinid],
+                'amount': coin_dividend[coinid],
+            })
+
+        return JsonResponse({'results': items}, status=status.HTTP_200_OK)

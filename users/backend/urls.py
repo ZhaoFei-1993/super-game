@@ -65,5 +65,10 @@ urlpatterns = [
     # 消息列表
     path('message_list/', views.MessageBackendList.as_view(), name='user-backend-message_list'),
     # 消息明细
-    path('message_list/<int:pk>/', views.MessageBackendDetail.as_view(), name='user-backend-message_detail')
+    path('message_list/<int:pk>/', views.MessageBackendDetail.as_view(), name='user-backend-message_detail'),
+
+    # 指定时间查询各个币种盈利
+    path('dividend/profit/', views.CoinProfitView.as_view(), name='user-backend-dividend-profit'),
+    # 生成当前锁定分红方案
+    path('dividend/proposal/', views.CoinDividendProposalView.as_view(), name='user-backend-dividend-proposal'),
 ]

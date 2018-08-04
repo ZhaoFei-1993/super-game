@@ -640,3 +640,43 @@ def number_time_judgment():
     else:
         key = 5
     return key
+
+
+def make_insert_sql(table_name, values):
+    """
+    组装插入的SQL语句
+    :param table_name:  表名
+    :param values:      字段 => 值
+    :usage: table_name=mytable, values=[{"a": "hello", "b": "world"}, {"a": "good", "b": "day"}]
+            ==> INSERT INTO mytable (`a`, `b`) VALUES ("hello", "world"), ("good", "day")
+    :return:
+    """
+    if len(values) == 0:
+        return False
+
+    field = '`' + '`,`'.join(values[0].keys()) + '`'
+    arr_values = []
+    for value in values:
+        arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
+
+    return 'INSERT INTO ' + table_name + ' (' + field + ') VALUES ' + ','.join(arr_values)
+
+
+def make_batch_update_sql(table_name, values, update):
+    """
+    组装批量更新的SQL语句
+    :param table_name:  表名
+    :param values:      字段 => 值
+    :return: INSERT INTO `tbl` (`a`, `b`, `c`) VALUES (2, 3, 123) ON DUPLICATE KEY UPDATE c = VALUES(c);
+    """
+    if len(values) == 0:
+        return False
+
+    field = '`' + '`,`'.join(values[0].keys()) + '`'
+    arr_values = []
+    for value in values:
+        arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
+
+    mysql_update = ' ON DUPLICATE KEY UPDATE ' + update + ' = VALUES(' + update + ')'
+    return 'INSERT INTO ' + table_name + ' (' + field + ') VALUES ' + ','.join(arr_values) + mysql_update
+
