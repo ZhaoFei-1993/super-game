@@ -183,6 +183,7 @@ class PlayView(ListAPIView):
                 size = periods.size
                 if self.request.GET.get('language') == 'en':
                     size = periods.size_en
+                print("periods===================", periods.points)
                 points_one = periods.points[0]
                 points_two = periods.points[1]
                 pair = periods.pair
