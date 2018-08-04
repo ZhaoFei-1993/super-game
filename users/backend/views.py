@@ -1936,7 +1936,16 @@ class CoinDividendProposalView(ListCreateAPIView):
         return coin_name
 
     def list(self, request, *args, **kwargs):
+        if 'total_dividend' not in request.GET:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
         total_dividend = float(request.GET.get('total_dividend'))     # 总分红金额
+
+        scale = None
+        if 'scale' in request.GET:
+            scale = request.GET.get('scale')    # 自定义比例
+            scale = json.loads(scale)
+
         if total_dividend == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
@@ -1956,7 +1965,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         # 随机生成货币分配比例
         scale_sum = 100
         scale_number = len(clubs)
-        scale_coin = np.random.multinomial(scale_sum, np.ones(scale_number)/scale_number, size=1)[0]
+        scale_coin = np.random.multinomial(scale_sum, np.ones(scale_number) / scale_number, size=1)[0]
 
         # 计算出各个俱乐部币种分红数量
         coin_dividend = {}
@@ -1968,7 +1977,10 @@ class CoinDividendProposalView(ListCreateAPIView):
             if coin_id == Coin.HAND:
                 continue
 
-            coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
+            if scale is not None:
+                coin_scale_percent = scale[coin_id]
+            else:
+                coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
 
             scale_dividend = total_dividend * coin_scale_percent
             coin_dividend[coin_id] = int((scale_dividend / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
@@ -2025,7 +2037,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         dividend_config.save()
 
         for coin in coins:
-            scale = float(coin['scale'])
+            scale = float(coin['scale'] * 100)
             price = float(coin['price'])
             coin_id = int(coin['coin_id'])
 
