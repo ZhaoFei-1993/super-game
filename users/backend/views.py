@@ -1938,11 +1938,12 @@ class CoinDividendProposalView(ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         if 'total_dividend' not in request.GET:
-            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+            return JsonResponse({'results': {'code': -1, 'message': 'total_dividend参数错误'}}, status=status.HTTP_200_OK)
 
         total_dividend = float(request.GET.get('total_dividend'))     # 总分红金额
 
         scale = None
+        scale_format = {}
         if 'scale' in request.GET:
             scale = request.GET.get('scale')    # 自定义比例
 
@@ -1951,17 +1952,15 @@ class CoinDividendProposalView(ListCreateAPIView):
 
                 # 判断传过来的值总和是否=100
                 scale_sum = 0.00
-                scale_format = {}
                 for scl in scale:
                     scale_sum += float(scale[scl])
                     scale_format[int(scl)] = float(scale[scl])
 
                 if scale_sum != 1:
-                    print('总和不等于100')
-                    return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+                    return JsonResponse({'results': {'code': -2, 'message': '比例总和不为1'}}, status=status.HTTP_200_OK)
 
         if total_dividend == 0:
-            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+            return JsonResponse({'results': {'code': -3, 'message': 'total_dividend参数错误'}}, status=status.HTTP_200_OK)
 
         dividend_decimal = settings.DIVIDEND_DECIMAL  # 分红精度
         coin_ids = [Coin.BTC, Coin.ETH, Coin.INT, Coin.USDT]
