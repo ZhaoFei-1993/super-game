@@ -1857,8 +1857,20 @@ class CoinProfitView(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        start_date = dateparser.parse(request.GET.get('start_date'))
-        end_date = dateparser.parse(request.GET.get('end_date'))
+        date_time_now = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
+
+        if 'start_date' not in request.GET:
+            start_date = date_time_now - timedelta(1)
+        else:
+            start_date = dateparser.parse(request.GET.get('start_date'))
+
+        if 'end_date' not in request.GET:
+            end_date = date_time_now
+        else:
+            end_date = dateparser.parse(request.GET.get('end_date'))
+
+        print('start_date = ', start_date)
+        print('end_date = ', end_date)
 
         profits = ClubProfitAbroad.objects.filter(created_at__gte=start_date, created_at__lt=end_date)
         if len(profits) == 0:
@@ -1958,7 +1970,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             if coin_id == Coin.HAND:
                 continue
 
-            coin_scale_percent = scale_coin[idx] / 100
+            coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
 
             scale_dividend = total_dividend * coin_scale_percent
             coin_dividend[coin_id] = int((scale_dividend / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
