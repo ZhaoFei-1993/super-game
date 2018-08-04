@@ -83,6 +83,9 @@ class ClubRuleSerialize(serializers.ModelSerializer):
         number_key = "INITIAL_ONLINE_USER_" + str(day)
         initial_online_user_number = get_cache(number_key)
         period = str(number_time_judgment())
+        print('initial_online_user_number = ', initial_online_user_number)
+        print('period = ', period)
+        print('coin_name_key = ', coin_name_key)
         if int(obj.id) == 1:
             user_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
         else:
