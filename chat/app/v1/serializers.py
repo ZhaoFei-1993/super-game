@@ -80,7 +80,7 @@ class ClubRuleSerialize(serializers.ModelSerializer):
         coin_name = club_liat.coin.name
         coin_name_key = str(coin_name.lower())
         day = datetime.now().strftime('%Y-%m-%d')
-        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         initial_online_user_number = get_cache(number_key)
         period = str(number_time_judgment())
         print('initial_online_user_number = ', initial_online_user_number)
