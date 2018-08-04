@@ -1946,6 +1946,14 @@ class CoinDividendProposalView(ListCreateAPIView):
             scale = request.GET.get('scale')    # 自定义比例
             scale = json.loads(scale)
 
+            # 判断传过来的值总和是否=100
+            scale_sum = 0
+            for scl in scale:
+                scale_sum += scale[scl]
+            if scale_sum != 1:
+                print('总和不等于100')
+                return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
         if total_dividend == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
