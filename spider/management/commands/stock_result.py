@@ -206,3 +206,4 @@ def newobject(periods, stock_id, next_start, next_end):
     new_object.lottery_time = next_end
     new_object.rotary_header_time = rotary_header_time
     new_object.save()
+

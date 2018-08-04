@@ -270,6 +270,7 @@ class Command(BaseCommand):
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
                             next_end += datetime.timedelta(1)
+                            next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next_start, next_end)
 
@@ -295,6 +296,7 @@ class Command(BaseCommand):
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
                             next_end += datetime.timedelta(1)
+                            next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
@@ -322,6 +324,7 @@ class Command(BaseCommand):
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
                             next_end += datetime.timedelta(1)
+                            next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
@@ -350,6 +353,7 @@ class Command(BaseCommand):
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
                                 next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
                             next_end += datetime.timedelta(1)
+                            next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
                         newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
