@@ -1947,12 +1947,15 @@ class CoinDividendProposalView(ListCreateAPIView):
             scale = request.GET.get('scale')    # 自定义比例
 
             if scale != '':
-                scale = json.loads(quote_plus(scale))
+                scale = json.loads(scale)
 
                 # 判断传过来的值总和是否=100
-                scale_sum = 0
+                scale_sum = 0.00
+                scale_format = {}
                 for scl in scale:
-                    scale_sum += scale[scl]
+                    scale_sum += float(scale[scl])
+                    scale_format[int(scl)] = float(scale[scl])
+
                 if scale_sum != 1:
                     print('总和不等于100')
                     return JsonResponse({'results': []}, status=status.HTTP_200_OK)
@@ -1989,7 +1992,7 @@ class CoinDividendProposalView(ListCreateAPIView):
                 continue
 
             if scale is not None and scale != '':
-                coin_scale_percent = scale[coin_id]
+                coin_scale_percent = scale_format[coin_id]
             else:
                 coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
 
