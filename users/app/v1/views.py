@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend
+    UserCoinLock, Countries, Dividend, UserCoinLockLog
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -1409,6 +1409,17 @@ class AssetLock(CreateAPIView):
         coin_detail.rest = user_coin.balance
         coin_detail.sources = CoinDetail.LOCK
         coin_detail.save()
+
+        # 写入日志表
+        user_coin_lock_log = UserCoinLockLog()
+        user_coin_lock_log.user_coin_lock = ulcoin
+        user_coin_lock_log.coin_lock_days = locked_days
+        user_coin_lock_log.user = userinfo
+        user_coin_lock_log.amount = amounts
+        user_coin_lock_log.start_time = ulcoin.created_at
+        user_coin_lock_log.end_time = ulcoin.end_time
+        user_coin_lock_log.save()
+
         content = {'code': 0}
         return self.response(content)
 
@@ -1830,6 +1841,17 @@ class LockDetailView(RetrieveUpdateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_lock.end_time += timedelta(days_extra)
         user_lock.save()
+
+        # 写入日志表
+        user_coin_lock_log = UserCoinLockLog()
+        user_coin_lock_log.user_coin_lock = user_lock
+        user_coin_lock_log.coin_lock_days = days_extra
+        user_coin_lock_log.user_id = user_lock.user_id
+        user_coin_lock_log.amount = user_lock.amounts
+        user_coin_lock_log.start_time = datetime.now()
+        user_coin_lock_log.end_time = user_lock.end_time
+        user_coin_lock_log.save()
+
         return self.response({'code': 0})
 
 
