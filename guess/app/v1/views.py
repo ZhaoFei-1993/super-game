@@ -185,7 +185,10 @@ class PlayView(ListAPIView):
                     size = periods.size_en
                 points = periods.points.split(',')
                 pair = periods.pair
-                right_list = [up_and_down, size, pair]
+                right_list = [up_and_down, size, pair, points]
+                # right_list_one = [up_and_down, size, pair]+points
+                print("right_list================================", right_list)
+                # print("right_list_one================================", right_list_one)
 
                 title = options.title  # 选项标题
                 if self.request.GET.get('language') == 'en':
