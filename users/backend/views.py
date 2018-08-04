@@ -1987,7 +1987,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             if coin_id == Coin.HAND:
                 continue
 
-            if scale is not None:
+            if scale is not None and scale != '':
                 coin_scale_percent = scale[coin_id]
             else:
                 coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
