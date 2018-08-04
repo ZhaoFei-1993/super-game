@@ -1855,7 +1855,7 @@ class MessageBackendDetail(RetrieveUpdateDestroyAPIView):
 
 class CoinProfitView(ListAPIView):
     """
-    锁定分红-真实收益数据
+    锁定分红-真实收益数据、实际锁定用户数、实际锁定总量
     """
 
     def list(self, request, *args, **kwargs):
@@ -1885,13 +1885,25 @@ class CoinProfitView(ListAPIView):
         for club in clubs:
             map_club_coin[club.id] = club.coin_id
 
+        # GSG实际锁定总量
+        user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
+        # GSG实际锁定用户数
+        user_coin_lock_total = UserCoinLock.objects.filter(is_free=False).distinct().count()
+
         data = []
         for item in profits:
             data.append({
                 'coin_name': map_coin_id_name[map_club_coin[item.roomquiz_id]],
-                'profit': item.profit
+                'profit': item.profit,
+                'sum_user_coin_lock': round(user_coin_lock_sum['amount__sum'], 2)
             })
-        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
+
+        response = {
+            'sum_user_coin_lock': round(user_coin_lock_sum['amount__sum'], 2),
+            'user_coin_lock_total': user_coin_lock_total,
+            'profits': data,
+        }
+        return JsonResponse({'results': response}, status=status.HTTP_200_OK)
 
 
 class CoinDividendProposalView(ListCreateAPIView):
