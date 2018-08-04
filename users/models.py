@@ -706,6 +706,27 @@ class Dividend(models.Model):
         verbose_name = verbose_name_plural = "用户分红表"
 
 
+class DividendConfig(models.Model):
+    dividend = models.DecimalField(verbose_name="分红总额", max_digits=10, decimal_places=2, default=0.00)
+    dividend_date = models.DateTimeField(verbose_name="分红日期")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红配置表"
+
+
+class DividendConfigCoin(models.Model):
+    dividend_config = models.ForeignKey(DividendConfig, on_delete=models.DO_NOTHING)
+    coin = models.ForeignKey(Coin, on_delete=models.DO_NOTHING)
+    scale = models.FloatField(verbose_name="比例", default=0.00)
+    price = models.FloatField(verbose_name="价格（单位:USD）", default=0.00)
+    amount = models.FloatField(verbose_name="盈利数量", default=0.000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红货币配置表"
+
+
 @reversion.register()
 class GSGAssetAccount(models.Model):
     NORMAL = 0
