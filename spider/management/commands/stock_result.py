@@ -179,9 +179,6 @@ def ergodic_record(period, dt, date):
             period.pair = num_spilt[0] + num_spilt[1]
             period.save()
 
-        period.is_result = True
-        period.save()
-
         # 开始遍历record表
         rule_dic = {
             '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
@@ -197,6 +194,9 @@ def ergodic_record(period, dt, date):
         index_day.index_value = float(dt['num'])
         index_day.index_time = period.lottery_time
         index_day.save()
+
+        period.is_result = True
+        period.save()
 
 
 def newobject(periods, stock_id, next_start, next_end):
