@@ -155,3 +155,6 @@ ASIA_GAME_OPEN = True              # 是否有开启亚盘玩法
 ETHERSCAN_API_URL = 'https://api.etherscan.io/api?module=proxy&action='
 ETHERSCAN_API_KEY = 'UBF8T46ADRW5VNIGQ2SIKK99J5JYY3FWIV'
 
+EXCHANGE = True
+DIVIDEND_DECIMAL = 10000000
+

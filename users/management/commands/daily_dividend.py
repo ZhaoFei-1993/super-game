@@ -2,10 +2,11 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from datetime import datetime, timedelta
-from users.models import Coin, UserCoin, UserCoinLock, Dividend, CoinDetail
+from users.models import Coin, UserCoin, UserCoinLock, Dividend, CoinDetail, DividendConfig, DividendConfigCoin
 import dateparser
 from decimal import Decimal
 from utils.functions import make_insert_sql
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -32,22 +33,12 @@ class Command(BaseCommand):
     """
     help = "每日分红"
     total_gsg = 1000000000  # GSG总发行量
-    dividend_decimal = 1000000    # 分红精度
+    dividend_decimal = settings.DIVIDEND_DECIMAL    # 分红精度
 
-    total_dividend = 15000
-    dividend_date = '2018-08-03'
-    dividend_percent = {
-        Coin.BTC: 0.1,
-        Coin.ETH: 0.2,
-        Coin.USDT: 0.3,
-        Coin.INT: 0.4
-    }
-    coin_price = {
-        Coin.BTC: 7700,
-        Coin.ETH: 425,
-        Coin.USDT: 1,
-        Coin.INT: 0.06
-    }
+    total_dividend = 0
+    dividend_date = ''
+    dividend_percent = {}
+    coin_price = {}
 
     lock_time_delta = 12 * 3600        # 锁定12小时后方可享受分红，单位（秒）
 
@@ -119,15 +110,47 @@ class Command(BaseCommand):
 
         return dividend_datetime
 
+    def get_dividend_config(self):
+        """
+        获取分红配置
+        :return:
+        """
+        dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
+
+        try:
+            dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
+        except DividendConfig.DoesNotExist:
+            return {}
+
+        dividend_config_coin = DividendConfigCoin.objects.filter(dividend_config=dividend_config)
+
+        self.total_dividend = dividend_config.dividend      # 分红总额
+        self.dividend_date = dividend_config.dividend_date - timedelta(1)  # 分红日期
+
+        percent = {}
+        price = {}
+        for ditem in dividend_config_coin:
+            percent[ditem.coin_id] = ditem.scale / 100
+            price[ditem.coin_id] = ditem.price
+
+        self.dividend_percent = percent
+        self.coin_price = price
+
     @transaction.atomic()
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('-----每日分红脚本开始运行-----'))
+
+        # 获取分红配置
+        self.get_dividend_config()
+
         # 获取所有锁定数据：用户、锁定金额、锁定时间
         user_coin_lock = UserCoinLock.objects.filter(is_free=False)
         print('获取到', len(user_coin_lock), '条锁定记录')
 
         # 获取已分红数据
         dividend_datetime = self.get_dividended_datetime(user_coin_lock)
+
+        self.dividend_date = self.dividend_date.strftime('%Y-%m-%d')
 
         dividend_values = []
         coin_detail_values = []
@@ -178,7 +201,7 @@ class Command(BaseCommand):
                     'status': '0',
                     'user_id': str(ucl.user_id),
                     'message_id': '6',
-                    'title': self.dividend_date + '锁定分红情况',
+                    'title': str(self.dividend_date) + '锁定分红情况',
                     'title_en': '',
                     'content': message_template,
                     'content_en': '',

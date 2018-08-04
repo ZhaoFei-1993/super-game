@@ -6,6 +6,7 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
 from django.db import transaction
 from decimal import Decimal
 from django.db import connection
+from django.conf import settings
 import dateparser
 from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
@@ -1869,9 +1870,6 @@ class CoinProfitView(ListAPIView):
         else:
             end_date = dateparser.parse(request.GET.get('end_date'))
 
-        print('start_date = ', start_date)
-        print('end_date = ', end_date)
-
         profits = ClubProfitAbroad.objects.filter(created_at__gte=start_date, created_at__lt=end_date)
         if len(profits) == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
@@ -1942,7 +1940,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         if total_dividend == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
-        dividend_decimal = 1000000  # 分红精度
+        dividend_decimal = settings.DIVIDEND_DECIMAL  # 分红精度
         coin_ids = [Coin.BTC, Coin.ETH, Coin.INT, Coin.USDT]
 
         # 获取当前货币价格
