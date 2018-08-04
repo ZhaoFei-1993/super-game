@@ -33,6 +33,7 @@ from url_filter.integrations.drf import DjangoFilterBackend
 from quiz.models import Record, Quiz, ClubProfitAbroad
 import numpy as np
 from chat.models import Club
+from urllib.parse import quote_plus
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -1946,7 +1947,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             scale = request.GET.get('scale')    # 自定义比例
 
             if scale != '':
-                scale = json.loads(scale)
+                scale = json.loads(quote_plus(scale))
 
                 # 判断传过来的值总和是否=100
                 scale_sum = 0
