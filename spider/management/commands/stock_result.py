@@ -40,8 +40,8 @@ def points_result(record):
     玩法：点数
     """
     coin = Coin.objects.get(pk=record.club.coin_id)
-    num_list = record.periods.points.split(',')
-    if record.options.title in num_list:
+    num_list = record.periods.points
+    if str(record.options.title) in num_list:
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
         record.earn_coin = earn_coin
@@ -180,17 +180,21 @@ def ergodic_record(period, dt, date):
             period.save()
 
         # 开始遍历record表
+        i = 0
         rule_dic = {
             '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
         }
-        for record in Record.objects.filter(periods=period, status='0'):
-            if record.play.play_name == str(0):
-                rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
-            else:
-                rule_dic[record.play.play_name](record)
+        records = Record.objects.filter(periods=period, status='0')
+        if len(records) > 0:
+            i += 1
+            for record in Record.objects.filter(periods=period, status='0'):
+                print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
+                if record.play.play_name == str(0):
+                    rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
+                else:
+                    rule_dic[record.play.play_name](record)
 
         index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-        print(index_day.id)
         index_day.index_value = float(dt['num'])
         index_day.index_time = period.lottery_time
         index_day.save()
