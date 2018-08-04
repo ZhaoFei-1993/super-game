@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 from users.models import UserCoinLock, Dividend
-from quiz.models import Record, Quiz
-from guess.models import Record as Record_Guess
 from chat.models import Club
-from django.db.models import Q, Sum
 from utils.functions import normalize_fraction, get_sql
 from django.db import transaction
 from datetime import datetime, timedelta
@@ -29,7 +26,7 @@ class Command(BaseCommand):
         #总下注额
         sql = "select  club_id, sum(bet) from "
         sql += " ("
-        sql += " select roomquiz_id as club_id,  sum(bet) as bet from quiz_record a "
+        sql += " select roomquiz_id as club_id, sum(bet) as bet from quiz_record a "
         sql += " join("
         sql += " select  quiz_record.id from quiz_record "
         sql += " where source <> '1'"
@@ -108,23 +105,23 @@ class Command(BaseCommand):
         sql += " group by club_id"
         dt_earn = self.list2dict(list(get_sql(sql)))
         if dt_all:
-            temp_dict={}
+            temp_dict = {}
             for x in dt_all:
                 if x not in dt_earn:
                     temp_dict[x] = dt_all[x]
                 else:
-                    temp_dict[x] = normalize_fraction(dt_all[x]-dt_earn[x],18)
+                    temp_dict[x] = normalize_fraction(dt_all[x]-dt_earn[x], 18)
 
             clubs = Club.objects.all()
             coins = []
             for x in clubs:
                 for y in temp_dict.keys():
                     if x.id == int(y):
-                        if x.coin.is_criterion!=1:
+                        if x.coin.is_criterion != 1:
                             coins.append(
                                 {
-                                    'coin_id':x.coin_id,
-                                    'profit':temp_dict[y]
+                                    'coin_id': x.coin_id,
+                                    'profit': temp_dict[y]
                                 }
                         )
             print('各种主要币种(除垃圾币)营收情况：', coins)
@@ -133,9 +130,9 @@ class Command(BaseCommand):
                     for y in coins:
                         if y['profit'] > 0:
                             divide = Dividend()
-                            divide.coin_id=y['coin_id']
-                            divide.user_lock_id=x.id
-                            divide.divide = normalize_fraction((x.amount/total_gsg)*y['profit'], 18)
+                            divide.coin_id = y['coin_id']
+                            divide.user_lock_id = x.id
+                            divide.divide = normalize_fraction((x.amount/total_gsg) * y['profit'], 18)
                             divide.save()
                 self.stdout.write(self.style.SUCCESS('分红完成'))
             else:
@@ -144,9 +141,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('昨日无开奖无分红'))
         self.stdout.write(self.style.SUCCESS('-----分红脚本结束运行-----'))
 
-    def list2dict(self, result):
-        temp={}
+    @staticmethod
+    def list2dict(result):
+        temp = {}
         if result:
             for x in result:
-                temp[str(x[0])]=x[1]
+                temp[str(x[0])] = x[1]
         return temp

@@ -6,13 +6,14 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
 from django.db import transaction
 from decimal import Decimal
 from django.db import connection
+import dateparser
 from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
-    UserMessage, IntInvitation, Message, CoinPrice
+    UserMessage, IntInvitation, Message, CoinPrice, DividendConfig, DividendConfigCoin
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -28,7 +29,7 @@ from base import backend
 from django.http import JsonResponse
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
-from quiz.models import Record, Quiz
+from quiz.models import Record, Quiz, ClubProfitAbroad
 import numpy as np
 from chat.models import Club
 
@@ -1856,14 +1857,11 @@ class CoinProfitView(ListAPIView):
     """
 
     def list(self, request, *args, **kwargs):
-        open_prize_time = '2018-08-04'
+        start_date = dateparser.parse(request.GET.get('start_date'))
+        end_date = dateparser.parse(request.GET.get('end_date'))
 
-        sql = "SELECT roomquiz_id, SUM( bet ) AS sum_bet FROM quiz_record "
-        sql += "WHERE open_prize_time >= '" + open_prize_time + "' AND open_prize_time < '" + open_prize_time + "' "
-        sql += "AND earn_coin < 0 AND is_distribution = 1 AND source != '" + str(Record.CONSOLE) + "'"
-        sql += "GROUP BY roomquiz_id"
-        items = get_sql(sql)
-        if len(items) == 0:
+        profits = ClubProfitAbroad.objects.filter(created_at__gte=start_date, created_at__lt=end_date)
+        if len(profits) == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
         coins = Coin.objects.filter(is_disabled=False)
@@ -1877,15 +1875,15 @@ class CoinProfitView(ListAPIView):
             map_club_coin[club.id] = club.coin_id
 
         data = []
-        for item in items:
+        for item in profits:
             data.append({
-                'coin_name': map_coin_id_name[map_club_coin[item[0]]],
-                'profit': item[1]
+                'coin_name': map_coin_id_name[map_club_coin[item.roomquiz_id]],
+                'profit': item.profit
             })
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
-class CoinDividendProposalView(ListAPIView):
+class CoinDividendProposalView(ListCreateAPIView):
     """
     锁定分红-分红方案
     """
@@ -1928,11 +1926,12 @@ class CoinDividendProposalView(ListAPIView):
         return coin_name
 
     def list(self, request, *args, **kwargs):
-        total_dividend = float(request.data.get('total_dividend'))     # 总分红金额
+        total_dividend = float(request.GET.get('total_dividend'))     # 总分红金额
         if total_dividend == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
         dividend_decimal = 1000000  # 分红精度
+        coin_ids = [Coin.BTC, Coin.ETH, Coin.INT, Coin.USDT]
 
         # 获取当前货币价格
         coin_price = CoinPrice.objects.all()
@@ -1940,9 +1939,9 @@ class CoinDividendProposalView(ListAPIView):
         if len(coin_price) == 0:
             return JsonResponse({'results': []}, status=status.HTTP_200_OK)
         for cprice in coin_price:
-            map_coin_id_price[self.get_coin_id_by_name(cprice.coin_name)] = cprice.price
+            map_coin_id_price[self.get_coin_id_by_name(cprice.coin_name)] = float(cprice.price)
 
-        clubs = Club.objects.filter(is_dissolve=False, is_recommend__in=[1, 2, 3])
+        clubs = Club.objects.filter(is_dissolve=False, coin_id__in=coin_ids)
 
         # 随机生成货币分配比例
         scale_sum = 100
@@ -1955,19 +1954,80 @@ class CoinDividendProposalView(ListAPIView):
         idx = 0
         for club in clubs:
             coin_id = club.coin_id
-            coin_dividend[coin_id] = int((total_dividend * scale_coin[idx] / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
-            coin_scale[coin_id] = scale_coin[idx]
+            # 排除HAND俱乐部
+            if coin_id == Coin.HAND:
+                continue
+
+            coin_scale_percent = scale_coin[idx] / 100
+
+            scale_dividend = total_dividend * coin_scale_percent
+            coin_dividend[coin_id] = int((scale_dividend / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
+            coin_scale[coin_id] = coin_scale_percent
             idx += 1
 
         items = []
         for coinid in coin_scale:
             items.append({
-                'coin_id': coinid,
-                'coin_name': self.get_coin_name_by_id(coinid),
-                'scale': coin_scale[coinid],
-                'dividend_price': total_dividend * coin_scale[coinid],
-                'price': map_coin_id_price[coinid],
-                'amount': coin_dividend[coinid],
+                'coin_id': str(coinid),     # 货币ID
+                'coin_name': self.get_coin_name_by_id(coinid),  # 货币名称
+                'scale': str(coin_scale[coinid]),   # 货币占有比例
+                'dividend_price': str(total_dividend * coin_scale[coinid]),     # 分红总价
+                'price': str(map_coin_id_price[coinid]),    # 货币对应价格
+                'amount': str(coin_dividend[coinid]),   # 分红数量
             })
 
         return JsonResponse({'results': items}, status=status.HTTP_200_OK)
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        """
+        确定当前锁定分红方案
+        :param request:
+            - dividend: 分红金额
+            - coins: [
+                {
+                    coin_id: 1,
+                    scale: 20,
+                    price: 55555
+                },
+                ...
+            ]
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        dividend = request.data.get('dividend')
+        coins = json.loads(request.data.get('coins'))
+        dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
+
+        decimal = 1000000
+
+        # 判断该日期是否已经设置，若是，则更新数据，若否，则插入数据
+        try:
+            dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
+
+            DividendConfigCoin.objects.filter(dividend_config=dividend_config).delete()
+        except DividendConfig.DoesNotExist:
+            dividend_config = DividendConfig()
+
+        dividend_config.dividend = Decimal(dividend)
+        dividend_config.dividend_date = dividend_date
+        dividend_config.save()
+
+        for coin in coins:
+            scale = float(coin['scale'])
+            price = float(coin['price'])
+            coin_id = int(coin['coin_id'])
+
+            amount = float(dividend) * scale / price
+            amount = int(decimal * amount) / decimal
+
+            dividend_config_coin = DividendConfigCoin()
+            dividend_config_coin.dividend_config = dividend_config
+            dividend_config_coin.coin_id = coin_id
+            dividend_config_coin.scale = scale
+            dividend_config_coin.price = price
+            dividend_config_coin.amount = amount
+            dividend_config_coin.save()
+
+        return JsonResponse({'results': []}, status=status.HTTP_200_OK)

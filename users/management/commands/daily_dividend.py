@@ -144,7 +144,7 @@ class Command(BaseCommand):
             # 判断是否已经分过红
             if self.dividend_date in dividend_datetime:
                 print(ucl.id, ' 已分过红 ', self.dividend_date)
-                # continue
+                continue
 
             # 获取分红金额
             dividend_coins = self.get_coin_dividend(ucl.amount)
