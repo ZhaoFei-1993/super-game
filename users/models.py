@@ -244,6 +244,7 @@ class UserCoin(models.Model):
     address = models.CharField(verbose_name="充值地址", max_length=50, default='')
 
     class Meta:
+        unique_together = ["coin", "user"]
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户代币余额表"
 
@@ -328,6 +329,21 @@ class UserCoinLock(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户货币锁定记录表"
+
+
+class UserCoinLockLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_coin_lock = models.ForeignKey(UserCoinLock, on_delete=models.DO_NOTHING)
+    coin_lock_days = models.IntegerField(verbose_name="锁定天数", default=0)
+    amount = models.DecimalField(verbose_name="锁定金额", max_digits=10, decimal_places=10,
+                                 default=0.0000000000)
+    start_time = models.DateTimeField(verbose_name="锁定开始时间")
+    end_time = models.DateTimeField(verbose_name="锁定结束时间")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "用户货币锁定日志表"
 
 
 @reversion.register()
@@ -688,6 +704,27 @@ class Dividend(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "用户分红表"
+
+
+class DividendConfig(models.Model):
+    dividend = models.DecimalField(verbose_name="分红总额", max_digits=10, decimal_places=2, default=0.00)
+    dividend_date = models.DateTimeField(verbose_name="分红日期")
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红配置表"
+
+
+class DividendConfigCoin(models.Model):
+    dividend_config = models.ForeignKey(DividendConfig, on_delete=models.DO_NOTHING)
+    coin = models.ForeignKey(Coin, on_delete=models.DO_NOTHING)
+    scale = models.FloatField(verbose_name="比例", default=0.00)
+    price = models.FloatField(verbose_name="价格（单位:USD）", default=0.00)
+    amount = models.FloatField(verbose_name="盈利数量", default=0.000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红货币配置表"
 
 
 @reversion.register()
