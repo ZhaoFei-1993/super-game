@@ -185,7 +185,7 @@ class PlayView(ListAPIView):
                     size = periods.size_en
                 points_one = ''
                 points_two = ''
-                if periods.points != '' or periods.points != None:
+                if periods.points != '':
                     points_one = periods.points[0]
                     points_two = periods.points[1]
                 pair = periods.pair
