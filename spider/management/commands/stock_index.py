@@ -84,8 +84,8 @@ def get_index_cn(period, base_url):
                                 result_value = float(result_dt[1])
                                 result_index_time = datetime.datetime.strptime(result_dt[0] + ':00',
                                                                                "%Y-%m-%d %H:%M:%S")
-                                print(index_time)
-                                print(result_index_time)
+                                # print(index_time)
+                                # print(result_index_time)
                                 if index_time == result_index_time:
                                     print('再次开始存储,已存储时间但数值变动')
                                     print('value===> ', value)
