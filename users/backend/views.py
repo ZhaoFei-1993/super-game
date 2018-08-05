@@ -1855,7 +1855,7 @@ class MessageBackendDetail(RetrieveUpdateDestroyAPIView):
 
 class CoinProfitView(ListAPIView):
     """
-    锁定分红-真实收益数据、实际锁定用户数、实际锁定总量
+    锁定分红-真实收益数据、实际锁定用户数、实际锁定总量、每GSG实际分红货币、每GSG名义分红货币
     """
 
     def list(self, request, *args, **kwargs):
@@ -1885,25 +1885,14 @@ class CoinProfitView(ListAPIView):
         for club in clubs:
             map_club_coin[club.id] = club.coin_id
 
-        # GSG实际锁定总量
-        user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
-        # GSG实际锁定用户数
-        user_coin_lock_total = UserCoinLock.objects.filter(is_free=False).distinct().count()
-
         data = []
         for item in profits:
             data.append({
                 'coin_name': map_coin_id_name[map_club_coin[item.roomquiz_id]],
                 'profit': item.profit,
-                'sum_user_coin_lock': round(user_coin_lock_sum['amount__sum'], 2)
             })
 
-        response = {
-            'sum_user_coin_lock': round(user_coin_lock_sum['amount__sum'], 2),
-            'user_coin_lock_total': user_coin_lock_total,
-            'profits': data,
-        }
-        return JsonResponse({'results': response}, status=status.HTTP_200_OK)
+        return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
 class CoinDividendProposalView(ListCreateAPIView):
@@ -2012,18 +2001,48 @@ class CoinDividendProposalView(ListCreateAPIView):
             coin_scale[coin_id] = coin_scale_percent
             idx += 1
 
+        # GSG实际锁定总量
+        user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
+        user_coin_lock_sum = int(user_coin_lock_sum['amount__sum'] * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
+
+        # GSG实际锁定用户数
+        user_coin_lock_total = UserCoinLock.objects.filter(is_free=False).distinct().count()
+
+        # 每GSG实际分红货币数量
+        gsg_coin_dividend = {}
+        # 每GSG名义分红货币数量
+        gsg_coin_titular_dividend = {}
+
         items = []
         for coinid in coin_scale:
+            amount = str(coin_dividend[coinid])
+
             items.append({
                 'coin_id': str(coinid),     # 货币ID
                 'coin_name': self.get_coin_name_by_id(coinid),  # 货币名称
                 'scale': str(coin_scale[coinid]),   # 货币占有比例
                 'dividend_price': str(total_dividend * coin_scale[coinid]),     # 分红总价
                 'price': str(map_coin_id_price[coinid]),    # 货币对应价格
-                'amount': str(coin_dividend[coinid]),   # 分红数量
+                'amount': amount,   # 分红数量
             })
 
-        return JsonResponse({'results': items}, status=status.HTTP_200_OK)
+            # 每GSG实际分红货币数量：分红货币数量 / GSG锁定总量
+            tmp_gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(settings.DIVIDEND_DECIMAL)
+            gsg_coin_dividend[str(coinid)] = tmp_gsg_coin_dividend
+
+            # 每GSG名义分红货币数量：每GSG实际分红 x 10亿 / GSG锁定总量
+            tmp_real_sum = int((tmp_gsg_coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(settings.DIVIDEND_DECIMAL)) / float(settings.DIVIDEND_DECIMAL)
+            gsg_coin_titular_dividend[str(coinid)] = tmp_real_sum
+
+        results = {
+            'user_coin_lock_sum': user_coin_lock_sum,
+            'user_coin_lock_total': user_coin_lock_total,
+            'gsg_coin_dividend': gsg_coin_dividend,
+            'gsg_coin_titular_dividend': gsg_coin_titular_dividend,
+            'dividend': items,
+        }
+
+        return JsonResponse({'results': results}, status=status.HTTP_200_OK)
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
