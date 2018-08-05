@@ -183,19 +183,20 @@ class PlayView(ListAPIView):
                 size = periods.size
                 if self.request.GET.get('language') == 'en':
                     size = periods.size_en
-                points = periods.points.split(',')
+                points_one = ''
+                points_two = ''
+                if periods.points != '':
+                    points_one = periods.points[0]
+                    points_two = periods.points[1]
                 pair = periods.pair
-                right_list = [up_and_down, size, pair, points]
-                # right_list_one = [up_and_down, size, pair]+points
-                print("right_list================================", right_list)
-                # print("right_list_one================================", right_list_one)
+                right_list = [up_and_down, size, pair, points_one, points_two]
 
                 title = options.title  # 选项标题
                 if self.request.GET.get('language') == 'en':
                     title = options.title_en
 
                 is_right = 0
-                if title in right_list or title in points:
+                if title in right_list:
                     is_right = 1
                 options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
                                                        options_id=options.pk).count()
