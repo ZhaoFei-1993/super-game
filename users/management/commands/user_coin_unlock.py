@@ -25,6 +25,24 @@ class Command(BaseCommand):
         user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
         set_cache(self.key_unlock, str(user_coin_lock.id) + ',' + str(user_coin_lock.end_time))
 
+    def release_user_coin_lock(self, user_lock_id):
+        """
+        释放用户锁定
+        :param user_lock_id
+        :return:
+        """
+        lock_id = 0
+
+        user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
+        if user_coin_lock.end_time <= datetime.now():
+            lock_id = user_lock_id
+            user_coin_lock.is_free = True
+            user_coin_lock.save()
+
+            self.set_expire_lock_cache()
+
+        return lock_id
+
     @transaction.atomic()
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('-----锁定解锁脚本开始运行-----'))
@@ -36,26 +54,12 @@ class Command(BaseCommand):
             user_lock_id, lock_end_time = cache_lock_datetime.split(',')
             if dateparser.parse(lock_end_time) <= datetime.now():
                 # 判断用户是否有延期操作，再从DB中取一次来判断
-                user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
-                if user_coin_lock.end_time <= datetime.now():
-                    lock_id = user_lock_id
-                    user_coin_lock.is_free = True
-                    user_coin_lock.save()
-
-                    self.set_expire_lock_cache()
-                else:
-                    self.set_expire_lock_cache()
+                lock_id = self.release_user_coin_lock(user_lock_id)
         else:
             user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
 
             # 判断是否过期，若是，则解除锁定状态
-            if user_coin_lock.end_time <= datetime.now():
-                lock_id = user_coin_lock.id
-                user_coin_lock.is_free = True
-                user_coin_lock.save()
-
-            # 获取下一条锁定记录，写入缓存中
-            self.set_expire_lock_cache()
+            lock_id = self.release_user_coin_lock(user_coin_lock.id)
 
         if lock_id == 0:
             self.stdout.write(self.style.SUCCESS('当前无满足解锁条件的记录'))
