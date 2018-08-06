@@ -2028,11 +2028,11 @@ class CoinDividendProposalView(ListCreateAPIView):
 
             # 每GSG实际分红货币数量：分红货币数量 / GSG锁定总量
             tmp_gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(settings.DIVIDEND_DECIMAL)
-            gsg_coin_dividend[str(coinid)] = tmp_gsg_coin_dividend
+            gsg_coin_dividend[self.get_coin_name_by_id(coinid)] = tmp_gsg_coin_dividend
 
             # 每GSG名义分红货币数量：每GSG实际分红 x 10亿 / GSG锁定总量
             tmp_real_sum = int((tmp_gsg_coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(settings.DIVIDEND_DECIMAL)) / float(settings.DIVIDEND_DECIMAL)
-            gsg_coin_titular_dividend[str(coinid)] = tmp_real_sum
+            gsg_coin_titular_dividend[self.get_coin_name_by_id(coinid)] = tmp_real_sum
 
         results = {
             'user_coin_lock_sum': user_coin_lock_sum,
