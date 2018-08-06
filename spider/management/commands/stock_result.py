@@ -6,9 +6,6 @@ from base.function import add_coin_detail, add_user_coin
 from datetime import timedelta
 from chat.models import Club
 
-Guess_Closing = 1.5
-Guess_Starting = 5
-
 
 def base_functions(user_id, coin_id, earn_coin):
     add_user_coin(user_id, coin_id, earn_coin)
@@ -204,7 +201,7 @@ def ergodic_record(period, dt, date):
 
 
 def newobject(periods, stock_id, next_start, next_end):
-    rotary_header_time = next_start - timedelta(hours=Guess_Closing)
+    rotary_header_time = next_end - timedelta(minutes=30)
     new_object = Periods(periods=periods, stock_id=stock_id)
     new_object.save()
     new_object.lottery_time = next_end

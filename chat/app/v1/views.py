@@ -115,7 +115,9 @@ class BannerView(ListAPIView):
             data.append(
                 {
                     "img_url": item['image'],
-                    "action": item['active']
+                    "action": item['active'],
+                    "type": item['banner_type'],
+                    "param": item['param'],
                 }
             )
         return self.response({"code": 0, "data": data})

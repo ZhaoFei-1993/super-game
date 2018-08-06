@@ -6,6 +6,7 @@ from base.backend import CreateAPIView, FormatListAPIView, FormatRetrieveAPIView
 from django.db import transaction
 from decimal import Decimal
 from django.db import connection
+from django.conf import settings
 import dateparser
 from datetime import datetime, timedelta, date
 from django.db.models.functions import ExtractDay
@@ -32,6 +33,7 @@ from url_filter.integrations.drf import DjangoFilterBackend
 from quiz.models import Record, Quiz, ClubProfitAbroad
 import numpy as np
 from chat.models import Club
+from urllib.parse import quote_plus
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -1853,7 +1855,7 @@ class MessageBackendDetail(RetrieveUpdateDestroyAPIView):
 
 class CoinProfitView(ListAPIView):
     """
-    锁定分红-真实收益数据
+    锁定分红-真实收益数据、实际锁定用户数、实际锁定总量、每GSG实际分红货币、每GSG名义分红货币
     """
 
     def list(self, request, *args, **kwargs):
@@ -1868,9 +1870,6 @@ class CoinProfitView(ListAPIView):
             end_date = date_time_now
         else:
             end_date = dateparser.parse(request.GET.get('end_date'))
-
-        print('start_date = ', start_date)
-        print('end_date = ', end_date)
 
         profits = ClubProfitAbroad.objects.filter(created_at__gte=start_date, created_at__lt=end_date)
         if len(profits) == 0:
@@ -1890,8 +1889,9 @@ class CoinProfitView(ListAPIView):
         for item in profits:
             data.append({
                 'coin_name': map_coin_id_name[map_club_coin[item.roomquiz_id]],
-                'profit': item.profit
+                'profit': item.profit,
             })
+
         return JsonResponse({'results': data}, status=status.HTTP_200_OK)
 
 
@@ -1938,11 +1938,32 @@ class CoinDividendProposalView(ListCreateAPIView):
         return coin_name
 
     def list(self, request, *args, **kwargs):
-        total_dividend = float(request.GET.get('total_dividend'))     # 总分红金额
-        if total_dividend == 0:
-            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+        if 'total_dividend' not in request.GET:
+            return JsonResponse({'results': {'code': -1, 'message': 'total_dividend参数错误'}}, status=status.HTTP_200_OK)
 
-        dividend_decimal = 1000000  # 分红精度
+        total_dividend = float(request.GET.get('total_dividend'))     # 总分红金额
+
+        scale = None
+        scale_format = {}
+        if 'scale' in request.GET:
+            scale = request.GET.get('scale')    # 自定义比例
+
+            if scale != '':
+                scale = json.loads(scale)
+
+                # 判断传过来的值总和是否=100
+                scale_sum = 0.00
+                for scl in scale:
+                    scale_sum += float(scale[scl])
+                    scale_format[int(scl)] = float(scale[scl])
+
+                if scale_sum != 1:
+                    return JsonResponse({'results': {'code': -2, 'message': '比例总和不为1'}}, status=status.HTTP_200_OK)
+
+        if total_dividend == 0:
+            return JsonResponse({'results': {'code': -3, 'message': 'total_dividend参数错误'}}, status=status.HTTP_200_OK)
+
+        dividend_decimal = settings.DIVIDEND_DECIMAL  # 分红精度
         coin_ids = [Coin.BTC, Coin.ETH, Coin.INT, Coin.USDT]
 
         # 获取当前货币价格
@@ -1958,7 +1979,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         # 随机生成货币分配比例
         scale_sum = 100
         scale_number = len(clubs)
-        scale_coin = np.random.multinomial(scale_sum, np.ones(scale_number)/scale_number, size=1)[0]
+        scale_coin = np.random.multinomial(scale_sum, np.ones(scale_number) / scale_number, size=1)[0]
 
         # 计算出各个俱乐部币种分红数量
         coin_dividend = {}
@@ -1970,25 +1991,53 @@ class CoinDividendProposalView(ListCreateAPIView):
             if coin_id == Coin.HAND:
                 continue
 
-            coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
+            if scale is not None and scale != '':
+                coin_scale_percent = scale_format[coin_id]
+            else:
+                coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
 
             scale_dividend = total_dividend * coin_scale_percent
             coin_dividend[coin_id] = int((scale_dividend / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
             coin_scale[coin_id] = coin_scale_percent
             idx += 1
 
+        # GSG实际锁定总量
+        user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
+        user_coin_lock_sum = int(user_coin_lock_sum['amount__sum'] * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
+
+        # GSG实际锁定用户数
+        user_coin_lock_total = UserCoinLock.objects.filter(is_free=False).distinct().count()
+
         items = []
         for coinid in coin_scale:
+            amount = str(coin_dividend[coinid])
+
+            # 每GSG实际分红货币数量：分红货币数量 / GSG锁定总量
+            tmp_gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(
+                settings.DIVIDEND_DECIMAL)
+
+            # 每GSG名义分红货币数量：每GSG实际分红 x 10亿 / GSG锁定总量
+            tmp_real_sum = int((tmp_gsg_coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(
+                settings.DIVIDEND_DECIMAL)) / float(settings.DIVIDEND_DECIMAL)
+
             items.append({
                 'coin_id': str(coinid),     # 货币ID
                 'coin_name': self.get_coin_name_by_id(coinid),  # 货币名称
                 'scale': str(coin_scale[coinid]),   # 货币占有比例
                 'dividend_price': str(total_dividend * coin_scale[coinid]),     # 分红总价
                 'price': str(map_coin_id_price[coinid]),    # 货币对应价格
-                'amount': str(coin_dividend[coinid]),   # 分红数量
+                'amount': amount,   # 分红数量
+                'gsg_coin_dividend': '%.6f' % tmp_gsg_coin_dividend,
+                'gsg_coin_titular_dividend': '%.6f' % tmp_real_sum,
             })
 
-        return JsonResponse({'results': items}, status=status.HTTP_200_OK)
+        results = {
+            'user_coin_lock_sum': user_coin_lock_sum,
+            'user_coin_lock_total': user_coin_lock_total,
+            'dividend': items,
+        }
+
+        return JsonResponse({'results': results}, status=status.HTTP_200_OK)
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
@@ -2027,7 +2076,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         dividend_config.save()
 
         for coin in coins:
-            scale = float(coin['scale'])
+            scale = float(coin['scale'] * 100)
             price = float(coin['price'])
             coin_id = int(coin['coin_id'])
 

@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'console',
     'handle',
     'marksix',
+    # 'silk',
 ]
 
 MIDDLEWARE = [
@@ -86,6 +87,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'base.middleware.RequestExceptionHandler',
+    # 'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -284,3 +286,8 @@ ASIA_GAME_OPEN = local_settings.ASIA_GAME_OPEN
 
 ETHERSCAN_API_URL = local_settings.ETHERSCAN_API_URL
 ETHERSCAN_API_KEY = local_settings.ETHERSCAN_API_KEY
+
+DIVIDEND_DECIMAL = local_settings.DIVIDEND_DECIMAL
+GSG_TOTAL_SUPPLY = local_settings.GSG_TOTAL_SUPPLY
+GSG_LEAST_LOCK_AMOUNT = local_settings.GSG_LEAST_LOCK_AMOUNT
+GSG_UNLOCK_PREACT_TIME = local_settings.GSG_UNLOCK_PREACT_TIME

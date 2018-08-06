@@ -122,6 +122,7 @@ class Command(BaseCommand):
                 record.bet = wager
                 record.odds = current_odds
                 record.source = Record.CONSOLE
+                record.handicap = rule.handicap
                 record.save()
 
                 if self.robot_bet_change_odds is True:

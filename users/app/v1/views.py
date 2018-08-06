@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -1359,8 +1359,16 @@ class AssetView(ListAPIView):
                 temp_dict['is_lock_valid'] = list['is_lock_valid']
             data.append(temp_dict)
 
-        return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': normalize_fraction(user_gsg.balance, 2), 'data': data})
+        response = {
+            'code': 0,
+            'user_name': user_info.nickname,
+            'user_avatar': user_info.avatar,
+            'user_integral': normalize_fraction(user_gsg.balance, 2),
+            'least_lock_amount': settings.GSG_LEAST_LOCK_AMOUNT,
+            'data': data
+        }
+
+        return self.response(response)
 
 
 class AssetLock(CreateAPIView):
@@ -1391,7 +1399,7 @@ class AssetLock(CreateAPIView):
         coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0, coin_id=coin.id)
         if not coin_configs.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if amounts <= 0 or amounts > user_coin.balance:
+        if amounts < settings.GSG_LEAST_LOCK_AMOUNT or amounts > user_coin.balance:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance -= amounts
         user_coin.save()
@@ -1830,6 +1838,7 @@ class LockDetailView(RetrieveUpdateAPIView):
         data["dividend"] = dividend
         return self.response({'code': 0, 'data': data})
 
+    @transaction.atomic()
     def put(self, request, *args, **kwargs):
         id = int(kwargs['id'])
         days_extra = int(request.data.get('days_extra'))
@@ -1851,6 +1860,13 @@ class LockDetailView(RetrieveUpdateAPIView):
         user_coin_lock_log.start_time = datetime.now()
         user_coin_lock_log.end_time = user_lock.end_time
         user_coin_lock_log.save()
+
+        # 判断是否有24小时提醒日志，有则作废该日志记录，否则无法再次接收到24小时提示信息
+        pre_release_unlock_message_log = PreReleaseUnlockMessageLog.objects.filter(user_lock_id=user_lock.id).count()
+        if pre_release_unlock_message_log > 0:
+            pre_release_unlock_message = PreReleaseUnlockMessageLog.objects.get(user_lock_id=user_lock.id)
+            pre_release_unlock_message.is_delete = True
+            pre_release_unlock_message.save()
 
         return self.response({'code': 0})
 

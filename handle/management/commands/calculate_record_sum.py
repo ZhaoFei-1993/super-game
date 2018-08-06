@@ -75,7 +75,7 @@ class Command(BaseCommand):
             if float(gsg_to_rmb) < float(0.65):
                 gsg_to_rmb = 0.65
             cash_back_gsg = (float(record_sum) * rate) / float(gsg_to_rmb)
-            cash_back_gsg = normalize_fraction(cash_back_gsg, 2)
+            cash_back_gsg = normalize_fraction(cash_back_gsg, 3)
 
             user_coin_gsg = UserCoin.objects.filter(user_id=user_id, coin_id=6).first()
             user_coin_gsg.balance = float(user_coin_gsg.balance) + float(cash_back_gsg)

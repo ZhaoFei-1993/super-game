@@ -43,7 +43,7 @@ class ClubListSerialize(serializers.ModelSerializer):
             user_number = 0
         else:
             day = datetime.now().strftime('%Y-%m-%d')
-            number_key = "INITIAL_ONLINE_USER_" + str(day)
+            number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
             initial_online_user_number = get_cache(number_key)
             period = str(number_time_judgment())
             quiz_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
@@ -80,9 +80,12 @@ class ClubRuleSerialize(serializers.ModelSerializer):
         coin_name = club_liat.coin.name
         coin_name_key = str(coin_name.lower())
         day = datetime.now().strftime('%Y-%m-%d')
-        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         initial_online_user_number = get_cache(number_key)
         period = str(number_time_judgment())
+        print('initial_online_user_number = ', initial_online_user_number)
+        print('period = ', period)
+        print('coin_name_key = ', coin_name_key)
         if int(obj.id) == 1:
             user_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
         else:
@@ -97,4 +100,4 @@ class ClubBannerSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = ClubBanner
-        fields = ('active', 'image')
+        fields = ('active', 'image', 'banner_type', 'param')
