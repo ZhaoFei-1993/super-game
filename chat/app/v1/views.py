@@ -118,6 +118,7 @@ class BannerView(ListAPIView):
                     "action": item['active'],
                     "type": item['banner_type'],
                     "param": item['param'],
+                    "title": item['title'],
                 }
             )
         return self.response({"code": 0, "data": data})
