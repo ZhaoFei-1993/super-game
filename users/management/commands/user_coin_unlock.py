@@ -29,38 +29,38 @@ class Command(BaseCommand):
         set_cache(self.key_unlock, cache_val)
 
     @staticmethod
-    def pre_release_unlock_message(end_time, user_id, user_lock_id):
+    def pre_release_unlock_message(user_coin_lock):
         """
         提前xxx小时解锁提醒
-        :param  end_time    结束时间
-        :param  user_id     用户ID
-        :param  user_lock_id
+        :param  user_coin_lock
         :return:
         """
-        if datetime.now() + timedelta(seconds=settings.GSG_UNLOCK_PREACT_TIME) < end_time:
+        time_diff = (user_coin_lock.end_time - datetime.now()).seconds
+        if time_diff > settings.GSG_UNLOCK_PREACT_TIME:
             return True
 
-        hours = settings.GSG_UNLOCK_PREACT_TIME / 3600
+        hours = int(time_diff / 3600)
 
         # 判断是否已经发送过提醒信息
-        pre_release_unlock_message = PreReleaseUnlockMessageLog.objects.filter(user_coin_lock_id=user_lock_id, is_delete=False).count()
+        pre_release_unlock_message = PreReleaseUnlockMessageLog.objects.filter(user_coin_lock_id=user_coin_lock.id, is_delete=False).count()
         if pre_release_unlock_message > 0:
             return True
 
         # 发送信息
         user_message = UserMessage()
         user_message.status = 0
-        user_message.content = '亲爱的用户您好，你锁定的XXX GSG ' + str(hours) + '小时后到期，如需延长参与锁定即分红时间，请到个人钱包进行操作。'
+        user_message.content = '亲爱的用户您好，你锁定的' + str(int(user_coin_lock.amount)) + ' GSG ' + str(hours) + '小时后到期，如需延长参与锁定即分红时间，请到个人钱包进行操作。'
         user_message.title = 'GSG锁定即将到期提醒'
-        user_message.user_id = user_id
+        user_message.user_id = user_coin_lock.user_id
         user_message.message_id = 6
         user_message.save()
 
         pre_release_unlock_message_log = PreReleaseUnlockMessageLog()
-        pre_release_unlock_message_log.user_id = user_id
-        pre_release_unlock_message_log.user_coin_lock_id = user_lock_id
+        pre_release_unlock_message_log.user_id = user_coin_lock.user_id
+        pre_release_unlock_message_log.user_coin_lock_id = user_coin_lock.id
         pre_release_unlock_message_log.user_message_id = user_message.id
         pre_release_unlock_message_log.save()
+        print('ID=' + str(user_coin_lock.user_id) + ' 即将自动解锁提醒')
 
     def release_user_coin_lock(self, user_lock_id=0):
         """
@@ -76,7 +76,7 @@ class Command(BaseCommand):
             user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
 
         if user_coin_lock.end_time <= datetime.now():
-            lock_id = user_lock_id
+            lock_id = user_coin_lock.id
             user_coin_lock.is_free = True
             user_coin_lock.save()
 
@@ -90,10 +90,8 @@ class Command(BaseCommand):
             user_message.user_id = user_coin_lock.user_id
             user_message.message_id = 6
             user_message.save()
-
-            self.set_expire_lock_cache()
         else:
-            self.pre_release_unlock_message(user_coin_lock.end_time, user_coin_lock.user_id, user_coin_lock.id)
+            self.pre_release_unlock_message(user_coin_lock)
 
         return lock_id
 
@@ -111,11 +109,16 @@ class Command(BaseCommand):
             if lock_end_time <= datetime.now():
                 # 判断用户是否有延期操作，再从DB中取一次来判断
                 lock_id = self.release_user_coin_lock(user_lock_id)
+
+                self.set_expire_lock_cache()
             else:
-                self.pre_release_unlock_message(lock_end_time, user_id, user_lock_id)
+                user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
+                self.pre_release_unlock_message(user_coin_lock)
         else:
             # 若缓存中无数据，则在DB中读取
             lock_id = self.release_user_coin_lock()
+
+            self.set_expire_lock_cache()
 
         if lock_id == 0:
             self.stdout.write(self.style.SUCCESS('当前无满足解锁条件的记录'))
