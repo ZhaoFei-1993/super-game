@@ -122,6 +122,7 @@ class Command(BaseCommand):
                 record.bet = wager
                 record.odds = current_odds
                 record.source = Record.CONSOLE
+                record.handicap = rule.handicap
                 record.save()
 
                 if self.robot_bet_change_odds is True:
@@ -325,7 +326,7 @@ class Command(BaseCommand):
                 1: 20,      # 让分赛果
                 2: 5,       # 比分
                 3: 5,       # 总进球
-                # 8: 10
+                8: 10
             }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
