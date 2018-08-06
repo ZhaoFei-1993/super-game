@@ -1359,8 +1359,16 @@ class AssetView(ListAPIView):
                 temp_dict['is_lock_valid'] = list['is_lock_valid']
             data.append(temp_dict)
 
-        return self.response({'code': 0, 'user_name': user_info.nickname, 'user_avatar': user_info.avatar,
-                              'user_integral': normalize_fraction(user_gsg.balance, 2), 'data': data})
+        response = {
+            'code': 0,
+            'user_name': user_info.nickname,
+            'user_avatar': user_info.avatar,
+            'user_integral': normalize_fraction(user_gsg.balance, 2),
+            'least_lock_amount': settings.GSG_LEAST_LOCK_AMOUNT,
+            'data': data
+        }
+
+        return self.response(response)
 
 
 class AssetLock(CreateAPIView):
@@ -1391,7 +1399,7 @@ class AssetLock(CreateAPIView):
         coin_configs = CoinLock.objects.filter(period=locked_days, is_delete=0, coin_id=coin.id)
         if not coin_configs.exists():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if amounts <= 0 or amounts > user_coin.balance:
+        if amounts < settings.GSG_LEAST_LOCK_AMOUNT or amounts > user_coin.balance:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_coin.balance -= amounts
         user_coin.save()
