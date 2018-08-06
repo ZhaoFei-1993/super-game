@@ -10,7 +10,7 @@ class Club(models.Model):
     PENDING = 2  # 人气
     PUBLISHING = 3  # 热门
     CLOSE = 0  # 未开启
-    NIL = 1
+    NIL = 1   # 无角标
 
     STATUS_CHOICE = (
         (PENDING, "人气"),
@@ -55,8 +55,13 @@ class ClubRule(models.Model):
 
 @reversion.register()
 class ClubBanner(models.Model):
+    URL = 0
+    CLUB = 1
+
     image = models.CharField(verbose_name="图像", max_length=255, default='')
     active = models.CharField(verbose_name="活动标识", max_length=255, default='')
+    banner_type = models.IntegerField(verbose_name="轮播图类型", default=URL)
+    param = models.CharField(verbose_name="轮播参数", default='', max_length=255)
     order = models.IntegerField(verbose_name="轮播顺序")
     language = models.CharField(verbose_name="语言", max_length=32, default='')
     is_delete = models.BooleanField(verbose_name="是否删除", default=0)

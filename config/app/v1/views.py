@@ -25,3 +25,19 @@ class Html5ConfigView(ListAPIView):
             'is_club_profit_enable': 1 if settings.CLUB_REVENUE else 0,
             'is_exchange': 1 if settings.EXCHANGE else 0
         })
+
+
+class WebDomainConfigView(ListAPIView):
+    """
+    return html5 config
+    """
+    authentication_classes = ()
+
+    def list(self, request, *args, **kwargs):
+        """
+        网站域名
+        """
+        return self.response({
+            'code': 0,
+            'domain': 'https://www.gsg28.xyz',
+        })
