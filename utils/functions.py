@@ -680,3 +680,37 @@ def make_batch_update_sql(table_name, values, update):
     mysql_update = ' ON DUPLICATE KEY UPDATE ' + update
     return 'INSERT INTO ' + table_name + ' (' + field + ') VALUES ' + ','.join(arr_values) + mysql_update
 
+
+def get_club_info(club_id):
+    """
+        从缓存读取club_info
+        :param club_id:  俱乐部id
+        :return: 俱乐部信息字典;
+    """
+    cache_club_key = 'club_info'
+    cache_club_value = get_cache(cache_club_key)
+    if cache_club_value is None:
+        club = Club.objects.get(pk=club_id)
+        cache_club_value = {
+            club_id: {
+                'coin_id': club.coin_id, 'club_name': club.room_title,
+                'club_name_en': club.room_title_en, 'coin_name': club.room_title.replace('俱乐部', ''),
+                'coin_accuracy': club.coin.coin_accuracy,
+            }
+        }
+        set_cache(cache_club_key, str(cache_club_value), 24 * 60 * 60)
+        cache_club_value = get_cache(cache_club_key)
+    elif club_id not in eval(cache_club_value).keys():
+        cache_club_value = eval(cache_club_value)
+        club = Club.objects.get(pk=club_id)
+        cache_club_value.update({
+            club_id: {
+                'coin_id': club.coin_id, 'club_name': club.room_title,
+                'club_name_en': club.room_title_en, 'coin_name': club.room_title.replace('俱乐部', ''),
+                'coin_accuracy': club.coin.coin_accuracy,
+            }
+        })
+        set_cache(cache_club_key, str(cache_club_value), 24 * 60 * 60)
+        cache_club_value = get_cache(cache_club_key)
+
+    return eval(cache_club_value)
