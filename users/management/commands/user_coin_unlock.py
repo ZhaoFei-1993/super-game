@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from datetime import datetime
-from users.models import UserCoinLock
+from datetime import datetime, timedelta
+from users.models import UserCoinLock, UserMessage
 from utils.cache import get_cache, set_cache
 import dateparser
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -23,7 +24,33 @@ class Command(BaseCommand):
         :return:
         """
         user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
-        set_cache(self.key_unlock, str(user_coin_lock.id) + ',' + str(user_coin_lock.end_time))
+
+        cache_val = str(user_coin_lock.id) + ',' + str(user_coin_lock.user_id) + ',' + str(user_coin_lock.end_time)
+        set_cache(self.key_unlock, cache_val)
+
+    @staticmethod
+    def pre_release_unlock_message(end_time, user_id):
+        """
+        提前xxx小时解锁提醒
+        :param  end_time    结束时间
+        :param  user_id     用户ID
+        :return:
+        """
+        if datetime.now() + timedelta(seconds=settings.GSG_UNLOCK_PREACT_TIME) < end_time:
+            return True
+
+        hours = settings.GSG_UNLOCK_PREACT_TIME / 3600
+
+        # TODO: 判断是否已经发过提醒信息
+
+        # 发送信息
+        user_message = UserMessage()
+        user_message.status = 0
+        user_message.content = '亲爱的用户您好，你锁定的XXX GSG ' + str(hours) + '小时后到期，如需延长参与锁定即分红时间，请到个人钱包进行操作。'
+        user_message.title = 'GSG锁定即将到期提醒'
+        user_message.user_id = user_id
+        user_message.message_id = 6
+        user_message.save()
 
     def release_user_coin_lock(self, user_lock_id):
         """
@@ -34,10 +61,22 @@ class Command(BaseCommand):
         lock_id = 0
 
         user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
+
         if user_coin_lock.end_time <= datetime.now():
             lock_id = user_lock_id
             user_coin_lock.is_free = True
             user_coin_lock.save()
+
+            amount = str(user_coin_lock.amount)
+
+            # 发送解锁信息
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.content = '亲爱的用户您好，你锁定的' + amount + ' GSG 已到期，重新参与锁定即分红活动，请到个人钱包进行操作。'
+            user_message.title = 'GSG锁定到期提醒'
+            user_message.user_id = user_coin_lock.user_id
+            user_message.message_id = 6
+            user_message.save()
 
             self.set_expire_lock_cache()
 
@@ -51,10 +90,15 @@ class Command(BaseCommand):
 
         lock_id = 0
         if cache_lock_datetime is not None:
-            user_lock_id, lock_end_time = cache_lock_datetime.split(',')
-            if dateparser.parse(lock_end_time) <= datetime.now():
+            user_lock_id, user_id, lock_end_time = cache_lock_datetime.split(',')
+
+            lock_end_time = dateparser.parse(lock_end_time)
+
+            if lock_end_time <= datetime.now():
                 # 判断用户是否有延期操作，再从DB中取一次来判断
                 lock_id = self.release_user_coin_lock(user_lock_id)
+            else:
+                self.pre_release_unlock_message(lock_end_time, user_id)
         else:
             user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
 
