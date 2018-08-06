@@ -785,7 +785,7 @@ class Expenditure(models.Model):
         (OTHER, '其他')
     )
 
-    year = models.CharField(verbose_name="年",max_length=20, default="")
+    year = models.CharField(verbose_name="年", max_length=20, default="")
     month = models.CharField(verbose_name="月", max_length=20, default="")
     type = models.CharField(verbose_name="类型", choices=TYPE_CHOICE, max_length=1, default="")
     in_out = models.BooleanField(verbose_name="收入(1)支出(0)", default=0)
@@ -796,3 +796,14 @@ class Expenditure(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "公司财务"
+
+
+class PreReleaseUnlockMessageLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    user_message = models.ForeignKey(UserMessage, on_delete=models.DO_NOTHING)
+    user_coin_lock = models.ForeignKey(UserCoinLock, on_delete=models.DO_NOTHING)
+    is_delete = models.BooleanField(verbose_name="是否删除状态", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "GSG锁定即将到期提醒信息日志表"

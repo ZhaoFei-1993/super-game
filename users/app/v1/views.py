@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -1838,6 +1838,7 @@ class LockDetailView(RetrieveUpdateAPIView):
         data["dividend"] = dividend
         return self.response({'code': 0, 'data': data})
 
+    @transaction.atomic()
     def put(self, request, *args, **kwargs):
         id = int(kwargs['id'])
         days_extra = int(request.data.get('days_extra'))
@@ -1859,6 +1860,13 @@ class LockDetailView(RetrieveUpdateAPIView):
         user_coin_lock_log.start_time = datetime.now()
         user_coin_lock_log.end_time = user_lock.end_time
         user_coin_lock_log.save()
+
+        # 判断是否有24小时提醒日志，有则作废该日志记录，否则无法再次接收到24小时提示信息
+        pre_release_unlock_message_log = PreReleaseUnlockMessageLog.objects.filter(user_lock_id=user_lock.id).count()
+        if pre_release_unlock_message_log > 0:
+            pre_release_unlock_message = PreReleaseUnlockMessageLog.objects.get(user_lock_id=user_lock.id)
+            pre_release_unlock_message.is_delete = True
+            pre_release_unlock_message.save()
 
         return self.response({'code': 0})
 

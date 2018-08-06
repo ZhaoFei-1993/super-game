@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from datetime import datetime, timedelta
-from users.models import UserCoinLock, UserMessage
+from users.models import UserCoinLock, UserMessage, PreReleaseUnlockMessageLog
 from utils.cache import get_cache, set_cache
 import dateparser
 from django.conf import settings
@@ -29,11 +29,12 @@ class Command(BaseCommand):
         set_cache(self.key_unlock, cache_val)
 
     @staticmethod
-    def pre_release_unlock_message(end_time, user_id):
+    def pre_release_unlock_message(end_time, user_id, user_lock_id):
         """
         提前xxx小时解锁提醒
         :param  end_time    结束时间
         :param  user_id     用户ID
+        :param  user_lock_id
         :return:
         """
         if datetime.now() + timedelta(seconds=settings.GSG_UNLOCK_PREACT_TIME) < end_time:
@@ -41,7 +42,10 @@ class Command(BaseCommand):
 
         hours = settings.GSG_UNLOCK_PREACT_TIME / 3600
 
-        # TODO: 判断是否已经发过提醒信息
+        # 判断是否已经发送过提醒信息
+        pre_release_unlock_message = PreReleaseUnlockMessageLog.objects.filter(user_coin_lock_id=user_lock_id, is_delete=False).count()
+        if pre_release_unlock_message > 0:
+            return True
 
         # 发送信息
         user_message = UserMessage()
@@ -52,7 +56,13 @@ class Command(BaseCommand):
         user_message.message_id = 6
         user_message.save()
 
-    def release_user_coin_lock(self, user_lock_id):
+        pre_release_unlock_message_log = PreReleaseUnlockMessageLog()
+        pre_release_unlock_message_log.user_id = user_id
+        pre_release_unlock_message_log.user_coin_lock_id = user_lock_id
+        pre_release_unlock_message_log.user_message_id = user_message.id
+        pre_release_unlock_message_log.save()
+
+    def release_user_coin_lock(self, user_lock_id=0):
         """
         释放用户锁定
         :param user_lock_id
@@ -60,7 +70,10 @@ class Command(BaseCommand):
         """
         lock_id = 0
 
-        user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
+        if user_lock_id == 0:
+            user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
+        else:
+            user_coin_lock = UserCoinLock.objects.get(pk=user_lock_id)
 
         if user_coin_lock.end_time <= datetime.now():
             lock_id = user_lock_id
@@ -79,6 +92,8 @@ class Command(BaseCommand):
             user_message.save()
 
             self.set_expire_lock_cache()
+        else:
+            self.pre_release_unlock_message(user_coin_lock.end_time, user_coin_lock.user_id, user_coin_lock.id)
 
         return lock_id
 
@@ -91,19 +106,16 @@ class Command(BaseCommand):
         lock_id = 0
         if cache_lock_datetime is not None:
             user_lock_id, user_id, lock_end_time = cache_lock_datetime.split(',')
-
             lock_end_time = dateparser.parse(lock_end_time)
 
             if lock_end_time <= datetime.now():
                 # 判断用户是否有延期操作，再从DB中取一次来判断
                 lock_id = self.release_user_coin_lock(user_lock_id)
             else:
-                self.pre_release_unlock_message(lock_end_time, user_id)
+                self.pre_release_unlock_message(lock_end_time, user_id, user_lock_id)
         else:
-            user_coin_lock = UserCoinLock.objects.filter(is_free=False).order_by('end_time').first()
-
-            # 判断是否过期，若是，则解除锁定状态
-            lock_id = self.release_user_coin_lock(user_coin_lock.id)
+            # 若缓存中无数据，则在DB中读取
+            lock_id = self.release_user_coin_lock()
 
         if lock_id == 0:
             self.stdout.write(self.style.SUCCESS('当前无满足解锁条件的记录'))
