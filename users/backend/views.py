@@ -2058,7 +2058,9 @@ class CoinDividendProposalView(ListCreateAPIView):
         :return:
         """
         dividend = request.data.get('dividend')
+        print("request.data.get('coins') = ", request.data.get('coins'))
         coins = json.loads(request.data.get('coins'))
+        print('coins = ', coins)
         dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
 
         decimal = 1000000
