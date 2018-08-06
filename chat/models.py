@@ -10,7 +10,7 @@ class Club(models.Model):
     PENDING = 2  # 人气
     PUBLISHING = 3  # 热门
     CLOSE = 0  # 未开启
-    NIL = 1
+    NIL = 1   # 无角标
 
     STATUS_CHOICE = (
         (PENDING, "人气"),

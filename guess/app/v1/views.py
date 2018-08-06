@@ -665,7 +665,6 @@ class PlayRuleImage(ListAPIView):
         # print("now_time========================", now_time)
         # print("now_time========================", language_switch(language, "GUESS_RULE") + ".jpg?t=%s" % now_time)
         rule_img = '/'.join(
-            [MEDIA_DOMAIN_HOST, "smstp.png"])
-        print("rule_img===========================", rule_img)
+            [MEDIA_DOMAIN_HOST, "smstp_1.png"])
         return self.response(
             {'code': 0, 'data': {'image': rule_img}})
