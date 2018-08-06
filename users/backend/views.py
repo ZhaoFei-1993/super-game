@@ -2058,9 +2058,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         :return:
         """
         dividend = request.data.get('dividend')
-        print("request.data.get('coins') = ", request.data.get('coins'))
         coins = json.loads(request.data.get('coins'))
-        print('coins = ', coins)
         dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
 
         decimal = 1000000
@@ -2085,7 +2083,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         }
         map_club_id_amount = {}
         for coin in coins:
-            scale = float(coin['scale'] * 100)
+            scale = float(coin['scale']) * 100
             price = float(coin['price'])
             coin_id = int(coin['coin_id'])
 
