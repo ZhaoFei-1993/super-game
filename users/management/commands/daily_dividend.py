@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
+from django.db import transaction, connection
 from datetime import datetime, timedelta
 from users.models import Coin, UserCoin, UserCoinLock, Dividend, CoinDetail, DividendConfig, DividendConfigCoin
 import dateparser
@@ -120,7 +120,7 @@ class Command(BaseCommand):
         try:
             dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
         except DividendConfig.DoesNotExist:
-            return {}
+            raise CommandError('Not set yet')
 
         dividend_config_coin = DividendConfigCoin.objects.filter(dividend_config=dividend_config)
 
@@ -190,10 +190,11 @@ class Command(BaseCommand):
                 coin_detail_values.append({
                     'user_id': str(ucl.user_id),
                     'coin_name': self.get_coin_name(coin_id),
-                    'amount': dividend_amount,
-                    'rest': user_coin.balance,
+                    'amount': str(dividend_amount),
+                    'rest': str(user_coin.balance),
                     'sources': str(CoinDetail.DEVIDEND),
                     'created_at': created_at,
+                    'is_delete': str(0),
                 })
 
                 # 发送分红消息
@@ -208,4 +209,9 @@ class Command(BaseCommand):
                     'created_at': created_at,
                 })
 
-        print('dividend_values = ', make_insert_sql('users_dividend', dividend_values))
+        with connection.cursor() as cursor:
+            cursor.execute(make_insert_sql('users_dividend', dividend_values))
+            cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
+            cursor.execute(make_insert_sql('users_usermessage', user_message_values))
+
+        self.stdout.write(self.style.SUCCESS('-----分红完成-----'))
