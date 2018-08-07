@@ -114,6 +114,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         comment = request.data.get('comment')
         comment_en = request.data.get('comment_en')
         mobile_type = request.data.get('mobile_type')
+        mobile_plugin = request.data.get('mobile_plugin')
         config = AndroidVersion()
         if str(mobile_type).upper() == 'IOS':
             type = 1
@@ -128,6 +129,7 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         config.comment = comment
         config.comment_en = comment_en
         config.mobile_type = type
+        config.mobile_plugin = mobile_plugin
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
         if type ==1:
@@ -172,6 +174,8 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
             item.comment = request.data.get('comment')
         if "comment_en" in request.data:
             item.comment_en = request.data.get('comment_en')
+        if "recommend" in request.data:
+            item.mobile_plugin = request.data.get('mobile_plugin')
         item.save()
         return self.response({"code": 0})
 
