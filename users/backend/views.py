@@ -2003,6 +2003,8 @@ class CoinDividendProposalView(ListCreateAPIView):
 
         # GSG实际锁定总量
         user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
+        if user_coin_lock_sum['amount__sum'] is None:
+            user_coin_lock_sum['amount__sum'] = 0
         user_coin_lock_sum = int(user_coin_lock_sum['amount__sum'] * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
 
         # GSG实际锁定用户数
@@ -2024,7 +2026,7 @@ class CoinDividendProposalView(ListCreateAPIView):
                 'coin_id': str(coinid),     # 货币ID
                 'coin_name': self.get_coin_name_by_id(coinid),  # 货币名称
                 'scale': str(coin_scale[coinid]),   # 货币占有比例
-                'dividend_price': str(total_dividend * coin_scale[coinid]),     # 分红总价
+                'dividend_price': str(round(total_dividend * coin_scale[coinid], 2)),     # 分红总价
                 'price': str(map_coin_id_price[coinid]),    # 货币对应价格
                 'amount': amount,   # 分红数量
                 'gsg_coin_dividend': '%.6f' % tmp_gsg_coin_dividend,
