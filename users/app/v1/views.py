@@ -2632,7 +2632,7 @@ class InvitationMergeView(ListAPIView):
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (240, 960))
+        base_img.paste(qr_img, (238, 960))
         ftext = Image.open(
             settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
         base_img.paste(ftext, (300, 915))  # 插入邀请码
