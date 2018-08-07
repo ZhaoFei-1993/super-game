@@ -801,7 +801,7 @@ class ProfitView(ListAPIView):
         name = get_cache(CLUB_PROFIT_NAME)
         if data is None or name is None:
             lists = ClubProfitAbroad.objects.filter(Q(created_at__gte=start_time, created_at__lte=end_time)).order_by(
-                'created_at', '-profit_total')
+                'created_at', '-virtual_profit')
         else:
             lists = []
         return lists
@@ -831,7 +831,7 @@ class ProfitView(ListAPIView):
             print("我的天，竟然没有放进缓存")
             name = []
             sums = []
-            sql = "SELECT uc.`name`, sum( cpb.profit_total ) AS sum_total FROM quiz_clubprofitabroad cpb "
+            sql = "SELECT uc.`name`, sum( cpb.virtual_profit ) AS sum_total FROM quiz_clubprofitabroad cpb "
             sql += "LEFT JOIN chat_club c on cpb.roomquiz_id = c.id LEFT JOIN users_coin uc on uc.id = c.coin_id "
             sql += "WHERE cpb.created_at>='" + start_time + "' AND cpb.created_at<='" + end_time + "' and c.is_recommend!=0 "
             sql += "GROUP BY uc.`name` ORDER BY sum_total desc limit 0" + "," + str(type) + ";"
@@ -851,7 +851,7 @@ class ProfitView(ListAPIView):
                         data[date_key]["total"] = []
                         data[date_key]['created_at'] = []
                 if item['coin_name'] in name:
-                    profit_total = float(item["profit_total"])
+                    profit_total = float(item["virtual_profit"])
                     if profit_total < 0:
                         type = 1
                     else:

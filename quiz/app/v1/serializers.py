@@ -449,7 +449,7 @@ class ClubProfitAbroadSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = ClubProfitAbroad
-        fields = ("id", "coin_name", "coin_icon", "profit_total", "cash_back_sum", "created_at")
+        fields = ("id", "coin_name", "coin_icon", "virtual_profit", "cash_back_sum", "created_at")
 
     @staticmethod
     def get_coin_name(obj):
