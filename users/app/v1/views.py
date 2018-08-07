@@ -2598,55 +2598,55 @@ class InvitationMergeView(ListAPIView):
             invitation_code = user.invitation_code
 
         if self.request.GET.get('language') == 'en':
-            if os.access(save_path + '/qrcode_' + str(user.id) + '_new_en.jpg', os.F_OK):
-                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.jpg'
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_new_en.png', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_en.png'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
         else:
-            if os.access(save_path + '/qrcode_' + str(user.id) + '_new.jpg', os.F_OK):
-                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.jpg'
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_new.png', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.png'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
         pygame.init()
         # 设置字体和字号
-        font = pygame.font.SysFont('Microsoft YaHei', 64)
+        font = pygame.font.SysFont('Microsoft YaHei', 60)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        ftext = font.render(invitation_code, True, (255, 255, 255), (116, 68, 11))
+        ftext = font.render(invitation_code, True, (0, 0, 0), (255, 255, 255))
         # 保存图片
-        invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
+        invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.png'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
         # qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
         if self.request.GET.get('language') == 'en':
-            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk_en.jpg')
+            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk_en.png')
         else:
-            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.jpg')
+            base_img = Image.open(settings.BASE_DIR + '/uploads/fx_bk.png')
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=3,
+            box_size=8,
+            border=1,
         )
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (200, 678))
+        base_img.paste(qr_img, (255, 1000))
         ftext = Image.open(
-            settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
-        base_img.paste(ftext, (310, 1080))  # 插入邀请码
+            settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.png')
+        base_img.paste(ftext, (310, 950))  # 插入邀请码
 
         # 保存二维码图片
-        qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')
+        qr_img.save(save_path + '/qrcode_' + str(user.id) + '.png')
         # qr_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/qrcode_' + str(user_id) + '.png'
         # 保存推广图片
         if self.request.GET.get('language') == 'en':
-            base_img.save(save_path + '/spread_' + str(user.id) + '_new_en.jpg', quality=90)
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new_en.jpg'
+            base_img.save(save_path + '/spread_' + str(user.id) + '_new_en.png', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new_en.png'
         else:
-            base_img.save(save_path + '/spread_' + str(user.id) + '_new.jpg', quality=90)
-            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.jpg'
+            base_img.save(save_path + '/spread_' + str(user.id) + '_new.png', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.png'
 
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
 
