@@ -209,9 +209,10 @@ class Command(BaseCommand):
                     'created_at': created_at,
                 })
 
-        with connection.cursor() as cursor:
-            cursor.execute(make_insert_sql('users_dividend', dividend_values))
-            cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
-            cursor.execute(make_insert_sql('users_usermessage', user_message_values))
+        if len(dividend_values) > 0:
+            with connection.cursor() as cursor:
+                cursor.execute(make_insert_sql('users_dividend', dividend_values))
+                cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
+                cursor.execute(make_insert_sql('users_usermessage', user_message_values))
 
-        self.stdout.write(self.style.SUCCESS('-----分红完成-----'))
+        self.stdout.write(self.style.SUCCESS('-----执行完成-----'))
