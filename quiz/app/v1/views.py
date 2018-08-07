@@ -859,7 +859,7 @@ class ProfitView(ListAPIView):
                     data[item['coin_name']]["icon"] = item["coin_icon"]
                     data[item['coin_name']]["type"].append(type)
                     data[item['coin_name']]["sum"] += normalize_fraction(1, 2)
-                    data[item['coin_name']]["total"].append(normalize_fraction(item["virtual_profit"], 18))
+                    data[item['coin_name']]["total"].append(normalize_fraction(item["virtual_profit"], 7))
                     data[item['coin_name']]['created_at'].append(item["created_at"])
             for club_info in coins:
                 data[str(club_info[0])]["sum"] = club_info[1]
