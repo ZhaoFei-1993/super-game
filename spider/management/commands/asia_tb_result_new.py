@@ -97,7 +97,7 @@ def asia_option(quiz, rule_asia):
 def asia_result(quiz, records_asia):
     rule_dic = {
         '平手': '0', '平手/半球': '0/0.5', '半球': '0.5', '半球/一球': '0.5/1', '一球': '1', '一球/一球半': '1/1.5',
-        '一球半': '1.5', '球半/两球': '1.5/2', '两球': '2', '两球/两球半': '2/2.5', '三球': '3', '三球/三球半': '3/3.5',
+        '一球半': '1.5', '一球半/两球': '1.5/2', '两球': '2', '两球/两球半': '2/2.5', '三球': '3', '三球/三球半': '3/3.5',
         '四球': '4',
     }
 
@@ -134,6 +134,8 @@ def asia_result(quiz, records_asia):
                 earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
             print('上盘全负， 下盘全胜')
         else:
+            print(handicap)
+            print(rule_dic[handicap])
             if len(rule_dic[handicap].split('/')) == 1:
                 if len(rule_dic[handicap]) == 1:
                     if clean_score == int(rule_dic[handicap]):
