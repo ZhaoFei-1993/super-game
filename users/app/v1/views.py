@@ -2231,7 +2231,7 @@ class VersionUpdateView(RetrieveAPIView):
             mobile_plugin = request.GET.get('mobile_plugin')
             versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type, mobile_plugin=mobile_plugin)
         else:
-            versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
+            versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type, mobile_plugin=4)
         if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
         else:
