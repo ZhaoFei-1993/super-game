@@ -217,7 +217,7 @@ class UserRegister(object):
                 area_code = 86
             user.area_code = area_code
             user.username = username
-            user.source =  user.__getattribute__(source.upper())
+            user.source = user.__getattribute__(source.upper())
             user.set_password(password)
             user.register_type = register_type
             user.ip_address = ip_address
@@ -2205,6 +2205,7 @@ class VersionUpdateView(RetrieveAPIView):
     """
     版本更新
     """
+
     # def max_version(self, m_version, version):
     #     """
     #     版本号转换为数字
@@ -2218,7 +2219,6 @@ class VersionUpdateView(RetrieveAPIView):
     #             return version
     #     return m_version
 
-
     def retrieve(self, request, *args, **kwargs):
         version = request.query_params.get('version')
         mobile_type = request.META.get('HTTP_X_API_KEY')
@@ -2227,7 +2227,11 @@ class VersionUpdateView(RetrieveAPIView):
             type = 0
         if str(mobile_type).upper() == "IOS" or str(mobile_type).upper() == "HTML5":  # 由于目前ios版本是内嵌html5的网页
             type = 1
-        versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
+        if 'mobile_plugin' in request.GET:
+            mobile_plugin = request.GET.get('mobile_plugin')
+            versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type, mobile_plugin=mobile_plugin)
+        else:
+            versions = AndroidVersion.objects.filter(is_delete=0, mobile_type=type)
         if not versions.exists():
             return self.response({'code': 0, 'is_new': 0})
         else:
@@ -2235,21 +2239,21 @@ class VersionUpdateView(RetrieveAPIView):
             # for x in versions:
             #     m_version = self.max_version(m_version, x.version)
             # last_version = versions.filter(version=m_version).order_by('-update_at').first()
-             last_version = versions.order_by('-create_at').first()
-        if last_version.version == version:
-            return self.response({'code': 0, 'is_new': 0})
-        else:
-            serialize = AndroidSerializer(last_version)
-            if type == 1:
-                data = serialize.data
-                data['plist_url'] = data['plist_url']
+            last_version = versions.order_by('-create_at').first()
+            if last_version.version == version:
+                return self.response({'code': 0, 'is_new': 0})
             else:
-                data = serialize.data
-                data['is_update'] = True if data['is_update'] else False
-                data['is_delete'] = True if data['is_delete'] else False
-            if language == 'en':
-                data['comment'] = data['comment_en']
-            return self.response({'code': 0, 'is_new': 1, 'data': data})
+                serialize = AndroidSerializer(last_version)
+                if type == 1:
+                    data = serialize.data
+                    data['plist_url'] = data['plist_url']
+                else:
+                    data = serialize.data
+                    data['is_update'] = True if data['is_update'] else False
+                    data['is_delete'] = True if data['is_delete'] else False
+                if language == 'en':
+                    data['comment'] = data['comment_en']
+                return self.response({'code': 0, 'is_new': 1, 'data': data})
 
 
 class ImageUpdateView(CreateAPIView):

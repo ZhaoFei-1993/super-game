@@ -163,15 +163,31 @@ class Config(models.Model):
 class AndroidVersion(models.Model):
     ANDROID = 0
     IOS = 1
+    # ANDROID_PLUGIN = 2
     TYPE_CHOICE = (
         (ANDROID, "Android"),
-        (IOS, "IOS")
+        (IOS, "IOS"),
+        # (ANDROID_PLUGIN, "ANDROID_PLUGIN")
+    )
+
+    STOCK = 0
+    AIR = 4
+    MARKSIX = 1
+    DRAGON_TIGER = 2
+    BACCARAT = 3
+    PLUGIN = (
+        (STOCK, "股票"),
+        (AIR, "空"),
+        (MARKSIX, "六合彩"),
+        (DRAGON_TIGER, "龙虎斗"),
+        (BACCARAT, "百家乐")
     )
 
     version = models.CharField("安卓版本号", max_length=20)
     upload_url = models.CharField("apk地址", max_length=150)
     plist_url = models.CharField("plist地址", max_length=150, default="")  # 只有IOS才有，默认为空
     mobile_type = models.IntegerField("手机类型", choices=TYPE_CHOICE, default=ANDROID)
+    mobile_plugin = models.IntegerField("插件类型", choices=PLUGIN, default=AIR)
     comment = models.CharField("版本说明", max_length=100, default='')
     comment_en = models.CharField("版本说明英文版", max_length=200, default='')
     is_update = models.BooleanField("是否已更新", max_length=2, default=False)
