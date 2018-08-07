@@ -8,6 +8,7 @@ from utils.functions import normalize_fraction
 from django.db.models import Q
 import datetime
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
+from guess.models import Record as Guess_Record
 
 
 class Command(BaseCommand):
@@ -32,7 +33,13 @@ class Command(BaseCommand):
         user_list = []
         records = Record.objects.filter(~Q(roomquiz_id=Club.objects.get(room_title='HAND俱乐部').id), is_distribution=True,
                                         open_prize_time__range=(start_with, end_with))
+        guess_records = Guess_Record.objects.filter(~Q(club=Club.objects.get(room_title='HAND俱乐部')), ~Q(status=0),
+                                                    open_prize_time__range=(start_with, end_with))
+
         for record in records:
+            if record.user_id not in user_list:
+                user_list.append(record.user_id)
+        for record in guess_records:
             if record.user_id not in user_list:
                 user_list.append(record.user_id)
 
@@ -42,72 +49,105 @@ class Command(BaseCommand):
             record_sum = 0
             record_sum_usd = 0
             record_dic = {}
-            for record_personal in records.filter(user_id=user_id):
-                club_id = record_personal.roomquiz_id
-                club_nickname = 'club_nickname'+str(club_id)
-                coin_name = get_cache(club_nickname)
-                if coin_name is None:
-                    club_name = Club.objects.get(pk=club_id).room_title
-                    coin_name = club_name.replace('俱乐部', '')
-                    set_cache(club_nickname, coin_name, 24 * 3600)
+            # 计算球赛单用户投注量
+            if records.filter(user_id=user_id).exists():
+                for record_personal in records.filter(user_id=user_id):
+                    club_id = record_personal.roomquiz_id
+                    club_nickname = 'club_nickname' + str(club_id)
+                    coin_name = get_cache(club_nickname)
+                    if coin_name is None:
+                        club_name = Club.objects.get(pk=club_id).room_title
+                        coin_name = club_name.replace('俱乐部', '')
+                        set_cache(club_nickname, coin_name, 24 * 3600)
 
-                if coin_name in record_dic.keys():
-                    record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bet)
-                else:
-                    record_dic[coin_name] = float(record_personal.bet)
+                    if coin_name in record_dic.keys():
+                        record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bet)
+                    else:
+                        record_dic[coin_name] = float(record_personal.bet)
 
-                rmb_price = 'currency_corresponds_to_rmb_price_'+str(coin_name)
-                usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
-                price = get_cache(rmb_price)
-                price_usd = get_cache(usd_price)
-                if price is None:
-                    coin_price = CoinPrice.objects.get(coin_name=coin_name)
-                    price = coin_price.price
-                    set_cache(rmb_price, coin_price.price, 24 * 3600)
-                if price_usd is None:
-                    coin_price = CoinPrice.objects.get(coin_name=coin_name)
-                    price_usd = coin_price.price_usd
-                    set_cache(usd_price, price_usd, 24 * 3600)
-                record_sum = record_sum + record_personal.bet * price
-                record_sum_usd = record_sum_usd + record_personal.bet * price_usd
+                    rmb_price = 'currency_corresponds_to_rmb_price_' + str(coin_name)
+                    usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
+                    price = get_cache(rmb_price)
+                    price_usd = get_cache(usd_price)
+                    if price is None:
+                        coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                        price = coin_price.price
+                        set_cache(rmb_price, coin_price.price, 24 * 3600)
+                    if price_usd is None:
+                        coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                        price_usd = coin_price.price_usd
+                        set_cache(usd_price, price_usd, 24 * 3600)
+                    record_sum = record_sum + record_personal.bet * price
+                    record_sum_usd = record_sum_usd + record_personal.bet * price_usd
+            # 计算股指单用户投注量
+            if guess_records.filter(user_id=user_id).exists():
+                for record_personal in guess_records.filter(user_id=user_id):
+                    club_id = record_personal.club_id
+                    club_nickname = 'club_nickname' + str(club_id)
+                    coin_name = get_cache(club_nickname)
+                    if coin_name is None:
+                        club_name = Club.objects.get(pk=club_id).room_title
+                        coin_name = club_name.replace('俱乐部', '')
+                        set_cache(club_nickname, coin_name, 24 * 3600)
 
+                    if coin_name in record_dic.keys():
+                        record_dic[coin_name] = record_dic[coin_name] + float(record_personal.bets)
+                    else:
+                        record_dic[coin_name] = float(record_personal.bets)
+
+                    rmb_price = 'currency_corresponds_to_rmb_price_' + str(coin_name)
+                    usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
+                    price = get_cache(rmb_price)
+                    price_usd = get_cache(usd_price)
+                    if price is None:
+                        coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                        price = coin_price.price
+                        set_cache(rmb_price, coin_price.price, 24 * 3600)
+                    if price_usd is None:
+                        coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                        price_usd = coin_price.price_usd
+                        set_cache(usd_price, price_usd, 24 * 3600)
+                    record_sum = record_sum + record_personal.bets * price
+                    record_sum_usd = record_sum_usd + record_personal.bets * price_usd
+
+            # 计算完毕,开始清算
             # 返现值
             if float(gsg_to_rmb) < float(0.65):
                 gsg_to_rmb = 0.65
             cash_back_gsg = (float(record_sum) * rate) / float(gsg_to_rmb)
             cash_back_gsg = normalize_fraction(cash_back_gsg, 3)
+            if cash_back_gsg > 0:
+                user_coin_gsg = UserCoin.objects.filter(user_id=user_id, coin_id=6).first()
+                user_coin_gsg.balance = float(user_coin_gsg.balance) + float(cash_back_gsg)
+                user_coin_gsg.save()
 
-            user_coin_gsg = UserCoin.objects.filter(user_id=user_id, coin_id=6).first()
-            user_coin_gsg.balance = float(user_coin_gsg.balance) + float(cash_back_gsg)
-            user_coin_gsg.save()
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = user_id
+                coin_detail.coin_name = "GSG"
+                coin_detail.amount = float(cash_back_gsg)
+                coin_detail.rest = user_coin_gsg.balance
+                coin_detail.sources = CoinDetail.CASHBACK
+                coin_detail.save()
 
-            # 用户资金明细表
-            coin_detail = CoinDetail()
-            coin_detail.user_id = user_id
-            coin_detail.coin_name = "GSG"
-            coin_detail.amount = float(cash_back_gsg)
-            coin_detail.rest = user_coin_gsg.balance
-            coin_detail.sources = CoinDetail.CASHBACK
-            coin_detail.save()
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = '返现公告'
+                u_mes.title_en = 'Cash-back announcement'
+                content = ''
+                for key, value in record_dic.items():
+                    value = normalize_fraction(value, 8)
+                    content = content + str(value) + '个' + key + '，'
+                u_mes.content = '您在' + date_last + '投注了' + content + '投注总价值约为' + str(
+                    normalize_fraction(record_sum_usd, 2)) + 'USD ,' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
+                u_mes.content_en = ''
+                u_mes.save()
 
-            # 发送信息
-            u_mes = UserMessage()
-            u_mes.status = 0
-            u_mes.user_id = user_id
-            u_mes.message_id = 6  # 私人信息
-            u_mes.title = '返现公告'
-            u_mes.title_en = 'Cash-back announcement'
-            content = ''
-            for key, value in record_dic.items():
-                value = normalize_fraction(value, 8)
-                content = content + str(value) + '个' + key + '，'
-            u_mes.content = '您在' + date_last + '投注了' + content + '投注总价值约为' + str(
-                normalize_fraction(record_sum_usd, 2)) + 'USD ,' + '本次GSG激励数量为' + str(cash_back_gsg) + '个，已发放！'
-            u_mes.content_en = ''
-            u_mes.save()
-
-            # print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum)
-            print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum, ' ,cash_back====> ', cash_back_gsg)
+                # print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum)
+                print('use_id=====> ', user_id, ' ,record_sum====> ', record_sum, ' ,cash_back====> ', cash_back_gsg)
 
             obj = EveryDayInjectionValue()
             obj.user_id = user_id
