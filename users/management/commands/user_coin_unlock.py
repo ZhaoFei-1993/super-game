@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from datetime import datetime, timedelta
+from datetime import datetime
 from users.models import UserCoinLock, UserMessage, PreReleaseUnlockMessageLog, UserCoin, CoinDetail, Coin
 from utils.cache import get_cache, set_cache
 import dateparser
