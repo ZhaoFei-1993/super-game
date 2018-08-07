@@ -139,6 +139,7 @@ class Coin(models.Model):
     HAND = 4
     EOS = 8
     USDT = 9
+    GSG = 6
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
@@ -265,6 +266,7 @@ class CoinDetail(models.Model):
     LOCK = 11
     DEVIDEND = 12
     EXCHANGE = 13
+    UNLOCK = 14
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -280,7 +282,8 @@ class CoinDetail(models.Model):
         (CASHBACK, "返现"),
         (LOCK, "锁定"),
         (DEVIDEND, "分红"),
-        (EXCHANGE, "兑换")
+        (EXCHANGE, "兑换"),
+        (UNLOCK, "解锁"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')

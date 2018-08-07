@@ -2075,8 +2075,15 @@ class CoinDividendProposalView(ListCreateAPIView):
         dividend_config.dividend_date = dividend_date
         dividend_config.save()
 
+        map_coin_id_club_id = {
+            1: 2,
+            2: 3,
+            3: 4,
+            9: 6,
+        }
+        map_club_id_amount = {}
         for coin in coins:
-            scale = float(coin['scale'] * 100)
+            scale = float(coin['scale']) * 100
             price = float(coin['price'])
             coin_id = int(coin['coin_id'])
 
@@ -2090,5 +2097,18 @@ class CoinDividendProposalView(ListCreateAPIView):
             dividend_config_coin.price = price
             dividend_config_coin.amount = amount
             dividend_config_coin.save()
+
+            # 俱乐部ID对应虚拟盈收
+            map_club_id_amount[map_coin_id_club_id[coin_id]] = amount
+
+        # 写入虚拟盈利数据表中
+        club_profit_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d 23:59:59.000000'))
+        club_profits = ClubProfitAbroad.objects.filter(created_at=club_profit_date)
+        for profit in club_profits:
+            for club_id in map_club_id_amount:
+                if profit.roomquiz_id != club_id:
+                    continue
+                profit.virtual_profit = map_club_id_amount[club_id]
+                profit.save()
 
         return JsonResponse({'results': []}, status=status.HTTP_200_OK)

@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from quiz.models import Record
+from quiz.models import Quiz, Record, Rule
 
 
 class Command(BaseCommand):
-    help = "fix asia record"
 
     def handle(self, *args, **options):
-        for record in Record.objects.filter(rule__type='8', handicap=''):
-            record.handicap = record.rule.handicap
-            record.save()
+        list = []
+        for quiz in Quiz.objects.all():
+            if Rule.objects.filter(quiz=quiz, type='8').count() >= 2:
+                list.append(quiz.id)
+        print(list)
+
+

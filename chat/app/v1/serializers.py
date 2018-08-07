@@ -100,4 +100,4 @@ class ClubBannerSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = ClubBanner
-        fields = ('active', 'image', 'banner_type', 'param')
+        fields = ('active', 'image', 'banner_type', 'param', 'title')

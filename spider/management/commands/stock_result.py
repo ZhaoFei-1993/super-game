@@ -183,8 +183,8 @@ def ergodic_record(period, dt, date):
         }
         records = Record.objects.filter(periods=period, status='0')
         if len(records) > 0:
-            i += 1
             for record in Record.objects.filter(periods=period, status='0'):
+                i += 1
                 print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
                 if record.play.play_name == str(0):
                     rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
