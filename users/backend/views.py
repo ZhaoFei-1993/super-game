@@ -2071,14 +2071,17 @@ class CoinDividendProposalView(ListCreateAPIView):
 
         decimal = 1000000
 
-        # 判断该日期是否已经设置，若是，则更新数据，若否，则插入数据
-        try:
-            dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
-
-            DividendConfigCoin.objects.filter(dividend_config=dividend_config).delete()
-        except DividendConfig.DoesNotExist:
-            dividend_config = DividendConfig()
-
+        # 判断该日期是否已经设置，若是，则无法再修改
+        dividend_config = DividendConfig.objects.filter(dividend_date=dividend_date).count()
+        if dividend_config > 0:
+            return JsonResponse({'results': {'code': -1, 'message': '设置后无法修改'}}, status=status.HTTP_200_OK)
+        # try:
+        #     dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
+        #
+        #     DividendConfigCoin.objects.filter(dividend_config=dividend_config).delete()
+        # except DividendConfig.DoesNotExist:
+        #     dividend_config = DividendConfig()
+        dividend_config = DividendConfig()
         dividend_config.dividend = Decimal(dividend)
         dividend_config.dividend_date = dividend_date
         dividend_config.save()
