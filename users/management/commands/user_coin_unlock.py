@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from datetime import datetime, timedelta
-from users.models import UserCoinLock, UserMessage, PreReleaseUnlockMessageLog
+from datetime import datetime
+from users.models import UserCoinLock, UserMessage, PreReleaseUnlockMessageLog, UserCoin, CoinDetail, Coin
 from utils.cache import get_cache, set_cache
 import dateparser
 from django.conf import settings
@@ -80,16 +80,31 @@ class Command(BaseCommand):
             user_coin_lock.is_free = True
             user_coin_lock.save()
 
-            amount = str(user_coin_lock.amount)
+            amount = str(int(user_coin_lock.amount))
+            user_id = user_coin_lock.user_id
 
             # 发送解锁信息
             user_message = UserMessage()
             user_message.status = 0
             user_message.content = '亲爱的用户您好，你锁定的' + amount + ' GSG 已到期，重新参与锁定即分红活动，请到个人钱包进行操作。'
             user_message.title = 'GSG锁定到期提醒'
-            user_message.user_id = user_coin_lock.user_id
+            user_message.user_id = user_id
             user_message.message_id = 6
             user_message.save()
+
+            # 将余额返回给用户
+            user_coin = UserCoin.objects.select_for_update().get(user_id=user_id, coin_id=Coin.GSG)
+            user_coin.balance += user_coin_lock.amount
+            user_coin.save()
+
+            # 写入用户余额变更记录表
+            coin_detail = CoinDetail()
+            coin_detail.user_id = user_id
+            coin_detail.coin_name = 'GSG'
+            coin_detail.amount = str(user_coin_lock.amount)
+            coin_detail.rest = user_coin.balance
+            coin_detail.sources = CoinDetail.UNLOCK
+            coin_detail.save()
         else:
             self.pre_release_unlock_message(user_coin_lock)
 

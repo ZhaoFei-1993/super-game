@@ -2603,16 +2603,16 @@ class InvitationMergeView(ListAPIView):
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
         else:
-            if os.access(save_path + '/qrcode_' + str(user.id) + '_new.jpg', os.F_OK):
+            if os.access(save_path + '/qrcode_' + str(user.id) + '_new.png', os.F_OK):
                 base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_new.jpg'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
 
         pygame.init()
         # 设置字体和字号
-        font = pygame.font.SysFont('Microsoft YaHei', 64)
+        font = pygame.font.SysFont('Microsoft YaHei', 60)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        ftext = font.render(invitation_code, True, (255, 255, 255), (116, 68, 11))
+        ftext = font.render(invitation_code, True, (0, 0, 0), (255, 255, 255))
         # 保存图片
         invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -2626,16 +2626,16 @@ class InvitationMergeView(ListAPIView):
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=3,
+            box_size=8,
+            border=1,
         )
         qr.add_data(qr_data)
         qr.make(fit=True)
         qr_img = qr.make_image()
-        base_img.paste(qr_img, (200, 678))
+        base_img.paste(qr_img, (238, 960))
         ftext = Image.open(
             settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
-        base_img.paste(ftext, (310, 1080))  # 插入邀请码
+        base_img.paste(ftext, (300, 915))  # 插入邀请码
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')

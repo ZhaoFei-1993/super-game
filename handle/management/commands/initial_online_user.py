@@ -29,7 +29,7 @@ class Command(BaseCommand, BaseView):
                 "time_nine": " 23:00:00",
                 "time_ten": " 23:59:59"
             }]
-            set_cache(time_key, list)
+            set_cache(time_key, list, 24 * 3600)
         initial_online_user_number = get_cache(number_key)
         if initial_online_user_number == None or initial_online_user_number == '':
             int_quiz_1 = int(random.uniform(6, 8))

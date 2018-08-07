@@ -305,8 +305,21 @@ class Command(BaseCommand):
         if len(options) == 0:
             return False
 
-        secure_random = random.SystemRandom()
-        return secure_random.choice(options)
+        if play_id == 1:
+            choice_a = random.randint(30, 70)
+            choice_b = 100 - choice_a
+            choices = {
+                0: choice_a,
+                1: choice_b,
+            }
+            weight_choice = WeightChoice()
+            weight_choice.set_choices(choices)
+            idx = weight_choice.choice()
+
+            return options[idx]
+        else:
+            secure_random = random.SystemRandom()
+            return secure_random.choice(options)
 
     @staticmethod
     def get_bet_user():

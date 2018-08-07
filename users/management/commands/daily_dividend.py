@@ -32,7 +32,6 @@ class Command(BaseCommand):
         INT = 1500 * 40% / 0.06 = 10000
     """
     help = "每日分红"
-    total_gsg = 1000000000  # GSG总发行量
     dividend_decimal = settings.DIVIDEND_DECIMAL    # 分红精度
 
     total_dividend = 0
@@ -41,6 +40,9 @@ class Command(BaseCommand):
     coin_price = {}
 
     lock_time_delta = 12 * 3600        # 锁定12小时后方可享受分红，单位（秒）
+
+    profit_coin_message = []    # 组成 xxxBTC、xxxINT
+    user_profit_coin_message = []   # 用户分红，组成 xxxBTC、xxxINT
 
     def check_lock_time(self, lock_time):
         """
@@ -58,13 +60,17 @@ class Command(BaseCommand):
         :param amount   锁定数量
         :return:
         """
-        percent = Decimal(amount / self.total_gsg)
+        percent = Decimal(amount / settings.GSG_TOTAL_SUPPLY)
         coin_dividend = {}
         for coin_id in self.dividend_percent:
             coin_percent = Decimal(self.dividend_percent[coin_id])
             dividend = self.total_dividend * coin_percent / Decimal(self.coin_price[coin_id]) * percent
             dividend = int(dividend * self.dividend_decimal) / self.dividend_decimal
-            coin_dividend[coin_id] = '%.6f' % dividend
+
+            user_dividend = '%.7f' % dividend
+            coin_dividend[coin_id] = user_dividend
+
+            self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
 
         return coin_dividend
 
@@ -133,8 +139,21 @@ class Command(BaseCommand):
             percent[ditem.coin_id] = ditem.scale / 100
             price[ditem.coin_id] = ditem.price
 
+            # 盈利情况组成字符串
+            self.profit_coin_message.append(str(ditem['amount']) + self.get_coin_name(ditem.coin_id))
+
         self.dividend_percent = percent
         self.coin_price = price
+
+    def get_profit_msg(self):
+        """
+        获取盈利信息
+        :return:
+        """
+        profit_msg = []
+        for coin_id in self.dividend_percent:
+            coin_name = self.get_coin_name(coin_id)
+            profit_msg.append()
 
     @transaction.atomic()
     def handle(self, *args, **options):
@@ -155,7 +174,6 @@ class Command(BaseCommand):
         dividend_values = []
         coin_detail_values = []
         user_message_values = []
-        message_template = 'GSG' + self.dividend_date + '盈利情况：xxxBTC、xxxETH、xxxINT，根据您GSG锁定数量xxx，获得的分红为xxxBTC、xxxETH、xxxINT，已发放至您的钱包，请查收！'
         for ucl in user_coin_lock:
             created_at = str(datetime.now())
 
@@ -171,6 +189,10 @@ class Command(BaseCommand):
 
             # 获取分红金额
             dividend_coins = self.get_coin_dividend(ucl.amount)
+
+            message_template = 'GSG' + self.dividend_date + '盈利情况：%s，根据您GSG锁定数量%s，获得的分红为%s，已发放至您的钱包，请查收！'
+            message_template = message_template % ('、'.join(self.profit_coin_message), str(ucl.amount), '、'.join(self.user_profit_coin_message))
+
             for coin_id in dividend_coins:
                 dividend_amount = str(dividend_coins[coin_id])
 
@@ -209,9 +231,10 @@ class Command(BaseCommand):
                     'created_at': created_at,
                 })
 
-        with connection.cursor() as cursor:
-            cursor.execute(make_insert_sql('users_dividend', dividend_values))
-            cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
-            cursor.execute(make_insert_sql('users_usermessage', user_message_values))
+        if len(dividend_values) > 0:
+            with connection.cursor() as cursor:
+                cursor.execute(make_insert_sql('users_dividend', dividend_values))
+                cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
+                cursor.execute(make_insert_sql('users_usermessage', user_message_values))
 
-        self.stdout.write(self.style.SUCCESS('-----分红完成-----'))
+        self.stdout.write(self.style.SUCCESS('-----执行完成-----'))
