@@ -2110,7 +2110,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             map_club_id_amount[map_coin_id_club_id[coin_id]] = amount
 
         # 写入虚拟盈利数据表中
-        club_profit_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d 23:59:59.000000'))
+        club_profit_date = dateparser.parse(datetime.strftime(datetime.now() - timedelta(1), '%Y-%m-%d 23:59:59.000000'))
         club_profits = ClubProfitAbroad.objects.filter(created_at=club_profit_date)
         for profit in club_profits:
             for club_id in map_club_id_amount:
