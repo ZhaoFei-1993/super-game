@@ -80,7 +80,7 @@ class Command(BaseCommand):
             user_coin_lock.is_free = True
             user_coin_lock.save()
 
-            amount = str(user_coin_lock.amount)
+            amount = str(int(user_coin_lock.amount))
 
             # 发送解锁信息
             user_message = UserMessage()
