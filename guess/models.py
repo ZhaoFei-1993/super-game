@@ -197,6 +197,8 @@ class Record(models.Model):
     status = models.CharField(verbose_name="下注状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+    open_prize_time = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
+    is_distribution = models.BooleanField(verbose_name="是否分配过奖金", default=False)
 
     class Meta:
         ordering = ['-id']
