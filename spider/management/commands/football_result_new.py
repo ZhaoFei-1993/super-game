@@ -403,6 +403,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         # 初始化sql语句
         # 插入coin_detail表
         sql = make_insert_sql('users_coindetail', coin_detail_list)
+        # print(sql)
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
@@ -429,6 +430,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 cursor.execute(sql)
 
         # 更新record状态
+        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         update_record_right = 'earn_coin=VALUES(earn_coin),' \
                               'type=\'{type}\', is_distribution=\'1\', ' \
                               'open_prize_time=\'{open_prize_time}\''.format(type=Record.CORRECT,
@@ -705,8 +707,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('进入脚本')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
-        print('----------------------------------------')
-        print('delay delay delay delay')
         print(Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                   category__parent_id=2).exists())
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
@@ -730,7 +730,7 @@ class Command(BaseCommand):
         if quizs.exists():
             print(len(list(quizs)))
             print(list(quizs))
-            for quiz in quizs:
+            for quiz in list(quizs)[:10]:
                 print(quiz.match_flag)
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,

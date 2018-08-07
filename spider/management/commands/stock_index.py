@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from guess.models import Index, Periods, Index_day
-from .stock_result import ergodic_record, newobject
+from .stock_result_new import ergodic_record, newobject
 import requests
 import datetime
 from utils.cache import *
