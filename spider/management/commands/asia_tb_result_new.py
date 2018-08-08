@@ -105,10 +105,11 @@ def asia_result(quiz, records_asia):
     user_message_list = []
     user_coin_dic = {}
     i = 0
+    print('共 ', len(records_asia), ' 条投注记录')
     for record in records_asia:
-        i += 1
-        print('正在处理record_id为: ', record.id, ', 共 ', len(records_asia), '条, 当前第 ', i, ' 条 (亚盘)')
-        cache_club_value = get_club_info(record.roomquiz_id)
+        # i += 1
+        # print('正在处理record_id为: ', record.id, ', 共 ', len(records_asia), '条, 当前第 ', i, ' 条 (亚盘)')
+        cache_club_value = get_club_info()
         coin_id = cache_club_value[record.roomquiz_id]['coin_id']
         club_name = cache_club_value[record.roomquiz_id]['club_name']
         club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']
