@@ -352,6 +352,30 @@ class UserRegister(object):
                     coin_bankruptcy.rest = Decimal(int_user_coin.balance)
                     coin_bankruptcy.sources = 4
                     coin_bankruptcy.save()
+
+        # 注册送HAND币
+        if user.is_money == 0 and user.is_robot == 0:
+            user_money = 10000
+            try:
+                user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+            except Exception:
+                return 0
+            user_balance.balance += user_money
+            user_balance.save()
+            coin_detail = CoinDetail()
+            coin_detail.user = user
+            coin_detail.coin_name = 'HAND'
+            coin_detail.amount = '+' + str(user_money)
+            coin_detail.rest = Decimal(user_balance.balance)
+            coin_detail.sources = 6
+            coin_detail.save()
+            user.is_money = 1
+            user.save()
+            r_msg = UserMessage()  # 注册送hand消息
+            r_msg.status = 0
+            r_msg.user = user
+            r_msg.message_id = 5
+            r_msg.save()
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
