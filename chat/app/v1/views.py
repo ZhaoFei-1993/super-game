@@ -6,6 +6,7 @@ from chat.models import Club, ClubRule, ClubBanner
 from api.settings import MEDIA_DOMAIN_HOST
 from base import code as error_code
 from datetime import datetime
+from users.models import UserMessage, Message
 from base.exceptions import ParamErrorException
 from django.db.models import Q
 from utils.functions import sign_confirmation, language_switch, message_hints
@@ -37,6 +38,25 @@ class ClublistView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
         user = request.user
+
+        # 发消息
+        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+        for i in message:
+            message_id = i.id
+            user_message = UserMessage.objects.filter(message=message_id, user=user.id).count()
+            if user_message == 0:
+                usermessage = UserMessage()
+                usermessage.user = user
+                usermessage.message = i
+                usermessage.save()
+        is_usermessage = UserMessage.objects.filter(user_id=user.id, message_id=12).count()
+        if is_usermessage == 0:
+            user_message = UserMessage()
+            user_message.status = 0
+            user_message.user = user
+            user_message.message_id = 12
+            user_message.save()
+
         is_sign = sign_confirmation(user.id)  # 是否签到
         is_message = message_hints(user.id)  # 是否有未读消息
         if user.is_block == 1:

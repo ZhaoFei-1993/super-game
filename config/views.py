@@ -132,9 +132,9 @@ class VersionView(ListCreateAPIView, RetrieveUpdateDestroyAPIView):
         config.mobile_plugin = mobile_plugin
         date = datetime.now().strftime('%Y%m%d')
         config.upload_url = ''.join([MEDIA_DOMAIN_HOST, "/apps/", mobile_type, '/', date + '_' + files])
-        if type ==1:
-            plist_url=genarate_plist(version, config.upload_url)
-            config.plist_url=plist_url
+        if type == 1:
+            plist_url = genarate_plist(version, config.upload_url)
+            config.plist_url = plist_url
         config.save()
         return self.response({"code": 0})
 
