@@ -45,7 +45,7 @@ def size_result(record):
     玩法：大小
     """
     # 获取币信息
-    cache_club_value = get_club_info(record.club.id)
+    cache_club_value = get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -73,7 +73,7 @@ def points_result(record):
     """
     玩法：点数
     """
-    cache_club_value = get_club_info(record.club.id)
+    cache_club_value = get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -102,7 +102,7 @@ def pair_result(record):
     """
     玩法：对⼦
     """
-    cache_club_value = get_club_info(record.club.id)
+    cache_club_value = get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -130,7 +130,7 @@ def status_result(record, win_sum_dic, lose_sum_dic):
     """
     玩法：涨跌
     """
-    cache_club_value = get_club_info(record.club.id)
+    cache_club_value = get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']

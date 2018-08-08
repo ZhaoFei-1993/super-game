@@ -14,6 +14,8 @@ def get_coin_id(coin_type):
         coin_id = Coin.HAND
     elif coin_type == 'INT':
         coin_id = Coin.INT
+    elif coin_type == 'GSG':
+        coin_id = Coin.GSG
 
     return coin_id
 

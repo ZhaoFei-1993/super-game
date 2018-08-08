@@ -177,6 +177,7 @@ def ergodic_record(period, dt, date):
             period.save()
 
         # 开始遍历record表
+        print(Record.objects.filter(periods=period, status='0'))
         i = 0
         rule_dic = {
             '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
