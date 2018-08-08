@@ -178,6 +178,20 @@ class CoinPrice(models.Model):
 
 
 @reversion.register()
+class CoinPriceZero(models.Model):
+    coin_name = models.CharField(verbose_name="货币名称", max_length=255, default="")
+    platform_name = models.CharField(verbose_name="平台名称", max_length=20, default="")
+    price = models.DecimalField(verbose_name="平台价格", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    price_usd = models.DecimalField(verbose_name="平台价格", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    updated_at = models.DateTimeField(verbose_name="更新时间", auto_now_add=True)
+    updated_at_true = models.DateTimeField(verbose_name="真正更新时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "货币平台0点价格表"
+
+
+@reversion.register()
 class CoinOutServiceCharge(models.Model):
     value = models.DecimalField(verbose_name="比例", max_digits=6, decimal_places=4, default=0.0000)
     coin_out = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name='coin_out',
