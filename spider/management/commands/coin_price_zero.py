@@ -6,12 +6,13 @@ from users.models import CoinPrice, CoinPriceZero
 import json
 import datetime
 import time
+from utils.cache import *
 
 url_CNY = 'https://api.coinmarketcap.com/v1/ticker/?convert=CNY&limit=0'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-coin_list = ['BTC', 'HAND', 'EOS', 'INT', 'ETH', 'USDT']
+coin_list = ['BTC', 'EOS', 'INT', 'ETH', 'USDT']
 
 
 def trunc(f, n):
@@ -32,7 +33,11 @@ class Command(BaseCommand):
                                        int(date_ymd.split('-')[2]), 0, 0, 0)
         end_with = datetime.datetime(int(date_ymd.split('-')[0]), int(date_ymd.split('-')[1]),
                                      int(date_ymd.split('-')[2]), 23, 59, 59)
-        if CoinPriceZero.objects.filter(updated_at__range=(start_with, end_with)).count() == len(coin_list):
+        cache_key = 'coin_price_' + date_ymd
+        if get_cache(cache_key) is None:
+            set_cache(cache_key, {}, 24 * 60 * 60)
+        cache_value = get_cache(cache_key)
+        if len(cache_value) == len(coin_list):
             print('无需更新')
         else:
             for coin_name in coin_list:
@@ -60,4 +65,13 @@ class Command(BaseCommand):
                                 coin_price.updated_at = update_time
                                 coin_price.updated_at_true = last_updated
                                 coin_price.save()
+
+                                cache_value.update({
+                                    coin_name: {
+                                        'price': float(trunc(price, 4)),
+                                        'price_usd': float(trunc(price_usd, 4))
+                                    }
+                                })
+                                set_cache(cache_key, cache_value, 24 * 60 * 60)
+
                                 print(coin_name, '价格已经变更')
