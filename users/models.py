@@ -338,7 +338,7 @@ class UserCoinLock(models.Model):
                                  default=0.000000000000000000)
     total_amount= models.DecimalField(verbose_name="锁定总金额(不变)", max_digits=32, decimal_places=18,
                                  default=0.000000000000000000)
-    end_time = models.DateTimeField(verbose_name="锁定结束时间", auto_now_add=True)
+    end_time = models.DateTimeField(verbose_name="锁定结束时间")
     is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
     is_divided = models.BooleanField(verbose_name="是否已分红", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
