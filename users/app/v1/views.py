@@ -590,13 +590,6 @@ class InfoView(ListAPIView):
                 usermessage.user = user
                 usermessage.message = i
                 usermessage.save()
-        is_usermessage = UserMessage.objects.filter(user_id=user_id, message_id=12).count()
-        if is_usermessage == 0:
-            user_message = UserMessage()
-            user_message.status = 0
-            user_message.user = user
-            user_message.message_id = 12
-            user_message.save()
 
         # 创建usercoin
         coins = Coin.objects.filter(is_disabled=False)
