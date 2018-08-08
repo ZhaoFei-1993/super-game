@@ -46,8 +46,6 @@ def size_result(record):
     """
     # 获取币信息
     cache_club_value = get_club_info()
-    print(type(cache_club_value))
-    print(cache_club_value)
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
