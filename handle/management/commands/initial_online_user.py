@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import random
 from base.app import BaseView
 from datetime import datetime
-from utils.cache import get_cache, set_cache, delete_cache
+from utils.cache import get_cache, set_cache
 
 
 class Command(BaseCommand, BaseView):
@@ -15,20 +15,23 @@ class Command(BaseCommand, BaseView):
         number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
         initial_online_user_time = get_cache(time_key)
-        if initial_online_user_time is None or initial_online_user_time == "":
-            list = [{
-                "time_one": " 00:00:00",
-                "time_two": " 08:59:59",
-                "time_three": " 09:00:00",
-                "time_four": " 11:59:59",
-                "time_five": " 12:00:00",
-                "time_six": " 19:59:59",
-                "time_seven": " 20:00:00",
-                "time_eight": " 22:59:59",
-                "time_nine": " 23:00:00",
-                "time_ten": " 23:59:59"
-            }]
-            set_cache(time_key, list, 24 * 3600)
+        if initial_online_user_time is not None:
+            raise CommandError(str(day) + '初始化人数已经设置')
+
+        list = [{
+            "time_one": " 00:00:00",
+            "time_two": " 08:59:59",
+            "time_three": " 09:00:00",
+            "time_four": " 11:59:59",
+            "time_five": " 12:00:00",
+            "time_six": " 19:59:59",
+            "time_seven": " 20:00:00",
+            "time_eight": " 22:59:59",
+            "time_nine": " 23:00:00",
+            "time_ten": " 23:59:59"
+        }]
+        set_cache(time_key, list, 24 * 3600)
+
         initial_online_user_number = get_cache(number_key)
         if initial_online_user_number is None or initial_online_user_number == '':
             int_quiz_1 = int(random.uniform(6, 8))
@@ -195,3 +198,5 @@ class Command(BaseCommand, BaseView):
 
             }]
             set_cache(number_key, data, 24 * 3600)
+
+            print('初始化人数设置成功')
