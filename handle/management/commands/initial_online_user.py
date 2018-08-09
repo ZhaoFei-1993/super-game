@@ -14,9 +14,8 @@ class Command(BaseCommand, BaseView):
         day = datetime.now().strftime('%Y-%m-%d')
         number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
-        # delete_cache(number_key)
         initial_online_user_time = get_cache(time_key)
-        if initial_online_user_time == None or initial_online_user_time == "":
+        if initial_online_user_time is None or initial_online_user_time == "":
             list = [{
                 "time_one": " 00:00:00",
                 "time_two": " 08:59:59",
@@ -31,7 +30,7 @@ class Command(BaseCommand, BaseView):
             }]
             set_cache(time_key, list, 24 * 3600)
         initial_online_user_number = get_cache(number_key)
-        if initial_online_user_number == None or initial_online_user_number == '':
+        if initial_online_user_number is None or initial_online_user_number == '':
             int_quiz_1 = int(random.uniform(6, 8))
             int_guess_1 = int(random.uniform(5, 8))
             usdt_quiz_1 = int(random.uniform(30, 40))
