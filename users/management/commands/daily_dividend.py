@@ -126,7 +126,7 @@ class Command(BaseCommand):
         dividend_date = dateparser.parse(date_today)
 
         # 判断当天是否已经分红
-        if get_cache(date_today) is not None:
+        if get_cache(self.key_daily_dividend_datetime + date_today) is not None:
             raise CommandError(date_today + '已经分红')
 
         try:
