@@ -131,7 +131,8 @@ class Command(BaseCommand):
         dividend_config_coin = DividendConfigCoin.objects.filter(dividend_config=dividend_config)
 
         self.total_dividend = dividend_config.dividend      # 分红总额
-        self.dividend_date = dividend_config.dividend_date - timedelta(1)  # 分红日期
+        # self.dividend_date = dividend_config.dividend_date - timedelta(1)  # 分红日期
+        self.dividend_date = dividend_config.dividend_date  # 分红日期
 
         percent = {}
         price = {}
@@ -158,11 +159,8 @@ class Command(BaseCommand):
 
         # 获取已分红数据
         dividend_datetime = self.get_dividended_datetime(user_coin_lock)
-        print('dividend_datetime = ', dividend_datetime)
 
         self.dividend_date = self.dividend_date.strftime('%Y-%m-%d')
-
-        print('self.dividend_date = ', self.dividend_date)
 
         dividend_values = []
         coin_detail_values = []
