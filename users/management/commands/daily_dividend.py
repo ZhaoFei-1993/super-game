@@ -145,16 +145,6 @@ class Command(BaseCommand):
         self.dividend_percent = percent
         self.coin_price = price
 
-    def get_profit_msg(self):
-        """
-        获取盈利信息
-        :return:
-        """
-        profit_msg = []
-        for coin_id in self.dividend_percent:
-            coin_name = self.get_coin_name(coin_id)
-            profit_msg.append()
-
     @transaction.atomic()
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('-----每日分红脚本开始运行-----'))
@@ -168,8 +158,11 @@ class Command(BaseCommand):
 
         # 获取已分红数据
         dividend_datetime = self.get_dividended_datetime(user_coin_lock)
+        print('dividend_datetime = ', dividend_datetime)
 
         self.dividend_date = self.dividend_date.strftime('%Y-%m-%d')
+
+        print('self.dividend_date = ', self.dividend_date)
 
         dividend_values = []
         coin_detail_values = []
