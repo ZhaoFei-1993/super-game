@@ -2047,7 +2047,7 @@ class CoinTypeView(CreateAPIView, ListAPIView):
 
 class ForgetPasswordView(ListAPIView):
     """
-    修改密码
+    忘记密码
     """
 
     def post(self, request):
@@ -2092,6 +2092,49 @@ class ForgetPasswordView(ListAPIView):
         # u_mes.user = userinfo
         # u_mes.message_id = 7  # 修改密码
         # u_mes.save()
+
+        content = {'code': 0}
+        return self.response(content)
+
+
+class ChangePasswordView(ListAPIView):
+    """
+    修改密码
+    """
+    permission_classes = (LoginRequired,)
+
+    def post(self, request):
+        userinfo = request.user
+        value = value_judge(request, "password", "code")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if 'area_code' not in request.data:
+            area_code = 86
+        else:
+            area_code = request.data.get('area_code')
+        password = request.data.get('password')
+
+        # 获取该手机号码最后一条发短信记录
+        sms = Sms.objects.filter(area_code=userinfo.area_code, telephone=userinfo.telephone).order_by('-id').first()
+        if (sms is None) or (sms.code != request.data.get('code')):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+
+        if int(sms.type) != 5:
+            return self.response({'code': error_code.API_40106_SMS_PARAMETER})
+
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
+
+        if len(password) < 6:
+            raise ParamErrorException(error_code=error_code.API_20802_PASS_CODE_LEN_ERROR)
+        if "password" not in request.data:
+            raise ParamErrorException(error_code=error_code.API_20801_PASS_CODE_ERROR)
+
+        userinfo.set_password(password)
+        userinfo.save()
 
         content = {'code': 0}
         return self.response(content)

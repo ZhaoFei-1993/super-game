@@ -38,8 +38,8 @@ class Command(BaseCommand, BaseView):
             usdt_guess_1 = int(random.uniform(15, 20))
             btc_quiz_1 = int(random.uniform(10, 15))
             btc_guess_1 = int(random.uniform(5, 8))
-            hand_quiz_1 = int(random.uniform(160, 200))
-            hand_guess_1 = int(random.uniform(80, 110))
+            hand_quiz_1 = int(random.uniform(300, 400))
+            hand_guess_1 = int(random.uniform(180, 230))
             eth_quiz_1 = int(random.uniform(35, 40))
             eth_guess_1 = int(random.uniform(20, 25))  # 00.00 - 09.00
             int_quiz_2 = int(random.uniform(20, 30))
@@ -48,8 +48,8 @@ class Command(BaseCommand, BaseView):
             usdt_guess_2 = int(random.uniform(35, 45))
             btc_quiz_2 = int(random.uniform(20, 25))
             btc_guess_2 = int(random.uniform(13, 16))
-            hand_quiz_2 = int(random.uniform(250, 300))
-            hand_guess_2 = int(random.uniform(150, 180))
+            hand_quiz_2 = int(random.uniform(380, 450))
+            hand_guess_2 = int(random.uniform(250, 300))
             eth_quiz_2 = int(random.uniform(50, 60))
             eth_guess_2 = int(random.uniform(30, 35))  # 09.00 - 12.00
             int_quiz_3 = int(random.uniform(6, 8))
@@ -58,8 +58,8 @@ class Command(BaseCommand, BaseView):
             usdt_guess_3 = int(random.uniform(15, 20))
             btc_quiz_3 = int(random.uniform(15, 19))
             btc_guess_3 = int(random.uniform(8, 13))
-            hand_quiz_3 = int(random.uniform(160, 200))
-            hand_guess_3 = int(random.uniform(80, 110))
+            hand_quiz_3 = int(random.uniform(300, 400))
+            hand_guess_3 = int(random.uniform(180, 230))
             eth_quiz_3 = int(random.uniform(35, 40))
             eth_guess_3 = int(random.uniform(20, 25))  # 12.00 - 20.00
             int_quiz_4 = int(random.uniform(40, 50))
@@ -68,8 +68,8 @@ class Command(BaseCommand, BaseView):
             usdt_guess_4 = int(random.uniform(60, 80))
             btc_quiz_4 = int(random.uniform(38, 45))
             btc_guess_4 = int(random.uniform(20, 25))
-            hand_quiz_4 = int(random.uniform(400, 500))
-            hand_guess_4 = int(random.uniform(250, 300))
+            hand_quiz_4 = int(random.uniform(700, 800))
+            hand_guess_4 = int(random.uniform(350, 450))
             eth_quiz_4 = int(random.uniform(70, 80))
             eth_guess_4 = int(random.uniform(45, 50))  # 20.00 - 23.00
             int_quiz_5 = int(random.uniform(20, 30))
@@ -78,8 +78,8 @@ class Command(BaseCommand, BaseView):
             usdt_guess_5 = int(random.uniform(35, 45))
             btc_quiz_5 = int(random.uniform(25, 30))
             btc_guess_5 = int(random.uniform(16, 21))
-            hand_quiz_5 = int(random.uniform(160, 200))
-            hand_guess_5 = int(random.uniform(80, 110))
+            hand_quiz_5 = int(random.uniform(380, 450))
+            hand_guess_5 = int(random.uniform(250, 300))
             eth_quiz_5 = int(random.uniform(35, 40))
             eth_guess_5 = int(random.uniform(20, 25))  # 23.00 - 00.00
             data = [{
