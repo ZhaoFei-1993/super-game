@@ -428,8 +428,8 @@ class UserMessage(models.Model):
     user = models.ForeignKey(User, verbose_name="收件人ID", on_delete=models.CASCADE)
     title = models.CharField(verbose_name="消息标题", max_length=100, default="")
     title_en = models.CharField(verbose_name="英文消息标题", max_length=100, default="")
-    content = models.CharField(verbose_name="消息内容", max_length=500, default="")
-    content_en = models.CharField(verbose_name="英文消息内容", max_length=500, default="")
+    content = models.CharField(verbose_name="消息内容", max_length=800, default="")
+    content_en = models.CharField(verbose_name="英文消息内容", max_length=800, default="")
     message = models.ForeignKey(Message, verbose_name="消息内容表外键", on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
