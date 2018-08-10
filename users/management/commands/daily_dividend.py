@@ -138,6 +138,7 @@ class Command(BaseCommand):
         for ditem in dividend_config_coin:
             percent[ditem.coin_id] = ditem.scale / 100
             price[ditem.coin_id] = ditem.price
+            print('ditem = ', ditem)
 
             # 盈利情况组成字符串
             self.profit_coin_message.append(str(ditem['amount']) + self.get_coin_name(ditem.coin_id))
