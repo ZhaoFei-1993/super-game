@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from users.models import Coin, UserCoin, UserCoinLock, Dividend, CoinDetail, DividendConfig, DividendConfigCoin
 import dateparser
 from decimal import Decimal
-from utils.functions import make_insert_sql
+from utils.functions import make_insert_sql, get_cache, set_cache
 from django.conf import settings
 
 
@@ -32,6 +32,7 @@ class Command(BaseCommand):
         INT = 1500 * 40% / 0.06 = 10000
     """
     help = "每日分红"
+    key_daily_dividend_datetime = 'daily_dividend_'
     dividend_decimal = settings.DIVIDEND_DECIMAL    # 分红精度
 
     total_dividend = 0
@@ -121,7 +122,12 @@ class Command(BaseCommand):
         获取分红配置
         :return:
         """
-        dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        date_today = datetime.strftime(datetime.now(), '%Y-%m-%d')
+        dividend_date = dateparser.parse(date_today)
+
+        # 判断当天是否已经分红
+        if get_cache(date_today) is not None:
+            raise CommandError(date_today + '已经分红')
 
         try:
             dividend_config = DividendConfig.objects.get(dividend_date=dividend_date)
@@ -228,4 +234,5 @@ class Command(BaseCommand):
                 cursor.execute(make_insert_sql('users_coindetail', coin_detail_values))
                 cursor.execute(make_insert_sql('users_usermessage', user_message_values))
 
+        set_cache(self.key_daily_dividend_datetime + self.dividend_date, '1', 86400)
         self.stdout.write(self.style.SUCCESS('-----执行完成-----'))
