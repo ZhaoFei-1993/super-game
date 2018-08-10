@@ -1423,13 +1423,12 @@ class AssetLock(CreateAPIView):
         ulcoin = UserCoinLock()
         print('amounts = ', amounts, ' type is ', type(amounts))
         print('coin_configs[0] = ', coin_configs[0].__dict__)
+        created_at = datetime.now()
         ulcoin.user = userinfo
         ulcoin.amount = amounts
         ulcoin.coin_lock = coin_configs[0]
-        ulcoin.save()
-        print('ulcoin.created_at = ', ulcoin.created_at)
-        print('ulcoin.end_time = ', ulcoin.created_at + timedelta(days=locked_days))
-        ulcoin.end_time = ulcoin.created_at + timedelta(days=locked_days)
+        ulcoin.created_at = created_at
+        ulcoin.end_time = created_at + timedelta(days=locked_days)
         ulcoin.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
