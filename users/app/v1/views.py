@@ -1407,7 +1407,7 @@ class AssetLock(CreateAPIView):
         amounts = Decimal(str(request.data.get('amounts')))
         locked_days = int(request.data.get('locked_days'))
         # coin_id = int(request.data.get('coin_id'))
-        coin_id = 6
+        coin_id = Coin.GSG
         try:
             coin = Coin.objects.get(id=coin_id)
             user_coin = UserCoin.objects.select_for_update().get(user_id=userid, coin_id=coin_id)
@@ -1421,11 +1421,14 @@ class AssetLock(CreateAPIView):
         user_coin.balance -= amounts
         user_coin.save()
         ulcoin = UserCoinLock()
+        print('amounts = ', amounts, ' type is ', type(amounts))
+        print('coin_configs[0] = ', coin_configs[0].__dict__)
+        created_at = datetime.now()
         ulcoin.user = userinfo
         ulcoin.amount = amounts
         ulcoin.coin_lock = coin_configs[0]
-        ulcoin.save()
-        ulcoin.end_time = ulcoin.created_at + timedelta(days=locked_days)
+        ulcoin.created_at = created_at
+        ulcoin.end_time = created_at + timedelta(days=locked_days)
         ulcoin.save()
         coin_detail = CoinDetail()
         coin_detail.user = userinfo
