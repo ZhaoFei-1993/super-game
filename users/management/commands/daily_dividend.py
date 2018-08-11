@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, connection
+from django.db.models import Sum
 from datetime import datetime, timedelta
 from users.models import Coin, UserCoin, UserCoinLock, Dividend, CoinDetail, DividendConfig, DividendConfigCoin
 import dateparser
@@ -33,17 +34,18 @@ class Command(BaseCommand):
     """
     help = "每日分红"
     key_daily_dividend_datetime = 'daily_dividend_'
-    dividend_decimal = settings.DIVIDEND_DECIMAL    # 分红精度
+    dividend_decimal = settings.DIVIDEND_DECIMAL  # 分红精度
 
+    dividend_id = 0
     total_dividend = 0
     dividend_date = ''
     dividend_percent = {}
     coin_price = {}
 
-    lock_time_delta = 12 * 3600        # 锁定12小时后方可享受分红，单位（秒）
+    lock_time_delta = 12 * 3600  # 锁定12小时后方可享受分红，单位（秒）
 
-    profit_coin_message = []    # 组成 xxxBTC、xxxINT
-    user_profit_coin_message = []   # 用户分红，组成 xxxBTC、xxxINT
+    profit_coin_message = []  # 组成 xxxBTC、xxxINT
+    user_profit_coin_message = []  # 用户分红，组成 xxxBTC、xxxINT
 
     def check_lock_time(self, lock_time):
         """
@@ -54,14 +56,29 @@ class Command(BaseCommand):
         end_dt = datetime.now().strftime("%Y-%m-%d 23:59:59")
         return lock_time + timedelta(seconds=self.lock_time_delta) <= dateparser.parse(end_dt)
 
+    @staticmethod
+    def get_total_coin_lock():
+        """
+        获取平台GSG总锁定量
+        :return:
+        """
+        lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(lock_sum=Sum('amount'))
+
+        if lock_sum['lock_sum'] is None:
+            total_coin_lock = 0
+        else:
+            total_coin_lock = lock_sum['lock_sum']
+
+        return total_coin_lock
+
     def get_coin_dividend(self, amount):
         """
         获取每种币用户可分得数量
-        公式：( 分红金额 * 币种比例 / 币种价格 ) * ( 用户锁定量 / GSG总发行量 )
+        公式：( 分红金额 * 币种比例 / 币种价格 ) * ( 用户锁定量 / GSG总锁定量 )
         :param amount   锁定数量
         :return:
         """
-        percent = Decimal(amount / settings.GSG_TOTAL_SUPPLY)
+        percent = Decimal(amount / self.get_total_coin_lock())
         coin_dividend = {}
         for coin_id in self.dividend_percent:
             coin_percent = Decimal(self.dividend_percent[coin_id])
@@ -136,7 +153,8 @@ class Command(BaseCommand):
 
         dividend_config_coin = DividendConfigCoin.objects.filter(dividend_config=dividend_config)
 
-        self.total_dividend = dividend_config.dividend      # 分红总额
+        self.dividend_id = dividend_config.id
+        self.total_dividend = dividend_config.dividend  # 分红总额
         # self.dividend_date = dividend_config.dividend_date - timedelta(1)  # 分红日期
         self.dividend_date = dividend_config.dividend_date  # 分红日期
 
@@ -147,7 +165,7 @@ class Command(BaseCommand):
             price[ditem.coin_id] = ditem.price
 
             # 盈利情况组成字符串
-            self.profit_coin_message.append(str(ditem.amount) + self.get_coin_name(ditem.coin_id))
+            self.profit_coin_message.append(str(ditem.revenue) + self.get_coin_name(ditem.coin_id))
 
         self.dividend_percent = percent
         self.coin_price = price
@@ -188,7 +206,8 @@ class Command(BaseCommand):
             dividend_coins = self.get_coin_dividend(ucl.amount)
 
             message_template = 'GSG' + self.dividend_date + '盈利情况：%s，根据您GSG锁定数量%s，获得的分红为%s，已发放至您的钱包，请查收！'
-            message_template = message_template % ('、'.join(self.profit_coin_message), str(ucl.amount), '、'.join(self.user_profit_coin_message))
+            message_template = message_template % (
+            '、'.join(self.profit_coin_message), str(int(ucl.amount)), '、'.join(self.user_profit_coin_message))
 
             for coin_id in dividend_coins:
                 dividend_amount = str(dividend_coins[coin_id])
@@ -202,6 +221,7 @@ class Command(BaseCommand):
                     'coin_id': str(coin_id),
                     'user_lock_id': str(ucl.id),
                     'divide': dividend_amount,
+                    'divide_config_id': str(self.dividend_id),
                     'created_at': created_at,
                 })
 
@@ -216,17 +236,17 @@ class Command(BaseCommand):
                     'is_delete': str(0),
                 })
 
-                # 发送分红消息
-                user_message_values.append({
-                    'status': '0',
-                    'user_id': str(ucl.user_id),
-                    'message_id': '6',
-                    'title': str(self.dividend_date) + '锁定分红情况',
-                    'title_en': '',
-                    'content': message_template,
-                    'content_en': '',
-                    'created_at': created_at,
-                })
+            # 发送分红消息
+            user_message_values.append({
+                'status': '0',
+                'user_id': str(ucl.user_id),
+                'message_id': '6',
+                'title': str(self.dividend_date) + '锁定分红情况',
+                'title_en': '',
+                'content': message_template,
+                'content_en': '',
+                'created_at': created_at,
+            })
 
         if len(dividend_values) > 0:
             with connection.cursor() as cursor:

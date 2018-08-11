@@ -14,7 +14,7 @@ from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
     LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
-    UserMessage, IntInvitation, Message, CoinPrice, DividendConfig, DividendConfigCoin
+    UserMessage, IntInvitation, Message, CoinPrice, DividendConfig, DividendConfigCoin, Dividend
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
@@ -34,6 +34,7 @@ from quiz.models import Record, Quiz, ClubProfitAbroad
 import numpy as np
 from chat.models import Club
 from urllib.parse import quote_plus
+from utils.functions import get_cache
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -1900,42 +1901,60 @@ class CoinDividendProposalView(ListCreateAPIView):
     锁定分红-分红方案
     """
     @staticmethod
-    def get_coin_id_by_name(coin_name):
+    def get_total_coin_lock():
         """
-        获取货币ID
-        :param  coin_name
+        获取平台GSG总锁定量
         :return:
         """
-        coin_id = 0
-        if coin_name == 'BTC':
-            coin_id = Coin.BTC
-        elif coin_name == 'ETH':
-            coin_id = Coin.ETH
-        elif coin_name == 'INT':
-            coin_id = Coin.INT
-        elif coin_name == 'USDT':
-            coin_id = Coin.USDT
+        lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(lock_sum=Sum('amount'))
 
-        return coin_id
+        if lock_sum['lock_sum'] is None:
+            total_coin_lock = 0
+        else:
+            total_coin_lock = lock_sum['lock_sum']
+
+        return total_coin_lock
 
     @staticmethod
-    def get_coin_name_by_id(coin_id):
+    def get_coin_dividend(dividend_price, user_coin_lock_sum):
         """
-        获取货币名称
-        :param  coin_id
+        每GSG实际分红：每种币总分红 / GSG锁定总量
+        :param  dividend_price
+        :param  user_coin_lock_sum
         :return:
         """
-        coin_name = ''
-        if coin_id == Coin.BTC:
-            coin_name = 'BTC'
-        elif coin_id == Coin.ETH:
-            coin_name = 'ETH'
-        elif coin_id == Coin.USDT:
-            coin_name = 'USDT'
-        elif coin_id == Coin.INT:
-            coin_name = 'INT'
+        if user_coin_lock_sum == 0:
+            return 0
 
-        return coin_name
+        return float('%.7f' % (float(dividend_price) / user_coin_lock_sum))
+
+        # gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(
+        #     settings.DIVIDEND_DECIMAL)
+        # return float('%.7f' % gsg_coin_dividend)
+
+    @staticmethod
+    def get_coin_titular_dividend(dividend_price):
+        """
+        每GSG名义分红：实际总分红 / 10亿
+        :param  dividend_price  每种币实际总分红
+        :return:
+        """
+        return float('%.7f' % (float(dividend_price) / settings.GSG_TOTAL_SUPPLY))
+        # coin_dividend = self.get_coin_dividend(amount, user_coin_lock_sum)
+        #
+        # coin_titular_dividend = int((coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(
+        #         settings.DIVIDEND_DECIMAL)) / float(settings.DIVIDEND_DECIMAL)
+        # return float('%.7f' % coin_titular_dividend)
+
+    @staticmethod
+    def get_revenue(dividend_price, user_coin_lock_sum):
+        """
+        计算盈收数值
+        :param  dividend_price      每种币实际总分红
+        :param  user_coin_lock_sum  用户GSG总锁定量
+        :return:
+        """
+        return float(dividend_price) * settings.GSG_TOTAL_SUPPLY / user_coin_lock_sum
 
     def list(self, request, *args, **kwargs):
         if 'total_dividend' not in request.GET:
@@ -1966,13 +1985,8 @@ class CoinDividendProposalView(ListCreateAPIView):
         dividend_decimal = settings.DIVIDEND_DECIMAL  # 分红精度
         coin_ids = [Coin.BTC, Coin.ETH, Coin.INT, Coin.USDT]
 
-        # 获取当前货币价格
-        coin_price = CoinPrice.objects.all()
-        map_coin_id_price = {}
-        if len(coin_price) == 0:
-            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
-        for cprice in coin_price:
-            map_coin_id_price[self.get_coin_id_by_name(cprice.coin_name)] = float(cprice.price)
+        # 获取货币价格
+        coin_price = get_cache('coin_price_' + datetime.now().strftime('%Y-%m-%d'))
 
         clubs = Club.objects.filter(is_dissolve=False, coin_id__in=coin_ids)
 
@@ -1987,6 +2001,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         idx = 0
         for club in clubs:
             coin_id = club.coin_id
+            coin_name = Coin.objects.get_coin_name_by_id(coin_id)
             # 排除HAND俱乐部
             if coin_id == Coin.HAND:
                 continue
@@ -1997,46 +2012,45 @@ class CoinDividendProposalView(ListCreateAPIView):
                 coin_scale_percent = scale_coin[idx] / 100      # 占有百分比
 
             scale_dividend = total_dividend * coin_scale_percent
-            coin_dividend[coin_id] = int((scale_dividend / map_coin_id_price[coin_id]) * dividend_decimal) / dividend_decimal
+            coin_dividend[coin_id] = int((scale_dividend / coin_price[coin_name]['price_usd']) * dividend_decimal) / dividend_decimal
             coin_scale[coin_id] = coin_scale_percent
             idx += 1
 
         # GSG实际锁定总量
-        user_coin_lock_sum = UserCoinLock.objects.filter(is_free=False).aggregate(Sum('amount'))
-        if user_coin_lock_sum['amount__sum'] is None:
-            user_coin_lock_sum['amount__sum'] = 0
-        user_coin_lock_sum = int(user_coin_lock_sum['amount__sum'] * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
+        user_coin_lock_sum = self.get_total_coin_lock()
+        user_coin_lock_sum = int(user_coin_lock_sum * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
 
         # GSG实际锁定用户数
         user_coin_lock_total = UserCoinLock.objects.filter(is_free=False).distinct().count()
 
         items = []
         for coinid in coin_scale:
-            amount = str(coin_dividend[coinid])
+            amount = coin_dividend[coinid]
+            coin_name = Coin.objects.get_coin_name_by_id(coinid)
 
-            # 每GSG实际分红货币数量：分红货币数量 / GSG锁定总量
-            if user_coin_lock_sum == 0:
-                tmp_gsg_coin_dividend = 0
-            else:
-                tmp_gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(
-                    settings.DIVIDEND_DECIMAL)
+            # 实际总分红
+            dividend_price = str(round(total_dividend * coin_scale[coinid], 2))
 
-            # 每GSG名义分红货币数量：每GSG实际分红 x 10亿 / GSG锁定总量
-            if user_coin_lock_sum == 0:
-                tmp_real_sum = 0
-            else:
-                tmp_real_sum = int((tmp_gsg_coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(
-                    settings.DIVIDEND_DECIMAL)) / float(settings.DIVIDEND_DECIMAL)
+            # 每GSG实际分红货币数量
+            gsg_coin_dividend = self.get_coin_dividend(dividend_price, user_coin_lock_sum)
+
+            # 每GSG名义分红货币数量
+            gsg_coin_titular_dividend = self.get_coin_titular_dividend(dividend_price)
+
+            # 营收对应数值
+            revenue = self.get_revenue(dividend_price, user_coin_lock_sum)
 
             items.append({
                 'coin_id': str(coinid),     # 货币ID
-                'coin_name': self.get_coin_name_by_id(coinid),  # 货币名称
+                'coin_name': Coin.objects.get_coin_name_by_id(coinid),  # 货币名称
                 'scale': str(coin_scale[coinid]),   # 货币占有比例
-                'dividend_price': str(round(total_dividend * coin_scale[coinid], 2)),     # 分红总价
-                'price': str(map_coin_id_price[coinid]),    # 货币对应价格
-                'amount': amount,   # 分红数量
-                'gsg_coin_dividend': '%.6f' % tmp_gsg_coin_dividend,
-                'gsg_coin_titular_dividend': '%.6f' % tmp_real_sum,
+                'dividend_price': dividend_price,     # 分红总价
+                'price': str(coin_price[coin_name]['price_usd']),    # 货币对应单价
+                'amount': str(amount),   # 分红数量
+                'total_gsg_lock': int(user_coin_lock_sum),   # GSG总锁定量
+                'gsg_coin_dividend': gsg_coin_dividend,     # 每GSG实际分红
+                'gsg_coin_titular_dividend': gsg_coin_titular_dividend,      # GSG名义分红
+                'revenue': revenue,      # 营收数值
             })
 
         results = {
@@ -2069,8 +2083,6 @@ class CoinDividendProposalView(ListCreateAPIView):
         coins = json.loads(request.data.get('coins'))
         dividend_date = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
 
-        decimal = 1000000
-
         # 判断该日期是否已经设置，若是，则无法再修改
         dividend_config = DividendConfig.objects.filter(dividend_date=dividend_date).count()
         if dividend_config > 0:
@@ -2086,6 +2098,10 @@ class CoinDividendProposalView(ListCreateAPIView):
         dividend_config.dividend_date = dividend_date
         dividend_config.save()
 
+        # GSG实际锁定总量
+        user_coin_lock_sum = self.get_total_coin_lock()
+        user_coin_lock_sum = int(user_coin_lock_sum * settings.DIVIDEND_DECIMAL) / settings.DIVIDEND_DECIMAL
+
         map_coin_id_club_id = {
             1: 2,
             2: 3,
@@ -2099,7 +2115,19 @@ class CoinDividendProposalView(ListCreateAPIView):
             coin_id = int(coin['coin_id'])
 
             amount = float(dividend) * scale / price
-            amount = int(decimal * amount) / decimal
+            amount = int(settings.DIVIDEND_DECIMAL * amount) / settings.DIVIDEND_DECIMAL
+
+            # 实际总分红
+            dividend_price = str(round(float(dividend) * scale, 2))
+
+            # 每GSG实际分红
+            coin_dividend = self.get_coin_dividend(dividend_price, user_coin_lock_sum)
+
+            # 每GSG名义分红
+            coin_titular_dividend = self.get_coin_titular_dividend(dividend_price)
+
+            # 盈收数值
+            revenue = self.get_revenue(coin_dividend, user_coin_lock_sum)
 
             dividend_config_coin = DividendConfigCoin()
             dividend_config_coin.dividend_config = dividend_config
@@ -2107,10 +2135,14 @@ class CoinDividendProposalView(ListCreateAPIView):
             dividend_config_coin.scale = scale * 100
             dividend_config_coin.price = price
             dividend_config_coin.amount = amount
+            dividend_config_coin.dividend_price = dividend_price
+            dividend_config_coin.coin_dividend = coin_dividend
+            dividend_config_coin.coin_titular_dividend = coin_titular_dividend
+            dividend_config_coin.revenue = revenue
             dividend_config_coin.save()
 
             # 俱乐部ID对应虚拟盈收
-            map_club_id_amount[map_coin_id_club_id[coin_id]] = amount
+            map_club_id_amount[map_coin_id_club_id[coin_id]] = revenue
 
         # 写入虚拟盈利数据表中
         club_profit_date = dateparser.parse(datetime.strftime(datetime.now() - timedelta(1), '%Y-%m-%d 23:59:59.000000'))
@@ -2123,3 +2155,89 @@ class CoinDividendProposalView(ListCreateAPIView):
                 profit.save()
 
         return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
+
+class CoinDividendHistoryView(ListAPIView):
+    """
+    查看历史分红记录
+    """
+    def list(self, request, *args, **kwargs):
+        date_time_now = dateparser.parse(datetime.strftime(datetime.now(), '%Y-%m-%d'))
+
+        if 'start_date' not in request.GET:
+            start_date = date_time_now - timedelta(1)
+        else:
+            start_date = dateparser.parse(request.GET.get('start_date'))
+
+        if 'end_date' not in request.GET:
+            end_date = date_time_now
+        else:
+            end_date = dateparser.parse(request.GET.get('end_date'))
+
+        # 获取时间范围内的数据
+        dividend_config = DividendConfig.objects.filter(dividend_date__gte=start_date, dividend_date__lte=end_date)
+        dividend_ids = []
+        for cfg in dividend_config:
+            dividend_ids.append(cfg.id)
+
+        if len(dividend_ids) == 0:
+            return JsonResponse({'results': []}, status=status.HTTP_200_OK)
+
+        dividend_config_coin = DividendConfigCoin.objects.filter(dividend_config_id__in=dividend_ids)
+        revenue_sum = {}
+        for item in dividend_config_coin:
+            if item.dividend_config_id not in revenue_sum:
+                revenue_sum[item.dividend_config_id] = 0
+
+            revenue_sum[item.dividend_config_id] += item.revenue
+
+        items = []
+        for cfg in dividend_config:
+            items.append({
+                'id': cfg.id,
+                'date': cfg.dividend_date.strftime('%Y-%m-%d'),
+                'dividend': cfg.dividend,
+                'revenue': revenue_sum[cfg.id]
+            })
+
+        return JsonResponse({'results': items}, status=status.HTTP_200_OK)
+
+
+class CoinDividendHistoryDetailView(ListAPIView):
+    """
+    查看历史分红用户分红列表
+    """
+    def list(self, request, *args, **kwargs):
+        dividend_id = int(kwargs['pk'])
+
+        user_dividends = Dividend.objects.filter(divide_config_id=dividend_id)
+        user_ids = []
+        for dividend in user_dividends:
+            user_ids.append(dividend.user_id)
+
+        users = User.objects.filter(id__in=user_ids)
+        map_user_name = {}
+        for user in users:
+            if user.id not in map_user_name:
+                map_user_name[user.id] = user.username
+
+        dividend_info = {}
+        for item in user_dividends:
+            coin_name = Coin.objects.get_coin_name_by_id(item.coin_id)
+
+            if item.user_id not in dividend_info:
+                dividend_info[item.user_id] = {}
+
+            if coin_name not in dividend_info[item.user_id]:
+                dividend_info[item.user_id][coin_name] = 0
+
+            dividend_info[item.user_id][coin_name] += float(str(item.divide))
+
+        items = []
+        for user_id in dividend_info:
+            items.append({
+                'username': map_user_name[user_id],
+                'dividend': dividend_info[user_id],
+            })
+
+        return JsonResponse({'results': items}, status=status.HTTP_200_OK)

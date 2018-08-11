@@ -130,6 +130,48 @@ class User(AbstractBaseUser):
 #         ordering = ['-id']
 #         verbose_name = verbose_name_plural = "用户邀请表"
 
+class CoinManager(models.Manager):
+    """
+    Coin操作
+    """
+    @staticmethod
+    def get_coin_name_by_id(coin_id):
+        """
+        获取货币名称
+        :param  coin_id
+        :return:
+        """
+        coin_name = ''
+        if coin_id == Coin.BTC:
+            coin_name = 'BTC'
+        elif coin_id == Coin.ETH:
+            coin_name = 'ETH'
+        elif coin_id == Coin.USDT:
+            coin_name = 'USDT'
+        elif coin_id == Coin.INT:
+            coin_name = 'INT'
+
+        return coin_name
+
+    @staticmethod
+    def get_coin_id_by_name(coin_name):
+        """
+        获取货币ID
+        :param  coin_name
+        :return:
+        """
+        coin_id = 0
+        if coin_name == 'BTC':
+            coin_id = Coin.BTC
+        elif coin_name == 'ETH':
+            coin_id = Coin.ETH
+        elif coin_name == 'INT':
+            coin_id = Coin.INT
+        elif coin_name == 'USDT':
+            coin_id = Coin.USDT
+
+        return coin_id
+
 
 @reversion.register()
 class Coin(models.Model):
@@ -158,6 +200,8 @@ class Coin(models.Model):
     is_lock_valid = models.BooleanField(verbose_name="是否允许锁定分红", default=0)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    objects = CoinManager()
 
     class Meta:
         ordering = ['-id']
@@ -712,17 +756,6 @@ class Robot(models.Model):
         verbose_name = verbose_name_plural = "可疑用户表"
 
 
-@reversion.register()
-class Dividend(models.Model):
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
-    user_lock = models.ForeignKey(UserCoinLock, on_delete=models.CASCADE)
-    divide = models.DecimalField(verbose_name="分红额", max_digits=32, decimal_places=18, default=0.000000000000000000)
-    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-
-    class Meta:
-        verbose_name = verbose_name_plural = "用户分红表"
-
-
 class DividendConfig(models.Model):
     dividend = models.DecimalField(verbose_name="分红总额", max_digits=10, decimal_places=2, default=0.00)
     dividend_date = models.DateTimeField(verbose_name="分红日期")
@@ -737,11 +770,28 @@ class DividendConfigCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.DO_NOTHING)
     scale = models.FloatField(verbose_name="比例", default=0.00)
     price = models.FloatField(verbose_name="价格（单位:USD）", default=0.00)
-    amount = models.FloatField(verbose_name="盈利数量", default=0.000000)
+    amount = models.FloatField(verbose_name="盈利数量", default=0.0000000)
+    dividend_price = models.FloatField(verbose_name="实际总分红", default=0.0000000)
+    coin_dividend = models.FloatField(verbose_name="每GSG实际分红", default=0.0000000)
+    coin_titular_dividend = models.FloatField(verbose_name="每GSG名义分红", default=0.0000000)
+    revenue = models.FloatField(verbose_name="营收数值", default=0.0000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "用户分红货币配置表"
+
+
+@reversion.register()
+class Dividend(models.Model):
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
+    user_lock = models.ForeignKey(UserCoinLock, on_delete=models.CASCADE)
+    divide = models.DecimalField(verbose_name="分红额", max_digits=32, decimal_places=18, default=0.000000000000000000)
+    divide_config = models.ForeignKey(DividendConfig, on_delete=models.DO_NOTHING, related_name="user_dividend")
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "用户分红表"
 
 
 @reversion.register()
