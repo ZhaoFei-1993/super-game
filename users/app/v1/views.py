@@ -2122,7 +2122,7 @@ class ChangePasswordView(ListAPIView):
         if (sms is None) or (sms.code != request.data.get('code')):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
 
-        if int(sms.type) != 5:
+        if int(sms.type) != 8:
             return self.response({'code': error_code.API_40106_SMS_PARAMETER})
 
         # 判断验证码是否已过期
