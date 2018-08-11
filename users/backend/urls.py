@@ -71,4 +71,7 @@ urlpatterns = [
     path('dividend/profit/', views.CoinProfitView.as_view(), name='user-backend-dividend-profit'),
     # 生成当前锁定分红方案
     path('dividend/proposal/', views.CoinDividendProposalView.as_view(), name='user-backend-dividend-proposal'),
+    # 查看分红数据
+    path('dividend/history/', views.CoinDividendHistoryView.as_view(), name='user-backend-dividend-history'),
+    path('dividend/history/<int:pk>/', views.CoinDividendHistoryDetailView.as_view(), name='user-backend-dividend-history-detail'),
 ]
