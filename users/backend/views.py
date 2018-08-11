@@ -1926,7 +1926,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         if user_coin_lock_sum == 0:
             return 0
 
-        return float('%.7f' % (float(dividend_price) / user_coin_lock_sum))
+        return '%.7f' % (float(dividend_price) / user_coin_lock_sum)
 
         # gsg_coin_dividend = int((float(amount) / user_coin_lock_sum) * settings.DIVIDEND_DECIMAL) / float(
         #     settings.DIVIDEND_DECIMAL)
@@ -1939,7 +1939,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         :param  dividend_price  每种币实际总分红
         :return:
         """
-        return float('%.7f' % (float(dividend_price) / settings.GSG_TOTAL_SUPPLY))
+        return '%.7f' % (float(dividend_price) / settings.GSG_TOTAL_SUPPLY)
         # coin_dividend = self.get_coin_dividend(amount, user_coin_lock_sum)
         #
         # coin_titular_dividend = int((coin_dividend * settings.GSG_TOTAL_SUPPLY / float(user_coin_lock_sum)) * float(
@@ -2048,8 +2048,8 @@ class CoinDividendProposalView(ListCreateAPIView):
                 'price': str(coin_price[coin_name]['price_usd']),    # 货币对应单价
                 'amount': str(amount),   # 分红数量
                 'total_gsg_lock': int(user_coin_lock_sum),   # GSG总锁定量
-                'gsg_coin_dividend': gsg_coin_dividend,     # 每GSG实际分红
-                'gsg_coin_titular_dividend': gsg_coin_titular_dividend,      # GSG名义分红
+                'gsg_coin_dividend': str(gsg_coin_dividend),     # 每GSG实际分红
+                'gsg_coin_titular_dividend': str(gsg_coin_titular_dividend),      # GSG名义分红
                 'revenue': revenue,      # 营收数值
             })
 
