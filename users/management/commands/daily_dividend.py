@@ -41,6 +41,7 @@ class Command(BaseCommand):
     dividend_date = ''
     dividend_percent = {}
     coin_price = {}
+    coin_titular_dividend = {}  # 每种币实际分红数量
 
     lock_time_delta = 12 * 3600  # 锁定12小时后方可享受分红，单位（秒）
 
@@ -78,17 +79,26 @@ class Command(BaseCommand):
         :param amount   锁定数量
         :return:
         """
-        percent = Decimal(amount / self.get_total_coin_lock())
         coin_dividend = {}
-        for coin_id in self.dividend_percent:
-            coin_percent = Decimal(self.dividend_percent[coin_id])
-            dividend = self.total_dividend * coin_percent / Decimal(self.coin_price[coin_id]) * percent
-            dividend = int(dividend * self.dividend_decimal) / self.dividend_decimal
+        for coin_id in self.coin_titular_dividend:
+            user_dividend = amount * self.coin_titular_dividend[coin_id]
+            user_dividend = int(user_dividend * self.dividend_decimal) / self.dividend_decimal
+            user_dividend = '%.7f' % user_dividend
 
-            user_dividend = '%.7f' % dividend
             coin_dividend[coin_id] = user_dividend
 
             self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
+        # percent = Decimal(amount / self.get_total_coin_lock())
+        # coin_dividend = {}
+        # for coin_id in self.dividend_percent:
+        #     coin_percent = Decimal(self.dividend_percent[coin_id])
+        #     dividend = self.total_dividend * coin_percent / Decimal(self.coin_price[coin_id]) * percent
+        #     dividend = int(dividend * self.dividend_decimal) / self.dividend_decimal
+        #
+        #     user_dividend = '%.7f' % dividend
+        #     coin_dividend[coin_id] = user_dividend
+        #
+        #     self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
 
         return coin_dividend
 
@@ -163,6 +173,8 @@ class Command(BaseCommand):
         for ditem in dividend_config_coin:
             percent[ditem.coin_id] = ditem.scale / 100
             price[ditem.coin_id] = ditem.price
+
+            self.coin_titular_dividend[ditem.coin_id] = ditem.coin_titular_dividend
 
             # 盈利情况组成字符串
             self.profit_coin_message.append(str(ditem.revenue) + self.get_coin_name(ditem.coin_id))
