@@ -222,6 +222,7 @@ class Command(BaseCommand):
                     'user_lock_id': str(ucl.id),
                     'divide': dividend_amount,
                     'divide_config_id': str(self.dividend_id),
+                    'user_id': str(ucl.user_id),
                     'created_at': created_at,
                 })
 
