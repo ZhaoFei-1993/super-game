@@ -4,6 +4,7 @@ from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
 from utils.functions import *
+from time import time
 
 coin_detail_list = []
 user_message_list = []
@@ -159,6 +160,7 @@ def status_result(record, win_sum_dic, lose_sum_dic):
 
 
 def ergodic_record(period, dt, date):
+    start_time = time()
     print(dt)
     print('----------------')
     if dt['auto'] is True:
@@ -249,8 +251,8 @@ def ergodic_record(period, dt, date):
         records = Guess_Record.objects.filter(periods=period, status='0')
         if len(records) > 0:
             for record in records:
-                i += 1
-                print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
+                # i += 1
+                # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
                 if record.play.play_name == str(0):
                     rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
                 else:
@@ -303,6 +305,12 @@ def ergodic_record(period, dt, date):
 
         period.is_result = True
         period.save()
+
+        end_time = time()
+        cost_time = str(round(end_time - start_time)) + '秒'
+        print('执行完成。耗时：' + cost_time)
+        print('----------------------------------------------')
+
 
 
 def newobject(periods, stock_id, next_start, next_end):

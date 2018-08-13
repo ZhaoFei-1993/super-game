@@ -6,7 +6,6 @@ from .stock_result_new import ergodic_record, newobject
 import requests
 import datetime
 from utils.cache import *
-import time
 import re
 import local_settings
 
