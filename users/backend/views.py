@@ -2054,8 +2054,8 @@ class CoinDividendProposalView(ListCreateAPIView):
             })
 
         results = {
-            'user_coin_lock_sum': user_coin_lock_sum,
-            'user_coin_lock_total': user_coin_lock_total,
+            'user_coin_lock_sum': user_coin_lock_sum,           # GSG锁定总量
+            'user_coin_lock_total': user_coin_lock_total,       # GSG锁定总用户数
             'dividend': items,
         }
 
