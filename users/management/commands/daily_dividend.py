@@ -191,6 +191,7 @@ class Command(BaseCommand):
         user_message_values = []
         for ucl in user_coin_lock:
             created_at = str(datetime.now())
+            self.user_profit_coin_message = []
 
             # 判断锁定时间是否大于12小时
             if self.check_lock_time(ucl.created_at) is False:
