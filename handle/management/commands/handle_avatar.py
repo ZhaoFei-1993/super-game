@@ -25,5 +25,7 @@ class Command(BaseCommand):
             print(host_avatar, '===', host_name + '.' + host_avatar_type)
             print(guest_avatar, '===', guest_name + '.' + guest_avatar_type)
 
-            # shutil.copy(host_avatar, host_name + '.' + host_avatar_type)
-            # shutil.copy(guest_avatar, guest_name + '.' + guest_avatar_type)
+            # if os.path.exists(host_name + '.' + host_avatar_type) is not True:
+            #     shutil.copy(host_avatar, host_name + '.' + host_avatar_type)
+            # if os.path.exists(guest_name + '.' + guest_avatar_type) is not True:
+            #     shutil.copy(guest_avatar, guest_name + '.' + guest_avatar_type)
