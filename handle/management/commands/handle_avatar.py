@@ -15,8 +15,10 @@ class Command(BaseCommand):
         for quiz in Quiz.objects.filter(category__parent_id=2):
             host_name = quiz.host_team
             guest_name = quiz.guest_team
-            host_avatar = quiz.host_team_avatar.replace('https://api.gsg.one/images/spider/football/team_icon/', '')
-            guest_avatar = quiz.guest_team_avatar.replace('https://api.gsg.one//images/spider/football/team_icon/', '')
+            host_avatar = quiz.host_team_avatar.replace('https://api.gsg.one/uploads/images/spider/football/team_icon/',
+                                                        '')
+            guest_avatar = quiz.guest_team_avatar.replace(
+                'https://api.gsg.one/uploads/images/spider/football/team_icon/', '')
             host_avatar_type = host_avatar.split('.')[1]
             guest_avatar_type = guest_avatar.split('.')[1]
 
