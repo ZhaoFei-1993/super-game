@@ -312,7 +312,6 @@ def ergodic_record(period, dt, date):
         print('----------------------------------------------')
 
 
-
 def newobject(periods, stock_id, next_start, next_end):
     rotary_header_time = next_end - timedelta(minutes=30)
     new_object = Periods(periods=periods, stock_id=stock_id)

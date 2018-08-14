@@ -26,4 +26,3 @@ class Command(BaseCommand):
         gsg_value.save()
 
         print('ETC/ETH价格为: ' + str(value))
-

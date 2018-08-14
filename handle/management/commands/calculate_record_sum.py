@@ -168,16 +168,16 @@ class Command(BaseCommand):
                 if obj.user.is_robot == True:
                     user_info_list.append(obj.user.id)
                 print("i==========================", i)
-                # 发送信息
-                u_mes = UserMessage()
-                u_mes.status = 0
-                u_mes.user_id = obj.user_id
-                u_mes.message_id = 6  # 私人信息
-                u_mes.title_en = str(date_now) + 'GSG exchange qualification.'
-                u_mes.title = str(date_now) + 'GSG兑换资格。'
-                u_mes.content = '恭喜您获得了GSG的兑换资格。'
-                u_mes.content_en = 'Congratulations on your eligibility for GSG.'
-                u_mes.save()
+                # # 发送信息
+                # u_mes = UserMessage()
+                # u_mes.status = 0
+                # u_mes.user_id = obj.user_id
+                # u_mes.message_id = 6  # 私人信息
+                # u_mes.title_en = str(date_now) + 'GSG exchange qualification.'
+                # u_mes.title = str(date_now) + 'GSG兑换资格。'
+                # u_mes.content = '恭喜您获得了GSG的兑换资格。'
+                # u_mes.content_en = 'Congratulations on your eligibility for GSG.'
+                # u_mes.save()
             i += 1
         EXCHANGE_QUALIFICATION_INFO = "all_exchange_qualification__info" + str(date_now)  # key
         print("user_info_list================================", user_info_list)
