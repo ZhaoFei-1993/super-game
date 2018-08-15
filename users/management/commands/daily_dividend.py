@@ -152,6 +152,7 @@ class Command(BaseCommand):
         date_today = datetime.strftime(datetime.now(), '%Y-%m-%d')
         dividend_date = dateparser.parse(date_today)
 
+        print('cache key = ', self.key_daily_dividend_datetime + date_today)
         print('get_cache(self.key_daily_dividend_datetime + date_today) = ', get_cache(self.key_daily_dividend_datetime + date_today))
         # 判断当天是否已经分红
         if get_cache(self.key_daily_dividend_datetime + date_today) is not None:
@@ -188,8 +189,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('-----每日分红脚本开始运行-----'))
 
         # 获取分红配置
+        print('正在获取分红配置')
         self.get_dividend_config()
 
+        print('正在获取所有锁定数据')
         # 获取所有锁定数据：用户、锁定金额、锁定时间
         user_coin_lock = UserCoinLock.objects.filter(is_free=False)
         print('获取到', len(user_coin_lock), '条锁定记录')
