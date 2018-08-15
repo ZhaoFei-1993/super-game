@@ -81,7 +81,7 @@ class Command(BaseCommand):
         """
         coin_dividend = {}
         for coin_id in self.coin_titular_dividend:
-            user_dividend = amount * self.coin_titular_dividend[coin_id]
+            user_dividend = float(amount) * self.coin_titular_dividend[coin_id]
             user_dividend = int(user_dividend * self.dividend_decimal) / self.dividend_decimal
             user_dividend = '%.7f' % user_dividend
 
