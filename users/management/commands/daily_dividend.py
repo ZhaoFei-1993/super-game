@@ -103,7 +103,7 @@ class Command(BaseCommand):
 
         coin_dividend = {}
         for coin_id in self.dividend_percent:
-            user_dividend = self.coin_dividend_amount[coin_id] * (float(amount) / self.get_total_coin_lock())
+            user_dividend = self.coin_dividend_amount[coin_id] * (Decimal(amount) / self.get_total_coin_lock())
             user_dividend = '%.7f' % user_dividend
 
             coin_dividend[coin_id] = user_dividend
