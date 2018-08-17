@@ -42,6 +42,7 @@ class Command(BaseCommand):
     dividend_percent = {}
     coin_price = {}
     coin_titular_dividend = {}  # 每种币实际分红数量
+    coin_dividend_amount = {}   # 每种币总分红数量
 
     lock_time_delta = 12 * 3600  # 锁定12小时后方可享受分红，单位（秒）
 
@@ -75,19 +76,19 @@ class Command(BaseCommand):
     def get_coin_dividend(self, amount):
         """
         获取每种币用户可分得数量
-        公式：( 分红金额 * 币种比例 / 币种价格 ) * ( 用户锁定量 / GSG总锁定量 )
         :param amount   锁定数量
         :return:
         """
-        coin_dividend = {}
-        for coin_id in self.coin_titular_dividend:
-            user_dividend = float(amount) * self.coin_titular_dividend[coin_id]
-            user_dividend = int(user_dividend * self.dividend_decimal) / self.dividend_decimal
-            user_dividend = '%.7f' % user_dividend
+        # coin_dividend = {}
+        # for coin_id in self.coin_titular_dividend:
+        #     user_dividend = float(amount) * self.coin_titular_dividend[coin_id]
+        #     user_dividend = int(user_dividend * self.dividend_decimal) / self.dividend_decimal
+        #     user_dividend = '%.7f' % user_dividend
+        #
+        #     coin_dividend[coin_id] = user_dividend
+        #
+        #     self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
 
-            coin_dividend[coin_id] = user_dividend
-
-            self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
         # percent = Decimal(amount / self.get_total_coin_lock())
         # coin_dividend = {}
         # for coin_id in self.dividend_percent:
@@ -99,6 +100,13 @@ class Command(BaseCommand):
         #     coin_dividend[coin_id] = user_dividend
         #
         #     self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
+
+        coin_dividend = {}
+        for coin_id in self.dividend_percent:
+            user_dividend = self.coin_dividend_amount[coin_id] * (float(amount) / self.get_total_coin_lock())
+            user_dividend = '%.7f' % user_dividend
+
+            coin_dividend[coin_id] = user_dividend
 
         return coin_dividend
 
@@ -152,8 +160,6 @@ class Command(BaseCommand):
         date_today = datetime.strftime(datetime.now(), '%Y-%m-%d')
         dividend_date = dateparser.parse(date_today)
 
-        print('cache key = ', self.key_daily_dividend_datetime + date_today)
-        print('get_cache(self.key_daily_dividend_datetime + date_today) = ', get_cache(self.key_daily_dividend_datetime + date_today))
         # 判断当天是否已经分红
         if get_cache(self.key_daily_dividend_datetime + date_today) is not None:
             raise CommandError(date_today + '已经分红')
@@ -177,6 +183,7 @@ class Command(BaseCommand):
             price[ditem.coin_id] = ditem.price
 
             self.coin_titular_dividend[ditem.coin_id] = ditem.coin_titular_dividend
+            self.coin_dividend_amount[ditem.coin_id] = ditem.amount
 
             # 盈利情况组成字符串
             self.profit_coin_message.append(str(ditem.revenue) + self.get_coin_name(ditem.coin_id))
