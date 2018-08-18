@@ -34,5 +34,9 @@ urlpatterns = [
     # 财务报表
     path('finance/',views.FinanceView.as_view(),name='finance-user-finance'),
     # 提现打款操作
-    path('bill/<int:pk>/', views.BillView.as_view(), name= 'finance-user-bill')
+    path('bill/<int:pk>/', views.BillView.as_view(), name= 'finance-user-bill'),
+    # 玩法列表
+    path('playlist/', views.PlayListView.as_view(), name='finance-user-playlist'),
+    # 玩法详情
+    path('playlist/<int:play_id>/', views.PlayDetailView.as_view(), name='finance-user-playdetail')
 ]
