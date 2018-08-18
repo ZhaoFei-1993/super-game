@@ -627,7 +627,7 @@ class PlayDetailView(RetrieveAPIView):
                 sum_earn_coin=Sum('earn_coin')).order_by('date')
         temp_bets = {}
         temp_earns= {}
-        format = '%Y-%m-%d'
+        format = '%m/%d'
         if len(bets) > 0:
             for c in bets:
                 date = c['date'].strftime(format)
@@ -641,11 +641,18 @@ class PlayDetailView(RetrieveAPIView):
                     temp_earns[str(d['club_id'])]={}
                 temp_earns[str(d['club_id'])][date]=d['sum_earn_coin']
         for a in clubs:
+            a['start_day'] = week_ago.strftime('%Y-%m-%d')
+            a['end_day'] = day_ago.strftime('%Y-%m-%d')
             for b in range(0,7):
                 date = (week_ago + timedelta(b)).strftime(format)
+                day_ago_date = day_ago.strftime(format)
                 temp_none = {'date': date, 'profit': 0}
                 if temp_bets:
                     if str(a['id']) not in temp_bets:
+                        if date == day_ago_date:
+                            a['in'] = 0
+                            a['out'] = 0
+                            a['last_profit'] = 0
                         if 'results' not in a:
                             a['results'] = [temp_none]
                         else:
@@ -657,27 +664,47 @@ class PlayDetailView(RetrieveAPIView):
                                     a['results']=[{'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)}]
                                 else:
                                     a['results'].append({'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)})
+                                if date == day_ago_date:
+                                    a['in'] = normalize_fraction(temp_bets[str(a['id'])][date],4)
+                                    a['out'] = 0
+                                    a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date],4)
                             else:
                                 if date not in temp_earns[str(a['id'])]:
                                     if 'results' not in a:
                                         a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)}]
                                     else:
                                         a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)})
+                                    if date == day_ago_date:
+                                        a['in'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
+                                        a['out'] = 0
+                                        a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
                                 else:
                                     if 'results' not in a:
                                         a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)}]
                                     else:
                                         a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)})
+                                    if date == day_ago_date:
+                                        a['in'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
+                                        a['out'] = normalize_fraction(temp_earns[str(a['id'])][date], 4)
+                                        a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)
                         else:
                             if 'results' not in a:
                                 a['results'] = [temp_none]
                             else:
                                 a['results'].append(temp_none)
+                            if date == day_ago_date:
+                                a['in'] = 0
+                                a['out'] = 0
+                                a['last_profit'] = 0
                 else:
                     if 'results' not in a:
                         a['results'] = [temp_none]
                     else:
                         a['results'].append(temp_none)
+                    if date == day_ago_date:
+                        a['in'] = 0
+                        a['out'] = 0
+                        a['last_profit'] = 0
         return clubs
 
 
