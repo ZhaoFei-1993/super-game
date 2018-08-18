@@ -608,6 +608,8 @@ class PlayDetailView(RetrieveAPIView):
         if play_name == "球赛":
             quiz = Quiz.objects.filter(status=5).values('id').order_by('-id')
             quiz_ids = [x['id'] for x in quiz]
+            total_bets = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_bets=Sum('bets')).order_by('club_id')
+            total_earns = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids, earn_coin__gt=0).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_earn_coin=Sum('earn_coin')).order_by('club_id')
             bets = Record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), roomquiz_id__in=ids,
                                          quiz_id__in=quiz_ids).extra(select={'date': 'date(open_prize_time)'}).extra({'club_id':'roomquiz_id'}).values(
                 'date', 'club_id').annotate(sum_bets=Sum('bet')).order_by('date')
@@ -617,6 +619,11 @@ class PlayDetailView(RetrieveAPIView):
                 sum_earn_coin=Sum('earn_coin')).order_by('date')
 
         if play_name == "猜股指":
+            total_bets = g_record.objects.filter(club_id__in=ids,
+                                           status=str(1)).values('club_id').annotate(sum_bets=Sum('bets')).order_by('club_id')
+            total_earns = g_record.objects.filter(club_id__in=ids,
+                                           status=str(1), earn_coin__gt=0).values('club_id').annotate(sum_earn_coin=Sum('earn_coin')).order_by('club_id')
+
             bets = g_record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), club_id__in=ids,
                                            status=str(1)).extra(select={'date': 'date(open_prize_time)'}).values('date',
                                                                                                                  'club_id').annotate(
@@ -627,6 +634,8 @@ class PlayDetailView(RetrieveAPIView):
                 sum_earn_coin=Sum('earn_coin')).order_by('date')
         temp_bets = {}
         temp_earns= {}
+        temp_total_bets = {}
+        temp_total_earns = {}
         format = '%m/%d'
         if len(bets) > 0:
             for c in bets:
@@ -634,25 +643,43 @@ class PlayDetailView(RetrieveAPIView):
                 if str(c['club_id']) not in temp_bets:
                     temp_bets[str(c['club_id'])]={}
                 temp_bets[str(c['club_id'])][str(date)]=c['sum_bets']
+
         if len(earns) > 0:
             for d in earns:
                 date = d['date'].strftime(format)
                 if str(d['club_id']) not in temp_earns:
                     temp_earns[str(d['club_id'])]={}
                 temp_earns[str(d['club_id'])][date]=d['sum_earn_coin']
+
+        if len(total_bets) > 0:
+            for x in total_bets:
+                temp_total_bets[str(x['club_id'])] = x['sum_bets']
+
+        if len(total_earns) > 0:
+            for x in total_earns:
+                temp_total_earns[str(x['club_id'])] = x['sum_earn_coin']
+
         for a in clubs:
             a['start_day'] = week_ago.strftime('%Y-%m-%d')
             a['end_day'] = day_ago.strftime('%Y-%m-%d')
+            if str(a['id']) not in temp_total_bets:
+                a['in'] = 0
+                a['out'] = 0
+                a['rest'] = 0
+            else:
+                if str(a['id']) not in temp_total_earns:
+                    a['in']=normalize_fraction(temp_total_bets[str(a['id'])],3)
+                    a['out'] = 0
+                    a['rest'] = normalize_fraction(temp_total_bets[str(a['id'])],3)
+                else:
+                    a['in'] = normalize_fraction(temp_total_bets[str(a['id'])], 3)
+                    a['out'] = normalize_fraction(temp_total_earns[str(a['id'])], 3)
+                    a['rest'] = normalize_fraction(temp_total_bets[str(a['id'])]-temp_total_earns[str(a['id'])], 3)
             for b in range(0,7):
                 date = (week_ago + timedelta(b)).strftime(format)
-                day_ago_date = day_ago.strftime(format)
                 temp_none = {'date': date, 'profit': 0}
                 if temp_bets:
                     if str(a['id']) not in temp_bets:
-                        if date == day_ago_date:
-                            a['in'] = 0
-                            a['out'] = 0
-                            a['last_profit'] = 0
                         if 'results' not in a:
                             a['results'] = [temp_none]
                         else:
@@ -664,47 +691,27 @@ class PlayDetailView(RetrieveAPIView):
                                     a['results']=[{'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)}]
                                 else:
                                     a['results'].append({'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)})
-                                if date == day_ago_date:
-                                    a['in'] = normalize_fraction(temp_bets[str(a['id'])][date],4)
-                                    a['out'] = 0
-                                    a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date],4)
                             else:
                                 if date not in temp_earns[str(a['id'])]:
                                     if 'results' not in a:
                                         a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)}]
                                     else:
                                         a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)})
-                                    if date == day_ago_date:
-                                        a['in'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
-                                        a['out'] = 0
-                                        a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
                                 else:
                                     if 'results' not in a:
                                         a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)}]
                                     else:
                                         a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)})
-                                    if date == day_ago_date:
-                                        a['in'] = normalize_fraction(temp_bets[str(a['id'])][date], 4)
-                                        a['out'] = normalize_fraction(temp_earns[str(a['id'])][date], 4)
-                                        a['last_profit'] = normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)
                         else:
                             if 'results' not in a:
                                 a['results'] = [temp_none]
                             else:
                                 a['results'].append(temp_none)
-                            if date == day_ago_date:
-                                a['in'] = 0
-                                a['out'] = 0
-                                a['last_profit'] = 0
                 else:
                     if 'results' not in a:
                         a['results'] = [temp_none]
                     else:
                         a['results'].append(temp_none)
-                    if date == day_ago_date:
-                        a['in'] = 0
-                        a['out'] = 0
-                        a['last_profit'] = 0
         return clubs
 
 
