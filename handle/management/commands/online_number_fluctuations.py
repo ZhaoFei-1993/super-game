@@ -15,27 +15,29 @@ class Command(BaseCommand):
         now_number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)       # 在线人数key
         number_key = "INITIAL_ONLINE_USER_" + str(day)       # 在线人数key
         lists = get_cache(now_number_key)
+        print("lists==========old=====================", lists)
         for list in lists:
             for i in list:
                 # list_i = list[i]
                 for s in list[i]:
                     calculation_one = int(random.randint(1, 2))
-                    print("calculation_one=========================", calculation_one)
+                    # print("calculation_one=========================", calculation_one)
                     if calculation_one == 1:
-                        print("原来=====================", int(list[i][s]['quiz']))
+                        # print("原来=====================", int(list[i][s]['quiz']))
                         list[i][s]['quiz'] = int(list[i][s]['quiz']) + fluctuation
                     else:
-                        print("原来=====================", int(list[i][s]['quiz']))
+                        # print("原来=====================", int(list[i][s]['quiz']))
                         list[i][s]['quiz'] = int(list[i][s]['quiz']) - fluctuation
                     calculation_two = int(random.randint(1, 2))
                     if calculation_two == 1:
-                        print("原来=====================", int(list[i][s]['guess']))
+                        # print("原来=====================", int(list[i][s]['guess']))
                         list[i][s]['guess'] = int(list[i][s]['guess']) + fluctuation
                     else:
-                        print("原来=====================", int(list[i][s]['guess']))
+                        # print("原来=====================", int(list[i][s]['guess']))
                         list[i][s]['guess'] = int(list[i][s]['guess']) - fluctuation
-                    print("改变以后=====================", int(list[i][s]['quiz']))
-                    print("改变以后=====================", int(list[i][s]['guess']))
-                # list[i] = list_i
+                    # print("改变以后=====================", int(list[i][s]['quiz']))
+                    # print("改变以后=====================", int(list[i][s]['guess']))
+                    # list[i] = list_i
+        print("lists=======xin========================", lists)
         set_cache(number_key, lists, 24 * 3600)
         print("人数波动已经完成！")
