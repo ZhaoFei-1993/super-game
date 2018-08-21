@@ -20,14 +20,21 @@ class Command(BaseCommand):
                 list_i = list[i]
                 for s in list_i:
                     calculation_one = int(random.randint(1, 2))
+                    print("calculation_one=========================", calculation_one)
                     if calculation_one == 1:
+                        print("原来=====================", int(list_i[s]['quiz']))
                         list_i[s]['quiz'] = int(list_i[s]['quiz']) + fluctuation
                     else:
+                        print("原来=====================", int(list_i[s]['quiz']))
                         list_i[s]['quiz'] = int(list_i[s]['quiz']) - fluctuation
                     calculation_two = int(random.randint(1, 2))
                     if calculation_two == 1:
+                        print("原来=====================", int(list_i[s]['guess']))
                         list_i[s]['guess'] = int(list_i[s]['guess']) + fluctuation
                     else:
+                        print("原来=====================", int(list_i[s]['guess']))
                         list_i[s]['guess'] = int(list_i[s]['guess']) - fluctuation
+                    print("改变以后=====================", int(list_i[s]['quiz']))
+                    print("改变以后=====================", int(list_i[s]['guess']))
         set_cache(number_key, lists, 24 * 3600)
         print("人数波动已经完成！")
