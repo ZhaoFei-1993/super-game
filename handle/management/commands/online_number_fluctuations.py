@@ -30,3 +30,4 @@ class Command(BaseCommand):
                     else:
                         list_i[s]['guess'] = int(list_i[s]['guess']) - fluctuation
         set_cache(number_key, lists, 24 * 3600)
+        print("人数波动已经完成！")
