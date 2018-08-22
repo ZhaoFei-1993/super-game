@@ -296,329 +296,337 @@ def get_data_info(url):
                 #                    (flag_ah, title_ah, odd_ah), (flag_ad, title_ad, odd_ad), (flag_aa, title_aa, odd_aa)]
 
                 # ------------------------------------------------------------------------------------------------------
-                os.chdir(cache_dir)
-                with open('match_cache.txt', 'r+') as f:
-                    dt = f.read()
-                match_id_list = dt.split(',')
-                if match_id not in match_id_list and \
-                        (len(result_crs) > 0 and len(result_ttg) > 0 and len(result_hhad) > 0 and len(result_had) > 0):
-                    with open('match_cache.txt', 'a+') as f:
-                        f.write(match_id + ',')
+                host_team_avatar = 'https://api.gsg.one/uploads/images/spider/football/team_icon/pres_proj_2018_201806_TeamLogo_vs_fb_home_1.png'
+                guest_team_avatar = 'https://api.gsg.one/uploads/images/spider/football/team_icon/pres_proj_2018_201806_TeamLogo_vs_fb_visiting_1.png'
+                os.chdir(img_dir)
+                if os.path.exists(host_team_abbr + '.png'):
+                    host_team_avatar = host_team_abbr + '.png'
+                if os.path.exists(guest_team_abbr + '.png'):
+                    guest_team_avatar = guest_team_abbr + '.png'
 
-                    host_team_avatar = ''
-                    guest_team_avatar = ''
+                # os.chdir(cache_dir)
+                # with open('match_cache.txt', 'r+') as f:
+                #     dt = f.read()
+                # match_id_list = dt.split(',')
+                # if match_id not in match_id_list and \
+                #         (len(result_crs) > 0 and len(result_ttg) > 0 and len(result_hhad) > 0 and len(result_had) > 0):
+                #     with open('match_cache.txt', 'a+') as f:
+                #         f.write(match_id + ',')
+                #
+                #     host_team_avatar = ''
+                #     guest_team_avatar = ''
+                #
+                #     try:
+                #         img_base_url = 'https://i.sporttery.cn/api/fb_match_info/get_match_info?mid=' + match_id + '&f_callback=getMatchInfo'
+                #         response_img_url = requests.get(img_base_url, headers=headers)
+                #         if response_img_url.status_code == 200:
+                #             dt = response_img_url.text.encode("utf-8").decode('unicode_escape')
+                #             result = json.loads(dt[13:-2])
+                #             host_team_img_url = result['result']['h_pic']
+                #             guest_team_img_url = result['result']['a_pic']
+                #
+                #             if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
+                #                     len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
+                #                 host_team_avatar = \
+                #                     re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][
+                #                         1].replace(
+                #                         '/',
+                #                         '_')
+                #                 guest_team_avatar = \
+                #                     re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
+                #                         1].replace(
+                #                         '/', '_')
+                #
+                #                 files = []
+                #                 source_dir = img_dir
+                #                 for root, sub_dirs, files in os.walk(source_dir):
+                #                     files = files
+                #
+                #                 if host_team_avatar not in files:
+                #                     response_img = requests.get(host_team_img_url)
+                #                     img = response_img.content
+                #                     os.chdir(img_dir)
+                #                     with open(host_team_avatar, 'wb') as f:
+                #                         f.write(img)
+                #                 else:
+                #                     print('图片已经存在')
+                #
+                #                 if guest_team_avatar not in files:
+                #                     response_img = requests.get(guest_team_img_url)
+                #                     img = response_img.content
+                #                     os.chdir(img_dir)
+                #                     with open(guest_team_avatar, 'wb') as f:
+                #                         f.write(img)
+                #                 else:
+                #                     print('图片已经存在')
+                #
+                #     except requests.ConnectionError as e:
+                #         print('img Error', e.args)
+                # ------------------------------------------------------------------------------------------------------
+                if Quiz.objects.filter(match_flag=match_id).exists() is not True:
+                    quiz = Quiz()
+                    quiz.match_flag = match_id
 
-                    try:
-                        img_base_url = 'https://i.sporttery.cn/api/fb_match_info/get_match_info?mid=' + match_id + '&f_callback=getMatchInfo'
-                        response_img_url = requests.get(img_base_url, headers=headers)
-                        if response_img_url.status_code == 200:
-                            dt = response_img_url.text.encode("utf-8").decode('unicode_escape')
-                            result = json.loads(dt[13:-2])
-                            host_team_img_url = result['result']['h_pic']
-                            guest_team_img_url = result['result']['a_pic']
+                    if Category.objects.filter(name=league_abbr).first() is None:
+                        category = Category()
+                        category.name = league_abbr
+                        category.admin = Admin.objects.filter(id=1).first()
+                        category.parent = Category.objects.filter(id=2).first()
+                        category.save()
+                    quiz.category = Category.objects.filter(name=league_abbr).first()
 
-                            if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
-                                    len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
-                                host_team_avatar = \
-                                    re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][
-                                        1].replace(
-                                        '/',
-                                        '_')
-                                guest_team_avatar = \
-                                    re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
-                                        1].replace(
-                                        '/', '_')
-
-                                files = []
-                                source_dir = img_dir
-                                for root, sub_dirs, files in os.walk(source_dir):
-                                    files = files
-
-                                if host_team_avatar not in files:
-                                    response_img = requests.get(host_team_img_url)
-                                    img = response_img.content
-                                    os.chdir(img_dir)
-                                    with open(host_team_avatar, 'wb') as f:
-                                        f.write(img)
-                                else:
-                                    print('图片已经存在')
-
-                                if guest_team_avatar not in files:
-                                    response_img = requests.get(guest_team_img_url)
-                                    img = response_img.content
-                                    os.chdir(img_dir)
-                                    with open(guest_team_avatar, 'wb') as f:
-                                        f.write(img)
-                                else:
-                                    print('图片已经存在')
-
-                    except requests.ConnectionError as e:
-                        print('img Error', e.args)
-                    # ------------------------------------------------------------------------------------------------------
-                    if Quiz.objects.filter(match_flag=match_id).exists() is not True:
-                        quiz = Quiz()
-                        quiz.match_flag = match_id
-
-                        if Category.objects.filter(name=league_abbr).first() is None:
-                            category = Category()
-                            category.name = league_abbr
-                            category.admin = Admin.objects.filter(id=1).first()
-                            category.parent = Category.objects.filter(id=2).first()
-                            category.save()
-                        quiz.category = Category.objects.filter(name=league_abbr).first()
-
-                        quiz.host_team = host_team_abbr
-                        quiz.host_team_fullname = host_team
-                        quiz.host_team_en = host_team_en
-                        quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + host_team_avatar
-                        quiz.guest_team = guest_team_abbr
-                        quiz.guest_team_fullname = guest_team
-                        quiz.guest_team_en = guest_team_en
-                        quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + guest_team_avatar
-                        quiz.match_name = league_abbr
-                        quiz.begin_at = time
-                        quiz.updated_at = created_at
-                        quiz.admin = Admin.objects.filter(id=1).first()
-                        if Quiz.objects.filter(host_team=host_team_abbr, guest_team=guest_team_abbr, begin_at=time).exists():
-                            quiz.status = Quiz.REPEAT_GAME
-                        else:
-                            pass
-                        quiz.save()
-                        for i in range(0, 4):
-                            # 赛果
-                            if i == 0:
-                                odds_pool_had = []
-                                num = 0
-                                rule = Rule()
-                                rule.quiz = quiz
-                                rule.type = i
-                                rule.type_en = i
-                                rule.tips = '赛果'
-                                rule.tips_en = ' Winner'
-                                rule.save()
-                                for dt in result_had:
-                                    option = Option()
-                                    option.rule = rule
-                                    option.option = dt[1]
-                                    if dt[1] == '主负':
-                                        option.option_en = 'Away'
-                                    elif dt[1] == '平局':
-                                        option.option_en = 'Draw'
-                                    elif dt[1] == '主胜':
-                                        option.option_en = 'Home'
-
-                                    option.odds = dt[2]
-                                    odds_pool_had.append(float(dt[2]))
-                                    option.flag = dt[0]
-                                    num = num + 1
-                                    option.order = num
-                                    option.save()
-                                rule.max_odd = max(odds_pool_had)
-                                rule.min_odd = min(odds_pool_had)
-                                rule.save()
-                                odds_pool_had.clear()
-
-                            # 让分赛果
-                            elif i == 1:
-                                odds_pool_hhad = []
-                                num = 0
-                                rule = Rule()
-                                rule.quiz = quiz
-                                rule.type = i
-                                rule.type_en = i
-                                rule.save()
-                                for dt in result_hhad:
-                                    option = Option()
-                                    option.rule = rule
-                                    option.option = dt[1][2:]
-                                    if dt[1][2:] == '主负':
-                                        option.option_en = 'Away'
-                                    elif dt[1][2:] == '平局':
-                                        option.option_en = 'Draw'
-                                    elif dt[1][2:] == '主胜':
-                                        option.option_en = 'Home'
-
-                                    option.odds = dt[2]
-                                    odds_pool_hhad.append(float(dt[2]))
-                                    option.flag = dt[0]
-                                    num = num + 1
-                                    option.order = num
-                                    option.save()
-
-                                    if dt[1][0] == '+':
-                                        rule.guest_let_score = dt[1][1]
-                                    else:
-                                        rule.home_let_score = dt[1][1]
-                                    rule.tips = '让分赛果'
-                                    rule.tips_en = 'Handicap Results'
-                                    rule.save()
-                                rule.max_odd = max(odds_pool_hhad)
-                                rule.min_odd = min(odds_pool_hhad)
-                                rule.save()
-                                odds_pool_hhad.clear()
-
-                            # 比分
-                            elif i == 2:
-                                odds_pool_crs = []
-                                num_h = 0
-                                num_d = 0
-                                num_a = 0
-                                rule = Rule()
-                                rule.quiz = quiz
-                                rule.type = i
-                                rule.type_en = i
-                                rule.tips = '比分'
-                                rule.tips_en = 'Scored'
-                                rule.save()
-                                for dt in result_crs:
-                                    option = Option()
-                                    option.rule = rule
-                                    option.option = dt[1]
-                                    if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
-                                        option.option_en = 'Other'
-                                    else:
-                                        option.option_en = dt[1]
-
-                                    option.odds = dt[2]
-                                    odds_pool_crs.append(float(dt[2]))
-                                    if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
-                                        if dt[1] == '胜其他':
-                                            option.option_type = '胜'
-                                            num_h = num_h + 1
-                                            option.order = num_h
-                                        elif dt[1] == '平其他':
-                                            option.option_type = '平'
-                                            num_d = num_d + 1
-                                            option.order = num_d
-                                        elif dt[1] == '负其他':
-                                            option.option_type = '负'
-                                            num_a = num_a + 1
-                                            option.order = num_a
-                                    else:
-                                        score = dt[1].split(':')
-                                        if score[0] > score[1]:
-                                            option.option_type = '胜'
-                                            num_h = num_h + 1
-                                            option.order = num_h
-                                        elif score[0] == score[1]:
-                                            option.option_type = '平'
-                                            num_d = num_d + 1
-                                            option.order = num_d
-                                        elif score[0] < score[1]:
-                                            option.option_type = '负'
-                                            num_a = num_a + 1
-                                            option.order = num_a
-                                    option.flag = dt[0]
-                                    option.save()
-                                rule.max_odd = max(odds_pool_crs)
-                                rule.min_odd = min(odds_pool_crs)
-                                rule.save()
-                                odds_pool_crs.clear()
-
-                            # 总进球
-                            elif i == 3:
-                                odds_pool_ttg = []
-                                num = 0
-                                rule = Rule()
-                                rule.quiz = quiz
-                                rule.type = i
-                                rule.type_en = i
-                                rule.tips = '总进球'
-                                rule.tips_en = 'Total goals'
-                                rule.save()
-                                for dt in result_ttg:
-                                    option = Option()
-                                    option.rule = rule
-                                    option.option = dt[1]
-                                    if dt[1] == '7球以上':
-                                        option.option_en = '7+'
-                                    else:
-                                        option.option_en = dt[1][0]
-
-                                    option.odds = dt[2]
-                                    odds_pool_ttg.append(float(dt[2]))
-                                    option.flag = dt[0]
-                                    num = num + 1
-                                    option.order = num
-                                    option.save()
-                                rule.max_odd = max(odds_pool_ttg)
-                                rule.min_odd = min(odds_pool_ttg)
-                                rule.save()
-                                odds_pool_ttg.clear()
-
-                        # 亚盘玩法
-                        try:
-                            response_asia = requests.get(asia_url + match_id, headers=headers)
-                            dt = response_asia.text.encode("utf-8").decode('unicode_escape')
-                            json_dt = eval(dt[8:-2])
-                        except requests.ConnectionError as e:
-                            print('asia Error', e.args)
-                        else:
-                            if json_dt['status']['code'] == 0:
-                                rule = Rule()
-                                rule.quiz = quiz
-                                rule.type = str(Rule.AISA_RESULTS)
-                                rule.type_en = str(Rule.AISA_RESULTS)
-                                rule.tips = '亚盘'
-                                rule.tips_en = 'Asian Handicap'
-                                rule.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
-                                rule.save()
-
-                                for i in range(1, 3):
-                                    option = Option()
-                                    option.rule = rule
-                                    if i == 1:
-                                        option.option = '主队'
-                                        option.option_en = 'Home'
-                                        option.odds = json_dt['result']['data'][0]['o1']
-                                    else:
-                                        option.option = '客队'
-                                        option.option_en = 'Guest'
-                                        option.odds = json_dt['result']['data'][0]['o2']
-                                    option.order = i
-                                    option.save()
-
-                        # 记录初始赔率
-                        change_time = get_time()
-                        quiz = Quiz.objects.get(match_flag=match_id)
-                        for rule in Rule.objects.filter(quiz=quiz):
-                            for option in Option.objects.filter(rule=rule):
-                                quiz_odds_log = QuizOddsLog()
-                                quiz_odds_log.quiz = quiz
-                                quiz_odds_log.rule = rule
-                                quiz_odds_log.option = option
-                                quiz_odds_log.option_title = option.option
-                                quiz_odds_log.odds = option.odds
-                                quiz_odds_log.change_at = change_time
-                                quiz_odds_log.save()
-
-                                # 生成俱乐部选项赔率表
-                                clubs = Club.objects.all()
-                                for club in clubs:
-                                    option_odds = OptionOdds()
-                                    option_odds.club = club
-                                    option_odds.quiz = quiz
-                                    option_odds.option = option
-                                    option_odds.odds = option.odds
-                                    option_odds.save()
+                    quiz.host_team = host_team_abbr
+                    quiz.host_team_fullname = host_team
+                    quiz.host_team_en = host_team_en
+                    quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + host_team_avatar
+                    quiz.guest_team = guest_team_abbr
+                    quiz.guest_team_fullname = guest_team
+                    quiz.guest_team_en = guest_team_en
+                    quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/football/team_icon/' + guest_team_avatar
+                    quiz.match_name = league_abbr
+                    quiz.begin_at = time
+                    quiz.updated_at = created_at
+                    quiz.admin = Admin.objects.filter(id=1).first()
+                    if Quiz.objects.filter(host_team=host_team_abbr, guest_team=guest_team_abbr, begin_at=time).exists():
+                        quiz.status = Quiz.REPEAT_GAME
                     else:
-                        print('已经存在')
-                    # --------------------------------------------------------------------------------------------------
-                    print(match_id)
-                    print(league)
-                    print(league_abbr)
-                    print(guest_team)
-                    print(host_team)
-                    print(time)
-                    print(created_at)
-                    print(result_had)
-                    print(result_hhad)
-                    print(result_ttg)
-                    print(result_crs)
-                    # print(result_hafu)
-                    print('-------------------------------------------------------------------------------------------')
+                        pass
+                    quiz.save()
+                    for i in range(0, 4):
+                        # 赛果
+                        if i == 0:
+                            odds_pool_had = []
+                            num = 0
+                            rule = Rule()
+                            rule.quiz = quiz
+                            rule.type = i
+                            rule.type_en = i
+                            rule.tips = '赛果'
+                            rule.tips_en = ' Winner'
+                            rule.save()
+                            for dt in result_had:
+                                option = Option()
+                                option.rule = rule
+                                option.option = dt[1]
+                                if dt[1] == '主负':
+                                    option.option_en = 'Away'
+                                elif dt[1] == '平局':
+                                    option.option_en = 'Draw'
+                                elif dt[1] == '主胜':
+                                    option.option_en = 'Home'
+
+                                option.odds = dt[2]
+                                odds_pool_had.append(float(dt[2]))
+                                option.flag = dt[0]
+                                num = num + 1
+                                option.order = num
+                                option.save()
+                            rule.max_odd = max(odds_pool_had)
+                            rule.min_odd = min(odds_pool_had)
+                            rule.save()
+                            odds_pool_had.clear()
+
+                        # 让分赛果
+                        elif i == 1:
+                            odds_pool_hhad = []
+                            num = 0
+                            rule = Rule()
+                            rule.quiz = quiz
+                            rule.type = i
+                            rule.type_en = i
+                            rule.save()
+                            for dt in result_hhad:
+                                option = Option()
+                                option.rule = rule
+                                option.option = dt[1][2:]
+                                if dt[1][2:] == '主负':
+                                    option.option_en = 'Away'
+                                elif dt[1][2:] == '平局':
+                                    option.option_en = 'Draw'
+                                elif dt[1][2:] == '主胜':
+                                    option.option_en = 'Home'
+
+                                option.odds = dt[2]
+                                odds_pool_hhad.append(float(dt[2]))
+                                option.flag = dt[0]
+                                num = num + 1
+                                option.order = num
+                                option.save()
+
+                                if dt[1][0] == '+':
+                                    rule.guest_let_score = dt[1][1]
+                                else:
+                                    rule.home_let_score = dt[1][1]
+                                rule.tips = '让分赛果'
+                                rule.tips_en = 'Handicap Results'
+                                rule.save()
+                            rule.max_odd = max(odds_pool_hhad)
+                            rule.min_odd = min(odds_pool_hhad)
+                            rule.save()
+                            odds_pool_hhad.clear()
+
+                        # 比分
+                        elif i == 2:
+                            odds_pool_crs = []
+                            num_h = 0
+                            num_d = 0
+                            num_a = 0
+                            rule = Rule()
+                            rule.quiz = quiz
+                            rule.type = i
+                            rule.type_en = i
+                            rule.tips = '比分'
+                            rule.tips_en = 'Scored'
+                            rule.save()
+                            for dt in result_crs:
+                                option = Option()
+                                option.rule = rule
+                                option.option = dt[1]
+                                if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
+                                    option.option_en = 'Other'
+                                else:
+                                    option.option_en = dt[1]
+
+                                option.odds = dt[2]
+                                odds_pool_crs.append(float(dt[2]))
+                                if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
+                                    if dt[1] == '胜其他':
+                                        option.option_type = '胜'
+                                        num_h = num_h + 1
+                                        option.order = num_h
+                                    elif dt[1] == '平其他':
+                                        option.option_type = '平'
+                                        num_d = num_d + 1
+                                        option.order = num_d
+                                    elif dt[1] == '负其他':
+                                        option.option_type = '负'
+                                        num_a = num_a + 1
+                                        option.order = num_a
+                                else:
+                                    score = dt[1].split(':')
+                                    if score[0] > score[1]:
+                                        option.option_type = '胜'
+                                        num_h = num_h + 1
+                                        option.order = num_h
+                                    elif score[0] == score[1]:
+                                        option.option_type = '平'
+                                        num_d = num_d + 1
+                                        option.order = num_d
+                                    elif score[0] < score[1]:
+                                        option.option_type = '负'
+                                        num_a = num_a + 1
+                                        option.order = num_a
+                                option.flag = dt[0]
+                                option.save()
+                            rule.max_odd = max(odds_pool_crs)
+                            rule.min_odd = min(odds_pool_crs)
+                            rule.save()
+                            odds_pool_crs.clear()
+
+                        # 总进球
+                        elif i == 3:
+                            odds_pool_ttg = []
+                            num = 0
+                            rule = Rule()
+                            rule.quiz = quiz
+                            rule.type = i
+                            rule.type_en = i
+                            rule.tips = '总进球'
+                            rule.tips_en = 'Total goals'
+                            rule.save()
+                            for dt in result_ttg:
+                                option = Option()
+                                option.rule = rule
+                                option.option = dt[1]
+                                if dt[1] == '7球以上':
+                                    option.option_en = '7+'
+                                else:
+                                    option.option_en = dt[1][0]
+
+                                option.odds = dt[2]
+                                odds_pool_ttg.append(float(dt[2]))
+                                option.flag = dt[0]
+                                num = num + 1
+                                option.order = num
+                                option.save()
+                            rule.max_odd = max(odds_pool_ttg)
+                            rule.min_odd = min(odds_pool_ttg)
+                            rule.save()
+                            odds_pool_ttg.clear()
+
+                    # 亚盘玩法
+                    try:
+                        response_asia = requests.get(asia_url + match_id, headers=headers)
+                        dt = response_asia.text.encode("utf-8").decode('unicode_escape')
+                        json_dt = eval(dt[8:-2])
+                    except requests.ConnectionError as e:
+                        print('asia Error', e.args)
+                    else:
+                        if json_dt['status']['code'] == 0:
+                            rule = Rule()
+                            rule.quiz = quiz
+                            rule.type = str(Rule.AISA_RESULTS)
+                            rule.type_en = str(Rule.AISA_RESULTS)
+                            rule.tips = '亚盘'
+                            rule.tips_en = 'Asian Handicap'
+                            rule.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
+                            rule.save()
+
+                            for i in range(1, 3):
+                                option = Option()
+                                option.rule = rule
+                                if i == 1:
+                                    option.option = '主队'
+                                    option.option_en = 'Home'
+                                    option.odds = json_dt['result']['data'][0]['o1']
+                                else:
+                                    option.option = '客队'
+                                    option.option_en = 'Guest'
+                                    option.odds = json_dt['result']['data'][0]['o2']
+                                option.order = i
+                                option.save()
+
+                    # 记录初始赔率
+                    change_time = get_time()
+                    quiz = Quiz.objects.get(match_flag=match_id)
+                    for rule in Rule.objects.filter(quiz=quiz):
+                        for option in Option.objects.filter(rule=rule):
+                            quiz_odds_log = QuizOddsLog()
+                            quiz_odds_log.quiz = quiz
+                            quiz_odds_log.rule = rule
+                            quiz_odds_log.option = option
+                            quiz_odds_log.option_title = option.option
+                            quiz_odds_log.odds = option.odds
+                            quiz_odds_log.change_at = change_time
+                            quiz_odds_log.save()
+
+                            # 生成俱乐部选项赔率表
+                            clubs = Club.objects.all()
+                            for club in clubs:
+                                option_odds = OptionOdds()
+                                option_odds.club = club
+                                option_odds.quiz = quiz
+                                option_odds.option = option
+                                option_odds.odds = option.odds
+                                option_odds.save()
                 else:
-                    print('已经存在，跳过或者还没开售')
+                    print('已经存在')
+                # --------------------------------------------------------------------------------------------------
+                print(match_id)
+                print(league)
+                print(league_abbr)
+                print(guest_team)
+                print(host_team)
+                print(time)
+                print(created_at)
+                print(result_had)
+                print(result_hhad)
+                print(result_ttg)
+                print(result_crs)
+                # print(result_hafu)
+                print('-------------------------------------------------------------------------------------------')
+            else:
+                print('已经存在，跳过或者还没开售')
     else:
         print('未请求到任何数据')
 
