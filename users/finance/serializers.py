@@ -2,7 +2,6 @@ from rest_framework import serializers
 from users.models import GSGAssetAccount, Expenditure
 from chat.models import Club, ClubRule
 
-
 class GSGSerializer(serializers.HyperlinkedModelSerializer):
     """
     GSG账号表
@@ -70,3 +69,9 @@ class ExpenditureSerializer(serializers.HyperlinkedModelSerializer):
         else:
             in_out = '收入'
         return in_out
+
+class ClubRuleSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = ClubRule
+        fields = ("id", "title", "icon")

@@ -3,10 +3,10 @@ from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIVi
 from django.http import JsonResponse
 from base.exceptions import UserLoginException
 from rest_framework import status
-from utils.functions import value_judge, reversion_Decorator
+from utils.functions import value_judge, reversion_Decorator, normalize_fraction
 from rest_framework_jwt.settings import api_settings
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from wc_auth.models import Admin
@@ -16,8 +16,10 @@ from users.models import UserRecharge, UserPresentation, UserCoin, CoinDetail, U
     GSGAssetAccount, CoinOutServiceCharge, Expenditure
 from chat.models import Club
 from django.db.models import Sum, Q
-from quiz.models import Record, OptionOdds
-from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer, ExpenditureSerializer
+from quiz.models import Record, OptionOdds, Quiz
+from guess.models import Record as g_record
+from users.finance.serializers import GSGSerializer, ClubSerializer, GameSerializer, ExpenditureSerializer, \
+    ClubRuleSerializer
 from users.app.v1.serializers import PresentationSerialize
 import pytz
 from sms.models import Sms
@@ -25,6 +27,7 @@ from django.conf import settings
 from base.function import LoginRequired
 from chat.models import ClubRule
 from url_filter.integrations.drf import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 
 
 class UserManager(object):
@@ -66,7 +69,6 @@ class UserManager(object):
             return token, user
         else:
             raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
-
 
 
 class LoginView(CreateAPIView):
@@ -541,10 +543,12 @@ class FinanceView(ListAPIView):
         results = items.data.get('results')
         return self.response({'code': 0, 'data': results})
 
+
 class BillView(ListCreateAPIView):
     """
     打款操作
     """
+
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
@@ -552,9 +556,9 @@ class BillView(ListCreateAPIView):
             item = UserPresentation.objects.get(pk=id)
         except Exception:
             return JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
-        txid ='11111'
-        state=1
-        if state==1:
+        txid = '11111'
+        state = 1
+        if state == 1:
             item.is_bill = 1
             language = request.data.get('language', '')
             item.txid = txid
@@ -573,3 +577,143 @@ class BillView(ListCreateAPIView):
             return self.response({'code': 0})
         else:
             return JsonResponse({'Error': 'Present Fail'}, status=status.HTTP_400_BAD_REQUEST)
+
+class PlayListView(ListAPIView):
+    """
+    玩法列表
+    """
+    queryset = ClubRule.objects.filter(is_deleted=0)
+    serializer_class = ClubRuleSerializer
+
+
+class PlayDetailView(RetrieveAPIView):
+    """
+    玩法详情
+    """
+
+    def retrieve(self, request, *args, **kwargs):
+        play_id = int(kwargs['play_id'])
+        play_item = get_object_or_404(ClubRule, pk=play_id)
+        play_name = play_item.title
+        data = list(self.play(play_name))
+        return JsonResponse({'data':data}, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def play(play_name):
+        clubs = Club.objects.filter(coin__is_criterion=0).values('id','coin__name', 'coin__icon').order_by('coin__coin_order')
+        ids = [x['id'] for x in clubs]
+        now_date = datetime.now().date()
+        day_ago = now_date - timedelta(1)
+        week_ago = now_date - timedelta(7)
+        if play_name == "球赛":
+            quiz = Quiz.objects.filter(status=5).values('id').order_by('-id')
+            quiz_ids = [x['id'] for x in quiz]
+            total_bets = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_bets=Sum('bets')).order_by('club_id')
+            total_earns = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids, earn_coin__gt=0).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_earn_coin=Sum('earn_coin')).order_by('club_id')
+            bets = Record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), roomquiz_id__in=ids,
+                                         quiz_id__in=quiz_ids).extra(select={'date': 'date(open_prize_time)'}).extra({'club_id':'roomquiz_id'}).values(
+                'date', 'club_id').annotate(sum_bets=Sum('bet')).order_by('date')
+            earns = Record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), roomquiz_id__in=ids,
+                                          quiz_id__in=quiz_ids, earn_coin__gt=0).extra(
+                select={'date': 'date(open_prize_time)'}).extra({'club_id':'roomquiz_id'}).values('date', 'club_id').annotate(
+                sum_earn_coin=Sum('earn_coin')).order_by('date')
+
+        if play_name == "猜股指":
+            total_bets = g_record.objects.filter(club_id__in=ids,
+                                           status=str(1)).values('club_id').annotate(sum_bets=Sum('bets')).order_by('club_id')
+            total_earns = g_record.objects.filter(club_id__in=ids,
+                                           status=str(1), earn_coin__gt=0).values('club_id').annotate(sum_earn_coin=Sum('earn_coin')).order_by('club_id')
+
+            bets = g_record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), club_id__in=ids,
+                                           status=str(1)).extra(select={'date': 'date(open_prize_time)'}).values('date',
+                                                                                                                 'club_id').annotate(
+                sum_bets=Sum('bets')).order_by('date')
+            earns = g_record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), club_id__in=ids,
+                                            status=str(1), earn_coin__gt=0).extra(
+                select={'date': 'date(open_prize_time)'}).values('date', 'club_id').annotate(
+                sum_earn_coin=Sum('earn_coin')).order_by('date')
+        temp_bets = {}
+        temp_earns= {}
+        temp_total_bets = {}
+        temp_total_earns = {}
+        format = '%m/%d'
+        if len(bets) > 0:
+            for c in bets:
+                date = c['date'].strftime(format)
+                if str(c['club_id']) not in temp_bets:
+                    temp_bets[str(c['club_id'])]={}
+                temp_bets[str(c['club_id'])][str(date)]=c['sum_bets']
+
+        if len(earns) > 0:
+            for d in earns:
+                date = d['date'].strftime(format)
+                if str(d['club_id']) not in temp_earns:
+                    temp_earns[str(d['club_id'])]={}
+                temp_earns[str(d['club_id'])][date]=d['sum_earn_coin']
+
+        if len(total_bets) > 0:
+            for x in total_bets:
+                temp_total_bets[str(x['club_id'])] = x['sum_bets']
+
+        if len(total_earns) > 0:
+            for x in total_earns:
+                temp_total_earns[str(x['club_id'])] = x['sum_earn_coin']
+
+        for a in clubs:
+            a['start_day'] = week_ago.strftime('%Y-%m-%d')
+            a['end_day'] = day_ago.strftime('%Y-%m-%d')
+            if str(a['id']) not in temp_total_bets:
+                a['in'] = 0
+                a['out'] = 0
+                a['rest'] = 0
+            else:
+                if str(a['id']) not in temp_total_earns:
+                    a['in']=normalize_fraction(temp_total_bets[str(a['id'])],3)
+                    a['out'] = 0
+                    a['rest'] = normalize_fraction(temp_total_bets[str(a['id'])],3)
+                else:
+                    a['in'] = normalize_fraction(temp_total_bets[str(a['id'])], 3)
+                    a['out'] = normalize_fraction(temp_total_earns[str(a['id'])], 3)
+                    a['rest'] = normalize_fraction(temp_total_bets[str(a['id'])]-temp_total_earns[str(a['id'])], 3)
+            for b in range(0,7):
+                date = (week_ago + timedelta(b)).strftime(format)
+                temp_none = {'date': date, 'profit': 0}
+                if temp_bets:
+                    if str(a['id']) not in temp_bets:
+                        if 'results' not in a:
+                            a['results'] = [temp_none]
+                        else:
+                            a['results'].append(temp_none)
+                    else:
+                        if date in temp_bets[str(a['id'])]:
+                            if str(a['id']) not in temp_earns:
+                                if 'results' not in a:
+                                    a['results']=[{'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)}]
+                                else:
+                                    a['results'].append({'date':date, 'profit':normalize_fraction(temp_bets[str(a['id'])][date],4)})
+                            else:
+                                if date not in temp_earns[str(a['id'])]:
+                                    if 'results' not in a:
+                                        a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)}]
+                                    else:
+                                        a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date],4)})
+                                else:
+                                    if 'results' not in a:
+                                        a['results'] = [{'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)}]
+                                    else:
+                                        a['results'].append({'date': date, 'profit': normalize_fraction(temp_bets[str(a['id'])][date] - temp_earns[str(a['id'])][date],4)})
+                        else:
+                            if 'results' not in a:
+                                a['results'] = [temp_none]
+                            else:
+                                a['results'].append(temp_none)
+                else:
+                    if 'results' not in a:
+                        a['results'] = [temp_none]
+                    else:
+                        a['results'].append(temp_none)
+        return clubs
+
+
+
+
