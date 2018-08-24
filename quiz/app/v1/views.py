@@ -905,6 +905,15 @@ class Change(ListAPIView):
         coin = get_sql(sql)  # gsg
         gsg = coin[1]
         eth = coin[0]
+
+        sql = "SELECT v.value FROM quiz_gsgvalue v"
+        sql += " where v.house = 'debi'"
+        sql += " and v.coin_id = 6"
+        sql += "  ORDER BY v.created_at DESC limit 1"
+        gsg_list = get_sql(sql)    # gsg价格列表
+        print("gsg_list====================================", gsg_list)
+        gsg_value = get_sql(sql)[0][0]    # gsg价格
+
         sql = "select a.price from users_coinprice a"
         sql += " where coin_name='ETH'"
         sql += " and a.platform_name!=''"
@@ -1133,10 +1142,10 @@ class PlatformList(ListAPIView):
         price_list = get_sql(sql)  # 交易所列表
         data = []
         for price in price_list:
-            if price[0] == 'bitforex':
-                pass
-            else:
+            if price[0] == 'debi':
                 data.append(price[0])
+            else:
+                pass
         return self.response({'code': 0, "data": data})
 
 
@@ -1157,10 +1166,12 @@ class GsgPrice(ListAPIView):
             if len(price_list) <= 0:
                 raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
             house = price_list[0][0]
+            house = 'debi'
         else:
             house = self.request.GET.get('house')
         sql = "select date_format(a.created_at, '%m/%d') as date, date_format(a.created_at, '%Y-%m-%d') as date, avg(value)  as price from quiz_gsgvalue a"
-        sql += " where a.house= '" + house + "'" + "group by date;"
+        sql += " where a.club_id = 6"
+        sql += " and a.house= '" + house + "'" + "group by date;"
         price_list = get_sql(sql)
         data = []
         for price in price_list:
