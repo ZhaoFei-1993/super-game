@@ -1170,7 +1170,7 @@ class GsgPrice(ListAPIView):
         else:
             house = self.request.GET.get('house')
         sql = "select date_format(a.created_at, '%m/%d') as date, date_format(a.created_at, '%Y-%m-%d') as date, avg(value)  as price from quiz_gsgvalue a"
-        sql += " where a.club_id = 6"
+        sql += " where a.coin_id = 6"
         sql += " and a.house= '" + house + "'" + "group by date;"
         price_list = get_sql(sql)
         data = []
