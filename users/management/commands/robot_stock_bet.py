@@ -306,7 +306,7 @@ class Command(BaseCommand):
         :param last_periods 上期数据
         :return:
         """
-        options = Options.objects.filter(play_id=play_id).order_by('odds')
+        options = Options.objects.filter(play_id=play_id).order_by('order')
         if len(options) == 0:
             return False
 
