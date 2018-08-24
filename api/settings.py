@@ -78,10 +78,6 @@ INSTALLED_APPS = [
     'dragon_tiger',
 ]
 
-DJANGO_SILK_ENABLE = local_settings.DJANGO_SILK_ENABLE
-if DJANGO_SILK_ENABLE:
-    INSTALLED_APPS += 'silk'
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -92,8 +88,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'base.middleware.RequestExceptionHandler',
-    # 'silk.middleware.SilkyMiddleware',
 ]
+
+DJANGO_SILK_ENABLE = local_settings.DJANGO_SILK_ENABLE
+if DJANGO_SILK_ENABLE:
+    INSTALLED_APPS += ('silk',)
+    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 ROOT_URLCONF = 'api.urls'
 
