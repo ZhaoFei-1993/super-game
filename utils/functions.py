@@ -450,7 +450,7 @@ class ImageChar(object):
     # SAVE_PATH = os.path.join(os.getcwd(), 'utils/captcha_img')
 
     def __init__(self, fontColor=(0, 0, 0),
-                 size=(100, 100),
+                 size=(300, 200),
                  fontPath='./utils/simsun.ttc',
                  bgColor=(255, 255, 255),
                  fontSize=20):

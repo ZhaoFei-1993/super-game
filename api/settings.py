@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'console',
     'handle',
     'marksix',
+    # 'recharge',
     # 'silk',
 ]
 
