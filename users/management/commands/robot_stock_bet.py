@@ -127,13 +127,17 @@ class Command(BaseCommand):
                 if stock is False:
                     continue
 
+                # 获取上期开奖结果
+                last_period_number = item.periods - 1
+                last_periods = Periods.objects.get(stock=stock, periods=last_period_number)
+
                 # 随机抽取玩法
                 rule = self.get_bet_rule(stock.id)
                 if rule is False:
                     continue
 
                 # 随机下注选项
-                option = self.get_bet_option(rule.id)
+                option = self.get_bet_option(rule.id, last_periods)
                 if option is False:
                     continue
 
@@ -295,10 +299,11 @@ class Command(BaseCommand):
         return choice
 
     @staticmethod
-    def get_bet_option(play_id):
+    def get_bet_option(play_id, last_periods):
         """
         获取下注选项，目前随机获取
         :param play_id 玩法ID
+        :param last_periods 上期数据
         :return:
         """
         options = Options.objects.filter(play_id=play_id).order_by('odds')
@@ -306,12 +311,19 @@ class Command(BaseCommand):
             return False
 
         if play_id == 1:
-            choice_a = random.randint(30, 70)
-            choice_b = 100 - choice_a
+            # 获取上一期大小的开奖结果
+            # 上期大，则下注权重为：押大:押小=4:6
+            # 上期小，则下注权重为：押大:押小=6:4
             choices = {
-                0: choice_a,
-                1: choice_b,
+                0: 60,
+                1: 40,
             }
+            if last_periods.size == '大':
+                choices = {
+                    0: 40,
+                    1: 60,
+                }
+
             weight_choice = WeightChoice()
             weight_choice.set_choices(choices)
             idx = weight_choice.choice()
