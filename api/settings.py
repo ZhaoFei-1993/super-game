@@ -76,8 +76,11 @@ INSTALLED_APPS = [
     'marksix',
     # 'recharge',
     'dragon_tiger',
-    # 'silk',
 ]
+
+DJANGO_SILK_ENABLE = local_settings.DJANGO_SILK_ENABLE
+if DJANGO_SILK_ENABLE:
+    INSTALLED_APPS += 'silk'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
