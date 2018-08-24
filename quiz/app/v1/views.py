@@ -910,15 +910,15 @@ class Change(ListAPIView):
         sql += " where v.house = 'debi'"
         sql += " and v.coin_id = 6"
         sql += "  ORDER BY v.created_at DESC limit 1"
-        gsg_list = get_sql(sql)    # gsg价格列表
-        print("gsg_list====================================", gsg_list)
+        # gsg_list = get_sql(sql)    # gsg价格列表
+        # print("gsg_list====================================", gsg_list)
         gsg_value = get_sql(sql)[0][0]    # gsg价格
 
         sql = "select a.price from users_coinprice a"
         sql += " where coin_name='ETH'"
         sql += " and a.platform_name!=''"
         eth_vlue = get_sql(sql)[0][0]  # ETH 价格
-        gsg_value = Decimal(0.3)
+        # gsg_value = Decimal(0.3)
         convert_ratio = int(eth_vlue / gsg_value)  # 1 ETH 换多少 GSG
         toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
 
