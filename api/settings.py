@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'handle',
     'marksix',
     # 'recharge',
+    'dragon_tiger',
     # 'silk',
 ]
 
