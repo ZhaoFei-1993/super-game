@@ -182,6 +182,7 @@ class Coin(models.Model):
     EOS = 8
     USDT = 9
     GSG = 6
+    BCH = 10
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)

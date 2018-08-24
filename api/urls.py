@@ -43,3 +43,5 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DJANGO_SILK_ENABLE:
+    urlpatterns += [path('silk', include('silk.urls', namespace='silk'))]
