@@ -361,7 +361,7 @@ class Command(BaseCommand):
             2: 10,
         }
         if len(options) == 2:
-            options = {
+            choices = {
                 0: 50,
                 1: 50,
             }
