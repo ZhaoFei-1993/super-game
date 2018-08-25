@@ -312,6 +312,12 @@ class RecordsListView(ListCreateAPIView):
             if language == 'en':
                 host_team = quiz.host_team_en
                 guest_team = quiz.guest_team_en
+
+                if host_team == '' or host_team is None:
+                    host_team = quiz.host_team
+
+                if guest_team == '' or guest_team is None:
+                    host_team = quiz.guest_team
             else:
                 host_team = quiz.host_team
                 guest_team = quiz.guest_team
