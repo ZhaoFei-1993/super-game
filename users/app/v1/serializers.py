@@ -255,7 +255,7 @@ class MessageListSerialize(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()  # 消息类型
     # type = serializers.SlugRelatedField(read_only=True, slug_field="type")
     # title = serializers.SlugRelatedField(read_only=True, slug_field="title")
-    titles = serializers.SerializerMethodField()  # 消息标题
+    # titles = serializers.SerializerMethodField()  # 消息标题
     created_at = serializers.SerializerMethodField()
 
     class Meta:
