@@ -211,6 +211,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                         response_score = requests.get(score_url, headers=headers)
                         dt = response_score.text.encode("utf-8").decode('unicode_escape')
                         score_dt = eval(dt[21:-2])
+                        if score_dt['status']['code'] != 0:
+                            print(score_dt['status']['message'])
+                            return
 
                         for score in score_dt['result']['data']:
                             if score['h_cn_abbr'] == quiz.host_team and score['a_cn_abbr'] == quiz.guest_team:
