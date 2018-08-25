@@ -25,7 +25,7 @@ def get_data(url):
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
-            result = json.loads(dt[8:-2])
+            result = json.loads(dt[12:-2])
             return result
     except requests.ConnectionError as e:
         print('match Error ', e.args)
@@ -421,6 +421,8 @@ def get_data_info(url):
                                 num = num + 1
                                 option.order = num
                                 option.save()
+                            print(match_id)
+                            print(odds_pool_had)
                             rule.max_odd = max(odds_pool_had)
                             rule.min_odd = min(odds_pool_had)
                             rule.save()
