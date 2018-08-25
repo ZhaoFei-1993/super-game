@@ -608,7 +608,7 @@ class PlayDetailView(RetrieveAPIView):
         if play_name == "球赛":
             quiz = Quiz.objects.filter(status=5).values('id').order_by('-id')
             quiz_ids = [x['id'] for x in quiz]
-            total_bets = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_bets=Sum('bets')).order_by('club_id')
+            total_bets = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids).extra({'club_id': 'roomquiz_id'}).values('club_id').annotate(sum_bets=Sum('bet')).order_by('club_id')
             total_earns = Record.objects.filter(roomquiz_id__in=ids, quiz_id__in=quiz_ids, earn_coin__gt=0).extra({'club_id':'roomquiz_id'}).values('club_id').annotate(sum_earn_coin=Sum('earn_coin')).order_by('club_id')
             bets = Record.objects.filter(open_prize_time__date__range=(week_ago, day_ago), roomquiz_id__in=ids,
                                          quiz_id__in=quiz_ids).extra(select={'date': 'date(open_prize_time)'}).extra({'club_id':'roomquiz_id'}).values(

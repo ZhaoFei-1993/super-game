@@ -2,7 +2,7 @@
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, LockSerialize, \
-    CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize
+    CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize, DivendListSerializer
 import qrcode
 from django.core.cache import caches
 from quiz.models import Quiz
@@ -3000,3 +3000,17 @@ class HomeMessageView(ListAPIView):
     #     sql += " and a.is_deleted=0"
     #     data = get_sql(sql)  # 用户拥有的ETH
     #     return self.response({'code': 0, 'data': data})
+
+class DividendHistory(ListAPIView):
+    """
+    每日分红记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = DivendListSerializer
+
+    def get_queryset(self):
+        lock_id = int(self.kwargs['lock_id'])
+        query = Dividend.objects.filter(user_lock_id=lock_id).order_by('-created_at')
+        return query
+
+

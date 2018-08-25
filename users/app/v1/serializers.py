@@ -4,7 +4,7 @@ from django.db.models import Q, Sum
 from rest_framework import serializers
 from ...models import User, DailySettings, UserMessage, Message, UserCoinLock, UserRecharge, \
     UserPresentation, UserCoin, Coin, CoinValue, DailyLog, CoinDetail, IntegralPrize, CoinOutServiceCharge, \
-    CoinGiveRecords, Countries
+    CoinGiveRecords, Countries, Dividend
 from quiz.models import Record, Quiz
 from django.db import connection
 from utils.cache import get_cache, set_cache
@@ -815,3 +815,26 @@ class HomeMessageSerialize(serializers.ModelSerializer):
             content = obj.content_en
         list = str(title) + ": " + str(content)
         return list
+
+
+class DivendListSerializer(serializers.ModelSerializer):
+    """
+    分红列表序列化
+    """
+    coin_name = serializers.CharField(source='coin.name')
+    divide = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Dividend
+        fields = ('date','coin_name', 'divide')
+
+    @staticmethod
+    def get_date(obj):
+        date = obj.created_at.strftime('%Y-%m-%d')
+        return date
+
+    @staticmethod
+    def get_divide(obj):
+        divide = normalize_fraction(obj.divide, 18)
+        return divide
