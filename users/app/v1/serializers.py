@@ -255,12 +255,12 @@ class MessageListSerialize(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()  # 消息类型
     # type = serializers.SlugRelatedField(read_only=True, slug_field="type")
     # title = serializers.SlugRelatedField(read_only=True, slug_field="title")
-    titles = serializers.SerializerMethodField()  # 消息标题
+    # titles = serializers.SerializerMethodField()  # 消息标题
     created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = UserMessage
-        fields = ("id", "message", "type", "titles", "status", "created_at")
+        fields = ("id", "message", "type", "status", "created_at")
 
     def get_type(self, obj):  # 消息类型
         list = Message.objects.get(pk=obj.message_id)

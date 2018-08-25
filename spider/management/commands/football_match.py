@@ -421,6 +421,8 @@ def get_data_info(url):
                                 num = num + 1
                                 option.order = num
                                 option.save()
+                            print(match_id)
+                            print(odds_pool_had)
                             rule.max_odd = max(odds_pool_had)
                             rule.min_odd = min(odds_pool_had)
                             rule.save()
