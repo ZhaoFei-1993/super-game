@@ -310,7 +310,7 @@ class Command(BaseCommand):
         if len(options) == 0:
             return False
 
-        if int(play_id) == 1:
+        if int(play_id) in [1, 5, 9, 13]:
             # 获取上一期大小的开奖结果
             # 上期大，则下注权重为：押大:押小=4:6
             # 上期小，则下注权重为：押大:押小=6:4

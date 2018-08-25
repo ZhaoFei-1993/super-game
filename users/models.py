@@ -13,6 +13,7 @@ from django.conf import settings
 from base.error_code import get_code
 from utils.models import CodeModel
 import hashlib
+from base.models import BaseManager
 
 
 class UserManager(BaseUserManager):
@@ -130,10 +131,12 @@ class User(AbstractBaseUser):
 #         ordering = ['-id']
 #         verbose_name = verbose_name_plural = "用户邀请表"
 
-class CoinManager(models.Manager):
+class CoinManager(BaseManager):
     """
     Coin操作
     """
+    key = 'coin_data'
+
     @staticmethod
     def get_coin_name_by_id(coin_id):
         """

@@ -10,6 +10,14 @@ from django.db.models import Sum, F, FloatField
 
 from .odds import Game
 from decimal import Decimal
+from base.models import BaseManager
+
+
+class CategoryManager(BaseManager):
+    """
+    竞猜分类数据操作
+    """
+    key = 'category_data'
 
 
 @reversion.register()
@@ -22,9 +30,20 @@ class Category(MPTTModel):
     order = models.IntegerField(verbose_name="排序", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
+    objects = CategoryManager()
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "竞猜分类表"
+
+
+class QuizManager(BaseManager):
+    """
+    体育赛事竞猜数据操作
+    """
+    key = 'quiz_data'
+    order_by = 'begin_at'
+    cache_type = 'default'
 
 
 @reversion.register()
@@ -87,6 +106,8 @@ class Quiz(models.Model):
     gaming_time = models.IntegerField(verbose_name="比赛进行时间", default=0)
     match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
     is_reappearance = models.BooleanField(verbose_name="是否已返现", default=False)
+
+    objects = QuizManager()
 
     class Meta:
         ordering = ['-id']

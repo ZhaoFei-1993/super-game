@@ -235,61 +235,141 @@ class RecordsListView(ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
-        Progress = results.data.get('results')
+        progress = results.data.get('results')
         data = []
-        # quiz_id = ''
         tmp = ''
-        # time = ''
-        # host = ''
-        # guest = ''
-        for fav in Progress:
-            # record = fav.get('pk')
-            # quiz = fav.get('quiz_id')
+
+        language = request.GET.get('language')
+
+        club_ids = []
+        quiz_ids = []
+        option_odds_ids = []
+        for fav in progress:
+            club_ids.append(int(fav.get('roomquiz_id')))
+            quiz_ids.append(int(fav.get('quiz_id')))
+            option_odds_ids.append(int(fav.get('option_id')))
+
+        # 俱乐部对应货币精度
+        clubs = Club.objects.get_all()
+        coins = Coin.objects.get_all()
+        map_coin_accuracy = {}
+        map_coin_icon = {}
+        map_coin_name = {}
+        for coin in coins:
+            for club in clubs:
+                if club.coin_id != coin.id:
+                    continue
+                map_coin_accuracy[club.id] = coin.coin_accuracy
+                map_coin_icon[club.id] = coin.icon
+                map_coin_name[club.id] = coin.name
+
+        # 竞猜比赛数据
+        quizs = Quiz.objects.filter(id__in=quiz_ids)
+        map_team_info = {}
+        map_quiz_category_name = {}
+        for quiz in quizs:
+            map_team_info[quiz.id] = quiz
+
+            quiz_category = Category.objects.get_one(pk=quiz.category_id)
+            category = Category.objects.get_one(pk=quiz_category.parent_id)
+            map_quiz_category_name[quiz.id] = category.name
+
+        # 获取我的选项及我的选项是否正确，通过option_odds获取option_id，然后通过option_id获取rule_id
+        option_odds = OptionOdds.objects.filter(id__in=option_odds_ids)
+        option_ids = []
+        for option_odd in option_odds:
+            option_ids.append(option_odd.option_id)
+        options = Option.objects.filter(id__in=option_ids)
+        rule_ids = []
+        map_option_odds_option = {}
+        for item in options:
+            rule_ids.append(item.rule_id)
+            for option_odd in option_odds:
+                if option_odd.option_id != item.id:
+                    continue
+                map_option_odds_option[option_odd.id] = item
+        rules = Rule.objects.filter(id__in=rule_ids)
+        map_option_rule = {}
+        for rule in rules:
+            for option in options:
+                if option.rule_id != rule.id:
+                    continue
+                map_option_rule[option.id] = rule
+        map_option_odds_rule = {}
+        for option_odd in option_odds:
+            map_option_odds_rule[option_odd.id] = map_option_rule[option_odd.option_id]
+
+        for fav in progress:
+            club_id = int(fav.get('roomquiz_id'))
+            quiz_id = int(fav.get('quiz_id'))
+            option_odd_id = int(fav.get('option_id'))
+
             pecific_dates = fav.get('created_at')[0].get('years')
             pecific_date = fav.get('created_at')[0].get('year')
-            # pecific_time = fav.get('created_at')[0].get('time')
-            # host_team = fav.get('host_team')
-            # guest_team = fav.get('guest_team')
-            # if tmp == pecific_date and time == pecific_time and host == host_team and guest == guest_team:
-            #     host_team = ""
-            #     guest_team = ""
-            # else:
-            #     host = host_team
-            #     guest = guest_team
-            #
-            # if tmp == pecific_date and time == pecific_time:
-            #     pecific_time = ""
-            # else:
-            #     time = pecific_time
+
+            # 队名
+            quiz = map_team_info[quiz_id]
+            if language == 'en':
+                host_team = quiz.host_team_en
+                guest_team = quiz.guest_team_en
+            else:
+                host_team = quiz.host_team
+                guest_team = quiz.guest_team
+
+            status = int(quiz.status)
+            earn_coin = Decimal(float(fav.get('earn_coin')))
+
+            # 获取盈亏数据
+            earn_coin_str = '待开奖'
+            if language == 'en':
+                earn_coin_str = 'Wait results'
+            if status in [Quiz.PUBLISHING_ANSWER, Quiz.BONUS_DISTRIBUTION]:
+                if earn_coin <= 0:
+                    earn_coin_str = "猜错"
+                    if language == 'en':
+                        earn_coin_str = "Guess wrong"
+                else:
+                    earn_coin_str = "+" + str(normalize_fraction(earn_coin, map_coin_accuracy[club_id]))
+
             if tmp == pecific_date:
                 pecific_date = ""
                 pecific_dates = ""
             else:
                 tmp = pecific_date
-            # records = Record.objects.get(pk=record)
-            # earn_coin = records.earn_coin
-            # print("earn_coin=================", earn_coin)
-            # if quiz_id==quiz:
-            #     pass
-            # else:
-            #     quiz_id=quiz
-            bet = fav.get('bet')
+
+            # 获取用户选项数据
+            rule = map_option_odds_rule[option_odd_id]
+            option = map_option_odds_option[option_odd_id]
+            if language == 'en':
+                tips = rule.tips_en
+                if tips == '' or tips is None:
+                    tips = rule.tips
+            else:
+                tips = rule.tips
+            if language == 'en':
+                option_str = option.option_en
+                if option_str is None or option_str == '':
+                    option_str = option.option
+            else:
+                option_str = option.option
+            my_option = tips + ':' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
+
             data.append({
                 "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
                 "type": fav.get('type'),
-                'host_team': fav.get('host_team'),
-                'guest_team': fav.get('guest_team'),
-                'earn_coin': fav.get('earn_coin'),
+                'host_team': host_team,
+                'guest_team': guest_team,
+                'earn_coin': earn_coin_str,
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
-                'my_option': fav.get('my_option')[0].get('my_option'),
-                'is_right': fav.get('my_option')[0].get('is_right'),
-                'coin_avatar': fav.get('coin_avatar'),
-                'category_name': fav.get('quiz_category'),
-                'coin_name': fav.get('coin_name'),
-                'bet': fav.get('bets')
+                'my_option': my_option,
+                'is_right': option.is_right,
+                'coin_avatar': map_coin_icon[club_id],
+                'category_name': map_quiz_category_name[quiz.id],
+                'coin_name': map_coin_name[club_id],
+                'bet': normalize_fraction(fav.get('bet'), map_coin_accuracy[club_id])
             })
         return self.response({'code': 0, 'data': data})
 
