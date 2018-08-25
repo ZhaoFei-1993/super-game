@@ -360,6 +360,12 @@ class Command(BaseCommand):
             1: 20,
             2: 10,
         }
+        if len(options) == 2:
+            options = {
+                0: 50,
+                1: 50,
+            }
+
         weight_choice = WeightChoice()
         weight_choice.set_choices(choices)
         idx = weight_choice.choice()
