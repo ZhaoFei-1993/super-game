@@ -326,8 +326,15 @@ class Command(BaseCommand):
                 1: 20,      # 让分赛果
                 2: 5,       # 比分
                 3: 5,       # 总进球
-                8: 10
+                8: 10       # 亚盘
             }
+            if len(rules) == 4:
+                rules_weight = {
+                    0: 60,  # 赛果
+                    1: 20,  # 让分赛果
+                    2: 10,  # 比分
+                    3: 10,  # 总进球
+                }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
         rule_type = weight_choice.choice()
