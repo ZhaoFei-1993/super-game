@@ -18,9 +18,12 @@ class Encryption(BaseCommand):
     appsecret = '92e56d8195a9dd45a9b90aacf82886b1'     #你的Secret
     url = 'http://api.wt123.co/service'        #API请求地址 | 测试阶段地址
     time = int(time.time())
+    print("time================================", time)
     m = hashlib.md5()  # 创建md5对象
-    m.update(time, appid, appsecret)
-    token = m.hedigest()
+    hash_str = str(time)+appid+appsecret
+    hash_str = hash_str.encode('utf-8')
+    m.update(hash_str)
+    token = m.hexdigest()
     print("$token==============================", token)
 
 
