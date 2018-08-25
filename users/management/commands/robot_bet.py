@@ -303,6 +303,8 @@ class Command(BaseCommand):
         category = Category.objects.get(pk=quiz.category_id)
 
         rules = Rule.objects.filter(quiz_id=quiz_id)
+        if len(rules) < 4:
+            return False
         if len(rules) == 0:
             return False
 
