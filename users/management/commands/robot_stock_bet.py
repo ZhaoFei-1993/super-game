@@ -301,7 +301,7 @@ class Command(BaseCommand):
     @staticmethod
     def get_bet_option(play_id, last_periods):
         """
-        获取下注选项，目前随机获取
+        获取下注选项
         :param play_id 玩法ID
         :param last_periods 上期数据
         :return:
@@ -310,7 +310,7 @@ class Command(BaseCommand):
         if len(options) == 0:
             return False
 
-        if play_id == 1:
+        if int(play_id) == 1:
             # 获取上一期大小的开奖结果
             # 上期大，则下注权重为：押大:押小=4:6
             # 上期小，则下注权重为：押大:押小=6:4
