@@ -1248,8 +1248,8 @@ class MessageListView(ListAPIView, DestroyAPIView):
             data.append({
                 "user_message_id": list["id"],
                 "message_id": list["message"],
-                'type': list["type"],
-                'message_title': list["titles"],
+                'type': list["type"][0]['type_list'],
+                'message_title': list["type"][0]['title'],
                 'is_read': list["status"],
                 'message_date': list["created_at"],
             })
