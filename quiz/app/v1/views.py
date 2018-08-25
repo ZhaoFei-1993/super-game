@@ -317,7 +317,7 @@ class RecordsListView(ListCreateAPIView):
                     host_team = quiz.host_team
 
                 if guest_team == '' or guest_team is None:
-                    host_team = quiz.guest_team
+                    guest_team = quiz.guest_team
             else:
                 host_team = quiz.host_team
                 guest_team = quiz.guest_team
