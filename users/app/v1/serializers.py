@@ -255,22 +255,17 @@ class MessageListSerialize(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()  # 消息类型
     # type = serializers.SlugRelatedField(read_only=True, slug_field="type")
     # title = serializers.SlugRelatedField(read_only=True, slug_field="title")
-    titles = serializers.SerializerMethodField()  # 消息标题
+    # titles = serializers.SerializerMethodField()  # 消息标题
     created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = UserMessage
-        fields = ("id", "message", "type", "titles", "status", "created_at")
+        fields = ("id", "message", "type", "status", "created_at")
 
-    @staticmethod
-    def get_type(obj):  # 消息类型
+    def get_type(self, obj):  # 消息类型
         list = Message.objects.get(pk=obj.message_id)
         type = list.type
-        return type
 
-    def get_titles(self, obj):  # 消息标题
-        list = Message.objects.get(pk=obj.message_id)
-        type = list.type
         if int(type) == 3:
             title = obj.title
             if self.context['request'].GET.get('language') == 'en':
@@ -284,7 +279,30 @@ class MessageListSerialize(serializers.ModelSerializer):
                 title = list.title_en
                 if title == '' or title == None:
                     title = list.title
-        return title
+
+        data = [{
+            "type_list": type,
+            "title": title
+        }]
+        return data
+
+    # def get_titles(self, obj):  # 消息标题
+    #     list = Message.objects.get(pk=obj.message_id)
+    #     type = list.type
+    #     if int(type) == 3:
+    #         title = obj.title
+    #         if self.context['request'].GET.get('language') == 'en':
+    #             title = obj.title_en
+    #             if title == '' or title == None:
+    #                 title = obj.title
+    #     else:
+    #         list = Message.objects.get(pk=obj.message_id)
+    #         title = list.title
+    #         if self.context['request'].GET.get('language') == 'en':
+    #             title = list.title_en
+    #             if title == '' or title == None:
+    #                 title = list.title
+    #     return title
 
     @staticmethod
     def get_created_at(obj):  # 时间

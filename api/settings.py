@@ -74,7 +74,8 @@ INSTALLED_APPS = [
     'console',
     'handle',
     'marksix',
-    # 'silk',
+    # 'recharge',
+    'dragon_tiger',
 ]
 
 MIDDLEWARE = [
@@ -87,8 +88,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'base.middleware.RequestExceptionHandler',
-    # 'silk.middleware.SilkyMiddleware',
 ]
+
+DJANGO_SILK_ENABLE = local_settings.DJANGO_SILK_ENABLE
+if DJANGO_SILK_ENABLE:
+    INSTALLED_APPS += ('silk',)
+    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 ROOT_URLCONF = 'api.urls'
 

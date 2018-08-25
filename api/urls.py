@@ -32,12 +32,16 @@ urlpatterns = [
     path('captcha/', include('captcha.urls')),
     # config
     path('configs/', include('config.urls')),
-    #
+    #  俱乐部路由
     path('chat/', include('chat.urls')),
-    #
+    # 股票路由
     path('guess/', include('guess.urls')),
-    #
+    # 六合彩路由
     path('marksix/', include('marksix.urls')),
+    # 龙虎斗路由
+    path('dragon_tiger/', include('dragon_tiger.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DJANGO_SILK_ENABLE:
+    urlpatterns += [path('silk', include('silk.urls', namespace='silk'))]

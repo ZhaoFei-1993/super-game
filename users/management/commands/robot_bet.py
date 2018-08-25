@@ -303,6 +303,8 @@ class Command(BaseCommand):
         category = Category.objects.get(pk=quiz.category_id)
 
         rules = Rule.objects.filter(quiz_id=quiz_id)
+        if len(rules) < 4:
+            return False
         if len(rules) == 0:
             return False
 
@@ -326,8 +328,15 @@ class Command(BaseCommand):
                 1: 20,      # 让分赛果
                 2: 5,       # 比分
                 3: 5,       # 总进球
-                8: 10
+                8: 10       # 亚盘
             }
+            if len(rules) == 4:
+                rules_weight = {
+                    0: 60,  # 赛果
+                    1: 20,  # 让分赛果
+                    2: 10,  # 比分
+                    3: 10,  # 总进球
+                }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
         rule_type = weight_choice.choice()
@@ -360,6 +369,12 @@ class Command(BaseCommand):
             1: 20,
             2: 10,
         }
+        if len(options) == 2:
+            choices = {
+                0: 50,
+                1: 50,
+            }
+
         weight_choice = WeightChoice()
         weight_choice.set_choices(choices)
         idx = weight_choice.choice()
@@ -373,7 +388,6 @@ class Command(BaseCommand):
         :return:
         """
         users = User.objects.filter(is_robot=True)
-        print("users=====================================", users)
         secure_random = random.SystemRandom()
         return secure_random.choice(users)
 
