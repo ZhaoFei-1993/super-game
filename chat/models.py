@@ -2,9 +2,16 @@ from django.db import models
 from wc_auth.models import Admin
 from users.models import User, Coin
 import reversion
+from base.models import BaseManager
 
 
-# Create your models here.
+class ClubManager(BaseManager):
+    """
+    俱乐部数据操作
+    """
+    key = 'club_data'
+
+
 @reversion.register()
 class Club(models.Model):
     PENDING = 2  # 人气
@@ -31,6 +38,8 @@ class Club(models.Model):
     user = models.IntegerField(verbose_name="俱乐部创始人", default=0)
     is_recommend = models.CharField(verbose_name="", choices=STATUS_CHOICE, max_length=1, default=PENDING)
     is_dissolve = models.BooleanField(verbose_name="是否删除俱乐部", default=False)
+
+    objects = ClubManager()
 
     class Meta:
         ordering = ['-id']
