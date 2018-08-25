@@ -260,7 +260,7 @@ class MessageListSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = UserMessage
-        fields = ("id", "message", "type", "titles", "status", "created_at")
+        fields = ("id", "message", "type", "status", "created_at")
 
     def get_type(self, obj):  # 消息类型
         list = Message.objects.get(pk=obj.message_id)
