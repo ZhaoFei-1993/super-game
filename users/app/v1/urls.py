@@ -94,6 +94,8 @@ urlpatterns = [
     path('countries/', views.CountriesView.as_view(), name="app-v1-user-countries"),
     # 首页推送
     path('home/message/', views.HomeMessageView.as_view(), name='app-v1-user-message-home'),
+    # 分红记录
+    path('dividend/<int:lock_id>/', views.DividendHistory.as_view(), name='app-v1-user-dividend-lock')
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定
