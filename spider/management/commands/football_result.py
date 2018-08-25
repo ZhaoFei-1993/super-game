@@ -113,6 +113,7 @@ def get_data(url):
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[12:-2])
+            print(result)
             return result
     except requests.ConnectionError as e:
         print('Error', e.args)
