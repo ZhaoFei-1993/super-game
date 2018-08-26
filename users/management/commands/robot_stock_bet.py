@@ -79,7 +79,7 @@ class Command(BaseCommand):
 
         # 算出随机注册时间与已注册时间差集
         diff_random_datetime = list(set(random_datetime) - set(user_generated_datetime))
-        print('今日总下注数 = ', len(random_total))
+        print('今日总下注数 = ', random_total)
         print('今日剩余下注数 = ', len(diff_random_datetime))
 
         current_generate_time = ''
