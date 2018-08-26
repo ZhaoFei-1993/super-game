@@ -735,7 +735,7 @@ class Command(BaseCommand):
             print(list(quizs))
             for quiz in list(quizs)[:20]:
                 print('quiz.match_flag = ', quiz.match_flag)
-                if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178]:
+                if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]:
                     print('玩法Rule数据不全，跳过')
                     continue
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
