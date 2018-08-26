@@ -726,18 +726,20 @@ class Command(BaseCommand):
                 delay_quiz.save()
 
         # 在此基础上增加2小时
+        rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]
+
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
             (Q(status=str(Quiz.PUBLISHING)) | Q(status=str(Quiz.ENDED))) & Q(begin_at__lt=after_2_hours) & Q(
-                category__parent_id=2))
+                category__parent_id=2) & ~Q(match_flag__in=rule_data_lack))
         if quizs.exists():
             print(len(list(quizs)))
             print(list(quizs))
-            for quiz in list(quizs)[:20]:
+            for quiz in list(quizs)[:10]:
                 print('quiz.match_flag = ', quiz.match_flag)
-                if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]:
-                    print('玩法Rule数据不全，跳过')
-                    continue
+                # if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]:
+                #     print('玩法Rule数据不全，跳过')
+                #     continue
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
                                     guest_team=quiz.guest_team).count() >= 2:
