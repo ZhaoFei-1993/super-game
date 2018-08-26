@@ -735,7 +735,7 @@ class Command(BaseCommand):
             print(list(quizs))
             for quiz in list(quizs)[:10]:
                 print(quiz.match_flag)
-                if int(quiz.match_flag) == 110322:
+                if int(quiz.match_flag) in [110208,110322]:
                     continue
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
