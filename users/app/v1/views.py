@@ -1225,33 +1225,67 @@ class MessageListView(ListAPIView, DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        type = self.request.parser_context['kwargs']['type']
-        list = ""
-        if int(type) == 1:
-            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
+        message_type = self.request.parser_context['kwargs']['type']
+        items = ""
+        if int(message_type) == 1:
+            items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
-        elif int(type) == 2:
-            list = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
+        elif int(message_type) == 2:
+            items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
-        return list
+        return items
 
     def list(self, request, *args, **kwargs):
-        user = self.request.user.id
+        user_id = self.request.user.id
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        data = []
+
+        messages = Message.objects.get_all()
+        language = request.GET.get('language')
+
+        # 公共消息标识
+        user_messages = UserMessage.objects.filter(user_id=user_id, status=0)
         public_sign = 0
-        if message_sign(user, 2) or message_sign(user, 3):
-            public_sign = 1
-        system_sign = message_sign(user, 1)
-        for list in items:
+        system_sign = 0
+        for user_message in user_messages:
+            pmsg = None
+            for msg in messages:
+                if msg.id != user_message.message_id:
+                    continue
+                pmsg = msg
+            if int(pmsg.type) in [2, 3]:
+                public_sign = 1
+            if int(pmsg.type) in [1]:
+                system_sign = 1
+
+        data = []
+        for item in items:
+            # 公共消息模板类型、标题
+            message_type = 0
+            msg_title = ''
+            for message in messages:
+                if message.id != item['message_id']:
+                    continue
+                message_type = int(message.type)
+                msg_title = message.title if language != 'en' else message.title_en
+                if msg_title == '' or msg_title is None:
+                    msg_title = message.title
+
+            # 消息内容
+            if message_type == 3:
+                message_title = item['title'] if language != 'en' else item['title_en']
+                if message_title != '' or message_title is None:
+                    message_title = item['title']
+            else:
+                message_title = msg_title
+
             data.append({
-                "user_message_id": list["id"],
-                "message_id": list["message"],
-                'type': list["type"][0]['type_list'],
-                'message_title': list["type"][0]['title'],
-                'is_read': list["status"],
-                'message_date': list["created_at"],
+                "user_message_id": item["id"],
+                "message_id": item["message"],
+                'type': str(message_type),
+                'message_title': message_title,
+                'is_read': item["status"],
+                'message_date': item["created_at"],
             })
         return self.response({'code': 0,
                               'data': data,

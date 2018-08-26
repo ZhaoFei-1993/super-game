@@ -437,6 +437,13 @@ class DailyLog(models.Model):
         verbose_name = verbose_name_plural = "用户签到记录表"
 
 
+class MessageManager(BaseManager):
+    """
+    消息数据操作
+    """
+    key = 'message_data'
+
+
 @reversion.register()
 class Message(models.Model):
     GLOBAL = 1
@@ -456,6 +463,8 @@ class Message(models.Model):
     content_en = models.CharField(verbose_name="英文消息内容", max_length=255, default="")
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    objects = MessageManager()
 
     class Meta:
         ordering = ['-id']
