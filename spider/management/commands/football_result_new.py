@@ -733,7 +733,7 @@ class Command(BaseCommand):
         if quizs.exists():
             print(len(list(quizs)))
             print(list(quizs))
-            for quiz in list(quizs)[:10]:
+            for quiz in list(quizs)[:20]:
                 print('quiz.match_flag = ', quiz.match_flag)
                 if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178]:
                     print('玩法Rule数据不全，跳过')
