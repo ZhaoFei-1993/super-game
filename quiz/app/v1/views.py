@@ -128,12 +128,12 @@ class QuizListView(ListCreateAPIView):
     def get_queryset(self):
         # 竞猜赛事分类
         category_id = None
-        if 'category' not in self.request.GET or self.request.GET.get('category') == '':
+        if 'category' in self.request.GET and self.request.GET.get('category') != '':
             category_id = self.request.GET.get('category')
 
         # 赛事类型：1＝未结束，2＝已结束
         quiz_type = 1
-        if 'type' not in self.request.GET or self.request.GET['type'] == '':
+        if 'type' in self.request.GET and self.request.GET['type'] != '':
             quiz_type = int(self.request.GET.get('type'))
 
         if 'is_user' not in self.request.GET:
