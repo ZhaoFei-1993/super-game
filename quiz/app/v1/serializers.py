@@ -150,7 +150,7 @@ class QuizSerialize(serializers.ModelSerializer):
         :param obj:
         :return:
         """
-        return 1 if int(obj.status) == 2 else 0
+        return 1 if int(obj.status) == 3 else 0
 
     def get_is_bet(self, obj):
         """
