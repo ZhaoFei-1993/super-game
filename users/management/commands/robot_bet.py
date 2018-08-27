@@ -133,6 +133,9 @@ class Command(BaseCommand):
                 # user_coin.balance -= wager
                 # user_coin.save()
 
+                # 更新俱乐部对应竞猜投注的数据
+                Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=club.id, user_id=user.id)
+
                 # rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
                 coin = Coin.objects.get(pk=club.coin_id)
                 vs_info = quiz.host_team + ' VS ' + quiz.guest_team + ' - ' + str(quiz.begin_at)
