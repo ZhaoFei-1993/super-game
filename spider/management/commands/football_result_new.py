@@ -119,7 +119,7 @@ def get_data(url):
 
 @transaction.atomic()
 def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest_team_score=None):
-    quiz = Quiz.objects.get(match_flag=match_flag)
+    quiz = Quiz.objects.filter(match_flag=match_flag).first()
     rule_all = Rule.objects.filter(quiz=quiz).all()
     rule_had = rule_all.get(type=0)
     rule_hhad = rule_all.get(type=1)
