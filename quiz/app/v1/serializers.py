@@ -50,16 +50,16 @@ class QuizSerialize(serializers.ModelSerializer):
         host_team = obj.host_team
         if self.context['request'].GET.get('language') == 'en':
             host_team = obj.host_team_en
-            if host_team == '' or host_team == None:
+            if host_team == '' or host_team is None:
                 host_team = obj.host_team
         return host_team
 
     def get_match_name(self, obj):
-        vv = Category.objects.get(pk=obj.category_id)
+        vv = Category.objects.get_one(pk=obj.category_id)
         match_name = vv.name
         if self.context['request'].GET.get('language') == 'en':
             match_name = vv.name_en
-            if match_name == '' or match_name == None:
+            if match_name == '' or match_name is None:
                 match_name = vv.name_en
         return match_name
 
@@ -67,20 +67,25 @@ class QuizSerialize(serializers.ModelSerializer):
         guest_team = obj.guest_team
         if self.context['request'].GET.get('language') == 'en':
             guest_team = obj.guest_team_en
-            if guest_team == '' or guest_team == None:
+            if guest_team == '' or guest_team is None:
                 guest_team = obj.guest_team
         return guest_team
 
     def get_total_people(self, obj):
+        """
+        获取俱乐部对应竞猜投注总数
+        :param obj:
+        :return:
+        """
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        total_people = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id).count()
+        total_people = Record.objects.get_club_quiz_bet_count(quiz_id=obj.pk, club_id=roomquiz_id)
         return total_people
 
     def get_total_coin_avatar(self, obj):
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        club_info = Club.objects.get(pk=roomquiz_id)
-        total_coin_avatar = club_info.coin.icon
-        return total_coin_avatar
+        club_info = Club.objects.get_one(pk=roomquiz_id)
+        coin = Coin.objects.get_one(pk=club_info.coin_id)
+        return coin.icon
 
     def get_win_rate(self, obj):
         quiz_KEY = "QUIZ_LIST_KEY_WIN_RATE" + str(obj.pk)  # key
@@ -104,9 +109,9 @@ class QuizSerialize(serializers.ModelSerializer):
         if planish_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
-            vv = Category.objects.get(pk=obj.category_id)
+            vv = Category.objects.get_one(pk=obj.category_id)
             type_id = vv.parent_id
-            quiz_type = Category.objects.get(pk=type_id)
+            quiz_type = Category.objects.get_one(pk=type_id)
             planish_rate = 0
             if quiz_type.name == "篮球":
                 odds = ''
@@ -140,46 +145,33 @@ class QuizSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_is_end(obj):
-        if int(obj.status) == 2:
-            is_end = 1
-        else:
-            is_end = 0
+        """
+        比赛是否已结束
+        :param obj:
+        :return:
+        """
+        return 1 if int(obj.status) == 2 else 0
 
-        return is_end
-
-    # def get_total_coin(self, obj):  # 投注总金额
-    #     roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-    #     sql = "select sum(a.bet) from quiz_record a"
-    #     sql += " where a.quiz_id= '" + str(obj.pk) + "'"
-    #     sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
-    #     total_coin = get_sql(sql)[0][0]  # 投注金额
-    #     if total_coin==None or total_coin=='':
-    #         return 0
-    #     # record = Record.objects.filter(quiz_id=obj.pk, roomquiz_id=roomquiz_id)
-    #     club = Club.objects.get(pk=roomquiz_id)
-    #     # total_coin = 0
-    #     # for coin in record:
-    #     #     total_coin = total_coin + coin.bet
-    #     total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
-    #     return total_coin
-
-    def get_is_bet(self, obj):  # 是否已投注
-        user = self.context['request'].user.id
+    def get_is_bet(self, obj):
+        """
+        是否已投注
+        :param obj:
+        :return:
+        """
+        user_id = self.context['request'].user.id
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-        record_count = Record.objects.filter(user_id=user, quiz_id=obj.pk, roomquiz_id=roomquiz_id).count()
-        is_vote = 0
-        if record_count > 0:
-            is_vote = 1
-        return is_vote
+        is_user_bet = Record.objects.get_club_quiz_bet_users(quiz_id=obj.pk, club_id=roomquiz_id, user_id=user_id)
+
+        return 1 if is_user_bet is True else 0
 
     @staticmethod
     def get_category(obj):
-        CATEGORY_KEY = "QUIZ_CATEGORY_KEY" + str(obj.category_id)  # key
+        CATEGORY_KEY = "QUIZ_CATEGORY_KEY" + str(obj.category_id)
         quiz_type_name = check_key(CATEGORY_KEY)
         if quiz_type_name == 0:
-            vv = Category.objects.get(pk=obj.category_id)
+            vv = Category.objects.get_one(pk=obj.category_id)
             type_id = vv.parent_id
-            quiz_type = Category.objects.get(pk=type_id)
+            quiz_type = Category.objects.get_one(pk=type_id)
             quiz_type_name = quiz_type.name
             set_cache(CATEGORY_KEY, quiz_type_name)
         return quiz_type_name

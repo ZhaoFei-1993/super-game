@@ -2,6 +2,9 @@
 from django.db import models, transaction
 from wc_auth.models import Admin
 from mptt.models import MPTTModel, TreeForeignKey
+import os
+from threading import Thread
+import threading
 from users.models import Coin, User, CoinValue
 from chat.models import Club
 import reversion
@@ -11,6 +14,7 @@ from django.db.models import Sum, F, FloatField
 from .odds import Game
 from decimal import Decimal
 from base.models import BaseManager
+from utils.cache import set_cache, get_cache, incr_cache
 
 
 class CategoryManager(BaseManager):
@@ -326,6 +330,104 @@ class OptionOdds(models.Model):
         verbose_name = verbose_name_plural = "竞猜选项赔率表"
 
 
+class RecordManager(models.Manager):
+    """
+    竞猜记录数据操作
+    """
+    KEY_CLUB_QUIZ_BET_COUNT = 'record_club_quiz_bet_count_'
+    KEY_CLUB_QUIZ_BET_USERS = 'users'
+
+    def get_club_quiz_bet_count(self, quiz_id, club_id):
+        """
+        获取俱乐部对应竞猜投注总数
+        :param quiz_id:    竞猜ID
+        :param club_id:    俱乐部ID
+        :return:
+        """
+        key = self.KEY_CLUB_QUIZ_BET_COUNT + str(quiz_id) + '_' + str(club_id)
+        count = get_cache(key)
+        if count is None:
+            count = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=club_id).count()
+            set_cache(key, count)
+
+        return count
+
+    def incre_club_quiz_bet_count(self, quiz_id, club_id):
+        """
+        俱乐部对应竞猜投注总人数+1
+        :param quiz_id:    竞猜ID
+        :param club_id:    俱乐部ID
+        :return:
+        """
+        key = self.KEY_CLUB_QUIZ_BET_COUNT + str(quiz_id) + '_' + str(club_id)
+        incr_cache(key=key)
+
+    def get_club_quiz_bet_users(self, quiz_id, club_id, user_id):
+        """
+        获取俱乐部对应竞猜投注的所有用户ID
+        :param quiz_id:     竞猜ID
+        :param club_id:     俱乐部ID
+        :param user_id:     用户ID
+        :return:
+        """
+        cache_club_dir = settings.CACHE_DIR + '/' + str(club_id) + '/'
+        if not os.path.exists(cache_club_dir):
+            os.mkdir(cache_club_dir)
+        cache_club_quiz_dir = cache_club_dir + str(quiz_id) + '/'
+        if not os.path.exists(cache_club_quiz_dir):
+            os.mkdir(cache_club_quiz_dir)
+
+        # 从获取中读取，若没有，则从DB中读取，并写入缓存中
+        cache_file = cache_club_quiz_dir + self.KEY_CLUB_QUIZ_BET_USERS
+        if not os.path.exists(cache_file):
+            items = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=club_id).values_list('user_id', flat=True)
+            user_ids = list(set(items))
+
+            with open(cache_file, 'a+') as f:
+                f.write(','.join(str(x) for x in user_ids))
+        else:
+            cache_value = None
+            obj_cache_file = open(cache_file, 'rU')
+            try:
+                for line in obj_cache_file:
+                    cache_value = line
+            finally:
+                obj_cache_file.close()
+
+            if cache_value is None:
+                return False
+
+            user_ids = cache_value.split(',')
+
+        return user_id in user_ids
+
+    def update_club_quiz_bet_users(self, quiz_id, club_id, user_id):
+        """
+        增加俱乐部对应竞猜投注的用户ID
+        :param quiz_id:
+        :param club_id:
+        :param user_id:
+        :return:
+        """
+        cache_file = settings.CACHE_DIR + '/' + str(club_id) + '/' + str(quiz_id) + '/' + self.KEY_CLUB_QUIZ_BET_USERS
+        if not os.path.exists(cache_file):
+            self.get_club_quiz_bet_users(quiz_id, club_id, user_id)
+        else:
+            with open(cache_file, 'a+') as f:
+                f.write(',' + str(user_id))
+
+    def update_club_quiz_bet_data(self, quiz_id, club_id, user_id=0):
+        """
+        更新俱乐部对应竞猜投注的数据
+        :param quiz_id:
+        :param club_id:
+        :param user_id:
+        :return:
+        """
+        self.incre_club_quiz_bet_count(quiz_id=quiz_id, club_id=club_id)
+        self.update_club_quiz_bet_users(quiz_id=quiz_id, club_id=club_id, user_id=user_id)
+
+
 @reversion.register()
 class Record(models.Model):
     NORMAL = 0
@@ -362,6 +464,8 @@ class Record(models.Model):
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
     open_prize_time = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
     is_distribution = models.BooleanField(verbose_name="是否分配过奖金", default=False)
+
+    objects = RecordManager()
 
     class Meta:
         ordering = ['-id']

@@ -126,23 +126,29 @@ class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
+        # 竞猜赛事分类
+        category_id = None
+        if 'category' not in self.request.GET or self.request.GET.get('category') == '':
+            category_id = self.request.GET.get('category')
+
+        # 赛事类型：1＝未结束，2＝已结束
+        quiz_type = 1
+        if 'type' not in self.request.GET or self.request.GET['type'] == '':
+            quiz_type = int(self.request.GET.get('type'))
+
         if 'is_user' not in self.request.GET:
-            if 'category' not in self.request.GET or self.request.GET['category'] == '':
-                if int(self.request.GET.get('type')) == 1:  # 未结束
-                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
-                                               is_delete=False).order_by(
-                        'begin_at')
-                elif int(self.request.GET.get('type')) == 2:  # 已结束
-                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
-                                               is_delete=False).order_by(
-                        '-begin_at')
+            if category_id is None:
+                if quiz_type == 1:  # 未结束
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by('begin_at')
+                elif quiz_type == 2:  # 已结束
+                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by('-begin_at')
             else:
-                category_id = str(self.request.GET.get('category'))
+                category_id = str(category_id)
                 category_arr = category_id.split(',')
-                if int(self.request.GET.get('type')) == 1:  # 未开始
+                if quiz_type == 1:  # 未开始
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
                                                is_delete=False, category__in=category_arr).order_by('begin_at')
-                elif int(self.request.GET.get('type')) == 2:  # 已结束
+                elif quiz_type == 2:  # 已结束
                     return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
                                                is_delete=False, category__in=category_arr).order_by('-begin_at')
         else:
@@ -799,6 +805,10 @@ class BetView(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
+
+        # 更新俱乐部对应竞猜投注的数据
+        Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)
+
         response = {
             'code': 0,
             'data': {
