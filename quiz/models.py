@@ -398,6 +398,7 @@ class RecordManager(models.Manager):
                 return False
 
             user_ids = cache_value.split(',')
+        print('user_ids = ', user_ids)
 
         return user_id in user_ids
 
