@@ -35,6 +35,7 @@ import numpy as np
 from chat.models import Club
 from urllib.parse import quote_plus
 from utils.functions import get_cache
+from django.shortcuts import get_object_or_404
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -2259,35 +2260,38 @@ class DividendHistoryBackend(ListAPIView):
     """
     分红历史列表
     """
-    queryset = DividendHistory.objects.all().order_by('-created_at')
-    serializer_class = serializers.DividendHistorySerializer
+    serializer_class = serializers.DividendCoinSerializer
 
-    # def list(self, request, *args, **kwargs):
-    #     items = super().list(request, *args, **kwargs)
-    #     results = items.data.get('results')
-    #     data = []
-    #     for x in results:
-    #         data.append({
-    #             'date':x['date'],
-    #             'locked':x['locked'],
-    #             'deadline':x['deadline'],
-    #             'newline':x['newline'],
-    #             'truevalue':x['truevalue'],
-    #             'revenuevalue':x['revenuevalue'],
-    #             'created_at':x['created_at'],
-    #             'updated_at':x['updated_at']
-    #         })
-    #     now_date = datetime.now().date()
-    #     str_date = now_date.strftime('%Y-%m-%d')
-    #     locks = UserCoinLock.objects.filter(is_free=0)
-    #     deadline = self.null2zero(
-    #         locks.filter(end_time__date=now_date).aggregate(locks_sum=Sum('amount'))['locks_sum'])
-    #     newline = self.null2zero(
-    #         locks.filter(created_at__date=now_date).aggregate(locks_sum=Sum('amount'))['locks_sum'])
-    #
-    #     return JsonResponse({'aa':'xxx'}, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        x = self.kwargs['date']
+        date = datetime.strptime(x, '%Y-%m-%d').date()
+        objects = DividendConfigCoin.objects.filter(created_at__date = (date + timedelta(1)))
+        return objects
 
 
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        dd = self.kwargs['date']
+        lock = get_object_or_404(DividendHistory, date=dd)
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append({
+                'date':dd,
+                'coin_name': x['coin_name'],
+                'scale': x['scale'],
+                'dividend_price': normalize_fraction(x['dividend_price'],12),
+                'price':normalize_fraction(x['price'],12),
+                'total_number': normalize_fraction(x['total_number'], 12),
+                'user_locks':normalize_fraction(lock.locked, 12),
+                'deadline':normalize_fraction(lock.deadline,12),
+                'newline': normalize_fraction(lock.newline, 12),
+                'coin_dividend': normalize_fraction(x['coin_dividend'], 12),
+                'coin_titular_dividend': normalize_fraction(x['coin_titular_dividend'], 12),
+                'revenue': normalize_fraction(x['revenue'], 12),
+                'total_revenue': normalize_fraction(x['total_revenue'], 12)
+            })
+        return JsonResponse({'data':data}, status=status.HTTP_200_OK)
 
 
 

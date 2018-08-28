@@ -75,7 +75,7 @@ urlpatterns = [
     path('dividend/history/', views.CoinDividendHistoryView.as_view(), name='user-backend-dividend-history'),
     path('dividend/history/<int:pk>/', views.CoinDividendHistoryDetailView.as_view(), name='user-backend-dividend-history-detail'),
     # 分红历史列表
-    path('dividend/history_list/', views.DividendHistoryBackend.as_view(), name='user-backend-dividend-history_list'),
+    path('dividend/history_list/<date>/', views.DividendHistoryBackend.as_view(), name='user-backend-dividend-history_list'),
 
     #总锁定列表
     path('dividend/history_list/total_lock/<date>/', views.TotalUserLockDetail.as_view(), name='user-backend-dividend-history_list-total_lock'),
