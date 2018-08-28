@@ -9,9 +9,6 @@ from captcha.models import CaptchaStore
 from utils.models import CodeModel
 
 
-# Create your models here.
-
-
 @reversion.register()
 class Table(models.Model):
     OPERATION = 1
@@ -23,9 +20,11 @@ class Table(models.Model):
 
     OPERATION = 0
     SHUFFLE = 1
+    STOP = 2
     TABLE_IN_CHECKOU = (
         (OPERATION, "正常"),
-        (SHUFFLE, "洗牌中")
+        (SHUFFLE, "洗牌中"),
+        (STOP, "停台中")
     )
 
     BACCARAT = 1
@@ -317,6 +316,7 @@ class BetLimit(models.Model):
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
+    bets_four = models.CharField(verbose_name='下注值4', max_length=255, default=0.04)
     bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=3, null=True)
     bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=3, null=True)
 
