@@ -289,6 +289,7 @@ class Record(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deagon_tiger_user')
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_record_club')
+    number_tab = models.ForeignKey(Number_tab, on_delete=models.CASCADE, related_name='deagon_tiger_record_number_tab')
     option = models.ForeignKey(Options, on_delete=models.CASCADE, related_name='deagon_tiger_option')
     bets = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
