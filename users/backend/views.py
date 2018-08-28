@@ -2397,30 +2397,31 @@ class PresentUserDividend(ListAPIView):
         temp = 0
         lt = len(coins)
         data = []
-        temp_dic={}
+        i =0
         for x in dividends:
             if x.user_lock_id!= temp:
                 temp = x.user_lock_id
-                if lt != len(coins):
-                    for c in coins_name:
-                        if c not in temp_dic:
-                            temp_dic[c]=0
-                if temp_dic:
-                    data.append(temp_dic)
+                if data:
+                    i += 1
                 amount = sc2str(normalize_fraction(x.user_lock.amount, 12),9)
                 user = x.user.username
-                temp_dic = {'user': user, 'amount': amount, 'lock_id':temp}
-                lt = 0
+                coin_index = coins.index(x.coin_id)
+                coin_name = coins_name[coin_index]
+                data.append({'user': user,
+                             'amount': amount,
+                             'lock_id':temp,
+                             coin_name:sc2str(normalize_fraction(x.divide, 12),9)
+                             }
+                            )
             else:
                 coin_index = coins.index(x.coin_id)
                 coin_name = coins_name[coin_index]
-                temp_dic[coin_name] = sc2str(normalize_fraction(x.divide, 12),9)
-                lt += 1
-        if lt != len(coins):
+                data[i][coin_name] = sc2str(normalize_fraction(x.divide, 12),9)
+
+        for x in data:
             for c in coins_name:
-                if c not in temp_dic:
-                    temp_dic[c] = 0
-            data.append(temp_dic)
+                if c not in x:
+                    x[c]=0
         return JsonResponse({'data':data}, status=status.HTTP_200_OK)
 
 
