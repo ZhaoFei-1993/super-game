@@ -140,7 +140,7 @@ class UserRegister(object):
             else:
                 raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
             message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-            ids  = [x.id for x in message]
+            ids = [x.id for x in message]
             user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
             mes_ids = list(set([x.message_id for x in user_messages]))
             for i in ids:
@@ -1230,10 +1230,10 @@ class MessageListView(ListAPIView, DestroyAPIView):
         items = ""
         if int(message_type) == 1:
             items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
-                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
+                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         elif int(message_type) == 2:
             items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
-                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
+                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         return items
 
     def list(self, request, *args, **kwargs):
@@ -3036,6 +3036,7 @@ class HomeMessageView(ListAPIView):
     #     data = get_sql(sql)  # 用户拥有的ETH
     #     return self.response({'code': 0, 'data': data})
 
+
 class DividendHistory(ListAPIView):
     """
     每日分红记录
@@ -3051,16 +3052,14 @@ class DividendHistory(ListAPIView):
     def list(self, request, *args, **kwargs):
         items = super().list(request, *args, **kwargs)
         results = items.data.get('results')
-        data=[]
+        data = []
         for x in results:
-            y,m,d=x['date'].split('-')
+            y, m, d = x['date'].split('-')
             data.append({
-                'year':y,
-                'month_day': m+'/'+d,
-                'coin_name':x['coin_name'],
-                'divide':x['divide'],
-                'coin_icon':x['coin_icon']
+                'year': y,
+                'month_day': m + '/' + d,
+                'coin_name': x['coin_name'],
+                'divide': x['divide'],
+                'coin_icon': x['coin_icon']
             })
         return self.response({'code': 0, 'data': data})
-
-
