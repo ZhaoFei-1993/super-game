@@ -3048,4 +3048,20 @@ class DividendHistory(ListAPIView):
         query = Dividend.objects.filter(user_lock_id=lock_id).order_by('-created_at')
         return query
 
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        results = items.data.get('results')
+        data=[]
+        for x in results:
+            y,m,d=x['date'].split('-')
+            data.append({
+                'year':y,
+                'month':m,
+                'day':d,
+                'coin_name':x['coin_name'],
+                'divide':x['divide'],
+                'coin_icon':x['coin_icon']
+            })
+        return self.response({'code': 0, 'data': data})
+
 
