@@ -812,6 +812,7 @@ class GSGAssetAccount(models.Model):
     NORMAL = 0
     LOCKED = 1
     SUPER = 2
+
     TYPE_CHOICE = (
         (NORMAL, "普通账户"),
         (LOCKED, "锁定账号"),
@@ -887,3 +888,20 @@ class PreReleaseUnlockMessageLog(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG锁定即将到期提醒信息日志表"
+
+
+class DividendHistory(models.Model):
+    date = models.CharField(verbose_name="日期", max_length=20, default="")
+    locked  = models.DecimalField(verbose_name="锁定数量", max_digits=32, decimal_places=2, default=0.00)
+    deadline = models.DecimalField(verbose_name="当日到期数量", max_digits=32, decimal_places=2, default=0.00)
+    newline = models.DecimalField(verbose_name="当日新增数量", max_digits=32, decimal_places=2, default=0.00)
+    truevalue = models.DecimalField(verbose_name="实际分红额", max_digits=32, decimal_places=8, default=0)
+    revenuevalue=models.DecimalField(verbose_name="营收分红额", max_digits=32, decimal_places=8, default=0)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="创建时间", auto_now=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "GSG历史分红列表"
+
+
+

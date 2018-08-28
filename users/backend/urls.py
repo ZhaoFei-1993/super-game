@@ -74,4 +74,22 @@ urlpatterns = [
     # 查看分红数据
     path('dividend/history/', views.CoinDividendHistoryView.as_view(), name='user-backend-dividend-history'),
     path('dividend/history/<int:pk>/', views.CoinDividendHistoryDetailView.as_view(), name='user-backend-dividend-history-detail'),
+    # 分红历史列表
+    path('dividend/history_list/', views.DividendHistoryBackend.as_view(), name='user-backend-dividend-history_list'),
+
+    #总锁定列表
+    path('dividend/history_list/total_lock/<date>/', views.TotalUserLockDetail.as_view(), name='user-backend-dividend-history_list-total_lock'),
+    # 当日到期
+    path('dividend/history_list/free_lock/<date>/', views.PresentLockFreeDetail.as_view(),
+         name='user-backend-dividend-history_list-freee_lock'),
+    # 当日锁定
+    path('dividend/history_list/lock/<date>/', views.PresentUserLockDetail.as_view(),
+         name='user-backend-dividend-history_list-lock'),
+    # 当日实际分红
+    path('dividend/history_list/dividend/<date>/', views.PresentUserDividend.as_view(),
+         name='user-backend-dividend-history_list-dividend'),
+
+    # 当日名义分红
+    path('dividend/history_list/revenue/<date>/', views.PresentRevenueDividend.as_view(),
+         name='user-backend-dividend-history_list-revenue'),
 ]
