@@ -3053,13 +3053,44 @@ class DividendHistory(ListAPIView):
         items = super().list(request, *args, **kwargs)
         results = items.data.get('results')
         data = []
+        temp_dic={}
+        temp_date = 0
+        i = 0
         for x in results:
             y, m, d = x['date'].split('-')
-            data.append({
-                'year': y,
-                'month_day': m + '/' + d,
-                'coin_name': x['coin_name'],
-                'divide': x['divide'],
-                'coin_icon': x['coin_icon']
-            })
+            md = m + '/' + d
+            if x['date']!=temp_date:
+                if data:
+                    i +=1
+                temp_date=x['date']
+                data.append(
+                    {
+                        'year' :str(y),
+                        'month_day': md,
+                        'results':[
+                            {
+                                'coin_name': x['coin_name'],
+                                'divide': normalize_fraction(x['divide'], 12),
+                                'coin_icon': x['coin_icon']
+                            }]
+                    }
+                )
+            else:
+                data[i]['results'].append(
+                    {
+                        'coin_name': x['coin_name'],
+                        'divide': normalize_fraction(x['divide'], 12),
+                        'coin_icon': x['coin_icon']
+                    }
+                )
+
+
+
+            # temp = {
+            #     'year': y,
+            #     'month_day': m + '/' + d,
+            #     'coin_name': x['coin_name'],
+            #     'divide': x['divide'],
+            #     'coin_icon': x['coin_icon']
+            # })
         return self.response({'code': 0, 'data': data})
