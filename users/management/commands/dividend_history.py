@@ -59,7 +59,7 @@ class Command(BaseCommand):
             locks.filter(created_at__date=temp_date).aggregate(locks_sum=Sum('amount'))['locks_sum'])
         if not is_history_exists:
             history.locked = self.null2zero(
-                locks.filter(created_at__date__lte=temp_date).aggregate(locks_sum=Sum('amount'))['locks_sum'])
+                locks.filter(end_time__date__gt=temp_date).aggregate(locks_sum=Sum('amount'))['locks_sum'])
         else:
             last_history = DividendHistory.objects.all().order_by('-created_at').first()
             history.locked = last_history.locked + history.newline

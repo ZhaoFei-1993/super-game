@@ -2443,5 +2443,5 @@ class PresentRevenueDividend(ListAPIView):
         for c in coins_name:
             if c not in temp_dic:
                 temp_dic[c]=0
-        return JsonResponse({'data':temp_dic}, status=status.HTTP_200_OK)
+        return JsonResponse({'data':[temp_dic]}, status=status.HTTP_200_OK)
 
