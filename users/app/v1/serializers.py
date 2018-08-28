@@ -810,7 +810,7 @@ class DivendListSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_date(obj):
-        date = obj.created_at.strftime('%Y-%m-%d')
+        date = (obj.created_at-timedelta(1)).strftime('%Y-%m-%d')
         return date
 
     @staticmethod
