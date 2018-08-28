@@ -140,10 +140,11 @@ class UserRegister(object):
             else:
                 raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
             message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-            for i in message:
-                message_id = i.id
-                user_message = UserMessage.objects.filter(message=message_id, user=user.id)
-                if len(user_message) == 0:
+            ids  = [x.id for x in message]
+            user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
+            mes_ids = list(set([x.message_id for x in user_messages]))
+            for i in ids:
+                if i not in mes_ids:
                     usermessage = UserMessage()
                     usermessage.user = user
                     usermessage.message = i
