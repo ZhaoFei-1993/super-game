@@ -288,7 +288,7 @@ class Record(models.Model):
         (ERROR, "异常")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deagon_tiger_user')
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_club')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_record_club')
     option = models.ForeignKey(Options, on_delete=models.CASCADE, related_name='deagon_tiger_option')
     bets = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
@@ -306,7 +306,7 @@ class Record(models.Model):
 
 @reversion.register()
 class BetLimit(models.Model):
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_club')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_betlimit_club')
     table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='deagon_tiger_table')
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
