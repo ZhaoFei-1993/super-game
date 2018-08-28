@@ -85,7 +85,7 @@ urlpatterns = [
     # 当日锁定
     path('dividend/history_list/lock/<date>/', views.PresentUserLockDetail.as_view(),
          name='user-backend-dividend-history_list-lock'),
-    # 当日实际分红
+    # 当日用户分红
     path('dividend/history_list/dividend/<date>/', views.PresentUserDividend.as_view(),
          name='user-backend-dividend-history_list-dividend'),
 

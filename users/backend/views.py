@@ -2207,7 +2207,7 @@ class CoinDividendHistoryView(ListAPIView):
         for cfg in dividend_config:
             items.append({
                 'id': cfg.id,
-                'date': cfg.dividend_date.strftime('%Y-%m-%d'),
+                'date': (cfg.dividend_date - timedelta(1)).strftime('%Y-%m-%d'),
                 'dividend': cfg.dividend,
                 'revenue': revenue_sum[cfg.id]
             })
@@ -2439,7 +2439,7 @@ class PresentRevenueDividend(ListAPIView):
             for x in dividends:
                 index = coins.index(x.coin_id)
                 coin_name = coins_name[index]
-                temp_dic[coin_name] = x.revenue
+                temp_dic[coin_name] = normalize_fraction(x.revenue, 12)
         for c in coins_name:
             if c not in temp_dic:
                 temp_dic[c]=0
