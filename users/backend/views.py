@@ -18,7 +18,7 @@ from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, Co
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
-from utils.functions import normalize_fraction, get_sql
+from utils.functions import normalize_fraction, get_sql, sc2str
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from django.http import HttpResponse
@@ -2279,17 +2279,17 @@ class DividendHistoryBackend(ListAPIView):
             data.append({
                 'date':dd,
                 'coin_name': x['coin_name'],
-                'scale': x['scale'],
-                'dividend_price': normalize_fraction(x['dividend_price'],9),
+                'scale': normalize_fraction(x['scale'],9),
+                'dividend_price': sc2str(x['dividend_price'],9),
                 'price':normalize_fraction(x['price'],9),
                 'total_number': normalize_fraction(x['total_number'], 12),
                 'user_locks':normalize_fraction(lock.locked, 12),
                 'deadline':normalize_fraction(lock.deadline,12),
                 'newline': normalize_fraction(lock.newline, 12),
-                'coin_dividend': normalize_fraction(x['coin_dividend'], 9),
-                'coin_titular_dividend': normalize_fraction(x['coin_titular_dividend'], 9),
-                'revenue': normalize_fraction(x['revenue'], 9),
-                'total_revenue': normalize_fraction(x['total_revenue'], 9)
+                'coin_dividend': sc2str(x['coin_dividend'], 9),
+                'coin_titular_dividend': sc2str(x['coin_titular_dividend'],9),
+                'revenue': sc2str(x['revenue'],9),
+                'total_revenue': sc2str(x['total_revenue'],9)
             })
         return JsonResponse({'data':data}, status=status.HTTP_200_OK)
 
@@ -2407,14 +2407,14 @@ class PresentUserDividend(ListAPIView):
                             temp_dic[c]=0
                 if temp_dic:
                     data.append(temp_dic)
-                amount = normalize_fraction(x.user_lock.amount, 12)
+                amount = sc2str(normalize_fraction(x.user_lock.amount, 12),9)
                 user = x.user.username
                 temp_dic = {'user': user, 'amount': amount, 'lock_id':temp}
                 lt = 0
             else:
                 coin_index = coins.index(x.coin_id)
                 coin_name = coins_name[coin_index]
-                temp_dic[coin_name] = normalize_fraction(x.divide, 12)
+                temp_dic[coin_name] = sc2str(normalize_fraction(x.divide, 12),9)
                 lt += 1
         if lt != len(coins):
             for c in coins_name:
@@ -2439,7 +2439,7 @@ class PresentRevenueDividend(ListAPIView):
             for x in dividends:
                 index = coins.index(x.coin_id)
                 coin_name = coins_name[index]
-                temp_dic[coin_name] = normalize_fraction(x.revenue, 12)
+                temp_dic[coin_name] = sc2str(normalize_fraction(x.revenue, 12), 9)
         for c in coins_name:
             if c not in temp_dic:
                 temp_dic[c]=0

@@ -703,3 +703,9 @@ def get_club_info():
             set_cache(cache_club_key, cache_club_value_origin)
             cache_club_value = get_cache(cache_club_key)
     return cache_club_value
+
+
+# 将科学计数法转换为字符串
+def sc2str(sc, digit): #sc科学计数值, digit位数
+    vv = str('%.'+str(digit)+'f') % Decimal(str(sc))
+    return vv
