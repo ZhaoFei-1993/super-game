@@ -296,8 +296,8 @@ def get_data_info(url):
                 #                    (flag_ah, title_ah, odd_ah), (flag_ad, title_ad, odd_ad), (flag_aa, title_aa, odd_aa)]
 
                 # ------------------------------------------------------------------------------------------------------
-                host_team_avatar = 'https://api.gsg.one/uploads/images/spider/football/team_icon/pres_proj_2018_201806_TeamLogo_vs_fb_home_1.png'
-                guest_team_avatar = 'https://api.gsg.one/uploads/images/spider/football/team_icon/pres_proj_2018_201806_TeamLogo_vs_fb_visiting_1.png'
+                host_team_avatar = '主队.png'
+                guest_team_avatar = '客队.png'
                 os.chdir(img_dir)
                 if os.path.exists(host_team_abbr + '.png'):
                     host_team_avatar = host_team_abbr + '.png'
@@ -395,166 +395,170 @@ def get_data_info(url):
                     for i in range(0, 4):
                         # 赛果
                         if i == 0:
-                            odds_pool_had = []
-                            num = 0
-                            rule = Rule()
-                            rule.quiz = quiz
-                            rule.type = i
-                            rule.type_en = i
-                            rule.tips = '赛果'
-                            rule.tips_en = ' Winner'
-                            rule.save()
-                            for dt in result_had:
-                                option = Option()
-                                option.rule = rule
-                                option.option = dt[1]
-                                if dt[1] == '主负':
-                                    option.option_en = 'Away'
-                                elif dt[1] == '平局':
-                                    option.option_en = 'Draw'
-                                elif dt[1] == '主胜':
-                                    option.option_en = 'Home'
+                            if len(result_had) > 0:
+                                odds_pool_had = []
+                                num = 0
+                                rule = Rule()
+                                rule.quiz = quiz
+                                rule.type = i
+                                rule.type_en = i
+                                rule.tips = '赛果'
+                                rule.tips_en = ' Winner'
+                                rule.save()
+                                for dt in result_had:
+                                    option = Option()
+                                    option.rule = rule
+                                    option.option = dt[1]
+                                    if dt[1] == '主负':
+                                        option.option_en = 'Away'
+                                    elif dt[1] == '平局':
+                                        option.option_en = 'Draw'
+                                    elif dt[1] == '主胜':
+                                        option.option_en = 'Home'
 
-                                option.odds = dt[2]
-                                odds_pool_had.append(float(dt[2]))
-                                option.flag = dt[0]
-                                num = num + 1
-                                option.order = num
-                                option.save()
-                            print(match_id)
-                            print(odds_pool_had)
-                            rule.max_odd = max(odds_pool_had)
-                            rule.min_odd = min(odds_pool_had)
-                            rule.save()
-                            odds_pool_had.clear()
+                                    option.odds = dt[2]
+                                    odds_pool_had.append(float(dt[2]))
+                                    option.flag = dt[0]
+                                    num = num + 1
+                                    option.order = num
+                                    option.save()
+                                print(match_id)
+                                print(odds_pool_had)
+                                rule.max_odd = max(odds_pool_had)
+                                rule.min_odd = min(odds_pool_had)
+                                rule.save()
+                                odds_pool_had.clear()
 
                         # 让分赛果
                         elif i == 1:
-                            odds_pool_hhad = []
-                            num = 0
-                            rule = Rule()
-                            rule.quiz = quiz
-                            rule.type = i
-                            rule.type_en = i
-                            rule.save()
-                            for dt in result_hhad:
-                                option = Option()
-                                option.rule = rule
-                                option.option = dt[1][2:]
-                                if dt[1][2:] == '主负':
-                                    option.option_en = 'Away'
-                                elif dt[1][2:] == '平局':
-                                    option.option_en = 'Draw'
-                                elif dt[1][2:] == '主胜':
-                                    option.option_en = 'Home'
-
-                                option.odds = dt[2]
-                                odds_pool_hhad.append(float(dt[2]))
-                                option.flag = dt[0]
-                                num = num + 1
-                                option.order = num
-                                option.save()
-
-                                if dt[1][0] == '+':
-                                    rule.guest_let_score = dt[1][1]
-                                else:
-                                    rule.home_let_score = dt[1][1]
-                                rule.tips = '让分赛果'
-                                rule.tips_en = 'Handicap Results'
+                            if len(result_hhad) > 0:
+                                odds_pool_hhad = []
+                                num = 0
+                                rule = Rule()
+                                rule.quiz = quiz
+                                rule.type = i
+                                rule.type_en = i
                                 rule.save()
-                            rule.max_odd = max(odds_pool_hhad)
-                            rule.min_odd = min(odds_pool_hhad)
-                            rule.save()
-                            odds_pool_hhad.clear()
+                                for dt in result_hhad:
+                                    option = Option()
+                                    option.rule = rule
+                                    option.option = dt[1][2:]
+                                    if dt[1][2:] == '主负':
+                                        option.option_en = 'Away'
+                                    elif dt[1][2:] == '平局':
+                                        option.option_en = 'Draw'
+                                    elif dt[1][2:] == '主胜':
+                                        option.option_en = 'Home'
+
+                                    option.odds = dt[2]
+                                    odds_pool_hhad.append(float(dt[2]))
+                                    option.flag = dt[0]
+                                    num = num + 1
+                                    option.order = num
+                                    option.save()
+
+                                    if dt[1][0] == '+':
+                                        rule.guest_let_score = dt[1][1]
+                                    else:
+                                        rule.home_let_score = dt[1][1]
+                                    rule.tips = '让分赛果'
+                                    rule.tips_en = 'Handicap Results'
+                                    rule.save()
+                                rule.max_odd = max(odds_pool_hhad)
+                                rule.min_odd = min(odds_pool_hhad)
+                                rule.save()
+                                odds_pool_hhad.clear()
 
                         # 比分
                         elif i == 2:
-                            odds_pool_crs = []
-                            num_h = 0
-                            num_d = 0
-                            num_a = 0
-                            rule = Rule()
-                            rule.quiz = quiz
-                            rule.type = i
-                            rule.type_en = i
-                            rule.tips = '比分'
-                            rule.tips_en = 'Scored'
-                            rule.save()
-                            for dt in result_crs:
-                                option = Option()
-                                option.rule = rule
-                                option.option = dt[1]
-                                if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
-                                    option.option_en = 'Other'
-                                else:
-                                    option.option_en = dt[1]
+                            if len(result_crs) > 0:
+                                odds_pool_crs = []
+                                num_h = 0
+                                num_d = 0
+                                num_a = 0
+                                rule = Rule()
+                                rule.quiz = quiz
+                                rule.type = i
+                                rule.type_en = i
+                                rule.tips = '比分'
+                                rule.tips_en = 'Scored'
+                                rule.save()
+                                for dt in result_crs:
+                                    option = Option()
+                                    option.rule = rule
+                                    option.option = dt[1]
+                                    if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
+                                        option.option_en = 'Other'
+                                    else:
+                                        option.option_en = dt[1]
 
-                                option.odds = dt[2]
-                                odds_pool_crs.append(float(dt[2]))
-                                if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
-                                    if dt[1] == '胜其他':
-                                        option.option_type = '胜'
-                                        num_h = num_h + 1
-                                        option.order = num_h
-                                    elif dt[1] == '平其他':
-                                        option.option_type = '平'
-                                        num_d = num_d + 1
-                                        option.order = num_d
-                                    elif dt[1] == '负其他':
-                                        option.option_type = '负'
-                                        num_a = num_a + 1
-                                        option.order = num_a
-                                else:
-                                    score = dt[1].split(':')
-                                    if score[0] > score[1]:
-                                        option.option_type = '胜'
-                                        num_h = num_h + 1
-                                        option.order = num_h
-                                    elif score[0] == score[1]:
-                                        option.option_type = '平'
-                                        num_d = num_d + 1
-                                        option.order = num_d
-                                    elif score[0] < score[1]:
-                                        option.option_type = '负'
-                                        num_a = num_a + 1
-                                        option.order = num_a
-                                option.flag = dt[0]
-                                option.save()
-                            rule.max_odd = max(odds_pool_crs)
-                            rule.min_odd = min(odds_pool_crs)
-                            rule.save()
-                            odds_pool_crs.clear()
+                                    option.odds = dt[2]
+                                    odds_pool_crs.append(float(dt[2]))
+                                    if dt[1] == '胜其他' or dt[1] == '平其他' or dt[1] == '负其他':
+                                        if dt[1] == '胜其他':
+                                            option.option_type = '胜'
+                                            num_h = num_h + 1
+                                            option.order = num_h
+                                        elif dt[1] == '平其他':
+                                            option.option_type = '平'
+                                            num_d = num_d + 1
+                                            option.order = num_d
+                                        elif dt[1] == '负其他':
+                                            option.option_type = '负'
+                                            num_a = num_a + 1
+                                            option.order = num_a
+                                    else:
+                                        score = dt[1].split(':')
+                                        if score[0] > score[1]:
+                                            option.option_type = '胜'
+                                            num_h = num_h + 1
+                                            option.order = num_h
+                                        elif score[0] == score[1]:
+                                            option.option_type = '平'
+                                            num_d = num_d + 1
+                                            option.order = num_d
+                                        elif score[0] < score[1]:
+                                            option.option_type = '负'
+                                            num_a = num_a + 1
+                                            option.order = num_a
+                                    option.flag = dt[0]
+                                    option.save()
+                                rule.max_odd = max(odds_pool_crs)
+                                rule.min_odd = min(odds_pool_crs)
+                                rule.save()
+                                odds_pool_crs.clear()
 
                         # 总进球
                         elif i == 3:
-                            odds_pool_ttg = []
-                            num = 0
-                            rule = Rule()
-                            rule.quiz = quiz
-                            rule.type = i
-                            rule.type_en = i
-                            rule.tips = '总进球'
-                            rule.tips_en = 'Total goals'
-                            rule.save()
-                            for dt in result_ttg:
-                                option = Option()
-                                option.rule = rule
-                                option.option = dt[1]
-                                if dt[1] == '7球以上':
-                                    option.option_en = '7+'
-                                else:
-                                    option.option_en = dt[1][0]
+                            if len(result_ttg) > 0:
+                                odds_pool_ttg = []
+                                num = 0
+                                rule = Rule()
+                                rule.quiz = quiz
+                                rule.type = i
+                                rule.type_en = i
+                                rule.tips = '总进球'
+                                rule.tips_en = 'Total goals'
+                                rule.save()
+                                for dt in result_ttg:
+                                    option = Option()
+                                    option.rule = rule
+                                    option.option = dt[1]
+                                    if dt[1] == '7球以上':
+                                        option.option_en = '7+'
+                                    else:
+                                        option.option_en = dt[1][0]
 
-                                option.odds = dt[2]
-                                odds_pool_ttg.append(float(dt[2]))
-                                option.flag = dt[0]
-                                num = num + 1
-                                option.order = num
-                                option.save()
-                            rule.max_odd = max(odds_pool_ttg)
-                            rule.min_odd = min(odds_pool_ttg)
-                            rule.save()
-                            odds_pool_ttg.clear()
+                                    option.odds = dt[2]
+                                    odds_pool_ttg.append(float(dt[2]))
+                                    option.flag = dt[0]
+                                    num = num + 1
+                                    option.order = num
+                                    option.save()
+                                rule.max_odd = max(odds_pool_ttg)
+                                rule.min_odd = min(odds_pool_ttg)
+                                rule.save()
+                                odds_pool_ttg.clear()
 
                     # 亚盘玩法
                     try:
