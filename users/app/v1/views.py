@@ -3056,8 +3056,7 @@ class DividendHistory(ListAPIView):
             y,m,d=x['date'].split('-')
             data.append({
                 'year':y,
-                'month':m,
-                'day':d,
+                'month_day': m+'/'+d,
                 'coin_name':x['coin_name'],
                 'divide':x['divide'],
                 'coin_icon':x['coin_icon']
