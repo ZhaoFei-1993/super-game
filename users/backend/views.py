@@ -2280,16 +2280,16 @@ class DividendHistoryBackend(ListAPIView):
                 'date':dd,
                 'coin_name': x['coin_name'],
                 'scale': x['scale'],
-                'dividend_price': normalize_fraction(x['dividend_price'],12),
-                'price':normalize_fraction(x['price'],12),
+                'dividend_price': normalize_fraction(x['dividend_price'],9),
+                'price':normalize_fraction(x['price'],9),
                 'total_number': normalize_fraction(x['total_number'], 12),
                 'user_locks':normalize_fraction(lock.locked, 12),
                 'deadline':normalize_fraction(lock.deadline,12),
                 'newline': normalize_fraction(lock.newline, 12),
-                'coin_dividend': normalize_fraction(x['coin_dividend'], 12),
-                'coin_titular_dividend': normalize_fraction(x['coin_titular_dividend'], 12),
-                'revenue': normalize_fraction(x['revenue'], 12),
-                'total_revenue': normalize_fraction(x['total_revenue'], 12)
+                'coin_dividend': normalize_fraction(x['coin_dividend'], 9),
+                'coin_titular_dividend': normalize_fraction(x['coin_titular_dividend'], 9),
+                'revenue': normalize_fraction(x['revenue'], 9),
+                'total_revenue': normalize_fraction(x['total_revenue'], 9)
             })
         return JsonResponse({'data':data}, status=status.HTTP_200_OK)
 
