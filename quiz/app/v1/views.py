@@ -30,7 +30,7 @@ class CategoryView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        categorys = Category.objects.filter(parent_id=None)
+        categorys = Category.objects.filter(parent_id=None).order_by('order')
         data = []
         for category in categorys:
             children = []
