@@ -108,6 +108,7 @@ class Command(BaseCommand):
 
             coin_dividend[coin_id] = user_dividend
 
+        self.user_profit_coin_message.append(str(user_dividend) + self.get_coin_name(coin_id))
         return coin_dividend
 
     @staticmethod
@@ -207,7 +208,7 @@ class Command(BaseCommand):
         # 获取已分红数据
         dividend_datetime = self.get_dividended_datetime(user_coin_lock)
 
-        self.dividend_date = self.dividend_date.strftime('%Y-%m-%d')
+        self.dividend_date = (self.dividend_date-timedelta(days=1)).strftime('%Y-%m-%d')
 
         dividend_values = []
         coin_detail_values = []
