@@ -432,7 +432,7 @@ class LoginView(CreateAPIView):
         # register_type = ur.get_register_type(username)
         register_type = User.REGISTER_TELEPHONE
 
-        # 校验google recaptcha
+        # # 校验google recaptcha
         # if 'recaptcha' not in request.data:
         #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
         # recaptcha = request.data.get('recaptcha')
