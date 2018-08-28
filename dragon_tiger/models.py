@@ -14,41 +14,48 @@ from utils.models import CodeModel
 
 @reversion.register()
 class Table(models.Model):
-    OPERATION = 0
-    SHUFFLE = 1
-    STOP = 2
-
+    OPERATION = 1
+    STOP = 0
     Table_STATUS = (
-        (OPERATION, "桌子运营中"),
-        (SHUFFLE, "洗牌中"),
+        (OPERATION, "正常"),
         (STOP, "停台中")
     )
 
-    DRAGON_TIGER = 0
+    OPERATION = 0
+    SHUFFLE = 1
+    TABLE_IN_CHECKOU = (
+        (OPERATION, "正常"),
+        (SHUFFLE, "洗牌中")
+    )
+
     BACCARAT = 1
-
+    DRAGON_TIGER = 2
     NAME_LIST = (
-        (DRAGON_TIGER, "龙虎斗"),
         (BACCARAT, "百家乐"),
+        (DRAGON_TIGER, "龙虎斗")
     )
-    ORDINARY = 0
-    FREE = 1
 
+    ORDINARY_ONE = 0
+    ORDINARY_TWO = 1
+    FREE = 2
     MODE_LIST = (
-        (ORDINARY, "普通台"),
-        (FREE, "免佣台"),
+        (ORDINARY_ONE, "龙虎普通台"),
+        (ORDINARY_TWO, "百家乐普通台"),
+        (FREE, "百家乐免佣台")
     )
+
     three_table_id = models.IntegerField(verbose_name="第三方桌子ID号", default=0)
-    table_name = models.CharField(verbose_name="桌子昵称", max_length=10, default='')
+    table_name = models.CharField(verbose_name="桌子昵称", max_length=30, default='')
     game_id = models.IntegerField(verbose_name="所属游戏ID号", default=0)
     game_name = models.CharField(verbose_name="游戏昵称", choices=NAME_LIST, max_length=1, default=DRAGON_TIGER)
-    mode = models.CharField(verbose_name="桌子类型", choices=MODE_LIST, max_length=1, default=ORDINARY)
+    mode = models.CharField(verbose_name="桌子类型", choices=MODE_LIST, max_length=1, default=ORDINARY_TWO)
     special_num = models.IntegerField(verbose_name="特殊数字，免佣台有效", default=0)
     percent_num = models.IntegerField(verbose_name="免佣百分比", default=0)
-    in_checkou = models.CharField(verbose_name="桌子状态", choices=Table_STATUS, max_length=1, default=STOP)
-    msg = models.CharField(verbose_name="桌子状态文字提示", max_length=20, default='')
+    status = models.CharField(verbose_name="桌子状态", choices=Table_STATUS, max_length=1, default=OPERATION)
+    in_checkout = models.CharField(verbose_name="桌子状态", choices=TABLE_IN_CHECKOU, max_length=1, default=OPERATION)
     websocket_url = models.CharField(verbose_name="websocket的链接地址", max_length=30, default='')
-    order_show = models.IntegerField(verbose_name="排序", default=1)
+    wait_time = models.IntegerField(verbose_name="等待时间", default=30)
+    remake = models.CharField(verbose_name="备注", max_length=100, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
 
@@ -111,10 +118,8 @@ class Number_tab(models.Model):
     number_tab_number = models.IntegerField(verbose_name="局号", default=0)
     opening = models.CharField(verbose_name="开局结果", choices=OPENING_LIST, max_length=1, default=NULL)
     pair = models.CharField(verbose_name="开局结果（对子）", choices=PAIR_LIST, max_length=1, default=NULL)
-    wait_time = models.IntegerField(verbose_name="等待时间", default=30)
     previous_number_tab_id = models.IntegerField(verbose_name="第三方上一局ID号", default=0)
     bet_statu = models.CharField(verbose_name="本局状态", choices=BET_LIST, max_length=1, default=NULL)
-    remake = models.CharField(verbose_name="备注", max_length=100)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
 
