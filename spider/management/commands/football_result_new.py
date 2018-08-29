@@ -120,11 +120,12 @@ def get_data(url):
 @transaction.atomic()
 def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest_team_score=None):
     quiz = Quiz.objects.filter(match_flag=match_flag).first()
+
     rule_all = Rule.objects.filter(quiz=quiz).all()
-    rule_had = rule_all.get(type=0)
-    rule_hhad = rule_all.get(type=1)
-    rule_ttg = rule_all.get(type=3)
-    rule_crs = rule_all.get(type=2)
+    rule_had = rule_all.filter(type=0).first()
+    rule_hhad = rule_all.filter(type=1).first()
+    rule_ttg = rule_all.filter(type=3).first()
+    rule_crs = rule_all.filter(type=2).first()
 
     result_flag = False
     try:
@@ -726,7 +727,7 @@ class Command(BaseCommand):
                 delay_quiz.save()
 
         # 在此基础上增加2小时
-        rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265, 110378]
+        rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]
 
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
