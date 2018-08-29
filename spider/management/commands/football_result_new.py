@@ -335,18 +335,25 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             flag = True
             # 判断是否回答正确
             is_right = False
-            if record.rule_id == rule_had.id:
-                if record.option.option_id == option_had.id:
-                    is_right = True
-            if record.rule_id == rule_hhad.id:
-                if record.option.option_id == option_hhad.id:
-                    is_right = True
-            if record.rule_id == rule_ttg.id:
-                if record.option.option_id == option_ttg.id:
-                    is_right = True
-            if record.rule_id == rule_crs.id:
-                if record.option.option_id == option_crs.id:
-                    is_right = True
+            if result_had is not None:
+                if record.rule_id == rule_had.id:
+                    if record.option.option_id == option_had.id:
+                        is_right = True
+
+            if rule_hhad is not None:
+                if record.rule_id == rule_hhad.id:
+                    if record.option.option_id == option_hhad.id:
+                        is_right = True
+
+            if rule_ttg is not None:
+                if record.rule_id == rule_ttg.id:
+                    if record.option.option_id == option_ttg.id:
+                        is_right = True
+
+            if rule_crs is not None:
+                if record.rule_id == rule_crs.id:
+                    if record.option.option_id == option_crs.id:
+                        is_right = True
 
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
