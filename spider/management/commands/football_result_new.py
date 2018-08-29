@@ -726,7 +726,7 @@ class Command(BaseCommand):
                 delay_quiz.save()
 
         # 在此基础上增加2小时
-        rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]
+        rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265, 110378]
 
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
