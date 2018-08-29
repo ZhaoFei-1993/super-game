@@ -10,6 +10,7 @@ import time
 import pytz
 import datetime
 import plistlib
+import decimal
 from PIL import Image
 from decimal import Decimal
 from django.db import transaction
@@ -706,6 +707,16 @@ def get_club_info():
 
 
 # 将科学计数法转换为字符串
-def sc2str(sc, digit): #sc科学计数值, digit位数
+def sc2str(sc, digit):
     vv = str('%.'+str(digit)+'f') % Decimal(str(sc))
     return vv
+
+
+def float_to_str(f, x=5):
+    ctx = decimal.Context()
+    x += 3
+    ctx.prec = x
+    d1 = ctx.create_decimal(repr(f))
+    numbers = format(d1, 'f')
+    number = numbers[0:-2]
+    return number

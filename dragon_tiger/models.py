@@ -2,11 +2,49 @@ from django.db import models
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
+import time
+import hashlib
 from sms.models import Sms
 from users.models import User
 from chat.models import Club
 from captcha.models import CaptchaStore
 from utils.models import CodeModel
+
+
+class TableManager(models.Manager):
+    """
+    竞猜记录数据操作
+    """
+
+    def get_token(self, three_table_id):
+        appid = '58000000'  # 获取token需要参数Appid
+        appsecret = '92e56d8195a9dd45a9b90aacf82886b1'  # 获取token需要参数Secret
+        times = int(time.time())  # 获取token需要参数time
+
+        array = {'appid': '58000000', 'menu': 'bet', 'tid': three_table_id}  # 龙虎斗
+
+        m = hashlib.md5()  # 创建md5对象
+        hash_str = str(times) + appid + appsecret
+        hash_str = hash_str.encode('utf-8')
+        m.update(hash_str)
+        token = m.hexdigest()
+        array['token'] = token
+        list = ""
+        for key in array:
+            value = array[key]
+            list += str(key) + str(value)
+        list += appsecret
+        list = list.encode('utf-8')
+        sign = hashlib.sha1(list)
+        sign = sign.hexdigest()
+        sign = sign.upper()
+        array['sign'] = sign
+        in_token = {
+            "connect": "api",
+            "mode": "onlineLogin",
+            "json": array
+        }  # ws参数组装
+        return in_token
 
 
 @reversion.register()
@@ -50,13 +88,15 @@ class Table(models.Model):
     mode = models.CharField(verbose_name="桌子类型", choices=MODE_LIST, max_length=1, default=ORDINARY_TWO)
     special_num = models.IntegerField(verbose_name="特殊数字，免佣台有效", default=0)
     percent_num = models.IntegerField(verbose_name="免佣百分比", default=0)
-    status = models.CharField(verbose_name="桌子状态", choices=Table_STATUS, max_length=1, default=OPERATION)
-    in_checkout = models.CharField(verbose_name="桌子状态", choices=TABLE_IN_CHECKOU, max_length=1, default=OPERATION)
+    status = models.CharField(verbose_name="桌子状态", choices=Table_STATUS, max_length=1, default=STOP)
+    in_checkout = models.CharField(verbose_name="桌子状态", choices=TABLE_IN_CHECKOU, max_length=1, default=STOP)
     websocket_url = models.CharField(verbose_name="websocket的链接地址", max_length=30, default='')
     wait_time = models.IntegerField(verbose_name="等待时间", default=30)
     remake = models.CharField(verbose_name="备注", max_length=100, default="")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="最后更新日期", auto_now=True)
+
+    objects = TableManager()
 
     class Meta:
         ordering = ['-id']
@@ -256,6 +296,13 @@ class Roach(models.Model):
 
 @reversion.register()
 class Options(models.Model):
+    BACCARAT = 1
+    DRAGON_TIGER = 2
+    NAME_LIST = (
+        (BACCARAT, "百家乐"),
+        (DRAGON_TIGER, "龙虎斗")
+    )
+    types = models.CharField(verbose_name="游戏类型", choices=NAME_LIST, max_length=1, default=DRAGON_TIGER)
     title = models.CharField(verbose_name='选项标题', max_length=255)
     title_en = models.CharField(verbose_name='选项标题(英文)', max_length=255)
     odds = models.DecimalField(verbose_name='赔率', max_digits=10, decimal_places=2, default=0.00)
@@ -271,7 +318,7 @@ class Options(models.Model):
 
 
 @reversion.register()
-class Record(models.Model):
+class Dragontigerrecord(models.Model):
     IOS = 1
     ANDROID = 2
     HTML5 = 3
@@ -311,15 +358,43 @@ class Record(models.Model):
 
 @reversion.register()
 class BetLimit(models.Model):
+    BACCARAT = 1
+    DRAGON_TIGER = 2
+    NAME_LIST = (
+        (BACCARAT, "百家乐"),
+        (DRAGON_TIGER, "龙虎斗")
+    )
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_betlimit_club')
-    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='deagon_tiger_table')
+    types = models.CharField(verbose_name="类型", choices=NAME_LIST, max_length=1, default=DRAGON_TIGER)
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
     bets_four = models.CharField(verbose_name='下注值4', max_length=255, default=0.04)
-    bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=3, null=True)
-    bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=3, null=True)
+    red_limit = models.DecimalField(verbose_name='限红', max_digits=10, decimal_places=3, null=True)
 
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "下注值控制表"
+
+
+@reversion.register()
+class Board(models.Model):
+    SPADE = 1
+    HEART = 2
+    DIAMOND = 2
+    CLUB = 2
+    COLOR_LIST = (
+        (SPADE, "黑桃"),
+        (HEART, "红桃"),
+        (DIAMOND, "方块"),
+        (CLUB, "梅花"),
+    )
+    points = models.IntegerField(verbose_name="点数", default=0)
+    color = models.CharField(verbose_name="类型", choices=COLOR_LIST, max_length=1, default=SPADE)
+    uel = models.CharField(verbose_name='图片链接地址', max_length=255, default="")
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "扑克牌图片库"
