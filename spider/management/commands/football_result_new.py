@@ -162,19 +162,19 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     else:
                         result_list.append(result.string)
 
-                option_had = Option.objects.filter(rule=rule_had).filter(option=result_list[1]).first()
+                option_had = Option.objects.filter(rule=rule_had, option=result_list[1]).first()
                 if option_had is not None:
                     option_had.is_right = 1
 
-                option_hhad = Option.objects.filter(rule=rule_hhad).filter(option=result_list[0]).first()
+                option_hhad = Option.objects.filter(rule=rule_hhad, option=result_list[0]).first()
                 if option_hhad is not None:
                     option_hhad.is_right = 1
 
-                option_ttg = Option.objects.filter(rule=rule_ttg).filter(option=result_list[3]).first()
+                option_ttg = Option.objects.filter(rule=rule_ttg, option=result_list[3]).first()
                 if option_ttg is not None:
                     option_ttg.is_right = 1
 
-                option_crs = Option.objects.filter(rule=rule_crs).filter(option=result_list[2]).first()
+                option_crs = Option.objects.filter(rule=rule_crs, option=result_list[2]).first()
                 if option_crs is not None:
                     option_crs.is_right = 1
 
@@ -238,22 +238,22 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     quiz.guest_team_score = guest_team_score
                     quiz.save()
 
-                    option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+                    option_had = Option.objects.filter(rule=rule_had, flag=result_had['pool_rs']).first()
                     if option_had is not None:
                         option_had.is_right = 1
                         option_had.save()
 
-                    option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+                    option_hhad = Option.objects.filter(rule=rule_hhad, flag=result_hhad['pool_rs']).first()
                     if option_hhad is not None:
                         option_hhad.is_right = 1
                         option_hhad.save()
 
-                    option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+                    option_ttg = Option.objects.filter(rule=rule_ttg, flag=result_ttg['pool_rs']).first()
                     if option_ttg is not None:
                         option_ttg.is_right = 1
                         option_ttg.save()
 
-                    option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+                    option_crs = Option.objects.filter(rule=rule_crs, flag=result_crs['pool_rs']).first()
                     if option_crs is not None:
                         option_crs.is_right = 1
                         option_crs.save()
@@ -275,22 +275,22 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             quiz.guest_team_score = guest_team_score
             quiz.save()
 
-            option_had = Option.objects.filter(rule=rule_had).filter(flag=result_had['pool_rs']).first()
+            option_had = Option.objects.filter(rule=rule_had, flag=result_had['pool_rs']).first()
             if option_had is not None:
                 option_had.is_right = 1
                 option_had.save()
 
-            option_hhad = Option.objects.filter(rule=rule_hhad).filter(flag=result_hhad['pool_rs']).first()
+            option_hhad = Option.objects.filter(rule=rule_hhad, flag=result_hhad['pool_rs']).first()
             if option_hhad is not None:
                 option_hhad.is_right = 1
                 option_hhad.save()
 
-            option_ttg = Option.objects.filter(rule=rule_ttg).filter(flag=result_ttg['pool_rs']).first()
+            option_ttg = Option.objects.filter(rule=rule_ttg, flag=result_ttg['pool_rs']).first()
             if option_ttg is not None:
                 option_ttg.is_right = 1
                 option_ttg.save()
 
-            option_crs = Option.objects.filter(rule=rule_crs).filter(flag=result_crs['pool_rs']).first()
+            option_crs = Option.objects.filter(rule=rule_crs, flag=result_crs['pool_rs']).first()
             if option_crs is not None:
                 option_crs.is_right = 1
                 option_crs.save()
