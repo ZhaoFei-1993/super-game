@@ -198,10 +198,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             datas = get_data(url + match_flag)
             if datas['status']['code'] == 0:
                 if len(datas['result']['pool_rs']) > 0:
-                    result_had = datas['result']['pool_rs']['had']
-                    result_hhad = datas['result']['pool_rs']['hhad']
-                    result_ttg = datas['result']['pool_rs']['ttg']
-                    result_crs = datas['result']['pool_rs']['crs']
+                    result_had = datas['result']['pool_rs'].get('had')
+                    result_hhad = datas['result']['pool_rs'].get('hhad')
+                    result_ttg = datas['result']['pool_rs'].get('ttg')
+                    result_crs = datas['result']['pool_rs'].get('crs')
                     # result_hafu = datas['result']['pool_rs']['hafu']
 
                     score_status = requests.get(live_url + match_flag).json()['status']
@@ -266,10 +266,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 return
         else:
             datas = result_data
-            result_had = datas['result']['pool_rs']['had']
-            result_hhad = datas['result']['pool_rs']['hhad']
-            result_ttg = datas['result']['pool_rs']['ttg']
-            result_crs = datas['result']['pool_rs']['crs']
+            result_had = datas['result']['pool_rs'].get('had')
+            result_hhad = datas['result']['pool_rs'].get('hhad')
+            result_ttg = datas['result']['pool_rs'].get('ttg')
+            result_crs = datas['result']['pool_rs'].get('crs')
 
             quiz.host_team_score = host_team_score
             quiz.guest_team_score = guest_team_score
