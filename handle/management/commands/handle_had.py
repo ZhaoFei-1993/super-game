@@ -19,14 +19,14 @@ def process_main(records):
         rule_all = Rule.objects.filter(quiz=record.quiz).all()
         rule_had = rule_all.filter(type=0).first()
         if rule_had is not None:
-            # 用户增加对应币金额
-            club = Club.objects.get(pk=record.roomquiz_id)
-
-            # 获取币信息
-            coin = Coin.objects.get(pk=club.coin_id)
-
             option_had = Option.objects.filter(rule=rule_had, is_right=True).first()
             if record.option.option_id == option_had.id and record.earn_coin < 0:
+                # 用户增加对应币金额
+                club = Club.objects.get(pk=record.roomquiz_id)
+
+                # 获取币信息
+                coin = Coin.objects.get(pk=club.coin_id)
+
                 earn_coin = record.bet * record.odds
                 earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
                 record.type = Record.CORRECT
@@ -73,9 +73,9 @@ class Command(BaseCommand):
                                         earn_coin__lt=0)
         print(len(records))
         range_list = []
-        for i in range(0, 5000, 1000):
+        for i in range(0, 5000, 2500):
             range_list.append(i)
-        p = Pool(5)
+        p = Pool(2)
         for i in range(0, len(range_list) - 1):
             if range_list[i + 1] > len(records):
                 p.apply_async(process_main, args=(list(records)[range_list[i]: -1], ))
