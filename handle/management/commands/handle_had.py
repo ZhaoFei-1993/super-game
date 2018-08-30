@@ -73,9 +73,10 @@ class Command(BaseCommand):
                                         earn_coin__lt=0)
         print(len(records))
         range_list = []
-        for i in range(0, 5000, 2500):
+        for i in range(0, 40000, 13000):
             range_list.append(i)
-        p = Pool(2)
+        print(range_list)
+        p = Pool(3)
         for i in range(0, len(range_list) - 1):
             if range_list[i + 1] > len(records):
                 p.apply_async(process_main, args=(list(records)[range_list[i]: -1], ))
