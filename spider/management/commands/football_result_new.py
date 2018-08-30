@@ -192,7 +192,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     except:
         pass
 
-    result_had = None
     if result_flag is False:
         if result_data is None:
             print('--------------------------- 竞彩网路径开奖 ------------------------------')
@@ -336,7 +335,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             flag = True
             # 判断是否回答正确
             is_right = False
-            if result_had is not None:
+            if rule_had is not None:
                 if record.rule_id == rule_had.id:
                     if record.option.option_id == option_had.id:
                         is_right = True
