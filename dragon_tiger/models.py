@@ -379,18 +379,20 @@ class BetLimit(models.Model):
 
 @reversion.register()
 class Board(models.Model):
+    NULL = 0
     SPADE = 1
     HEART = 2
     DIAMOND = 3
     CLUB = 4
     COLOR_LIST = (
+        (NULL, "空"),
         (SPADE, "黑桃"),
         (HEART, "红桃"),
         (DIAMOND, "方块"),
         (CLUB, "梅花"),
     )
     points = models.IntegerField(verbose_name="点数", default=0)
-    color = models.CharField(verbose_name="类型", choices=COLOR_LIST, max_length=1, default=SPADE)
+    color = models.CharField(verbose_name="类型", choices=COLOR_LIST, max_length=1, default=NULL)
     uel = models.CharField(verbose_name='图片链接地址', max_length=255, default="")
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     update_at = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
