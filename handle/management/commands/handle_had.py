@@ -35,6 +35,7 @@ class Command(BaseCommand):
                 if record.id == 8411942:
                     print(record.option.option_id)
                     print(option_had.id)
+                    return
                 # if record.option.option_id == option_had.id and record.earn_coin < 0:
                 #     earn_coin = record.bet * record.odds
                 #     earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
