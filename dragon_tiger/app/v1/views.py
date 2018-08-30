@@ -95,7 +95,6 @@ class Dragontigeroption(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_id = str(request.user.id)
         user_avatar = request.user.avatar
-        print("user_avatar=============================", user_avatar)
         club_id = str(self.request.GET.get('club_id'))
         types = str(self.request.GET.get('type'))
         sql = "select cc.coin_id from chat_club cc"
@@ -111,7 +110,7 @@ class Dragontigeroption(ListAPIView):
         sql += " and uc.user_id= '" + user_id + "'"
         user_balance = get_sql(sql)[0][0]  # 获取用户金额
         user_balance = float(user_balance)
-        user_balance = float_to_str(user_balance, coin_accuracy)
+        user_balance = normalize_fraction(user_balance, coin_accuracy)
 
         sql = "select b.bets_one, b.bets_two, b.bets_three, b.bets_four, b.red_limit from dragon_tiger_betlimit b"
         sql += " where b.club_id = '" + club_id + "'"
