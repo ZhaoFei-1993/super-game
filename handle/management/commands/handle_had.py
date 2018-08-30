@@ -31,7 +31,7 @@ class Command(BaseCommand):
             rule_all = Rule.objects.filter(quiz=record.quiz).all()
             rule_had = rule_all.filter(type=0).first()
             if rule_had is not None:
-                option_had = Option.objects.filter(rule=rule_had, is_right=True).first()
+                option_had = Option.objects.filter(quiz=record.quiz, rule=rule_had, is_right=True).first()
                 if record.option.option_id == option_had.id and record.earn_coin < 0:
                     earn_coin = record.bet * record.odds
                     earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
