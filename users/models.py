@@ -329,12 +329,14 @@ class CoinDetail(models.Model):
     DEVIDEND = 12
     EXCHANGE = 13
     UNLOCK = 14
+    DRAGON_TIGER = 15
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
         (REALISATION, "提现"),
         (BETS, "下注"),
         (GUESS_BETS, "股票下注"),
+        (DRAGON_TIGER, "龙虎斗下注"),
         (ACTIVITY, "活动"),
         (OPEB_PRIZE, "开奖"),
         (REGISTER, "注册"),
