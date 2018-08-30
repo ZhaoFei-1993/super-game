@@ -67,7 +67,7 @@ class Command(BaseCommand):
     help = "发送消息"
 
     def handle(self, *args, **options):
-        start_with = datetime.datetime(2018, 8, 7, 19, 0, 0)
+        start_with = datetime.datetime(2018, 8, 29, 19, 0, 0)
         print(start_with)
         records = Record.objects.filter(open_prize_time__gt=start_with, is_distribution=True, rule__type='0',
                                         earn_coin__lt=0)
