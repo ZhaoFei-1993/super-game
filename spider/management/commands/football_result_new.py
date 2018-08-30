@@ -192,6 +192,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     except:
         pass
 
+    result_had = None
     if result_flag is False:
         if result_data is None:
             print('--------------------------- 竞彩网路径开奖 ------------------------------')
