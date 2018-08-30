@@ -6,21 +6,18 @@ from users.models import CoinDetail, UserCoin, UserMessage
 import datetime
 from utils.functions import get_club_info, normalize_fraction
 from decimal import Decimal
+from multiprocessing import Pool
+import os
 
 
 class Command(BaseCommand):
     help = "发送消息"
 
-    def handle(self, *args, **options):
-        start_with = datetime.datetime(2018, 8, 29, 19, 0, 0)
-        print(start_with)
-        records = Record.objects.filter(open_prize_time__gt=start_with, is_distribution=True, rule__type='0',
-                                        earn_coin__lt=0)
-        print('counts ==== ', len(records))
+    def process_main(self, records):
         i = 0
         for record in records:
             i += 1
-            print('现在正在执行第', i, '条，一共', len(records))
+            print('现在正在执行第', i, '条，一共', len(records), os.getpid())
             cache_club_value = get_club_info()
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
@@ -67,3 +64,19 @@ class Command(BaseCommand):
                         earn_coin) \
                                        + '重新发放,请查收！'
                     u_mes.save()
+
+    def handle(self, *args, **options):
+        start_with = datetime.datetime(2018, 8, 29, 19, 0, 0)
+        records = Record.objects.filter(open_prize_time__gt=start_with, is_distribution=True, rule__type='0',
+                                        earn_coin__lt=0)
+        range_list = []
+        for i in range(0, 5000, 500):
+            range_list.append(i)
+        p = Pool(10)
+        for i in range_list:
+            if range_list[i + 1] > len(records):
+                p.apply_async(self.process_main, args=records[range_list[i], -1])
+            else:
+                p.apply_async(self.process_main, args=records[range_list[i], range_list[i + 1]])
+        p.close()
+        p.join()
