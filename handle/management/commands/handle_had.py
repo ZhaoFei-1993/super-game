@@ -77,6 +77,6 @@ class Command(BaseCommand):
             if range_list[i + 1] > len(records):
                 p.apply_async(self.process_main, args=records[range_list[i], -1])
             else:
-                p.apply_async(self.process_main, args=records[range_list[i], range_list[i + 1]])
+                p.apply_async(self.process_main, args=(records[range_list[i], range_list[i + 1]], ))
         p.close()
         p.join()
