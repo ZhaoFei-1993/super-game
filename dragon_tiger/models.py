@@ -381,8 +381,8 @@ class BetLimit(models.Model):
 class Board(models.Model):
     SPADE = 1
     HEART = 2
-    DIAMOND = 2
-    CLUB = 2
+    DIAMOND = 3
+    CLUB = 4
     COLOR_LIST = (
         (SPADE, "黑桃"),
         (HEART, "红桃"),
