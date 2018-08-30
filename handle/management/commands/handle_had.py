@@ -73,7 +73,7 @@ class Command(BaseCommand):
                                         earn_coin__lt=0)
         print(len(records))
         range_list = []
-        for i in range(0, 40000, 20000):
+        for i in range(0, 40001, 20000):
             range_list.append(i)
         print(range_list)
         p = Pool(2)
