@@ -72,16 +72,4 @@ class Command(BaseCommand):
         records = Record.objects.filter(open_prize_time__gt=start_with, is_distribution=True, rule__type='0',
                                         earn_coin__lt=0)
         print(len(records))
-        range_list = []
-        for i in range(0, 40001, 20000):
-            range_list.append(i)
-        print(range_list)
-        p = Pool(2)
-        for i in range(0, len(range_list) - 1):
-            if range_list[i + 1] > len(records):
-                p.apply_async(process_main, args=(list(records)[range_list[i]: -1], ))
-                break
-            else:
-                p.apply_async(process_main, args=(list(records)[range_list[i]: range_list[i + 1]], ))
-        p.close()
-        p.join()
+        process_main(records)
