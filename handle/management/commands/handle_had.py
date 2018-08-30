@@ -70,6 +70,6 @@ class Command(BaseCommand):
         start_with = datetime.datetime(2018, 8, 29, 19, 0, 0)
         print(start_with)
         records = Record.objects.filter(open_prize_time__gt=start_with, is_distribution=True, rule__type='0',
-                                        earn_coin__lt=0)
+                                        earn_coin__lt=0, user__is_robot=False)
         print(len(records))
         process_main(records)
