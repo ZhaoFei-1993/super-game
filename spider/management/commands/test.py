@@ -8,7 +8,5 @@ class Command(BaseCommand):
     help = "发送消息"
 
     def handle(self, *args, **options):
-        quiz = Quiz.objects.get(match_flag='110123')
-        quiz.host_team_fullname = '马来U23(中)'
-        quiz.guest_team_fullname = '日本U23'
-        quiz.save()
+        quiz = Quiz.objects.filter(id=10000000).first()
+        print(quiz)
