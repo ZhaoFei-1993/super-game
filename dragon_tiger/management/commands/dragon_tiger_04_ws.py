@@ -31,7 +31,7 @@ class Command(BaseCommand):
             if sendModes == "onlineLogin" and status == True:
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
-                    # table_info.save()
+                    table_info.save()
                     print("------------------桌子状态改变成功------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
                     is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
@@ -143,10 +143,43 @@ class Command(BaseCommand):
                         print("---------------新局数已经存在------------------")
             elif sendModes == "resetBoot" and status == True:
                 print("------------------日结------------------")
-                # if messages["round"]["number_tab_status"]["type"] == 1:
-                #     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
-                #     table_info.save()
-                #     print("------------------桌子开始洗牌成功------------------")
+                table_info.in_checkout = 2
+                table_info.save()
+                print("------------------桌子-日结------------------")
+                if messages["round"]["number_tab_status"]["type"] == 2:
+                    is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
+                                                    boot_num=messages["round"]["boot_num"]).count()
+                    if is_boots == 0:
+                        boots = Boots()
+                        boots.tid = table_info
+                        boots.boot_id = int(messages["round"]["boot_id"])
+                        boots.boot_num = int(messages["round"]["boot_num"])
+                        boots.save()
+                        print("---------------当前靴号入库成功------------------")
+                    else:
+                        print("---------------靴号已经存在------------------")
+                        boots = Boots.objects.get(boot_id=messages["round"]["boot_id"],
+                                                  boot_num=messages["round"]["boot_num"])
+                    is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
+                                                              number_tab_number=messages["round"][
+                                                                  "number_tab_number"]).count()
+                    if is_Number_tab == 0:
+                        number_tab = Number_tab()
+                        number_tab.tid = table_info
+                        number_tab.boots = boots
+                        number_tab.number_tab_id = messages["round"]["number_tab_id"]
+                        number_tab.number_tab_number = messages["round"]["number_tab_number"]
+                        if "opening" in messages["round"]:
+                            number_tab.opening = messages["round"]["opening"]
+                        if "pair" in messages["round"]:
+                            number_tab.pair = messages["round"]["pair"]
+                        number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
+                        number_tab.save()
+                        print("---------------当前局数入库成功------------------")
+                    else:
+                        print("---------------当前局数已经存在------------------")
+                    ludan_save(messages, boots)
+                    print("---------------日结-成功------------------")
 
 
     @staticmethod
