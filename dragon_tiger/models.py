@@ -209,10 +209,12 @@ class Showroad(models.Model):
 class Bigroad(models.Model):
     BANKER = 1
     PLAYER = 2
+    TIE = 3
 
     OPENING_LIST = (
         (BANKER, "龙/庄"),
         (PLAYER, "虎/闲"),
+        (TIE, "和")
     )
     boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
     result_big = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
