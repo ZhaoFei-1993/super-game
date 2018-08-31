@@ -1,14 +1,11 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView, ListCreateAPIView
 from utils.functions import value_judge, float_to_str
-import hashlib
 from django.db import transaction
 from base import code as error_code
 from base.exceptions import ParamErrorException
-import time
+import requests
 from utils.functions import value_judge, get_sql
-import urllib.request
-import urllib.parse
 import json
 from decimal import Decimal
 from dragon_tiger.models import BetLimit
@@ -18,50 +15,30 @@ from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord
 from users.models import Coin, UserCoin, CoinDetail
 from chat.models import Club
 from utils.cache import get_cache, set_cache
+from utils.functions import obtain_token
 
 
-class Encryption(ListAPIView):
+class Table_info(ListAPIView):
     """
-    加密
-     appid = '58000000'                              # 你的Appid
-    appsecret = '92e56d8195a9dd45a9b90aacf82886b1'               # 你的Secret
-    menu = 'home'
-    game = 0、
-    url = 'http://api.wt123.co/service'                         # API请求地址 | 测试阶段地址
+    主动获取桌子信息，并且入库
     """
 
-    def post(self, request):
-        value = value_judge(request, "appsecret", "appid", "menu", "game")
-        if value == 0:
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        if 'game' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        appid = request.data.get('appid')  # 你的Appid
-        appsecret = request.data.get('appsecret')  # 你的Secret
-        menu = request.data.get('menu')  # 你的Appid
-        game = request.data.get('game')  # 你的Appid
-        array = {}
-        arr = {}
-        array['appid'] = appid
-        array['menu'] = menu
-        array['game'] = game
-        times = int(time.time())
-        m = hashlib.md5()  # 创建md5对象
-        hash_str = str(times) + appid + appsecret
-        hash_str = hash_str.encode('utf-8')
-        m.update(hash_str)
-        token = m.hexdigest()
-        array['token'] = token
-        arr['token'] = token
-        list = ""
-        for key in array:
-            value = array[key]
-            list += str(key) + str(value)
-        list += appsecret
-        list = list.encode('utf-8')
-        sign = hashlib.sha1(list)
-        sign = sign.hexdigest()
-        sign = sign.upper()
-        arr['sign'] = sign
-        return arr
+        menu = "home"
+        game = self.request.GET.get('game')
+        array = obtain_token(menu, game)
+        data = array
+        result = requests.post('http://api.wt123.co/service', data=data)
+        res = json.loads(result.content.decode('utf-8'))
+
+        return self.response({'code': 0, "data": res})
 
 
 class Request_post(ListAPIView):

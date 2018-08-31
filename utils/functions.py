@@ -16,6 +16,8 @@ from decimal import Decimal
 from django.db import transaction
 from django.conf import settings
 from django.db.models import Sum, Q
+from base import code as error_code
+import hashlib
 from chat.models import Club
 from base.exceptions import ParamErrorException
 from api.settings import MEDIA_ROOT, MEDIA_DOMAIN_HOST
@@ -31,6 +33,7 @@ from django.db import connection
 from PIL import Image, ImageDraw, ImageFont
 import random
 from utils.cache import get_cache, set_cache
+from dragon_tiger.models import Showroad, Bigroad, Psthway, Bigeyeroad, Roach
 
 
 def random_string(length=16):
@@ -708,7 +711,7 @@ def get_club_info():
 
 # 将科学计数法转换为字符串
 def sc2str(sc, digit):
-    vv = str('%.'+str(digit)+'f') % Decimal(str(sc))
+    vv = str('%.' + str(digit) + 'f') % Decimal(str(sc))
     return vv
 
 
@@ -720,3 +723,180 @@ def float_to_str(f, x=5):
     numbers = format(d1, 'f')
     number = numbers[0:-2]
     return number
+
+
+def obtain_token(menu, game):
+    appid = '58000000'  # 获取token需要参数Appid
+    appsecret = '92e56d8195a9dd45a9b90aacf82886b1'  # 获取token需要参数Secret
+    times = int(time.time())  # 获取token需要参数time
+    array = {'appid': '58000000', 'menu': menu, 'game': game}  # 全部
+    m = hashlib.md5()  # 创建md5对象
+    hash_str = str(times) + appid + appsecret
+    hash_str = hash_str.encode('utf-8')
+    m.update(hash_str)
+    token = m.hexdigest()
+    array['token'] = token
+    list = ""
+    for key in array:
+        value = array[key]
+        list += str(key) + str(value)
+    list += appsecret
+    list = list.encode('utf-8')
+    sign = hashlib.sha1(list)
+    sign = sign.hexdigest()
+    sign = sign.upper()
+    array['sign'] = sign
+    return array
+
+
+def ludan_save(messages, boots):
+    if messages["round"]["ludan"] != False:
+
+        showroad_number = Showroad.objects.filter(boots_id=boots.id).count()
+        if "show_location" in messages["round"]["ludan"]["showRoad"]:
+            is_showroad_number = len(messages["round"]["ludan"]["showRoad"]["show_location"])
+            if int(is_showroad_number) > int(showroad_number):
+                s = 1
+                for i in messages["round"]["ludan"]["showRoad"]["show_location"]:
+                    if s > showroad_number:
+                        showroad = Showroad()
+                        showroad.boots = boots
+                        if i["result"] == "banker":
+                            result_show = 1
+                        elif i["result"] == "player":
+                            result_show = 2
+                        else:
+                            result_show = 3
+                        showroad.result_show = result_show
+                        showroad.order_show = s
+                        showroad.show_x_show = i["show_x"]
+                        showroad.show_y_show = i["show_y"]
+                        if i["pair"] == "bankerPair":
+                            pair = 1
+                        elif i["pair"] == "playerPair":
+                            pair = 2
+                        elif i["pair"] == "bothPair":
+                            pair = 3
+                        else:
+                            pair = 0
+                        showroad.pair = pair
+                        showroad.save()
+                        print("结果路图入库成功============================", s, "条")
+                    s += 1
+            else:
+                print("--------结果图早已入库--------")
+        else:
+            print("--------结果图暂无数据--------")
+
+        bigroad_number = Bigroad.objects.filter(boots_id=boots.id).count()
+        if "show_location" in messages["round"]["ludan"]["bigRoad"]:
+            is_bigroad_number = len(messages["round"]["ludan"]["bigRoad"]["show_location"])
+            if int(is_bigroad_number) > int(bigroad_number):
+                b = 1
+                for i in messages["round"]["ludan"]["bigRoad"]["show_location"]:
+                    if b > bigroad_number:
+                        print("000000")
+                        bigroad = Bigroad()
+                        bigroad.boots = boots
+                        if i["result"] == "red":
+                            result_big = 1
+                        else:
+                            result_big = 2
+                        bigroad.result_big = result_big
+                        bigroad.order_big = b
+                        bigroad.show_x_big = i["show_x"]
+                        bigroad.show_y_big = i["show_y"]
+                        if i["tie_num"] != 0:
+                            bigroad.tie_num = 1
+                        bigroad.save()
+                        print("大路图入库成功============================", b, "条")
+                    b += 1
+
+            b_test = 1
+            for i in messages["round"]["ludan"]["bigRoad"]["show_location"]:
+                if b_test == bigroad_number:
+                    if i["tie_num"] != 0:
+                        bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
+                        bigroad.tie_num = 1
+                        bigroad.save()
+                    print("------------改变大路图最后一条数据，确保出现和的录入------------")
+                b_test += 1
+            else:
+                print("--------大路图早已入库--------")
+        else:
+            print("--------大路图暂无数据--------")
+
+        bigeyeroad_number = Bigeyeroad.objects.filter(boots_id=boots.id).count()
+        if "show_location" in messages["round"]["ludan"]["bigEyeRoad"]:
+            is_bigeyeroad_number = len(messages["round"]["ludan"]["bigEyeRoad"]["show_location"])
+            if int(is_bigeyeroad_number) > int(bigeyeroad_number):
+                by = 1
+                for i in messages["round"]["ludan"]["bigEyeRoad"]["show_location"]:
+                    if by > bigeyeroad_number:
+                        bigeyeroad = Bigeyeroad()
+                        bigeyeroad.boots = boots
+                        if i["result"] == "red":
+                            result_big_eye = 1
+                        else:
+                            result_big_eye = 2
+                        bigeyeroad.result_big_eye = result_big_eye
+                        bigeyeroad.order_big_eye = by
+                        bigeyeroad.show_x_big_eye = i["show_x"]
+                        bigeyeroad.show_y_big_eye = i["show_y"]
+                        bigeyeroad.save()
+                        print("大眼路图入库成功============================", by, "条")
+                    by += 1
+            else:
+                print("--------大眼路图早已入库--------")
+        else:
+            print("--------大眼路图暂无数据--------")
+
+        psthway_number = Psthway.objects.filter(boots_id=boots.id).count()
+        if "show_location" in messages["round"]["ludan"]["pathway"]:
+            is_psthway_number = len(messages["round"]["ludan"]["pathway"]["show_location"])
+            if int(is_psthway_number) > int(psthway_number):
+                p = 1
+                for i in messages["round"]["ludan"]["pathway"]["show_location"]:
+                    if p > psthway_number:
+                        psthway = Psthway()
+                        psthway.boots = boots
+                        if i["result"] == "red":
+                            result_psthway = 1
+                        else:
+                            result_psthway = 2
+                        psthway.result_psthway = result_psthway
+                        psthway.order_psthway = p
+                        psthway.show_x_psthway = i["show_x"]
+                        psthway.show_y_psthway = i["show_y"]
+                        psthway.save()
+                        print("小路图入库成功============================", p, "条")
+                    p += 1
+            else:
+                print("--------小路图早已入库--------")
+        else:
+            print("--------小路图暂无数据--------")
+
+        roach_number = Roach.objects.filter(boots_id=boots.id).count()
+        if "show_location" in messages["round"]["ludan"]["roach"]:
+            is_roach_number = len(messages["round"]["ludan"]["roach"]["show_location"])
+            if int(is_roach_number) > int(roach_number):
+                rn = 1
+                for i in messages["round"]["ludan"]["roach"]["show_location"]:
+                    if rn > roach_number:
+                        roach = Roach()
+                        roach.boots = boots
+                        if i["result"] == "red":
+                            result_roach = 1
+                        else:
+                            result_roach = 2
+                        roach.result_roach = result_roach
+                        roach.order_roach = rn
+                        roach.show_x_roach = i["show_x"]
+                        roach.show_y_roach = i["show_y"]
+                        roach.save()
+                        print("珠盘路图入库成功============================", rn, "条")
+                    rn += 1
+            else:
+                print("--------珠盘路图早已入库--------")
+        else:
+            print("--------珠盘路暂无数据--------")
