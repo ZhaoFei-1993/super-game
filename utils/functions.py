@@ -754,7 +754,7 @@ def ludan_save(messages, boots):
 
         showroad_number = Showroad.objects.filter(boots_id=boots.id).count()
         if "showRoad" in messages["round"]["ludan"]:
-            if messages["round"]["ludan"]["showRoad"]["previous_res"] != None:
+            if "show_location" in messages["round"]["ludan"]["showRoad"]:
                 is_showroad_number = len(messages["round"]["ludan"]["showRoad"]["show_location"])
                 if int(is_showroad_number) > int(showroad_number):
                     s = 1
@@ -782,7 +782,7 @@ def ludan_save(messages, boots):
                                 pair = 0
                             showroad.pair = pair
                             showroad.save()
-                            print("结果路图入库成功============================", s, "条")
+                            print("结果路图入库成功===========================第", s, "条")
                         s += 1
                 else:
                     print("--------结果图早已入库--------")
@@ -793,7 +793,7 @@ def ludan_save(messages, boots):
 
         bigroad_number = Bigroad.objects.filter(boots_id=boots.id).count()
         if "bigRoad" in messages["round"]["ludan"]:
-            if messages["round"]["ludan"]["bigRoad"]["previous_res"] != None:
+            if "show_location" in messages["round"]["ludan"]["bigRoad"]:
                 is_bigroad_number = len(messages["round"]["ludan"]["bigRoad"]["show_location"])
                 if int(is_bigroad_number) > int(bigroad_number):
                     b = 1
@@ -814,7 +814,7 @@ def ludan_save(messages, boots):
                             if i["tie_num"] != 0:
                                 bigroad.tie_num = 1
                             bigroad.save()
-                            print("大路图入库成功============================", b, "条")
+                            print("大路图入库成功============================第", b, "条")
                         b += 1
                 else:
                     b_test = 1
@@ -834,7 +834,7 @@ def ludan_save(messages, boots):
 
         bigeyeroad_number = Bigeyeroad.objects.filter(boots_id=boots.id).count()
         if "bigEyeRoad" in messages["round"]["ludan"]:
-            if messages["round"]["ludan"]["bigEyeRoad"]["previous_res"] != None:
+            if "show_location" in messages["round"]["ludan"]["bigEyeRoad"]:
                 is_bigeyeroad_number = len(messages["round"]["ludan"]["bigEyeRoad"]["show_location"])
                 if int(is_bigeyeroad_number) > int(bigeyeroad_number):
                     by = 1
@@ -851,7 +851,7 @@ def ludan_save(messages, boots):
                             bigeyeroad.show_x_big_eye = i["show_x"]
                             bigeyeroad.show_y_big_eye = i["show_y"]
                             bigeyeroad.save()
-                            print("大眼路图入库成功============================", by, "条")
+                            print("大眼路图入库成功============================第", by, "条")
                         by += 1
                 else:
                     print("--------大眼路图早已入库--------")
@@ -862,7 +862,7 @@ def ludan_save(messages, boots):
 
         psthway_number = Psthway.objects.filter(boots_id=boots.id).count()
         if "pathway" in messages["round"]["ludan"]:
-            if messages["round"]["ludan"]["pathway"]["previous_res"] != None:
+            if "show_location" in messages["round"]["ludan"]["pathway"]:
                 is_psthway_number = len(messages["round"]["ludan"]["pathway"]["show_location"])
                 if int(is_psthway_number) > int(psthway_number):
                     p = 1
@@ -872,6 +872,7 @@ def ludan_save(messages, boots):
                             psthway.boots = boots
                             if i["result"] == "banker":
                                 result_psthway = 1
+
                             else:
                                 result_psthway = 2
                             psthway.result_psthway = result_psthway
@@ -879,7 +880,7 @@ def ludan_save(messages, boots):
                             psthway.show_x_psthway = i["show_x"]
                             psthway.show_y_psthway = i["show_y"]
                             psthway.save()
-                            print("小路图入库成功============================", p, "条")
+                            print("小路图入库成功============================第", p, "条")
                         p += 1
                 else:
                     print("--------小路图早已入库--------")
@@ -890,7 +891,7 @@ def ludan_save(messages, boots):
 
         roach_number = Roach.objects.filter(boots_id=boots.id).count()
         if "roach" in messages["round"]["ludan"]:
-            if messages["round"]["ludan"]["roach"]["previous_res"] != None:
+            if "show_location" in messages["round"]["ludan"]["roach"]:
                 is_roach_number = len(messages["round"]["ludan"]["roach"]["show_location"])
                 if int(is_roach_number) > int(roach_number):
                     rn = 1
@@ -907,7 +908,7 @@ def ludan_save(messages, boots):
                             roach.show_x_roach = i["show_x"]
                             roach.show_y_roach = i["show_y"]
                             roach.save()
-                            print("珠盘路图入库成功============================", rn, "条")
+                            print("珠盘路图入库成功============================第", rn, "条")
                         rn += 1
                 else:
                     print("--------珠盘路图早已入库--------")
