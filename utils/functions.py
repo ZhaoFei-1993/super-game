@@ -795,7 +795,6 @@ def ludan_save(messages, boots):
                 b = 1
                 for i in messages["round"]["ludan"]["bigRoad"]["show_location"]:
                     if b > bigroad_number:
-                        print("000000")
                         bigroad = Bigroad()
                         bigroad.boots = boots
                         if i["result"] == "red":
@@ -811,17 +810,16 @@ def ludan_save(messages, boots):
                         bigroad.save()
                         print("大路图入库成功============================", b, "条")
                     b += 1
-
-            b_test = 1
-            for i in messages["round"]["ludan"]["bigRoad"]["show_location"]:
-                if b_test == bigroad_number:
-                    if i["tie_num"] != 0:
-                        bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
-                        bigroad.tie_num = 1
-                        bigroad.save()
-                    print("------------改变大路图最后一条数据，确保出现和的录入------------")
-                b_test += 1
             else:
+                b_test = 1
+                for i in messages["round"]["ludan"]["bigRoad"]["show_location"]:
+                    if b_test == bigroad_number:
+                        if i["tie_num"] != 0:
+                            bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
+                            bigroad.tie_num = 1
+                            bigroad.save()
+                        print("------------改变大路图最后一条数据，确保出现和的录入------------")
+                    b_test += 1
                 print("--------大路图早已入库--------")
         else:
             print("--------大路图暂无数据--------")
