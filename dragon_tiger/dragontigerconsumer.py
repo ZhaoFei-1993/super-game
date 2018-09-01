@@ -18,17 +18,46 @@ class DragonTigerConsumer(BaseConsumer):
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)
 
-    async def command_message(self, event):
+    async def tableinfo_message(self, event):
         """
-        推送比分数据至客户端
+        推送桌子状态至客户端
         :param event:
         :return:
         """
         await self.send_json(
             {
-                "msg_type": "score",
-                "quiz_id": event["table_id"],
-                "host": event["boots"],
-                "guest": event['guest'],
+                "msg_type": "table_info",
+                "table_id": event["table_id"],
+                "in_checkout": event["in_checkout"],
+            }
+        )
+
+    async def bootsinfo_message(self, event):
+        """
+        推送桌子状态至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "boots_info",
+                "table_id": event["table_id"],
+                "boots_id": event["boots_id"],
+                "boot_num": event["boot_num"],
+            }
+        )
+
+    async def numberinfo_message(self, event):
+        """
+        推送桌子状态至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "number_info",
+                "table_id": event["table_id"],
+                "number_tab_id": event["number_tab_id"],
+                "bet_statu": event["bet_statu"],
             }
         )

@@ -822,7 +822,14 @@ def ludan_save(messages, boots):
                         if b_test == bigroad_number:
                             if i["tie_num"] != 0:
                                 bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
-                                bigroad.tie_num = 1
+                                if i["result"] == "banker":
+                                    result_big = 1
+                                    bigroad.result_big = result_big
+                                else:
+                                    result_big = 2
+                                    bigroad.result_big = result_big
+                                if int(i["tie_num"]) != 1:
+                                    bigroad.tie_num = 1
                                 bigroad.save()
                             print("------------改变大路图最后一条数据，确保出现和的录入------------")
                         b_test += 1
