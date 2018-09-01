@@ -9,7 +9,8 @@ from urllib import parse
 from django.conf import settings
 from rq import Queue
 from redis import Redis
-from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, dragon_tiger_boots_info
+from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, \
+    dragon_tiger_boots_info,dragon_tiger_result
 
 
 class Command(BaseCommand):
@@ -71,12 +72,12 @@ class Command(BaseCommand):
                         print("---------------当前局数入库成功------------------")
                     else:
                         print("---------------当前局数已经存在------------------")
-                    ludan_save(messages, boots)
+                    ludan_save(messages, boots, table_info.id)
 
             elif sendModes == "openingDtResult" and status is True:
                 print("-----------------开奖--------------------")
-                boots = Boots.objects.all().first()
-                number_tab = Number_tab.objects.get(bet_statu=2, number_tab_id=0, number_tab_number=0, boots_id=boots.id, opening=0, pair=0, previous_number_tab_id=0)
+                boots = Boots.objects.filter(tid_id=table_info.id).first()
+                number_tab = Number_tab.objects.filter(tid_id=table_info.id).first()
                 number_tab.tid = table_info
                 number_tab.boots = boots
                 number_tab.number_tab_id = messages["round"]["number_tab_id"]
@@ -88,7 +89,12 @@ class Command(BaseCommand):
                     number_tab.pair = messages["round"]["pair"]
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
-                ludan_save(messages, boots)
+                print("-------------开始推送---------------")
+                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                          messages["round"]["number_tab_status"]["betStatus"])
+                q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, number_tab.opening)
+                print("-----------推送完成--------------")
+                ludan_save(messages, boots, table_info.id)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)
                       + "局---已经开奖----")
 
@@ -96,7 +102,7 @@ class Command(BaseCommand):
                 print("------------------开始接受下注--------------------")
                 table_info.in_checkout = 0
                 table_info.save()
-                boots = Boots.objects.all().first()
+                boots = Boots.objects.filter(tid_id=table_info.id).first()
                 number_tab = Number_tab()
                 number_tab.tid = table_info
                 number_tab.boots = boots
@@ -112,7 +118,7 @@ class Command(BaseCommand):
             elif sendModes == "endBet" and status is True:
                 print("------------------开始结束下注--------------------")
                 # boots = Boots.objects.all().first()
-                number_tab = Number_tab.objects.all().first()
+                number_tab = Number_tab.objects.filter(tid_id=table_info.id).first()
                 # number_tab.tid = table_info
                 # number_tab.boots = boots
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
@@ -175,7 +181,7 @@ class Command(BaseCommand):
                 print("------------------日结开始------------------")
                 # print("------------------上局部路单入库--------------------")
                 # boots = Boots.objects.all().first()
-                # ludan_save(messages, boots)
+                # ludan_save(messages, boots, table_info.id)
                 # print("---------------上局部路单入库成功------------------")
                 table_info.in_checkout = 2
                 table_info.save()

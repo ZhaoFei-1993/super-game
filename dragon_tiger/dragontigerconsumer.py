@@ -28,7 +28,7 @@ class DragonTigerConsumer(BaseConsumer):
             {
                 "msg_type": "table_info",
                 "table_id": event["table_id"],
-                "in_checkout": event["in_checkout"],
+                "in_checkout": event["in_checkout"]
             }
         )
 
@@ -43,7 +43,7 @@ class DragonTigerConsumer(BaseConsumer):
                 "msg_type": "boots_info",
                 "table_id": event["table_id"],
                 "boots_id": event["boots_id"],
-                "boot_num": event["boot_num"],
+                "boot_num": event["boot_num"]
             }
         )
 
@@ -58,6 +58,98 @@ class DragonTigerConsumer(BaseConsumer):
                 "msg_type": "number_info",
                 "table_id": event["table_id"],
                 "number_tab_id": event["number_tab_id"],
-                "bet_statu": event["bet_statu"],
+                "bet_statu": event["betstatus"]
+            }
+        )
+
+    async def result_message(self, event):
+        """
+        推送开奖信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "result",
+                "table_id": event["table_id"],
+                "number_tab_id": event["number_tab_id"],
+                "opening": event["opening"]
+            }
+        )
+
+    async def showroad_message(self, event):
+        """
+        推送结果图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "showroad",
+                "show_x": event["show_x"],
+                "show_y": event["show_y"],
+                "result": event["result"],
+                "pair": event["pair"]
+            }
+        )
+
+    async def bigroad_message(self, event):
+        """
+        推送大路图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "bigRoad",
+                "show_x": event["show_x"],
+                "show_y": event["show_y"],
+                "result": event["result"],
+                "tie_num": event["tie_num"]
+            }
+        )
+
+    async def bigeyeroad_message(self, event):
+        """
+        推送大眼路图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "bigeyeroad",
+                "show_x": event["show_x"],
+                "show_y": event["show_y"],
+                "result": event["result"],
+            }
+        )
+
+    async def pathway_message(self, event):
+        """
+        推送小路图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "pathway",
+                "show_x": event["show_x"],
+                "show_y": event["show_y"],
+                "result": event["result"],
+            }
+        )
+
+    async def roach_message(self, event):
+        """
+        推送珠盘路图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "roach",
+                "show_x": event["show_x"],
+                "show_y": event["show_y"],
+                "result": event["result"],
             }
         )

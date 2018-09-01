@@ -67,26 +67,142 @@ def dragon_tiger_number_info(table_id, number_tab_id, bet_statu):
     )
 
 
-# def dragon_tiger_ready_bet(table_id, in_checkout, number_tab_id, bet_statu):
-#     """
-#     发送比分
-#     :param table_id      桌id
-#     :param in_checkout      桌状态
-#     :param number_tab_id     局id
-#     :param bet_statu     局状态
-#     :return:
-#     """
-#     group = 'dragon_tiger_' + str(table_id)
-#
-#     channel_layer = get_channel_layer()
-#     async_to_sync(channel_layer.group_send)(
-#         group,
-#         {
-#             "type": "readybet.message",
-#             "table_id": table_id,
-#             "in_checkout": in_checkout,
-#             "number_tab_id": number_tab_id,
-#             "bet_statu": bet_statu
-#         },
-#     )
+def dragon_tiger_result(table_id, number_tab_id, opening):
+    """
+    推送结果
+    :param table_id      桌id
+    :param number_tab_id     局id
+    :param opening     局状态
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
 
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "result.message",
+            "table_id": table_id,
+            "number_tab_id": number_tab_id,
+            "opening": opening
+        },
+    )
+
+
+def dragon_tiger_showroad(table_id, show_x, show_y, result, pair):
+    """
+    推送结果图结果
+    :param table_id      桌id
+    :param show_x     x轴
+    :param show_y     y轴
+    :param result     结果
+    :param pair     结果(对)
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "showroad.message",
+            "show_x": show_x,
+            "show_y": show_y,
+            "result": result,
+            "pair": pair
+        },
+    )
+
+
+def dragon_tiger_bigroad(table_id, show_x, show_y, result, tie_num):
+    """
+    推送大路图结果
+    :param table_id      桌id
+    :param show_x     x轴
+    :param show_y     y轴
+    :param result     结果
+    :param tie_num     结果(对)
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "bigroad.message",
+            "show_x": show_x,
+            "show_y": show_y,
+            "result": result,
+            "tie_num": tie_num
+        },
+    )
+
+
+def dragon_tiger_bigeyeroad(table_id, show_x, show_y, result):
+    """
+    推送大眼路图结果
+    :param table_id      桌id
+    :param show_x     x轴
+    :param show_y     y轴
+    :param result     结果
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "bigeyeroad.message",
+            "show_x": show_x,
+            "show_y": show_y,
+            "result": result
+        },
+    )
+
+
+def dragon_tiger_pathway(table_id, show_x, show_y, result):
+    """
+    推送小路图结果
+    :param table_id      桌id
+    :param show_x     x轴
+    :param show_y     y轴
+    :param result     结果
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "pathway.message",
+            "show_x": show_x,
+            "show_y": show_y,
+            "result": result
+        },
+    )
+
+
+def dragon_tiger_roach(table_id, show_x, show_y, result):
+    """
+    推送珠盘路结果
+    :param table_id      桌id
+    :param show_x     x轴
+    :param show_y     y轴
+    :param result     结果
+    :return:
+    """
+    group = 'dragon_tiger_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "roach.message",
+            "show_x": show_x,
+            "show_y": show_y,
+            "result": result
+        },
+    )
