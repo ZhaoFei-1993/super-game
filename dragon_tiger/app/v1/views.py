@@ -118,7 +118,7 @@ class Table_boots(ListAPIView):
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
                     "result": i[0],     # 结果[1.龙&庄/2.虎&闲/3.和]
-                    "tie_num": i[3]     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "tie_num": i[3]     # 是否有和
                     })
 
             sql_list = "be.result_big_eye, be.show_x_big_eye, be.show_y_big_eye"
@@ -195,9 +195,7 @@ class Table_list(ListAPIView):
         sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
         sql = "select "+sql_list+" from dragon_tiger_table dt"
         sql += " where dt.game_name = '" + types + "'"
-        print("sql============", sql)
         table_list = get_sql(sql)  # 获取桌子信息
-        print("table_list=======================", table_list)
         data = []
         name_list = dict(Table.NAME_LIST)
         # table_status = dict(Table.Table_STATUS)
@@ -206,7 +204,7 @@ class Table_list(ListAPIView):
             data.append({
                 "table_id": i[0],     # 桌ID
                 "three_table_id": i[1],  # 第三方桌ID
-                "table_name": i[2],  # 第三方桌号
+                "table_name": i[2],  # 桌子昵称
                 "wait_time": i[5],     # 等待时间
                 "game_name": name_list[int(i[6])],   # 游戏昵称
                 # "status": table_status[int(i[3])],    # 桌子状态(开、停)

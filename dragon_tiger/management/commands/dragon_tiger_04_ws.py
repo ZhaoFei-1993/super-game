@@ -93,18 +93,18 @@ class Command(BaseCommand):
 
                 table_info.in_checkout = 0
                 table_info.save()
-                boots = Boots.objects.all().first()
-                number_tab = Number_tab()
-                number_tab.tid = table_info
-                number_tab.boots = boots
+                # boots = Boots.objects.all().first()
+                number_tab = Number_tab.objects.all().first()
+                # number_tab.tid = table_info
+                # number_tab.boots = boots
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("---------------接受下注---------新局部数生成成功---------")
             elif sendModes == "endBet" and status is True:
-                boots = Boots.objects.all().first()
+                # boots = Boots.objects.all().first()
                 number_tab = Number_tab()
-                number_tab.tid = table_info
-                number_tab.boots = boots
+                # number_tab.tid = table_info
+                # number_tab.boots = boots
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("---------------结束下注---------当局状态改变---------")
