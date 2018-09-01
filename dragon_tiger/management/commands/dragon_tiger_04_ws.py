@@ -7,6 +7,9 @@ import hashlib
 import time
 from urllib import parse
 from django.conf import settings
+from rq import Queue
+from redis import Redis
+from dragon_tiger.consumers import dragon_tiger__send_score
 
 
 class Command(BaseCommand):
@@ -20,7 +23,7 @@ class Command(BaseCommand):
         #     f.write(str(messages))           # 保存数据成文件
         status = messages["status"]
         sendModes = messages["sendMode"]
-        if status == False:
+        if status is False:
             table_info = Table.objects.get(three_table_id=4)
             table_info.in_checkout = 2
             table_info.save()
@@ -28,7 +31,7 @@ class Command(BaseCommand):
             print("------------------桌子暂未运营------------------")
         else:
             table_info = Table.objects.get(three_table_id=4)
-            if sendModes == "onlineLogin" and status == True:
+            if sendModes == "onlineLogin" and status is True:
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
@@ -67,7 +70,7 @@ class Command(BaseCommand):
                         print("---------------当前局数已经存在------------------")
                     ludan_save(messages, boots)
 
-            elif sendModes == "openingDtResult" and status == True:
+            elif sendModes == "openingDtResult" and status is True:
                 boots = Boots.objects.all().first()
                 number_tab = Number_tab.objects.get(bet_statu=2, number_tab_id=0, number_tab_number=0, boots_id=boots.id, opening=0, pair=0, previous_number_tab_id=0)
                 number_tab.tid = table_info
@@ -83,7 +86,11 @@ class Command(BaseCommand):
                 number_tab.save()
                 ludan_save(messages, boots)
                 print("-------------第"+str(number_tab.boots.boot_id)+"靴----第"+str(number_tab.number_tab_number)+"局---已经开奖----")
-            elif sendModes == "startBet" and status == True:
+            elif sendModes == "startBet" and status is True:
+                redis_conn = Redis()
+                q = Queue(connection=redis_conn)
+                q.enqueue(dragon_tiger__send_score, table_info.id, 0, messages["round"]["number_tab_status"]["betStatus"])
+
                 table_info.in_checkout = 0
                 table_info.save()
                 boots = Boots.objects.all().first()
@@ -93,7 +100,7 @@ class Command(BaseCommand):
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("---------------接受下注---------新局部数生成成功---------")
-            elif sendModes == "endBet" and status == True:
+            elif sendModes == "endBet" and status is True:
                 boots = Boots.objects.all().first()
                 number_tab = Number_tab()
                 number_tab.tid = table_info
@@ -101,13 +108,13 @@ class Command(BaseCommand):
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("---------------结束下注---------当局状态改变---------")
-            elif sendModes == "inCheckout" and status == True:
+            elif sendModes == "inCheckout" and status is True:
                 print("------------------桌子开始洗牌------------------")
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
                     print("------------------桌子开始洗牌成功------------------")
-            elif sendModes == "changeBoot" and status == True:
+            elif sendModes == "changeBoot" and status is True:
                 print("------------------桌子开始换靴------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
                     is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
@@ -141,7 +148,7 @@ class Command(BaseCommand):
                         print("---------------新局数入库成功------------------")
                     else:
                         print("---------------新局数已经存在------------------")
-            elif sendModes == "resetBoot" and status == True:
+            elif sendModes == "resetBoot" and status is True:
                 print("------------------日结------------------")
                 table_info.in_checkout = 2
                 table_info.save()

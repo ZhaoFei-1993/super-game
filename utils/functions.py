@@ -750,7 +750,7 @@ def obtain_token(menu, game):
 
 
 def ludan_save(messages, boots):
-    if messages["round"]["ludan"] != False:
+    if messages["round"]["ludan"] is not False:
 
         showroad_number = Showroad.objects.filter(boots_id=boots.id).count()
         if "showRoad" in messages["round"]["ludan"]:

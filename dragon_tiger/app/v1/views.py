@@ -7,20 +7,21 @@ from base.exceptions import ParamErrorException
 import requests
 from utils.functions import value_judge, get_sql
 import json
+import re
 from decimal import Decimal
 from dragon_tiger.models import BetLimit
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
-from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord
+from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord, Table
 from users.models import Coin, UserCoin, CoinDetail
 from chat.models import Club
 from utils.cache import get_cache, set_cache
 from utils.functions import obtain_token
 
 
-class Table_info(ListAPIView):
+class Table_boots(ListAPIView):
     """
-    主动获取桌子信息，并且入库
+    桌子信息
     """
 
     permission_classes = (LoginRequired,)
@@ -29,33 +30,191 @@ class Table_info(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        if 'game' not in self.request.GET:
+        if 'table_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        menu = "home"
-        game = self.request.GET.get('game')
-        array = obtain_token(menu, game)
-        data = array
-        result = requests.post('http://api.wt123.co/service', data=data)
-        res = json.loads(result.content.decode('utf-8'))
+        table_id = str(self.request.GET.get('table_id'))
+        sql_list = "db.id, db.boot_id, db.boot_num"
+        sql = "select " + sql_list + " from dragon_tiger_boots db"
+        sql += " where db.tid_id= '" + table_id + "'"
+        sql += " order by db.id desc limit 1"
+        boot_info = get_sql(sql)
+        if boot_info == ():
+            boot_list = {}
+        else:
+            boot_list = {
+                "boot_id": boot_info[0][0],           # 靴ID
+                "three_boot_id": boot_info[0][1],        # 第三方靴ID
+                "boot_number": boot_info[0][2]         # 靴号
+            }
 
-        return self.response({'code': 0, "data": res})
+        if boot_info == ():
+            number_tab_list = {
+                "number_tab_id": "",  # 局id
+                "number_tab_number": "",  # 第三方局号
+                "opening": 0,  # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
+                # "opening": "空“,      # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
+                "pair": 0,  # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
+                # "pair": "空“,        # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
+                "bet_statu": 0,  # 本局状态[0.尚未接受下注/1.接受下注/2.停止下注-等待开盘/3.已开奖]
+                # "bet_statu": 尚未接受下注,      # 本局状态
+                "previous_three_number_tab_id": "",  # 第三方上局_id
+                "three_number_tab_id": ""  # 第三方局ID
+            }
+            ludan = {
+                "showroad_list": "",
+                "bigroad_list": "",
+                "bigeyeroad_list": "",
+                "psthway_list": "",
+                "roach_list": ""
+            }
+        else:
+            sql_list = "nt.id, nt.number_tab_number, nt.opening, nt.pair, nt.bet_statu, nt.previous_number_tab_id, " \
+                       "nt.number_tab_id"
+            sql = "select " +sql_list + " from dragon_tiger_number_tab nt"
+            sql += " where nt.tid_id = '" + table_id + "'"
+            sql += " and nt.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by nt.id desc limit 1"
+            number_tab_info = get_sql(sql)
+            # opening_list = dict(Number_tab.OPENING_LIST)
+            # pair_list = dict(Number_tab.PAIR_LIST)
+            # bet_list = dict(Number_tab.BET_LIST)
+            if number_tab_info == ():
+                number_tab_list = {}
+            else:
+                number_tab_list = {
+                    "number_tab_id": number_tab_info[0][0],  # 局id
+                    "number_tab_number": number_tab_info[0][1],  # 第三方局号
+                    "opening": number_tab_info[0][2],  # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
+                    # "opening": opening_list[int(i[0][2])],      # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
+                    "pair": number_tab_info[0][3],  # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
+                    # "pair": pair_list[int(i[0][3])],        # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
+                    "bet_statu": number_tab_info[0][4],  # 本局状态[0.尚未接受下注/1.接受下注/2.停止下注-等待开盘/3.已开奖]
+                    # "bet_statu": bet_list[int(i[0][4])],      # 本局状态
+                    "previous_three_number_tab_id": number_tab_info[0][5],  # 第三方上局_id
+                    "three_number_tab_id": number_tab_info[0][6],  # 第三方局ID
+                }
+
+            sql_list = "sr.result_show, sr.show_x_show, sr.show_y_show"
+            sql = "select " +sql_list+ " from dragon_tiger_showroad sr"
+            sql += " where sr.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by sr.order_show"
+            showroad_info = get_sql(sql)
+            showroad_list = []             # 结果图
+            for i in showroad_info:
+                showroad_list.append({
+                    "show_x": i[1],      # X轴
+                    "show_y": i[2],      # Y轴
+                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    })
+
+            sql_list = "br.result_big, br.show_x_big, br.show_y_big, br.tie_num"
+            sql = "select " +sql_list+ " from dragon_tiger_bigroad br"
+            sql += " where br.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by br.order_big"
+            bigroad_info = get_sql(sql)
+            bigroad_list = []             # 大路图
+            for i in bigroad_info:
+                bigroad_list.append({
+                    "show_x": i[1],      # X轴
+                    "show_y": i[2],      # Y轴
+                    "result": i[0],     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "tie_num": i[3]     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    })
+
+            sql_list = "be.result_big_eye, be.show_x_big_eye, be.show_y_big_eye"
+            sql = "select " + sql_list + " from dragon_tiger_bigeyeroad be"
+            sql += " where be.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by be.order_big_eye"
+            bigeyeroad_info = get_sql(sql)
+            bigeyeroad_list = []  # 大路图
+            for i in bigeyeroad_info:
+                bigeyeroad_list.append({
+                    "show_x": i[1],  # X轴
+                    "show_y": i[2],  # Y轴
+                    "result": i[0],  # 结果[1.龙&庄/2.虎&闲]
+                })
+
+            sql_list = "pw.result_psthway, pw.show_x_psthway, pw.show_y_psthway"
+            sql = "select " +sql_list+ " from dragon_tiger_psthway pw"
+            sql += " where pw.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by pw.order_psthway"
+            psthway_info = get_sql(sql)
+            psthway_list = []             # 结果图
+            for i in psthway_info:
+                psthway_list.append({
+                    "show_x": i[1],      # X轴
+                    "show_y": i[2],      # Y轴
+                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲]
+                    })
+
+            sql_list = "r.result_roach, r.show_x_roach, r.show_y_roach"
+            sql = "select " +sql_list+ " from dragon_tiger_roach r"
+            sql += " where r.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by r.order_roach"
+            roach_info = get_sql(sql)
+            roach_list = []             # 结果图
+            for i in roach_info:
+                roach_list.append({
+                    "show_x": i[1],      # X轴
+                    "show_y": i[2],      # Y轴
+                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲]
+                    })
+            ludan = {
+                "showroad_list": showroad_list,
+                "bigroad_list": bigroad_list,
+                "bigeyeroad_list": bigeyeroad_list,
+                "psthway_list": psthway_list,
+                "roach_list": roach_list
+            }
+
+        data = {
+            "boot_list": boot_list,
+            "number_tab_list": number_tab_list,
+            "ludan": ludan
+
+        }
+        return self.response({'code': 0, "data": data})
 
 
-class Request_post(ListAPIView):
+class Table_list(ListAPIView):
     """
-    url = 'http://api.wt123.co/service'                         # API请求地址 | 测试阶段地址
+    获取桌子列表
     """
+    permission_classes = (LoginRequired,)
 
-    def post(self, request):
-        if 'data' not in request.data:
-            raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
-        data = request.data.get('recaptcha')
+    def get_queryset(self):
+        pass
 
-        result = request.post('http://api.wt123.co/service', data=data)
-        res = json.loads(result.content.decode('utf-8'))
-        print("res=============================", res)
-        if res is False:
-            raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
+    def list(self, request, *args, **kwargs):
+        if 'type' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        types = str(self.request.GET.get('type'))
+        regex = re.compile(r'^(1|2)$')
+        if types is None or not regex.match(types):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
+        sql = "select "+sql_list+" from dragon_tiger_table dt"
+        sql += " where dt.game_name = '" + types + "'"
+        print("sql============", sql)
+        table_list = get_sql(sql)  # 获取桌子信息
+        print("table_list=======================", table_list)
+        data = []
+        name_list = dict(Table.NAME_LIST)
+        # table_status = dict(Table.Table_STATUS)
+        # table_in_checkou = dict(Table.TABLE_IN_CHECKOU)
+        for i in table_list:
+            data.append({
+                "table_id": i[0],     # 桌ID
+                "three_table_id": i[1],  # 第三方桌ID
+                "table_name": i[2],  # 第三方桌号
+                "wait_time": i[5],     # 等待时间
+                "game_name": name_list[int(i[6])],   # 游戏昵称
+                # "status": table_status[int(i[3])],    # 桌子状态(开、停)
+                # "in_checkout": table_in_checkou[int(i[4])],    # 桌子状态
+                "in_checkout_number": i[4],    # 桌子状态(0.正常/1,洗牌/2.停桌)
+            })
+
+        return self.response({'code': 0, "data": data})
 
 
 class Dragontigeroption(ListAPIView):
@@ -78,9 +237,11 @@ class Dragontigeroption(ListAPIView):
         sql += " where cc.id = '" + club_id + "'"
         coin_id = get_sql(sql)[0][0]  # 获取coin_id
 
-        sql = "select uc.coin_accuracy from users_coin uc"
+        sql = "select uc.coin_accuracy, uc.icon from users_coin uc"
         sql += " where uc.id = '" + str(coin_id) + "'"
-        coin_accuracy = int(get_sql(sql)[0][0])  # 获取货币精度
+        coin_info = get_sql(sql)[0]  # 获取货币精度
+        coin_accuracy = int(coin_info[0])  # 获取货币精度
+        coin_icon = coin_info[1]  # 获取货币精度
 
         sql = "select uc.balance from users_usercoin uc"
         sql += " where uc.coin_id = '" + str(coin_id) + "'"
@@ -96,7 +257,7 @@ class Dragontigeroption(ListAPIView):
 
         # sql = "select dto.title, concat(1,':',dto.odds), dto.order from dragon_tiger_options dto"
         # sql += " where dto.types = '" + types + "'"
-        # option_list = get_sql(sql)  # 获取选项
+        # option_list = get_sql(sql)  # 获取选项               # 留下来的例子(查询并且处理字段)
 
         sql = "select dto.title, dto.odds, dto.order, dto.id from dragon_tiger_options dto"
         sql += " where dto.types = '" + types + "'"
@@ -127,11 +288,16 @@ class Dragontigeroption(ListAPIView):
 
         return self.response({'code': 0,
                               "user_balance": user_balance,
+                              "coin_icon": coin_icon,
                               "user_avatar": user_avatar,
                               "bets_one": betlimit_list[0],
+                              "bets_one_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_1_m.png",
                               "bets_two": betlimit_list[1],
+                              "bets_two_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_2_m.png",
                               "bets_three": betlimit_list[2],
+                              "bets_three_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_3_m.png",
                               "bets_four": betlimit_list[3],
+                              "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
                               "red_limit": betlimit_list[4],
                               "option_info": option_info
                               })
