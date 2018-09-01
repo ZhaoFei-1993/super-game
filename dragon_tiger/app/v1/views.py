@@ -296,7 +296,7 @@ class Dragontigeroption(ListAPIView):
                               "bets_three_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_3_m.png",
                               "bets_four": betlimit_list[3],
                               "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
-                              "red_limit": betlimit_list[4],
+                              "red_limit": int(betlimit_list[4]),
                               "option_info": option_info
                               })
 

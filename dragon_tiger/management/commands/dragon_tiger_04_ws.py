@@ -32,6 +32,7 @@ class Command(BaseCommand):
         else:
             table_info = Table.objects.get(three_table_id=4)
             if sendModes == "onlineLogin" and status is True:
+                print("--------------------第一次链接-------------------------")
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
@@ -71,6 +72,7 @@ class Command(BaseCommand):
                     ludan_save(messages, boots)
 
             elif sendModes == "openingDtResult" and status is True:
+                print("-----------------开奖--------------------")
                 boots = Boots.objects.all().first()
                 number_tab = Number_tab.objects.get(bet_statu=2, number_tab_id=0, number_tab_number=0, boots_id=boots.id, opening=0, pair=0, previous_number_tab_id=0)
                 number_tab.tid = table_info
@@ -87,6 +89,7 @@ class Command(BaseCommand):
                 ludan_save(messages, boots)
                 print("-------------第"+str(number_tab.boots.boot_id)+"靴----第"+str(number_tab.number_tab_number)+"局---已经开奖----")
             elif sendModes == "startBet" and status is True:
+                print("------------------开始接受下注--------------------")
                 redis_conn = Redis()
                 q = Queue(connection=redis_conn)
                 q.enqueue(dragon_tiger__send_score, table_info.id, 0, messages["round"]["number_tab_status"]["betStatus"])
@@ -101,6 +104,7 @@ class Command(BaseCommand):
                 number_tab.save()
                 print("---------------接受下注---------新局部数生成成功---------")
             elif sendModes == "endBet" and status is True:
+                print("------------------开始结束下注--------------------")
                 # boots = Boots.objects.all().first()
                 number_tab = Number_tab()
                 # number_tab.tid = table_info
