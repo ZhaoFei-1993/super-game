@@ -54,6 +54,9 @@ class Command(BaseCommand):
                         print("---------------靴号已经存在------------------")
                         boots = Boots.objects.get(boot_id=messages["round"]["boot_id"],
                                                   boot_num=messages["round"]["boot_num"])
+                    print("-------------开始推送---------------")
+                    q.enqueue(dragon_tiger_boots_info, table_info.id, boots.id, boots.boot_num)
+                    print("-----------推送完成--------------")
                     is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
@@ -70,6 +73,10 @@ class Command(BaseCommand):
                         number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                         number_tab.save()
                         print("---------------当前局数入库成功------------------")
+                        print("-------------开始推送---------------")
+                        q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                                  messages["round"]["number_tab_status"]["betStatus"])
+                        print("-----------推送完成--------------")
                     else:
                         print("---------------当前局数已经存在------------------")
                     ludan_save(messages, boots, table_info.id)
