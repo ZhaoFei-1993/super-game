@@ -236,8 +236,8 @@ class Bigeyeroad(models.Model):
     PLAYER = 2
 
     OPENING_LIST = (
-        (BANKER, "龙/庄"),
-        (PLAYER, "虎/闲"),
+        (BANKER, "红"),
+        (PLAYER, "蓝"),
     )
     boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
     result_big_eye = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
@@ -258,8 +258,8 @@ class Psthway(models.Model):
     PLAYER = 2
 
     OPENING_LIST = (
-        (BANKER, "龙/庄"),
-        (PLAYER, "虎/闲"),
+        (BANKER, "红"),
+        (PLAYER, "蓝"),
     )
     boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
     result_psthway = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
@@ -280,8 +280,8 @@ class Roach(models.Model):
     PLAYER = 2
 
     OPENING_LIST = (
-        (BANKER, "龙/庄"),
-        (PLAYER, "虎/闲"),
+        (BANKER, "红"),
+        (PLAYER, "蓝"),
     )
     boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
     result_roach = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)

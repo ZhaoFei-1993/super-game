@@ -835,7 +835,7 @@ def ludan_save(messages, boots, table_id):
                         if b_test == bigroad_number:
                             if i["tie_num"] != 0:
                                 bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
-                                if i["result"] == "banker":
+                                if i["result"] == "red":
                                     result_big = 1
                                     bigroad.result_big = result_big
                                 else:
@@ -866,7 +866,7 @@ def ludan_save(messages, boots, table_id):
                         if by > bigeyeroad_number:
                             bigeyeroad = Bigeyeroad()
                             bigeyeroad.boots = boots
-                            if i["result"] == "banker":
+                            if i["result"] == "red":
                                 result_big_eye = 1
                             else:
                                 result_big_eye = 2
@@ -898,9 +898,8 @@ def ludan_save(messages, boots, table_id):
                         if p > psthway_number:
                             psthway = Psthway()
                             psthway.boots = boots
-                            if i["result"] == "banker":
+                            if i["result"] == "red":
                                 result_psthway = 1
-
                             else:
                                 result_psthway = 2
                             psthway.result_psthway = result_psthway
@@ -931,7 +930,7 @@ def ludan_save(messages, boots, table_id):
                         if rn > roach_number:
                             roach = Roach()
                             roach.boots = boots
-                            if i["result"] == "banker":
+                            if i["result"] == "red":
                                 result_roach = 1
                             else:
                                 result_roach = 2
