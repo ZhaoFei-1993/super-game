@@ -844,8 +844,6 @@ def ludan_save(messages, boots, table_id):
                                 if int(i["tie_num"]) == 1:
                                     bigroad.tie_num = 1
                                 bigroad.save()
-                                print("bigroad===============================,", bigroad.tie_num)
-                                print("tie_num===============================,", i["tie_num"])
                                 print("-------------开始推送---------------")
                                 q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
                                           bigroad.result_big, bigroad.tie_num)
