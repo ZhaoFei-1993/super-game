@@ -104,7 +104,7 @@ class Table_boots(ListAPIView):
                 showroad_list.append({
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
-                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲/3.和]
                     })
 
             sql_list = "br.result_big, br.show_x_big, br.show_y_big, br.tie_num"
@@ -117,7 +117,7 @@ class Table_boots(ListAPIView):
                 bigroad_list.append({
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
-                    "result": i[0],     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "result": int(i[0]),     # 结果[1.龙&庄/2.虎&闲/3.和]
                     "tie_num": i[3]     # 是否有和
                     })
 
@@ -131,7 +131,7 @@ class Table_boots(ListAPIView):
                 bigeyeroad_list.append({
                     "show_x": i[1],  # X轴
                     "show_y": i[2],  # Y轴
-                    "result": i[0],  # 结果[1.龙&庄/2.虎&闲]
+                    "result": int(i[0]),  # 结果[1.龙&庄/2.虎&闲]
                 })
 
             sql_list = "pw.result_psthway, pw.show_x_psthway, pw.show_y_psthway"
@@ -144,7 +144,7 @@ class Table_boots(ListAPIView):
                 psthway_list.append({
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
-                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲]
+                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲]
                     })
 
             sql_list = "r.result_roach, r.show_x_roach, r.show_y_roach"
@@ -157,7 +157,7 @@ class Table_boots(ListAPIView):
                 roach_list.append({
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
-                    "result": i[0]     # 结果[1.龙&庄/2.虎&闲]
+                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲]
                     })
             ludan = {
                 "showroad_list": showroad_list,
