@@ -1012,7 +1012,7 @@ class DailyListView(ListAPIView):
         total_sign_days = len(items)
 
         # 签到赠送的币种
-        sign_coin = Coin.objects.get_one(pk=Coin.GSG)
+        sign_coin = Coin.objects.get_one(pk=Coin.HAND)
 
         # 用户签到数据
         daily_log = DailyLog.objects.filter(user_id=request.user.id).order_by('-id').first()
