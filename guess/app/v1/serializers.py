@@ -382,10 +382,10 @@ class RecordSerialize(serializers.ModelSerializer):
         return data
 
     def get_my_option(self, obj):  # 我的选项
-        play_name = obj.Play.PLAY[int(obj.play.play_name)][1]
+        play_name = obj.play.PLAY[int(obj.play.play_name)][1]
         title = str(play_name) + "：" + str(obj.options.title)
         if self.context['request'].GET.get('language') == 'en':
-            play_name = obj.Play.PLAY_EN[int(obj.play.play_name_en)][1]
+            play_name = obj.play.PLAY_EN[int(obj.play.play_name_en)][1]
             title = str(play_name) + "：" + str(obj.options.title_en)
         return title
 

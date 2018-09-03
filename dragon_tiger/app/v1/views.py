@@ -471,7 +471,6 @@ class DragontigerBet(ListCreateAPIView):
             all_avatar_lists.append(now_avatar_list[2])
             all_avatar_lists.append(now_avatar_list[3])
             all_avatar_lists.append(now_avatar_list[4])
-        print("now_avatar_list=================================", all_avatar_lists)
         print("-----------开始推送---------------")
         q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
         print("-----------推送完成--------------")
@@ -526,7 +525,6 @@ class Avatar(ListAPIView):
             sql += " and dtr.club_id = '" + club_id + "'"
             sql += " group by dtr.user_id"
             sql += " order by sum_bets desc limit 5"
-            print("sql===========================", sql)
             avatar_list = get_sql(sql)
             data = []
             s = 0
@@ -536,8 +534,6 @@ class Avatar(ListAPIView):
                     "user_nickname": i[1],
                     "bet_amount": i[2]
                     })
-
-            print("avatar_list============================", avatar_list)
         return self.response({'code': 0, "data": data})
 
 
