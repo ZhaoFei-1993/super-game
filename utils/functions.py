@@ -829,7 +829,7 @@ def ludan_save(messages, boots, table_id):
                                 else:
                                     result_big = 2
                                     bigroad.result_big = result_big
-                                if int(i["tie_num"]) == 1:
+                                if int(i["tie_num"]) != 1:
                                     bigroad.tie_num = i["tie_num"]
                                 bigroad.save()
                                 print("-------------开始推送---------------")
