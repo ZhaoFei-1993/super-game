@@ -136,7 +136,7 @@ class Command(BaseCommand):
 
                 print("-------------局数开始推送---------------")
                 q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
-                          messages["round"]["number_tab_status"]["betStatus"])
+                          3)
                 opening = int(number_tab.opening)
                 q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, opening)
                 print("-----------局数推送完成--------------")

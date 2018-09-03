@@ -18,6 +18,12 @@ from chat.models import Club
 from .serializers import RecordSerialize
 from utils.cache import get_cache, set_cache
 from utils.functions import obtain_token
+from rq import Queue
+from redis import Redis
+from dragon_tiger.consumers import dragon_tiger_avatar
+
+redis_conn = Redis()
+q = Queue(connection=redis_conn)
 
 
 class Table_boots(ListAPIView):
@@ -442,6 +448,34 @@ class DragontigerBet(ListCreateAPIView):
         record.source = source
         record.save()
 
+        USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
+        avatar_info = get_cache(USER_BET_AVATAR)
+        if avatar_info[user.id] is not None:
+            avatar_info[user.id]["bet_amount"] += coins
+        else:
+            avatar_info[user.id] = {
+                "user_avatar": user.avatar,
+                "user_nickname": user.nickname,
+                "bet_amount": coins
+            }
+        set_cache(USER_BET_AVATAR, avatar_info)
+        avatar_lists = []
+
+        for i in avatar_info:
+            avatar_lists.append(avatar_info[i])
+        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
+        all_avatar_lists = []
+        if len(now_avatar_list) > 5:
+            all_avatar_lists.append(now_avatar_list[0])
+            all_avatar_lists.append(now_avatar_list[1])
+            all_avatar_lists.append(now_avatar_list[2])
+            all_avatar_lists.append(now_avatar_list[3])
+            all_avatar_lists.append(now_avatar_list[4])
+        print("now_avatar_list=================================", all_avatar_lists)
+        print("-----------开始推送---------------")
+        q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
+        print("-----------推送完成--------------")
+
         # 用户减少金币
         # balance = float_to_str(float(usercoin.balance), coin_accuracy)
         usercoin.balance = usercoin.balance - Decimal(coins)
@@ -464,6 +498,47 @@ class DragontigerBet(ListCreateAPIView):
             }
         }
         return self.response(response)
+
+
+class Avatar(ListAPIView):
+    """
+    头像
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        if 'number_tab_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        number_tab_id = str(self.request.GET.get('number_tab_id'))
+        club_id = str(self.request.GET.get('club_id'))
+        user_bet_avatar = "USER_BET_AVATAR" + number_tab_id  # key
+        avatar_list = get_cache(user_bet_avatar)
+        if avatar_list == None or avatar_list == '':
+            sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
+            sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+            sql += " inner join users_user u on dtr.user_id=u.id"
+            sql += " where dtr.number_tab_id = '" + number_tab_id + "'"
+            sql += " and dtr.club_id = '" + club_id + "'"
+            sql += " group by dtr.user_id"
+            sql += " order by sum_bets desc limit 5"
+            print("sql===========================", sql)
+            avatar_list = get_sql(sql)
+            data = []
+            s = 0
+            for i in avatar_list:
+                data.append({
+                    "user_avatar": i[0],
+                    "user_nickname": i[1],
+                    "bet_amount": i[2]
+                    })
+
+            print("avatar_list============================", avatar_list)
+        return self.response({'code': 0, "data": data})
 
 
 class Record(ListAPIView):
@@ -525,17 +600,3 @@ class Record(ListAPIView):
             })
 
         return self.response({'code': 0, 'data': data})
-
-
-class Avatar(ListAPIView):
-    """
-    头像
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        pass
-
-    def list(self, request, *args, **kwargs):
-
-        return self.response({'code': 0})
