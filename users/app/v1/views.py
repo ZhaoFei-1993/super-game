@@ -1372,8 +1372,9 @@ class AssetView(ListAPIView):
         coin_id_charges = {}
         coin_payment = {}
         for charge in coin_out_charges:
+            print('charge = ', charge.__dict__)
             coin_id_charges[charge.coin_out_id] = normalize_fraction(charge.value, 4)
-            coin_payment[charge.coin_payment_id] = map_coins[charge.coin_payment_id].name
+            coin_payment[charge.coin_out_id] = map_coins[charge.coin_payment_id].name
 
         # 获取锁定币数：提现锁定数量+用户锁定GSG数量
         gsg_coin_lock = UserCoinLock.objects.filter(user_id=user_id, is_free=0).aggregate(Sum('amount'))
