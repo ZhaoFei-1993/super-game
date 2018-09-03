@@ -54,53 +54,20 @@ class UserInfoSerializer(serializers.ModelSerializer):
     """
     telephone = serializers.SerializerMethodField()  # 用户电话
     is_passcode = serializers.SerializerMethodField()
-    win_ratio = serializers.SerializerMethodField()
-    quiz_push = serializers.SerializerMethodField()
-    is_user = serializers.SerializerMethodField()
-    integral = serializers.SerializerMethodField()
-    gsg_icon = serializers.SerializerMethodField()
-
-    # usercoin = serializers.SerializerMethodField()
-    # usercoin_avatar = serializers.SerializerMethodField()
-    # ggtc_avatar = serializers.SerializerMethodField()
-    # ggtc = serializers.SerializerMethodField()
+    # win_ratio = serializers.SerializerMethodField()
+    # quiz_push = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            "id", "nickname", "avatar", "integral", "telephone", "is_passcode",
-            "win_ratio", "quiz_push", "is_sound", "is_notify", "is_user", "area_code", "gsg_icon")
+            "id", "nickname", "avatar", "telephone", "is_passcode", "is_sound", "is_notify", "area_code")
 
     @staticmethod
     def get_telephone(obj):  # 电话号码
         if obj.telephone == '' or obj.telephone is None:
-            return ""
+            return ''
         else:
             return obj.telephone
-
-    @staticmethod
-    def get_integral(obj):  # GSG
-        coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
-        integral = coin_gsg.balance
-        return integral
-
-    @staticmethod
-    def get_gsg_icon(obj):  # GSG
-        GSG_ICON = "gsg_icon_in_cache"  # key
-        gsg_icon = get_cache(GSG_ICON)
-        if gsg_icon is None:
-            coin_gsg = UserCoin.objects.get(user_id=obj.pk, coin_id=6)
-            gsg_icon = coin_gsg.coin.icon
-            set_cache(GSG_ICON, gsg_icon)
-        return gsg_icon
-
-    def get_is_user(self, obj):  # 电话号码
-        user = self.context['request'].user.id
-        if user == obj.id:
-            is_user = 1
-        else:
-            is_user = 0
-        return is_user
 
     @staticmethod
     def get_is_passcode(obj):  # 密保
@@ -109,143 +76,44 @@ class UserInfoSerializer(serializers.ModelSerializer):
         else:
             return 1
 
-    @staticmethod
-    def get_usercoin(obj):  # 代币余额
-        usercoin = UserCoin.objects.get(user_id=obj.id, is_opt=True)
-        return usercoin.balance
-
-    @staticmethod
-    def get_win_ratio(obj):  # 胜率
-        total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=obj.id).count()
-        win_count = Record.objects.filter(user_id=obj.id, earn_coin__gt=0).count()
-        if total_count == 0 or win_count == 0:
-            win_ratio = "0%"
-        else:
-            record_count = round(win_count / total_count * 100, 2)
-            win_ratio = str(record_count) + "%"
-        return win_ratio
-
-    @staticmethod
-    def get_quiz_push(obj):
-        quiz = Quiz.objects.filter(Q(status=5) | Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
-        data = []
-        for i in quiz:
-            time = i.begin_at.strftime('%H:%M')
-            name = i.host_team + "VS" + i.guest_team
-            quiz_push = str(time) + " " + name
-            data.append({
-                'quiz_push': quiz_push,
-            })
-        return data
+    # @staticmethod
+    # def get_win_ratio(obj):  # 胜率
+    #     total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=obj.id).count()
+    #     win_count = Record.objects.filter(user_id=obj.id, earn_coin__gt=0).count()
+    #     if total_count == 0 or win_count == 0:
+    #         win_ratio = "0%"
+    #     else:
+    #         record_count = round(win_count / total_count * 100, 2)
+    #         win_ratio = str(record_count) + "%"
+    #     return win_ratio
+    #
+    # @staticmethod
+    # def get_quiz_push(obj):
+    #     quiz = Quiz.objects.filter(Q(status=5) | Q(status=11), Q(is_delete=False)).order_by('-total_people')[:10]
+    #     data = []
+    #     for i in quiz:
+    #         time = i.begin_at.strftime('%H:%M')
+    #         name = i.host_team + "VS" + i.guest_team
+    #         quiz_push = str(time) + " " + name
+    #         data.append({
+    #             'quiz_push': quiz_push,
+    #         })
+    #     return data
 
 
 class DailySerialize(serializers.ModelSerializer):
     """
-    签到
+    签到列表。
     """
-    is_sign = serializers.SerializerMethodField()  # 消息类型
-    is_selected = serializers.SerializerMethodField()  # 消息类型
     rewards = serializers.SerializerMethodField()  # 消息类型
-    icon = serializers.SerializerMethodField()  # 图片
-    name = serializers.SerializerMethodField()  # 昵称
 
     class Meta:
         model = DailySettings
-        fields = ("id", "days", "rewards", "icon", "name", "is_sign", "is_selected")
+        fields = ("id", "days", "rewards")
 
     @staticmethod
-    def get_rewards(obj):  # 金额
-        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
-        if date_last > end_date:
-            rewards = normalize_fraction(obj.rewards, 2)
-        else:
-            if obj.days == 1:
-                rewards = 6
-            if obj.days == 2:
-                rewards = 8
-            if obj.days == 3:
-                rewards = 10
-            if obj.days == 4:
-                rewards = 12
-            if obj.days == 5:
-                rewards = 14
-            if obj.days == 6:
-                rewards = 16
-            if obj.days == 7:
-                rewards = 18
-        return rewards
-
-    @staticmethod
-    def get_icon(obj):  # 图
-        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
-        if date_last >= end_date:
-            icon = obj.coin.icon
-        else:
-            icon = ''
-        return icon
-
-    @staticmethod
-    def get_name(obj):  # 昵称
-        date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        end_date = "2018-06-24 00:00:00"
-        if date_last >= end_date:
-            name = obj.coin.name
-        else:
-            name = ''
-
-        return name
-
-    def get_is_sign(self, obj):  # 是否已签到
-        user = self.context['request'].user.id
-        sign = sign_confirmation(user)  # 判断是否签到
-        yesterday = datetime.today() + timedelta(-1)
-        yesterday_format = yesterday.strftime("%Y%m%d")
-        yesterday_format = str(yesterday_format) + "000000"  # 今天凌晨00.00时间
-        try:
-            daily = DailyLog.objects.get(user_id=user)
-            sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")  # 上次签到时间
-        except DailyLog.DoesNotExist:
-            daily = DailyLog()
-            sign_date = str(0)
-
-        is_sign = 0
-        if sign_date < yesterday_format:  # 判断昨天签到没有
-            is_sign = 0
-            daily.number = 1
-            daily.save()
-        elif sign == 1 and daily.number == 0:
-            is_sign = 1
-        elif daily.number >= obj.days:
-            is_sign = 1
-
-        return is_sign
-
-    def get_is_selected(self, obj):
-        yesterday = datetime.today() + timedelta(-1)
-        yesterday_format = yesterday.strftime("%Y%m%d")
-        yesterday_format = str(yesterday_format) + "000000"
-        user = self.context['request'].user.id
-        sign = sign_confirmation(user)  # 判断是否签到
-        try:
-            daily = DailyLog.objects.get(user_id=user)
-        except DailyLog.DoesNotExist:
-            return 0
-        is_selected = 0
-        sign_date = daily.sign_date.strftime("%Y%m%d%H%M%S")
-        if sign_date < yesterday_format:  # 判断昨天签到没有
-            is_selected = 0
-            if obj.days == 1:
-                is_selected = 1
-        else:
-            if sign == 1 and sign_date > yesterday_format:
-                if obj.days == daily.number:
-                    is_selected = 1
-            elif sign == 0 and sign_date > yesterday_format:
-                if obj.days == (daily.number + 1):
-                    is_selected = 1
-        return is_selected
+    def get_rewards(obj):  # 签到奖励数量
+        return normalize_fraction(obj.rewards, 2)
 
 
 class MessageListSerialize(serializers.ModelSerializer):
@@ -433,29 +301,27 @@ class PresentationSerialize(serializers.ModelSerializer):
 
 class UserCoinSerialize(serializers.ModelSerializer):
     """
-    用户余额
+    用户余额  
     """
-    # name = serializers.SerializerMethodField()  # 代币名
-    coin_name = serializers.SerializerMethodField()  # 交易所币名
-    icon = serializers.SerializerMethodField()  # 代币头像
+    # coin_name = serializers.SerializerMethodField()  # 交易所币名
+    # icon = serializers.SerializerMethodField()  # 代币头像
+    # exchange_rate = serializers.SerializerMethodField()  # 代币数
+    # coin_value = serializers.SerializerMethodField()  # 投注值
+    # locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
+    # recent_address = serializers.SerializerMethodField()
+    # min_present = serializers.SerializerMethodField()  # 提现限制最小金额
+    # service_charge = serializers.SerializerMethodField()  # 提现手续费
+    # service_coin = serializers.SerializerMethodField()  # 用于提现的币种
+    # is_reality = serializers.SerializerMethodField()  # 用于提现的币种
+    # is_recharge = serializers.SerializerMethodField()  # 用于提现的币种
+
     balance = serializers.SerializerMethodField()
-    exchange_rate = serializers.SerializerMethodField()  # 代币数
-    coin_value = serializers.SerializerMethodField()  # 投注值
-    locked_coin = serializers.SerializerMethodField()  # 审核中锁定的总币数
-    recent_address = serializers.SerializerMethodField()
-    min_present = serializers.SerializerMethodField()  # 提现限制最小金额
-    service_charge = serializers.SerializerMethodField()  # 提现手续费
-    service_coin = serializers.SerializerMethodField()  # 用于提现的币种
-    is_reality = serializers.SerializerMethodField()  # 用于提现的币种
-    is_recharge = serializers.SerializerMethodField()  # 用于提现的币种
-    coin_order = serializers.IntegerField(source='coin.coin_order')  # 币种顺序
-    is_lock_valid = serializers.IntegerField(source='coin.is_lock_valid')
+    # coin_order = serializers.IntegerField(source='coin.coin_order')  # 币种顺序
+    # is_lock_valid = serializers.IntegerField(source='coin.is_lock_valid')
 
     class Meta:
         model = UserCoin
-        fields = ("id", "coin_name", "icon", "coin", "balance",
-                  "exchange_rate", "address", "coin_value", "locked_coin", "service_charge", "service_coin",
-                  "min_present", "coin_order", "recent_address", "is_reality", "is_recharge", "is_lock_valid")
+        fields = ("id", "coin_id", "balance", "address")
 
     @staticmethod
     def get_balance(obj):
@@ -466,54 +332,54 @@ class UserCoinSerialize(serializers.ModelSerializer):
         #     balance -= lock_coin
         return balance
 
-    @staticmethod
-    def get_is_reality(obj):
-        try:
-            list = Coin.objects.get(pk=obj.coin.id)
-        except Exception:
-            return ''
-        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
-        return list.is_reality
+    # @staticmethod
+    # def get_is_reality(obj):
+    #     try:
+    #         list = Coin.objects.get(pk=obj.coin.id)
+    #     except Exception:
+    #         return ''
+    #     # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+    #     return list.is_reality
+    #
+    # @staticmethod
+    # def get_is_recharge(obj):
+    #     try:
+    #         list = Coin.objects.get(pk=obj.coin.id)
+    #     except Exception:
+    #         return ''
+    #     # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+    #     return list.is_recharge
 
-    @staticmethod
-    def get_is_recharge(obj):
-        try:
-            list = Coin.objects.get(pk=obj.coin.id)
-        except Exception:
-            return ''
-        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
-        return list.is_recharge
+    # @staticmethod
+    # def get_coin_value(obj):
+    #     data = []
+    #     coin_value = CoinValue.objects.filter(coin_id=obj.coin.id).order_by('value')
+    #     for i in coin_value:
+    #         s = i.value
+    #         data.append(
+    #             {
+    #                 'value': normalize_fraction(s, int(obj.coin.coin_accuracy))
+    #             }
+    #         )
+    #     return data
 
-    @staticmethod
-    def get_coin_value(obj):
-        data = []
-        coin_value = CoinValue.objects.filter(coin_id=obj.coin.id).order_by('value')
-        for i in coin_value:
-            s = i.value
-            data.append(
-                {
-                    'value': normalize_fraction(s, int(obj.coin.coin_accuracy))
-                }
-            )
-        return data
+    # @staticmethod
+    # def get_coin_name(obj):  # 交易所币名
+    #     try:
+    #         list = Coin.objects.get(pk=obj.coin.id)
+    #     except Exception:
+    #         return ''
+    #     # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
+    #     return list.name
 
-    @staticmethod
-    def get_coin_name(obj):  # 交易所币名
-        try:
-            list = Coin.objects.get(pk=obj.coin.id)
-        except Exception:
-            return ''
-        # my_rule = list.TYPE_CHOICE[int(list.type) - 1][1]
-        return list.name
-
-    @staticmethod
-    def get_icon(obj):  # 代币头像
-        try:
-            list = Coin.objects.get(pk=obj.coin.id)
-        except Exception:
-            return ''
-        title = list.icon
-        return title
+    # @staticmethod
+    # def get_icon(obj):  # 代币头像
+    #     try:
+    #         list = Coin.objects.get(pk=obj.coin.id)
+    #     except Exception:
+    #         return ''
+    #     title = list.icon
+    #     return title
 
     # @staticmethod
     # def get_total(obj):  # 总金额
@@ -522,53 +388,53 @@ class UserCoinSerialize(serializers.ModelSerializer):
     #     list = [str(list), int(list)][int(list) == list]
     #     return list
 
-    @staticmethod
-    def get_min_present(obj):
-        min_present = normalize_fraction(obj.coin.cash_control, int(obj.coin.coin_accuracy))
-        return min_present
+    # @staticmethod
+    # def get_min_present(obj):
+    #     min_present = normalize_fraction(obj.coin.cash_control, int(obj.coin.coin_accuracy))
+    #     return min_present
 
-    @staticmethod
-    def get_exchange_rate(obj):  # 币种交换汇率
-        list = obj.coin.exchange_rate
-        return list
+    # @staticmethod
+    # def get_exchange_rate(obj):  # 币种交换汇率
+    #     list = obj.coin.exchange_rate
+    #     return list
 
-    @staticmethod
-    def get_locked_coin(obj):  # 提现申请期间锁定币数
-        lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id), 8)
-        # if obj.coin.name == "USDT":
-        #     coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
-        #     coin_lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
-        #     lock_coin += coin_lock_coin
-        if obj.coin.name == "GSG":
-            coin_locks = UserCoinLock.objects.filter(user_id=obj.user.id, is_free=0).aggregate(Sum('amount'))[
-                'amount__sum']
-            coin_locks = coin_locks if coin_locks else 0
-            lock_coin = normalize_fraction(coin_locks, 8)
-        return lock_coin
+    # @staticmethod
+    # def get_locked_coin(obj):  # 提现申请期间锁定币数
+    #     lock_coin = normalize_fraction(amount_presentation(obj.user.id, obj.coin.id), 8)
+    #     # if obj.coin.name == "USDT":
+    #     #     coin_give = CoinGiveRecords.objects.get(user_id=obj.user_id, coin_give_id=1)
+    #     #     coin_lock_coin = normalize_fraction(coin_give.lock_coin, int(obj.coin.coin_accuracy))
+    #     #     lock_coin += coin_lock_coin
+    #     if obj.coin.name == "GSG":
+    #         coin_locks = UserCoinLock.objects.filter(user_id=obj.user.id, is_free=0).aggregate(Sum('amount'))[
+    #             'amount__sum']
+    #         coin_locks = coin_locks if coin_locks else 0
+    #         lock_coin = normalize_fraction(coin_locks, 8)
+    #     return lock_coin
 
-    @staticmethod
-    def get_recent_address(obj):  # 最近使用地址
-        recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[
-                 :2].values('address', 'address_name')
-        return list(recent)
+    # @staticmethod
+    # def get_recent_address(obj):  # 最近使用地址
+    #     recent = UserPresentation.objects.filter(user_id=obj.user.id, coin_id=obj.coin.id).order_by('-created_at')[
+    #              :2].values('address', 'address_name')
+    #     return list(recent)
 
-    @staticmethod
-    def get_service_charge(obj):
-        try:
-            coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
-        except Exception:
-            return ''
-        fee = normalize_fraction(coin_out.value, 4)
-        return fee
+    # @staticmethod
+    # def get_service_charge(obj):
+    #     try:
+    #         coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
+    #     except Exception:
+    #         return ''
+    #     fee = normalize_fraction(coin_out.value, 4)
+    #     return fee
 
-    @staticmethod
-    def get_service_coin(obj):
-        try:
-            coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
-        except Exception:
-            return ''
-        name = coin_out.coin_payment.name
-        return name
+    # @staticmethod
+    # def get_service_coin(obj):
+    #     try:
+    #         coin_out = CoinOutServiceCharge.objects.get(coin_out=obj.coin)
+    #     except Exception:
+    #         return ''
+    #     name = coin_out.coin_payment.name
+    #     return name
 
 
 class CoinOperateSerializer(serializers.ModelSerializer):

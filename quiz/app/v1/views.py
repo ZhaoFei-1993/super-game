@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, \
     EveryDayInjectionValue
 from users.models import CoinDetail
 from chat.models import Club
-from users.models import UserCoin, CoinValue, Coin, CoinGiveRecords
+from users.models import UserCoin, CoinValue, Coin, CoinGiveRecords, User
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from decimal import Decimal
@@ -30,33 +30,62 @@ class CategoryView(ListAPIView):
         return
 
     def list(self, request, *args, **kwargs):
-        categorys = Category.objects.filter(parent_id=None)
-        data = []
+        language = request.GET.get('language')
+
+        categorys = Category.objects.get_all()
+
+        # 获取所有父分类
+        root_category = []
+        child_category_ids = []
         for category in categorys:
+            if category.parent_id is not None:
+                child_category_ids.append(category.id)
+                continue
+            root_category.append(category)
+
+        quiz_category = Quiz.objects.filter(category_id__in=child_category_ids).values_list('category_id', flat=True)
+
+        items = []
+        for category in root_category:
             children = []
+
+            # 分类名称
             category_name = category.name
-            if self.request.GET.get('language') == 'en':
+            if language == 'en':
                 category_name = category.name_en
-            categoryslist = Category.objects.filter(parent_id=category.id, is_delete=0).order_by('order')
-            for categorylist in categoryslist:
-                categorylist_name = categorylist.name
-                if self.request.GET.get('language') == 'en':
-                    categorylist_name = categorylist.name_en
-                    if categorylist_name == "" or categorylist_name == None:
-                        categorylist_name = categorylist.name
-                number = Quiz.objects.filter(category_id=categorylist.id).count()
-                if number <= 0:
+                if category_name == '' or category_name is None:
+                    category_name = category.name
+
+            # 获取子分类
+            child_category = []
+            for item in categorys:
+                if item.is_delete != 0 or item.parent_id != category.id:
+                    continue
+                child_category.append(item)
+
+            child_category = sorted(child_category, key=lambda c: c.order)
+            for child in child_category:
+                child_category_name = child.name
+                if language == 'en':
+                    child_category_name = child.name_en
+                    if child_category_name == '' or child_category_name is None:
+                        child_category_name = child.name
+
+                # 分类下无竞猜记录的不显示
+                if child.id not in quiz_category:
                     continue
                 children.append({
-                    "category_id": categorylist.id,
-                    "category_name": categorylist_name,
+                    'category_id': child.id,
+                    'category_name': child_category_name,
                 })
-            data.append({
-                "category_id": category.id,
-                "category_name": category_name,
-                "children": children
+
+            items.append({
+                'category_id': category.id,
+                'category_name': category_name,
+                'children': children,
             })
-        return self.response({'code': 0, 'data': data})
+
+        return self.response({'code': 0, 'data': items})
 
 
 class HotestView(ListAPIView):
@@ -101,19 +130,20 @@ class HotestView(ListAPIView):
                 'status': fav.get('status'),
             })
 
-        quiz_id_list = '(' + quiz_id_list + ')'
-        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-        sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
-        sql += " where a.quiz_id in " + str(quiz_id_list)
-        sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
-        sql += " group by a.quiz_id"
-        total_coin = get_sql(sql)  # 投注金额
-        club = Club.objects.get(pk=roomquiz_id)
-        for s in total_coin:
-            for a in data:
-                if a['id'] == s[0]:
-                    a['total_coin'] = int(s[1])
-                    a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+        if quiz_id_list != '':
+            quiz_id_list = '(' + quiz_id_list + ')'
+            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+            sql = "SELECT a.quiz_id, SUM(a.bet) FROM quiz_record a"
+            sql += " WHERE a.quiz_id IN " + str(quiz_id_list)
+            sql += " AND a.roomquiz_id = '" + str(roomquiz_id) + "'"
+            sql += " GROUP BY a.quiz_id"
+            total_coin = get_sql(sql)  # 投注金额
+            club = Club.objects.get_one(pk=roomquiz_id)
+            for s in total_coin:
+                for a in data:
+                    if a['id'] == s[0]:
+                        a['total_coin'] = int(s[1])
+                        a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
 
         return self.response({'code': 0, 'data': data})
 
@@ -417,7 +447,7 @@ class QuizDetailView(ListAPIView):
 
 class QuizPushView(ListAPIView):
     """
-    下注页面推送
+    下注页面推送玩家下注信息
     """
     permission_classes = (LoginRequired,)
     serializer_class = QuizPushSerializer
@@ -431,14 +461,44 @@ class QuizPushView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+
+        language = request.GET.get('language')
+
+        rule_ids = []
+        user_ids = []
+        option_odds_ids = []
+        for item in items:
+            rule_ids.append(item['rule_id'])
+            user_ids.append(item['user_id'])
+            option_odds_ids.append(item['option_id'])
+
+        # 玩法
+        rules = Rule.objects.filter(id__in=rule_ids)
+        map_rule_name = {}
+        for rule in rules:
+            rule_tips = rule.tips
+            if language == 'en':
+                rule_tips = rule.tips_en if rule.tips_en != '' and rule.tips_en is not None else rule.tips
+
+            map_rule_name[rule.id] = rule_tips
+
+        # 玩家
+        users = User.objects.filter(id__in=user_ids)
+        map_user_name = {}
+        for user in users:
+            map_user_name[user.id] = str(user.nickname[0]) + '**'
+
+        # 下注选项
+        map_option_odds_title = OptionOdds.objects.get_option_odds_title(option_odds_ids, language)
+
         data = []
         for item in items:
             data.append(
                 {
                     "quiz_id": item['id'],
-                    "username": item['username'],
-                    "my_rule": item['my_rule'],
-                    "my_option": item['my_option'],
+                    "username": map_user_name[item['user_id']],
+                    "my_rule": map_rule_name[item['rule_id']],
+                    "my_option": map_option_odds_title[item['option_id']],
                     "bet": item['bet']
                 }
             )
@@ -458,61 +518,121 @@ class RuleView(ListAPIView):
         user = request.user.id
         roomquiz_id = self.request.GET.get('roomquiz_id')
         quiz_id = kwargs['quiz_id']
-        rule = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
-        clubinfo = Club.objects.get(pk=int(roomquiz_id))
-        coin_id = clubinfo.coin.pk
-        coin_betting_control = clubinfo.coin.betting_control
-        coin_betting_control = normalize_fraction(coin_betting_control, int(clubinfo.coin.coin_accuracy))
-        coin_betting_toplimit = clubinfo.coin.betting_toplimit
-        coin_betting_toplimit = normalize_fraction(coin_betting_toplimit, int(clubinfo.coin.coin_accuracy))
+        language = request.GET.get('language')
+
+        rules = Rule.objects.filter(quiz_id=quiz_id).order_by('type')
+        clubinfo = Club.objects.get_one(pk=int(roomquiz_id))
+        coin = Coin.objects.get_one(pk=clubinfo.coin_id)
+        coin_id = coin.id
+        coin_betting_control = coin.betting_control
+        coin_betting_control = normalize_fraction(coin_betting_control, int(coin.coin_accuracy))
+        coin_betting_toplimit = coin.betting_toplimit
+        coin_betting_toplimit = normalize_fraction(coin_betting_toplimit, int(coin.coin_accuracy))
         usercoin = UserCoin.objects.get(user_id=user, coin_id=coin_id)
         is_bet = usercoin.id
-        balance = normalize_fraction(usercoin.balance, int(clubinfo.coin.coin_accuracy))
-        coin_name = usercoin.coin.name
-        coin_icon = usercoin.coin.icon
+        balance = normalize_fraction(usercoin.balance, int(coin.coin_accuracy))
+        coin_name = coin.name
+        coin_icon = coin.icon
 
         coinvalue = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
-        value1 = coinvalue[0].value
-        value1 = normalize_fraction(value1, coinvalue[0].coin.coin_accuracy)
-        value2 = coinvalue[1].value
-        value2 = normalize_fraction(value2, coinvalue[0].coin.coin_accuracy)
-        value3 = coinvalue[2].value
-        value3 = normalize_fraction(value3, coinvalue[0].coin.coin_accuracy)
+        coin_values = []
+        for cv in coinvalue:
+            coin_values.append(normalize_fraction(cv.value, coin.coin_accuracy))
+
+        # 玩法ID
+        rule_ids = [int(rule.id) for rule in rules]
+        # 选项ID
+        options = Option.objects.filter(rule_id__in=rule_ids).order_by('order')
+        option_ids = [int(option.id) for option in options]
+
+        # 玩法对应的所有option id
+        map_rule_options = {}
+        map_options = {}
+        for option in options:
+            map_options[option.id] = option
+
+            if option.rule_id not in map_rule_options:
+                map_rule_options[option.rule_id] = []
+            map_rule_options[option.rule_id].append(option.id)
+
+        # 选项赔率ID
+        option_odds = OptionOdds.objects.filter(option_id__in=option_ids, club_id=roomquiz_id)
+
+        # 玩法对应的所有option odds
+        map_rule_option_odds = {}
+        all_option_odds_ids = []
+        for rule in rules:
+            rule_option_ids = map_rule_options[rule.id]
+            if rule.id not in map_rule_option_odds:
+                map_rule_option_odds[rule.id] = []
+            for option_odd in option_odds:
+                if option_odd.option_id not in rule_option_ids:
+                    continue
+                map_rule_option_odds[rule.id].append(option_odd)
+                all_option_odds_ids.append(option_odd.id)
+
+        record_option_total = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id__in=rule_ids).values_list('option_id').annotate(Count('id')).order_by('option_id')
+        # 每个玩法总下注数
+        record_rule_total = {}
+        # 每个选项总下注数
+        record_option_id_count = {}
+        if len(record_option_total) > 0:
+            for rot in record_option_total:
+                option_id, count = rot
+
+                # 每个选项总下注数
+                record_option_id_count[option_id] = count
+
+                # 每个玩法总下注数
+                for rule_id in map_rule_option_odds:
+                    rule_option_odds_ids = [int(opt.id) for opt in map_rule_option_odds[rule_id]]
+                    if option_id in rule_option_odds_ids:
+                        if rule_id not in record_rule_total:
+                            record_rule_total[rule_id] = 0
+                        record_rule_total[rule_id] += count
+
+        # 获取每个选项的下注用户ID
+        option_user_ids = Record.objects.filter(option_id__in=all_option_odds_ids).values('option_id', 'user_id')
+        map_option_odds_users = {}
+        for oui in option_user_ids:
+            if oui['option_id'] not in map_option_odds_users:
+                map_option_odds_users[oui['option_id']] = []
+            map_option_odds_users[oui['option_id']].append(oui['user_id'])
+
         data = []
-        for i in rule:
-            # option = Option.objects.filter(rule_id=i.pk).order_by('order')
-            option = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by('option__order')
-            option_id = OptionOdds.objects.filter(option__rule_id=i.pk, club_id=roomquiz_id).order_by(
-                'option__order').values('pk')
+        for i in rules:
+            option = map_rule_option_odds[i.id]
+
             list = []
-            total = Record.objects.filter(option_id__in=option_id, rule_id=i.pk, roomquiz_id=roomquiz_id).count()
+            total = record_rule_total[i.id] if i.id in record_rule_total else 0
             for s in option:
-                is_record = Record.objects.filter(user_id=user, roomquiz_id=roomquiz_id, option_id=s.pk).count()
-                is_choice = 0
-                if int(is_record) > 0:
-                    is_choice = 1
+                option_info = map_options[s.option_id]
+
+                # 是否用户已选择
+                is_choice = 1 if s.id in map_option_odds_users and user in map_option_odds_users[s.id] else 0
+
                 odds = normalize_fraction(s.odds, 2)
-                number = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id=i.pk, option_id=s.pk).count()
+                number = record_option_id_count[s.id] if s.id in record_option_id_count else 0
                 if number == 0 or total == 0:
                     accuracy = "0"
                 else:
                     accuracy = number / total
                     accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
-                option = s.option.option
-                if self.request.GET.get('language') == 'en':
-                    option = s.option.option_en
-                    if option == '' or option == None:
-                        option = s.option.option
+                option_title = option_info.option
+                if language == 'en':
+                    option_title = option_info.option_en
+                    if option_title == '' or option_title is None:
+                        option_title = option_info.option
                 list.append({
                     "option_id": s.pk,
-                    "option": option,
+                    "option": option_title,
                     "odds": odds,
-                    "option_type": s.option.option_type,
-                    "is_right": s.option.is_right,
+                    "option_type": option_info.option_type,
+                    "is_right": option_info.is_right,
                     "number": number,
                     "accuracy": accuracy,
                     "is_choice": is_choice,
-                    "order": s.option.order
+                    "order": option_info.order
                 })
             # 比分
             win = []
@@ -527,17 +647,17 @@ class RuleView(ListAPIView):
                     else:
                         loss.append(l)
                 tips = i.tips
-                if self.request.GET.get('language') == 'en':
+                if language == 'en':
                     tips = i.tips_en
-                    if tips == '' or tips == None:
+                    if tips == '' or tips is None:
                         tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
+                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
                     "list_win": win,
                     "list_flat": flat,
                     "list_loss": loss
@@ -552,17 +672,17 @@ class RuleView(ListAPIView):
                     flat.sort(key=lambda x: x["order"])
                     loss.sort(key=lambda x: x["order"])
                 tips = i.tips
-                if self.request.GET.get('language') == 'en':
+                if language == 'en':
                     tips = i.tips_en
-                    if tips == '' or tips == None:
+                    if tips == '' or tips is None:
                         tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
+                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
                     "list_win": win,
                     "list_loss": loss,
                 })
@@ -571,41 +691,41 @@ class RuleView(ListAPIView):
             elif int(i.type) == Rule.AISA_RESULTS:
                 if settings.ASIA_GAME_OPEN:
                     tips = i.tips
-                    if self.request.GET.get('language') == 'en':
+                    if language == 'en':
                         tips = i.tips_en
-                        if tips == '' or tips == None:
+                        if tips == '' or tips is None:
                             tips = i.tips
                     data.append({
                         "quiz_id": i.quiz_id,
                         "type": i.TYPE_CHOICE[int(i.type)][1],
                         "tips": tips,
-                        "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                        "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                        "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
+                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
+                        "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
                         "handicap": i.handicap,
                         "list": list
                     })
 
             else:
                 tips = i.tips
-                if self.request.GET.get('language') == 'en':
+                if language == 'en':
                     tips = i.tips_en
-                    if tips == '' or tips == None:
+                    if tips == '' or tips is None:
                         tips = i.tips
                 data.append({
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coinvalue[0].coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coinvalue[0].coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
+                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
                     "list": list
                 })
         return self.response({'code': 0, 'data': data,
                               'list': {'is_bet': is_bet, 'balance': balance, 'coin_name': coin_name,
                                        'coin_icon': coin_icon, 'coin_betting_control': coin_betting_control,
-                                       'coin_betting_toplimit': coin_betting_toplimit, 'value1': value1,
-                                       'value2': value2, 'value3': value3}})
+                                       'coin_betting_toplimit': coin_betting_toplimit, 'value1': coin_values[0],
+                                       'value2': coin_values[1], 'value3': coin_values[2]}})
 
 
 class BetView(ListCreateAPIView):

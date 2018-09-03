@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
-from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql, get_club_info
+from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
 from django.db import transaction
 import datetime
 from decimal import Decimal
@@ -316,7 +316,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # i += 1
             # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
 
-            cache_club_value = get_club_info()
+            cache_club_value = Club.objects.get_club_info()
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
             club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']
@@ -485,7 +485,7 @@ def handle_delay_game(delay_quiz):
             # 延迟比赛，返回用户投注的钱
             return_coin = float(record.bet)
 
-            cache_club_value = get_club_info()
+            cache_club_value = Club.objects.get_club_info()
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
             club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']

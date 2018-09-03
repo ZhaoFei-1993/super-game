@@ -73,7 +73,9 @@ def delete_cache(key, cache_type='redis'):
     """
     cache = get_cache_type(cache_type)
 
-    return cache.delete(key)
+    cache.delete(key)
+
+    return True
 
 
 def check_key(key):

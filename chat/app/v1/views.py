@@ -3,13 +3,13 @@ from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
 from chat.models import Club, ClubRule, ClubBanner
-from api.settings import MEDIA_DOMAIN_HOST
 from base import code as error_code
-from datetime import datetime
-from users.models import UserMessage, Message
+from users.models import UserMessage, DailyLog, Coin
 from base.exceptions import ParamErrorException
 from django.db.models import Q
-from utils.functions import sign_confirmation, language_switch, message_hints
+from utils.functions import message_hints, number_time_judgment
+from datetime import datetime
+from utils.cache import get_cache
 
 
 class ClublistView(ListAPIView):
@@ -40,49 +40,52 @@ class ClublistView(ListAPIView):
         user = request.user
 
         # 发消息
-        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-        for i in message:
-            message_id = i.id
-            user_message = UserMessage.objects.filter(message=message_id, user=user.id).count()
-            if user_message == 0:
-                usermessage = UserMessage()
-                usermessage.user = user
-                usermessage.message = i
-                usermessage.save()
-        is_usermessage = UserMessage.objects.filter(user_id=user.id, message_id=12).count()
-        if is_usermessage == 0:
-            user_message = UserMessage()
-            user_message.status = 0
-            user_message.user = user
-            user_message.message_id = 12
-            user_message.save()
+        UserMessage.objects.add_system_user_message(user=user)
 
-        is_sign = sign_confirmation(user.id)  # 是否签到
+        is_sign = DailyLog.objects.is_signed(user.id)  # 是否签到
         is_message = message_hints(user.id)  # 是否有未读消息
         if user.is_block == 1:
             raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+
+        # 获取俱乐部货币、在线人数
+        coins = Coin.objects.get_coins_map_id()
+
         data = []
         for item in items:
-            coin = item['coin'][0]['coin_list']
+            coin = coins[item['coin_id']]
+            coin_name = coin.name.lower()
+            if coin_name == 'eos':
+                user_number = 0
+            else:
+                day = datetime.now().strftime('%Y-%m-%d')
+                number_key = "INITIAL_ONLINE_USER_" + str(day)
+                initial_online_user_number = get_cache(number_key)
+                period = str(number_time_judgment())
+                quiz_number = int(initial_online_user_number[0][period][coin_name]['quiz'])
+                guess_number = int(initial_online_user_number[0][period][coin_name]['guess'])
+                user_number = quiz_number + guess_number
+
             data.append(
                 {
                     "club_id": item['id'],
                     "room_title": item['title'],
                     "autograph": item['club_autograph'],
-                    "user_number": item['coin'][0]['user_number'],
+                    "user_number": user_number,
                     "room_number": item['room_number'],
                     "coin_name": coin.name,
-                    "coin_key": coin.pk,
+                    "coin_key": coin.id,
                     "icon": item['icon'],
                     "coin_icon": coin.icon,
                     "is_recommend": item['is_recommend']
                 }
             )
-        content = {"code": 0,
-                   "data": data,
-                   "is_sign": is_sign,
-                   "is_message": is_message
-                   }
+
+        content = {
+            "code": 0,
+            "data": data,
+            "is_sign": is_sign,
+            "is_message": is_message
+        }
         return self.response(content)
 
 
