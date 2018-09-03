@@ -55,7 +55,7 @@ class AddressManager(models.Manager):
         for coin_id in arr_coins:
             coin = obj_coin[coin_id]
 
-            # ETH代币
+            # ETH及代币
             if coin.is_eth_erc20:
                 # 判断用户是否有地址，若有，则直接用地址，无则从地址库中拿出来
                 if eth_address is None:
@@ -63,6 +63,7 @@ class AddressManager(models.Manager):
                     address.user = user_id
                     address.save()
                     coin_address = address.address
+                    eth_address = coin_address
                 else:
                     coin_address = eth_address
             # BTC、USDT、BCH
@@ -72,6 +73,7 @@ class AddressManager(models.Manager):
                     address.user = user_id
                     address.save()
                     coin_address = address.address
+                    btc_address = coin_address
                 else:
                     coin_address = btc_address
 
