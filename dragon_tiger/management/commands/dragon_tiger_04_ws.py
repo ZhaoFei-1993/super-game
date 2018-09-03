@@ -31,7 +31,7 @@ class Command(BaseCommand):
             table_info = Table.objects.get(three_table_id=4)
             table_info.in_checkout = 2
             table_info.save()
-            ws.close()
+            # ws.close()
             print("------------------桌子暂未运营------------------")
         else:
             table_info = Table.objects.get(three_table_id=4)
@@ -123,7 +123,7 @@ class Command(BaseCommand):
                         record.status = 1
                         record.save()
                         print("-------------开奖开始推送---------------")
-                        q.enqueue(dragon_tiger_lottery, record.user_id, coins, int(messages["round"]["opening"]))
+                        q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening)
                         print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")

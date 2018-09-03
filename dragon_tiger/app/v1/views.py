@@ -34,6 +34,26 @@ class Table_boots(ListAPIView):
         if 'table_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         table_id = str(self.request.GET.get('table_id'))
+        sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
+        sql = "select " + sql_list + " from dragon_tiger_table dt"
+        sql += " where dt.id = '" + table_id + "'"
+        table_list = get_sql(sql)  # 获取桌子信息
+        data = []
+        name_list = dict(Table.NAME_LIST)
+        if table_list == ():
+            table_info = {}
+        else:
+            table_info = {
+                "table_id": table_list[0][0],  # 桌ID
+                "three_table_id": table_list[0][1],  # 第三方桌ID
+                "table_name": table_list[0][2],  # 桌子昵称
+                "wait_time": table_list[0][5],  # 等待时间
+                "game_name": name_list[int(table_list[0][6])],  # 游戏昵称
+                # "status": table_status[int(i[3])],    # 桌子状态(开、停)
+                # "in_checkout": table_in_checkou[int(i[4])],    # 桌子状态
+                "in_checkout_number": table_list[0][4],  # 桌子状态(0.正常/1,洗牌/2.停桌)
+            }
+
         sql_list = "db.id, db.boot_id, db.boot_num"
         sql = "select " + sql_list + " from dragon_tiger_boots db"
         sql += " where db.tid_id= '" + table_id + "'"
@@ -169,6 +189,7 @@ class Table_boots(ListAPIView):
             }
 
         data = {
+            "table_info": table_info,
             "boot_list": boot_list,
             "number_tab_list": number_tab_list,
             "ludan": ludan
@@ -504,3 +525,17 @@ class Record(ListAPIView):
             })
 
         return self.response({'code': 0, 'data': data})
+
+
+class Avatar(ListAPIView):
+    """
+    头像
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+
+        return self.response({'code': 0})
