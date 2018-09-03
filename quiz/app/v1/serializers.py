@@ -299,41 +299,16 @@ class QuizPushSerializer(serializers.ModelSerializer):
     """
     竞猜详情推送序列化
     """
-    my_rule = serializers.SerializerMethodField()  # 比赛状态
-    my_option = serializers.SerializerMethodField()  # 比赛状态
-    username = serializers.SerializerMethodField()  # 比赛状态
     bet = serializers.SerializerMethodField()  # 比赛状态
 
     class Meta:
         model = Record
-        fields = ("id", "username", "my_rule", "my_option", "bet")
-
-    def get_my_rule(self, obj):
-        rule = Rule.objects.get(pk=obj.rule_id)
-        my_rule = rule.tips
-        if self.context['request'].GET.get('language') == 'en':
-            my_rule = rule.tips_en
-        return my_rule
+        fields = ("id", "user_id", "rule_id", "option_id", "bet")
 
     @staticmethod
     def get_bet(obj):
         bet = round(float(obj.bet), 3)
         return bet
-
-    def get_my_option(self, obj):
-        # option = Option.objects.get(pk=obj.option_id)
-        option = OptionOdds.objects.get(pk=obj.option_id)
-        my_option = option.option.option
-        if self.context['request'].GET.get('language') == 'en':
-            my_option = option.option.option_en
-        return my_option
-
-    @staticmethod
-    def get_username(obj):
-        user_info = User.objects.get(pk=obj.user_id)
-        username = user_info.nickname
-        user_name = str(username[0]) + "**"
-        return user_name
 
 
 class ClubProfitAbroadSerialize(serializers.ModelSerializer):

@@ -45,13 +45,13 @@ class StockListSerialize(serializers.ModelSerializer):
     """
     股票配置表序列化
     """
-    title = serializers.SerializerMethodField()  ## 股票标题
-    closing_time = serializers.SerializerMethodField()  ## 股票封盘时间
-    # lottery_time = serializers.SerializerMethodField()  ## 股票开奖时间
-    previous_result = serializers.SerializerMethodField()  ## 上期开奖指数
-    previous_result_colour = serializers.SerializerMethodField()  ## 上期开奖指数颜色
-    # index = serializers.SerializerMethodField()  ## 本期指数颜色
-    index_colour = serializers.SerializerMethodField()  ## 本期指数颜色
+    title = serializers.SerializerMethodField()  # 股票标题
+    closing_time = serializers.SerializerMethodField()  # 股票封盘时间
+    # lottery_time = serializers.SerializerMethodField()  # 股票开奖时间
+    previous_result = serializers.SerializerMethodField()  # 上期开奖指数
+    previous_result_colour = serializers.SerializerMethodField()  # 上期开奖指数颜色
+    # index = serializers.SerializerMethodField()  # 本期指数颜色
+    index_colour = serializers.SerializerMethodField()  # 本期指数颜色
     # rise = serializers.SerializerMethodField()  # 看涨人数
     # fall = serializers.SerializerMethodField()  # 看跌人数
     periods_id = serializers.SerializerMethodField()  # 看跌人数

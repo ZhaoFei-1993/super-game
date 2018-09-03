@@ -11,21 +11,17 @@ import pytz
 import datetime
 import plistlib
 import decimal
+from decimal import Decimal
 from rq import Queue
 from redis import Redis
-from PIL import Image
-from decimal import Decimal
 from django.db import transaction
 from django.conf import settings
 from django.db.models import Sum, Q
-from base import code as error_code
 import hashlib
 from chat.models import Club
 from base.exceptions import ParamErrorException
 from api.settings import MEDIA_ROOT, MEDIA_DOMAIN_HOST
 import os
-from config.models import Admin_Operation
-from quiz.models import Record
 from base import code
 from users.models import DailyLog, UserMessage, UserCoinLock, UserPresentation, User, Coin, UserCoin
 from console.models import Address
@@ -176,12 +172,12 @@ def message_hints(user_id):
     return is_message
 
 
-def message_sign(user_id, type):
+def message_sign(user_id, message_type):
     #  公共消息标记
     usermessage = UserMessage.objects.filter(user_id=user_id, status=0)
     sign = 0
-    for list in usermessage:
-        if int(list.message.type) == type:
+    for item in usermessage:
+        if int(item.message.type) == message_type:
             sign = 1
     return sign
 
@@ -215,22 +211,6 @@ def surplus_date(end_date):
         return int(surplus)
     else:
         return 0
-
-
-# def win_ratio(user_id):
-#     """
-#     获取自己胜录
-#     :param user_id:
-#     :return:
-#     """
-#     total_count = Record.objects.filter(~Q(earn_coin='0'), user_id=user_id).count()
-#     win_count = Record.objects.filter(user_id=user_id, earn_coin__gt=0).count()
-#     if total_count == 0 or win_count == 0:
-#         win_ratio = "0%"
-#     else:
-#         record_count = round(win_count / total_count * 100, 2)
-#         win_ratio = str(record_count) + "%"
-#     return win_ratio
 
 
 def reversion_Decorator(func):
@@ -329,11 +309,16 @@ def genarate_plist(version, file_path):
 
 
 @transaction.atomic()
-def coin_initialization(user_id, coin_id):
-    coin_info = Coin.objects.get(pk=coin_id)
-    is_usercoin = UserCoin.objects.filter(coin_id=coin_id, user_id=user_id).count()
-    user = User.objects.get(pk=user_id)
-    if is_usercoin <= 0:  # 是否有余额表记录
+def coin_initialization(user_id, coin_id, user_coins=None, user=None):
+    coin_info = Coin.objects.get_one(pk=coin_id)
+
+    user_coin = None
+    if user_coins is not None and coin_id in user_coins:
+        user_coin = user_coins[coin_id]
+
+    if user is None:
+        user = User.objects.get(pk=user_id)
+    if user_coin is None:  # 是否有余额表记录
         if coin_info.is_eth_erc20:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
             if user_coin_number != 0:
@@ -343,8 +328,7 @@ def coin_initialization(user_id, coin_id):
                 address.user = user.pk
                 address.save()
         else:
-            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id,
-                                                       coin__is_eth_erc20=False).count()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
@@ -357,7 +341,11 @@ def coin_initialization(user_id, coin_id):
         user_coin.user = user
         user_coin.address = address.address
         user_coin.save()
-    is_address = UserCoin.objects.filter(~Q(address=''), coin_id=coin_id, user_id=user_id).count()
+
+    if user_coin is None:
+        is_address = UserCoin.objects.filter(~Q(address=''), coin_id=coin_id, user_id=user_id).count()
+    else:
+        is_address = 0 if user_coin.address == '' else 1
     if is_address == 0:
         if coin_info.is_eth_erc20:
             user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=True).count()
@@ -461,7 +449,7 @@ class ImageChar(object):
                  size=(300, 200),
                  fontPath='./utils/simsun.ttc',
                  bgColor=(255, 255, 255),
-                 fontSize=20):
+                 fontSize=24):
         self.size = size
         self.fontPath = fontPath
         self.bgColor = bgColor

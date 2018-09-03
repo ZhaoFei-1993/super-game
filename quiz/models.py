@@ -3,9 +3,7 @@ from django.db import models, transaction
 from wc_auth.models import Admin
 from mptt.models import MPTTModel, TreeForeignKey
 import os
-from threading import Thread
-import threading
-from users.models import Coin, User, CoinValue
+from users.models import Coin, User, CoinValue, UserCoin, BankruptcyRecords, UserMessage, CoinDetail
 from chat.models import Club
 import reversion
 from django.conf import settings
@@ -15,6 +13,7 @@ from .odds import Game
 from decimal import Decimal
 from base.models import BaseManager
 from utils.cache import set_cache, get_cache, incr_cache
+from datetime import date
 
 
 class CategoryManager(BaseManager):
@@ -26,6 +25,9 @@ class CategoryManager(BaseManager):
 
 @reversion.register()
 class Category(MPTTModel):
+    FOOTBALL = 2
+    BASKETBALL = 1
+
     name = models.CharField(verbose_name="分类名称", max_length=50)
     name_en = models.CharField(verbose_name="分类名称(英文)", max_length=50, default='')
     icon = models.CharField(verbose_name="分类图标", max_length=255, default='')
@@ -316,6 +318,35 @@ class OptionOddsManager(models.Manager):
                         option_odds.odds = option.odds
                         option_odds.save()
 
+    def get_option_odds_title(self, option_odds_ids, language='zh'):
+        """
+        获取option odds对应的选项标题
+        :param  option_odds_ids  选项ID 数组：[1, 2, 3]
+        :param  language  语言
+        :return: [option_odds_id => option_title]
+        """
+        option_odds = self.filter(id__in=option_odds_ids)
+        option_ids = []
+        for oo in option_odds:
+            option_ids.append(oo.option_id)
+
+        option_ids = list(set(option_ids))
+        options = Option.objects.filter(id__in=option_ids)
+        map_option_id_title = {}
+        for option in options:
+            option_title = option.option
+            if language == 'en':
+                option_title = option.option_en
+                if option_title == '' or option_title is None:
+                    option_title = option.option
+            map_option_id_title[option.id] = option_title
+
+        map_option_odds_title = {}
+        for option_odd in option_odds:
+            map_option_odds_title[option_odd.id] = map_option_id_title[option_odd.option_id]
+
+        return map_option_odds_title
+
 
 class OptionOdds(models.Model):
     club = models.ForeignKey(Club, on_delete=models.DO_NOTHING)
@@ -360,7 +391,11 @@ class RecordManager(models.Manager):
         :return:
         """
         key = self.KEY_CLUB_QUIZ_BET_COUNT + str(quiz_id) + '_' + str(club_id)
-        incr_cache(key=key)
+        cache_value = get_cache(key)
+        if cache_value is not None:
+            incr_cache(key=key)
+        else:
+            self.get_club_quiz_bet_count(quiz_id=quiz_id, club_id=club_id)
 
     def get_club_quiz_bet_users(self, quiz_id, club_id, user_id):
         """
@@ -426,6 +461,46 @@ class RecordManager(models.Manager):
         """
         self.incre_club_quiz_bet_count(quiz_id=quiz_id, club_id=club_id)
         self.update_club_quiz_bet_users(quiz_id=quiz_id, club_id=club_id, user_id=user_id)
+
+    def bankruptcy_hand(self, user, roomquiz_id):
+        """
+        破产赠送hand币活动
+        :param user:
+        :param roomquiz_id: 俱乐部ID
+        :return:
+        """
+        return True
+        user_id = user.id
+
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=Coin.HAND)
+        record_number = self.filter(user_id=user_id, roomquiz_id=1, type=0).count()
+        if int(user_coin.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot is False:
+            today = date.today()
+            is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
+                                                       created_at__gte=today).count()
+            if is_give <= 0:
+                user_coin.balance += Decimal(10000)
+                user_coin.save()
+
+                coin_bankruptcy = CoinDetail()
+                coin_bankruptcy.user = user
+                coin_bankruptcy.coin_name = 'HAND'
+                coin_bankruptcy.amount = '+' + str(10000)
+                coin_bankruptcy.rest = Decimal(user_coin.balance)
+                coin_bankruptcy.sources = 4
+                coin_bankruptcy.save()
+
+                bankruptcy_info = BankruptcyRecords()
+                bankruptcy_info.user = user
+                bankruptcy_info.coin_name = 'HAND'
+                bankruptcy_info.money = Decimal(10000)
+                bankruptcy_info.save()
+
+                user_message = UserMessage()
+                user_message.status = 0
+                user_message.user = user
+                user_message.message_id = 10  # 修改密码
+                user_message.save()
 
 
 @reversion.register()

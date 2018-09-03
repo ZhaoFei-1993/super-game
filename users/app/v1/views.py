@@ -5,12 +5,12 @@ from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, Mes
     CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize, DivendListSerializer
 import qrcode
 from django.core.cache import caches
-from quiz.models import Quiz
+from quiz.models import Quiz, Record
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -24,9 +24,7 @@ from decimal import Decimal
 from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
-from utils.functions import random_salt, sign_confirmation, message_hints, language_switch, \
-    message_sign, resize_img, normalize_fraction, random_invitation_code, \
-    coin_initialization
+from utils.functions import random_salt, message_hints, language_switch, resize_img, normalize_fraction, random_invitation_code
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -42,6 +40,7 @@ from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 from utils.functions import value_judge, get_sql
+from console.models import Address
 
 
 class UserRegister(object):
@@ -109,12 +108,15 @@ class UserRegister(object):
 
         return token
 
-    def login(self, source, username, area_code, password, device_token=''):
+    def login(self, source, username, area_code, password, device_token='', request=None):
         """
         用户登录
         :param source:   用户来源
         :param username: 用户账号
+        :param area_code: 国家区号
         :param password: 登录密码，第三方登录不提供
+        :param device_token: 设备号
+        :param request: 请求数据
         :return:
         """
         token = None
@@ -150,11 +152,7 @@ class UserRegister(object):
                     usermessage.message = i
                     usermessage.save()
 
-            coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
-            for coin in coins:
-                user_id = user.id
-                coin_id = coin.id
-                coin_initialization(user_id, coin_id)
+            Address.objects.initial(user.id)
 
             # 更新用户的device_token
             if device_token is not None and device_token != '':
@@ -184,6 +182,10 @@ class UserRegister(object):
                 r_msg.user = user
                 r_msg.message_id = 5
                 r_msg.save()
+
+        if request is not None:
+            request.user = user
+            LoginRecord.objects.log(request, True)
         return token
 
     @transaction.atomic()
@@ -291,12 +293,7 @@ class UserRegister(object):
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
 
-        coins = Coin.objects.filter(is_disabled=False)  # 生成货币余额与充值地址
-
-        for coin in coins:
-            user_id = userinfo.id
-            coin_id = coin.id
-            coin_initialization(user_id, coin_id)
+        Address.objects.initial(userinfo.id)
 
         give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
@@ -513,7 +510,7 @@ class LoginView(CreateAPIView):
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
             if int(register_type) == 1 or int(register_type) == 2:
                 password = None
-                token = ur.login(source=source, username=username, device_token=device_token, password=password)
+                token = ur.login(source=source, username=username, device_token=device_token, password=password, request=request)
             elif int(register_type) == 3:
                 password = ''
                 # area_code = request.data.get('area_code')
@@ -524,7 +521,7 @@ class LoginView(CreateAPIView):
                 if 'password' in request.data:
                     password = request.data.get('password')
                 token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
-                                 password=password)
+                                 password=password, request=request)
             else:
                 password = request.data.get('password')
                 # area_code = request.data.get('area_code')
@@ -533,7 +530,7 @@ class LoginView(CreateAPIView):
                 else:
                     area_code = request.data.get('area_code')
                 token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
-                                 password=password)
+                                 password=password, request=request)
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -565,153 +562,60 @@ class InfoView(ListAPIView):
         return User.objects.filter(id=self.request.user.id)
 
     def list(self, request, *args, **kwargs):
-        user = request.user
-        roomquiz_id = kwargs['roomquiz_id']
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-        user_id = self.request.user.id
-        is_sign = sign_confirmation(user_id)  # 是否签到
-        clubinfo = Club.objects.get(pk=roomquiz_id)
-        coin_name = clubinfo.coin.name
-        coin_id = clubinfo.coin.pk
 
-        lr = LoginRecord()  # 登录记录
-        lr.user = user
-        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
-        lr.ip = request.META.get("REMOTE_ADDR", '')
-        lr.save()
+        user = request.user
+        roomquiz_id = kwargs['roomquiz_id']
+        user_id = user.id
+
+        # 是否签到
+        is_sign = DailyLog.objects.is_signed(user_id)
+
+        # 俱乐部信息
+        clubinfo = Club.objects.get_one(pk=roomquiz_id)
+
+        # 俱乐部对应货币信息
+        coin = Coin.objects.get_one(pk=clubinfo.coin_id)
+        coin_name = coin.name
+        coin_id = coin.id
+
+        # GSG币信息
+        gsg = Coin.objects.get_gsg_coin()
+
+        # 登录日志
+        LoginRecord.objects.log(request)
 
         # 发消息
-        message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-        for i in message:
-            message_id = i.id
-            user_message = UserMessage.objects.filter(message=message_id, user=user.id).count()
-            if user_message == 0:
-                usermessage = UserMessage()
-                usermessage.user = user
-                usermessage.message = i
-                usermessage.save()
+        UserMessage.objects.add_system_user_message(user=user)
 
-        # 创建usercoin
-        coins = Coin.objects.filter(is_disabled=False)
-        for coin in coins:
-            coin_pk = coin.id
-            coin_initialization(user_id, coin_pk)
+        user_coins = UserCoin.objects.filter(user_id=user_id)
+        map_user_coin = {}
+        integral = 0        # GSG余额
+        current_coin_balance = 0    # 当前俱乐部币余额
+        current_coin_address = ''   # 当前俱乐部币充值地址
+        if len(user_coins) > 0:
+            for item in user_coins:
+                map_user_coin[item.coin_id] = item
+
+                # 获取GSG余额
+                if item.coin_id == Coin.GSG:
+                    integral = item.balance
+
+                if item.coin_id == coin_id:
+                    current_coin_balance = item.balance
+                    current_coin_address = item.address
+
+        Address.objects.initial(user_id, user_coins)
 
         # 货币赠送活动
-        give_info = CoinGive.objects.get(pk=1)
-        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-        today = date.today()
-        today_time = today.strftime("%Y%m%d%H%M%S")
-        if today_time < end_date and user.is_robot == 0:  # 活动期间
-            is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
-            if is_give == 0:
-                user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user_id).first()
-                user_coin_give_records = CoinGiveRecords()
-                user_coin_give_records.start_coin = user_coin.balance
-                user_coin_give_records.user = user
-                user_coin_give_records.coin_give = give_info
-                user_coin_give_records.lock_coin = give_info.number
-                user_coin_give_records.save()
-                user_coin.balance += give_info.number
-                user_coin.save()
-                user_message = UserMessage()
-                user_message.status = 0
-                user_message.user = user
-                user_message.message_id = 11
-                user_message.save()
-                coin_bankruptcy = CoinDetail()
-                coin_bankruptcy.user = user
-                coin_bankruptcy.coin_name = 'USDT'
-                coin_bankruptcy.amount = '+' + str(give_info.number)
-                coin_bankruptcy.rest = Decimal(user_coin.balance)
-                coin_bankruptcy.sources = 4
-                coin_bankruptcy.save()
+        CoinGive.objects.usdt_activity(user)
 
         # 破产赠送hand功能
-        # usercoins = UserCoin.objects.get(user_id=user.id, coin__name="HAND")
-        # record_number = Record.objects.filter(user_id=usercoins.user.id, roomquiz_id=1, type=0).count()
-        # if int(usercoins.balance) < 1000 and int(roomquiz_id) == 1 and record_number < 1 and user.is_robot == 0:
-        #     today = date.today()
-        #     is_give = BankruptcyRecords.objects.filter(user_id=user_id, coin_name="HAND", money=10000,
-        #                                                created_at__gte=today).count()
-        #     if is_give <= 0:
-        #         usercoins.balance += Decimal(10000)
-        #         usercoins.save()
-        #         coin_bankruptcy = CoinDetail()
-        #         coin_bankruptcy.user = user
-        #         coin_bankruptcy.coin_name = 'HAND'
-        #         coin_bankruptcy.amount = '+' + str(10000)
-        #         coin_bankruptcy.rest = Decimal(usercoins.balance)
-        #         coin_bankruptcy.sources = 4
-        #         coin_bankruptcy.save()
-        #         bankruptcy_info = BankruptcyRecords()
-        #         bankruptcy_info.user = user
-        #         bankruptcy_info.coin_name = 'HAND'
-        #         bankruptcy_info.money = Decimal(10000)
-        #         bankruptcy_info.save()
-        #         user_message = UserMessage()
-        #         user_message.status = 0
-        #         user_message.user = user
-        #         user_message.message_id = 10  # 修改密码
-        #         user_message.save()
+        Record.objects.bankruptcy_hand(user, roomquiz_id)
 
-        usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
-        usercoin_avatar = usercoin.coin.icon
-        user_coin = usercoin.balance
-        recharge_address = usercoin.address
-
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
-                                                               is_effective=1).count()
-        if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
-                                                                 is_effective=1)
-            for a in user_invitation_info:
-                try:
-                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
-                except Exception:
-                    return 0
-                # if int(a.coin) == 9:
-                #     a.is_deleted = 1
-                #     a.save()
-                #     usdt_balance.balance += a.money
-                #     usdt_balance.save()
-                #     coin_detail = CoinDetail()
-                #     coin_detail.user = user
-                #     coin_detail.coin_name = 'USDT'
-                #     coin_detail.amount = '+' + str(a.money)
-                #     coin_detail.rest = usdt_balance.balance
-                #     coin_detail.sources = 8
-                #     coin_detail.save()
-                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                #     usdt_give.lock_coin += a.money
-                #     usdt_give.save()
-                # else:
-                userbalance.balance += a.money
-                userbalance.save()
-                coin_detail = CoinDetail()
-                coin_detail.user = user
-                coin_detail.coin_name = userbalance.coin.name
-                coin_detail.amount = '+' + str(a.money)
-                coin_detail.rest = userbalance.balance
-                coin_detail.sources = 8
-                coin_detail.save()
-                a.is_deleted = 1
-                a.save()
-                u_mes = UserMessage()  # 邀请注册成功后消息
-                u_mes.status = 0
-                u_mes.user = user
-                if a.invitee_one != 0:
-                    u_mes.message_id = 1  # 邀请t1消息
-                else:
-                    u_mes.message_id = 2  # 邀请t2消息
-                u_mes.save()
-
-        lr = LoginRecord()  # 登录记录
-        lr.user = user
-        lr.login_type = request.META.get('HTTP_X_API_KEY', '')
-        lr.ip = request.META.get("REMOTE_ADDR", '')
-        lr.save()
+        # 用户邀请赠送USDT
+        UserInvitation.objects.usdt_activity(user)
 
         is_message = message_hints(user_id)  # 是否有未读消息
 
@@ -719,12 +623,12 @@ class InfoView(ListAPIView):
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
-            'usercoin': normalize_fraction(user_coin, int(usercoin.coin.coin_accuracy)),
+            'usercoin': normalize_fraction(current_coin_balance, int(coin.coin_accuracy)),
             'coin_name': coin_name,
-            'usercoin_avatar': usercoin_avatar,
-            'gsg_icon': items[0]["gsg_icon"],
-            'recharge_address': recharge_address,
-            'integral': normalize_fraction(items[0]["integral"], 2),
+            'usercoin_avatar': coin.icon,
+            'gsg_icon': gsg.icon,
+            'recharge_address': current_coin_address,
+            'integral': normalize_fraction(integral, 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
             'is_passcode': items[0]["is_passcode"],
@@ -1103,17 +1007,63 @@ class DailyListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+
+        # 总签到天数
+        total_sign_days = len(items)
+
+        # 签到赠送的币种
+        sign_coin = Coin.objects.get_one(pk=Coin.HAND)
+
+        # 用户签到数据
+        daily_log = DailyLog.objects.filter(user_id=request.user.id).order_by('-id').first()
+
+        # 最后签到日期
+        last_sign_date = None
+        if daily_log is not None:
+            if daily_log.sign_date.strftime("%Y%m%d") == date.today().strftime("%Y%m%d"):
+                last_sign_date = DailyLog.TODAY
+            elif daily_log.sign_date.strftime("%Y%m%d") == (date.today() - timedelta(days=1)).strftime("%Y%m%d"):
+                last_sign_date = DailyLog.YESTERDAY
+
+        # 判断最后一条记录的number值是否有效，判断依据：最后一次签到的时间无论是昨天还是今天，均有效
+        sign_number = -1
+        if last_sign_date is not None:
+            sign_number = daily_log.number
+            # 判断是否大于总签到天数，若是，则重新开始计算
+            if sign_number >= total_sign_days:
+                if last_sign_date in [DailyLog.YESTERDAY, DailyLog.TODAY]:
+                    sign_number -= total_sign_days
+
+        # 判断当前应该选择哪一天签到
+        selected_number = 0
+        if sign_number > 0:
+            if last_sign_date == DailyLog.YESTERDAY:
+                selected_number = sign_number
+            else:
+                selected_number = sign_number - 1
+
         data = []
-        for list in items:
+        index = 0
+        for item in items:
+            is_sign = 0
+            if sign_number > 0 and index < sign_number:
+                is_sign = 1
+
+            is_selected = 0
+            if index == selected_number:
+                is_selected = 1
+
             data.append({
-                "id": list["id"],
-                "days": list["days"],
-                "icon": list["icon"],
-                "name": list["name"],
-                "rewards": list["rewards"],
-                "is_sign": list["is_sign"],
-                "is_selected": list["is_selected"]
+                "id": item["id"],
+                "days": item["days"],
+                "icon": sign_coin.icon,
+                "name": sign_coin.name,
+                "rewards": item["rewards"],
+                "is_sign": is_sign,
+                "is_selected": is_selected
             })
+            index += 1
+
         return self.response({'code': 0, 'data': data})
 
 
@@ -1123,9 +1073,10 @@ class DailySignListView(ListCreateAPIView):
     """
     permission_classes = (LoginRequired,)
 
-    def post(self, request):
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        sign = sign_confirmation(user_id)  # 判断是否签到
+        sign = DailyLog.objects.is_signed(user_id)  # 判断是否签到
         yesterday = datetime.today() + timedelta(-1)
         yesterday_format = yesterday.strftime("%Y%m%d")
         yesterday_format = str(yesterday_format) + "000000"
@@ -1156,6 +1107,11 @@ class DailySignListView(ListCreateAPIView):
         # date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         # end_date = "2018-06-24 00:00:00"
         # if date_last > end_date:
+
+        total_sign_days = DailySettings.objects.all().count()
+        if fate > total_sign_days:
+            fate = 1
+
         try:
             dailysettings = DailySettings.objects.get(days=fate)
         except DailySettings.DoesNotExist:
@@ -1174,6 +1130,9 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.rest = Decimal(user_coin.balance)
         coin_detail.sources = 7
         coin_detail.save()
+
+        # 删除掉缓存
+        DailyLog.objects.remove_sign_cache(user_id)
 
         content = {'code': 0,
                    'data': normalize_fraction(rewards, 2),
@@ -1245,19 +1204,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
         language = request.GET.get('language')
 
         # 公共消息标识
-        user_messages = UserMessage.objects.filter(user_id=user_id, status=0)
-        public_sign = 0
-        system_sign = 0
-        for user_message in user_messages:
-            pmsg = None
-            for msg in messages:
-                if msg.id != user_message.message_id:
-                    continue
-                pmsg = msg
-            if int(pmsg.type) in [2, 3]:
-                public_sign = 1
-            if int(pmsg.type) in [1]:
-                system_sign = 1
+        public_sign, system_sign = UserMessage.objects.check_message_sign(user_id=user_id)
 
         data = []
         for item in items:
@@ -1275,7 +1222,7 @@ class MessageListView(ListAPIView, DestroyAPIView):
             # 消息内容
             if message_type == 3:
                 message_title = item['title'] if language != 'en' else item['title_en']
-                if message_title != '' or message_title is None:
+                if message_title == '' or message_title is None:
                     message_title = item['title']
             else:
                 message_title = msg_title
@@ -1306,22 +1253,31 @@ class DetailView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user.id
         user_message_id = kwargs['user_message_id']
+        language = request.GET.get('language')
+
         try:
             user_message = UserMessage.objects.get(pk=user_message_id)
-        except Exception:
+        except UserMessage.DoesNotExist:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_message.status = 1
         user_message.save()
-        public_sign = 0
-        if message_sign(user, 2) or message_sign(user, 3):
-            public_sign = 1
-        system_sign = message_sign(user, 1)
-        if int(user_message.message.type) == 3:
+
+        # 系统消息类型
+        message = Message.objects.get_one(pk=user_message.message_id)
+        message_type = int(message.type)
+        system_message_content = message.content
+        system_message_content_en = message.content_en
+
+        # 消息读取标识
+        public_sign, system_sign = UserMessage.objects.check_message_sign(user_id=user)
+
+        if message_type == 3:
             data = user_message.content
-            if self.request.GET.get('language') == 'en':
+            if language == 'en':
                 data = user_message.content_en
-                if data == '' or data == None:
+                if data == '' or data is None:
                     data = user_message.content
+
             content = {'code': 0,
                        'data': data,
                        'status': user_message.status,
@@ -1329,11 +1285,11 @@ class DetailView(ListAPIView):
                        'public_sign': public_sign
                        }
         else:
-            data = user_message.message.content
-            if self.request.GET.get('language') == 'en':
-                data = user_message.message.content_en
-                if data == '' or data == None:
-                    data = user_message.message.content
+            data = system_message_content
+            if language == 'en':
+                data = system_message_content_en
+                if data == '' or data is None:
+                    data = system_message_content
             content = {'code': 0,
                        'data': data,
                        'status': user_message.status,
@@ -1364,40 +1320,105 @@ class AssetView(ListAPIView):
     serializer_class = UserCoinSerialize
 
     def get_queryset(self):
-        user = self.request.user.id
-        list = UserCoin.objects.filter(user_id=user).order_by('-balance', 'coin__coin_order')
-        return list
+        return UserCoin.objects.filter(user_id=self.request.user.id).order_by('-balance', 'coin__coin_order')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         user_info = request.user
-        Progress = results.data.get('results')
+        user_id = user_info.id
+        items = results.data.get('results')
         data = []
         try:
             # user_info = User.objects.get(id=user)
-            eth = UserCoin.objects.get(user_id=user_info.id, coin__name='ETH')
-            user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
+            eth = UserCoin.objects.get(user_id=user_id, coin__name='ETH')
+            user_gsg = UserCoin.objects.get(user_id=user_id, coin_id=Coin.GSG)
         except Exception:
             raise
 
-        for list in Progress:
+        coins = Coin.objects.get_all()
+        coin_ids = []
+        map_coins = {}
+        for coin in coins:
+            map_coins[coin.id] = coin
+
+            if coin.is_disabled is False:
+                coin_ids.append(coin.id)
+
+        # coin_values = CoinValue.objects.filter(coin_id__in=coin_ids)
+        # map_coin_values = {}
+        # for coin_value in coin_values:
+        #     if coin_value.coin_id not in map_coin_values:
+        #         map_coin_values[coin_value.coin_id] = []
+        #     map_coin_values[coin_value.coin_id].append(coin_value.value)
+        # print('map_coin_values = ', map_coin_values)
+
+        # 近期使用地址
+        user_presentation = UserPresentation.objects.filter(user_id=user_id, coin_id__in=coin_ids).order_by('-created_at')
+        map_user_presentation = {}
+        map_user_presentation_amount = {}   # 币提现锁定数量
+        if len(user_presentation) > 0:
+            for presentation in user_presentation:
+                if presentation.coin_id not in map_user_presentation:
+                    map_user_presentation[presentation.coin_id] = []
+                    map_user_presentation_amount[presentation.coin_id] = 0
+                map_user_presentation[presentation.coin_id].append(presentation)
+
+                # 提现中状态
+                if presentation.status == 0:
+                    map_user_presentation_amount[presentation.coin_id] += presentation.amount
+
+        # 提现手续费
+        coin_out_charges = CoinOutServiceCharge.objects.filter(coin_out_id__in=coin_ids)
+        coin_id_charges = {}
+        coin_payment = {}
+        for charge in coin_out_charges:
+            coin_id_charges[charge.coin_out_id] = normalize_fraction(charge.value, 4)
+            coin_payment[charge.coin_payment_id] = map_coins[charge.coin_payment_id].name
+
+        # 获取锁定币数：提现锁定数量+用户锁定GSG数量
+        gsg_coin_lock = UserCoinLock.objects.filter(user_id=user_id, is_free=0).aggregate(Sum('amount'))
+        gsg_coin_lock = gsg_coin_lock['amount__sum'] if gsg_coin_lock['amount__sum'] is not None else 0
+        gsg_coin_lock = normalize_fraction(gsg_coin_lock, 8)
+
+        for item in items:
+            coin_id = item['coin_id']
+            coin = map_coins[coin_id]
+            min_present = normalize_fraction(coin.cash_control, int(coin.coin_accuracy))
+
+            # 常用地址.
+            user_presentations = map_user_presentation[coin_id] if coin_id in map_user_presentation else []
+            recent_address = []
+            if len(user_presentations) > 0:
+                for up in user_presentations:
+                    recent_address.append({
+                        'address': up.address,
+                        'address_name': up.address_name,
+                    })
+
+            presentation_amount = map_user_presentation_amount[
+                coin_id] if coin_id in map_user_presentation_amount else 0
+            if coin_id == Coin.GSG:
+                locked_coin = presentation_amount + gsg_coin_lock
+            else:
+                locked_coin = presentation_amount
+
             temp_dict = {
-                'coin_order': list["coin_order"],
-                'icon': list["icon"],
-                'coin_name': list["coin_name"],
-                'coin': list["coin"],
-                'recharge_address': list["address"],
-                'balance': list["balance"],
-                'locked_coin': list["locked_coin"],
-                'is_reality': list["is_reality"],
-                'is_recharge': list["is_recharge"],
-                'service_charge': list["service_charge"],
-                'service_coin': list["service_coin"],
-                'min_present': list["min_present"],
-                'recent_address': list["recent_address"]
+                'coin_order': coin.coin_order,
+                'icon': coin.icon,
+                'coin_name': coin.name,
+                'coin': item["coin_id"],
+                'recharge_address': item["address"],
+                'balance': item["balance"],
+                'locked_coin': locked_coin,
+                'is_reality': coin.is_reality,
+                'is_recharge': coin.is_recharge,
+                'service_charge': coin_id_charges[coin_id] if coin_id in coin_id_charges else '',
+                'service_coin': coin_payment[coin_id] if coin_id in coin_payment else '',
+                'min_present': min_present,
+                'recent_address': recent_address
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance, eth.coin.coin_accuracy)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance, coin.coin_accuracy)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             if temp_dict['coin_name'] == 'GSG':
@@ -1408,7 +1429,7 @@ class AssetView(ListAPIView):
                     for i, x in enumerate(coinlocks):
                         s = 'day_' + str(i)
                         temp_dict[s] = x.period
-                temp_dict['is_lock_valid'] = list['is_lock_valid']
+                temp_dict['is_lock_valid'] = coin.is_lock_valid
             data.append(temp_dict)
 
         response = {

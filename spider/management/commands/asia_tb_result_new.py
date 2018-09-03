@@ -109,7 +109,7 @@ def asia_result(quiz, records_asia):
     for record in records_asia:
         # i += 1
         # print('正在处理record_id为: ', record.id, ', 共 ', len(records_asia), '条, 当前第 ', i, ' 条 (亚盘)')
-        cache_club_value = get_club_info()
+        cache_club_value = Club.objects.get_club_info()
         coin_id = cache_club_value[record.roomquiz_id]['coin_id']
         club_name = cache_club_value[record.roomquiz_id]['club_name']
         club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']

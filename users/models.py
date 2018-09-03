@@ -4,7 +4,7 @@ from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
 from sms.models import Sms
-from datetime import datetime
+from datetime import datetime, date
 import time
 from decimal import Decimal
 import django.utils.timezone as timezone
@@ -12,8 +12,9 @@ from captcha.models import CaptchaStore
 from django.conf import settings
 from base.error_code import get_code
 from utils.models import CodeModel
-import hashlib
 from base.models import BaseManager
+from utils.cache import get_cache, set_cache, delete_cache
+from utils.common import save_user_message_content
 
 
 class UserManager(BaseUserManager):
@@ -122,15 +123,6 @@ class User(AbstractBaseUser):
         return self.username
 
 
-# @reversion.register()
-# class RewardCoin(models.Model):
-#
-#     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-#
-#     class Meta:
-#         ordering = ['-id']
-#         verbose_name = verbose_name_plural = "用户邀请表"
-
 class CoinManager(BaseManager):
     """
     Coin操作
@@ -174,6 +166,32 @@ class CoinManager(BaseManager):
             coin_id = Coin.USDT
 
         return coin_id
+
+    def get_gsg_coin(self):
+        """
+        获取GSG币信息
+        :return:
+        """
+        coins = self.get_all()
+        gsg = {}
+        for coin in coins:
+            if coin.id == Coin.GSG:
+                gsg = coin
+                break
+
+        return gsg
+
+    def get_coins_map_id(self):
+        """
+        返回货币ID对应的货币数据
+        :return:
+        """
+        coins = self.get_all()
+        map_coin = {}
+        for coin in coins:
+            map_coin[coin.id] = coin
+
+        return map_coin
 
 
 @reversion.register()
@@ -295,6 +313,13 @@ class CoinValue(models.Model):
         verbose_name = verbose_name_plural = "货币投注值表"
 
 
+class UserCoinManager(models.Manager):
+    """
+    用户货币数据操作
+    """
+    pass
+
+
 @reversion.register()
 class UserCoin(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -305,6 +330,8 @@ class UserCoin(models.Model):
     is_opt = models.BooleanField(verbose_name="是否选择", default=False)
     is_bet = models.BooleanField(verbose_name="是否为下注选择", default=False)
     address = models.CharField(verbose_name="充值地址", max_length=50, default='')
+
+    objects = UserCoinManager()
 
     class Meta:
         unique_together = ["coin", "user"]
@@ -427,12 +454,63 @@ class DailySettings(models.Model):
         verbose_name = verbose_name_plural = "签到配置表"
 
 
+class DailyLogManager(models.Manager):
+    """
+    每日签到数据操作
+    """
+    IS_SIGN_KEY = 'key_user_signed_%s_%s'
+
+    def is_signed(self, user_id):
+        """
+        判断用户是否已签到
+        :param user_id:
+        :return:
+        """
+        key = self.IS_SIGN_KEY % (user_id, datetime.now().strftime('%Y-%m-%d'))
+        cache_expired = 24 * 3600   # 缓存自动过期时间（秒）
+
+        cache_sign = get_cache(key)
+        if cache_sign is not None:
+            return cache_sign
+
+        user_sign = self.filter(user_id=user_id).order_by('-id').first()
+        if user_sign is False:
+            set_cache(key, 0, cache_expired)
+            return 0
+
+        sign_date = user_sign.sign_date.strftime("%Y%m%d%H%M%S")
+        today_time = date.today().strftime("%Y%m%d%H%M%S")
+        print('sign_date = ', sign_date)
+        print('today_time = ', today_time)
+        if int(sign_date) >= int(today_time):
+            is_sign = 1
+        else:
+            is_sign = 0
+
+        set_cache(key, is_sign, cache_expired)
+        return is_sign
+
+    def remove_sign_cache(self, user_id):
+        """
+        删除签到缓存
+        :param user_id:
+        :return:
+        """
+        key = self.IS_SIGN_KEY % (user_id, datetime.now().strftime('%Y-%m-%d'))
+        delete_cache(key)
+
+
 @reversion.register()
 class DailyLog(models.Model):
+    YESTERDAY = 1
+    TODAY = 2
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number = models.IntegerField(verbose_name="连续签到天数", default=0)
     sign_date = models.DateTimeField(verbose_name="签到时间")
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    objects = DailyLogManager()
 
     class Meta:
         ordering = ['-id']
@@ -473,6 +551,82 @@ class Message(models.Model):
         verbose_name = verbose_name_plural = "消息内容表"
 
 
+class UserMessageManager(models.Manager):
+    """
+    用户消息数据操作
+    """
+    def add_system_user_message(self, user):
+        """
+        发送公共消息
+        后台发布系统消息，当用户注册时间小于消息发布时间，则可接收到该消息
+        用户在登录系统后接收到系统消息
+        :param  user    用户
+        :return:
+        """
+        # 获取所有user.created_at <= message.created_at的系统消息
+        all_messages = Message.objects.get_all()
+        messages = []
+        message_ids = []
+        for message in all_messages:
+            if int(message.type) != Message.GLOBAL or message.created_at < user.created_at:
+                continue
+            messages.append(message)
+            message_ids.append(message.id)
+
+        if len(messages) == 0:
+            return True
+
+        # 获取用户所有已经接收到的message_id
+        user_messages = self.filter(message_id__in=message_ids, user_id=user.id).values_list('message_id', flat=True)
+        user_messages = list(set(user_messages))
+
+        diff_message_ids = list(set(message_ids).difference(set(user_messages)))
+        if len(diff_message_ids) == 0:
+            return True
+
+        # 差集入库
+        for message in messages:
+            if message.id not in diff_message_ids:
+                continue
+            user_message = UserMessage()
+            user_message.user = user
+            user_message.message = message
+            user_message.save()
+
+        return True
+
+    def check_message_sign(self, user_id):
+        """
+        检测用户消息读取标识
+        :param user_id:
+        :return: public_sign, system_sign
+        """
+        user_messages = self.filter(user_id=user_id, status=0)
+
+        messages = Message.objects.get_all()
+        map_message_id = {}
+        for message in messages:
+            map_message_id[message.id] = message
+
+        # 用户消息未读标识
+        public_sign = 0
+        for user_message in user_messages:
+            message = map_message_id[user_message.message_id]
+            if int(message.type) in [2, 3]:
+                public_sign = 1
+                break
+
+        # 系统消息未读标识
+        system_sign = 0
+        for user_message in user_messages:
+            message = map_message_id[user_message.message_id]
+            if int(message.type) in [1]:
+                system_sign = 1
+                break
+
+        return public_sign, system_sign
+
+
 @reversion.register()
 class UserMessage(models.Model):
     UNREAD = 0
@@ -491,6 +645,36 @@ class UserMessage(models.Model):
     content_en = models.CharField(verbose_name="英文消息内容", max_length=800, default="")
     message = models.ForeignKey(Message, verbose_name="消息内容表外键", on_delete=models.CASCADE)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    objects = UserMessageManager()
+
+    # def save(self, *args, **kwargs):
+    #     """
+    #     重写保存方法
+    #     :param args:
+    #     :param kwargs:
+    #     :return:
+    #     """
+    #     title = self.title
+    #     title_en = self.title_en
+    #     content = self.content
+    #     content_en = self.content_en
+    #
+    #     self.title = ''
+    #     self.title_en = ''
+    #     self.content = ''
+    #     self.content_en = ''
+    #     super().save(*args, **kwargs)
+    #
+    #     # 写入文件缓存
+    #     user_message_id = self.id
+    #     data = {
+    #         'content': content,
+    #         'title': title,
+    #         'content_en': content_en,
+    #         'title_en': title_en,
+    #     }
+    #     save_user_message_content(user_message_id, data)
 
     class Meta:
         ordering = ['-id']
@@ -607,6 +791,65 @@ class UserSettingOthors(models.Model):
         verbose_name = verbose_name_plural = "用户设置其他"
 
 
+class UserInvitationManager(models.Manager):
+    """
+    用户邀请
+    """
+    def usdt_activity(self, user):
+        """
+        邀请赠送USDT活动
+        :param user:
+        :return:
+        """
+        user_invitation_number = self.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1).count()
+        if user_invitation_number > 0:
+            user_invitation_info = self.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1)
+            for a in user_invitation_info:
+                try:
+                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                except UserCoin.DoesNotExist:
+                    return 0
+                # if int(a.coin) == 9:
+                #     a.is_deleted = 1
+                #     a.save()
+                #     usdt_balance.balance += a.money
+                #     usdt_balance.save()
+                #     coin_detail = CoinDetail()
+                #     coin_detail.user = user
+                #     coin_detail.coin_name = 'USDT'
+                #     coin_detail.amount = '+' + str(a.money)
+                #     coin_detail.rest = usdt_balance.balance
+                #     coin_detail.sources = 8
+                #     coin_detail.save()
+                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     usdt_give.lock_coin += a.money
+                #     usdt_give.save()
+                # else:
+                userbalance.balance += a.money
+                userbalance.save()
+
+                coin = Coin.objects.get_one(pk=a.coin)
+
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = coin.name
+                coin_detail.amount = '+' + str(a.money)
+                coin_detail.rest = userbalance.balance
+                coin_detail.sources = 8
+                coin_detail.save()
+                a.is_deleted = 1
+                a.save()
+
+                u_mes = UserMessage()  # 邀请注册成功后消息
+                u_mes.status = 0
+                u_mes.user = user
+                if a.invitee_one != 0:
+                    u_mes.message_id = 1  # 邀请t1消息
+                else:
+                    u_mes.message_id = 2  # 邀请t2消息
+                u_mes.save()
+
+
 @reversion.register()
 class UserInvitation(models.Model):
     inviter = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -619,6 +862,8 @@ class UserInvitation(models.Model):
     is_robot = models.BooleanField(verbose_name="是否机器人", default=True)
     is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
     created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
+
+    objects = UserInvitationManager()
 
     class Meta:
         verbose_name = verbose_name_plural = "用户邀请表"
@@ -651,12 +896,42 @@ class IntegralPrizeRecord(models.Model):
         verbose_name = verbose_name_plural = "积分奖品记录表"
 
 
+class LoginRecordManager(models.Manager):
+    """
+    登录记录数据操作
+    """
+    key_daily_login = 'key_user_login_'
+
+    def log(self, request, is_login=False):
+        """
+        登录记录
+        :param request:     请求数据
+        :param is_login:    是否在登录接口请求
+        :return:
+        """
+        key = self.key_daily_login + datetime.now().strftime('%Y%m%d')
+        daily_login = get_cache(key)
+        # user info接口调用的一天只记录一次
+        if daily_login is not None and is_login is False:
+            return True
+
+        login_record = LoginRecord()
+        login_record.user_id = request.user.id
+        login_record.login_type = request.META.get('HTTP_X_API_KEY', '')
+        login_record.ip = request.META.get('REMOTE_ADDR', '')
+        login_record.save()
+
+        set_cache(key, '1', 24 * 3600)
+
+
 @reversion.register()
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     login_type = models.CharField(verbose_name='登录手机类型', max_length=48, default='')
     ip = models.CharField(verbose_name='登录ip', max_length=48)
     login_time = models.DateTimeField(verbose_name='登录时间', auto_now=True)
+
+    objects = LoginRecordManager()
 
 
 @reversion.register()
@@ -701,6 +976,54 @@ class CoinInstall(models.Model):
         verbose_name = verbose_name_plural = "投注值表"
 
 
+class CoinGiveManager(models.Manager):
+    """
+    货币赠送数据操作
+    """
+    def usdt_activity(self, user):
+        """
+        USDT赠送活动
+        :param: user 用户
+        :return:
+        """
+        activity = self.get(pk=1)
+        end_date = activity.end_time.strftime("%Y%m%d%H%M%S")
+        today_time = date.today().strftime("%Y%m%d%H%M%S")
+        # 判断是否在活动时间内
+        if today_time >= end_date or user.is_robot is True:
+            return True
+
+        user_id = user.id
+        # 判断是否已赠送
+        is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
+        if is_give > 0:
+            return True
+
+        user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
+        user_coin_give_records = CoinGiveRecords()
+        user_coin_give_records.start_coin = user_coin.balance
+        user_coin_give_records.user = user
+        user_coin_give_records.coin_give = activity
+        user_coin_give_records.lock_coin = activity.number
+        user_coin_give_records.save()
+        user_coin.balance += activity.number
+        user_coin.save()
+
+        user_message = UserMessage()
+        user_message.status = 0
+        user_message.user = user
+        user_message.message_id = 11
+        user_message.save()
+
+        coin_bankruptcy = CoinDetail()
+        coin_bankruptcy.user = user
+        coin_bankruptcy.coin_name = 'USDT'
+        coin_bankruptcy.amount = '+' + str(activity.number)
+        coin_bankruptcy.rest = Decimal(user_coin.balance)
+        coin_bankruptcy.sources = 4
+        coin_bankruptcy.save()
+
+
 @reversion.register()
 class CoinGive(models.Model):
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
@@ -710,6 +1033,8 @@ class CoinGive(models.Model):
     match_number = models.IntegerField(verbose_name="要求局数", default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     end_time = models.DateTimeField(verbose_name="结束日期", auto_now=True)
+
+    objects = CoinGiveManager()
 
     class Meta:
         verbose_name = verbose_name_plural = "货币赠送活动表"

@@ -11,6 +11,26 @@ class ClubManager(BaseManager):
     """
     key = 'club_data'
 
+    def get_club_info(self):
+        """
+        从缓存读取club_info
+        :return:
+        """
+        club_values = {}
+        clubs = self.get_all()
+        if len(clubs) == 0:
+            return {}
+
+        for club in clubs:
+            club_values[club.id] = {
+                'coin_id': club.coin_id,
+                'club_name': club.room_title,
+                'club_name_en': club.room_title_en,
+                'coin_name': club.room_title.replace('俱乐部', ''),
+                'coin_accuracy': club.coin.coin_accuracy,
+            }
+        return club_values
+
 
 @reversion.register()
 class Club(models.Model):
