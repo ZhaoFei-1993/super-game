@@ -144,10 +144,11 @@ class UserRegister(object):
             else:
                 raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
             message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-            for i in message:
-                message_id = i.id
-                user_message = UserMessage.objects.filter(message=message_id, user=user.id)
-                if len(user_message) == 0:
+            ids = [x.id for x in message]
+            user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
+            mes_ids = list(set([x.message_id for x in user_messages]))
+            for i in ids:
+                if i not in mes_ids:
                     usermessage = UserMessage()
                     usermessage.user = user
                     usermessage.message = i
@@ -430,7 +431,7 @@ class LoginView(CreateAPIView):
         # register_type = ur.get_register_type(username)
         register_type = User.REGISTER_TELEPHONE
 
-        # 校验google recaptcha
+        # # 校验google recaptcha
         # if 'recaptcha' not in request.data:
         #     raise ParamErrorException(error_code.API_20105_GOOGLE_RECAPTCHA_FAIL)
         # recaptcha = request.data.get('recaptcha')
@@ -1191,10 +1192,10 @@ class MessageListView(ListAPIView, DestroyAPIView):
         items = ""
         if int(message_type) == 1:
             items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=1),
-                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
+                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         elif int(message_type) == 2:
             items = UserMessage.objects.filter(Q(user_id=user), Q(message__type=2) | Q(message__type=3),
-                                              Q(status=1) | Q(status=0)).order_by("status", "-created_at")
+                                               Q(status=1) | Q(status=0)).order_by("status", "-created_at")
         return items
 
     def list(self, request, *args, **kwargs):
@@ -3064,6 +3065,7 @@ class HomeMessageView(ListAPIView):
     #     data = get_sql(sql)  # 用户拥有的ETH
     #     return self.response({'code': 0, 'data': data})
 
+
 class DividendHistory(ListAPIView):
     """
     每日分红记录
@@ -3076,4 +3078,48 @@ class DividendHistory(ListAPIView):
         query = Dividend.objects.filter(user_lock_id=lock_id).order_by('-created_at')
         return query
 
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        results = items.data.get('results')
+        data = []
+        temp_dic={}
+        temp_date = 0
+        i = 0
+        for x in results:
+            y, m, d = x['date'].split('-')
+            md = m + '/' + d
+            if x['date']!=temp_date:
+                if data:
+                    i +=1
+                temp_date=x['date']
+                data.append(
+                    {
+                        'year' :str(y),
+                        'month_day': md,
+                        'results':[
+                            {
+                                'coin_name': x['coin_name'],
+                                'divide': normalize_fraction(x['divide'], 12),
+                                'coin_icon': x['coin_icon']
+                            }]
+                    }
+                )
+            else:
+                data[i]['results'].append(
+                    {
+                        'coin_name': x['coin_name'],
+                        'divide': normalize_fraction(x['divide'], 12),
+                        'coin_icon': x['coin_icon']
+                    }
+                )
 
+
+
+            # temp = {
+            #     'year': y,
+            #     'month_day': m + '/' + d,
+            #     'coin_name': x['coin_name'],
+            #     'divide': x['divide'],
+            #     'coin_icon': x['coin_icon']
+            # })
+        return self.response({'code': 0, 'data': data})

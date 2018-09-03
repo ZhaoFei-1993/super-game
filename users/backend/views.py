@@ -13,12 +13,12 @@ from django.db.models.functions import ExtractDay
 from django.db.models import Q, Count, Sum, Max, F, Func, Min
 from chat.models import Club
 from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, CoinDetail, CoinValue, RewardCoin, \
-    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, \
+    LoginRecord, UserInvitation, UserPresentation, CoinOutServiceCharge, UserRecharge, CoinGiveRecords, CoinGive, DividendHistory, \
     UserMessage, IntInvitation, Message, CoinPrice, DividendConfig, DividendConfigCoin, Dividend
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
-from utils.functions import normalize_fraction, get_sql
+from utils.functions import normalize_fraction, get_sql, sc2str
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from django.http import HttpResponse
@@ -35,6 +35,7 @@ import numpy as np
 from chat.models import Club
 from urllib.parse import quote_plus
 from utils.functions import get_cache
+from django.shortcuts import get_object_or_404
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -2109,6 +2110,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             9: 6,
         }
         map_club_id_amount = {}
+        vv = 0
         for coin in coins:
             scale = float(coin['scale'])
             price = float(coin['price'])
@@ -2139,6 +2141,7 @@ class CoinDividendProposalView(ListCreateAPIView):
             dividend_config_coin.coin_dividend = coin_dividend
             dividend_config_coin.coin_titular_dividend = coin_titular_dividend
             dividend_config_coin.revenue = revenue
+            vv += revenue
             dividend_config_coin.save()
 
             # 俱乐部ID对应虚拟盈收
@@ -2153,6 +2156,15 @@ class CoinDividendProposalView(ListCreateAPIView):
                     continue
                 profit.virtual_profit = map_club_id_amount[club_id]
                 profit.save()
+
+        # 写入分红历史记录
+        last_date = (datetime.now()-timedelta(1)).strftime('%Y-%m-%d')
+        last_history = DividendHistory.objects.filter(date=last_date).order_by('-created_at')
+        if last_history.exists():
+            item = last_history.first()
+            item.truevalue =  dividend_config.dividend
+            item.revenue = vv
+            item.save()
 
         return JsonResponse({'results': []}, status=status.HTTP_200_OK)
 
@@ -2195,7 +2207,7 @@ class CoinDividendHistoryView(ListAPIView):
         for cfg in dividend_config:
             items.append({
                 'id': cfg.id,
-                'date': cfg.dividend_date.strftime('%Y-%m-%d'),
+                'date': (cfg.dividend_date - timedelta(1)).strftime('%Y-%m-%d'),
                 'dividend': cfg.dividend,
                 'revenue': revenue_sum[cfg.id]
             })
@@ -2241,3 +2253,196 @@ class CoinDividendHistoryDetailView(ListAPIView):
             })
 
         return JsonResponse({'results': items}, status=status.HTTP_200_OK)
+
+
+
+class DividendHistoryBackend(ListAPIView):
+    """
+    分红历史列表
+    """
+    serializer_class = serializers.DividendCoinSerializer
+
+    def get_queryset(self):
+        x = self.kwargs['date']
+        date = datetime.strptime(x, '%Y-%m-%d').date()
+        objects = DividendConfigCoin.objects.filter(created_at__date = (date + timedelta(1)))
+        return objects
+
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        dd = self.kwargs['date']
+        lock = get_object_or_404(DividendHistory, date=dd)
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append({
+                'date':dd,
+                'coin_name': x['coin_name'],
+                'scale': normalize_fraction(x['scale'],9),
+                'dividend_price': sc2str(x['dividend_price'],9),
+                'price':normalize_fraction(x['price'],9),
+                'total_number': normalize_fraction(x['total_number'], 12),
+                'user_locks':normalize_fraction(lock.locked, 12),
+                'deadline':normalize_fraction(lock.deadline,12),
+                'newline': normalize_fraction(lock.newline, 12),
+                'coin_dividend': sc2str(x['coin_dividend'], 9),
+                'coin_titular_dividend': sc2str(x['coin_titular_dividend'],9),
+                'revenue': sc2str(x['revenue'],9),
+                'total_revenue': sc2str(x['total_revenue'],9)
+            })
+        return JsonResponse({'data':data}, status=status.HTTP_200_OK)
+
+
+
+    # @staticmethod
+    # def null2zero(object):
+    #     if object:
+    #         return normalize_fraction(object, 12)
+    #     else:
+    #         return 0
+
+class TotalUserLockDetail(ListAPIView):
+    """
+    总锁定明细
+    """
+    serializer_class = serializers.UserCoinLockSerializer
+
+    def get_queryset(self):
+        date = self.kwargs['date']
+        ww = datetime.strptime(date, '%Y-%m-%d').date()
+        objects = UserCoinLock.objects.filter(is_free=0, created_at__date__lte=ww)
+        return objects
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        counts = items.data.get('count')
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append(
+                {
+                    'user':x['user'],
+                    'amount':x['amount'],
+                    'delta':x['delta']
+                }
+            )
+        return JsonResponse({'counts':counts, 'data':data}, status=status.HTTP_200_OK)
+
+class PresentUserLockDetail(ListAPIView):
+    """
+    当天锁定明细
+    """
+    serializer_class = serializers.UserCoinLockSerializer
+
+    def get_queryset(self):
+        date = self.kwargs['date']
+        ww = datetime.strptime(date, '%Y-%m-%d').date()
+        objects = UserCoinLock.objects.filter(is_free=0, created_at__date=ww)
+        return objects
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        counts = items.data.get('count')
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append(
+                {
+                    'user':x['user'],
+                    'amount':x['amount'],
+                    'lock_days':x['lock_days']
+                }
+            )
+        return JsonResponse({'counts':counts, 'data':data}, status=status.HTTP_200_OK)
+
+class PresentLockFreeDetail(ListAPIView):
+    """
+    当天到期明细
+    """
+    serializer_class = serializers.UserCoinLockSerializer
+
+    def get_queryset(self):
+        date = self.kwargs['date']
+        ww = datetime.strptime(date, '%Y-%m-%d').date()
+        objects = UserCoinLock.objects.filter(end_time__date=ww)
+        return objects
+
+    def list(self, request, *args, **kwargs):
+        items = super().list(request, *args, **kwargs)
+        counts = items.data.get('count')
+        results = items.data.get('results')
+        data = []
+        for x in results:
+            data.append(
+                {
+                    'user':x['user'],
+                    'amount':x['amount'],
+                }
+            )
+        return JsonResponse({'counts':counts, 'data':data}, status=status.HTTP_200_OK)
+
+
+class PresentUserDividend(ListAPIView):
+    """
+    当天用户分红
+    """
+    def list(self, request, *args, **kwargs):
+        date = self.kwargs['date']
+        ww = datetime.strptime(date, '%Y-%m-%d').date()
+        dividends = Dividend.objects.filter(created_at__date=(ww + timedelta(1))).order_by('user_lock_id')
+        # lock_ids = [x.user_lock_id for x in dividends]
+        coins_name = ['INT', 'ETH', 'BTC', 'USDT']
+        coins = [1,2,3,9]
+        temp = 0
+        lt = len(coins)
+        data = []
+        i =0
+        for x in dividends:
+            if x.user_lock_id!= temp:
+                temp = x.user_lock_id
+                if data:
+                    i += 1
+                amount = sc2str(normalize_fraction(x.user_lock.amount, 12),9)
+                user = x.user.username
+                coin_index = coins.index(x.coin_id)
+                coin_name = coins_name[coin_index]
+                data.append({'user': user,
+                             'amount': amount,
+                             'lock_id':temp,
+                             coin_name:sc2str(normalize_fraction(x.divide, 12),9)
+                             }
+                            )
+            else:
+                coin_index = coins.index(x.coin_id)
+                coin_name = coins_name[coin_index]
+                data[i][coin_name] = sc2str(normalize_fraction(x.divide, 12),9)
+
+        for x in data:
+            for c in coins_name:
+                if c not in x:
+                    x[c]=0
+        return JsonResponse({'data':data}, status=status.HTTP_200_OK)
+
+
+class PresentRevenueDividend(ListAPIView):
+    """
+    分红营收值
+    """
+    def list(self, request, *args, **kwargs):
+        date = self.kwargs['date']
+        ww = datetime.strptime(date, '%Y-%m-%d').date()
+        dividends = DividendConfigCoin.objects.filter(created_at__date=(ww + timedelta(1)))
+        coins_name = ['INT', 'ETH', 'BTC', 'USDT']
+        coins = [1, 2, 3, 9]
+        temp_dic = {'date':date}
+        if dividends.exists():
+            for x in dividends:
+                index = coins.index(x.coin_id)
+                coin_name = coins_name[index]
+                temp_dic[coin_name] = sc2str(normalize_fraction(x.revenue, 12), 9)
+        for c in coins_name:
+            if c not in temp_dic:
+                temp_dic[c]=0
+        return JsonResponse({'data':[temp_dic]}, status=status.HTTP_200_OK)
+

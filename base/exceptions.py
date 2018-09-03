@@ -23,16 +23,17 @@ class CCBaseException(Exception):
         self.context = context
 
     def to_dict(self, request):
+        code = self.error_code
+        message = API_ERROR_MESSAGE_EN[code] if request.GET.get('language') == 'en' else API_ERROR_MESSAGE[code]
+        if self.context is not None and 'params' in self.context and '%s' in message:
+            message = message % self.context['params']
+
         context = {
-            'code': self.error_code,
-            'message': API_ERROR_MESSAGE[self.error_code],
+            'code': code,
+            'message': message,
         }
-        if request.GET.get('language') == 'en':
-            context = {
-                'code': self.error_code,
-                'message': API_ERROR_MESSAGE_EN[self.error_code],
-            }
         if self.context is not None:
+            del self.context['params']
             context = {**context, **self.context}
         return HttpResponse(json.dumps(context), content_type='application/json')
 

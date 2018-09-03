@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "推送竞猜比分"
 
     def handle(self, *args, **options):
-        quiz_id = 385
+        quiz_id = 1660
         host = 1
         guest = 2
 

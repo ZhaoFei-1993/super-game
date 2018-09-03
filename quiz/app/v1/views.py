@@ -1199,8 +1199,10 @@ class ChangeGsg(ListAPIView):
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
         number = get_cache(EXCHANGE_QUALIFICATION)
+        print("number==================================", number)
         if number == None or number == '':
             everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
+            print("everydayinjection============================", everydayinjection)
             if len(everydayinjection) <= 0:
                 raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
             else:
@@ -1433,9 +1435,9 @@ class ChangeRemainder(ListAPIView):
         date_last_all = (gsg_exchange_date_all + timedelta(days=50)).strftime('%Y-%m-%d')
         end_time_all = str(date_last_all) + ' 23:59:59'  # 结束时间
         if day > end_time_all:
-            raise ParamErrorException(error_code.API_408_ACTIVITY_ENDS)  # 活动已结束
+            raise ParamErrorException(error_code.API_70210_ACTIVITY_ENDS)  # 活动已结束
         if day < gsg_exchange_date:
-            raise ParamErrorException(error_code.API_407_ACTIVITY_HAS_NOT_STARTED)  # 活动未开始
+            raise ParamErrorException(error_code.API_70209_ACTIVITY_HAS_NOT_STARTED)  # 活动未开始
 
         coins = float(self.request.GET.get('wager'))  # 获取兑换ETH
         coin_astrict = float(0.01)

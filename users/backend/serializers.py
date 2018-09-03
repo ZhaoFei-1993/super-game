@@ -4,12 +4,12 @@ from django.utils import timezone
 import time
 from ..models import CoinLock, Coin, UserCoinLock, UserCoin, User, CoinDetail, LoginRecord, UserInvitation, \
     UserRecharge, \
-    CoinOutServiceCharge, IntInvitation, UserPresentation, Message
+    CoinOutServiceCharge, IntInvitation, UserPresentation, Message, DividendHistory, DividendConfigCoin
 from chat.models import Club
 from quiz.models import Record
 from datetime import datetime
 from django.db import connection
-from utils.functions import get_sql
+from utils.functions import get_sql, normalize_fraction
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -548,3 +548,118 @@ class MessageBackendSerializer(serializers.ModelSerializer):
     def get_created_at(obj):
         created_time = obj.created_at.strftime('%Y-%m-%d %H:%M')
         return created_time
+
+
+
+class DividendHistorySerializer(serializers.ModelSerializer):
+    """
+    历史分红序列化
+    """
+
+    locked = serializers.SerializerMethodField()
+    deadline = serializers.SerializerMethodField()
+    newline = serializers.SerializerMethodField()
+    truevalue = serializers.SerializerMethodField()
+    revenuevalue = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DividendHistory
+        fields = ('date', 'locked', 'deadline', 'newline', 'truevalue', 'revenuevalue', 'created_at', 'updated_at')
+
+    @staticmethod
+    def get_locked(obj):
+        return normalize_fraction(obj.locked, 18)
+
+    @staticmethod
+    def get_deadline(obj):
+        return normalize_fraction(obj.deadline, 18)
+
+    @staticmethod
+    def get_newline(obj):
+        return normalize_fraction(obj.newline, 18)
+
+    @staticmethod
+    def get_truevalue(obj):
+        return normalize_fraction(obj.truevalue, 18)
+
+    @staticmethod
+    def get_revenuevalue(obj):
+        return normalize_fraction(obj.revenuevalue, 18)
+
+    @staticmethod
+    def get_created_at(obj):
+        if obj.created_at:
+            return obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return ''
+
+    @staticmethod
+    def get_updated_at(obj):
+        if obj.updated_at:
+            return obj.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return ''
+
+
+class UserCoinLockSerializer(serializers.ModelSerializer):
+    """
+    锁定列表
+    """
+    user = serializers.CharField(source='user.username')
+    amount = serializers.SerializerMethodField()
+    delta = serializers.SerializerMethodField()
+    lock_days = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserCoinLock
+        fields = ('user', 'amount', 'delta', 'lock_days')
+
+    @staticmethod
+    def get_amount(obj):
+        return normalize_fraction(obj.amount, 18)
+
+    @staticmethod
+    def get_delta(obj):
+        now_time = datetime.now()
+        delta = obj.end_time - now_time
+        if delta.seconds <=0:
+            value = '剩余锁定时间:0天0小时0分'
+        else:
+            d = delta.days
+            h = int(delta.seconds / 3600)
+            m = int((delta.seconds % 3600) / 60)
+            # s = int(delta.seconds % 60)
+            value = '剩余锁定时间:%d天%d小时%d分' % (d, h, m)
+        # for item in {'0天': d, '0小时': h, '0分': m}.items():
+        #     if item[0] in value and item[1] == 0:
+        #         value = value.replace(item[0], '')
+        return value
+
+    @staticmethod
+    def get_lock_days(obj):
+        lock_days = obj.end_time.date() - obj.created_at.date()
+        return lock_days.days
+
+class DividendCoinSerializer(serializers.ModelSerializer):
+    """
+    分红详情
+    """
+    coin_name = serializers.CharField(source='coin.name')
+    total_number = serializers.SerializerMethodField()
+    total_revenue = serializers.SerializerMethodField()
+    class Meta:
+        model = DividendConfigCoin
+        fields = ('coin_name', 'scale', 'price', 'dividend_price', 'total_number', 'coin_dividend', 'coin_titular_dividend', 'revenue', 'total_revenue')
+
+    @staticmethod
+    def get_total_number(obj):
+        if obj.price > 0:
+            return normalize_fraction(obj.dividend_price/obj.price, 12)
+        else:
+            return 0
+
+    @staticmethod
+    def get_total_revenue(obj):
+        return normalize_fraction(obj.revenue*obj.price, 12)

@@ -668,14 +668,15 @@ class DivendListSerializer(serializers.ModelSerializer):
     coin_name = serializers.CharField(source='coin.name')
     divide = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
+    coin_icon = serializers.CharField(source='coin.icon')
 
     class Meta:
         model = Dividend
-        fields = ('date','coin_name', 'divide')
+        fields = ('date','coin_name', 'divide', 'coin_icon')
 
     @staticmethod
     def get_date(obj):
-        date = obj.created_at.strftime('%Y-%m-%d')
+        date = (obj.created_at-timedelta(1)).strftime('%Y-%m-%d')
         return date
 
     @staticmethod
