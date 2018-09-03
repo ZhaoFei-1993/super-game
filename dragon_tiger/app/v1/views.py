@@ -495,7 +495,7 @@ class Record(ListAPIView):
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
                 'my_option': fav.get('my_option'),  # 投注选项
-                'is_right': fav.get('is_right'),  # 是否为正确答案
+                # 'is_right': fav.get('is_right'),  # 是否为正确答案
                 'coin_avatar': fav.get('coin_avatar'),  # 货币图标
                 'number_tab_number': fav.get('number_tab_number'),  # 编号
                 'coin_name': fav.get('coin_name'),  # 货币昵称
