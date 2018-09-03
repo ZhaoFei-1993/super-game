@@ -206,3 +206,24 @@ def dragon_tiger_roach(table_id, show_x, show_y, result):
             "result": result
         },
     )
+
+
+def dragon_tiger_lottery(user_id, coins, opening):
+    """
+    推送珠盘路结果
+    :param user_id      用户id
+    :param coins     x轴
+    :param opening     y轴
+    :return:
+    """
+    group = 'lottery' + str(user_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "Lottery.message",
+            "coins": coins,
+            "opening": opening
+        },
+    )

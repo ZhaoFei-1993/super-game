@@ -153,3 +153,17 @@ class DragonTigerConsumer(BaseConsumer):
                 "result": event["result"],
             }
         )
+
+    async def lottery_message(self, event):
+        """
+        推送珠盘路图信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "lottery",
+                "coins": event["coins"],
+                "opening": event["opening"],
+            }
+        )

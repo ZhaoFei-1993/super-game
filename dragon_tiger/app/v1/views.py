@@ -362,10 +362,11 @@ class DragontigerBet(ListCreateAPIView):
         else:
             option_id_one = 1
             option_id_two = 2
-
+        option_number = "("+str(option_id_one)+", "+str(option_id_two)+")"
         sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
-        sql += " where dtr.option_id = '" + str(option_id_one) + "'"
-        sql += " or dtr.option_id = '" + str(option_id_two) + "'"
+        sql += " where dtr.option_id in"+option_number
+        sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
+        print("sql===========================", sql)
         coin_number = get_sql(sql)[0][0]
         if coin_number == None or coin_number == 0:
             all_earn_coins = bet_limit.red_limit
@@ -376,6 +377,7 @@ class DragontigerBet(ListCreateAPIView):
 
         sql = "select sum(dtr.earn_coin) from dragon_tiger_dragontigerrecord dtr"
         sql += " where dtr.option_id = '" + str(option_id) + "'"
+        sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number_in = get_sql(sql)[0][0]
         earn_coin = float(option_odds.odds) * coins  # 应赔金额
         if coin_number_in == None or coin_number_in == 0:
@@ -404,7 +406,7 @@ class DragontigerBet(ListCreateAPIView):
         record.option = option_odds
         record.bets = coins
 
-        record.earn_coin = earn_coin
+        record.earn_coin = earn_coin+coins
         source = request.META.get('HTTP_X_API_KEY')
         if source == "ios":
             source = 1

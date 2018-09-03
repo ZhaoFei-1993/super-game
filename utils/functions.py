@@ -775,10 +775,10 @@ def ludan_save(messages, boots, table_id):
                                 pair = 0
                             showroad.pair = pair
                             showroad.save()
-                            print("-------------开始推送---------------")
+                            print("-------------结果路图开始推送---------------")
                             q.enqueue(dragon_tiger_showroad, table_id, showroad.show_x_show, showroad.show_y_show,
                                       showroad.result_show, showroad.pair)
-                            print("-----------推送完成--------------")
+                            print("-----------结果路图推送完成--------------")
                             print("结果路图入库成功===========================第", s, "条")
                         s += 1
                 else:
@@ -810,10 +810,10 @@ def ludan_save(messages, boots, table_id):
                             bigroad.show_y_big = i["show_y"]
                             bigroad.tie_num = i["tie_num"]
                             bigroad.save()
-                            print("-------------开始推送---------------")
+                            print("-------------大路图开始推送---------------")
                             q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
                                       bigroad.result_big, bigroad.tie_num)
-                            print("-----------推送完成--------------")
+                            print("-----------大路图推送完成--------------")
                             print("大路图入库成功============================第", b, "条")
                         b += 1
                 else:
@@ -830,10 +830,10 @@ def ludan_save(messages, boots, table_id):
                                     bigroad.result_big = result_big
                                 bigroad.tie_num = i["tie_num"]
                                 bigroad.save()
-                                print("-------------开始推送---------------")
+                                print("-------------大路图开始推送---------------")
                                 q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
                                           bigroad.result_big, bigroad.tie_num)
-                                print("-----------推送完成--------------")
+                                print("-----------大路图推送完成--------------")
                             print("------------改变大路图最后一条数据，确保出现和的录入------------")
                         b_test += 1
                     print("--------大路图早已入库--------")
@@ -862,10 +862,10 @@ def ludan_save(messages, boots, table_id):
                             bigeyeroad.show_y_big_eye = i["show_y"]
                             bigeyeroad.save()
                             print("大眼路图入库成功============================第", by, "条")
-                            print("-------------开始推送---------------")
+                            print("-------------大眼路图开始推送---------------")
                             q.enqueue(dragon_tiger_bigeyeroad, table_id, bigeyeroad.show_x_big_eye,
                                       bigeyeroad.show_y_big_eye, bigeyeroad.result_big_eye)
-                            print("-----------推送完成--------------")
+                            print("-----------大眼路图推送完成--------------")
                         by += 1
                 else:
                     print("--------大眼路图早已入库--------")
@@ -893,10 +893,10 @@ def ludan_save(messages, boots, table_id):
                             psthway.show_x_psthway = i["show_x"]
                             psthway.show_y_psthway = i["show_y"]
                             psthway.save()
-                            print("-------------开始推送---------------")
+                            print("-------------小路图开始推送---------------")
                             q.enqueue(dragon_tiger_pathway, table_id, psthway.show_x_psthway,
                                       psthway.show_y_psthway, psthway.result_psthway)
-                            print("-----------推送完成--------------")
+                            print("-----------小路图推送完成--------------")
                             print("小路图入库成功============================第", p, "条")
                         p += 1
                 else:
@@ -925,10 +925,10 @@ def ludan_save(messages, boots, table_id):
                             roach.show_x_roach = i["show_x"]
                             roach.show_y_roach = i["show_y"]
                             roach.save()
-                            print("-------------开始推送---------------")
+                            print("-------------珠盘路图开始推送---------------")
                             q.enqueue(dragon_tiger_roach, table_id, roach.show_x_roach,
                                       roach.show_y_roach, roach.result_roach)
-                            print("-----------推送完成--------------")
+                            print("-----------珠盘路图推送完成--------------")
                             print("珠盘路图入库成功============================第", rn, "条")
                         rn += 1
                 else:
