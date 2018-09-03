@@ -206,3 +206,46 @@ def dragon_tiger_roach(table_id, show_x, show_y, result):
             "result": result
         },
     )
+
+
+def dragon_tiger_lottery(user_id, coins, opening, balance=None):
+    """
+    推送用户金额结果
+    :param user_id      用户id
+    :param coins     x轴
+    :param opening     y轴
+    :param balance     用户现有金额
+    :return:
+    """
+    group = 'lottery_' + str(user_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "lottery.message",
+            "coins": coins,
+            "opening": opening,
+            "balance": balance
+        },
+    )
+
+
+def dragon_tiger_avatar(number_tab_id, now_avatar_list):
+    """
+    推送用户金额结果
+    :param number_tab_id      用户id
+    :param balance     用户现有金额
+    :return:
+    """
+    group = 'avatar_' + str(number_tab_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "avatar.message",
+            "number_tab_id": number_tab_id,
+            "now_avatar_list": now_avatar_list
+        },
+    )

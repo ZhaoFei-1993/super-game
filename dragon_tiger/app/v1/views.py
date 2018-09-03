@@ -12,11 +12,18 @@ from decimal import Decimal
 from dragon_tiger.models import BetLimit
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
-from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord, Table
+from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord, Table, Dragontigerrecord
 from users.models import Coin, UserCoin, CoinDetail
 from chat.models import Club
+from .serializers import RecordSerialize
 from utils.cache import get_cache, set_cache
 from utils.functions import obtain_token
+from rq import Queue
+from redis import Redis
+from dragon_tiger.consumers import dragon_tiger_avatar
+
+redis_conn = Redis()
+q = Queue(connection=redis_conn)
 
 
 class Table_boots(ListAPIView):
@@ -33,6 +40,26 @@ class Table_boots(ListAPIView):
         if 'table_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         table_id = str(self.request.GET.get('table_id'))
+        sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
+        sql = "select " + sql_list + " from dragon_tiger_table dt"
+        sql += " where dt.id = '" + table_id + "'"
+        table_list = get_sql(sql)  # 获取桌子信息
+        data = []
+        name_list = dict(Table.NAME_LIST)
+        if table_list == ():
+            table_info = {}
+        else:
+            table_info = {
+                "table_id": table_list[0][0],  # 桌ID
+                "three_table_id": table_list[0][1],  # 第三方桌ID
+                "table_name": table_list[0][2],  # 桌子昵称
+                "wait_time": table_list[0][5],  # 等待时间
+                "game_name": name_list[int(table_list[0][6])],  # 游戏昵称
+                # "status": table_status[int(i[3])],    # 桌子状态(开、停)
+                # "in_checkout": table_in_checkou[int(i[4])],    # 桌子状态
+                "in_checkout_number": table_list[0][4],  # 桌子状态(0.正常/1,洗牌/2.停桌)
+            }
+
         sql_list = "db.id, db.boot_id, db.boot_num"
         sql = "select " + sql_list + " from dragon_tiger_boots db"
         sql += " where db.tid_id= '" + table_id + "'"
@@ -84,11 +111,11 @@ class Table_boots(ListAPIView):
                 number_tab_list = {
                     "number_tab_id": number_tab_info[0][0],  # 局id
                     "number_tab_number": number_tab_info[0][1],  # 第三方局号
-                    "opening": number_tab_info[0][2],  # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
+                    "opening": int(number_tab_info[0][2]),  # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
                     # "opening": opening_list[int(i[0][2])],      # 开局结果(0.空/1.龙&庄/2.虎&闲/3.和)
-                    "pair": number_tab_info[0][3],  # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
+                    "pair": int(number_tab_info[0][3]),  # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
                     # "pair": pair_list[int(i[0][3])],        # 开局结果(对子)[0.空/1.龙对&庄对/2.虎对&闲对/3.和&对]
-                    "bet_statu": number_tab_info[0][4],  # 本局状态[0.尚未接受下注/1.接受下注/2.停止下注-等待开盘/3.已开奖]
+                    "bet_statu": int(number_tab_info[0][4]),  # 本局状态[0.尚未接受下注/1.接受下注/2.停止下注-等待开盘/3.已开奖]
                     # "bet_statu": bet_list[int(i[0][4])],      # 本局状态
                     "previous_three_number_tab_id": number_tab_info[0][5],  # 第三方上局_id
                     "three_number_tab_id": number_tab_info[0][6],  # 第三方局ID
@@ -168,6 +195,7 @@ class Table_boots(ListAPIView):
             }
 
         data = {
+            "table_info": table_info,
             "boot_list": boot_list,
             "number_tab_list": number_tab_list,
             "ludan": ludan
@@ -362,10 +390,11 @@ class DragontigerBet(ListCreateAPIView):
         else:
             option_id_one = 1
             option_id_two = 2
-
+        option_number = "("+str(option_id_one)+", "+str(option_id_two)+")"
         sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
-        sql += " where dtr.option_id = '" + str(option_id_one) + "'"
-        sql += " or dtr.option_id = '" + str(option_id_two) + "'"
+        sql += " where dtr.option_id in"+option_number
+        sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
+        print("sql===========================", sql)
         coin_number = get_sql(sql)[0][0]
         if coin_number == None or coin_number == 0:
             all_earn_coins = bet_limit.red_limit
@@ -374,8 +403,9 @@ class DragontigerBet(ListCreateAPIView):
             all_earn_coins = coin_number + normalize_fraction(bet_limit.red_limit, int(coin_accuracy))  # 能赔金额
         print("一共可以赔============================", all_earn_coins)
 
-        sql = "select sum(dtr.earn_coin) from dragon_tiger_dragontigerrecord dtr"
+        sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
         sql += " where dtr.option_id = '" + str(option_id) + "'"
+        sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number_in = get_sql(sql)[0][0]
         earn_coin = float(option_odds.odds) * coins  # 应赔金额
         if coin_number_in == None or coin_number_in == 0:
@@ -383,6 +413,7 @@ class DragontigerBet(ListCreateAPIView):
             all_earn_coin = earn_coin  # 应赔金额
         else:
             coin_number_in = normalize_fraction(coin_number_in, int(coin_accuracy))
+            coin_number_in = coin_number_in*Decimal(option_odds.odds)
             all_earn_coin = float(coin_number_in) + earn_coin
         print("一共要赔======================", all_earn_coin)
 
@@ -404,7 +435,7 @@ class DragontigerBet(ListCreateAPIView):
         record.option = option_odds
         record.bets = coins
 
-        record.earn_coin = earn_coin
+        # record.earn_coin = "-"+coins
         source = request.META.get('HTTP_X_API_KEY')
         if source == "ios":
             source = 1
@@ -416,6 +447,34 @@ class DragontigerBet(ListCreateAPIView):
             source = 4
         record.source = source
         record.save()
+
+        USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
+        avatar_info = get_cache(USER_BET_AVATAR)
+        if avatar_info[user.id] is not None:
+            avatar_info[user.id]["bet_amount"] += coins
+        else:
+            avatar_info[user.id] = {
+                "user_avatar": user.avatar,
+                "user_nickname": user.nickname,
+                "bet_amount": coins
+            }
+        set_cache(USER_BET_AVATAR, avatar_info)
+        avatar_lists = []
+
+        for i in avatar_info:
+            avatar_lists.append(avatar_info[i])
+        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
+        all_avatar_lists = []
+        if len(now_avatar_list) > 5:
+            all_avatar_lists.append(now_avatar_list[0])
+            all_avatar_lists.append(now_avatar_list[1])
+            all_avatar_lists.append(now_avatar_list[2])
+            all_avatar_lists.append(now_avatar_list[3])
+            all_avatar_lists.append(now_avatar_list[4])
+        print("now_avatar_list=================================", all_avatar_lists)
+        print("-----------开始推送---------------")
+        q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
+        print("-----------推送完成--------------")
 
         # 用户减少金币
         # balance = float_to_str(float(usercoin.balance), coin_accuracy)
@@ -439,3 +498,105 @@ class DragontigerBet(ListCreateAPIView):
             }
         }
         return self.response(response)
+
+
+class Avatar(ListAPIView):
+    """
+    头像
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        if 'number_tab_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        number_tab_id = str(self.request.GET.get('number_tab_id'))
+        club_id = str(self.request.GET.get('club_id'))
+        user_bet_avatar = "USER_BET_AVATAR" + number_tab_id  # key
+        avatar_list = get_cache(user_bet_avatar)
+        if avatar_list == None or avatar_list == '':
+            sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
+            sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+            sql += " inner join users_user u on dtr.user_id=u.id"
+            sql += " where dtr.number_tab_id = '" + number_tab_id + "'"
+            sql += " and dtr.club_id = '" + club_id + "'"
+            sql += " group by dtr.user_id"
+            sql += " order by sum_bets desc limit 5"
+            print("sql===========================", sql)
+            avatar_list = get_sql(sql)
+            data = []
+            s = 0
+            for i in avatar_list:
+                data.append({
+                    "user_avatar": i[0],
+                    "user_nickname": i[1],
+                    "bet_amount": i[2]
+                    })
+
+            print("avatar_list============================", avatar_list)
+        return self.response({'code': 0, "data": data})
+
+
+class Record(ListAPIView):
+    """
+    记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = RecordSerialize
+
+    def get_queryset(self):
+        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+        if 'user_id' not in self.request.GET:
+            user_id = self.request.user.id
+            if 'is_end' not in self.request.GET:
+                record = Dragontigerrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+                return record
+            else:
+                is_end = self.request.GET.get('is_end')
+                if int(is_end) == 1:
+                    return Dragontigerrecord.objects.filter(
+                        status=0,
+                        user_id=user_id,
+                        club_id=club_id).order_by('-created_at')
+                else:
+                    return Dragontigerrecord.objects.filter(status=1,
+                                                            user_id=user_id,
+                                                            club_id=club_id).order_by('-created_at')
+        else:
+            user_id = self.request.GET.get('user_id')
+            return Dragontigerrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        Progress = results.data.get('results')
+        data = []
+        tmp = ''
+        for fav in Progress:
+            pecific_dates = fav.get('created_at')[0].get('years')
+            pecific_date = fav.get('created_at')[0].get('year')
+            if tmp == pecific_date:
+                pecific_date = ""
+                pecific_dates = ""
+            else:
+                tmp = pecific_date
+            data.append({
+                "id": fav.get('id'),
+                'earn_coin': fav.get('earn_coin'),  # 竞猜结果
+                'type': fav.get('type'),  # 竞猜结果
+                'pecific_dates': pecific_dates,
+                'pecific_date': pecific_date,
+                'pecific_time': fav.get('created_at')[0].get('time'),
+                'my_option': fav.get('my_option'),  # 投注选项
+                # 'is_right': fav.get('is_right'),  # 是否为正确答案
+                'coin_avatar': fav.get('coin_avatar'),  # 货币图标
+                'number_tab_number': fav.get('number_tab_number'),  # 编号
+                'coin_name': fav.get('coin_name'),  # 货币昵称
+                'bet': fav.get('bet'),  # 下注金额
+                'right_option': fav.get('right_option')  # 下注金额
+            })
+
+        return self.response({'code': 0, 'data': data})

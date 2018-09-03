@@ -11,4 +11,8 @@ urlpatterns = [
     path('option/info/', views.Dragontigeroption.as_view(), name="dragon-tiger-option-info"),
     # 下注
     path('bet/', views.DragontigerBet.as_view(), name="dragon-tiger-bet"),
+    # 记录
+    path('record/', views.Record.as_view(), name="dragon-tiger-record"),
+    # 头像
+    path('bet/avatar/', views.Avatar.as_view(), name="dragon-tiger-avatar"),
 ]

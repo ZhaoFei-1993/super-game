@@ -1208,7 +1208,7 @@ class ChangeGsg(ListAPIView):
                 raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
             else:
                 number = everydayinjection[0].order
-        if int(number) < 1000:
+        if int(number) > 1000:
             raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
 
         gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
@@ -1420,19 +1420,20 @@ class ChangeRemainder(ListAPIView):
 
         day = datetime.now().strftime('%Y-%m-%d')
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        print("yesterday======================", yesterday)
         EXCHANGE_QUALIFICATION = "exchange_qualification_" + user_id + '_' + str(day)  # key
         number = get_cache(EXCHANGE_QUALIFICATION)
         print("number=====================================", number)
         if number == None or number == '':
             everydayinjection = EveryDayInjectionValue.objects.filter(user_id=int(user_id), injection_time=yesterday)
-            print("number====================================", len(everydayinjection))
+            print("number1====================================", len(everydayinjection))
             if len(everydayinjection) <= 0:
                 raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
             else:
                 print("number===============================", everydayinjection[0].orders)
                 number = everydayinjection[0].order
-        print("number====================================", number)
-        if int(number) < 1000:
+        print("number2====================================", number)
+        if int(number) > 1000:
             raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
 
         gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
