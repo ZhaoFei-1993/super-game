@@ -1433,7 +1433,7 @@ class ChangeRemainder(ListAPIView):
                 print("number===============================", everydayinjection[0].orders)
                 number = everydayinjection[0].order
         print("number2====================================", number)
-        if int(number) < 1000:
+        if int(number) > 1000:
             raise ParamErrorException(error_code.API_70208_NO_REDEMPTION)  # 有没有兑换资格
 
         gsg_exchange_date = settings.GSG_EXCHANGE_START_DATE
