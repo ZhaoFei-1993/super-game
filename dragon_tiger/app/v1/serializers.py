@@ -21,11 +21,12 @@ class RecordSerialize(serializers.ModelSerializer):
     coin_name = serializers.SerializerMethodField()  # 货币昵称
     earn_coin = serializers.SerializerMethodField()  # 竞猜结果
     is_right = serializers.SerializerMethodField()  # 是否为正确答案
+    right_option = serializers.SerializerMethodField()  # 正确答案
 
     class Meta:
         model = Dragontigerrecord
         fields = ("id", "type", "number_tab_number", "bet", "created_at", "my_option", "coin_avatar", "coin_name",
-                  "earn_coin", "is_right")
+                  "earn_coin", "is_right", "right_option")
 
     @staticmethod
     def get_bet(obj):  # 下注金额
@@ -62,7 +63,7 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_my_option(obj):  # 我的选项
-        title = str(obj.option.title) + " - 1：" + str(int(obj.option.odds))
+        title = str(obj.option.title) + " - 1 ：" + str(int(obj.option.odds))
         return title
 
     @staticmethod
@@ -87,6 +88,11 @@ class RecordSerialize(serializers.ModelSerializer):
         else:
             earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(obj.club.coin.coin_accuracy)))
         return earn_coin
+
+    @staticmethod
+    def get_right_option(obj):
+        right_option = obj.number_tab.opening
+        return right_option
 
     @staticmethod
     def get_is_right(obj):

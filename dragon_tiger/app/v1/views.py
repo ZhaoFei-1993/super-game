@@ -497,9 +497,10 @@ class Record(ListAPIView):
                 'my_option': fav.get('my_option'),  # 投注选项
                 'is_right': fav.get('is_right'),  # 是否为正确答案
                 'coin_avatar': fav.get('coin_avatar'),  # 货币图标
-                'number_tab_number': fav.get('number_tab_number'),  # 当期结果
+                'number_tab_number': fav.get('number_tab_number'),  # 编号
                 'coin_name': fav.get('coin_name'),  # 货币昵称
-                'bet': fav.get('bet')  # 下注金额
+                'bet': fav.get('bet'),  # 下注金额
+                'right_option': fav.get('right_option')  # 下注金额
             })
 
         return self.response({'code': 0, 'data': data})
