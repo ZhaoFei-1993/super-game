@@ -102,18 +102,23 @@ class Command(BaseCommand):
                         answer = 2
                 if "pair" in messages["round"]:
                     number_tab.pair = messages["round"]["pair"]
-                number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
+                number_tab.bet_statu = 3
                 number_tab.save()
                 if answer != 0:
                     record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
                     for record in record_list:
-                        coins = 0
                         if record.option.id == answer:
+                            earn_coin_one = record.option.odds*record.bets
+                            earn_coin = earn_coin_one+record.bets
                             coin_id = record.club.coin.id
                             user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=record.user.id)
-                            user_coin.balance += record.earn_coin
+                            user_coin.balance += earn_coin
                             user_coin.save()
-                            coins = normalize_fraction(record.earn_coin, int(record.club.coin.coin_accuracy))
+                            coins = normalize_fraction(earn_coin, int(record.club.coin.coin_accuracy))
+                            record.earn_coin = earn_coin
+                        else:
+                            record.earn_coin = "-"+record.bets
+                            coins = record.bets
                         record.is_distribution = True
                         record.status = 1
                         record.save()
