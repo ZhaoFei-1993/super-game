@@ -156,7 +156,7 @@ class DragonTigerConsumer(BaseConsumer):
 
     async def lottery_message(self, event):
         """
-        推送珠盘路图信息至客户端
+        推送用户金额信息至客户端
         :param event:
         :return:
         """
@@ -165,5 +165,6 @@ class DragonTigerConsumer(BaseConsumer):
                 "msg_type": "lottery",
                 "coins": event["coins"],
                 "opening": event["opening"],
+                "balance": event["balance"],
             }
         )

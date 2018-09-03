@@ -208,12 +208,13 @@ def dragon_tiger_roach(table_id, show_x, show_y, result):
     )
 
 
-def dragon_tiger_lottery(user_id, coins, opening):
+def dragon_tiger_lottery(user_id, coins, opening, balance=None):
     """
-    推送珠盘路结果
+    推送用户金额结果
     :param user_id      用户id
     :param coins     x轴
     :param opening     y轴
+    :param balance     用户现有金额
     :return:
     """
     group = 'lottery' + str(user_id)
@@ -224,6 +225,7 @@ def dragon_tiger_lottery(user_id, coins, opening):
         {
             "type": "Lottery.message",
             "coins": coins,
-            "opening": opening
+            "opening": opening,
+            "balance": balance
         },
     )

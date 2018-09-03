@@ -116,20 +116,29 @@ class Command(BaseCommand):
                             user_coin.save()
                             coins = normalize_fraction(earn_coin, int(record.club.coin.coin_accuracy))
                             record.earn_coin = earn_coin
+                            record.is_distribution = True
+                            record.status = 1
+                            record.save()
+                            print("-------------开奖开始推送---------------")
+                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
+                                      user_coin.balance)
+                            print("-----------开奖推送完成--------------")
+
                         else:
                             record.earn_coin = "-"+record.bets
                             coins = record.bets
-                        record.is_distribution = True
-                        record.status = 1
-                        record.save()
-                        print("-------------开奖开始推送---------------")
-                        q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening)
-                        print("-----------开奖推送完成--------------")
+                            record.is_distribution = True
+                            record.status = 1
+                            record.save()
+                            print("-------------开奖开始推送---------------")
+                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening)
+                            print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")
                 q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
                           messages["round"]["number_tab_status"]["betStatus"])
-                q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, number_tab.opening)
+                opening = int(number_tab.opening)
+                q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, opening)
                 print("-----------局数推送完成--------------")
                 ludan_save(messages, boots, table_info.id)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)
