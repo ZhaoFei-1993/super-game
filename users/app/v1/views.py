@@ -1222,13 +1222,8 @@ class MessageListView(ListAPIView, DestroyAPIView):
             # 消息内容
             if message_type == 3:
                 message_title = item['title'] if language != 'en' else item['title_en']
-                if message_title != '' or message_title is None:
+                if message_title == '' or message_title is None:
                     message_title = item['title']
-                # 记录与内容分别存储
-                # message_content = get_user_message_content(item['id'])
-                # message_title = message_content['title'] if language != 'en' else message_content['title_en']
-                # if message_title != '' or message_title is None:
-                #     message_title = message_content['title']
             else:
                 message_title = msg_title
 
