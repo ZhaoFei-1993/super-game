@@ -40,9 +40,7 @@ from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
 from utils.functions import value_judge, get_sql
-from utils.common import get_user_message_content
 from console.models import Address
-from silk.profiling.profiler import silk_profile
 
 
 class UserRegister(object):
@@ -563,7 +561,6 @@ class InfoView(ListAPIView):
     def get_queryset(self):
         return User.objects.filter(id=self.request.user.id)
 
-    @silk_profile(name="profile-user-info")
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
