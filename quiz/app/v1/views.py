@@ -43,6 +43,7 @@ class CategoryView(ListAPIView):
                 continue
             root_category.append(category)
 
+        root_category = sorted(root_category, key=lambda r: r.order)
         quiz_category = Quiz.objects.filter(category_id__in=child_category_ids).values_list('category_id', flat=True)
 
         items = []
