@@ -809,7 +809,7 @@ def ludan_save(messages, boots, table_id):
                             bigroad.show_x_big = i["show_x"]
                             bigroad.show_y_big = i["show_y"]
                             if i["tie_num"] != 0:
-                                bigroad.tie_num = 1
+                                bigroad.tie_num = i["tie_num"]
                             bigroad.save()
                             print("-------------开始推送---------------")
                             q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
@@ -823,14 +823,14 @@ def ludan_save(messages, boots, table_id):
                         if b_test == bigroad_number:
                             if i["tie_num"] != 0:
                                 bigroad = Bigroad.objects.filter(boots_id=boots.id).first()
-                                if i["result"] == "red":
+                                if i["result"] == "banker":
                                     result_big = 1
                                     bigroad.result_big = result_big
                                 else:
                                     result_big = 2
                                     bigroad.result_big = result_big
                                 if int(i["tie_num"]) == 1:
-                                    bigroad.tie_num = 1
+                                    bigroad.tie_num = i["tie_num"]
                                 bigroad.save()
                                 print("-------------开始推送---------------")
                                 q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
