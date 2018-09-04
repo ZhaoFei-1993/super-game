@@ -129,7 +129,7 @@ class Command(BaseCommand):
                             record.save()
                             print("-------------开奖开始推送---------------")
                             coins = str(coins)
-                            balance = str(user_coin.balance)
+                            balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
                             q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
                                       balance, record.club.coin.name)
                             print("-----------开奖推送完成--------------")
