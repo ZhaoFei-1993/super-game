@@ -22,36 +22,40 @@ def get_transaction(transaction_hash):
 
 
 class Command(BaseCommand):
-    help = "ETH交易信息监视器"
-
-    def add_arguments(self, parser):
-        parser.add_argument('coin', type=str)
+    help = "ETH及代币充值监视器"
 
     @transaction.atomic()
     def handle(self, *args, **options):
-        coin_name = options['coin'].upper()
+        confirm_number = settings.ETH_CONFIRMATIONS
 
-        try:
-            coin = Coin.objects.get(name=coin_name)
-        except Coin.DoesNotExist:
-            raise CommandError(coin_name + '无效')
+        # 获取所有ETH及代币ID
+        eth_token_ids = []
+        coins = Coin.objects.get_all()
+        coin_names = []
+        map_coin = {}
+        for coin in coins:
+            if coin.is_eth_erc20:
+                eth_token_ids.append(coin.id)
+                coin_names.append(coin.name)
+                map_coin[coin.id] = coin
 
         # 获取所有用户ETH交易hash，只获取交易确认数小于指定值的数据
-        user_recharges = UserRecharge.objects.filter(coin_id=coin.id, confirmations__lt=settings.ETH_CONFIRMATIONS)
+        user_recharges = UserRecharge.objects.filter(coin_id__in=eth_token_ids, confirmations__lt=confirm_number)
         if len(user_recharges) == 0:
-            raise CommandError('无交易信息')
+            raise CommandError('无充值信息')
 
-        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_recharges)) + '条用户ETH交易信息'))
+        self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_recharges)) + '条充值记录'))
 
         cnt_confirm = 0
         for recharge in user_recharges:
             txid = recharge.txid
             user_id = recharge.user_id
+            coin = map_coin[recharge.coin_id]
 
             trans = get_transaction(txid)
             confirmations = trans['confirmations']
 
-            if confirmations < settings.ETH_CONFIRMATIONS:
+            if confirmations < confirm_number:
                 self.stdout.write(self.style.SUCCESS(txid + ' 确认数未达标'))
                 continue
 
@@ -75,7 +79,9 @@ class Command(BaseCommand):
             coin_detail.sources = CoinDetail.RECHARGE
             coin_detail.save()
 
+            self.stdout.write(self.style.SUCCESS('确认一笔 ' + str(coin.name) + ' 充值，TXID=' + txid))
+
             cnt_confirm += 1
 
-        self.stdout.write(self.style.SUCCESS('共确认 ' + str(cnt_confirm) + ' 条有效交易记录'))
+        self.stdout.write(self.style.SUCCESS('共确认 ' + str(cnt_confirm) + ' 条有效充值记录'))
         self.stdout.write(self.style.SUCCESS(''))
