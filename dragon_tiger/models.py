@@ -21,7 +21,7 @@ class TableManager(models.Manager):
         appsecret = '92e56d8195a9dd45a9b90aacf82886b1'  # 获取token需要参数Secret
         times = int(time.time())  # 获取token需要参数time
 
-        array = {'appid': '58000000', 'menu': 'bet', 'tid': three_table_id}  # 龙虎斗
+        array = {'appid': '58000000', 'menu': 'bet', 'tid': three_table_id}
 
         m = hashlib.md5()  # 创建md5对象
         hash_str = str(times) + appid + appsecret
@@ -105,7 +105,7 @@ class Table(models.Model):
 
 @reversion.register()
 class Boots(models.Model):
-    tid = models.ForeignKey(Table, on_delete=models.CASCADE)
+    tid = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='dt_boots_tid')
     boot_id = models.IntegerField(verbose_name="第三方靴ID", default=0)
     boot_num = models.IntegerField(verbose_name="靴号", default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
@@ -151,8 +151,8 @@ class Number_tab(models.Model):
         (BANKERPAIR, "停止下注-等待开盘"),
         (BOTHPAIR, "已开奖")
     )
-    tid = models.ForeignKey(Table, on_delete=models.CASCADE)
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    tid = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='dt_number_tab_tid')
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_number_tab_boots')
     number_tab_id = models.IntegerField(verbose_name="第三方局ID", default=0)
     number_tab_number = models.IntegerField(verbose_name="局号", default=0)
     opening = models.CharField(verbose_name="开局结果", choices=OPENING_LIST, max_length=1, default=NULL)
@@ -191,7 +191,7 @@ class Showroad(models.Model):
         (BOTHPAIR, "和 对")
     )
 
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_showroad_boots')
     result_show = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
     order_show = models.IntegerField(verbose_name="排序", default=1)
     show_x_show = models.IntegerField(verbose_name="铺的横坐标", default=1)
@@ -216,7 +216,7 @@ class Bigroad(models.Model):
         (PLAYER, "虎/闲"),
         (TIE, "和")
     )
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_bigroad_boots')
     result_big = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
     order_big = models.IntegerField(verbose_name="排序", default=1)
     show_x_big = models.IntegerField(verbose_name="铺的横坐标", default=1)
@@ -239,7 +239,7 @@ class Bigeyeroad(models.Model):
         (BANKER, "红"),
         (PLAYER, "蓝"),
     )
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_bigeyeroad_boots')
     result_big_eye = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
     order_big_eye = models.IntegerField(verbose_name="排序", default=1)
     show_x_big_eye = models.IntegerField(verbose_name="铺的横坐标", default=1)
@@ -261,7 +261,7 @@ class Psthway(models.Model):
         (BANKER, "红"),
         (PLAYER, "蓝"),
     )
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_psthway_boots')
     result_psthway = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
     order_psthway = models.IntegerField(verbose_name="排序", default=1)
     show_x_psthway = models.IntegerField(verbose_name="铺的横坐标", default=1)
@@ -283,7 +283,7 @@ class Roach(models.Model):
         (BANKER, "红"),
         (PLAYER, "蓝"),
     )
-    boots = models.ForeignKey(Boots, on_delete=models.CASCADE)
+    boots = models.ForeignKey(Boots, on_delete=models.CASCADE, related_name='dt_boots_club')
     result_roach = models.CharField(verbose_name="结果", choices=OPENING_LIST, max_length=1, default=BANKER)
     order_roach = models.IntegerField(verbose_name="排序", default=1)
     show_x_roach = models.IntegerField(verbose_name="铺的横坐标", default=1)
@@ -340,10 +340,10 @@ class Dragontigerrecord(models.Model):
         (OPEN, "开奖"),
         (ERROR, "异常")
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deagon_tiger_user')
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_record_club')
-    number_tab = models.ForeignKey(Number_tab, on_delete=models.CASCADE, related_name='deagon_tiger_record_number_tab')
-    option = models.ForeignKey(Options, on_delete=models.CASCADE, related_name='deagon_tiger_option')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dt_record_user')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='dt_record_club')
+    number_tab = models.ForeignKey(Number_tab, on_delete=models.CASCADE, related_name='dt_record_number_tab')
+    option = models.ForeignKey(Options, on_delete=models.CASCADE, related_name='dt_option')
     bets = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
     source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
@@ -366,7 +366,7 @@ class BetLimit(models.Model):
         (BACCARAT, "百家乐"),
         (DRAGON_TIGER, "龙虎斗")
     )
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='deagon_tiger_betlimit_club')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='dt_betlimit_club')
     types = models.CharField(verbose_name="类型", choices=NAME_LIST, max_length=1, default=DRAGON_TIGER)
     bets_one = models.CharField(verbose_name='下注值1', max_length=255, default=0.01)
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)

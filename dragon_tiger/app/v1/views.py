@@ -456,7 +456,8 @@ class DragontigerBet(ListCreateAPIView):
             avatar_info[user.id] = {
                 "user_avatar": user.avatar,
                 "user_nickname": user.nickname,
-                "bet_amount": coins
+                "bet_amount": coins,
+                "is_user": 1
             }
         set_cache(USER_BET_AVATAR, avatar_info)
         avatar_lists = []
@@ -465,6 +466,14 @@ class DragontigerBet(ListCreateAPIView):
             avatar_lists.append(avatar_info[i])
         now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
         all_avatar_lists = []
+        number = len(now_avatar_list)
+        if number < 5:
+            all_avatar_lists.append({
+                "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
+                "user_nickname": "虚位以待",
+                "bet_amount": "",
+                "is_user": 0
+            })
         if len(now_avatar_list) > 5:
             all_avatar_lists.append(now_avatar_list[0])
             all_avatar_lists.append(now_avatar_list[1])
@@ -517,6 +526,7 @@ class Avatar(ListAPIView):
         club_id = str(self.request.GET.get('club_id'))
         user_bet_avatar = "USER_BET_AVATAR" + number_tab_id  # key
         avatar_list = get_cache(user_bet_avatar)
+        data = []
         if avatar_list == None or avatar_list == '':
             sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
             sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
@@ -526,14 +536,23 @@ class Avatar(ListAPIView):
             sql += " group by dtr.user_id"
             sql += " order by sum_bets desc limit 5"
             avatar_list = get_sql(sql)
-            data = []
             s = 0
             for i in avatar_list:
                 data.append({
                     "user_avatar": i[0],
                     "user_nickname": i[1],
-                    "bet_amount": i[2]
+                    "bet_amount": i[2],
+                    "is_user": 1
                     })
+                s += 1
+        a = 5 - len(data)
+        for i in range(a):
+            data.append({
+                "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
+                "user_nickname": "虚位以待",
+                "bet_amount": "",
+                "is_user": 0
+            })
         return self.response({'code': 0, "data": data})
 
 

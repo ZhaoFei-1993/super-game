@@ -43,6 +43,7 @@ class Command(BaseCommand):
                     print("------------------桌子状态改变成功------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
                     is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
+                                                    tid_id=table_info.id,
                                                     boot_num=messages["round"]["boot_num"]).count()
                     if is_boots == 0:
                         boots = Boots()
@@ -53,12 +54,14 @@ class Command(BaseCommand):
                         print("---------------当前靴号入库成功------------------")
                     else:
                         print("---------------靴号已经存在------------------")
-                        boots = Boots.objects.get(boot_id=messages["round"]["boot_id"],
+                        boots = Boots.objects.get(tid_id=table_info.id,
+                                                  boot_id=messages["round"]["boot_id"],
                                                   boot_num=messages["round"]["boot_num"])
                     print("-------------靴号开始推送---------------")
                     q.enqueue(dragon_tiger_boots_info, table_info.id, boots.id, boots.boot_num)
                     print("-----------靴号推送完成--------------")
-                    is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
+                    is_Number_tab = Number_tab.objects.filter(tid_id=table_info.id,
+                                                              number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
                     if is_Number_tab == 0:
@@ -105,7 +108,7 @@ class Command(BaseCommand):
                 number_tab.bet_statu = 3
                 number_tab.save()
                 if answer != 0:
-                    record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
+                    record_list = Dragontigerrecord.objects.filter(tid_id=table_info.id, number_tab=number_tab.id)
                     for record in record_list:
                         if record.option.id == answer:
                             earn_coin_one = record.option.odds*record.bets
@@ -187,7 +190,8 @@ class Command(BaseCommand):
             elif sendModes == "changeBoot" and status is True:
                 print("------------------桌子开始换靴------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
-                    is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
+                    is_boots = Boots.objects.filter(tid_id=table_info.id,
+                                                    boot_id=messages["round"]["boot_id"],
                                                     boot_num=messages["round"]["boot_num"]).count()
                     if is_boots == 0:
                         boots = Boots()
@@ -201,9 +205,11 @@ class Command(BaseCommand):
                         print("-----------靴号推送完成--------------")
                     else:
                         print("---------------该靴号已经存在------------------")
-                        boots = Boots.objects.get(boot_id=messages["round"]["boot_id"],
+                        boots = Boots.objects.get(tid_id=table_info.id,
+                                                  boot_id=messages["round"]["boot_id"],
                                                   boot_num=messages["round"]["boot_num"])
-                    is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
+                    is_Number_tab = Number_tab.objects.filter(tid_id=table_info.id,
+                                                              number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
                     if is_Number_tab == 0:
@@ -236,7 +242,8 @@ class Command(BaseCommand):
                 print("-----------桌子状态推送完成--------------")
                 print("------------桌子状态改变成功-------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
-                    is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
+                    is_boots = Boots.objects.filter(tid_id=table_info.id,
+                                                    boot_id=messages["round"]["boot_id"],
                                                     boot_num=messages["round"]["boot_num"]).count()
                     if is_boots == 0:
                         boots = Boots()
@@ -250,9 +257,11 @@ class Command(BaseCommand):
                         print("-----------靴号推送完成--------------")
                     else:
                         print("---------------靴号已经存在------------------")
-                        boots = Boots.objects.get(boot_id=messages["round"]["boot_id"],
+                        boots = Boots.objects.get(tid_id=table_info.id,
+                                                  boot_id=messages["round"]["boot_id"],
                                                   boot_num=messages["round"]["boot_num"])
-                    is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
+                    is_Number_tab = Number_tab.objects.filter(tid_id=table_info.id,
+                                                              number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
                     if is_Number_tab == 0:

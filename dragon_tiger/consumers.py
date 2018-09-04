@@ -235,7 +235,7 @@ def dragon_tiger_avatar(number_tab_id, now_avatar_list):
     """
     推送用户金额结果
     :param number_tab_id      用户id
-    :param balance     用户现有金额
+    :param now_avatar_list     用户现有金额
     :return:
     """
     group = 'avatar_' + str(number_tab_id)
