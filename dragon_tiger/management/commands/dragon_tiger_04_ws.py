@@ -98,6 +98,7 @@ class Command(BaseCommand):
                 number_tab.previous_number_tab_id = messages["round"]["previous_number_tab_id"]
                 answer = 0
                 if "opening" in messages["round"]:
+                    print("opening==========================", int(messages["round"]["opening"]))
                     number_tab.opening = messages["round"]["opening"]
                     if int(messages["round"]["opening"]) == 1:
                         answer = 1
@@ -110,9 +111,13 @@ class Command(BaseCommand):
                 number_tab.bet_statu = 3
                 number_tab.save()
                 if answer != 0:
+                    print("-----------获得答案-----------", answer)
                     record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
+                    print("len(record_list)================================", len(record_list))
                     for record in record_list:
+                        print("-------------开始循环表------------")
                         if record.option.id == answer:
+                            print("------------用户id："+str(record.user.id)+"-------答案正确--------")
                             earn_coin_one = record.option.odds*record.bets
                             earn_coin = earn_coin_one+record.bets
                             coin_id = record.club.coin.id
@@ -130,6 +135,7 @@ class Command(BaseCommand):
                             print("-----------开奖推送完成--------------")
 
                         else:
+                            print("------------用户id：" + str(record.user.id) + "-------答案错误--------")
                             old_earn_coin = "-" + str(record.bets)
                             old_earn_coin = Decimal(old_earn_coin)
                             record.earn_coin = old_earn_coin
