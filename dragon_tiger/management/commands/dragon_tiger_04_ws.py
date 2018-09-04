@@ -13,6 +13,7 @@ from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, \
     dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery
 from utils.cache import delete_cache
+from decimal import Decimal
 
 
 class Command(BaseCommand):
@@ -129,7 +130,9 @@ class Command(BaseCommand):
                             print("-----------开奖推送完成--------------")
 
                         else:
-                            record.earn_coin = "-"+record.bets
+                            old_earn_coin = "-" + str(record.bets)
+                            old_earn_coin = Decimal(old_earn_coin)
+                            record.earn_coin = old_earn_coin
                             coins = record.bets
                             record.is_distribution = True
                             record.status = 1
