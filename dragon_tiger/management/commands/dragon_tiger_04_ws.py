@@ -97,6 +97,7 @@ class Command(BaseCommand):
                 number_tab.number_tab_number = messages["round"]["number_tab_number"]
                 number_tab.previous_number_tab_id = messages["round"]["previous_number_tab_id"]
                 answer = 0
+                print("opening==========================", messages["round"]["opening"])
                 if "opening" in messages["round"]:
                     print("opening==========================", int(messages["round"]["opening"]))
                     number_tab.opening = messages["round"]["opening"]
