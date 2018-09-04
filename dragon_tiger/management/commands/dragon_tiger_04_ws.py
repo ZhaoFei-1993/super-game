@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 number_tab.bet_statu = 3
                 number_tab.save()
                 if answer != 0:
-                    record_list = Dragontigerrecord.objects.filter(tid_id=table_info.id, number_tab=number_tab.id)
+                    record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
                     for record in record_list:
                         if record.option.id == answer:
                             earn_coin_one = record.option.odds*record.bets
