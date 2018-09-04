@@ -97,9 +97,7 @@ class Command(BaseCommand):
                 number_tab.number_tab_number = messages["round"]["number_tab_number"]
                 number_tab.previous_number_tab_id = messages["round"]["previous_number_tab_id"]
                 answer = 0
-                print("opening==========================", messages["round"]["opening"])
                 if "opening" in messages["round"]:
-                    print("opening==========================", int(messages["round"]["opening"]))
                     number_tab.opening = messages["round"]["opening"]
                     if int(messages["round"]["opening"]) == 1:
                         answer = 1
@@ -114,7 +112,6 @@ class Command(BaseCommand):
                 if answer != 0:
                     print("-----------获得答案-----------", answer)
                     record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
-                    print("len(record_list)================================", len(record_list))
                     for record in record_list:
                         print("-------------开始循环表------------")
                         if record.option.id == answer:
@@ -146,8 +143,7 @@ class Command(BaseCommand):
                             record.save()
                             print("-------------开奖开始推送---------------")
                             balance = 0
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance
-                                      , record.club.coin.name)
+                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance, record.club.coin.name)
                             print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")

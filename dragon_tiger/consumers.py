@@ -225,7 +225,6 @@ def dragon_tiger_lottery(user_id, coins, opening, balance, coin_name):
         group,
         {
             "type": "lottery.message",
-            "user_id": user_id,
             "coins": coins,
             "opening": opening,
             "balance": balance,

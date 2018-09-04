@@ -3,7 +3,7 @@ from channels.consumer import get_channel_layer
 from asgiref.sync import async_to_sync
 
 
-def dragon_tiger_table_info(table_id, in_checkout):
+def baccarat_table_info(table_id, in_checkout):
     """
     桌子状态
      :param table_id 桌ID
@@ -23,7 +23,7 @@ def dragon_tiger_table_info(table_id, in_checkout):
     )
 
 
-def dragon_tiger_boots_info(table_id, boots_id, boot_num):
+def baccarat_boots_info(table_id, boots_id, boot_num):
     """
     推送局信息
     :param table_id:
@@ -45,7 +45,7 @@ def dragon_tiger_boots_info(table_id, boots_id, boot_num):
     )
 
 
-def dragon_tiger_number_info(table_id, number_tab_id, bet_statu):
+def baccarat_number_info(table_id, number_tab_id, bet_statu):
     """
     number 推送
     :param table_id 桌ID
@@ -67,7 +67,7 @@ def dragon_tiger_number_info(table_id, number_tab_id, bet_statu):
     )
 
 
-def dragon_tiger_result(table_id, number_tab_id, opening):
+def baccarat_result(table_id, number_tab_id, opening):
     """
     推送结果
     :param table_id      桌id
@@ -89,7 +89,7 @@ def dragon_tiger_result(table_id, number_tab_id, opening):
     )
 
 
-def dragon_tiger_showroad(table_id, show_x, show_y, result, pair):
+def baccarat_showroad(table_id, show_x, show_y, result, pair):
     """
     推送结果图结果
     :param table_id      桌id
@@ -114,7 +114,7 @@ def dragon_tiger_showroad(table_id, show_x, show_y, result, pair):
     )
 
 
-def dragon_tiger_bigroad(table_id, show_x, show_y, result, tie_num):
+def baccarat_bigroad(table_id, show_x, show_y, result, tie_num):
     """
     推送大路图结果
     :param table_id      桌id
@@ -139,7 +139,7 @@ def dragon_tiger_bigroad(table_id, show_x, show_y, result, tie_num):
     )
 
 
-def dragon_tiger_bigeyeroad(table_id, show_x, show_y, result):
+def baccarat_bigeyeroad(table_id, show_x, show_y, result):
     """
     推送大眼路图结果
     :param table_id      桌id
@@ -162,7 +162,7 @@ def dragon_tiger_bigeyeroad(table_id, show_x, show_y, result):
     )
 
 
-def dragon_tiger_pathway(table_id, show_x, show_y, result):
+def baccarat_pathway(table_id, show_x, show_y, result):
     """
     推送小路图结果
     :param table_id      桌id
@@ -185,7 +185,7 @@ def dragon_tiger_pathway(table_id, show_x, show_y, result):
     )
 
 
-def dragon_tiger_roach(table_id, show_x, show_y, result):
+def baccarat_roach(table_id, show_x, show_y, result):
     """
     推送珠盘路结果
     :param table_id      桌id
@@ -208,7 +208,7 @@ def dragon_tiger_roach(table_id, show_x, show_y, result):
     )
 
 
-def dragon_tiger_lottery(user_id, coins, opening, balance=None):
+def baccarat_lottery(user_id, coins, opening, balance):
     """
     推送用户金额结果
     :param user_id      用户id
@@ -231,11 +231,11 @@ def dragon_tiger_lottery(user_id, coins, opening, balance=None):
     )
 
 
-def dragon_tiger_avatar(number_tab_id, now_avatar_list):
+def baccarat_avatar(number_tab_id, now_avatar_list):
     """
     推送用户金额结果
     :param number_tab_id      用户id
-    :param balance     用户现有金额
+    :param now_avatar_list     用户现有金额
     :return:
     """
     group = 'avatar_' + str(number_tab_id)

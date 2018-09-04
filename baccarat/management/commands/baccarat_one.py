@@ -11,8 +11,8 @@ from django.conf import settings
 from users.models import UserCoin
 from rq import Queue
 from redis import Redis
-# from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, \
-#     dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery
+from baccarat.consumers import baccarat_table_info, baccarat_number_info, \
+    baccarat_boots_info, baccarat_result, baccarat_lottery
 
 
 class Command(BaseCommand):
@@ -59,7 +59,7 @@ class Command(BaseCommand):
                                                   boot_id=messages["round"]["boot_id"],
                                                   boot_num=messages["round"]["boot_num"])
                     print("-------------靴号开始推送---------------")
-                    # q.enqueue(dragon_tiger_boots_info, table_info.id, boots.id, boots.boot_num)
+                    q.enqueue(baccarat_boots_info, table_info.id, boots.id, boots.boot_num)
                     print("-----------靴号推送完成--------------")
                     is_Number_tab = Number_tab.objects.filter(tid_id=table_info.id,
                                                               number_tab_id=messages["round"]["number_tab_id"],
@@ -79,8 +79,8 @@ class Command(BaseCommand):
                         number_tab.save()
                         print("---------------当前局数入库成功------------------")
                         print("-------------局数开始推送---------------")
-                        # q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
-                        #           messages["round"]["number_tab_status"]["betStatus"])
+                        q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
+                                  messages["round"]["number_tab_status"]["betStatus"])
                         print("-----------局数推送完成--------------")
                     else:
                         print("---------------当前局数已经存在------------------")
@@ -131,7 +131,7 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
                             print("-------------开奖开始推送---------------")
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
                                       user_coin.balance)
                             print("-----------开奖推送完成--------------")
                         if int(record.option.id) == answer_pair:
@@ -147,8 +147,8 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
                             print("-------------开奖开始推送---------------")
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
-                                      user_coin.balance, number_tab.pair)
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
+                                      user_coin.balance)
                             print("-----------开奖推送完成--------------")
                         if answer_pair == 100:
                             if record.option.id == 7 or record.option.id == 8:
@@ -164,8 +164,8 @@ class Command(BaseCommand):
                                 record.status = 1
                                 record.save()
                                 print("-------------开奖开始推送---------------")
-                                q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
-                                          user_coin.balance, number_tab.pair)
+                                q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
+                                          number_tab.pair, user_coin.balance)
                                 print("-----------开奖推送完成--------------")
 
 
@@ -176,14 +176,15 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
                             print("-------------开奖开始推送---------------")
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening)
+                            balance = 0
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, balance)
                             print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")
-                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                           3)
                 opening = int(number_tab.opening)
-                q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, opening)
+                q.enqueue(baccarat_result, table_info.id, number_tab.id, opening)
                 print("-----------局数推送完成--------------")
                 baccarat_ludan_save(messages, boots, table_info.id)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)
@@ -200,8 +201,8 @@ class Command(BaseCommand):
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("-------------桌子状态，局数开始推送---------------")
-                q.enqueue(dragon_tiger_table_info, table_info.id, table_info.in_checkout)
-                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                q.enqueue(baccarat_table_info, table_info.id, table_info.in_checkout)
+                q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                           messages["round"]["number_tab_status"]["betStatus"])
                 print("-----------桌子状态，局数推送完成--------------")
                 print("---------------接受下注---------新局部数生成成功---------")
@@ -215,7 +216,7 @@ class Command(BaseCommand):
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("-------------局数推送---------------")
-                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id, messages["round"]["number_tab_status"]["betStatus"])
+                q.enqueue(baccarat_number_info, table_info.id, number_tab.id, messages["round"]["number_tab_status"]["betStatus"])
                 print("-----------局数推送完成--------------")
                 print("---------------结束下注---------当局状态改变---------")
 
@@ -225,7 +226,7 @@ class Command(BaseCommand):
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
                     print("-------------桌子状态推送---------------")
-                    q.enqueue(dragon_tiger_table_info, table_info.id, messages["round"]["number_tab_status"]["in_checkout"])
+                    q.enqueue(baccarat_table_info, table_info.id, messages["round"]["number_tab_status"]["in_checkout"])
                     print("-----------桌子状态推送完成--------------")
                     print("------------------桌子开始洗牌成功------------------")
 
@@ -243,7 +244,7 @@ class Command(BaseCommand):
                         boots.save()
                         print("---------------新靴号入库成功------------------")
                         print("-------------靴号推送---------------")
-                        q.enqueue(dragon_tiger_boots_info, table_info.id, boots.id, boots.boot_num)
+                        q.enqueue(baccarat_boots_info, table_info.id, boots.id, boots.boot_num)
                         print("-----------靴号推送完成--------------")
                     else:
                         print("---------------该靴号已经存在------------------")
@@ -263,7 +264,7 @@ class Command(BaseCommand):
                         number_tab.save()
                         print("---------------新局数入库成功------------------")
                         print("-------------局数推送---------------")
-                        q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                        q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                                   messages["round"]["number_tab_status"]["betStatus"])
                         print("-----------局数推送完成--------------")
                         print("------------------桌子洗牌成功------------------")
@@ -279,7 +280,7 @@ class Command(BaseCommand):
                 table_info.in_checkout = 2
                 table_info.save()
                 print("-------------桌子状态推送---------------")
-                q.enqueue(dragon_tiger_table_info, table_info.id, 2)
+                q.enqueue(baccarat_table_info, table_info.id, 2)
                 print("-----------桌子状态推送完成--------------")
                 print("------------桌子状态改变成功-------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
@@ -294,7 +295,7 @@ class Command(BaseCommand):
                         boots.save()
                         print("---------------当前靴号入库成功------------------")
                         print("-------------靴号推送---------------")
-                        q.enqueue(dragon_tiger_boots_info, table_info.id, boots.id, boots.boot_num)
+                        q.enqueue(baccarat_boots_info, table_info.id, boots.id, boots.boot_num)
                         print("-----------靴号推送完成--------------")
                     else:
                         print("---------------靴号已经存在------------------")
@@ -315,7 +316,7 @@ class Command(BaseCommand):
                         number_tab.save()
                         print("---------------当前局数入库成功------------------")
                         print("-------------局数推送---------------")
-                        q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                        q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                                   messages["round"]["number_tab_status"]["betStatus"])
                         print("-----------局数推送完成--------------")
                     else:

@@ -166,6 +166,7 @@ class BaccaratConsumer(BaseConsumer):
                 "coins": event["coins"],
                 "opening": event["opening"],
                 "balance": event["balance"],
+                "coin_name": event["coin_name"],
             }
         )
 
