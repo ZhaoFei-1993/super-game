@@ -450,8 +450,8 @@ class DragontigerBet(ListCreateAPIView):
 
         USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
         avatar_info = get_cache(USER_BET_AVATAR)
-        if avatar_info[user.id] is not None:
-            avatar_info[user.id]["bet_amount"] += coins
+        if avatar_info[user.id] == "":
+            avatar_info[user.id]["bet_amount"] = coins
         else:
             avatar_info[user.id] = {
                 "user_avatar": user.avatar,
