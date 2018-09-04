@@ -128,8 +128,10 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
                             print("-------------开奖开始推送---------------")
+                            coins = str(coins)
+                            balance = str(user_coin.balance)
                             q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
-                                      user_coin.balance, record.club.coin.name)
+                                      balance, record.club.coin.name)
                             print("-----------开奖推送完成--------------")
 
                         else:
@@ -143,6 +145,7 @@ class Command(BaseCommand):
                             record.save()
                             print("-------------开奖开始推送---------------")
                             balance = 0
+                            coins = str(coins)
                             q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance, record.club.coin.name)
                             print("-----------开奖推送完成--------------")
 
