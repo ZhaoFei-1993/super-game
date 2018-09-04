@@ -465,6 +465,7 @@ class DragontigerBet(ListCreateAPIView):
             avatar_lists.append(avatar_info[i])
         now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amount"], reverse=True)
         all_avatar_lists = []
+        all_avatar_lists.append(now_avatar_list)
         number = len(now_avatar_list)
         new_number = 5 - number
         for i in range(new_number+1):
