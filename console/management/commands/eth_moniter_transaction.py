@@ -22,7 +22,7 @@ def get_transaction(transaction_hash):
 
 
 class Command(BaseCommand):
-    help = "ETH交易信息监视器"
+    help = "ETH及代币充值监视器"
 
     @transaction.atomic()
     def handle(self, *args, **options):
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             coin_detail.sources = CoinDetail.RECHARGE
             coin_detail.save()
 
-            self.stdout.write(self.style.SUCCESS('确认 ' + str(coin.name) + ' 充值，TXID=' + txid))
+            self.stdout.write(self.style.SUCCESS('确认一笔 ' + str(coin.name) + ' 充值，TXID=' + txid))
 
             cnt_confirm += 1
 
