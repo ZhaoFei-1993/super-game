@@ -12,6 +12,7 @@ from rq import Queue
 from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, \
     dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery
+from utils.cache import delete_cache
 
 
 class Command(BaseCommand):
@@ -144,6 +145,8 @@ class Command(BaseCommand):
                 q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, opening)
                 print("-----------局数推送完成--------------")
                 ludan_save(messages, boots, table_info.id)
+                USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab.id  # key
+                delete_cache(USER_BET_AVATAR)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)
                       + "局---已经开奖----")
 

@@ -16,7 +16,7 @@ from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord
 from users.models import Coin, UserCoin, CoinDetail
 from chat.models import Club
 from .serializers import RecordSerialize
-from utils.cache import get_cache, set_cache
+from utils.cache import get_cache, set_cache, delete_cache
 from utils.functions import obtain_token
 from rq import Queue
 from redis import Redis
@@ -450,24 +450,24 @@ class DragontigerBet(ListCreateAPIView):
 
         USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
         avatar_info = get_cache(USER_BET_AVATAR)
-        if avatar_info[user.id] == "":
-            avatar_info[user.id]["bet_amount"] = coins
+        key = "'"+str(user.id)+"'"
+        if avatar_info is not None:
+            if key in avatar_info:
+                avatar_info[user.id]["bet_amount"] += coins
+            else:
+                avatar_info[user.id] = {"user_avatar": user.avatar,"user_nickname": user.nickname,"bet_amount": coins,"is_user": 1}
         else:
-            avatar_info[user.id] = {
-                "user_avatar": user.avatar,
-                "user_nickname": user.nickname,
-                "bet_amount": coins,
-                "is_user": 1
-            }
+            avatar_info = {}
+            avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname, "bet_amount": coins, "is_user": 1}
         set_cache(USER_BET_AVATAR, avatar_info)
         avatar_lists = []
-
         for i in avatar_info:
             avatar_lists.append(avatar_info[i])
-        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
+        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amount"], reverse=True)
         all_avatar_lists = []
         number = len(now_avatar_list)
-        if number < 5:
+        new_number = 5 - number
+        for i in range(new_number):
             all_avatar_lists.append({
                 "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
                 "user_nickname": "虚位以待",
