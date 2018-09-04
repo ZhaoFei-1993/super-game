@@ -145,7 +145,8 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
                             print("-------------开奖开始推送---------------")
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening)
+                            balance = None
+                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance)
                             print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")

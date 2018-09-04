@@ -208,7 +208,7 @@ def dragon_tiger_roach(table_id, show_x, show_y, result):
     )
 
 
-def dragon_tiger_lottery(user_id, coins, opening, balance=None):
+def dragon_tiger_lottery(user_id, coins, opening, balance):
     """
     推送用户金额结果
     :param user_id      用户id
