@@ -391,12 +391,12 @@ class RecordSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_coin_avatar(obj):  # 货币图标
-        coin_avatar = obj.club_info.coin.icon
+        coin_avatar = obj.club.coin.icon
         return coin_avatar
 
     @staticmethod
     def get_coin_name(obj):  # 货币昵称
-        coin_name = obj.club_info.coin.name
+        coin_name = obj.club.coin.name
         return coin_name
 
     def get_earn_coin(self, obj):  # 结果
