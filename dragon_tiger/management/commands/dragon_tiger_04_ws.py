@@ -145,7 +145,7 @@ class Command(BaseCommand):
                 q.enqueue(dragon_tiger_result, table_info.id, number_tab.id, opening)
                 print("-----------局数推送完成--------------")
                 ludan_save(messages, boots, table_info.id)
-                USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab.id  # key
+                USER_BET_AVATAR = "USER_BET_AVATAR" + int(number_tab.id)  # key
                 delete_cache(USER_BET_AVATAR)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)
                       + "局---已经开奖----")
