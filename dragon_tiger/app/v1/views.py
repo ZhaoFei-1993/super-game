@@ -467,7 +467,7 @@ class DragontigerBet(ListCreateAPIView):
         all_avatar_lists = []
         number = len(now_avatar_list)
         new_number = 5 - number
-        for i in range(new_number):
+        for i in range(new_number+1):
             all_avatar_lists.append({
                 "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
                 "user_nickname": "虚位以待",
