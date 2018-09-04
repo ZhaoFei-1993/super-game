@@ -90,3 +90,8 @@ def check_key(key):
     else:
         item = name
     return item
+
+
+def get_keys(key, cache_type='redis'):
+    cache = get_cache_type(cache_type)
+    return cache.keys('*' + key + '*')
