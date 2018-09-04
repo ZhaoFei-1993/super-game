@@ -163,6 +163,7 @@ class DragonTigerConsumer(BaseConsumer):
         await self.send_json(
             {
                 "msg_type": "lottery",
+                "user_id": event["user_id"],
                 "coins": event["coins"],
                 "opening": event["opening"],
                 "balance": event["balance"],
