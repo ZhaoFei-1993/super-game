@@ -14,6 +14,7 @@ class DragonTigerConsumer(BaseConsumer):
         """
         command = content.get("command", None)  # 指令
         group_name = content.get("group")  # 消息组
+        print("group_name==============================", group_name)
 
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)
