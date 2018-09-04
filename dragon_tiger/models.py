@@ -372,7 +372,7 @@ class BetLimit(models.Model):
     bets_two = models.CharField(verbose_name='下注值2', max_length=255, default=0.02)
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
     bets_four = models.CharField(verbose_name='下注值4', max_length=255, default=0.04)
-    red_limit = models.DecimalField(verbose_name='限红', max_digits=10, decimal_places=3, null=True)
+    red_limit = models.DecimalField(verbose_name='限红', max_digits=12, decimal_places=3, null=True)
 
     class Meta:
         ordering = ['-id']
