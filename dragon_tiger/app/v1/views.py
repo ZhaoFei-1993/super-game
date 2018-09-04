@@ -448,7 +448,7 @@ class DragontigerBet(ListCreateAPIView):
         record.source = source
         record.save()
 
-        USER_BET_AVATAR = "USER_BET_AVATAR" + int(number_tab_id)  # key
+        USER_BET_AVATAR = "USER_BET_AVATAR" + str(number_tab_id)  # key
         avatar_info = get_cache(USER_BET_AVATAR)
         key = "'"+str(user.id)+"'"
         if avatar_info is not None:
