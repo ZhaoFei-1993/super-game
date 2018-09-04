@@ -16,10 +16,13 @@ Including another URLconf
 from django.conf.urls import url
 from .consumers import QuizConsumer
 from dragon_tiger.dragontigerconsumer import DragonTigerConsumer
+from baccarat.baccaratconsumer import BaccaratConsumer
 
 websocket_urlpatterns = [
     # 球赛推送
     url(r'^quiz/', QuizConsumer),
     # 赌场推送
     url(r'^dragon_tiger/', DragonTigerConsumer),
+    # 百家乐
+    url(r'^baccarat/', BaccaratConsumer),
 ]

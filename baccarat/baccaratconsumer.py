@@ -1,7 +1,7 @@
 from base.base_consumers import BaseConsumer
 
 
-class DragonTigerConsumer(BaseConsumer):
+class BaccaratConsumer(BaseConsumer):
     async def receive_json(self, content, **kwargs):
         """
         接收客户端传过来的json数据
