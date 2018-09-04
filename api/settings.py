@@ -74,8 +74,9 @@ INSTALLED_APPS = [
     'console',
     'handle',
     'marksix',
-    # 'recharge',
     'dragon_tiger',
+    'baccarat',
+    # 'recharge',
 ]
 
 MIDDLEWARE = [
