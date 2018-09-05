@@ -254,3 +254,22 @@ def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name, club_id)
 #             "now_avatar_list": now_avatar_list
 #         },
 #     )
+
+
+def baccarat_road_info(table_id, ludan):
+    """
+      推送用户金额结果
+      :param table_id      用户id
+      :param ludan     用户现有金额
+      :return:
+      """
+    group = 'ludan_' + str(table_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "ludan.message",
+            "ludan": ludan
+        },
+    )

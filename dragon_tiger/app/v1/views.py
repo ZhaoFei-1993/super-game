@@ -282,29 +282,68 @@ class Dragontigeroption(ListAPIView):
         sql = "select dto.title, dto.odds, dto.order, dto.id from dragon_tiger_options dto"
         sql += " where dto.types = '" + types + "'"
         option_list = get_sql(sql)  # 获取选项
-        dragon_odds = str(1) + ":" + str(int(option_list[0][1]))
-        tie_odds = str(1) + ":" + str(int(option_list[1][1]))
-        player_odds = str(1) + ":" + str(int(option_list[2][1]))
-        option_info = {
-            "dragon": {
-                "title": option_list[0][0],
-                "odds": dragon_odds,
-                "order": option_list[0][2],
-                "option_id": option_list[0][3],
-            },
-            "tie": {
-                "title": option_list[1][0],
-                "odds": tie_odds,
-                "order": option_list[1][2],
-                "option_id": option_list[1][3],
-            },
-            "player": {
-                "title": option_list[2][0],
-                "odds": player_odds,
-                "order": option_list[2][2],
-                "option_id": option_list[2][3],
+        if int(types) == 2:
+            dragon_odds = str(1) + ":" + str(int(option_list[0][1]))
+            tie_odds = str(1) + ":" + str(int(option_list[1][1]))
+            player_odds = str(1) + ":" + str(int(option_list[2][1]))
+            option_info = {
+                "dragon": {
+                    "title": option_list[0][0],
+                    "odds": dragon_odds,
+                    "order": option_list[0][2],
+                    "option_id": option_list[0][3],
+                },
+                "tie": {
+                    "title": option_list[1][0],
+                    "odds": tie_odds,
+                    "order": option_list[1][2],
+                    "option_id": option_list[1][3],
+                },
+                "player": {
+                    "title": option_list[2][0],
+                    "odds": player_odds,
+                    "order": option_list[2][2],
+                    "option_id": option_list[2][3],
+                }
             }
-        }
+        else:
+            dragon_odds = str(1) + ":" + str(int(option_list[0][1]))
+            tie_odds = str(1) + ":" + str(int(option_list[1][1]))
+            player_odds = str(1) + ":" + str(int(option_list[2][1]))
+            banker_pair = str(1) + ":" + str(int(option_list[3][1]))
+            player_pair = str(1) + ":" + str(int(option_list[4][1]))
+            option_info = {
+                "dragon": {
+                    "title": option_list[0][0],
+                    "odds": dragon_odds,
+                    "order": option_list[0][2],
+                    "option_id": option_list[0][3],
+                },
+                "tie": {
+                    "title": option_list[1][0],
+                    "odds": tie_odds,
+                    "order": option_list[1][2],
+                    "option_id": option_list[1][3],
+                },
+                "player": {
+                    "title": option_list[2][0],
+                    "odds": player_odds,
+                    "order": option_list[2][2],
+                    "option_id": option_list[2][3],
+                },
+                "banker_pair": {
+                    "title": option_list[3][0],
+                    "odds": banker_pair,
+                    "order": option_list[3][2],
+                    "option_id": option_list[3][3],
+                },
+                "player_pair": {
+                    "title": option_list[4][0],
+                    "odds": player_pair,
+                    "order": option_list[4][2],
+                    "option_id": option_list[4][3],
+                }
+            }
 
         return self.response({'code': 0,
                               "user_id":user_id,

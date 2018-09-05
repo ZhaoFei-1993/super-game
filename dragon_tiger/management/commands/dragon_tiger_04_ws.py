@@ -11,7 +11,7 @@ from users.models import UserCoin
 from rq import Queue
 from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_info, \
-    dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery
+    dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery, dragon_tiger_road_info
 from utils.cache import delete_cache
 from decimal import Decimal
 
@@ -231,6 +231,16 @@ class Command(BaseCommand):
                                                               number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
+                    print("-------------局数推送---------------")
+                    ludan = {
+                        "showroad_list": "",
+                        "bigroad_list": "",
+                        "bigeyeroad_list": "",
+                        "psthway_list": "",
+                        "roach_list": ""
+                    }
+                    q.enqueue(dragon_tiger_road_info, table_info.id, ludan)
+                    print("-----------局数推送完成--------------")
                     if is_Number_tab == 0:
                         number_tab = Number_tab()
                         number_tab.tid = table_info

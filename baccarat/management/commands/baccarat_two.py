@@ -14,7 +14,7 @@ from django.db.models import Q
 from decimal import Decimal
 from redis import Redis
 from baccarat.consumers import baccarat_table_info, baccarat_number_info, \
-    baccarat_boots_info, baccarat_result, baccarat_lottery
+    baccarat_boots_info, baccarat_result, baccarat_lottery, baccarat_road_info
 
 
 class Command(BaseCommand):
@@ -293,6 +293,16 @@ class Command(BaseCommand):
                     is_Number_tab = Number_tab.objects.filter(number_tab_id=messages["round"]["number_tab_id"],
                                                               number_tab_number=messages["round"][
                                                                   "number_tab_number"]).count()
+                    print("-------------局数推送---------------")
+                    ludan = {
+                        "showroad_list": "",
+                        "bigroad_list": "",
+                        "bigeyeroad_list": "",
+                        "psthway_list": "",
+                        "roach_list": ""
+                    }
+                    q.enqueue(baccarat_road_info, table_info.id, ludan)
+                    print("-----------局数推送完成--------------")
                     if is_Number_tab == 0:
                         number_tab = Number_tab()
                         number_tab.tid = table_info

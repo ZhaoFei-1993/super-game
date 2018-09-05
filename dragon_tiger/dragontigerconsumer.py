@@ -183,3 +183,16 @@ class DragonTigerConsumer(BaseConsumer):
                 "now_avatar_list": event["now_avatar_list"]
             }
         )
+
+    async def ludan_message(self, event):
+        """
+        推送空路单信息至客户端
+        :param event:
+        :return:
+        """
+        await self.send_json(
+            {
+                "msg_type": "ludan",
+                "ludan": event["ludan"]
+            }
+        )
