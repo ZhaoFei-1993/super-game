@@ -18,11 +18,12 @@ class RecordSerialize(serializers.ModelSerializer):
     earn_coin = serializers.SerializerMethodField()  # 竞猜结果
     # is_right = serializers.SerializerMethodField()  # 是否为正确答案
     right_option = serializers.SerializerMethodField()  # 正确答案
+    right_pair = serializers.SerializerMethodField()  # 正确答案
 
     class Meta:
         model = Baccaratrecord
         fields = ("id", "type", "number_tab_number", "bet", "created_at", "my_option", "coin_avatar", "coin_name",
-                  "earn_coin", "right_option")
+                  "earn_coin", "right_option", "right_pair")
 
     @staticmethod
     def get_bet(obj):  # 下注金额
@@ -88,7 +89,12 @@ class RecordSerialize(serializers.ModelSerializer):
     @staticmethod
     def get_right_option(obj):
         right_option = obj.number_tab.opening
-        return right_option
+        return right_option\
+
+    @staticmethod
+    def get_right_pair(obj):
+        right_pair = obj.number_tab.pair
+        return right_pair
 
     # @staticmethod
     # def get_is_right(obj):

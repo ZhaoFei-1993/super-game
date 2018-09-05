@@ -234,7 +234,7 @@ class DragontigerBet(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
-        if int(option_odds.types) != 2:
+        if int(option_odds.types) != 1:
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
 
         if int(number_tab_info.bet_statu) == 0:
@@ -249,20 +249,36 @@ class DragontigerBet(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         try:
-            bet_limit = BetLimit.objects.get(club_id=club_id, types=2)
+            bet_limit = BetLimit.objects.get(club_id=club_id, types=1)
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
-        if int(option_id) == 2:
-            option_id_one = 1
-            option_id_two = 3
-        elif int(option_id) == 1:
-            option_id_one = 2
-            option_id_two = 3
+        if int(option_id) == 4:
+            option_id_one = 5
+            option_id_two = 6
+            option_id_three = 7
+            option_id_four = 8
+        elif int(option_id) == 5:
+            option_id_one = 4
+            option_id_two = 6
+            option_id_three = 7
+            option_id_four = 8
+        elif int(option_id) == 6:
+            option_id_one = 4
+            option_id_two = 5
+            option_id_three = 7
+            option_id_four = 8
+        elif int(option_id) == 7:
+            option_id_one = 4
+            option_id_two = 5
+            option_id_three = 6
+            option_id_four = 8
         else:
-            option_id_one = 1
-            option_id_two = 2
-        option_number = "("+str(option_id_one)+", "+str(option_id_two)+")"
+            option_id_one = 4
+            option_id_two = 5
+            option_id_three = 6
+            option_id_four = 7
+        option_number = "("+str(option_id_one)+", "+str(option_id_two)+", "+str(option_id_three)+", "+str(option_id_four)+")"
         sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
         sql += " where dtr.option_id in"+option_number
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
@@ -456,8 +472,8 @@ class Record(ListAPIView):
                         club_id=club_id).order_by('-created_at')
                 else:
                     return Baccaratrecord.objects.filter(status=1,
-                                                            user_id=user_id,
-                                                            club_id=club_id).order_by('-created_at')
+                                                         user_id=user_id,
+                                                         club_id=club_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
             return Baccaratrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
@@ -488,7 +504,8 @@ class Record(ListAPIView):
                 'number_tab_number': fav.get('number_tab_number'),  # 编号
                 'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet'),  # 下注金额
-                'right_option': fav.get('right_option')  # 下注金额
+                'right_option': fav.get('right_option'),  # 下注金额
+                'right_pair': fav.get('right_pair')  # 下注金额
             })
 
         return self.response({'code': 0, 'data': data})
