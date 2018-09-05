@@ -63,6 +63,7 @@ def bitcoin_cash_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url='v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
+    print('block = ', block)
 
     # charge_all = UserRecharge.objects.all()  # 所有充值记录
     # txids = []
