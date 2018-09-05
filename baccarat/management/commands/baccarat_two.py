@@ -148,13 +148,12 @@ class Command(BaseCommand):
                             old_earn_coin = "-" + str(record.bets)
                             old_earn_coin = Decimal(old_earn_coin)
                             record.earn_coin = old_earn_coin
-                            coins = record.bets
                             record.is_distribution = True
                             record.status = 1
                             record.save()
                             print("-------------庄/闲/和 开奖开始推送---------------")
                             balance = 0
-                            coins = str(coins)
+                            coins = 0
                             q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
                                       balance, record.club.coin.name, record.club.id)
                             print("-----------庄/闲/和 开奖推送完成--------------")
@@ -209,13 +208,12 @@ class Command(BaseCommand):
                                 old_earn_coin = "-" + str(record.bets)
                                 old_earn_coin = Decimal(old_earn_coin)
                                 record.earn_coin = old_earn_coin
-                                coins = record.bets
                                 record.is_distribution = True
                                 record.status = 1
                                 record.save()
                                 print("-------------庄和/闲和 开奖开始推送---------------")
                                 balance = 0
-                                coins = str(coins)
+                                coins = 0
                                 q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, balance,
                                           number_tab.pair, record.club.coin.name, record.club.id)
                                 print("-----------庄和/闲和 开奖推送完成--------------")
