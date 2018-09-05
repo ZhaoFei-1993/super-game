@@ -1,23 +1,17 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView, ListCreateAPIView
-from utils.functions import value_judge, float_to_str
 from django.db import transaction
 from base import code as error_code
 from base.exceptions import ParamErrorException
-import requests
-from utils.functions import value_judge, get_sql
-import json
 import re
 from decimal import Decimal
-from dragon_tiger.models import BetLimit
-from utils.functions import normalize_fraction
+from utils.functions import normalize_fraction, value_judge, get_sql
 from base.function import LoginRequired
-from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord, Table, Dragontigerrecord
-from users.models import Coin, UserCoin, CoinDetail
+from dragon_tiger.models import BetLimit, Number_tab, Options, Table, Dragontigerrecord
+from users.models import UserCoin, CoinDetail
 from chat.models import Club
 from .serializers import RecordSerialize
 from utils.cache import get_cache, set_cache, delete_cache
-from utils.functions import obtain_token
 from rq import Queue
 from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_avatar

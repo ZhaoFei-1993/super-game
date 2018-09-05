@@ -165,6 +165,7 @@ class BaccaratConsumer(BaseConsumer):
                 "msg_type": "lottery",
                 "coins": event["coins"],
                 "opening": event["opening"],
+                "pair": event["pair"],
                 "balance": event["balance"],
                 "coin_name": event["coin_name"],
             }

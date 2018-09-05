@@ -10,6 +10,8 @@ from urllib import parse
 from django.conf import settings
 from users.models import UserCoin
 from rq import Queue
+from django.db.models import Q
+from decimal import Decimal
 from redis import Redis
 from baccarat.consumers import baccarat_table_info, baccarat_number_info, \
     baccarat_boots_info, baccarat_result, baccarat_lottery
@@ -41,6 +43,9 @@ class Command(BaseCommand):
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
+                    print("-------------桌子状态推送---------------")
+                    q.enqueue(baccarat_table_info, table_info.id, messages["round"]["number_tab_status"]["in_checkout"])
+                    print("-----------桌子状态推送完成--------------")
                     print("------------------桌子状态改变成功------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
                     is_boots = Boots.objects.filter(tid_id=table_info.id,
@@ -116,9 +121,11 @@ class Command(BaseCommand):
                 number_tab.bet_statu = 3
                 number_tab.save()
                 if answer != 0:
-                    record_list = Baccaratrecord.objects.filter(number_tab=number_tab.id)
+                    record_list = Baccaratrecord.objects.filter(Q(option_id=4) | Q(option_id=5) | Q(option_id=6),
+                                                                number_tab=number_tab.id)
                     for record in record_list:
                         if int(record.option.id) == answer:
+                            print("------------用户id：" + str(record.user.id) + "----庄/闲/和---答案正确--------")
                             earn_coin_one = record.option.odds*record.bets
                             earn_coin = earn_coin_one+record.bets
                             coin_id = record.club.coin.id
@@ -130,27 +137,32 @@ class Command(BaseCommand):
                             record.is_distribution = True
                             record.status = 1
                             record.save()
-                            print("-------------开奖开始推送---------------")
-                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
-                                      user_coin.balance)
-                            print("-----------开奖推送完成--------------")
-                        if int(record.option.id) == answer_pair:
-                            earn_coin_one = record.option.odds * record.bets
-                            earn_coin = earn_coin_one + record.bets
-                            coin_id = record.club.coin.id
-                            user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=record.user.id)
-                            user_coin.balance += earn_coin
-                            user_coin.save()
-                            coins = normalize_fraction(earn_coin, int(record.club.coin.coin_accuracy))
-                            record.earn_coin = earn_coin
+                            print("-------------庄/闲/和 开奖开始推送---------------")
+                            coins = str(coins)
+                            balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
+                                      balance, record.club.coin.name)
+                            print("-----------庄/闲/和 开奖推送完成--------------")
+                        else:
+                            print("------------用户id：" + str(record.user.id) + "----庄/闲/和---答案错误--------")
+                            old_earn_coin = "-" + str(record.bets)
+                            old_earn_coin = Decimal(old_earn_coin)
+                            record.earn_coin = old_earn_coin
+                            coins = record.bets
                             record.is_distribution = True
                             record.status = 1
                             record.save()
-                            print("-------------开奖开始推送---------------")
+                            print("-------------庄/闲/和 开奖开始推送---------------")
+                            balance = 0
+                            coins = str(coins)
                             q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
-                                      user_coin.balance)
-                            print("-----------开奖推送完成--------------")
+                                      balance, record.club.coin.name)
+                            print("-----------庄/闲/和 开奖推送完成--------------")
+
+                    record_Pair = Baccaratrecord.objects.filter(Q(option_id=7) | Q(option_id=8), number_tab=number_tab.id)
+                    for record in record_Pair:
                         if answer_pair == 100:
+                            print("-----开庄闲双和-------用户id：" + str(record.user.id) + "-------庄和/闲和 答案都正确--------")
                             if record.option.id == 7 or record.option.id == 8:
                                 earn_coin_one = record.option.odds * record.bets
                                 earn_coin = earn_coin_one + record.bets
@@ -163,23 +175,50 @@ class Command(BaseCommand):
                                 record.is_distribution = True
                                 record.status = 1
                                 record.save()
-                                print("-------------开奖开始推送---------------")
+                                print("-------------庄和/闲和 开奖开始推送---------------")
+                                coins = str(coins)
+                                balance = str(
+                                    normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
                                 q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
-                                          number_tab.pair, user_coin.balance)
-                                print("-----------开奖推送完成--------------")
-
-
+                                          number_tab.pair, balance, record.club.coin.name)
+                                print("-----------庄和/闲和 开奖推送完成--------------")
                         else:
-                            record.earn_coin = "-"+record.bets
-                            coins = record.bets
-                            record.is_distribution = True
-                            record.status = 1
-                            record.save()
-                            print("-------------开奖开始推送---------------")
-                            balance = 0
-                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, balance)
-                            print("-----------开奖推送完成--------------")
-
+                            print("----------------------------开庄闲------------------------------")
+                            if int(record.option.id) == answer_pair:
+                                print("------------用户id：" + str(record.user.id) + "----庄和/闲和---答案正确--------")
+                                earn_coin_one = record.option.odds * record.bets
+                                earn_coin = earn_coin_one + record.bets
+                                coin_id = record.club.coin.id
+                                user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=record.user.id)
+                                user_coin.balance += earn_coin
+                                user_coin.save()
+                                coins = normalize_fraction(earn_coin, int(record.club.coin.coin_accuracy))
+                                record.earn_coin = earn_coin
+                                record.is_distribution = True
+                                record.status = 1
+                                record.save()
+                                print("-------------庄和/闲和  开奖开始推送---------------")
+                                coins = str(coins)
+                                balance = str(
+                                    normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
+                                q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
+                                          balance, record.club.coin.name)
+                                print("-----------庄和/闲和 开奖推送完成--------------")
+                            else:
+                                print("------------用户id：" + str(record.user.id) + "----庄和/闲和---答案错误--------")
+                                old_earn_coin = "-" + str(record.bets)
+                                old_earn_coin = Decimal(old_earn_coin)
+                                record.earn_coin = old_earn_coin
+                                coins = record.bets
+                                record.is_distribution = True
+                                record.status = 1
+                                record.save()
+                                print("-------------庄和/闲和 开奖开始推送---------------")
+                                balance = 0
+                                coins = str(coins)
+                                q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, balance,
+                                          number_tab.pair, record.club.coin.name)
+                                print("-----------庄和/闲和 开奖推送完成--------------")
                 print("-------------局数开始推送---------------")
                 q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                           3)

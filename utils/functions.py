@@ -35,6 +35,7 @@ from dragon_tiger.models import Showroad, Bigroad, Psthway, Bigeyeroad, Roach
 from baccarat.models import Showroad_baccarat,Bigroad_baccarat,Psthway_baccarat,Bigeyeroad_baccarat,Roach_baccarat
 from dragon_tiger.consumers import dragon_tiger_showroad, dragon_tiger_bigroad, dragon_tiger_bigeyeroad, \
     dragon_tiger_pathway, dragon_tiger_roach
+from baccarat.consumers import baccarat_showroad, baccarat_bigroad, baccarat_bigeyeroad, baccarat_pathway, baccarat_roach
 
 
 def random_string(length=16):
@@ -975,7 +976,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                             showroad.pair = pair
                             showroad.save()
                             print("-------------结果路图开始推送---------------")
-                            q.enqueue(dragon_tiger_showroad, table_id, showroad.show_x_show, showroad.show_y_show,
+                            q.enqueue(baccarat_showroad, table_id, showroad.show_x_show, showroad.show_y_show,
                                       showroad.result_show, showroad.pair)
                             print("-----------结果路图推送完成--------------")
                             print("结果路图入库成功===========================第", s, "条")
@@ -1010,7 +1011,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                             bigroad.tie_num = i["tie_num"]
                             bigroad.save()
                             print("-------------大路图开始推送---------------")
-                            q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
+                            q.enqueue(baccarat_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
                                       bigroad.result_big, bigroad.tie_num)
                             print("-----------大路图推送完成--------------")
                             print("大路图入库成功============================第", b, "条")
@@ -1030,7 +1031,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                                 bigroad.tie_num = i["tie_num"]
                                 bigroad.save()
                                 print("-------------大路图开始推送---------------")
-                                q.enqueue(dragon_tiger_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
+                                q.enqueue(baccarat_bigroad, table_id, bigroad.show_x_big, bigroad.show_y_big,
                                           bigroad.result_big, bigroad.tie_num)
                                 print("-----------大路图推送完成--------------")
                             print("------------改变大路图最后一条数据，确保出现和的录入------------")
@@ -1062,7 +1063,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                             bigeyeroad.save()
                             print("大眼路图入库成功============================第", by, "条")
                             print("-------------大眼路图开始推送---------------")
-                            q.enqueue(dragon_tiger_bigeyeroad, table_id, bigeyeroad.show_x_big_eye,
+                            q.enqueue(baccarat_bigeyeroad, table_id, bigeyeroad.show_x_big_eye,
                                       bigeyeroad.show_y_big_eye, bigeyeroad.result_big_eye)
                             print("-----------大眼路图推送完成--------------")
                         by += 1
@@ -1093,7 +1094,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                             psthway.show_y_psthway = i["show_y"]
                             psthway.save()
                             print("-------------小路图开始推送---------------")
-                            q.enqueue(dragon_tiger_pathway, table_id, psthway.show_x_psthway,
+                            q.enqueue(baccarat_pathway, table_id, psthway.show_x_psthway,
                                       psthway.show_y_psthway, psthway.result_psthway)
                             print("-----------小路图推送完成--------------")
                             print("小路图入库成功============================第", p, "条")
@@ -1125,7 +1126,7 @@ def baccarat_ludan_save(messages, boots, table_id):
                             roach.show_y_roach = i["show_y"]
                             roach.save()
                             print("-------------珠盘路图开始推送---------------")
-                            q.enqueue(dragon_tiger_roach, table_id, roach.show_x_roach,
+                            q.enqueue(baccarat_roach, table_id, roach.show_x_roach,
                                       roach.show_y_roach, roach.result_roach)
                             print("-----------珠盘路图推送完成--------------")
                             print("珠盘路图入库成功============================第", rn, "条")

@@ -10,7 +10,7 @@ def baccarat_table_info(table_id, in_checkout):
     :param in_checkout    桌状态
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -31,7 +31,7 @@ def baccarat_boots_info(table_id, boots_id, boot_num):
     :param boot_num:
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -53,7 +53,7 @@ def baccarat_number_info(table_id, number_tab_id, bet_statu):
     :param bet_statu    局状态
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -75,7 +75,7 @@ def baccarat_result(table_id, number_tab_id, opening):
     :param opening     局状态
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -99,7 +99,7 @@ def baccarat_showroad(table_id, show_x, show_y, result, pair):
     :param pair     结果(对)
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -124,7 +124,7 @@ def baccarat_bigroad(table_id, show_x, show_y, result, tie_num):
     :param tie_num     结果(对)
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -148,7 +148,7 @@ def baccarat_bigeyeroad(table_id, show_x, show_y, result):
     :param result     结果
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -171,7 +171,7 @@ def baccarat_pathway(table_id, show_x, show_y, result):
     :param result     结果
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -194,7 +194,7 @@ def baccarat_roach(table_id, show_x, show_y, result):
     :param result     结果
     :return:
     """
-    group = 'dragon_tiger_' + str(table_id)
+    group = 'baccarat_' + str(table_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -208,16 +208,18 @@ def baccarat_roach(table_id, show_x, show_y, result):
     )
 
 
-def baccarat_lottery(user_id, coins, opening, balance):
+def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name):
     """
     推送用户金额结果
     :param user_id      用户id
     :param coins     x轴
     :param opening     y轴
     :param balance     用户现有金额
+    :param pair     对子答案
+    :param coin_name     货币图标
     :return:
     """
-    group = 'lottery_' + str(user_id)
+    group = 'baccarat_lottery_' + str(user_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -226,7 +228,9 @@ def baccarat_lottery(user_id, coins, opening, balance):
             "type": "lottery.message",
             "coins": coins,
             "opening": opening,
-            "balance": balance
+            "pair": pair,
+            "balance": balance,
+            "coin_name": coin_name
         },
     )
 
@@ -238,7 +242,7 @@ def baccarat_avatar(number_tab_id, now_avatar_list):
     :param now_avatar_list     用户现有金额
     :return:
     """
-    group = 'avatar_' + str(number_tab_id)
+    group = 'baccarat_avatar_' + str(number_tab_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(

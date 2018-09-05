@@ -12,7 +12,7 @@ from decimal import Decimal
 from dragon_tiger.models import BetLimit
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
-from dragon_tiger.models import BetLimit, Number_tab, Options, Dragontigerrecord, Table, Dragontigerrecord
+from dragon_tiger.models import BetLimit, Options, Table
 from users.models import Coin, UserCoin, CoinDetail
 from chat.models import Club
 from .serializers import RecordSerialize
@@ -202,131 +202,6 @@ class Table_boots(ListAPIView):
 
         }
         return self.response({'code': 0, "data": data})
-
-
-class Table_list(ListAPIView):
-    """
-    获取桌子列表
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        pass
-
-    def list(self, request, *args, **kwargs):
-        if 'type' not in self.request.GET:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        types = str(self.request.GET.get('type'))
-        regex = re.compile(r'^(1|2)$')
-        if types is None or not regex.match(types):
-            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
-        sql = "select "+sql_list+" from dragon_tiger_table dt"
-        sql += " where dt.game_name = '" + types + "'"
-        table_list = get_sql(sql)  # 获取桌子信息
-        data = []
-        name_list = dict(Table.NAME_LIST)
-        # table_status = dict(Table.Table_STATUS)
-        # table_in_checkou = dict(Table.TABLE_IN_CHECKOU)
-        for i in table_list:
-            data.append({
-                "table_id": i[0],     # 桌ID
-                "three_table_id": i[1],  # 第三方桌ID
-                "table_name": i[2],  # 桌子昵称
-                "wait_time": i[5],     # 等待时间
-                "game_name": name_list[int(i[6])],   # 游戏昵称
-                # "status": table_status[int(i[3])],    # 桌子状态(开、停)
-                # "in_checkout": table_in_checkou[int(i[4])],    # 桌子状态
-                "in_checkout_number": i[4],    # 桌子状态(0.正常/1,洗牌/2.停桌)
-            })
-
-        return self.response({'code': 0, "data": data})
-
-
-class Dragontigeroption(ListAPIView):
-    """
-    龙虎斗：选项
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        pass
-
-    def list(self, request, *args, **kwargs):
-        if 'club_id' not in self.request.GET or 'type' not in self.request.GET:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        user_id = str(request.user.id)
-        user_avatar = request.user.avatar
-        club_id = str(self.request.GET.get('club_id'))
-        types = str(self.request.GET.get('type'))
-        sql = "select cc.coin_id from chat_club cc"
-        sql += " where cc.id = '" + club_id + "'"
-        coin_id = get_sql(sql)[0][0]  # 获取coin_id
-
-        sql = "select uc.coin_accuracy, uc.icon from users_coin uc"
-        sql += " where uc.id = '" + str(coin_id) + "'"
-        coin_info = get_sql(sql)[0]  # 获取货币精度
-        coin_accuracy = int(coin_info[0])  # 获取货币精度
-        coin_icon = coin_info[1]  # 获取货币精度
-
-        sql = "select uc.balance from users_usercoin uc"
-        sql += " where uc.coin_id = '" + str(coin_id) + "'"
-        sql += " and uc.user_id= '" + user_id + "'"
-        user_balance = get_sql(sql)[0][0]  # 获取用户金额
-        user_balance = float(user_balance)
-        user_balance = normalize_fraction(user_balance, coin_accuracy)
-
-        sql = "select b.bets_one, b.bets_two, b.bets_three, b.bets_four, b.red_limit from dragon_tiger_betlimit b"
-        sql += " where b.club_id = '" + club_id + "'"
-        sql += " and b.types= '" + types + "'"
-        betlimit_list = get_sql(sql)[0]  # 选项和限红
-
-        # sql = "select dto.title, concat(1,':',dto.odds), dto.order from dragon_tiger_options dto"
-        # sql += " where dto.types = '" + types + "'"
-        # option_list = get_sql(sql)  # 获取选项               # 留下来的例子(查询并且处理字段)
-
-        sql = "select dto.title, dto.odds, dto.order, dto.id from dragon_tiger_options dto"
-        sql += " where dto.types = '" + types + "'"
-        option_list = get_sql(sql)  # 获取选项
-        dragon_odds = str(1) + ":" + str(int(option_list[0][1]))
-        tie_odds = str(1) + ":" + str(int(option_list[1][1]))
-        player_odds = str(1) + ":" + str(int(option_list[2][1]))
-        option_info = {
-            "dragon": {
-                "title": option_list[0][0],
-                "odds": dragon_odds,
-                "order": option_list[0][2],
-                "option_id": option_list[0][3],
-            },
-            "tie": {
-                "title": option_list[1][0],
-                "odds": tie_odds,
-                "order": option_list[1][2],
-                "option_id": option_list[1][3],
-            },
-            "player": {
-                "title": option_list[2][0],
-                "odds": player_odds,
-                "order": option_list[2][2],
-                "option_id": option_list[2][3],
-            }
-        }
-
-        return self.response({'code': 0,
-                              "user_balance": user_balance,
-                              "coin_icon": coin_icon,
-                              "user_avatar": user_avatar,
-                              "bets_one": betlimit_list[0],
-                              "bets_one_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_1_m.png",
-                              "bets_two": betlimit_list[1],
-                              "bets_two_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_2_m.png",
-                              "bets_three": betlimit_list[2],
-                              "bets_three_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_3_m.png",
-                              "bets_four": betlimit_list[3],
-                              "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
-                              "red_limit": int(betlimit_list[4]),
-                              "option_info": option_info
-                              })
 
 
 class DragontigerBet(ListCreateAPIView):
