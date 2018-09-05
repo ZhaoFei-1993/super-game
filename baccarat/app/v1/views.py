@@ -11,10 +11,10 @@ from dragon_tiger.models import BetLimit, Options, Table
 from users.models import UserCoin, CoinDetail
 from chat.models import Club
 from .serializers import RecordSerialize
-from utils.cache import get_cache, set_cache
+# from utils.cache import get_cache, set_cache
 from rq import Queue
 from redis import Redis
-from baccarat.consumers import baccarat_avatar
+# from baccarat.consumers import baccarat_avatar
 from baccarat.models import Baccaratrecord, Number_tab
 
 redis_conn = Redis()
