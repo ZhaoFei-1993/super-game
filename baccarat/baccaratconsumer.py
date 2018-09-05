@@ -171,16 +171,16 @@ class BaccaratConsumer(BaseConsumer):
             }
         )
 
-    async def avatar_message(self, event):
-        """
-        推送用户金额信息至客户端
-        :param event:
-        :return:
-        """
-        await self.send_json(
-            {
-                "msg_type": "avatar",
-                "number_tab_id": event["number_tab_id"],
-                "now_avatar_list": event["now_avatar_list"]
-            }
-        )
+    # async def avatar_message(self, event):
+    #     """
+    #     推送用户金额信息至客户端
+    #     :param event:
+    #     :return:
+    #     """
+    #     await self.send_json(
+    #         {
+    #             "msg_type": "avatar",
+    #             "number_tab_id": event["number_tab_id"],
+    #             "now_avatar_list": event["now_avatar_list"]
+    #         }
+    #     )

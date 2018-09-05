@@ -31,13 +31,13 @@ class Command(BaseCommand):
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
         if status is False:
-            table_info = Table.objects.get(three_table_id=1)
+            table_info = Table.objects.get(three_table_id=2)
             table_info.in_checkout = 2
             table_info.save()
             # ws.close()
             print("------------------桌子暂未运营------------------")
         else:
-            table_info = Table.objects.get(three_table_id=1)
+            table_info = Table.objects.get(three_table_id=2)
             if sendModes == "onlineLogin" and status is True:
                 print("--------------------第一次链接-------------------------")
                 if messages["round"]["number_tab_status"]["type"] == 1:
@@ -373,12 +373,12 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_websocket_url():
-        table_info = Table.objects.get(three_table_id=1)
+        table_info = Table.objects.get(three_table_id=2)
         return table_info.websocket_url
 
     @staticmethod
     def on_open(ws):
-        get_token = Table.objects.get_token(three_table_id=1)
+        get_token = Table.objects.get_token(three_table_id=2)
         params = json.dumps(get_token)
         ws.send(params)
 

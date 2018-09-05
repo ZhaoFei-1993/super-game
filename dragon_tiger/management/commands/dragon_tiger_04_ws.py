@@ -135,7 +135,7 @@ class Command(BaseCommand):
                             coins = str(coins)
                             balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
                             q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
-                                      balance, record.club.coin.name)
+                                      balance, record.club.coin.name, record.club.id)
                             print("-----------开奖推送完成--------------")
 
                         else:
@@ -150,7 +150,8 @@ class Command(BaseCommand):
                             print("-------------开奖开始推送---------------")
                             balance = 0
                             coins = str(coins)
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance, record.club.coin.name)
+                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance,
+                                      record.club.coin.name, record.club.id)
                             print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")

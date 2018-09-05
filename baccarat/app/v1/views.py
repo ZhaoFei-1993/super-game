@@ -1,26 +1,21 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView, ListCreateAPIView
-from utils.functions import value_judge, float_to_str
 from django.db import transaction
 from base import code as error_code
 from base.exceptions import ParamErrorException
-import requests
 from utils.functions import value_judge, get_sql
-import json
-import re
 from decimal import Decimal
-from dragon_tiger.models import BetLimit
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
 from dragon_tiger.models import BetLimit, Options, Table
-from users.models import Coin, UserCoin, CoinDetail
+from users.models import UserCoin, CoinDetail
 from chat.models import Club
 from .serializers import RecordSerialize
 from utils.cache import get_cache, set_cache
-from utils.functions import obtain_token
 from rq import Queue
 from redis import Redis
-from dragon_tiger.consumers import dragon_tiger_avatar
+from baccarat.consumers import baccarat_avatar
+from baccarat.models import Baccaratrecord, Number_tab
 
 redis_conn = Redis()
 q = Queue(connection=redis_conn)
@@ -60,10 +55,10 @@ class Table_boots(ListAPIView):
                 "in_checkout_number": table_list[0][4],  # 桌子状态(0.正常/1,洗牌/2.停桌)
             }
 
-        sql_list = "db.id, db.boot_id, db.boot_num"
-        sql = "select " + sql_list + " from dragon_tiger_boots db"
-        sql += " where db.tid_id= '" + table_id + "'"
-        sql += " order by db.id desc limit 1"
+        sql_list = "bb.id, bb.boot_id, bb.boot_num"
+        sql = "select " + sql_list + " from baccarat_boots bb"
+        sql += " where bb.tid_id= '" + table_id + "'"
+        sql += " order by bb.id desc limit 1"
         boot_info = get_sql(sql)
         if boot_info == ():
             boot_list = {}
@@ -95,12 +90,12 @@ class Table_boots(ListAPIView):
                 "roach_list": ""
             }
         else:
-            sql_list = "nt.id, nt.number_tab_number, nt.opening, nt.pair, nt.bet_statu, nt.previous_number_tab_id, " \
-                       "nt.number_tab_id"
-            sql = "select " +sql_list + " from dragon_tiger_number_tab nt"
-            sql += " where nt.tid_id = '" + table_id + "'"
-            sql += " and nt.boots_id = '" + str(boot_info[0][0]) + "'"
-            sql += " order by nt.id desc limit 1"
+            sql_list = "bn.id, bn.number_tab_number, bn.opening, bn.pair, bn.bet_statu, bn.previous_number_tab_id, " \
+                       "bn.number_tab_id"
+            sql = "select " +sql_list + " from baccarat_number_tab bn"
+            sql += " where bn.tid_id = '" + table_id + "'"
+            sql += " and bn.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by bn.id desc limit 1"
             number_tab_info = get_sql(sql)
             # opening_list = dict(Number_tab.OPENING_LIST)
             # pair_list = dict(Number_tab.PAIR_LIST)
@@ -121,21 +116,22 @@ class Table_boots(ListAPIView):
                     "three_number_tab_id": number_tab_info[0][6],  # 第三方局ID
                 }
 
-            sql_list = "sr.result_show, sr.show_x_show, sr.show_y_show"
-            sql = "select " +sql_list+ " from dragon_tiger_showroad sr"
-            sql += " where sr.boots_id = '" + str(boot_info[0][0]) + "'"
-            sql += " order by sr.order_show"
+            sql_list = "sb.result_show, sb.show_x_show, sb.show_y_show, sb.pair"
+            sql = "select " +sql_list+ " from baccarat_showroad_baccarat sb"
+            sql += " where sb.boots_id = '" + str(boot_info[0][0]) + "'"
+            sql += " order by sb.order_show"
             showroad_info = get_sql(sql)
             showroad_list = []             # 结果图
             for i in showroad_info:
                 showroad_list.append({
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
-                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "result": int(i[0]),     # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "pair": int(i[3])     # 结果[1.龙&庄/2.虎&闲/3.和]
                     })
 
             sql_list = "br.result_big, br.show_x_big, br.show_y_big, br.tie_num"
-            sql = "select " +sql_list+ " from dragon_tiger_bigroad br"
+            sql = "select " +sql_list+ " from baccarat_bigroad_baccarat br"
             sql += " where br.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by br.order_big"
             bigroad_info = get_sql(sql)
@@ -145,11 +141,11 @@ class Table_boots(ListAPIView):
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
                     "result": int(i[0]),     # 结果[1.龙&庄/2.虎&闲/3.和]
-                    "tie_num": i[3]     # 是否有和
+                    "tie_num": int(i[3])     # 是否有和
                     })
 
             sql_list = "be.result_big_eye, be.show_x_big_eye, be.show_y_big_eye"
-            sql = "select " + sql_list + " from dragon_tiger_bigeyeroad be"
+            sql = "select " + sql_list + " from baccarat_bigeyeroad_baccarat be"
             sql += " where be.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by be.order_big_eye"
             bigeyeroad_info = get_sql(sql)
@@ -162,7 +158,7 @@ class Table_boots(ListAPIView):
                 })
 
             sql_list = "pw.result_psthway, pw.show_x_psthway, pw.show_y_psthway"
-            sql = "select " +sql_list+ " from dragon_tiger_psthway pw"
+            sql = "select " +sql_list+ " from baccarat_psthway_baccarat pw"
             sql += " where pw.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by pw.order_psthway"
             psthway_info = get_sql(sql)
@@ -175,7 +171,7 @@ class Table_boots(ListAPIView):
                     })
 
             sql_list = "r.result_roach, r.show_x_roach, r.show_y_roach"
-            sql = "select " +sql_list+ " from dragon_tiger_roach r"
+            sql = "select " +sql_list+ " from  baccarat_roach_baccarat r"
             sql += " where r.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by r.order_roach"
             roach_info = get_sql(sql)
@@ -303,7 +299,7 @@ class DragontigerBet(ListCreateAPIView):
         if float(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
-        record = Dragontigerrecord()
+        record = Baccaratrecord()
         record.user = user
         record.club = clubinfo
         record.number_tab = number_tab_info
@@ -323,32 +319,32 @@ class DragontigerBet(ListCreateAPIView):
         record.source = source
         record.save()
 
-        USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
-        avatar_info = get_cache(USER_BET_AVATAR)
-        if avatar_info[user.id] is not None:
-            avatar_info[user.id]["bet_amount"] += coins
-        else:
-            avatar_info[user.id] = {
-                "user_avatar": user.avatar,
-                "user_nickname": user.nickname,
-                "bet_amount": coins
-            }
-        set_cache(USER_BET_AVATAR, avatar_info)
-        avatar_lists = []
-
-        for i in avatar_info:
-            avatar_lists.append(avatar_info[i])
-        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
-        all_avatar_lists = []
-        if len(now_avatar_list) > 5:
-            all_avatar_lists.append(now_avatar_list[0])
-            all_avatar_lists.append(now_avatar_list[1])
-            all_avatar_lists.append(now_avatar_list[2])
-            all_avatar_lists.append(now_avatar_list[3])
-            all_avatar_lists.append(now_avatar_list[4])
-        print("-----------开始推送---------------")
-        q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
-        print("-----------推送完成--------------")
+        # USER_BET_AVATAR = "USER_BET_AVATAR" + number_tab_id  # key
+        # avatar_info = get_cache(USER_BET_AVATAR)
+        # if avatar_info[user.id] is not None:
+        #     avatar_info[user.id]["bet_amount"] += coins
+        # else:
+        #     avatar_info[user.id] = {
+        #         "user_avatar": user.avatar,
+        #         "user_nickname": user.nickname,
+        #         "bet_amount": coins
+        #     }
+        # set_cache(USER_BET_AVATAR, avatar_info)
+        # avatar_lists = []
+        #
+        # for i in avatar_info:
+        #     avatar_lists.append(avatar_info[i])
+        # now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amout"], reverse=True)
+        # all_avatar_lists = []
+        # if len(now_avatar_list) > 5:
+        #     all_avatar_lists.append(now_avatar_list[0])
+        #     all_avatar_lists.append(now_avatar_list[1])
+        #     all_avatar_lists.append(now_avatar_list[2])
+        #     all_avatar_lists.append(now_avatar_list[3])
+        #     all_avatar_lists.append(now_avatar_list[4])
+        # print("-----------开始推送---------------")
+        # q.enqueue(baccarat_avatar, number_tab_id, all_avatar_lists)
+        # print("-----------推送完成--------------")
 
         # 用户减少金币
         # balance = float_to_str(float(usercoin.balance), coin_accuracy)
@@ -374,42 +370,42 @@ class DragontigerBet(ListCreateAPIView):
         return self.response(response)
 
 
-class Avatar(ListAPIView):
-    """
-    头像
-    """
-    permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        pass
-
-    def list(self, request, *args, **kwargs):
-        if 'number_tab_id' not in self.request.GET:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if 'club_id' not in self.request.GET:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        number_tab_id = str(self.request.GET.get('number_tab_id'))
-        club_id = str(self.request.GET.get('club_id'))
-        user_bet_avatar = "USER_BET_AVATAR" + number_tab_id  # key
-        avatar_list = get_cache(user_bet_avatar)
-        if avatar_list == None or avatar_list == '':
-            sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
-            sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
-            sql += " inner join users_user u on dtr.user_id=u.id"
-            sql += " where dtr.number_tab_id = '" + number_tab_id + "'"
-            sql += " and dtr.club_id = '" + club_id + "'"
-            sql += " group by dtr.user_id"
-            sql += " order by sum_bets desc limit 5"
-            avatar_list = get_sql(sql)
-            data = []
-            s = 0
-            for i in avatar_list:
-                data.append({
-                    "user_avatar": i[0],
-                    "user_nickname": i[1],
-                    "bet_amount": i[2]
-                    })
-        return self.response({'code': 0, "data": data})
+# class Avatar(ListAPIView):
+#     """
+#     头像
+#     """
+#     permission_classes = (LoginRequired,)
+#
+#     def get_queryset(self):
+#         pass
+#
+#     def list(self, request, *args, **kwargs):
+#         if 'number_tab_id' not in self.request.GET:
+#             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+#         if 'club_id' not in self.request.GET:
+#             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+#         number_tab_id = str(self.request.GET.get('number_tab_id'))
+#         club_id = str(self.request.GET.get('club_id'))
+#         user_bet_avatar = "USER_BET_AVATAR" + number_tab_id  # key
+#         avatar_list = get_cache(user_bet_avatar)
+#         if avatar_list == None or avatar_list == '':
+#             sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
+#             sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+#             sql += " inner join users_user u on dtr.user_id=u.id"
+#             sql += " where dtr.number_tab_id = '" + number_tab_id + "'"
+#             sql += " and dtr.club_id = '" + club_id + "'"
+#             sql += " group by dtr.user_id"
+#             sql += " order by sum_bets desc limit 5"
+#             avatar_list = get_sql(sql)
+#             data = []
+#             s = 0
+#             for i in avatar_list:
+#                 data.append({
+#                     "user_avatar": i[0],
+#                     "user_nickname": i[1],
+#                     "bet_amount": i[2]
+#                     })
+#         return self.response({'code': 0, "data": data})
 
 
 class Record(ListAPIView):
@@ -424,22 +420,22 @@ class Record(ListAPIView):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
-                record = Dragontigerrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+                record = Baccaratrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Dragontigerrecord.objects.filter(
+                    return Baccaratrecord.objects.filter(
                         status=0,
                         user_id=user_id,
                         club_id=club_id).order_by('-created_at')
                 else:
-                    return Dragontigerrecord.objects.filter(status=1,
+                    return Baccaratrecord.objects.filter(status=1,
                                                             user_id=user_id,
                                                             club_id=club_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            return Dragontigerrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+            return Baccaratrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)

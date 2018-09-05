@@ -208,7 +208,7 @@ def baccarat_roach(table_id, show_x, show_y, result):
     )
 
 
-def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name):
+def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name, club_id):
     """
     推送用户金额结果
     :param user_id      用户id
@@ -217,9 +217,10 @@ def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name):
     :param balance     用户现有金额
     :param pair     对子答案
     :param coin_name     货币图标
+    :param club_id     俱乐部id
     :return:
     """
-    group = 'baccarat_lottery_' + str(user_id)
+    group = 'baccarat_lottery_' + str(user_id) + "_" + str(club_id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -235,21 +236,21 @@ def baccarat_lottery(user_id, coins, opening, balance, pair, coin_name):
     )
 
 
-def baccarat_avatar(number_tab_id, now_avatar_list):
-    """
-    推送用户金额结果
-    :param number_tab_id      用户id
-    :param now_avatar_list     用户现有金额
-    :return:
-    """
-    group = 'baccarat_avatar_' + str(number_tab_id)
-
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        group,
-        {
-            "type": "avatar.message",
-            "number_tab_id": number_tab_id,
-            "now_avatar_list": now_avatar_list
-        },
-    )
+# def baccarat_avatar(number_tab_id, now_avatar_list):
+#     """
+#     推送用户金额结果
+#     :param number_tab_id      用户id
+#     :param now_avatar_list     用户现有金额
+#     :return:
+#     """
+#     group = 'baccarat_avatar_' + str(number_tab_id)
+#
+#     channel_layer = get_channel_layer()
+#     async_to_sync(channel_layer.group_send)(
+#         group,
+#         {
+#             "type": "avatar.message",
+#             "number_tab_id": number_tab_id,
+#             "now_avatar_list": now_avatar_list
+#         },
+#     )

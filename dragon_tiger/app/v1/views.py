@@ -139,7 +139,7 @@ class Table_boots(ListAPIView):
                     "show_x": i[1],      # X轴
                     "show_y": i[2],      # Y轴
                     "result": int(i[0]),     # 结果[1.龙&庄/2.虎&闲/3.和]
-                    "tie_num": i[3]     # 是否有和
+                    "tie_num": int(i[3])     # 是否有和
                     })
 
             sql_list = "be.result_big_eye, be.show_x_big_eye, be.show_y_big_eye"

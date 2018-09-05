@@ -1,10 +1,6 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
-from datetime import datetime
-from utils.functions import number_time_judgment
-from utils.cache import get_cache, set_cache, delete_cache
-from dragon_tiger.models import Dragontigerrecord
-from chat.models import Club
+from baccarat.models import Baccaratrecord
 from utils.functions import normalize_fraction
 
 
@@ -24,7 +20,7 @@ class RecordSerialize(serializers.ModelSerializer):
     right_option = serializers.SerializerMethodField()  # 正确答案
 
     class Meta:
-        model = Dragontigerrecord
+        model = Baccaratrecord
         fields = ("id", "type", "number_tab_number", "bet", "created_at", "my_option", "coin_avatar", "coin_name",
                   "earn_coin", "right_option")
 
