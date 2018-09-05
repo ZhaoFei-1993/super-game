@@ -16,6 +16,10 @@ def get_coin_id(coin_type):
         coin_id = Coin.INT
     elif coin_type == 'GSG':
         coin_id = Coin.GSG
+    elif coin_type == 'DB':
+        coin_id = Coin.DB
+    elif coin_type == 'SOC':
+        coin_id = Coin.SOC
 
     return coin_id
 
