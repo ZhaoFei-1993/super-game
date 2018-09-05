@@ -105,14 +105,25 @@ class ClubRuleView(ListAPIView):
         items = results.data.get('results')
         data = []
         for item in items:
-            data.append(
-                {
-                    "clubrule_id": item['id'],
-                    "name": item['name'],
-                    "icon": item['icon'],
-                    "room_number": item['number']
-                }
-            )
+            if int(item['id']) == 5:
+                data.append(
+                    {
+                        "clubrule_id": item['id'],
+                        "name": item['name'],
+                        "icon": item['icon'],
+                        "room_number": item['number'],
+                        "table_id": 1
+                    }
+                )
+            else:
+                data.append(
+                    {
+                        "clubrule_id": item['id'],
+                        "name": item['name'],
+                        "icon": item['icon'],
+                        "room_number": item['number']
+                    }
+                )
         return self.response({"code": 0, "data": data})
 
 

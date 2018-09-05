@@ -253,6 +253,9 @@ class Dragontigeroption(ListAPIView):
         user_avatar = request.user.avatar
         club_id = str(self.request.GET.get('club_id'))
         types = str(self.request.GET.get('type'))
+        regex = re.compile(r'^(1|2)$')
+        if types is None or not regex.match(types):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         sql = "select cc.coin_id from chat_club cc"
         sql += " where cc.id = '" + club_id + "'"
         coin_id = get_sql(sql)[0][0]  # 获取coin_id

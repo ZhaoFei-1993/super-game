@@ -10,6 +10,7 @@ from base.function import LoginRequired
 from dragon_tiger.models import BetLimit, Options, Table
 from users.models import UserCoin, CoinDetail
 from chat.models import Club
+import re
 from .serializers import RecordSerialize
 # from utils.cache import get_cache, set_cache
 from rq import Queue
@@ -406,6 +407,30 @@ class DragontigerBet(ListCreateAPIView):
 #                     "bet_amount": i[2]
 #                     })
 #         return self.response({'code': 0, "data": data})
+
+
+class Changetable(ListAPIView):
+    """
+    头像
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        if 'table_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        id = int(self.request.GET.get('table_id'))
+        regex = re.compile(r'^(1|2|3)$')
+        if id is None or not regex.match(id):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        if id == 3:
+            table_id = 1
+        else:
+            table_id = id + 1
+
+        return self.response({'code': 0, "table_id": table_id})
 
 
 class Record(ListAPIView):
