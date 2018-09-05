@@ -69,10 +69,10 @@ def bitcoin_cash_monitor(block_num):
     # for charge in charge_all:
     #     txids.append(charge.txid)
 
-    print("block['transactions'] = ", block['transactions'])
-
     to_address = []
     for txid, item in enumerate(block['transactions']):
+        print('txid = ', txid)
+        print('item = ', item)
         outputs = item['out']
         for output in outputs:
             to_address += output['addresses']
