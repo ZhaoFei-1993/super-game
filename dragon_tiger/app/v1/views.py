@@ -313,6 +313,7 @@ class Dragontigeroption(ListAPIView):
         }
 
         return self.response({'code': 0,
+                              "user_id":user_id,
                               "user_balance": user_balance,
                               "coin_icon": coin_icon,
                               "user_avatar": user_avatar,
@@ -394,7 +395,6 @@ class DragontigerBet(ListCreateAPIView):
         sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
         sql += " where dtr.option_id in"+option_number
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
-        print("sql===========================", sql)
         coin_number = get_sql(sql)[0][0]
         if coin_number == None or coin_number == 0:
             all_earn_coins = bet_limit.red_limit
@@ -483,7 +483,6 @@ class DragontigerBet(ListCreateAPIView):
             all_avatar_lists.append(now_avatar_list[2])
             all_avatar_lists.append(now_avatar_list[3])
             all_avatar_lists.append(now_avatar_list[4])
-        print("all_avatar_lists===================", all_avatar_lists)
         print("-----------开始推送---------------")
         q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
         print("-----------推送完成--------------")

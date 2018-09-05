@@ -17,7 +17,7 @@ from decimal import Decimal
 
 
 class Command(BaseCommand):
-    help = '小样'
+    help = '龙虎斗5号台'
 
     @staticmethod
     def on_message(ws, message):
@@ -42,6 +42,10 @@ class Command(BaseCommand):
                 if messages["round"]["number_tab_status"]["type"] == 1:
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
+                    print("-------------桌子状态推送---------------")
+                    q.enqueue(dragon_tiger_table_info, table_info.id,
+                              messages["round"]["number_tab_status"]["in_checkout"])
+                    print("-----------桌子状态推送完成--------------")
                     print("------------------桌子状态改变成功------------------")
                 if messages["round"]["number_tab_status"]["type"] == 2:
                     is_boots = Boots.objects.filter(boot_id=messages["round"]["boot_id"],
