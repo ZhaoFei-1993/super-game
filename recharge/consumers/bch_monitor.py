@@ -70,15 +70,15 @@ def bitcoin_cash_monitor(block_num):
     #     txids.append(charge.txid)
 
     to_address = []
-    for txid, item in enumerate(block['transactions']):
-        print('txid = ', txid)
-        print('item = ', item)
+    for index, item in enumerate(block['transactions']):
         outputs = item['out']
         for output in outputs:
             to_address += output['addresses']
 
-    in_address = UserCoin.objects.filter(address__in=to_address)
-    print('in_address = ', in_address)
+    print('to_address = ', to_address)
+
+    # in_address = UserCoin.objects.filter(address__in=to_address)
+    # print('in_address = ', in_address)
 
     # coin_all = Coin.objects.all()  # 所有币种
     # charge_all = UserRecharge.objects.all()  # 所有充值记录
