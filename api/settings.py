@@ -76,7 +76,7 @@ INSTALLED_APPS = [
     'marksix',
     'dragon_tiger',
     'baccarat',
-    # 'recharge',
+    'recharge',
 ]
 
 MIDDLEWARE = [
