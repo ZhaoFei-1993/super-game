@@ -12,7 +12,7 @@ from django.db.models import Sum, F, FloatField
 from .odds import Game
 from decimal import Decimal
 from base.models import BaseManager
-from utils.cache import set_cache, get_cache, incr_cache
+from utils.cache import set_cache, get_cache, incr_cache, delete_cache
 from datetime import date
 
 
@@ -37,6 +37,18 @@ class Category(MPTTModel):
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
 
     objects = CategoryManager()
+
+    def save(self, *args, **kwargs):
+        """
+        重写保存方法
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        super().save(*args, **kwargs)
+
+        # 删除缓存,等待重新生成
+        delete_cache('category_data')
 
     class Meta:
         ordering = ['-id']
@@ -379,6 +391,7 @@ class RecordManager(models.Manager):
         count = get_cache(key)
         if count is None:
             count = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=club_id).count()
+            print('key = ', key, ' count = ', count, ' quiz_id = ', quiz_id, ' club_id = ', club_id)
             set_cache(key, count)
 
         return count
