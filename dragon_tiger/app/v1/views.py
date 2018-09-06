@@ -361,7 +361,7 @@ class Dragontigeroption(ListAPIView):
                               "bets_three_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_3_m.png",
                               "bets_four": betlimit_list[3],
                               "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
-                              "red_limit": int(betlimit_list[4]),
+                              "red_limit": normalize_fraction(float(betlimit_list[4]), int(coin_accuracy)),
                               "option_info": option_info
                               })
 
@@ -486,17 +486,19 @@ class DragontigerBet(ListCreateAPIView):
         record.source = source
         record.save()
 
-        USER_BET_AVATAR = "USER_BET_AVATAR" + str(number_tab_id)  # key
+        USER_BET_AVATAR = "USER_BET_AVATAR_" + str(number_tab_id) + "_" + str(club_id)  # key
         avatar_info = get_cache(USER_BET_AVATAR)
         key = "'"+str(user.id)+"'"
         if avatar_info is not None:
             if key in avatar_info:
                 avatar_info[user.id]["bet_amount"] += coins
             else:
-                avatar_info[user.id] = {"user_avatar": user.avatar,"user_nickname": user.nickname,"bet_amount": coins,"is_user": 1}
+                avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
+                                        "bet_amount": coins, "is_user": 1}
         else:
             avatar_info = {}
-            avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname, "bet_amount": coins, "is_user": 1}
+            avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
+                                    "bet_amount": coins, "is_user": 1}
         set_cache(USER_BET_AVATAR, avatar_info)
         avatar_lists = []
         for i in avatar_info:
