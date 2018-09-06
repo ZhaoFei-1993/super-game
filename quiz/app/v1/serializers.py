@@ -55,7 +55,9 @@ class QuizSerialize(serializers.ModelSerializer):
         return host_team
 
     def get_match_name(self, obj):
+        print('obj = ', obj.__dict__)
         vv = Category.objects.get_one(pk=obj.category_id)
+        print('vv = ', vv)
         match_name = vv.name
         if self.context['request'].GET.get('language') == 'en':
             match_name = vv.name_en
