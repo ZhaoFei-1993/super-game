@@ -8,14 +8,14 @@ from guess.models import Periods
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        dt = {'num': '2704.34', 'status': 'up'}
+        dt = {'num': '2704.34', 'status': 'up', 'atuo': True}
         period = Periods.objects.get(id=234)
         ergodic_record(period, dt, None)
 
-        dt = {'num': '8402.51', 'status': 'up'}
+        dt = {'num': '8402.51', 'status': 'up', 'atuo': True}
         period = Periods.objects.get(id=235)
         ergodic_record(period, dt, None)
 
-        dt = {'num': '27243.85', 'status': 'up'}
+        dt = {'num': '27243.85', 'status': 'up', 'atuo': True}
         period = Periods.objects.get(id=236)
         ergodic_record(period, dt, None)
