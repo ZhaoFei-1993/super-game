@@ -489,19 +489,14 @@ class DragontigerBet(ListCreateAPIView):
 
         USER_BET_AVATAR = "USER_BET_AVATAR_" + str(number_tab_id) + "_" + str(club_id)  # key
         avatar_info = get_cache(USER_BET_AVATAR)
-        # key = "'"+str(user.id)+"'"
         if avatar_info is not None:
-            print("++++++++++++++++++++++++++++++")
-            print("user_id==================", user_id in avatar_info)
             if user_id in avatar_info:
-                print("------------------等式成立----------------")
                 avatar_info[user.id]["bet_amount"] += coins
                 set_cache(USER_BET_AVATAR, avatar_info)
             else:
                 avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
                                         "bet_amount": coins, "is_user": 1}
                 set_cache(USER_BET_AVATAR, avatar_info)
-            print("avatar_info========================", avatar_info)
             avatar_lists = []
             for i in avatar_info:
                 avatar_lists.append(avatar_info[i])
