@@ -204,9 +204,9 @@ class Coin(models.Model):
     GSG = 6
     EOS = 8
     USDT = 9
-    BCH = 10
-    SOC = 11
-    DB = 12
+    BCH = 10              # btc
+    SOC = 11               # eth
+    DB = 12                # eth
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)

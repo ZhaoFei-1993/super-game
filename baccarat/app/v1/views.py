@@ -279,7 +279,7 @@ class DragontigerBet(ListCreateAPIView):
             option_id_three = 6
             option_id_four = 7
         option_number = "("+str(option_id_one)+", "+str(option_id_two)+", "+str(option_id_three)+", "+str(option_id_four)+")"
-        sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
+        sql = "select sum(dtr.bets) from baccarat_baccaratrecord dtr"
         sql += " where dtr.option_id in"+option_number
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         print("sql===========================", sql)
@@ -291,7 +291,7 @@ class DragontigerBet(ListCreateAPIView):
             all_earn_coins = coin_number + normalize_fraction(bet_limit.red_limit, int(coin_accuracy))  # 能赔金额
         print("一共可以赔============================", all_earn_coins)
 
-        sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
+        sql = "select sum(dtr.bets) from baccarat_baccaratrecord dtr"
         sql += " where dtr.option_id = '" + str(option_id) + "'"
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number_in = get_sql(sql)[0][0]
