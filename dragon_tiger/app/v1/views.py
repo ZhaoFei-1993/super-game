@@ -566,6 +566,7 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 15
         coin_detail.save()
+
         response = {
             'code': 0,
             'data': {

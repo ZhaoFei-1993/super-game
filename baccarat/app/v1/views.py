@@ -373,7 +373,7 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.coin_name = usercoin.coin.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = usercoin.balance
-        coin_detail.sources = 15
+        coin_detail.sources = 16
         coin_detail.save()
         response = {
             'code': 0,

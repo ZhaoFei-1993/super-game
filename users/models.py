@@ -360,6 +360,7 @@ class CoinDetail(models.Model):
     EXCHANGE = 13
     UNLOCK = 14
     DRAGON_TIGER = 15
+    BACCARAT = 16
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -367,6 +368,7 @@ class CoinDetail(models.Model):
         (BETS, "下注"),
         (GUESS_BETS, "股票下注"),
         (DRAGON_TIGER, "龙虎斗下注"),
+        (BACCARAT, "百家乐下注"),
         (ACTIVITY, "活动"),
         (OPEB_PRIZE, "开奖"),
         (REGISTER, "注册"),

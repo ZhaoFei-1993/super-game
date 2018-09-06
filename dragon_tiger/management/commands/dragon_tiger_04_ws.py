@@ -14,6 +14,7 @@ from dragon_tiger.consumers import dragon_tiger_table_info, dragon_tiger_number_
     dragon_tiger_boots_info, dragon_tiger_result, dragon_tiger_lottery, dragon_tiger_road_info
 from utils.cache import delete_cache
 from decimal import Decimal
+from users.models import CoinDetail
 
 
 class Command(BaseCommand):
@@ -116,12 +117,14 @@ class Command(BaseCommand):
                 if answer != 0:
                     print("-----------获得答案-----------", answer)
                     record_list = Dragontigerrecord.objects.filter(number_tab=number_tab.id)
+                    lottery_info = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}, 11: {},
+                                    12: {}}
                     for record in record_list:
                         print("-------------开始循环表------------")
                         if record.option.id == answer:
-                            print("------------用户id："+str(record.user.id)+"-------答案正确--------")
-                            earn_coin_one = record.option.odds*record.bets
-                            earn_coin = earn_coin_one+record.bets
+                            print("------------用户id：" + str(record.user.id) + "-------答案正确--------")
+                            earn_coin_one = record.option.odds * record.bets
+                            earn_coin = earn_coin_one + record.bets
                             coin_id = record.club.coin.id
                             user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=record.user.id)
                             user_coin.balance += earn_coin
@@ -131,13 +134,29 @@ class Command(BaseCommand):
                             record.is_distribution = True
                             record.status = 1
                             record.save()
-                            print("-------------开奖开始推送---------------")
-                            coins = str(coins)
-                            balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
-                                      balance, record.club.coin.name, record.club.id)
-                            print("-----------开奖推送完成--------------")
+                            coin_detail = CoinDetail()
+                            coin_detail.user = record.user
+                            coin_detail.coin_name = record.club.coin.name
+                            coin_detail.amount = '+' + str(coins)
+                            coin_detail.rest = user_coin.balance
+                            coin_detail.sources = 5
+                            coin_detail.save()
 
+                            balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
+                            if lottery_info[record.club.id] == {}:
+                                lottery_info[record.club.id][record.user.id] = {"user_id": record.user.id,
+                                                                                "balance": balance,
+                                                                                "coins": coins,
+                                                                                "coin_name": record.club.coin.name}
+                            else:
+                                if record.user.id in lottery_info[record.club.id]:
+                                    lottery_info[record.club.id][record.user.id]["coins"] += coins
+                                    lottery_info[record.club.id][record.user.id]["balance"] = balance
+                                else:
+                                    lottery_info[record.club.id][record.user.id] = {"user_id": record.user.id,
+                                                                                    "balance": balance,
+                                                                                    "coins": coins,
+                                                                                    "coin_name": record.club.coin.name}
                         else:
                             print("------------用户id：" + str(record.user.id) + "-------答案错误--------")
                             old_earn_coin = "-" + str(record.bets)
@@ -146,12 +165,26 @@ class Command(BaseCommand):
                             record.is_distribution = True
                             record.status = 1
                             record.save()
-                            print("-------------开奖开始推送---------------")
-                            balance = 0
-                            coins = 0
-                            q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening, balance,
-                                      record.club.coin.name, record.club.id)
-                            print("-----------开奖推送完成--------------")
+
+                        for club_id in lottery_info:
+                            if lottery_info[club_id] == {}:
+                                pass
+                            else:
+                                for user_id in lottery_info[club_id]:
+                                    print("-------------开奖开始推送---------------")
+                                    user_id = lottery_info[club_id][user_id]["user_id"]
+                                    balance = lottery_info[club_id][user_id]["balance"]
+                                    coins = str(lottery_info[club_id][user_id]["coins"])
+                                    coin_name = lottery_info[club_id][user_id]["coin_name"]
+                                    q.enqueue(dragon_tiger_lottery, user_id, coins, number_tab.opening, balance,
+                                              coin_name, club_id)
+                                    print("-----------开奖推送完成--------------")
+                # print("-------------开奖开始推送---------------")
+                # coins = str(coins)
+                # balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
+                # q.enqueue(dragon_tiger_lottery, record.user_id, coins, number_tab.opening,
+                #           balance, record.club.coin.name, record.club.id)
+                # print("-----------开奖推送完成--------------")
 
                 print("-------------局数开始推送---------------")
                 q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
@@ -191,7 +224,8 @@ class Command(BaseCommand):
                 number_tab.bet_statu = messages["round"]["number_tab_status"]["betStatus"]
                 number_tab.save()
                 print("-------------局数推送---------------")
-                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id, messages["round"]["number_tab_status"]["betStatus"])
+                q.enqueue(dragon_tiger_number_info, table_info.id, number_tab.id,
+                          messages["round"]["number_tab_status"]["betStatus"])
                 print("-----------局数推送完成--------------")
                 print("---------------结束下注---------当局状态改变---------")
 
@@ -201,7 +235,8 @@ class Command(BaseCommand):
                     table_info.in_checkout = int(messages["round"]["number_tab_status"]["in_checkout"])
                     table_info.save()
                     print("-------------桌子状态推送---------------")
-                    q.enqueue(dragon_tiger_table_info, table_info.id, messages["round"]["number_tab_status"]["in_checkout"])
+                    q.enqueue(dragon_tiger_table_info, table_info.id,
+                              messages["round"]["number_tab_status"]["in_checkout"])
                     print("-----------桌子状态推送完成--------------")
                     print("------------------桌子开始洗牌成功------------------")
 
@@ -308,7 +343,6 @@ class Command(BaseCommand):
                     else:
                         print("---------------当前局数已经存在------------------")
                     print("---------------日结-成功------------------")
-
 
     @staticmethod
     def on_error(ws, error):
