@@ -14,8 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-from . import consumers
+from .consumers import QuizConsumer
+from dragon_tiger.dragontigerconsumer import DragonTigerConsumer
+from baccarat.baccaratconsumer import BaccaratConsumer
 
 websocket_urlpatterns = [
-    url(r'^quiz/', consumers.QuizConsumer),
+    # 球赛推送
+    url(r'^quiz/', QuizConsumer),
+    # 赌场推送
+    url(r'^dragon_tiger/', DragonTigerConsumer),
+    # 百家乐
+    url(r'^baccarat/', BaccaratConsumer),
 ]

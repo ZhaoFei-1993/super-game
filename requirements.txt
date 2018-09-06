@@ -67,3 +67,5 @@ watchdog==0.8.3
 zope.interface==4.5.0
 dateparser==0.7.0
 numpy==1.15.0
+dwebsocket==0.4.2
+websockets==6.0

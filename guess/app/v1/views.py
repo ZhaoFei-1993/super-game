@@ -29,30 +29,30 @@ class StockList(ListAPIView):
     serializer_class = StockListSerialize
 
     def get_queryset(self):
-        stock_list = Stock.objects.all()
-        return stock_list
+        return Stock.objects.all()
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
+
         data = []
-        for list in items:
+        for item in items:
             data.append({
-                "stock_id": list["pk"],
-                "periods_id": list["periods_id"][0]["period_id"],
-                "icon": list["icon"],
-                "title": list["title"],
-                "closing_time": list["closing_time"][0]["start"],
-                "lottery_time": list["closing_time"][0]["start_at"],
-                "status": list["closing_time"][0]["status"],
-                "previous_result": list["previous_result"],
-                "previous_result_colour": list["previous_result_colour"],
-                "index": list["periods_id"][0]["index"],
-                "index_colour": list["index_colour"],
-                "rise": list["periods_id"][0]["rise"],
-                "fall": list["periods_id"][0]["fall"],
-                "is_seal": list["periods_id"][0]["is_seal"],
-                "result_list": list["result_list"]
+                "stock_id": item["pk"],
+                "periods_id": item["periods_id"][0]["period_id"],
+                "icon": item["icon"],
+                "title": item["title"],
+                "closing_time": item["closing_time"][0]["start"],
+                "lottery_time": item["closing_time"][0]["start_at"],
+                "status": item["closing_time"][0]["status"],
+                "previous_result": item["previous_result"],
+                "previous_result_colour": item["previous_result_colour"],
+                "index": item["periods_id"][0]["index"],
+                "index_colour": item["index_colour"],
+                "rise": item["periods_id"][0]["rise"],
+                "fall": item["periods_id"][0]["fall"],
+                "is_seal": item["periods_id"][0]["is_seal"],
+                "result_list": item["result_list"]
             })
         return self.response({'code': 0, 'data': data})
 

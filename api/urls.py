@@ -40,6 +40,8 @@ urlpatterns = [
     path('marksix/', include('marksix.urls')),
     # 龙虎斗路由
     path('dragon_tiger/', include('dragon_tiger.urls')),
+    # 百家乐
+    path('baccarat/', include('baccarat.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

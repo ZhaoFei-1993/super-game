@@ -4,13 +4,14 @@ import time
 from datetime import datetime, timedelta
 from utils.cache import get_cache, set_cache
 import random
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import Q
 
 from quiz.models import Quiz, Option, Record, Rule, OptionOdds, Category
 from users.models import User, UserCoin, CoinValue, Coin
 from chat.models import Club
 from utils.weight_choice import WeightChoice
+from utils.functions import make_insert_sql
 
 
 class Command(BaseCommand):
@@ -63,14 +64,36 @@ class Command(BaseCommand):
 
         # 获取所有进行中的竞猜
         quiz_list = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False, begin_at__gt=datetime.now()).order_by('begin_at')
-        # quizs = Quiz.objects.filter(status=Quiz.PUBLISHING, is_delete=False)
         if len(quiz_list) == 0:
             raise CommandError('当前无进行中的竞猜')
 
         quizs = self.get_get_quiz(quiz_list)
         quiz_len = len(quizs)
 
+        # 获取所有俱乐部数据
+        all_clubs = Club.objects.get_all()
+        clubs = []
+        for club in all_clubs:
+            if int(club.is_recommend) == Club.CLOSE:
+                continue
+            clubs.append(club)
+
+        # 获取所有竞猜分类数据
+        categorys = Category.objects.get_all()
+
+        # 机器人数据
+        robot_users = User.objects.filter(is_robot=True)
+
+        # 货币下注金额数据
+        coin_values = CoinValue.objects.all().order_by('value')
+        map_coin_values = {}
+        for coin_value in coin_values:
+            if coin_value.coin_id not in map_coin_values:
+                map_coin_values[coin_value.coin_id] = []
+            map_coin_values[coin_value.coin_id].append(coin_value)
+
         idx = 0
+        values = []
         for quiz in quizs:
             # 按照比赛时间顺序递减下注数
             bet_number = random.randrange(quiz_len + 1, quiz_len * 3 + 1)
@@ -91,12 +114,17 @@ class Command(BaseCommand):
 
             for n in range(1, bet_number):
                 # 随机获取俱乐部
-                club = self.get_bet_club()
+                club = self.get_bet_club(clubs)
                 if club is False:
                     continue
 
                 # 随机抽取玩法
-                rule = self.get_bet_rule(quiz.id)
+                category_type = Category.FOOTBALL
+                for category in categorys:
+                    if quiz.category_id == category.id:
+                        category_type = category.parent_id
+                        break
+                rule = self.get_bet_rule(quiz.id, category_type)
                 if rule is False:
                     continue
 
@@ -106,24 +134,30 @@ class Command(BaseCommand):
                     continue
 
                 # 随机下注用户
-                user = self.get_bet_user()
+                user = self.get_bet_user(robot_users)
 
                 # 随机下注币、赌注
-                wager = self.get_bet_wager(club.coin_id)
+                wager = self.get_bet_wager(club.coin_id, map_coin_values)
 
                 current_odds = option.odds
 
-                record = Record()
-                record.quiz = quiz
-                record.user = user
-                record.rule = rule
-                record.option = option
-                record.roomquiz_id = club.id
-                record.bet = wager
-                record.odds = current_odds
-                record.source = Record.CONSOLE
-                record.handicap = rule.handicap
-                record.save()
+                current_datetime = str(datetime.now())
+                values.append({
+                    'type': '0',
+                    'quiz_id': str(quiz.id),
+                    'user_id': str(user.id),
+                    'rule_id': str(rule.id),
+                    'option_id': str(option.id),
+                    'roomquiz_id': str(club.id),
+                    'bet': str(wager),
+                    'odds': str(current_odds),
+                    'source': str(Record.CONSOLE),
+                    'handicap': str(rule.handicap),
+                    'earn_coin': '0',
+                    'is_distribution': '0',
+                    'open_prize_time': current_datetime,
+                    'created_at': current_datetime,
+                })
 
                 if self.robot_bet_change_odds is True:
                     Option.objects.change_odds(rule.id, club.coin_id, club.id)
@@ -137,11 +171,16 @@ class Command(BaseCommand):
                 Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=club.id, user_id=user.id)
 
                 # rule_title = Rule.TYPE_CHOICE[int(rule.type)][1]
+                robot_user = '机器人-' + user.nickname + '在'
                 coin = Coin.objects.get(pk=club.coin_id)
                 vs_info = quiz.host_team + ' VS ' + quiz.guest_team + ' - ' + str(quiz.begin_at)
-                self.stdout.write(self.style.SUCCESS(club.room_title + '(' + vs_info + ') ' + rule.tips + '玩法' + '下注' + str(wager) + '个' + coin.name))
+                self.stdout.write(self.style.SUCCESS(robot_user + club.room_title + '(' + vs_info + ') ' + rule.tips + '下注' + str(wager) + '个' + coin.name))
 
             idx += 1
+
+        sql = make_insert_sql(table_name='quiz_record', values=values)
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
 
         user_generated_datetime.append(current_generate_time)
         set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
@@ -250,7 +289,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(200, 300)
+        user_total = random.randint(500, 800)
         start_date, end_date = self.get_date()
 
         random_datetime = []
@@ -261,13 +300,12 @@ class Command(BaseCommand):
         set_cache(self.get_key(self.key_today_random_datetime), random_datetime, 24 * 3600)
 
     @staticmethod
-    def get_bet_club():
+    def get_bet_club(clubs):
         """
         获取下注的俱乐部
         不同俱乐部选择权重不同
         :return:
         """
-        clubs = Club.objects.filter(~Q(is_recommend=Club.CLOSE))
         if len(clubs) == 0:
             return False
 
@@ -295,16 +333,13 @@ class Command(BaseCommand):
         return club_choice
 
     @staticmethod
-    def get_bet_rule(quiz_id):
+    def get_bet_rule(quiz_id, category_type):
         """
         获取下注玩法，随机获取
-        :param quiz_id:
+        :param quiz_id:         竞猜ID
+        :param category_type:   竞猜分类：2－足球、1－篮球
         :return:
         """
-        # 判断是足球或者篮球
-        quiz = Quiz.objects.get(pk=quiz_id)
-        category = Category.objects.get(pk=quiz.category_id)
-
         rules = Rule.objects.filter(quiz_id=quiz_id)
         if len(rules) < 4:
             return False
@@ -312,7 +347,7 @@ class Command(BaseCommand):
             return False
 
         # 4种玩法设置权重，70:20:5:5
-        if category.parent_id == 1:
+        if category_type == Category.BASKETBALL:
             """
             篮球
             """
@@ -385,24 +420,25 @@ class Command(BaseCommand):
         return options[idx]
 
     @staticmethod
-    def get_bet_user():
+    def get_bet_user(robot_users):
         """
         随机获取用户
+        :param robot_users  机器人数据
         :return:
         """
-        users = User.objects.filter(is_robot=True)
         secure_random = random.SystemRandom()
-        return secure_random.choice(users)
+        return secure_random.choice(robot_users)
 
     @staticmethod
-    def get_bet_wager(coin_id):
+    def get_bet_wager(coin_id, coin_values):
         """
         获取用户拥有哪些币种，并返回币种可下注金额
         高价值币种选择较下注金额
         :param coin_id
+        :param coin_values
         :return:
         """
-        coin_value = CoinValue.objects.filter(coin_id=coin_id).order_by('value')
+        coin_value = coin_values[coin_id]
         values = []
         for coin_val in coin_value:
             values.append(coin_val.value)

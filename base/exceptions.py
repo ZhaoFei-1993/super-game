@@ -25,7 +25,7 @@ class CCBaseException(Exception):
     def to_dict(self, request):
         code = self.error_code
         message = API_ERROR_MESSAGE_EN[code] if request.GET.get('language') == 'en' else API_ERROR_MESSAGE[code]
-        if 'params' in self.context and '%s' in message:
+        if self.context is not None and 'params' in self.context and '%s' in message:
             message = message % self.context['params']
 
         context = {

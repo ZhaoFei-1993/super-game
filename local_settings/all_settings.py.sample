@@ -168,3 +168,6 @@ GSG_UNLOCK_PREACT_TIME = 24 * 3600  # GSG解除提前提醒时间
 
 DJANGO_SILK_ENABLE = False  # 是否开启silk扩展
 
+USER_MESSAGE_SAVE_PATH = '/data/data/user_message/'
+USER_MESSAGE_SEPARATOR = '||||'
+
