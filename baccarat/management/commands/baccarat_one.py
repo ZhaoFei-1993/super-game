@@ -140,8 +140,8 @@ class Command(BaseCommand):
                             print("-------------庄/闲/和 开奖开始推送---------------")
                             coins = str(coins)
                             balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
-                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
-                                      balance, record.club.coin.name, record.club.id)
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
+                                      balance, number_tab.pair, record.club.coin.name, record.club.id)
                             print("-----------庄/闲/和 开奖推送完成--------------")
                         else:
                             print("------------用户id：" + str(record.user.id) + "----庄/闲/和---答案错误--------")
@@ -154,8 +154,8 @@ class Command(BaseCommand):
                             print("-------------庄/闲/和 开奖开始推送---------------")
                             balance = 0
                             coins = 0
-                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
-                                      balance, record.club.coin.name, record.club.id)
+                            q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
+                                      balance, number_tab.pair, record.club.coin.name, record.club.id)
                             print("-----------庄/闲/和 开奖推送完成--------------")
 
                     record_Pair = Baccaratrecord.objects.filter(Q(option_id=7) | Q(option_id=8), number_tab=number_tab.id)
@@ -179,7 +179,7 @@ class Command(BaseCommand):
                                 balance = str(
                                     normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
                                 q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
-                                          number_tab.pair, balance, record.club.coin.name, record.club.id)
+                                          balance, number_tab.pair, record.club.coin.name, record.club.id)
                                 print("-----------庄和/闲和 开奖推送完成--------------")
                         else:
                             print("----------------------------开庄闲------------------------------")
@@ -200,8 +200,8 @@ class Command(BaseCommand):
                                 coins = str(coins)
                                 balance = str(
                                     normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
-                                q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening, number_tab.pair,
-                                          balance, record.club.coin.name, record.club.id)
+                                q.enqueue(baccarat_lottery, record.user_id, coins, number_tab.opening,
+                                          balance, number_tab.pair, record.club.coin.name, record.club.id)
                                 print("-----------庄和/闲和 开奖推送完成--------------")
                             else:
                                 print("------------用户id：" + str(record.user.id) + "----庄和/闲和---答案错误--------")
