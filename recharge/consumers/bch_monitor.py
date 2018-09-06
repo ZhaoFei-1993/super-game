@@ -1,54 +1,7 @@
-import time as format_time
-from users.models import UserRecharge, UserCoin
+import time
+from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
-
-
-def deal_db_data(trans_dict, coin_all, charge_all):
-    # 币种是否配置
-    coin_id = None
-    for coin in coin_all:
-        if coin.name == trans_dict['type']:
-            coin_id = coin.id
-            break
-
-    if coin_id is None:
-        print('type_not allow,type:', trans_dict['type'])
-        return False
-
-    txid = trans_dict['hash']
-    addr = trans_dict['to']
-
-    value = trans_dict['value']
-    t_time = trans_dict['t_time']
-    usercoin_info = UserCoin.objects.filter(address=addr, coin_id=coin_id)
-    if not usercoin_info:
-        return False
-
-    user_id = usercoin_info[0].user_id
-
-    # 用户充值记录
-    charge_exists = False
-    for charge_data in charge_all:
-        if charge_data.address == addr and charge_data.txid == txid:
-            charge_exists = True
-
-    time_local = format_time.localtime(t_time)
-    time_dt = format_time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-
-    if charge_exists is False:
-        # 充值记录
-        recharge_obj = UserRecharge()
-        recharge_obj.address = addr
-        recharge_obj.coin_id = coin_id
-        recharge_obj.txid = txid
-        recharge_obj.user_id = user_id
-        recharge_obj.amount = value
-        recharge_obj.confirmations = 0
-        recharge_obj.trade_at = time_dt
-        recharge_obj.save()
-        return True
-
-    return False
+from decimal import Decimal
 
 
 def bitcoin_cash_monitor(block_num):
@@ -64,38 +17,54 @@ def bitcoin_cash_monitor(block_num):
     json_obj = wallet.get(url='v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
 
-    # charge_all = UserRecharge.objects.all()  # 所有充值记录
-    # txids = []
-    # for charge in charge_all:
-    #     txids.append(charge.txid)
-
     to_address = []
+    address_tx = {}
     for index, item in enumerate(block['transactions']):
         outputs = item['out']
         for output in outputs:
-            to_address += output['addresses']
+            addresses = output['addresses']
+            to_address += addresses
+            for address in addresses:
+                if address not in address_tx:
+                    address_tx[address] = []
 
-    print('to_address = ', to_address)
+                address_tx[address].append({
+                    'txid': item['txid'],
+                    'value': output['value'],
+                })
 
-    # in_address = UserCoin.objects.filter(address__in=to_address)
-    # print('in_address = ', in_address)
+    in_address = UserCoin.objects.filter(address__in=to_address).values('address', 'user_id')
+    if len(in_address) == 0:
+        return True
 
-    # coin_all = Coin.objects.all()  # 所有币种
-    # charge_all = UserRecharge.objects.all()  # 所有充值记录
-    # tmp_num = 0
-    # for i, val in enumerate(items):
-    #     tmp_dict = val
-    #     tmp_dict['t_time'] = json_obj['data']['t_time']
-    #     tmp_dict['type'] = json_obj['data']['type'].upper()
-    #
-    #     # 根据交易信息处理db数据
-    #     ret = deal_db_data(tmp_dict, coin_all, charge_all)
-    #     if ret is True:
-    #         tmp_num += 1
-    #
-    # print('blocknum:' + str(block_num) + '获取到' + str(tmp_num) + '条交易信息')
-    #
-    # stop_time = time()
-    # cost_time = str(round(stop_time - start_time)) + '秒'
-    # print('执行完成。耗时：' + cost_time)
+    # 所有充值记录
+    charge_all = UserRecharge.objects.all()
+    txids = []
+    for charge in charge_all:
+        txids.append(charge.txid)
+
+    # 把该地址对应的交易信息拿出来
+    recharge_number = 0
+    for user_coin in in_address:
+        address_recharges = address_tx[user_coin.address]
+        for recharge in address_recharges:
+            txid = recharge['txid']
+            if txid in txids:
+                continue
+
+            recharge_obj = UserRecharge()
+            recharge_obj.address = user_coin.address
+            recharge_obj.coin_id = Coin.BCH
+            recharge_obj.txid = txid
+            recharge_obj.user_id = user_coin.user_id
+            recharge_obj.amount = Decimal(recharge['value'])
+            recharge_obj.confirmations = 0
+            recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block.time))
+            recharge_obj.save()
+
+            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin.address, ' 充值金额 = ', recharge['value'])
+
+            recharge_number += 1
+
+    print('块=' + str(block_num) + ' 获取到' + str(recharge_number) + '条交易信息')
     return True
