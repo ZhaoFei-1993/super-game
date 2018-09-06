@@ -166,19 +166,19 @@ class Command(BaseCommand):
                             record.status = 1
                             record.save()
 
-                        for club_id in lottery_info:
-                            if lottery_info[club_id] == {}:
-                                pass
-                            else:
-                                for user_id in lottery_info[club_id]:
-                                    print("-------------开奖开始推送---------------")
-                                    user_id = lottery_info[club_id][user_id]["user_id"]
-                                    balance = lottery_info[club_id][user_id]["balance"]
-                                    coins = str(lottery_info[club_id][user_id]["coins"])
-                                    coin_name = lottery_info[club_id][user_id]["coin_name"]
-                                    q.enqueue(dragon_tiger_lottery, user_id, coins, number_tab.opening, balance,
-                                              coin_name, club_id)
-                                    print("-----------开奖推送完成--------------")
+                    for club_id in lottery_info:
+                        if lottery_info[club_id] == {}:
+                            pass
+                        else:
+                            for user_id in lottery_info[club_id]:
+                                print("-------------开奖开始推送---------------")
+                                user_id = lottery_info[club_id][user_id]["user_id"]
+                                balance = lottery_info[club_id][user_id]["balance"]
+                                coins = str(lottery_info[club_id][user_id]["coins"])
+                                coin_name = lottery_info[club_id][user_id]["coin_name"]
+                                q.enqueue(dragon_tiger_lottery, user_id, coins, number_tab.opening, balance,
+                                          coin_name, club_id)
+                                print("-----------开奖推送完成--------------")
                 # print("-------------开奖开始推送---------------")
                 # coins = str(coins)
                 # balance = str(normalize_fraction(user_coin.balance, int(record.club.coin.coin_accuracy)))
