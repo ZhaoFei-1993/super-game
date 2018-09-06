@@ -361,7 +361,7 @@ class Dragontigeroption(ListAPIView):
                               "bets_three_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_3_m.png",
                               "bets_four": betlimit_list[3],
                               "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
-                              "red_limit": int(betlimit_list[4]),
+                              "red_limit": normalize_fraction(float(betlimit_list[4]), int(coin_accuracy)),
                               "option_info": option_info
                               })
 
@@ -486,41 +486,73 @@ class DragontigerBet(ListCreateAPIView):
         record.source = source
         record.save()
 
-        USER_BET_AVATAR = "USER_BET_AVATAR" + str(number_tab_id)  # key
+        USER_BET_AVATAR = "USER_BET_AVATAR_" + str(number_tab_id) + "_" + str(club_id)  # key
         avatar_info = get_cache(USER_BET_AVATAR)
-        key = "'"+str(user.id)+"'"
+        # key = "'"+str(user.id)+"'"
         if avatar_info is not None:
-            if key in avatar_info:
+            print("++++++++++++++++++++++++++++++")
+            if user.id in avatar_info is True:
+                print("------------------等式成立----------------")
                 avatar_info[user.id]["bet_amount"] += coins
+                set_cache(USER_BET_AVATAR, avatar_info)
             else:
-                avatar_info[user.id] = {"user_avatar": user.avatar,"user_nickname": user.nickname,"bet_amount": coins,"is_user": 1}
+                avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
+                                        "bet_amount": coins, "is_user": 1}
+                set_cache(USER_BET_AVATAR, avatar_info)
+            print("avatar_info========================", avatar_info)
+            avatar_lists = []
+            for i in avatar_info:
+                avatar_lists.append(avatar_info[i])
+            now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amount"], reverse=True)
+            all_avatar_lists = []
+            for s in now_avatar_list:
+                all_avatar_lists.append(s)
+            number = len(all_avatar_lists)
+            if number <= 5:
+                new_number = 5 - number
+                for i in range(new_number):
+                    all_avatar_lists.append({
+                        "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
+                        "user_nickname": "虚位以待",
+                        "bet_amount": "",
+                        "is_user": 0
+                    })
+            else:
+                all_avatar_lists.append(now_avatar_list[0])
+                all_avatar_lists.append(now_avatar_list[1])
+                all_avatar_lists.append(now_avatar_list[2])
+                all_avatar_lists.append(now_avatar_list[3])
+                all_avatar_lists.append(now_avatar_list[4])
         else:
             avatar_info = {}
-            avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname, "bet_amount": coins, "is_user": 1}
-        set_cache(USER_BET_AVATAR, avatar_info)
-        avatar_lists = []
-        for i in avatar_info:
-            avatar_lists.append(avatar_info[i])
-        now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amount"], reverse=True)
-        all_avatar_lists = []
-        for s in now_avatar_list:
-            all_avatar_lists.append(s)
-        number = len(all_avatar_lists)
-        if number <= 5:
-            new_number = 5 - number
-            for i in range(new_number):
-                all_avatar_lists.append({
-                    "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
-                    "user_nickname": "虚位以待",
-                    "bet_amount": "",
-                    "is_user": 0
-                })
-        else:
-            all_avatar_lists.append(now_avatar_list[0])
-            all_avatar_lists.append(now_avatar_list[1])
-            all_avatar_lists.append(now_avatar_list[2])
-            all_avatar_lists.append(now_avatar_list[3])
-            all_avatar_lists.append(now_avatar_list[4])
+            avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
+                                    "bet_amount": coins, "is_user": 1}
+
+            set_cache(USER_BET_AVATAR, avatar_info)
+            avatar_lists = []
+            for i in avatar_info:
+                avatar_lists.append(avatar_info[i])
+            now_avatar_list = sorted(avatar_lists, key=lambda s: s["bet_amount"], reverse=True)
+            all_avatar_lists = []
+            for s in now_avatar_list:
+                all_avatar_lists.append(s)
+            number = len(all_avatar_lists)
+            if number <= 5:
+                new_number = 5 - number
+                for i in range(new_number):
+                    all_avatar_lists.append({
+                        "user_avatar": "https://api.gsg.one/uploads/hand_data-6.png",
+                        "user_nickname": "虚位以待",
+                        "bet_amount": "",
+                        "is_user": 0
+                    })
+            else:
+                all_avatar_lists.append(now_avatar_list[0])
+                all_avatar_lists.append(now_avatar_list[1])
+                all_avatar_lists.append(now_avatar_list[2])
+                all_avatar_lists.append(now_avatar_list[3])
+                all_avatar_lists.append(now_avatar_list[4])
+
         print("-----------开始推送---------------")
         q.enqueue(dragon_tiger_avatar, number_tab_id, all_avatar_lists)
         print("-----------推送完成--------------")
