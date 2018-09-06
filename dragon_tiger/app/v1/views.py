@@ -493,7 +493,7 @@ class DragontigerBet(ListCreateAPIView):
         if avatar_info is not None:
             print("++++++++++++++++++++++++++++++")
             print("user_id==================", user_id in avatar_info)
-            if user_id in avatar_info is True:
+            if user_id in avatar_info:
                 print("------------------等式成立----------------")
                 avatar_info[user.id]["bet_amount"] += coins
                 set_cache(USER_BET_AVATAR, avatar_info)
