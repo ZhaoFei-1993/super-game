@@ -380,6 +380,7 @@ class DragontigerBet(ListCreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = request.user
+        user_id = user.id
         number_tab_id = self.request.data['number_tab_id']  # 获取周期ID
         option_id = self.request.data['option_id']  # 获取俱乐部ID
         club_id = self.request.data['club_id']  # 获取俱乐部ID
@@ -491,7 +492,8 @@ class DragontigerBet(ListCreateAPIView):
         # key = "'"+str(user.id)+"'"
         if avatar_info is not None:
             print("++++++++++++++++++++++++++++++")
-            if user.id in avatar_info is True:
+            print("user_id==================", user_id in avatar_info)
+            if user_id in avatar_info is True:
                 print("------------------等式成立----------------")
                 avatar_info[user.id]["bet_amount"] += coins
                 set_cache(USER_BET_AVATAR, avatar_info)
