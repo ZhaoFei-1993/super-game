@@ -455,7 +455,9 @@ class DragontigerBet(ListCreateAPIView):
 
         if all_earn_coin > all_earn_coins:
             is_coins = (all_earn_coins - coin_number_in) / option_odds.odds
+            print("is_coins================================", is_coins)
             is_coins = normalize_fraction(float(is_coins), int(coin_accuracy))
+            print("is_coins=======================================", is_coins)
             message = str(is_coins) + str(clubinfo.coin.name) + "!"
             raise ParamErrorException(error_code.API_90104_DRAGON_TIGER_NO_BET, {'params': (message,)})  # 限红
 
