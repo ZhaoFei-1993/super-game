@@ -520,6 +520,7 @@ class Record(ListAPIView):
             sql += " and dtr.user_id = '" + user_id + "'"
         sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id"
         sql += " order by created_ats desc"
+        print("sql================================", sql)
         record_list = self.get_list_by_sql(sql)    #
 
         data = []
