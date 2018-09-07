@@ -666,6 +666,7 @@ class Record(ListAPIView):
 
         number_tab_id_list = get_sql(sql)    # 获取记录的number_tab_id
         data = []
+        print("number_tab_id_list======================", number_tab_id_list)
         if number_tab_id_list is None or number_tab_id_list == '':
             return self.response({'code': 0, "data": data})
         number_tab_id_list = list(set(number_tab_id_list))
