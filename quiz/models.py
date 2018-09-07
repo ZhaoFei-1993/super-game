@@ -391,7 +391,6 @@ class RecordManager(models.Manager):
         count = get_cache(key)
         if count is None:
             count = Record.objects.filter(quiz_id=quiz_id, roomquiz_id=club_id).count()
-            print('key = ', key, ' count = ', count, ' quiz_id = ', quiz_id, ' club_id = ', club_id)
             set_cache(key, count)
 
         return count
@@ -405,10 +404,11 @@ class RecordManager(models.Manager):
         """
         key = self.KEY_CLUB_QUIZ_BET_COUNT + str(quiz_id) + '_' + str(club_id)
         cache_value = get_cache(key)
-        if cache_value is not None:
-            incr_cache(key=key)
-        else:
+
+        if cache_value is None:
             self.get_club_quiz_bet_count(quiz_id=quiz_id, club_id=club_id)
+
+        incr_cache(key=key)
 
     def get_club_quiz_bet_users(self, quiz_id, club_id, user_id):
         """
