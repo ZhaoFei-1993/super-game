@@ -495,7 +495,7 @@ class Record(ListAPIView):
         number_tab_id = str(tuple(number_tab_id))
 
         sql_list = "sum(dtr.bets), sum(dtr.earn_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
-        sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%l' ) as time,"
+        sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%i' ) as time,"
         sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds, nt.pair"
         sql = "select " +sql_list + " from baccarat_baccaratrecord dtr"
         sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
