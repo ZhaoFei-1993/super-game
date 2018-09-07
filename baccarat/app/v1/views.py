@@ -11,7 +11,6 @@ from dragon_tiger.models import BetLimit, Options, Table
 from users.models import UserCoin, CoinDetail
 from chat.models import Club
 import re
-from .serializers import RecordSerialize
 # from utils.cache import get_cache, set_cache
 from rq import Queue
 from redis import Redis
