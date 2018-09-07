@@ -696,6 +696,7 @@ class Record(ListAPIView):
             user_id = self.request.GET.get('user_id')
             sql += " and dtr.user_id = '" + user_id + "'"
         sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id"
+        print("sql============================", sql)
         record_list = get_sql(sql)    #
 
         data = []
