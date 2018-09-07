@@ -40,6 +40,12 @@ class Command(BaseCommand, BaseView):
             usdt_guess_1 = int(random.uniform(15, 20))
             btc_quiz_1 = int(random.uniform(10, 15))
             btc_guess_1 = int(random.uniform(5, 8))
+            bch_quiz_1 = int(random.uniform(10, 15))
+            bch_guess_1 = int(random.uniform(5, 8))
+            soc_quiz_1 = int(random.uniform(50, 60))
+            soc_guess_1 = int(random.uniform(35, 40))
+            db_quiz_1 = int(random.uniform(6, 8))
+            db_guess_1 = int(random.uniform(3, 4))
             hand_quiz_1 = int(random.uniform(300, 400))
             hand_guess_1 = int(random.uniform(180, 230))
             eth_quiz_1 = int(random.uniform(50, 60))
@@ -50,6 +56,12 @@ class Command(BaseCommand, BaseView):
             usdt_guess_2 = int(random.uniform(35, 45))
             btc_quiz_2 = int(random.uniform(20, 25))
             btc_guess_2 = int(random.uniform(13, 16))
+            bch_quiz_2 = int(random.uniform(20, 25))
+            bch_guess_2 = int(random.uniform(13, 16))
+            soc_quiz_2 = int(random.uniform(80, 100))
+            soc_guess_2 = int(random.uniform(50, 60))
+            db_quiz_2 = int(random.uniform(20, 30))
+            db_guess_2 = int(random.uniform(10, 15))
             hand_quiz_2 = int(random.uniform(380, 450))
             hand_guess_2 = int(random.uniform(250, 300))
             eth_quiz_2 = int(random.uniform(80, 100))
@@ -60,6 +72,12 @@ class Command(BaseCommand, BaseView):
             usdt_guess_3 = int(random.uniform(15, 20))
             btc_quiz_3 = int(random.uniform(15, 19))
             btc_guess_3 = int(random.uniform(8, 13))
+            bch_quiz_3 = int(random.uniform(15, 19))
+            bch_guess_3 = int(random.uniform(8, 13))
+            soc_quiz_3 = int(random.uniform(50, 60))
+            soc_guess_3 = int(random.uniform(35, 40))
+            db_quiz_3 = int(random.uniform(6, 8))
+            db_guess_3 = int(random.uniform(3, 4))
             hand_quiz_3 = int(random.uniform(300, 400))
             hand_guess_3 = int(random.uniform(180, 230))
             eth_quiz_3 = int(random.uniform(50, 60))
@@ -70,6 +88,12 @@ class Command(BaseCommand, BaseView):
             usdt_guess_4 = int(random.uniform(60, 80))
             btc_quiz_4 = int(random.uniform(38, 45))
             btc_guess_4 = int(random.uniform(20, 25))
+            bch_quiz_4 = int(random.uniform(38, 45))
+            bch_guess_4 = int(random.uniform(20, 25))
+            soc_quiz_4 = int(random.uniform(140, 160))
+            soc_guess_4 = int(random.uniform(70, 80))
+            db_quiz_4 = int(random.uniform(40, 50))
+            db_guess_4 = int(random.uniform(20, 30))
             hand_quiz_4 = int(random.uniform(700, 800))
             hand_guess_4 = int(random.uniform(350, 450))
             eth_quiz_4 = int(random.uniform(140, 160))
@@ -80,6 +104,12 @@ class Command(BaseCommand, BaseView):
             usdt_guess_5 = int(random.uniform(35, 45))
             btc_quiz_5 = int(random.uniform(25, 30))
             btc_guess_5 = int(random.uniform(16, 21))
+            bch_quiz_5 = int(random.uniform(25, 30))
+            bch_guess_5 = int(random.uniform(16, 21))
+            soc_quiz_5 = int(random.uniform(50, 60))
+            soc_guess_5 = int(random.uniform(35, 40))
+            db_quiz_5 = int(random.uniform(20, 30))
+            db_guess_5 = int(random.uniform(10, 15))
             hand_quiz_5 = int(random.uniform(380, 450))
             hand_guess_5 = int(random.uniform(250, 300))
             eth_quiz_5 = int(random.uniform(50, 60))
@@ -105,6 +135,18 @@ class Command(BaseCommand, BaseView):
                     "eth": {
                         "quiz": eth_quiz_1,
                         "guess": eth_guess_1
+                    },
+                    "bch": {
+                        "quiz": bch_quiz_1,
+                        "guess": bch_guess_1
+                    },
+                    "soc": {
+                        "quiz": soc_quiz_1,
+                        "guess": soc_guess_1
+                    },
+                    "db": {
+                        "quiz": db_quiz_1,
+                        "guess": db_guess_1
                     }
                 },
                 "2": {
@@ -127,6 +169,18 @@ class Command(BaseCommand, BaseView):
                     "eth": {
                         "quiz": eth_quiz_2,
                         "guess": eth_guess_2
+                    },
+                    "bch": {
+                        "quiz": bch_quiz_2,
+                        "guess": bch_guess_2
+                    },
+                    "soc": {
+                        "quiz": soc_quiz_2,
+                        "guess": soc_guess_2
+                    },
+                    "db": {
+                        "quiz": db_quiz_2,
+                        "guess": db_guess_2
                     }
                 },
                 "3": {
@@ -149,6 +203,18 @@ class Command(BaseCommand, BaseView):
                     "eth": {
                         "quiz": eth_quiz_3,
                         "guess": eth_guess_3
+                    },
+                    "bch": {
+                        "quiz": bch_quiz_3,
+                        "guess": bch_guess_3
+                    },
+                    "soc": {
+                        "quiz": soc_quiz_3,
+                        "guess": soc_guess_3
+                    },
+                    "db": {
+                        "quiz": db_quiz_3,
+                        "guess": db_guess_3
                     }
                 },
                 "4": {
@@ -171,6 +237,18 @@ class Command(BaseCommand, BaseView):
                     "eth": {
                         "quiz": eth_quiz_4,
                         "guess": eth_guess_4
+                    },
+                    "bch": {
+                        "quiz": bch_quiz_4,
+                        "guess": bch_guess_4
+                    },
+                    "soc": {
+                        "quiz": soc_quiz_4,
+                        "guess": soc_guess_4
+                    },
+                    "db": {
+                        "quiz": db_quiz_4,
+                        "guess": db_guess_4
                     }
                 },
                 "5": {
@@ -193,6 +271,18 @@ class Command(BaseCommand, BaseView):
                     "eth": {
                         "quiz": eth_quiz_5,
                         "guess": eth_guess_5
+                    },
+                    "bch": {
+                        "quiz": bch_quiz_5,
+                        "guess": bch_guess_5
+                    },
+                    "soc": {
+                        "quiz": soc_quiz_5,
+                        "guess": soc_guess_5
+                    },
+                    "db": {
+                        "quiz": db_quiz_5,
+                        "guess": db_guess_5
                     }
                 },
 
