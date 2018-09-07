@@ -674,7 +674,8 @@ class Record(ListAPIView):
 
         sql_list = "sum(dtr.bets), sum(dtr.earn_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
         sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%i' ) as time,"
-        sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds"
+        sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds,"
+        sql_list += " date_format( dtr.created_at, '%Y%c%e%k%i' ) AS created_ats"
         sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
         sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
         sql += " left join dragon_tiger_number_tab nt on dtr.number_tab_id = nt.id"
@@ -695,9 +696,10 @@ class Record(ListAPIView):
         else:
             user_id = self.request.GET.get('user_id')
             sql += " and dtr.user_id = '" + user_id + "'"
-        sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id"
+        sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id, created_ats"
+        sql += " order by created_ats desc"
         print("sql============================", sql)
-        record_list = get_sql(sql)    #
+        record_list = self.get_list_by_sql(sql)    #
 
         data = []
         tmp = ''
