@@ -496,8 +496,8 @@ class Record(ListAPIView):
 
         sql_list = "sum(dtr.bets), sum(dtr.earn_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
         sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%i' ) as time,"
-        sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds, nt.pair"
-        sql_list += " date_format( dtr.created_at, '%Y%c%e%k%i' ) AS created_ats"
+        sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds, nt.pair,"
+        sql_list += " date_format(dtr.created_at, '%Y%c%e%k%i' ) AS created_ats"
         sql = "select " +sql_list + " from baccarat_baccaratrecord dtr"
         sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
         sql += " left join baccarat_number_tab nt on dtr.number_tab_id = nt.id"
