@@ -67,12 +67,13 @@ def baccarat_number_info(table_id, number_tab_id, bet_statu):
     )
 
 
-def baccarat_result(table_id, number_tab_id, opening):
+def baccarat_result(table_id, number_tab_id, opening, pair):
     """
     推送结果
     :param table_id      桌id
     :param number_tab_id     局id
     :param opening     局状态
+    :param pair     对子
     :return:
     """
     group = 'baccarat_' + str(table_id)
@@ -84,7 +85,8 @@ def baccarat_result(table_id, number_tab_id, opening):
             "type": "result.message",
             "table_id": table_id,
             "number_tab_id": number_tab_id,
-            "opening": opening
+            "opening": opening,
+            "pair": pair
         },
     )
 

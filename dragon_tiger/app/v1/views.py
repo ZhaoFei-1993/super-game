@@ -490,7 +490,9 @@ class DragontigerBet(ListCreateAPIView):
         avatar_info = get_cache(USER_BET_AVATAR)
         if avatar_info is not None:
             if user_id in avatar_info:
-                avatar_info[user.id]["bet_amount"] += coins
+                bet_coin = avatar_info[user.id]["bet_amount"]
+                bet_amount = bet_coin + coins
+                avatar_info[user.id]["bet_amount"] = normalize_fraction(bet_amount, int(coin_accuracy))
                 set_cache(USER_BET_AVATAR, avatar_info)
             else:
                 avatar_info[user.id] = {"user_avatar": user.avatar, "user_nickname": user.nickname,
