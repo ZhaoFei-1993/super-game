@@ -47,24 +47,23 @@ def bitcoin_cash_monitor(block_num):
     # 把该地址对应的交易信息拿出来
     recharge_number = 0
     for user_coin in in_address:
-        print('user_coin = ', user_coin)
-        address_recharges = address_tx[user_coin.address]
+        address_recharges = address_tx[user_coin['address']]
         for recharge in address_recharges:
             txid = recharge['txid']
             if txid in txids:
                 continue
 
             recharge_obj = UserRecharge()
-            recharge_obj.address = user_coin.address
+            recharge_obj.address = user_coin['address']
             recharge_obj.coin_id = Coin.BCH
             recharge_obj.txid = txid
-            recharge_obj.user_id = user_coin.user_id
+            recharge_obj.user_id = user_coin['user_id']
             recharge_obj.amount = Decimal(recharge['value'])
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block.time))
             recharge_obj.save()
 
-            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin.address, ' 充值金额 = ', recharge['value'])
+            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin['address'], ' 充值金额 = ', recharge['value'])
 
             recharge_number += 1
 
