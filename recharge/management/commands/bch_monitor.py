@@ -6,7 +6,7 @@ from redis import Redis
 from rq import Queue
 from recharge.consumers.bch_monitor import bitcoin_cash_monitor
 from base.eth import Wallet
-import local_settings
+from local_settings import BCH_WALLET_API_URL
 
 
 class Command(BaseCommand, BaseView):
@@ -37,7 +37,7 @@ class Command(BaseCommand, BaseView):
         """
         try:
             wallet = Wallet()
-            response = wallet.get(url=local_settings.BCH_WALLET_API_URL + 'v1/bch/block/block_height')
+            response = wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/block_height')
             block_height = int(response['data'])
         except Exception:
             raise CommandError('获取区块链最新节点高度失败')
