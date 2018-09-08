@@ -20,8 +20,6 @@ class Command(BaseCommand, BaseView):
         """
         eth_wallet = Wallet()
         json_data = eth_wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/tx/' + str(transaction_hash))
-        print('json_data = ', json_data)
-        raise CommandError('....')
         if json_data['code'] > 0:
             raise CommandError(json_data['message'] + ' tx = ' + transaction_hash)
 
