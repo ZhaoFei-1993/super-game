@@ -2,10 +2,9 @@ import time
 from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
 from decimal import Decimal
-from local_settings import BCH_WALLET_API_URL
 
 
-def bitcoin_cash_monitor(block_num):
+def electro_optical_system_monitor(block_num):
     """
     消费block_num队列
     """
@@ -15,7 +14,7 @@ def bitcoin_cash_monitor(block_num):
 
     # 根据block_num 获取交易数据
     wallet = Wallet()
-    json_obj = wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/transactions/' + str(block_num))
+    json_obj = wallet.get(url='v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
 
     to_address = []
@@ -63,7 +62,7 @@ def bitcoin_cash_monitor(block_num):
             recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block.time))
             recharge_obj.save()
 
-            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin.address, ' 充值金额 = ', recharge['value'])
+            print('获取1条EOS充值记录，TX = ', txid, ' 充值地址 = ', user_coin.address, ' 充值金额 = ', recharge['value'])
 
             recharge_number += 1
 

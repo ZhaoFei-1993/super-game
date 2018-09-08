@@ -4,14 +4,13 @@ from base.app import BaseView
 from utils.cache import get_cache, set_cache
 from redis import Redis
 from rq import Queue
-from recharge.consumers.bch_monitor import bitcoin_cash_monitor
+from recharge.consumers.eos_monitor import electro_optical_system_monitor
 from base.eth import Wallet
-from local_settings import BCH_WALLET_API_URL
 
 
 class Command(BaseCommand, BaseView):
-    help = "Bitcoin Cash充值监控"
-    cacheKey = 'key_bch_block_height'
+    help = "EOS充值监控"
+    cacheKey = 'key_eos_block_height'
 
     def add_arguments(self, parser):
         parser.add_argument('--block_height', type=int, help='块高度')
@@ -25,9 +24,9 @@ class Command(BaseCommand, BaseView):
         """
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
-        q.enqueue(bitcoin_cash_monitor, block_height)
+        q.enqueue(electro_optical_system_monitor, block_height)
 
-        self.stdout.write(self.style.SUCCESS('监控高度=' + str(block_height) + '的BCH充值数据'))
+        self.stdout.write(self.style.SUCCESS('监控高度=' + str(block_height) + '的EOS充值数据'))
 
     @staticmethod
     def get_block_height():
@@ -37,7 +36,7 @@ class Command(BaseCommand, BaseView):
         """
         try:
             wallet = Wallet()
-            response = wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/block_height')
+            response = wallet.get(url='v1/eos/block/block_height')
             block_height = int(response['data'])
         except Exception:
             raise CommandError('获取区块链最新节点高度失败')
@@ -59,12 +58,12 @@ class Command(BaseCommand, BaseView):
         cache_block_height = get_cache(self.cacheKey)
         if cache_block_height is None:
             cache_block_height = block_height
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, block_height)
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
         if cache_block_height > block_height:
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)
         for block in range(cache_block_height, block_height + 1):
