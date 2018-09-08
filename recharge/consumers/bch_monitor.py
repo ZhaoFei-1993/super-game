@@ -47,6 +47,7 @@ def bitcoin_cash_monitor(block_num):
     # 把该地址对应的交易信息拿出来
     recharge_number = 0
     for user_coin in in_address:
+        print('user_coin = ', user_coin)
         address_recharges = address_tx[user_coin.address]
         for recharge in address_recharges:
             txid = recharge['txid']
