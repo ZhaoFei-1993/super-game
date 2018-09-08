@@ -305,7 +305,7 @@ class Command(BaseCommand):
                 q.enqueue(baccarat_number_info, table_info.id, number_tab.id,
                           3)
                 opening = int(number_tab.opening)
-                q.enqueue(baccarat_result, table_info.id, number_tab.id, opening)
+                q.enqueue(baccarat_result, table_info.id, number_tab.id, opening, number_tab.pair)
                 print("-----------局数推送完成--------------")
                 baccarat_ludan_save(messages, boots, table_info.id)
                 print("-------------第" + str(number_tab.boots.boot_id) + "靴----第" + str(number_tab.number_tab_number)

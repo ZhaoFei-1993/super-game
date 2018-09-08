@@ -73,7 +73,8 @@ class BaccaratConsumer(BaseConsumer):
                 "msg_type": "result",
                 "table_id": event["table_id"],
                 "number_tab_id": event["number_tab_id"],
-                "opening": event["opening"]
+                "opening": event["opening"],
+                "pair": event["pair"]
             }
         )
 

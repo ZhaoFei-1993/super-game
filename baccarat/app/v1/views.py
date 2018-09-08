@@ -11,7 +11,6 @@ from dragon_tiger.models import BetLimit, Options, Table
 from users.models import UserCoin, CoinDetail
 from chat.models import Club
 import re
-from .serializers import RecordSerialize
 # from utils.cache import get_cache, set_cache
 from rq import Queue
 from redis import Redis
@@ -454,58 +453,121 @@ class Record(ListAPIView):
     记录
     """
     permission_classes = (LoginRequired,)
-    serializer_class = RecordSerialize
 
     def get_queryset(self):
-        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+       pass
+
+    def list(self, request, *args, **kwargs):
+        club_id = str(self.request.GET.get('club_id'))  # 俱乐部表ID
+        sql = "select uc.coin_accuracy, uc.icon, uc.name from chat_club cc"
+        sql += " left join users_coin uc on cc.coin_id=uc.id"
+        sql += " where cc.id = '" + club_id + "'"
+        coin_info = get_sql(sql)[0]  # 获取货币精度，货币图标，货币昵称
+
+        sql_list = " dtr.number_tab_id"
+        sql = "select " +sql_list + " from baccarat_baccaratrecord dtr"
+        sql += " where dtr.club_id = '" + club_id + "'"
         if 'user_id' not in self.request.GET:
-            user_id = self.request.user.id
+            user_id = str(self.request.user.id)
             if 'is_end' not in self.request.GET:
-                record = Baccaratrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
-                return record
+                sql += " and dtr.user_id = '" + user_id + "'"
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Baccaratrecord.objects.filter(
-                        status=0,
-                        user_id=user_id,
-                        club_id=club_id).order_by('-created_at')
+                    sql += " and dtr.user_id = '" + user_id + "'"
+                    sql += " and dtr.status =0"
                 else:
-                    return Baccaratrecord.objects.filter(status=1,
-                                                         user_id=user_id,
-                                                         club_id=club_id).order_by('-created_at')
+                    sql += " and dtr.user_id = '" + user_id + "'"
+                    sql += " and dtr.status =1"
         else:
             user_id = self.request.GET.get('user_id')
-            return Baccaratrecord.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+            sql += " and dtr.user_id = '" + user_id + "'"
+        sql += " order by dtr.created_at desc"
 
-    def list(self, request, *args, **kwargs):
-        results = super().list(request, *args, **kwargs)
-        Progress = results.data.get('results')
+        number_tab_id_list = get_sql(sql)    # 获取记录的number_tab_id
+        data = []
+        if number_tab_id_list == ():
+            return self.response({'code': 0, "data": data})
+        number_tab_id_list = list(set(number_tab_id_list))
+        number_tab_id = []
+        for i in number_tab_id_list:
+            number_tab_id.append(i[0])
+        number_tab_id = str(tuple(number_tab_id))
+
+        sql_list = "sum(dtr.bets), sum(dtr.earn_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
+        sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%i' ) as time,"
+        sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds, nt.pair,"
+        sql_list += " date_format(dtr.created_at, '%Y%c%e%k%i' ) AS created_ats"
+        sql = "select " +sql_list + " from baccarat_baccaratrecord dtr"
+        sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
+        sql += " left join baccarat_number_tab nt on dtr.number_tab_id = nt.id"
+        sql += " where dtr.number_tab_id in" + number_tab_id
+        sql += " and dtr.club_id = '" + club_id + "'"
+        if 'user_id' not in self.request.GET:
+            user_id = str(self.request.user.id)
+            if 'is_end' not in self.request.GET:
+                sql += " and dtr.user_id = '" + user_id + "'"
+            else:
+                is_end = self.request.GET.get('is_end')
+                if int(is_end) == 1:
+                    sql += " and dtr.user_id = '" + user_id + "'"
+                    sql += " and dtr.status =0"
+                else:
+                    sql += " and dtr.user_id = '" + user_id + "'"
+                    sql += " and dtr.status =1"
+        else:
+            user_id = self.request.GET.get('user_id')
+            sql += " and dtr.user_id = '" + user_id + "'"
+        sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id"
+        sql += " order by created_ats desc"
+        print("sql================================", sql)
+        record_list = self.get_list_by_sql(sql)    #
+
         data = []
         tmp = ''
-        for fav in Progress:
-            pecific_dates = fav.get('created_at')[0].get('years')
-            pecific_date = fav.get('created_at')[0].get('year')
+        for fav in record_list:
+            my_option = str(fav[7]) + " - 1 ：" + str(int(fav[10]))
+
+            if fav[1] == 0 or fav[1] == '':
+                earn_coin = "待开奖"
+                if self.request.GET.get('language') == 'en':
+                    earn_coin = "Wait results"
+            elif fav[1] < 0:
+                earn_coin = "猜错"
+                if self.request.GET.get('language') == 'en':
+                    earn_coin = "Guess wrong"
+            else:
+                earn_coin = "+" + str(normalize_fraction(fav[1], int(coin_info[0])))
+
+            if fav[1] == 0 or fav[1] == '':
+                type = 0
+            elif fav[1] > 0:
+                type = 1
+            else:
+                type = 2
+
+            bets = normalize_fraction(fav[0], int(coin_info[0]))
+
+            pecific_dates = fav[2]
+            pecific_date = fav[3]
             if tmp == pecific_date:
                 pecific_date = ""
                 pecific_dates = ""
             else:
                 tmp = pecific_date
             data.append({
-                "id": fav.get('id'),
-                'earn_coin': fav.get('earn_coin'),  # 竞猜结果
-                'type': fav.get('type'),  # 竞猜结果
+                'earn_coin': earn_coin,  # 获得金额
+                'type': type,  # 下注金额
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
-                'pecific_time': fav.get('created_at')[0].get('time'),
-                'my_option': fav.get('my_option'),  # 投注选项
-                # 'is_right': fav.get('is_right'),  # 是否为正确答案
-                'coin_avatar': fav.get('coin_avatar'),  # 货币图标
-                'number_tab_number': fav.get('number_tab_number'),  # 编号
-                'coin_name': fav.get('coin_name'),  # 货币昵称
-                'bet': fav.get('bet'),  # 下注金额
-                'right_option': fav.get('right_option'),  # 下注金额
-                'right_pair': fav.get('right_pair')  # 下注金额
+                'pecific_time': fav[4],
+                'my_option': my_option,  # 投注选项
+                'coin_avatar': coin_info[1],  # 货币图标
+                'number_tab_number': fav[8],  # 编号
+                'right_pair': fav[11],  # 编号
+                'coin_name': coin_info[2],  # 货币昵称
+                'bet': bets,  # 下注金额
+                'right_option': fav[6]  #
             })
 
         return self.response({'code': 0, 'data': data})
