@@ -62,9 +62,12 @@ class Wallet(object):
     def post(self, url, data):
         """
         发起post请求
+        :param  url 请求地址，可以写完整接口地址
+        :param  data    接口请求
         :return:
         """
-        result = requests.post(local_settings.ETH_WALLET_API_URL + url, headers=self.request_headers(data))
+        request_url = url if url.find('http') >= 0 else local_settings.ETH_WALLET_API_URL + url
+        result = requests.post(request_url, headers=self.request_headers(data))
         return result.json()
 
     def get(self, url):
@@ -72,7 +75,8 @@ class Wallet(object):
         发起get请求
         :return:
         """
-        result = requests.get(local_settings.ETH_WALLET_API_URL + url, headers=self.request_headers())
+        request_url = url if url.find('http') >= 0 else local_settings.ETH_WALLET_API_URL + url
+        result = requests.get(request_url, headers=self.request_headers())
         response = {'code': 0, 'message': 'success', 'data': {}}
         try:
             response = result.json()
