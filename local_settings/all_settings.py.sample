@@ -171,3 +171,7 @@ DJANGO_SILK_ENABLE = False  # 是否开启silk扩展
 USER_MESSAGE_SAVE_PATH = '/data/data/user_message/'
 USER_MESSAGE_SEPARATOR = '||||'
 
+# USDT、BCH钱包配置
+BTC_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
+BTC_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
+

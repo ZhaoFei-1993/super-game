@@ -2,6 +2,7 @@ import time
 from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
 from decimal import Decimal
+from local_settings import BTC_WALLET_API_URL
 
 
 def bitcoin_cash_monitor(block_num):
@@ -14,7 +15,7 @@ def bitcoin_cash_monitor(block_num):
 
     # 根据block_num 获取交易数据
     wallet = Wallet()
-    json_obj = wallet.get(url='v1/bch/block/transactions/' + str(block_num))
+    json_obj = wallet.get(url=BTC_WALLET_API_URL + 'v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
 
     to_address = []
