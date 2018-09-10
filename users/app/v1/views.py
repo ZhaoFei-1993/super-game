@@ -1389,7 +1389,10 @@ class AssetView(ListAPIView):
         gsg_coin_lock = normalize_fraction(gsg_coin_lock, 8)
 
         soc_coin_lock = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2, is_recharge_lock=0).first()
-        soc_coin_lock = normalize_fraction(soc_coin_lock.lock_coin, 8)
+        if soc_coin_lock == "" or soc_coin_lock == None:
+            soc_coin_lock = 0
+        else:
+            soc_coin_lock = normalize_fraction(soc_coin_lock.lock_coin, 8)
 
         for item in items:
             coin_id = item['coin_id']
@@ -3199,10 +3202,9 @@ class Url_list(ListAPIView):
 
             pygame.init()
             # 设置字体和字号
-            # avatar = user.avatar
-            # avatar = avatar.replace('https://api.gsg.one/uploads/', settings.MEDIA_ROOT)
-
-            avatar = settings.MEDIA_ROOT+"1850301213720180611151907.png"
+            avatar = user.avatar
+            avatar = avatar.replace('https://api.gsg.one/uploads/', settings.MEDIA_ROOT)
+            # avatar = settings.MEDIA_ROOT+"1850301213720180611151907.png"
             ima = Image.open(avatar).convert("RGBA")
             size = ima.size
             print(size)
@@ -3224,12 +3226,14 @@ class Url_list(ListAPIView):
 
                     if l < r3:
                         pimb[i - (r - r3), j - (r - r3)] = pima[i, j]
-            imb.save(save_path + "/test_circle.png")
+            imb.save(save_path + "/test_circle.png")           # 保存圆角头像
 
-            font = pygame.font.Font("./utils/simsun.ttc", 30)
+            font = pygame.font.Font("./utils/simsun.ttc", 22)
             # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-            nickname = user.nickname[0:1]+"****"
+            nickname = user.nickname[0:7]
             ftext = font.render(nickname, True, (0, 0, 0), (227, 185, 59))
+            ftext_width = ftext.get_width()
+            print("size=======================", ftext_width)
             # 保存图片
             invitation_code_address = save_path + '/nickname_' + str(user.id) + '.jpg'
             pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -3250,8 +3254,9 @@ class Url_list(ListAPIView):
                 settings.BASE_DIR + '/uploads/soc_activity/' + sub_path + '/nickname_' + str(user.id) + '.jpg')
             avatar = Image.open(
                 save_path + '/test_circle.png')
-            base_img.paste(ftext, (298, 278))  # 插入邀请码
-            base_img.paste(avatar, (252, 75), avatar)  # 插入邀请码
+            width = (690 - int(ftext_width)) / 2
+            base_img.paste(ftext, (int(width), 284))  # 插入邀请码
+            base_img.paste(avatar, (252, 75), avatar)  # 头像
 
             base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
             base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
