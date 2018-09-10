@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.db import models
+from django.db.models import Max
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
@@ -14,7 +15,7 @@ from base.error_code import get_code
 from utils.models import CodeModel
 from base.models import BaseManager
 from utils.cache import get_cache, set_cache, delete_cache
-from utils.common import save_user_message_content
+import random
 
 
 class UserManager(BaseUserManager):
@@ -111,6 +112,7 @@ class User(AbstractBaseUser):
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     is_block = models.BooleanField(verbose_name="是否被封", default=False)
+    eos_code = models.IntegerField(verbose_name="EOS充值码", default=0)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -1269,16 +1271,44 @@ class PreReleaseUnlockMessageLog(models.Model):
 
 class DividendHistory(models.Model):
     date = models.CharField(verbose_name="日期", max_length=20, default="")
-    locked  = models.DecimalField(verbose_name="锁定数量", max_digits=32, decimal_places=2, default=0.00)
+    locked = models.DecimalField(verbose_name="锁定数量", max_digits=32, decimal_places=2, default=0.00)
     deadline = models.DecimalField(verbose_name="当日到期数量", max_digits=32, decimal_places=2, default=0.00)
     newline = models.DecimalField(verbose_name="当日新增数量", max_digits=32, decimal_places=2, default=0.00)
     truevalue = models.DecimalField(verbose_name="实际分红额", max_digits=32, decimal_places=8, default=0)
-    revenuevalue=models.DecimalField(verbose_name="营收分红额", max_digits=32, decimal_places=8, default=0)
+    revenuevalue = models.DecimalField(verbose_name="营收分红额", max_digits=32, decimal_places=8, default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="创建时间", auto_now=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG历史分红列表"
+
+
+class EosCodeManager(models.Manager):
+    """
+    EOS充值码数据操作
+    """
+    def get_random(self):
+        """
+        随机获取一条数据
+        :return:
+        """
+        max_id = self.filter(user_id=0, is_good_code=False).aggregate(max_id=Max('id'))['max_id']
+        while True:
+            eos_code_id = random.randint(1, max_id)
+            eos_code = self.filter(pk=eos_code_id, user_id=0, is_good_code=False).first()
+            if eos_code:
+                return eos_code
+
+
+class EosCode(models.Model):
+    code = models.IntegerField(verbose_name="EOS充值编号")
+    is_good_code = models.BooleanField(verbose_name="是否靓号", default=False)
+    is_used = models.BooleanField(verbose_name="用户ID", default=False)
+
+    objects = EosCodeManager()
+
+    class Meta:
+        verbose_name = verbose_name_plural = "EOS充值编号生成表"
 
 
 
