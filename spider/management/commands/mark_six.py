@@ -101,7 +101,7 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     next_issue_dic = new_issue(issue, openprice.next_open)
     open_price.next_issue = next_issue_dic['next_issue']
     open_price.starting = datetime.datetime.now()
-    open_price.next_open = next_issue_dic['next_open_date']
+    open_price.next_open = next_issue_dic['next_open']
     open_price.next_closing = next_issue_dic['next_closing']
 
     open_price.is_open = True
@@ -135,16 +135,17 @@ class Command(BaseCommand):
         }
 
         response = requests.post(url, data=data, headers=headers)
+        open_price = OpenPrice.objects.order_by('-open').first()
         for body_list in response.json()['result']['data']['bodyList']:
             pre_draw_date = body_list['preDrawDate']
             issue = str(body_list['issue'])
-            if OpenPrice.objects.filter(issue=str(issue), is_open=False).exists() is not True:
-                pass
-            else:
+            if issue == open_price.next_issue and datetime.datetime.now() > open_price.next_open:
                 print(pre_draw_date, ' ', issue + '期')
                 # 拿到正码
                 pre_draw_code = body_list['preDrawCode']
                 pre_draw_code_list = pre_draw_code.split(',')
 
                 mark_six_result(pre_draw_code_list, pre_draw_date, issue)
+            else:
+                pass
 
