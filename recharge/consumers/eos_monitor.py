@@ -36,7 +36,7 @@ def electro_optical_system_monitor(block_num):
     for index, item in enumerate(block['transactions']):
         outputs = item['out']
         for output in outputs:
-            memos = 100000 if output['memo'] == 'memo' else output['memo']
+            memos = output['memo']
             to_memos += memos
             for memo in memos:
                 if memo not in memo_tx:
@@ -48,7 +48,7 @@ def electro_optical_system_monitor(block_num):
                     'memo': output['memo'],
                 })
 
-    in_memo = User.objects.filter(eos_code__in=to_memos).values('id', 'memo')
+    in_memo = User.objects.filter(eos_code__in=to_memos).values('id', 'eos_code')
     if len(in_memo) == 0:
         return True
 
