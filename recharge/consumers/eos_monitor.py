@@ -2,6 +2,7 @@ import time
 from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
 from decimal import Decimal
+from local_settings import EOS_WALLET_API_URL
 
 
 def electro_optical_system_monitor(block_num):
@@ -14,8 +15,11 @@ def electro_optical_system_monitor(block_num):
 
     # 根据block_num 获取交易数据
     wallet = Wallet()
-    json_obj = wallet.get(url='v1/bch/block/transactions/' + str(block_num))
+    json_obj = wallet.get(url=EOS_WALLET_API_URL + 'v1/eos/block/transactions/' + str(block_num))
     block = json_obj['data']
+
+    print('block = ', block)
+    raise 404
 
     to_address = []
     address_tx = {}
@@ -31,6 +35,7 @@ def electro_optical_system_monitor(block_num):
                 address_tx[address].append({
                     'txid': item['txid'],
                     'value': output['value'],
+                    'memo': output['memo'],
                 })
 
     in_address = UserCoin.objects.filter(address__in=to_address).values('address', 'user_id')
@@ -54,7 +59,7 @@ def electro_optical_system_monitor(block_num):
 
             recharge_obj = UserRecharge()
             recharge_obj.address = user_coin.address
-            recharge_obj.coin_id = Coin.BCH
+            recharge_obj.coin_id = Coin.EOS
             recharge_obj.txid = txid
             recharge_obj.user_id = user_coin.user_id
             recharge_obj.amount = Decimal(recharge['value'])

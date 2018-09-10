@@ -1411,8 +1411,10 @@ class AssetView(ListAPIView):
                 locked_coin = presentation_amount
 
             address = item["address"]
+            eos_code = ''
             if coin.id == Coin.EOS:
                 address = settings.EOS_RECHARGE_ADDRESS
+                eos_code = user_info.eos_code
 
             temp_dict = {
                 'coin_order': coin.coin_order,
@@ -1427,7 +1429,8 @@ class AssetView(ListAPIView):
                 'service_charge': coin_id_charges[coin_id] if coin_id in coin_id_charges else '',
                 'service_coin': coin_payment[coin_id] if coin_id in coin_payment else '',
                 'min_present': min_present,
-                'recent_address': recent_address
+                'recent_address': recent_address,
+                'eos_code': eos_code,
             }
             if temp_dict['coin_name'] == 'HAND':
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance, coin.coin_accuracy)
