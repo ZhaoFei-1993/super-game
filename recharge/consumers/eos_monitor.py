@@ -1,5 +1,5 @@
 import time
-from users.models import UserRecharge, User, Coin
+from users.models import UserRecharge, User, Coin, UserCoin, CoinDetail
 from base.eth import Wallet
 from decimal import Decimal
 from local_settings import EOS_WALLET_API_URL
@@ -67,17 +67,32 @@ def electro_optical_system_monitor(block_num):
             if txid in txids:
                 continue
 
+            user_id = user['id']
+            eos_code = user['eos_code']
+            value = recharge['value']
+
             recharge_obj = UserRecharge()
-            recharge_obj.address = user['eos_code']
+            recharge_obj.address = eos_code
             recharge_obj.coin_id = Coin.EOS
             recharge_obj.txid = txid
-            recharge_obj.user_id = user['id']
-            recharge_obj.amount = Decimal(recharge['value'])
+            recharge_obj.user_id = user_id
+            recharge_obj.amount = Decimal(value)
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = convert_localtime(block_time)
             # recharge_obj.save()
 
             # user coin增加对应值
+            user_coin = UserCoin.objects.get(coin_id=Coin.EOS, user_id=user_id)
+            user_coin.balance += Decimal(value)
+            # user_coin.save()
+
+            coin_detail = CoinDetail()
+            coin_detail.user_id = user_id
+            coin_detail.coin_name = 'EOS'
+            coin_detail.amount = value
+            coin_detail.rest = user_coin.balance
+            coin_detail.sources = CoinDetail.RECHARGE
+            # coin_detail.save()
 
             print('获取1条EOS充值记录，TX = ', txid, ' 充值码 = ', str(user['eos_code']), ' 充值金额 = ', recharge['value'])
 
