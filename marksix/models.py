@@ -124,8 +124,11 @@ class OpenPrice(models.Model):
 
     closing = models.DateTimeField(verbose_name="封盘时间", null=True)
     open = models.DateTimeField(verbose_name="开奖时间", null=True)
+
+    next_issue = models.CharField(verbose_name="下期期号", max_length=3, default='')
     starting = models.DateTimeField(verbose_name="下期开始投注时间", null=True)
     next_open = models.DateTimeField(verbose_name="下期开奖时间", null=True)
+    next_closing = models.DateTimeField(verbose_name="下期封盘时间", null=True)
     is_open = models.BooleanField(verbose_name="是否开奖", default=0)
 
     class Meta:

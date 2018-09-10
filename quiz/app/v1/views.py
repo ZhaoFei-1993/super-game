@@ -829,9 +829,11 @@ class BetView(ListCreateAPIView):
 
         # 调整赔率
         Option.objects.change_odds(rule_id, coin_id, roomquiz_id)
+        if clubinfo.coin.name == "SOC":  # USDT下注
+            pass
 
         if clubinfo.coin.name == "USDT":  # USDT下注
-            give_coin = CoinGiveRecords.objects.get(user_id=user.id)
+            give_coin = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
             coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
             balance = normalize_fraction(usercoin.balance, coin_accuracy)  # 总下注额
             usercoin.balance = balance - coins  # 用户余额表减下注额
