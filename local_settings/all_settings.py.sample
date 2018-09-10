@@ -179,4 +179,5 @@ BCH_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
 # EOS钱包配置
 EOS_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
 EOS_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
+EOS_RECHARGE_ADDRESS = 'gsgeosaddress'
 
