@@ -1351,14 +1351,6 @@ class AssetView(ListAPIView):
             if coin.is_disabled is False:
                 coin_ids.append(coin.id)
 
-        # coin_values = CoinValue.objects.filter(coin_id__in=coin_ids)
-        # map_coin_values = {}
-        # for coin_value in coin_values:
-        #     if coin_value.coin_id not in map_coin_values:
-        #         map_coin_values[coin_value.coin_id] = []
-        #     map_coin_values[coin_value.coin_id].append(coin_value.value)
-        # print('map_coin_values = ', map_coin_values)
-
         # 近期使用地址
         user_presentation = UserPresentation.objects.filter(user_id=user_id, coin_id__in=coin_ids).order_by('-created_at')
         map_user_presentation = {}
@@ -1415,12 +1407,16 @@ class AssetView(ListAPIView):
             else:
                 locked_coin = presentation_amount
 
+            address = item["address"]
+            if coin.id == Coin.EOS:
+                address = settings.EOS_RECHARGE_ADDRESS
+
             temp_dict = {
                 'coin_order': coin.coin_order,
                 'icon': coin.icon,
                 'coin_name': coin.name,
                 'coin': item["coin_id"],
-                'recharge_address': item["address"],
+                'recharge_address': address,
                 'balance': item["balance"],
                 'locked_coin': locked_coin,
                 'is_reality': coin.is_reality,
