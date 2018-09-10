@@ -61,17 +61,17 @@ def electro_optical_system_monitor(block_num):
     # 把该地址对应的交易信息拿出来
     recharge_number = 0
     for user in in_memo:
-        memo_recharges = memo_tx[user.eso_code]
+        memo_recharges = memo_tx[user['eso_code']]
         for recharge in memo_recharges:
             txid = recharge['txid']
             if txid in txids:
                 continue
 
             recharge_obj = UserRecharge()
-            recharge_obj.address = user.eso_code
+            recharge_obj.address = user['eso_code']
             recharge_obj.coin_id = Coin.EOS
             recharge_obj.txid = txid
-            recharge_obj.user_id = user.id
+            recharge_obj.user_id = user['id']
             recharge_obj.amount = Decimal(recharge['value'])
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = convert_localtime(block_time)
