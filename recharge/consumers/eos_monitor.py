@@ -79,7 +79,7 @@ def electro_optical_system_monitor(block_num):
 
             # user coin增加对应值
 
-            print('获取1条EOS充值记录，TX = ', txid, ' 充值码 = ', str(user.eso_code), ' 充值金额 = ', recharge['value'])
+            print('获取1条EOS充值记录，TX = ', txid, ' 充值码 = ', str(user['eos_code']), ' 充值金额 = ', recharge['value'])
 
             recharge_number += 1
 
