@@ -280,6 +280,8 @@ def ergodic_record(issue, answer_dic):
     if len(records) > 0:
         for record in records:
             play_dic[record.play_id](record, answer_dic)
+            record.status = '1'
+            record.save()
 
     # 开始执行sql语句
     # 插入coin_detail表
