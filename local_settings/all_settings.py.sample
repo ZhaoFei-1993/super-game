@@ -57,6 +57,7 @@ SMS_TEMPLATE_ID = 'SMS_82260017'
 MEDIA_DOMAIN_HOST = 'http://up.wocaicai.com'
 STATIC_DOMAIN_HOST = 'http://static.wocaicai.com'
 SUPER_GAME_SUBDOMAIN_NAME = 'https://share.gsgone.net'
+OFFICIAL_WEBSITE = 'https://www.gsg111.com'
 
 # 分享页面的竞猜ID
 SHARE_QUIZ_ID = 277
