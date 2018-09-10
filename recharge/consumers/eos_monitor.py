@@ -61,6 +61,7 @@ def electro_optical_system_monitor(block_num):
     # 把该地址对应的交易信息拿出来
     recharge_number = 0
     for user in in_memo:
+        print('user = ', user)
         memo_recharges = memo_tx[user['eso_code']]
         for recharge in memo_recharges:
             txid = recharge['txid']
