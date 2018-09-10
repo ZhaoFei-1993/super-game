@@ -1,4 +1,3 @@
-import time
 from users.models import UserRecharge, User, Coin, UserCoin, CoinDetail
 from base.eth import Wallet
 from decimal import Decimal
