@@ -21,7 +21,7 @@ def electro_optical_system_monitor(block_num):
     block = json_obj['data']
 
     print('block = ', block)
-    block_time = block.time
+    block_time = block['time']
     t_year = int(block_time[:4])
     t_month = int(block_time[5:7])
     t_day = int(block_time[8:10])
