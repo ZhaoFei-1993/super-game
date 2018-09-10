@@ -730,6 +730,51 @@ class UserRechargeManager(models.Manager):
             user_message.message_id = 3
             user_message.save()
 
+    @staticmethod
+    def soc_gift_event(user):
+        """
+        soc赠送活动
+        :param user:
+        :return:
+        """
+        activity = CoinGive.objects.get(pk=2)
+        end_date = activity.end_time.strftime("%Y%m%d%H%M%S")
+        today_time = date.today().strftime("%Y%m%d%H%M%S")
+        # 判断是否在活动时间内
+        if today_time >= end_date or user.is_robot is True:
+            return True
+
+        user_id = user.id
+        # 判断是否已赠送
+        is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2).count()
+        if is_give > 0:
+            return True
+        give_number = CoinGiveRecords.objects.filter(is_recharge_lock=1, coin_give_id=2).count()
+        if give_number >= 500:
+            return True
+
+        user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
+        user_coin_give_records = CoinGiveRecords()
+        user_coin_give_records.start_coin = user_coin.balance
+        user_coin_give_records.user = user
+        user_coin_give_records.coin_give = activity
+        user_coin_give_records.lock_coin = activity.number
+        user_coin_give_records.save()
+
+        user_message = UserMessage()
+        user_message.status = 0
+        user_message.user = user
+        user_message.message_id = 11
+        user_message.save()
+
+        coin_bankruptcy = CoinDetail()
+        coin_bankruptcy.user = user
+        coin_bankruptcy.coin_name = 'SOC'
+        coin_bankruptcy.amount = '+' + str(activity.number)
+        coin_bankruptcy.rest = Decimal(user_coin.balance)
+        coin_bankruptcy.sources = 4
+        coin_bankruptcy.save()
+
 
 @reversion.register()
 class UserRecharge(models.Model):
@@ -826,7 +871,7 @@ class UserInvitationManager(models.Manager):
                 #     coin_detail.rest = usdt_balance.balance
                 #     coin_detail.sources = 8
                 #     coin_detail.save()
-                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
                 #     usdt_give.lock_coin += a.money
                 #     usdt_give.save()
                 # else:
@@ -1000,7 +1045,7 @@ class CoinGiveManager(models.Manager):
 
         user_id = user.id
         # 判断是否已赠送
-        is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
+        is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give=1).count()
         if is_give > 0:
             return True
 
