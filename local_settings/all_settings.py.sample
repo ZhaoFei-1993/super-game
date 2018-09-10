@@ -175,3 +175,7 @@ USER_MESSAGE_SEPARATOR = '||||'
 BCH_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
 BCH_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
 
+# EOS钱包配置
+EOS_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
+EOS_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
+
