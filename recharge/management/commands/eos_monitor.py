@@ -37,7 +37,7 @@ class Command(BaseCommand, BaseView):
         """
         try:
             wallet = Wallet()
-            response = wallet.get(url=EOS_WALLET_API_URL + 'v1/eos/block/block_height')
+            response = wallet.get(url=EOS_WALLET_API_URL + 'v1/eos/block/height')
             block_height = int(response['data'])
         except Exception:
             raise CommandError('获取区块链最新节点高度失败')
