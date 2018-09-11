@@ -156,7 +156,7 @@ class UserRegister(object):
                 if i not in mes_ids:
                     usermessage = UserMessage()
                     usermessage.user = user
-                    usermessage.message = i
+                    usermessage.message_id = i
                     usermessage.save()
 
             Address.objects.initial(user.id)
