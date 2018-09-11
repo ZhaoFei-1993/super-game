@@ -221,8 +221,6 @@ class UserRegister(object):
 
             register_type = self.get_register_type(username)
             user = User()
-            if len(username) == 11:
-                user.telephone = username
             if area_code is None or area_code == '':
                 area_code = 86
             user.area_code = area_code
@@ -235,6 +233,7 @@ class UserRegister(object):
             user.nickname = nickname
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
+            user.telephone = username
             user.save()
 
             give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
