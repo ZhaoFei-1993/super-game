@@ -299,6 +299,26 @@ def normalize_fraction(d, b):
     return normalized if exponent <= 0 else normalized.quantize(1)
 
 
+def handle_zero(num):
+    """
+        处理小数点后的0
+        :param num:
+        :return str:
+    """
+    num = str(float(num))
+    num_list = num.split('.')
+    point_after_list = list(num_list[1])
+    for i in reversed(point_after_list):
+        if i == '0':
+            point_after_list.remove(i)
+        else:
+            break
+    if len(point_after_list) != 0:
+        return num_list[0] + '.' + ''.join(point_after_list)
+    else:
+        return num_list[0]
+
+
 def genarate_plist(version, file_path):
     """
     生成IOS plist文件

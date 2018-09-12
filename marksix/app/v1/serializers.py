@@ -6,6 +6,7 @@ from chat.models import Club
 from datetime import datetime
 from marksix.functions import change_num
 from utils.cache import set_cache, get_cache
+from utils.functions import handle_zero
 
 
 class PlaySerializer(serializers.HyperlinkedModelSerializer):
@@ -204,19 +205,25 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
     """
     下注
     """
+    bet_coin = serializers.SerializerMethodField()  # 下注金额
     coin_name = serializers.SerializerMethodField()  # 货币名称
     option_name = serializers.SerializerMethodField()  # 玩法名称
     created_time = serializers.SerializerMethodField()  # 下注时间处理，保留到分钟
     earn = serializers.SerializerMethodField()  # 投注状态，下注结果，下注正确，错误，或者挣钱
     content = serializers.SerializerMethodField()  # 下注内容
     coin_avartar = serializers.SerializerMethodField()  # 币种图标
+    one_piece_value = serializers.SerializerMethodField()  # 一注的价值
 
     class Meta:
         model = SixRecord
         fields = (
             "bet", "bet_coin", "status", "created_time", "issue",
-            "content", 'coin_name', 'option_name', 'earn', 'coin_avartar'
+            "content", 'coin_name', 'option_name', 'earn', 'coin_avartar',
+            "one_piece_value"
         )
+
+    def get_bet_coin(self, obj):
+        return handle_zero(obj.bet_coin)
 
     def get_content(self, obj):
         play = obj.play
@@ -244,7 +251,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
             title = Option.objects.get(id=option_id).option
 
         if play.id != 3 or title == '平码':
-            next = str(len(res.split(','))) + last
+            next = '共' + str(len(res.split(','))) + last
             res = res + '/' + next
         else:
             n = len(res.split(','))
@@ -252,7 +259,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                 sum = int(n * (n - 1) / 2)
             else:
                 sum = int(n * (n - 1) * (n - 2) / 6)
-            next = str(sum) + last
+            next = '共' + str(sum) + last
             res = res + '/' + next
         return res
 
@@ -308,6 +315,9 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         club_id = obj.club_id
         coin_avartar = Club.objects.get(id=club_id).coin.icon
         return coin_avartar
+
+    def get_one_piece_value(self, obj):
+        return handle_zero(obj.bet_coin / obj.bet)
 
 
 class ColorSerializer(serializers.HyperlinkedModelSerializer):
