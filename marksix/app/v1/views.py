@@ -278,9 +278,9 @@ class BetsViews(ListCreateAPIView):
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
         # 如果是色波玩法，最多允许选两个
-        if play_id == 2:
+        if int(play_id) == 2:
             if len(content.split(',')) > 2:
-                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+                raise ParamErrorException(error_code.API_50206_BET_COLOR_OVER)
 
         # 期数判断
         now = get_now()
