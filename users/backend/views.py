@@ -648,6 +648,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
     @transaction.atomic()
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
+        language = request.data.get('language', '')
 
         if 'status' not in request.data \
                 and 'text' not in request.data \
@@ -688,7 +689,6 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 coin_detail.save()
                 if 'text' in request.data:
                     text = request.data.get('text')
-                    language = request.data.get('language', '')
                     item.feedback = text
                     user_message = UserMessage()
                     user_message.status = 0
@@ -726,8 +726,20 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 if response['code'] == 0:
                     item.txid = response['data']['txn']
 
+                # 发送提现消息
+                user_message = UserMessage()
+                user_message.status = 0
+                if language == 'en':
+                    user_message.content = 'TXID:' + item.txid
+                    user_message.title = 'Present Success'
+                else:
+                    user_message.content = 'TXID:' + item.txid
+                    user_message.title = '提现成功公告'
+                user_message.user = item.user
+                user_message.message_id = 6  # 修改密码
+                # user_message.save()
+
         if 'txid' in request.data:
-            language = request.data.get('language', '')
             txid = request.data.get('txid')
             item.txid = txid
             user_message = UserMessage()
@@ -741,7 +753,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
             user_message.user = item.user
             user_message.message_id = 6  # 修改密码
             user_message.save()
-        print(item.txid)
+        print('txid = ', item.txid)
         item.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
