@@ -55,27 +55,31 @@ class AddressManager(models.Manager):
         for coin_id in arr_coins:
             coin = obj_coin[coin_id]
 
-            # ETH及代币
-            if coin.is_eth_erc20:
-                # 判断用户是否有地址，若有，则直接用地址，无则从地址库中拿出来
-                if eth_address is None:
-                    address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.ETH).first()
-                    address.user = user_id
-                    address.save()
-                    coin_address = address.address
-                    eth_address = coin_address
-                else:
-                    coin_address = eth_address
-            # BTC、USDT、BCH
+            # EOS
+            if coin_id in [8]:
+                coin_address = ''
             else:
-                if btc_address is None:
-                    address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.BTC).first()
-                    address.user = user_id
-                    address.save()
-                    coin_address = address.address
-                    btc_address = coin_address
+                # ETH及代币
+                if coin.is_eth_erc20:
+                    # 判断用户是否有地址，若有，则直接用地址，无则从地址库中拿出来
+                    if eth_address is None:
+                        address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.ETH).first()
+                        address.user = user_id
+                        address.save()
+                        coin_address = address.address
+                        eth_address = coin_address
+                    else:
+                        coin_address = eth_address
+                # BTC、USDT、BCH
                 else:
-                    coin_address = btc_address
+                    if btc_address is None:
+                        address = Address.objects.select_for_update().filter(user=0, coin_id=Coin.BTC).first()
+                        address.user = user_id
+                        address.save()
+                        coin_address = address.address
+                        btc_address = coin_address
+                    else:
+                        coin_address = btc_address
 
             user_coin = UserCoin()
             user_coin.coin_id = coin_id

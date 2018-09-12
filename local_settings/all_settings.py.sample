@@ -57,6 +57,7 @@ SMS_TEMPLATE_ID = 'SMS_82260017'
 MEDIA_DOMAIN_HOST = 'http://up.wocaicai.com'
 STATIC_DOMAIN_HOST = 'http://static.wocaicai.com'
 SUPER_GAME_SUBDOMAIN_NAME = 'https://share.gsgone.net'
+OFFICIAL_WEBSITE = 'https://www.gsg111.com'
 
 # 分享页面的竞猜ID
 SHARE_QUIZ_ID = 277
@@ -174,4 +175,9 @@ USER_MESSAGE_SEPARATOR = '||||'
 # USDT、BCH钱包配置
 BCH_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
 BCH_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
+
+# EOS钱包配置
+EOS_WALLET_API_SECRET = 'qbrVGQ4$Dxrz&S]vbTG#!!'
+EOS_WALLET_API_URL = 'http://127.0.0.1:3002/api/'
+EOS_RECHARGE_ADDRESS = 'gsgeosaddress'
 

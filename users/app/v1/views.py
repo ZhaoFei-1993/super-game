@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding:utf-8 -*-
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, LockSerialize, \
@@ -39,8 +39,14 @@ from api.settings import MEDIA_DOMAIN_HOST
 from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
-from utils.functions import value_judge, get_sql
+from utils.functions import value_judge, get_sql, soc_activity
 from console.models import Address
+from quiz.models import Record as quiz_record
+from guess.models import Record as guess_record
+from marksix.models import SixRecord
+from dragon_tiger.models import Dragontigerrecord
+from baccarat.models import Baccaratrecord
+from PIL import Image
 
 
 class UserRegister(object):
@@ -149,7 +155,7 @@ class UserRegister(object):
                 if i not in mes_ids:
                     usermessage = UserMessage()
                     usermessage.user = user
-                    usermessage.message = i
+                    usermessage.message_id = i
                     usermessage.save()
 
             Address.objects.initial(user.id)
@@ -214,8 +220,6 @@ class UserRegister(object):
 
             register_type = self.get_register_type(username)
             user = User()
-            if len(username) == 11:
-                user.telephone = username
             if area_code is None or area_code == '':
                 area_code = 86
             user.area_code = area_code
@@ -228,6 +232,7 @@ class UserRegister(object):
             user.nickname = nickname
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
+            user.telephone = username
             user.save()
 
             give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
@@ -1325,6 +1330,8 @@ class AssetView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         user_info = request.user
+        base_img = soc_activity(user_info)
+        print("base_img=================================", base_img)
         user_id = user_info.id
         items = results.data.get('results')
         data = []
@@ -1343,14 +1350,6 @@ class AssetView(ListAPIView):
 
             if coin.is_disabled is False:
                 coin_ids.append(coin.id)
-
-        # coin_values = CoinValue.objects.filter(coin_id__in=coin_ids)
-        # map_coin_values = {}
-        # for coin_value in coin_values:
-        #     if coin_value.coin_id not in map_coin_values:
-        #         map_coin_values[coin_value.coin_id] = []
-        #     map_coin_values[coin_value.coin_id].append(coin_value.value)
-        # print('map_coin_values = ', map_coin_values)
 
         # 近期使用地址
         user_presentation = UserPresentation.objects.filter(user_id=user_id, coin_id__in=coin_ids).order_by('-created_at')
@@ -1381,6 +1380,12 @@ class AssetView(ListAPIView):
         gsg_coin_lock = gsg_coin_lock['amount__sum'] if gsg_coin_lock['amount__sum'] is not None else 0
         gsg_coin_lock = normalize_fraction(gsg_coin_lock, 8)
 
+        soc_coin_lock = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2, is_recharge_lock=0).first()
+        if soc_coin_lock == "" or soc_coin_lock == None:
+            soc_coin_lock = 0
+        else:
+            soc_coin_lock = normalize_fraction(soc_coin_lock.lock_coin, 8)
+
         for item in items:
             coin_id = item['coin_id']
             coin = map_coins[coin_id]
@@ -1400,15 +1405,23 @@ class AssetView(ListAPIView):
                 coin_id] if coin_id in map_user_presentation_amount else 0
             if coin_id == Coin.GSG:
                 locked_coin = presentation_amount + gsg_coin_lock
+            elif coin_id == Coin.SOC:
+                locked_coin = presentation_amount + soc_coin_lock
             else:
                 locked_coin = presentation_amount
+
+            address = item["address"]
+            eos_code = ''
+            if coin.id == Coin.EOS:
+                address = settings.EOS_RECHARGE_ADDRESS
+                eos_code = user_info.eos_code
 
             temp_dict = {
                 'coin_order': coin.coin_order,
                 'icon': coin.icon,
                 'coin_name': coin.name,
                 'coin': item["coin_id"],
-                'recharge_address': item["address"],
+                'recharge_address': address,
                 'balance': item["balance"],
                 'locked_coin': locked_coin,
                 'is_reality': coin.is_reality,
@@ -1416,7 +1429,8 @@ class AssetView(ListAPIView):
                 'service_charge': coin_id_charges[coin_id] if coin_id in coin_id_charges else '',
                 'service_coin': coin_payment[coin_id] if coin_id in coin_payment else '',
                 'min_present': min_present,
-                'recent_address': recent_address
+                'recent_address': recent_address,
+                'eos_code': eos_code,
             }
             if temp_dict['coin_name'] == 'HAND':
                 temp_dict['eth_balance'] = normalize_fraction(eth.balance, coin.coin_accuracy)
@@ -1439,7 +1453,8 @@ class AssetView(ListAPIView):
             'user_avatar': user_info.avatar,
             'user_integral': normalize_fraction(user_gsg.balance, 2),
             'least_lock_amount': settings.GSG_LEAST_LOCK_AMOUNT,
-            'data': data
+            'data': data,
+            'base_img': base_img
         }
 
         return self.response(response)
@@ -1566,7 +1581,7 @@ class UserPresentationView(CreateAPIView):
 
         elif coin.name == 'USDT':  # usdt
             try:
-                coin_give = CoinGiveRecords.objects.get(user_id=userid)
+                coin_give = CoinGiveRecords.objects.get(user_id=userid, coin_give_id=1)
             except Exception:
                 raise
             balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
@@ -1584,7 +1599,7 @@ class UserPresentationView(CreateAPIView):
 
                 if coin.name == "USDT":  # usdt
                     try:
-                        coin_give = CoinGiveRecords.objects.get(user_id=userid)
+                        coin_give = CoinGiveRecords.objects.get(user_id=userid, coin_give_id=1)
                     except Exception:
                         raise
                     balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
@@ -3116,3 +3131,133 @@ class DividendHistory(ListAPIView):
             #     'coin_icon': x['coin_icon']
             # })
         return self.response({'code': 0, 'data': data})
+
+
+class Url_list(ListAPIView):
+    """
+    test
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+        quiz_sum = quiz_record.objects.filter(user_id=user.id, roomquiz_id=8).aggregate(Sum('bet'))
+        quiz_bet = quiz_sum['bet__sum']
+        if quiz_bet is None:
+            quiz_bet = 0
+        else:
+            quiz_bet = float(quiz_bet)
+        guess_sum = guess_record.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+        guess_bet = guess_sum['bets__sum']
+        if guess_bet is None:
+            guess_bet = 0
+        else:
+            guess_bet = float(guess_bet)
+        six_sum = SixRecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bet_coin'))
+        six_bet = six_sum['bet_coin__sum']
+        if six_bet is None:
+            six_bet = 0
+        else:
+            six_bet = float(six_bet)
+        dragin_tiger_sum = Dragontigerrecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+        dragin_tiger_bet = dragin_tiger_sum['bets__sum']
+        if dragin_tiger_bet is None:
+            dragin_tiger_bet = 0
+        else:
+            dragin_tiger_bet = float(dragin_tiger_bet)
+        baccarat_sum = Baccaratrecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+        baccarat_bet = baccarat_sum['bets__sum']
+        if baccarat_bet is None:
+            baccarat_bet = 0
+        else:
+            baccarat_bet = float(baccarat_bet)
+        bet_sum = quiz_bet + baccarat_bet + dragin_tiger_bet + six_bet + guess_bet
+        coin_give_number = CoinGiveRecords.objects.filter(user_id=user.id, coin_give_id=2, is_recharge_lock=0).count()
+        if coin_give_number == 1 and bet_sum >= 100:
+            coin_give_info = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=2, is_recharge_lock=0)
+            user_coin = UserCoin.objects.get(user_id=user.id, coin_id=11)
+            user_coin.balance += coin_give_info.lock_coin
+            user_coin.save()
+            coin_give_info.lock_coin = 0
+            coin_give_info.is_recharge_give = 1
+
+            # 生成为活动海报
+            sub_path = str(user.id % 10000)
+
+            spread_path = settings.MEDIA_ROOT + 'soc_activity/'
+            if not os.path.exists(spread_path):
+                os.mkdir(spread_path)
+
+            save_path = spread_path + sub_path
+            if not os.path.exists(save_path):
+                os.mkdir(save_path)
+
+            if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/soc_activity/' + sub_path + '/spread_' + str(
+                    user.id) + '.jpg'    # 界面地址
+                return self.response({'code': 0, "base_img": base_img})
+
+            pygame.init()
+            # 设置字体和字号
+            avatar = user.avatar
+            avatar = avatar.replace('https://api.gsg.one/uploads/', settings.MEDIA_ROOT)
+            # avatar = settings.MEDIA_ROOT+"1850301213720180611151907.png"
+            ima = Image.open(avatar).convert("RGBA")
+            size = ima.size
+            print(size)
+            r2 = min(size[0], size[1])
+            if size[0] != size[1]:
+                ima = ima.resize((r2, r2), Image.ANTIALIAS)
+
+            r3 = 92
+            imb = Image.new('RGBA', (r3 * 2, r3 * 2), (255, 255, 255, 0))
+            pima = ima.load()  # 像素的访问对象
+            pimb = imb.load()
+            r = float(r2 / 2)  # 圆心横坐标
+
+            for i in range(r2):
+                for j in range(r2):
+                    lx = abs(i - r)  # 到圆心距离的横坐标
+                    ly = abs(j - r)  # 到圆心距离的纵坐标
+                    l = (pow(lx, 2) + pow(ly, 2)) ** 0.5  # 三角函数 半径
+
+                    if l < r3:
+                        pimb[i - (r - r3), j - (r - r3)] = pima[i, j]
+            imb.save(save_path + "/test_circle.png")           # 保存圆角头像
+
+            font = pygame.font.Font("./utils/simsun.ttc", 22)
+            # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
+            nickname = user.nickname[0:7]
+            ftext = font.render(nickname, True, (0, 0, 0), (227, 185, 59))
+            ftext_width = ftext.get_width()
+            print("size=======================", ftext_width)
+            # 保存图片
+            invitation_code_address = save_path + '/nickname_' + str(user.id) + '.jpg'
+            pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
+
+            base_img = Image.open(settings.BASE_DIR + '/uploads/soc_activity.jpg')
+            qr_data = settings.OFFICIAL_WEBSITE
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=1,
+            )
+            qr.add_data(qr_data)
+            qr.make(fit=True)
+            qr_img = qr.make_image()
+            base_img.paste(qr_img, (211, 745))
+            ftext = Image.open(
+                settings.BASE_DIR + '/uploads/soc_activity/' + sub_path + '/nickname_' + str(user.id) + '.jpg')
+            avatar = Image.open(
+                save_path + '/test_circle.png')
+            width = (690 - int(ftext_width)) / 2
+            base_img.paste(ftext, (int(width), 284))  # 插入邀请码
+            base_img.paste(avatar, (252, 75), avatar)  # 头像
+
+            base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
+            base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+            return self.response({'code': 0, "base_img": base_img})

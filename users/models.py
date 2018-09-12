@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.db import models
+from django.db.models import Max
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
@@ -14,7 +15,7 @@ from base.error_code import get_code
 from utils.models import CodeModel
 from base.models import BaseManager
 from utils.cache import get_cache, set_cache, delete_cache
-from utils.common import save_user_message_content
+import random
 
 
 class UserManager(BaseUserManager):
@@ -111,6 +112,7 @@ class User(AbstractBaseUser):
     is_money = models.BooleanField(verbose_name="是否已领取注册奖励金额", default=False)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     is_block = models.BooleanField(verbose_name="是否被封", default=False)
+    eos_code = models.IntegerField(verbose_name="EOS充值码", default=0)
 
     USERNAME_FIELD = 'username'
     objects = UserManager()
@@ -730,6 +732,51 @@ class UserRechargeManager(models.Manager):
             user_message.message_id = 3
             user_message.save()
 
+    @staticmethod
+    def soc_gift_event(user):
+        """
+        soc赠送活动
+        :param user:
+        :return:
+        """
+        activity = CoinGive.objects.get(pk=2)
+        end_date = activity.end_time.strftime("%Y%m%d%H%M%S")
+        today_time = date.today().strftime("%Y%m%d%H%M%S")
+        # 判断是否在活动时间内
+        if today_time >= end_date or user.is_robot is True:
+            return True
+
+        user_id = user.id
+        # 判断是否已赠送
+        is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2).count()
+        if is_give > 0:
+            return True
+        give_number = CoinGiveRecords.objects.filter(is_recharge_lock=1, coin_give_id=2).count()
+        if give_number >= 500:
+            return True
+
+        user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
+        user_coin_give_records = CoinGiveRecords()
+        user_coin_give_records.start_coin = user_coin.balance
+        user_coin_give_records.user = user
+        user_coin_give_records.coin_give = activity
+        user_coin_give_records.lock_coin = activity.number
+        user_coin_give_records.save()
+
+        user_message = UserMessage()
+        user_message.status = 0
+        user_message.user = user
+        user_message.message_id = 11
+        user_message.save()
+
+        coin_bankruptcy = CoinDetail()
+        coin_bankruptcy.user = user
+        coin_bankruptcy.coin_name = 'SOC'
+        coin_bankruptcy.amount = '+' + str(activity.number)
+        coin_bankruptcy.rest = Decimal(user_coin.balance)
+        coin_bankruptcy.sources = 4
+        coin_bankruptcy.save()
+
 
 @reversion.register()
 class UserRecharge(models.Model):
@@ -826,7 +873,7 @@ class UserInvitationManager(models.Manager):
                 #     coin_detail.rest = usdt_balance.balance
                 #     coin_detail.sources = 8
                 #     coin_detail.save()
-                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
                 #     usdt_give.lock_coin += a.money
                 #     usdt_give.save()
                 # else:
@@ -1000,7 +1047,7 @@ class CoinGiveManager(models.Manager):
 
         user_id = user.id
         # 判断是否已赠送
-        is_give = CoinGiveRecords.objects.filter(user_id=user_id).count()
+        is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give=1).count()
         if is_give > 0:
             return True
 
@@ -1224,16 +1271,44 @@ class PreReleaseUnlockMessageLog(models.Model):
 
 class DividendHistory(models.Model):
     date = models.CharField(verbose_name="日期", max_length=20, default="")
-    locked  = models.DecimalField(verbose_name="锁定数量", max_digits=32, decimal_places=2, default=0.00)
+    locked = models.DecimalField(verbose_name="锁定数量", max_digits=32, decimal_places=2, default=0.00)
     deadline = models.DecimalField(verbose_name="当日到期数量", max_digits=32, decimal_places=2, default=0.00)
     newline = models.DecimalField(verbose_name="当日新增数量", max_digits=32, decimal_places=2, default=0.00)
     truevalue = models.DecimalField(verbose_name="实际分红额", max_digits=32, decimal_places=8, default=0)
-    revenuevalue=models.DecimalField(verbose_name="营收分红额", max_digits=32, decimal_places=8, default=0)
+    revenuevalue = models.DecimalField(verbose_name="营收分红额", max_digits=32, decimal_places=8, default=0)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="创建时间", auto_now=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "GSG历史分红列表"
+
+
+class EosCodeManager(models.Manager):
+    """
+    EOS充值码数据操作
+    """
+    def get_random(self):
+        """
+        随机获取一条数据
+        :return:
+        """
+        max_id = self.filter(user_id=0, is_good_code=False).aggregate(max_id=Max('id'))['max_id']
+        while True:
+            eos_code_id = random.randint(1, max_id)
+            eos_code = self.filter(pk=eos_code_id, user_id=0, is_good_code=False).first()
+            if eos_code:
+                return eos_code
+
+
+class EosCode(models.Model):
+    code = models.IntegerField(verbose_name="EOS充值编号")
+    is_good_code = models.BooleanField(verbose_name="是否靓号", default=False)
+    is_used = models.BooleanField(verbose_name="用户ID", default=False)
+
+    objects = EosCodeManager()
+
+    class Meta:
+        verbose_name = verbose_name_plural = "EOS充值编号生成表"
 
 
 

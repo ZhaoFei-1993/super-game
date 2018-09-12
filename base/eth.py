@@ -67,7 +67,7 @@ class Wallet(object):
         :return:
         """
         request_url = url if url.find('http') >= 0 else local_settings.ETH_WALLET_API_URL + url
-        result = requests.post(request_url, headers=self.request_headers(data))
+        result = requests.post(url=request_url, data=data, headers=self.request_headers(data))
         return result.json()
 
     def get(self, url):
