@@ -162,7 +162,7 @@ class StockList(ListAPIView):
                 "lottery_time": closing_time_dic[stock_id]["start_at"],
                 "status": closing_time_dic[stock_id]["status"],
                 "previous_result": previous_periods_dt[stock_id]['previous_result'],
-                "previous_result_color": previous_periods_dt[stock_id]['previous_result_color'],
+                "previous_result_colour": previous_periods_dt[stock_id]['previous_result_color'],
                 "index": index_dic[stock_id]['index_status'],
                 "index_colour": index_dic[stock_id]['index_color'],
                 "rise": periods_id_dic[stock_id]["rise"],
