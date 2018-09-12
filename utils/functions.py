@@ -35,7 +35,18 @@ from dragon_tiger.models import Showroad, Bigroad, Psthway, Bigeyeroad, Roach
 from baccarat.models import Showroad_baccarat,Bigroad_baccarat,Psthway_baccarat,Bigeyeroad_baccarat,Roach_baccarat
 from dragon_tiger.consumers import dragon_tiger_showroad, dragon_tiger_bigroad, dragon_tiger_bigeyeroad, \
     dragon_tiger_pathway, dragon_tiger_roach
-from baccarat.consumers import baccarat_showroad, baccarat_bigroad, baccarat_bigeyeroad, baccarat_pathway, baccarat_roach
+from baccarat.consumers import baccarat_showroad, baccarat_bigroad, baccarat_bigeyeroad, \
+    baccarat_pathway, baccarat_roach
+
+from quiz.models import Record as quiz_record
+from guess.models import Record as guess_record
+from marksix.models import SixRecord
+from dragon_tiger.models import Dragontigerrecord
+from baccarat.models import Baccaratrecord
+from PIL import Image
+from users.models import CoinGiveRecords
+import pygame
+import qrcode
 
 
 def random_string(length=16):
@@ -741,6 +752,131 @@ def obtain_token(menu, game):
     sign = sign.upper()
     array['sign'] = sign
     return array
+
+
+def soc_activity(user):
+    base_img = ""
+    print("settings.MEDIA_ROOT======================", settings.MEDIA_ROOT)
+    quiz_sum = quiz_record.objects.filter(user_id=user.id, roomquiz_id=8).aggregate(Sum('bet'))
+    quiz_bet = quiz_sum['bet__sum']
+    if quiz_bet is None:
+        quiz_bet = 0
+    else:
+        quiz_bet = float(quiz_bet)
+    guess_sum = guess_record.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+    guess_bet = guess_sum['bets__sum']
+    if guess_bet is None:
+        guess_bet = 0
+    else:
+        guess_bet = float(guess_bet)
+    six_sum = SixRecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bet_coin'))
+    six_bet = six_sum['bet_coin__sum']
+    if six_bet is None:
+        six_bet = 0
+    else:
+        six_bet = float(six_bet)
+    dragin_tiger_sum = Dragontigerrecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+    dragin_tiger_bet = dragin_tiger_sum['bets__sum']
+    if dragin_tiger_bet is None:
+        dragin_tiger_bet = 0
+    else:
+        dragin_tiger_bet = float(dragin_tiger_bet)
+    baccarat_sum = Baccaratrecord.objects.filter(user_id=user.id, club_id=8).aggregate(Sum('bets'))
+    baccarat_bet = baccarat_sum['bets__sum']
+    if baccarat_bet is None:
+        baccarat_bet = 0
+    else:
+        baccarat_bet = float(baccarat_bet)
+    bet_sum = quiz_bet + baccarat_bet + dragin_tiger_bet + six_bet + guess_bet
+    coin_give_number = CoinGiveRecords.objects.filter(user_id=user.id, coin_give_id=2, is_recharge_lock=0).count()
+    if coin_give_number == 1 and bet_sum >= 100:
+        coin_give_info = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=2, is_recharge_lock=0)
+        # if coin_give_info.is_recharge_give == 1:
+        #     return base_img
+        user_coin = UserCoin.objects.get(user_id=user.id, coin_id=11)
+        user_coin.balance += coin_give_info.lock_coin
+        user_coin.save()
+        coin_give_info.lock_coin = 0
+        coin_give_info.is_recharge_give = 1
+        coin_give_info.save()
+
+        # 生成为活动海报
+        sub_path = str(user.id % 10000)
+
+        spread_path = settings.MEDIA_ROOT + 'soc_activity/'
+        if not os.path.exists(spread_path):
+            os.mkdir(spread_path)
+
+        save_path = spread_path + sub_path
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+
+        if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
+            base_img = settings.MEDIA_DOMAIN_HOST + '/soc_activity/' + sub_path + '/spread_' + str(
+                user.id) + '.jpg'  # 界面地址
+            return base_img
+
+        pygame.init()
+        # 设置字体和字号
+        avatar = user.avatar
+        avatar = avatar.replace('https://api.gsg.one/uploads/', settings.MEDIA_ROOT)
+        # avatar = settings.MEDIA_ROOT+"1850301213720180611151907.png"
+        ima = Image.open(avatar).convert("RGBA")
+        size = ima.size
+        print(size)
+        r2 = min(size[0], size[1])
+        if size[0] != size[1]:
+            ima = ima.resize((r2, r2), Image.ANTIALIAS)
+
+        r3 = 92
+        imb = Image.new('RGBA', (r3 * 2, r3 * 2), (255, 255, 255, 0))
+        pima = ima.load()  # 像素的访问对象
+        pimb = imb.load()
+        r = float(r2 / 2)  # 圆心横坐标
+
+        for i in range(r2):
+            for j in range(r2):
+                lx = abs(i - r)  # 到圆心距离的横坐标
+                ly = abs(j - r)  # 到圆心距离的纵坐标
+                l = (pow(lx, 2) + pow(ly, 2)) ** 0.5  # 三角函数 半径
+
+                if l < r3:
+                    pimb[i - (r - r3), j - (r - r3)] = pima[i, j]
+        imb.save(save_path + "/test_circle.png")  # 保存圆角头像
+
+        font = pygame.font.Font("./utils/simsun.ttc", 22)
+        # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
+        nickname = user.nickname[0:7]
+        ftext = font.render(nickname, True, (0, 0, 0), (227, 185, 59))
+        ftext_width = ftext.get_width()
+        print("size=======================", ftext_width)
+        # 保存图片
+        invitation_code_address = save_path + '/nickname_' + str(user.id) + '.jpg'
+        pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
+
+        base_img = Image.open(settings.BASE_DIR + '/uploads/soc_activity.jpg')
+        qr_data = settings.OFFICIAL_WEBSITE
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=1,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        qr_img = qr.make_image()
+        base_img.paste(qr_img, (211, 745))
+        ftext = Image.open(
+            settings.BASE_DIR + '/uploads/soc_activity/' + sub_path + '/nickname_' + str(user.id) + '.jpg')
+        avatar = Image.open(
+            save_path + '/test_circle.png')
+        width = (690 - int(ftext_width)) / 2
+        base_img.paste(ftext, (int(width), 284))  # 插入邀请码
+        base_img.paste(avatar, (252, 75), avatar)  # 头像
+
+        base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
+        base_img = settings.MEDIA_DOMAIN_HOST + '/soc_activity/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+    return base_img
 
 
 def ludan_save(messages, boots, table_id):

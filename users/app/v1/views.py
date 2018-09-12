@@ -39,15 +39,14 @@ from api.settings import MEDIA_DOMAIN_HOST
 from django.db.models import Sum
 from PIL import Image
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
-from utils.functions import value_judge, get_sql
+from utils.functions import value_judge, get_sql, soc_activity
 from console.models import Address
 from quiz.models import Record as quiz_record
 from guess.models import Record as guess_record
 from marksix.models import SixRecord
 from dragon_tiger.models import Dragontigerrecord
 from baccarat.models import Baccaratrecord
-from PIL import Image, ImageDraw, ImageFont
-from io import StringIO
+from PIL import Image
 
 
 class UserRegister(object):
@@ -1331,6 +1330,8 @@ class AssetView(ListAPIView):
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         user_info = request.user
+        base_img = soc_activity(user_info)
+        print("base_img=================================", base_img)
         user_id = user_info.id
         items = results.data.get('results')
         data = []
@@ -1452,7 +1453,8 @@ class AssetView(ListAPIView):
             'user_avatar': user_info.avatar,
             'user_integral': normalize_fraction(user_gsg.balance, 2),
             'least_lock_amount': settings.GSG_LEAST_LOCK_AMOUNT,
-            'data': data
+            'data': data,
+            'base_img': base_img
         }
 
         return self.response(response)
