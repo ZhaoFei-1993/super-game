@@ -707,7 +707,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
 
             # ETH及对应代币转账直接请求转账接口
             coin = Coin.objects.get_one(pk=item.coin_id)
-            if coin.is_eth_erc20:
+            if settings.IS_ENABLE_TRANSFER_API and coin.is_eth_erc20:
                 wallet = Wallet()
                 transfer_data = {
                     'to': item.address,
