@@ -874,7 +874,7 @@ def soc_activity(user):
         base_img.paste(avatar, (252, 75), avatar)  # 头像
 
         base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
-        base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
+        base_img = settings.MEDIA_DOMAIN_HOST + '/soc_activity/' + sub_path + '/spread_' + str(user.id) + '.jpg'
     return base_img
 
 
