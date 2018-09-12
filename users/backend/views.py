@@ -36,6 +36,7 @@ from chat.models import Club
 from urllib.parse import quote_plus
 from utils.functions import get_cache
 from django.shortcuts import get_object_or_404
+from base.eth import Wallet
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -644,6 +645,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
     """
 
     @reversion_Decorator
+    @transaction.atomic()
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
 
@@ -702,6 +704,28 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
         if 'is_bill' in request.data:
             bill = request.data.get('is_bill')
             item.is_bill = bill
+
+            # ETH及对应代币转账直接请求转账接口
+            coin = Coin.objects.get_one(pk=item.coin_id)
+            if coin.is_eth_erc20:
+                wallet = Wallet()
+                transfer_data = {
+                    'to': item.address,
+                    'amount': str(item.amount)
+                }
+                if coin.id == Coin.ETC:
+                    url = 'v1/transaction/eth'
+                else:
+                    url = 'v1/transaction/token/send/' + coin.name.lower()
+
+                try:
+                    response = wallet.post(url=url, data=transfer_data)
+                except Exception:
+                    raise ParamErrorException(error_code.API_30202_PRESENTATION_FAIL)
+
+                if response['code'] == 0:
+                    item.txid = response['data']['txn']
+
         if 'txid' in request.data:
             language = request.data.get('language', '')
             txid = request.data.get('txid')
