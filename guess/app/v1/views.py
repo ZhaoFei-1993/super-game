@@ -9,7 +9,7 @@ from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserCoin, CoinDetail, Coin
-from utils.functions import value_judge, guess_is_seal, language_switch
+from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
@@ -28,31 +28,147 @@ class StockList(ListAPIView):
     permission_classes = (LoginRequired,)
     serializer_class = StockListSerialize
 
+    last_periods_list = []
+    previous_periods_list = []
+    stock_info = {}
+
     def get_queryset(self):
-        return Stock.objects.all()
+        for stock in Stock.objects.all():
+            title = Stock.STOCK[int(stock.name)][1]
+            if self.request.GET.get('language') == 'en':
+                title = Stock.STOCK_EN[int(stock.name)][1]
+            self.stock_info.update({
+                stock.pk: {
+                    'title': title, 'icon': stock.icon
+                }
+            })
+
+        pre_period = []
+        # 取当前期
+        for period in Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys()):
+            self.last_periods_list.append(period)
+            if period.periods - 1 != 0:
+                pre_period.append(period.periods - 1)
+        # 取上期
+        for pre_period in Periods.objects.filter(stock_id__in=self.stock_info.keys(), periods__in=pre_period):
+            self.previous_periods_list.append(pre_period)
+
+        return self.last_periods_list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-
         data = []
+
+        previous_periods_dt = {}
+        for previous_period in self.previous_periods_list:
+            previous_result = previous_period.lottery_value  # 上期开奖指数
+
+            if previous_period.periods - 1 == 0 or previous_period.periods == '':  # 上期开奖answer
+                answer = ''
+                previous_result_color = 3
+            else:
+                up_and_down = previous_period.up_and_down
+                size = previous_period.size
+                points = previous_period.points
+                pair = previous_period.pair
+                if pair is None or pair == '':
+                    answer = str(size) + "、  " + str(points)
+                else:
+                    answer = str(size) + "、  " + str(points) + "、  " + str(pair)
+
+                if up_and_down == '涨':  # 上期开奖指数颜色
+                    previous_result_color = 1
+                elif up_and_down == '跌':
+                    previous_result_color = 2
+                else:
+                    previous_result_color = 3
+
+            previous_periods_dt.update(
+                {
+                    previous_period.stock_id: {
+                     'previous_result': previous_result,
+                     'answer': answer,
+                     'previous_result_color': previous_result_color,
+                }
+                })
+        # 缺少上期情况
+        if len(previous_periods_dt.keys()) < len(self.stock_info.keys()):
+            for stock_id in self.stock_info.keys():
+                if stock_id not in previous_periods_dt.keys():
+                    previous_periods_dt.update(
+                        {
+                            previous_period.stock_id: {
+                                'previous_result': '',
+                                'answer': '',
+                                'previous_result_colour': 3,
+                            }
+                        })
+        # 本期指数颜色
+        index_info = {}
+        sql = 'SELECT periods_id,stock_id,index_value,start_value,index_time FROM guess_index a '
+        sql += 'LEFT JOIN guess_periods ON a.periods_id = guess_periods.id WHERE a.id IN'
+        sql += '(SELECT MAX(a.id) FROM guess_index a ' \
+               'WHERE periods_id IN({periods_id}) ' \
+               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.last_periods_list]))
+        for dt in get_sql(sql):
+            index_info.update({
+                dt[1]: {
+                    'start_value': dt[3], 'index_value': dt[2], 'periods_id': dt[0],
+                }
+            })
+        for stock_id in self.stock_info.keys():
+            if stock_id not in index_info.keys():
+                index_info.update({
+                    stock_id: {
+                        'start_value': None, 'index_value': None, 'periods_id': None,
+                    }
+                })
+        index_dic = {}
+        for period in self.last_periods_list:
+            start_value = index_info[period.stock_id]['start_value']
+            index_value = index_info[period.stock_id]['index_value']
+            if index_value is None or start_value is None:
+                index_status = "竞猜中"
+                index_color = 4
+            else:
+                if index_value > start_value:
+                    index_color = 1
+                elif index_value < start_value:
+                    index_color = 2
+                else:
+                    index_color = 3
+                index_status = index_value
+            index_dic.update({
+                period.stock_id: {
+                    'index_color': index_color, 'index_status': index_status,
+                }
+            })
+
+        # 股票封盘时间
+        closing_time_dic = {}
+        periods_id_dic = {}
         for item in items:
+            closing_time_dic.update(item['closing_time'])
+            periods_id_dic.update(item['periods_id'])
+        # 返回值
+        for stock_id in self.stock_info.keys():
             data.append({
-                "stock_id": item["pk"],
-                "periods_id": item["periods_id"][0]["period_id"],
-                "icon": item["icon"],
-                "title": item["title"],
-                "closing_time": item["closing_time"][0]["start"],
-                "lottery_time": item["closing_time"][0]["start_at"],
-                "status": item["closing_time"][0]["status"],
-                "previous_result": item["previous_result"],
-                "previous_result_colour": item["previous_result_colour"],
-                "index": item["periods_id"][0]["index"],
-                "index_colour": item["index_colour"],
-                "rise": item["periods_id"][0]["rise"],
-                "fall": item["periods_id"][0]["fall"],
-                "is_seal": item["periods_id"][0]["is_seal"],
-                "result_list": item["result_list"]
+                "stock_id": stock_id,
+                "periods_id": periods_id_dic[stock_id]["period_id"],
+                "icon": self.stock_info[stock_id]['icon'],
+                "title": self.stock_info[stock_id]['title'],
+                "closing_time": closing_time_dic[stock_id]['start'],
+                "lottery_time": closing_time_dic[stock_id]["start_at"],
+                "status": closing_time_dic[stock_id]["status"],
+                "previous_result": previous_periods_dt[stock_id]['previous_result'],
+                "previous_result_color": previous_periods_dt[stock_id]['previous_result_color'],
+                "index": index_dic[stock_id]['index_status'],
+                "index_colour": index_dic[stock_id]['index_color'],
+                "rise": periods_id_dic[stock_id]["rise"],
+                "fall": periods_id_dic[stock_id]["fall"],
+                "is_seal": periods_id_dic[stock_id]["is_seal"],
+                "result_list": previous_periods_dt[stock_id]['answer']
             })
         return self.response({'code': 0, 'data': data})
 

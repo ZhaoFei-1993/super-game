@@ -45,61 +45,60 @@ class StockListSerialize(serializers.ModelSerializer):
     """
     股票配置表序列化
     """
-    title = serializers.SerializerMethodField()  # 股票标题
+    # stock_id = serializers.SerializerMethodField()  # 股票pk
+    # icon = serializers.SerializerMethodField()  # 股票图标
+    # title = serializers.SerializerMethodField()  # 股票标题
     closing_time = serializers.SerializerMethodField()  # 股票封盘时间
     # lottery_time = serializers.SerializerMethodField()  # 股票开奖时间
-    previous_result = serializers.SerializerMethodField()  # 上期开奖指数
-    previous_result_colour = serializers.SerializerMethodField()  # 上期开奖指数颜色
+    # previous_result = serializers.SerializerMethodField()  # 上期开奖指数
+    # previous_result_colour = serializers.SerializerMethodField()  # 上期开奖指数颜色
     # index = serializers.SerializerMethodField()  # 本期指数颜色
-    index_colour = serializers.SerializerMethodField()  # 本期指数颜色
+    # index_colour = serializers.SerializerMethodField()  # 本期指数颜色
     # rise = serializers.SerializerMethodField()  # 看涨人数
     # fall = serializers.SerializerMethodField()  # 看跌人数
     periods_id = serializers.SerializerMethodField()  # 看跌人数
-    result_list = serializers.SerializerMethodField()  # 上期结果
+    # result_list = serializers.SerializerMethodField()  # 上期结果
 
     # is_seal = serializers.SerializerMethodField()  # 是否封盘
 
     class Meta:
-        model = Stock
-        fields = (
-            "pk", "title", "icon", "closing_time", "previous_result", "previous_result_colour",
-            "index_colour", "periods_id", "result_list")
+        model = Periods
+        fields = ("closing_time", "periods_id")
 
-    def get_title(self, obj):  # 股票标题
-        name = obj.name
-        title = Stock.STOCK[int(name)][1]
-        if self.context['request'].GET.get('language') == 'en':
-            title = obj.STOCK_EN[int(name)][1]
-        return title
+    # def get_stock_id(self, obj):
+    #     return obj.stock_id
+
+    # def get_title(self, obj):  # 股票标题
+    #     name = obj.stock.name
+    #     title = Stock.STOCK[int(name)][1]
+    #     if self.context['request'].GET.get('language') == 'en':
+    #         title = Stock.STOCK_EN[int(name)][1]
+    #     return title
+    #
+    # def get_icon(self, obj):
+    #     return obj.stock.icon
 
     def get_periods_id(self, obj):  # 股票标题
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         # rise = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
         #                               options_id__in=[49, 50, 51, 52]).count()           # 看涨人数
-        rise = Record.objects.filter(periods_id=periods.id, options__play__stock_id=obj.id,
+        rise = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
                                      options_id__in=[1, 2, 3, 4]).count()  # 看涨人数
         # fall = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
         #                               options_id__in=[53, 54, 55, 56]).count()         # 看跌人数
-        fall = Record.objects.filter(periods_id=periods.id, options__play__stock_id=obj.id,
+        fall = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
                                      options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
 
-        is_seal = guess_is_seal(periods)  # 是否封盘
+        is_seal = obj.is_seal  # 是否封盘
 
-        index_info = Index.objects.filter(periods=periods.pk).first()              # 本期指数
-        if index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == False:
-            index = "竞猜中"
-        elif index_info == None or index_info == '' or periods.start_value == None or periods.start_value == '' and is_seal == True:
-            index = "待开市"
-        else:
-            index = index_info.index_value
-
-        data = [{
-            "period_id": periods.id,
-            "rise": rise,
-            "is_seal": is_seal,
-            "fall": fall,
-            "index": index
-        }]
+        data = {
+            obj.stock_id: {
+                "period_id": obj.id,
+                "rise": rise,
+                "is_seal": is_seal,
+                "fall": fall,
+            }
+        }
         return data
 
     # # @staticmethod
@@ -136,31 +135,33 @@ class StockListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_closing_time(obj):  # 股票封盘时间
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        begin_at = periods.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+        begin_at = obj.rotary_header_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         begin_at = time.mktime(begin_at.timetuple())
         start = int(begin_at)
-        created_at = periods.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        created_at = obj.lottery_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         created_at = time.mktime(created_at.timetuple())
         start_at = int(created_at)
         day = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        lottery_time = periods.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
-        start_time = periods.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
-        rotary_header_time = periods.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
+        lottery_time = obj.lottery_time.strftime('%Y-%m-%d %H:%M:%S')  # 开奖时间
+        start_time = obj.start_time.strftime('%Y-%m-%d %H:%M:%S')  # 开始下注时间
+        rotary_header_time = obj.rotary_header_time.strftime('%Y-%m-%d %H:%M:%S')  # 封盘时间
         status = -1
         if start_time < day < rotary_header_time:
             status = 0  # 开始投注
-        elif periods.is_seal is True and periods.is_result is not True and datetime.now() < periods.lottery_time:
+        elif obj.is_seal is True and obj.is_result is not True and datetime.now() < obj.lottery_time:
             status = 1  # 封盘中
-        elif datetime.now() > periods.lottery_time and periods.is_result is not True:
+        elif datetime.now() > obj.lottery_time and obj.is_result is not True:
             status = 2  # 结算中
-        elif periods.is_result is True:
+        elif obj.is_result is True:
             status = 3  # 已开奖
-        data = [{
-            "start": start,
-            "start_at": start_at,
-            "status": status
-        }]
+        data = {
+            obj.stock_id: {
+                "start": start,
+                "start_at": start_at,
+                "status": status
+            }
+        }
         return data
 
     # @staticmethod
@@ -171,85 +172,85 @@ class StockListSerialize(serializers.ModelSerializer):
     #     start = int(begin_at)
     #     return start
 
-    @staticmethod
-    def get_index_colour(obj):  # 本期指数颜色
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        start_value = periods.start_value
-        index_info = Index.objects.filter(periods=periods.pk).first()
-        if index_info == None or index_info == '' or start_value == None or start_value == '':
-            index_colour = 4
-            return index_colour
-        index = index_info.index_value
-        if index > start_value:
-            index_colour = 1
-        elif index < start_value:
-            index_colour = 2
-        else:
-            index_colour = 3
-        return index_colour
+    # @staticmethod
+    # def get_index_colour(obj):  # 本期指数颜色
+    #     # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     start_value = obj.start_value
+    #     index_info = Index.objects.filter(periods_id=obj.pk).first()
+    #     if index_info == None or index_info == '' or start_value == None or start_value == '':
+    #         index_colour = 4
+    #         return index_colour
+    #     index = index_info.index_value
+    #     if index > start_value:
+    #         index_colour = 1
+    #     elif index < start_value:
+    #         index_colour = 2
+    #     else:
+    #         index_colour = 3
+    #     return index_colour
 
-    @staticmethod
-    def get_previous_result(obj):  # 上期开奖指数
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        last_periods = int(periods.periods) - 1
-        try:
-            previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
-            previous_result = previous_period.lottery_value
-        except Periods.DoesNotExist:
-            previous_result = ''
-        except Periods.MultipleObjectsReturned:
-            previous_result = ''
-
-        return previous_result
-
-    @staticmethod
-    def get_result_list(obj):  # 上期开奖指数
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        last_periods = int(periods.periods) - 1
-        if last_periods == 0:
-            list = ''
-            return list
-        previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
-        if previous_period == None or previous_period == '':
-            list = ''
-            return list
-        up_and_down = previous_period.up_and_down
-        size = previous_period.size
-        points = previous_period.points
-        pair = previous_period.pair
-        if pair == None or pair == '':
-            # list = str(up_and_down)+", "+str(size)+", "+str(points)
-            list = str(size) + "、  " + str(points)
-        else:
-            list = str(size) + "、  " + str(points) + "、  " + str(pair)
-        return list
-
-    @staticmethod
-    def get_previous_result_colour(obj):  # 上期开奖指数颜色
-        periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
-        last_periods = int(periods.periods) - 1
-
-        lottery_value = None
-        start_value = None
-        try:
-            previous_period = Periods.objects.get(stock_id=obj.id, periods=last_periods)
-            lottery_value = previous_period.lottery_value
-            start_value = previous_period.start_value
-        except Periods.DoesNotExist:
-            pass
-        except Periods.MultipleObjectsReturned:
-            pass
-
-        if lottery_value is None or start_value is None:
-            previous_result_colour = 3
-        else:
-            if lottery_value > start_value:
-                previous_result_colour = 1
-            elif lottery_value < start_value:
-                previous_result_colour = 2
-            else:
-                previous_result_colour = 3
-        return previous_result_colour
+    # @staticmethod
+    # def get_previous_result(obj):  # 上期开奖指数
+    #     # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     last_periods = int(obj.periods) - 1
+    #     try:
+    #         previous_period = Periods.objects.get(stock_id=obj.stock.id, periods=last_periods)
+    #         previous_result = previous_period.lottery_value
+    #     except Periods.DoesNotExist:
+    #         previous_result = ''
+    #     except Periods.MultipleObjectsReturned:
+    #         previous_result = ''
+    #
+    #     return previous_result
+    #
+    # @staticmethod
+    # def get_result_list(obj):  # 上期开奖指数
+    #     # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     last_periods = int(obj.periods) - 1
+    #     if last_periods == 0:
+    #         list = ''
+    #         return list
+    #     previous_period = Periods.objects.get(stock_id=obj.stock.id, periods=last_periods)
+    #     if previous_period is None or previous_period == '':
+    #         list = ''
+    #         return list
+    #     up_and_down = previous_period.up_and_down
+    #     size = previous_period.size
+    #     points = previous_period.points
+    #     pair = previous_period.pair
+    #     if pair is None or pair == '':
+    #         # list = str(up_and_down)+", "+str(size)+", "+str(points)
+    #         list = str(size) + "、  " + str(points)
+    #     else:
+    #         list = str(size) + "、  " + str(points) + "、  " + str(pair)
+    #     return list
+    #
+    # @staticmethod
+    # def get_previous_result_colour(obj):  # 上期开奖指数颜色
+    #     # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
+    #     last_periods = int(obj.periods) - 1
+    #
+    #     lottery_value = None
+    #     start_value = None
+    #     try:
+    #         previous_period = Periods.objects.get(stock_id=obj.stock.id, periods=last_periods)
+    #         lottery_value = previous_period.lottery_value
+    #         start_value = previous_period.start_value
+    #     except Periods.DoesNotExist:
+    #         pass
+    #     except Periods.MultipleObjectsReturned:
+    #         pass
+    #
+    #     if lottery_value is None or start_value is None:
+    #         previous_result_colour = 3
+    #     else:
+    #         if lottery_value > start_value:
+    #             previous_result_colour = 1
+    #         elif lottery_value < start_value:
+    #             previous_result_colour = 2
+    #         else:
+    #             previous_result_colour = 3
+    #     return previous_result_colour
 
 
 class GuessPushSerializer(serializers.ModelSerializer):

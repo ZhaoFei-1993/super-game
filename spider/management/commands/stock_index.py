@@ -130,11 +130,11 @@ def get_index_cn(period, base_url):
                 count = int(cache_dt.split(',')[2]) + 1
                 if count >= 6:
                     if float(period.start_value) > float(num):
-                        status = 'up'
+                        status = 'down'
                     elif float(period.start_value) == float(num):
                         status = 'draw'
                     elif float(period.start_value) < float(num):
-                        status = 'down'
+                        status = 'up'
 
                     param_dic = {
                         'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,

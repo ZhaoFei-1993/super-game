@@ -49,22 +49,21 @@ def edit_user_message(record, club_name, club_name_en, coin_name):
     title_en = 'Lottery announcement from' + club_name_en
     earn_coin = float(record.earn_coin)
     if earn_coin < 0:
-        content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                  record.periods.up_and_down + '， ' + record.periods.size + '， ' + record.periods.points + \
-                  '， 您选的答案是: ' + record.options.title + '，您答错了。'
+        content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 '\
+                  + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
+                  '，您答错了。'
 
         content_en = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                     record.periods.up_and_down + '， ' + record.periods.size + '， ' + record.periods.points + \
-                     '， 您选的答案是: ' + record.options.title + '您答错了。'
+                     record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
+                     '您答错了。'
     else:
         content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                  record.periods.up_and_down + '， ' + record.periods.size + '， ' + record.periods.points + \
-                  '， 您选的答案是: ' + record.options.title + '，您的奖金是：' + str(round(earn_coin, 3)) + coin_name
+                  record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' +\
+                  record.options.title + '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
         content_en = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                     record.periods.up_and_down + '， ' + record.periods.size + '， ' + record.periods.points + \
-                     '， 您选的答案是: ' + record.options.title + '，您的奖金是：' + str(round(earn_coin, 3)) + coin_name
-
+                     record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title +\
+                     '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
     now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     user_message_list.append(
@@ -93,15 +92,15 @@ def size_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -125,15 +124,15 @@ def points_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -156,15 +155,15 @@ def pair_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -190,15 +189,15 @@ def status_result(record, win_sum_dic, lose_sum_dic):
         earn_coin = lose_sum * (float(record.bets) / win_sum)
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        # record.earn_coin = earn_coin
-        # record.status = Record.OPEN
+        record.earn_coin = earn_coin
+        record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -306,6 +305,24 @@ def ergodic_record(period, dt, date):
                     rule_dic[record.play.play_name](record)
 
         # 开始执行sql语句
+        # 更新record状态
+        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        update_record_right = 'earn_coin=VALUES(earn_coin),' \
+                              'status=\'1\', is_distribution=\'1\', ' \
+                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
+        update_record_false = 'earn_coin=VALUES(earn_coin),' \
+                              'status=\'1\', is_distribution=\'1\', ' \
+                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
+        sql_right = make_batch_update_sql('guess_record', record_right_list, update_record_right)
+        sql_false = make_batch_update_sql('guess_record', record_false_list, update_record_false)
+        # print(sql_right)
+        # print(sql_false)
+        with connection.cursor() as cursor:
+            if sql_right is not False:
+                cursor.execute(sql_right)
+            if sql_false is not False:
+                cursor.execute(sql_false)
+
         # 插入coin_detail表
         sql = make_insert_sql('users_coindetail', coin_detail_list)
         # print(sql)
@@ -333,24 +350,6 @@ def ergodic_record(period, dt, date):
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
-
-        # 更新record状态
-        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        update_record_right = 'earn_coin=VALUES(earn_coin),' \
-                              'status=\'1\', is_distribution=\'1\', ' \
-                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
-        update_record_false = 'earn_coin=VALUES(earn_coin),' \
-                              'status=\'1\', is_distribution=\'1\', ' \
-                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
-        sql_right = make_batch_update_sql('guess_record', record_right_list, update_record_right)
-        sql_false = make_batch_update_sql('guess_record', record_false_list, update_record_false)
-        # print(sql_right)
-        # print(sql_false)
-        with connection.cursor() as cursor:
-            if sql_right is not False:
-                cursor.execute(sql_right)
-            if sql_false is not False:
-                cursor.execute(sql_false)
 
         # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
         # index_day.index_value = float(dt['num'])
