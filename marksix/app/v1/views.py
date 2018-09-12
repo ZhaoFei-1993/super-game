@@ -277,6 +277,11 @@ class BetsViews(ListCreateAPIView):
         issue = request.data.get('issue')
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
+        # 如果是色波玩法，最多允许选两个
+        if play_id == 2:
+            if len(content.split(',')) > 2:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
         # 期数判断
         now = get_now()
         openprice = OpenPrice.objects.filter(open__lt=now).first()
