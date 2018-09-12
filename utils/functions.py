@@ -756,6 +756,7 @@ def obtain_token(menu, game):
 
 def soc_activity(user):
     base_img = ""
+    print("settings.MEDIA_ROOT======================", settings.MEDIA_ROOT)
     quiz_sum = quiz_record.objects.filter(user_id=user.id, roomquiz_id=8).aggregate(Sum('bet'))
     quiz_bet = quiz_sum['bet__sum']
     if quiz_bet is None:
@@ -790,8 +791,8 @@ def soc_activity(user):
     coin_give_number = CoinGiveRecords.objects.filter(user_id=user.id, coin_give_id=2, is_recharge_lock=0).count()
     if coin_give_number == 1 and bet_sum >= 100:
         coin_give_info = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=2, is_recharge_lock=0)
-        if coin_give_info.is_recharge_give == 1:
-            return base_img
+        # if coin_give_info.is_recharge_give == 1:
+        #     return base_img
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=11)
         user_coin.balance += coin_give_info.lock_coin
         user_coin.save()
