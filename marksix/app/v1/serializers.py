@@ -308,6 +308,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                 earn = str(float(earn_coin))
             else:
                 earn = '+' + str(float(earn_coin))
+            handle_zero(earn)
 
         return earn
 

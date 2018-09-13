@@ -10,7 +10,7 @@ from users.finance.functions import get_now
 from marksix.functions import date_exchange, change_num
 from django.db import transaction
 from datetime import datetime
-from utils.functions import value_judge
+from utils.functions import value_judge, handle_zero
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from chat.models import Club
@@ -236,8 +236,8 @@ class OddsViews(ListAPIView):
                 'bet_num': bet_num,
                 'coin_name': coin_name,
                 'play_id': id,
-                'max_limit': limit.max_limit,
-                'min_limit': limit.min_limit
+                'max_limit': handle_zero(limit.max_limit),
+                'min_limit': handle_zero(limit.min_limit)
             }
         else:
             data = {
@@ -249,8 +249,8 @@ class OddsViews(ListAPIView):
                 'current_open': current_open,
                 'coin_name': coin_name,
                 'play_id': id,
-                'max_limit': limit.max_limit,
-                'min_limit': limit.min_limit
+                'max_limit': handle_zero(limit.max_limit),
+                'min_limit': handle_zero(limit.min_limit)
             }
 
         return JsonResponse({'code': 0, 'data': data})
