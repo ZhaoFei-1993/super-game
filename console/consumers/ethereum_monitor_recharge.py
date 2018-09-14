@@ -1,6 +1,6 @@
 from base.eth import *
 import time as format_time
-from users.models import UserRecharge, Coin, UserCoin, User
+from users.models import UserRecharge, Coin, UserCoin
 
 
 def get_coin_id(coin_type):
@@ -120,10 +120,5 @@ def etheruem_monitor(block_num):
         recharge_obj.confirmations = 0
         recharge_obj.trade_at = time_dt
         recharge_obj.save()
-
-        # SOC赠送活动
-        if coin_id == Coin.SOC:
-            user = User.objects.get(pk=user_id)
-            UserRecharge.objects.soc_gift_event(user)
 
     return True

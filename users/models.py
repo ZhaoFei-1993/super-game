@@ -738,42 +738,28 @@ class UserRechargeManager(models.Manager):
         :param user:
         :return:
         """
-        with open('/tmp/debug.log', 'a+') as f:
-            f.write('fsdfsdf')
-            f.write("\n")
         activity = CoinGive.objects.get(pk=2)
         end_date = activity.end_time.strftime("%Y%m%d%H%M%S")
         today_time = date.today().strftime("%Y%m%d%H%M%S")
         # 判断是否在活动时间内
         if today_time >= end_date or user.is_robot is True:
             return True
-        with open('/tmp/debug.log', 'a+') as f:
-            f.write('rrtttt')
-            f.write("\n")
+
         user_id = user.id
         # 判断是否已赠送
         is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2).count()
         if is_give > 0:
             return True
-        with open('/tmp/debug.log', 'a+') as f:
-            f.write('ttttttt')
-            f.write("\n")
         # 判断是否达到500人数上限
         give_number = CoinGiveRecords.objects.filter(is_recharge_lock=1, coin_give_id=2).count()
         if give_number >= 500:
             return True
-        with open('/tmp/debug.log', 'a+') as f:
-            f.write('qqqqq')
-            f.write("\n")
         # 判断是否达到赠送条件
         sum_amount_list = self.filter(user_id=user_id, coin_give_id=2).aggregate(
             Sum('amount'))
         sum_amount = sum_amount_list['amount__sum'] if sum_amount_list['amount__sum'] is not None else 0
         if sum_amount < 100:
             return True
-        with open('/tmp/debug.log', 'a+') as f:
-            f.write('bbbb')
-            f.write("\n")
 
         user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
         user_coin_give_records = CoinGiveRecords()
