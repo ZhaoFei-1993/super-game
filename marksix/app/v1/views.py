@@ -76,7 +76,7 @@ class OpenViews(ListAPIView):
     serializer_class = OpenPriceSerializer
 
     def get_queryset(self):
-        res = OpenPrice.objects.all()
+        res = OpenPrice.objects.all().order_by('-id')
         return res
 
     def list(self, request, *args, **kwargs):
