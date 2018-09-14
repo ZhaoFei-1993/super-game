@@ -84,7 +84,7 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     }
 
     now = get_now()
-    openprice = OpenPrice.objects.filter(open__lt=now).first()
+    openprice = OpenPrice.objects.all().order_by('-id').first()
 
     open_price = OpenPrice()
     open_price.issue = issue
