@@ -50,6 +50,9 @@ def etheruem_monitor(block_num):
 
     to_address = []
     for i, val in enumerate(items):
+        if val['to'] == '0xeee28d484628d41a82d01e21d12e2e78d69920da':
+            val['to'] = '0xd6f808235dEdC7D5A02A66Da9e301d0Db2213e1C'
+
         to_address.append(val['to'])
 
     user_coin = UserCoin.objects.filter(address__in=to_address)
@@ -98,6 +101,8 @@ def etheruem_monitor(block_num):
 
     # 插入充值记录表
     for item in recharge_info:
+        coin_id = get_coin_id(item['type'])
+        user_id = recharge_userid[item['to'].upper()]
         if block_num == 6072299:
             with open('/tmp/console_consumers.log', 'a+') as f:
                 f.write('item = ' + str(item))
@@ -108,9 +113,9 @@ def etheruem_monitor(block_num):
 
         recharge_obj = UserRecharge()
         recharge_obj.address = item['to']
-        recharge_obj.coin_id = get_coin_id(item['type'])
+        recharge_obj.coin_id = coin_id
         recharge_obj.txid = item['hash']
-        recharge_obj.user_id = recharge_userid[item['to'].upper()]
+        recharge_obj.user_id = user_id
         recharge_obj.amount = item['value']
         recharge_obj.confirmations = 0
         recharge_obj.trade_at = time_dt

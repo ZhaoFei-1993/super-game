@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.conf import settings
-from users.models import UserRecharge, Coin, UserCoin, CoinDetail
+from users.models import UserRecharge, Coin, UserCoin, CoinDetail, User
 from base.eth import *
 from decimal import Decimal
 
@@ -64,6 +64,10 @@ class Command(BaseCommand):
 
             # 首次充值获得奖励
             UserRecharge.objects.first_price(user_id)
+            # SOC赠送活动
+            if coin.id == Coin.SOC:
+                user = User.objects.get(pk=user_id)
+                UserRecharge.objects.soc_gift_event(user)
 
             # 用户充值成功
             user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
