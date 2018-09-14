@@ -292,8 +292,8 @@ class BetsViews(ListCreateAPIView):
         if datetime.now() > openprice.next_closing:
             raise ParamErrorException(error_code.API_50204_BET_CLOSED)
 
-        if int(openprice.next_issue) != int(issue):
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        # if int(openprice.next_issue) != int(issue):
+        #     raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         # 注数判断
         if play_id == '3':  # 连码

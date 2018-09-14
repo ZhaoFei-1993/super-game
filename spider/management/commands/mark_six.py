@@ -104,12 +104,12 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.next_closing = next_issue_dic['next_closing']
     open_price.save()
 
-    # # 处理投注记录
-    # print(answer_dic)
-    # ergodic_record(issue, answer_dic)
-    #
-    # open_price.is_open = True
-    # open_price.save()
+    # 处理投注记录
+    print(answer_dic)
+    ergodic_record(issue, answer_dic)
+
+    open_price.is_open = True
+    open_price.save()
 
     print('----------------------------------------------------------------------')
 
@@ -150,7 +150,7 @@ class Command(BaseCommand):
                 pre_draw_code_list = pre_draw_code.split(',')
 
                 # 推送开奖结果
-                mark_six_result_code(issue, pre_draw_code_list)
+                mark_six_result_code(issue)
 
                 mark_six_result(pre_draw_code_list, pre_draw_date, issue)
             else:
