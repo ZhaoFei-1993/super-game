@@ -1416,13 +1416,17 @@ class AssetView(ListAPIView):
                 address = settings.EOS_RECHARGE_ADDRESS
                 eos_code = user_info.eos_code
 
+            balance = item["balance"]
+            if coin.id == Coin.SOC and base_img != '':
+                balance += 100
+
             temp_dict = {
                 'coin_order': coin.coin_order,
                 'icon': coin.icon,
                 'coin_name': coin.name,
                 'coin': item["coin_id"],
                 'recharge_address': address,
-                'balance': item["balance"],
+                'balance': balance,
                 'locked_coin': locked_coin,
                 'is_reality': coin.is_reality,
                 'is_recharge': coin.is_recharge,
