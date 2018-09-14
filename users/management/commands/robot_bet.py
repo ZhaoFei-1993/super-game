@@ -289,7 +289,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(500, 800)
+        user_total = random.randint(200, 300)
         start_date, end_date = self.get_date()
 
         random_datetime = []
