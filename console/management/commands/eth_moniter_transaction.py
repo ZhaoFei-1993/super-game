@@ -64,10 +64,6 @@ class Command(BaseCommand):
 
             # 首次充值获得奖励
             UserRecharge.objects.first_price(user_id)
-            # SOC赠送活动
-            if coin.id == Coin.SOC:
-                user = User.objects.get(pk=user_id)
-                UserRecharge.objects.soc_gift_event(user)
 
             # 用户充值成功
             user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
@@ -82,6 +78,11 @@ class Command(BaseCommand):
             coin_detail.rest = user_coin.balance
             coin_detail.sources = CoinDetail.RECHARGE
             coin_detail.save()
+
+            # SOC赠送活动
+            if coin.id == Coin.SOC:
+                user = User.objects.get(pk=user_id)
+                UserRecharge.objects.soc_gift_event(user)
 
             self.stdout.write(self.style.SUCCESS('确认一笔 ' + str(coin.name) + ' 充值，TXID=' + txid))
 
