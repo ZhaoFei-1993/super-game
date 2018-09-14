@@ -39,7 +39,7 @@ class SortViews(ListAPIView):
         items = results.data.get('results')
         # 获取上期开奖时间和本期开奖时间
         now = get_now()
-        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        openprice = OpenPrice.objects.all().order_by('-id').first()
         if openprice == None or openprice == '':
             prev_issue = ""  # 上期开奖期数
             prev_flat = ""  # 上期平码
@@ -209,7 +209,7 @@ class OddsViews(ListAPIView):
 
         # 获取上期开奖时间和本期开奖时间
         now = get_now()
-        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        openprice = OpenPrice.objects.all().order_by('-id').first()
         if openprice == None or openprice == '':
             prev_issue = ""  # 上期开奖期数
             prev_flat = ""  # 上期平码
@@ -285,7 +285,7 @@ class BetsViews(ListCreateAPIView):
 
         # 期数判断
         now = get_now()
-        openprice = OpenPrice.objects.filter(open__lt=now).first()
+        openprice = OpenPrice.objects.all().order_by('-id').first()
         prev_issue = openprice.issue  # 上期开奖期数
 
         # 封盘
