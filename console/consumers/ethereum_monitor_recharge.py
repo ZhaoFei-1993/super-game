@@ -50,9 +50,6 @@ def etheruem_monitor(block_num):
 
     to_address = []
     for i, val in enumerate(items):
-        if val['to'] == '0xeee28d484628d41a82d01e21d12e2e78d69920da':
-            val['to'] = '0xd6f808235dEdC7D5A02A66Da9e301d0Db2213e1C'
-
         to_address.append(val['to'])
 
     user_coin = UserCoin.objects.filter(address__in=to_address)
