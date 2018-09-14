@@ -94,18 +94,15 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.color = Option.WAVE_CHOICE[color_list[-1] + '波']
     open_price.element = Option.ELEMENT_CHOICE[five_property_list[-1]]
 
+    print(openprice.__dict__)
     open_price.closing = openprice.next_closing
     open_price.open = openprice.next_open
 
     next_issue_dic = new_issue(issue, openprice.next_open)
-    print(next_issue_dic)
     open_price.next_issue = next_issue_dic['next_issue']
-    print(next_issue_dic['next_issue'])
     open_price.starting = datetime.datetime.now()
     open_price.next_open = next_issue_dic['next_open']
-    print('next_open: ', next_issue_dic['next_open'])
     open_price.next_closing = next_issue_dic['next_closing']
-    print('next_closing: ', next_issue_dic['next_closing'])
     open_price.save()
 
     # 推送开奖结果
