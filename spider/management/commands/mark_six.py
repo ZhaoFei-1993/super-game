@@ -104,6 +104,9 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.next_closing = next_issue_dic['next_closing']
     open_price.save()
 
+    # 推送开奖结果
+    mark_six_result_code(issue, next_issue_dic['next_issue'])
+
     # 处理投注记录
     print(answer_dic)
     ergodic_record(issue, answer_dic)
@@ -148,9 +151,6 @@ class Command(BaseCommand):
                 # 拿到正码
                 pre_draw_code = body_list['preDrawCode']
                 pre_draw_code_list = pre_draw_code.split(',')
-
-                # 推送开奖结果
-                mark_six_result_code(issue)
 
                 mark_six_result(pre_draw_code_list, pre_draw_date, issue)
             else:
