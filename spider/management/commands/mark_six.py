@@ -98,10 +98,14 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.open = openprice.next_open
 
     next_issue_dic = new_issue(issue, openprice.next_open)
+    print(next_issue_dic)
     open_price.next_issue = next_issue_dic['next_issue']
+    print(next_issue_dic['next_issue'])
     open_price.starting = datetime.datetime.now()
     open_price.next_open = next_issue_dic['next_open']
+    print('next_open: ', next_issue_dic['next_open'])
     open_price.next_closing = next_issue_dic['next_closing']
+    print('next_closing: ', next_issue_dic['next_closing'])
     open_price.save()
 
     # 推送开奖结果
@@ -129,7 +133,6 @@ def new_issue(now_issue, now_open_date):
         next_issue = 1
     else:
         next_issue = int(now_issue) + 1
-    print({'next_issue': next_issue, 'next_open': next_open_date, 'next_closing': next_closing})
     return {'next_issue': next_issue, 'next_open': next_open_date, 'next_closing': next_closing}
 
 
