@@ -82,8 +82,6 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
         'code_list': code_list, 'color_list': color_list, 'chinese_zodiac_list': chinese_zodiac_list,
         'five_property_list': five_property_list,
     }
-    print(answer_dic)
-    ergodic_record(issue, answer_dic)
 
     now = get_now()
     openprice = OpenPrice.objects.filter(open__lt=now).first()
@@ -104,9 +102,14 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.starting = datetime.datetime.now()
     open_price.next_open = next_issue_dic['next_open']
     open_price.next_closing = next_issue_dic['next_closing']
-
-    open_price.is_open = True
     open_price.save()
+
+    # # 处理投注记录
+    # print(answer_dic)
+    # ergodic_record(issue, answer_dic)
+    #
+    # open_price.is_open = True
+    # open_price.save()
 
     print('----------------------------------------------------------------------')
 
