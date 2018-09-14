@@ -25,6 +25,7 @@ class MarkSixConsumer(BaseConsumer):
         """
         await self.send_json({
             "msg_type": "result",
-            "issue": event['issue'],
-            "result_status": event['result_status'],
+            "current_issue": event['current_issue'],
+            "current_issue_open": event['current_issue_open'],
+            "next_issue": event['next_issue'],
         })
