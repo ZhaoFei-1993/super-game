@@ -325,7 +325,7 @@ class BetsViews(ListCreateAPIView):
         limit = MarkSixBetLimit.objects.get(options_id=option_id, club_id=club_id)
         limit_max = limit.max_limit
         limit_min = limit.min_limit
-        if float(bet_coin) > int(bet) * limit_max or float(bet_coin) < int(bet) * limit_min:
+        if float(bet_coin) > limit_max or float(bet_coin) < limit_min:
             raise ParamErrorException(error_code.API_50204_BET_ERROR)
 
         if play_id == '1':  # 为特码
