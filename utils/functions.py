@@ -726,6 +726,7 @@ def get_club_info():
                     'coin_id': club.coin_id, 'club_name': club.room_title,
                     'club_name_en': club.room_title_en, 'coin_name': club.room_title.replace('俱乐部', ''),
                     'coin_accuracy': club.coin.coin_accuracy,
+                    'coin_icon': club.coin.icon,
                 }
             }
             cache_club_value_origin.update(cache_club_value)
