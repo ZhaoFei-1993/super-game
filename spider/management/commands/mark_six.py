@@ -6,6 +6,7 @@ from marksix.models import OpenPrice, Number, Animals, Option
 import datetime
 from .mark_six_result import ergodic_record
 from users.finance.functions import get_now
+from marksix.consumers import mark_six_result_code
 
 url = 'https://1680660.com/smallSix/findSmallSixHistory.do'
 headers = {
@@ -144,6 +145,9 @@ class Command(BaseCommand):
                 # 拿到正码
                 pre_draw_code = body_list['preDrawCode']
                 pre_draw_code_list = pre_draw_code.split(',')
+
+                # 推送开奖结果
+                mark_six_result_code(issue, pre_draw_code)
 
                 mark_six_result(pre_draw_code_list, pre_draw_date, issue)
             else:

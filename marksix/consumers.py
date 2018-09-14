@@ -3,7 +3,7 @@ from channels.consumer import get_channel_layer
 from asgiref.sync import async_to_sync
 
 
-def mark_six_result(issue, result_code):
+def mark_six_result_code(issue, result_code):
     """
         结果号码推送
         :param issue 期数
