@@ -39,7 +39,8 @@ def get_index_cn(period, base_url):
                                           "%Y-%m-%d %H:%M:%S")
     stock_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd
     response = requests.get(base_url, headers=headers)
-    dt_dic = eval(re.findall('\(.*?\)', response.text)[0][1:-1])
+    content_text = response.text.replace('false', 'False')
+    dt_dic = eval(re.findall('\(.*?\)', content_text)[0][1:-1])
     data_list = dt_dic['data']
     if period.start_value is None or float(period.start_value) != float(dt_dic['info']['o']):
         period.start_value = float(dt_dic['info']['o'])
