@@ -129,6 +129,7 @@ def new_issue(now_issue, now_open_date):
         next_issue = 1
     else:
         next_issue = int(now_issue) + 1
+    print({'next_issue': next_issue, 'next_open': next_open_date, 'next_closing': next_closing})
     return {'next_issue': next_issue, 'next_open': next_open_date, 'next_closing': next_closing}
 
 
