@@ -755,7 +755,7 @@ class UserRechargeManager(models.Manager):
         if give_number >= 500:
             return True
         # 判断是否达到赠送条件
-        sum_amount_list = self.filter(user_id=user_id, coin_give_id=2).aggregate(
+        sum_amount_list = self.filter(user_id=user_id, coin_id=11).aggregate(
             Sum('amount'))
         sum_amount = sum_amount_list['amount__sum'] if sum_amount_list['amount__sum'] is not None else 0
         if sum_amount < 100:
