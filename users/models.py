@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Sum
 from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from wc_auth.models import Admin
 import reversion
@@ -732,8 +732,7 @@ class UserRechargeManager(models.Manager):
             user_message.message_id = 3
             user_message.save()
 
-    @staticmethod
-    def soc_gift_event(user):
+    def soc_gift_event(self, user):
         """
         soc赠送活动
         :param user:
@@ -751,8 +750,15 @@ class UserRechargeManager(models.Manager):
         is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2).count()
         if is_give > 0:
             return True
+        # 判断是否达到500人数上限
         give_number = CoinGiveRecords.objects.filter(is_recharge_lock=1, coin_give_id=2).count()
         if give_number >= 500:
+            return True
+        # 判断是否达到赠送条件
+        sum_amount_list = self.filter(user_id=user_id, coin_give_id=2).aggregate(
+            Sum('amount'))
+        sum_amount = sum_amount_list['amount__sum'] if sum_amount_list['amount__sum'] is not None else 0
+        if sum_amount < 100:
             return True
 
         user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
