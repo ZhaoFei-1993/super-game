@@ -186,6 +186,8 @@ def two_sides_result(record, answer_dic):
             if str(option_id) in record.content.split(','):
                 index = record.content.split(',').index(str(option_id))
                 earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+        else:
+            earn_coin = earn_coin
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
