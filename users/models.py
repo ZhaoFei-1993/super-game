@@ -738,27 +738,32 @@ class UserRechargeManager(models.Manager):
         :param user:
         :return:
         """
+        print('soc_gift_eventsoc_gift_event')
         activity = CoinGive.objects.get(pk=2)
         end_date = activity.end_time.strftime("%Y%m%d%H%M%S")
         today_time = date.today().strftime("%Y%m%d%H%M%S")
         # 判断是否在活动时间内
         if today_time >= end_date or user.is_robot is True:
+            print('time')
             return True
 
         user_id = user.id
         # 判断是否已赠送
         is_give = CoinGiveRecords.objects.filter(user_id=user_id, coin_give_id=2).count()
         if is_give > 0:
+            print('is_give')
             return True
         # 判断是否达到500人数上限
         give_number = CoinGiveRecords.objects.filter(is_recharge_lock=1, coin_give_id=2).count()
         if give_number >= 500:
+            print('give_number')
             return True
         # 判断是否达到赠送条件
         sum_amount_list = self.filter(user_id=user_id, coin_give_id=2).aggregate(
             Sum('amount'))
         sum_amount = sum_amount_list['amount__sum'] if sum_amount_list['amount__sum'] is not None else 0
         if sum_amount < 100:
+            print('sum_amount')
             return True
 
         user_coin = UserCoin.objects.filter(coin_id=activity.coin_id, user_id=user_id).first()
