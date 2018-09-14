@@ -147,7 +147,7 @@ class Command(BaseCommand):
                 pre_draw_code_list = pre_draw_code.split(',')
 
                 # 推送开奖结果
-                mark_six_result_code(issue, pre_draw_code)
+                mark_six_result_code(issue, pre_draw_code_list)
 
                 mark_six_result(pre_draw_code_list, pre_draw_date, issue)
             else:
