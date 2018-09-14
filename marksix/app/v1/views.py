@@ -289,8 +289,8 @@ class BetsViews(ListCreateAPIView):
         prev_issue = openprice.issue  # 上期开奖期数
 
         # 封盘
-        # if datetime.now() > openprice.next_closing:
-        #     raise ParamErrorException(error_code.API_50204_BET_CLOSED)
+        if datetime.now() > openprice.next_closing:
+            raise ParamErrorException(error_code.API_50204_BET_CLOSED)
 
         if int(openprice.next_issue) != int(issue):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
