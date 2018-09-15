@@ -7,7 +7,7 @@ from api import settings
 import pytz
 from datetime import datetime
 from chat.models import Club
-from utils.functions import guess_is_seal, normalize_fraction
+from utils.functions import guess_is_seal, normalize_fraction, get_club_info
 
 
 class PeriodsListSerialize(serializers.ModelSerializer):
@@ -331,34 +331,45 @@ class RecordSerialize(serializers.ModelSerializer):
     """
     bet = serializers.SerializerMethodField()  # 下注金额
     created_at = serializers.SerializerMethodField()  # 竞猜时间
-    my_option = serializers.SerializerMethodField()  # 投注选项
+    # my_option = serializers.SerializerMethodField()  # 投注选项
     coin_avatar = serializers.SerializerMethodField()  # 货币图标
     coin_name = serializers.SerializerMethodField()  # 货币昵称
-    earn_coin = serializers.SerializerMethodField()  # 竞猜结果
-    guess_title = serializers.SerializerMethodField()  # 股票昵称
-    index = serializers.SerializerMethodField()  # 指数
-    index_colour = serializers.SerializerMethodField()  # 指数颜色
-    guess_result = serializers.SerializerMethodField()  # 当期结果
+    earn_coin_result = serializers.SerializerMethodField()  # 竞猜结果
+    earn_coin = serializers.SerializerMethodField()
+    # guess_title = serializers.SerializerMethodField()  # 股票昵称
+    # index = serializers.SerializerMethodField()  # 指数
+    # index_colour = serializers.SerializerMethodField()  # 指数颜色
+    # guess_result = serializers.SerializerMethodField()  # 当期结果
     is_right = serializers.SerializerMethodField()  # 是否为正确答案
     type = serializers.SerializerMethodField()  # 是否为正确答案
-    stock_id = serializers.SerializerMethodField()  # 是否为正确答案
+    # stock_id = serializers.SerializerMethodField()
+    obj = serializers.SerializerMethodField()
 
     class Meta:
         model = Record
-        fields = ("id", "type", "periods_id", "stock_id", "bet", "created_at", "my_option", "coin_avatar", "coin_name",
-                  "earn_coin", "guess_title",
-                  "index", "index_colour", "guess_result", "is_right")
+        fields = ("id", "type", "periods_id", "bet", "created_at", "coin_avatar",
+                  "coin_name", "earn_coin", "earn_coin_result", "is_right", "obj")
 
     @staticmethod
+    def get_obj(obj):
+        return obj
+
+    # @staticmethod
+    # def get_bet(obj):  # 下注金额
+    #     coin_accuracy = obj.club.coin.coin_accuracy
+    #     bet = normalize_fraction(obj.bets, int(coin_accuracy))
+    #     return bet
+    @staticmethod
     def get_bet(obj):  # 下注金额
-        coin_accuracy = obj.club.coin.coin_accuracy
+        cache_club_value = get_club_info()
+        coin_accuracy = cache_club_value[obj.club_id]['coin_accuracy']
         bet = normalize_fraction(obj.bets, int(coin_accuracy))
         return bet
 
-    @staticmethod
-    def get_stock_id(obj):  # 下注金额
-        stock_id = obj.periods.stock_id
-        return stock_id
+    # @staticmethod
+    # def get_stock_id(obj):
+    #     stock_id = obj.periods.stock_id
+    #     return stock_id
 
     @staticmethod
     def get_type(obj):  # 下注金额
@@ -382,25 +393,35 @@ class RecordSerialize(serializers.ModelSerializer):
         }]
         return data
 
-    def get_my_option(self, obj):  # 我的选项
-        play_name = obj.play.PLAY[int(obj.play.play_name)][1]
-        title = str(play_name) + "：" + str(obj.options.title)
-        if self.context['request'].GET.get('language') == 'en':
-            play_name = obj.play.PLAY_EN[int(obj.play.play_name_en)][1]
-            title = str(play_name) + "：" + str(obj.options.title_en)
-        return title
+    # def get_my_option(self, obj):  # 我的选项
+    #     play_name = obj.play.PLAY[int(obj.play.play_name)][1]
+    #     title = str(play_name) + "：" + str(obj.options.title)
+    #     if self.context['request'].GET.get('language') == 'en':
+    #         play_name = obj.play.PLAY_EN[int(obj.play.play_name_en)][1]
+    #         title = str(play_name) + "：" + str(obj.options.title_en)
+    #     return title
 
+    # @staticmethod
+    # def get_coin_avatar(obj):  # 货币图标
+    #     coin_avatar = obj.club.coin.icon
+    #     return coin_avatar
     @staticmethod
     def get_coin_avatar(obj):  # 货币图标
-        coin_avatar = obj.club.coin.icon
+        cache_club_value = get_club_info()
+        coin_avatar = cache_club_value[obj.club_id]['coin_icon']
         return coin_avatar
 
+    # @staticmethod
+    # def get_coin_name(obj):  # 货币昵称
+    #     coin_name = obj.club.coin.name
+    #     return coin_name
     @staticmethod
     def get_coin_name(obj):  # 货币昵称
-        coin_name = obj.club.coin.name
+        cache_club_value = get_club_info()
+        coin_name = cache_club_value[obj.club_id]['coin_name']
         return coin_name
 
-    def get_earn_coin(self, obj):  # 结果
+    def get_earn_coin_result(self, obj):  # 结果
         if obj.earn_coin == 0 or obj.earn_coin == '':
             earn_coin = "待开奖"
             if self.context['request'].GET.get('language') == 'en':
@@ -414,6 +435,10 @@ class RecordSerialize(serializers.ModelSerializer):
         return earn_coin
 
     @staticmethod
+    def get_earn_coin(obj):  # 下注金额
+        return obj.earn_coin
+
+    @staticmethod
     def get_is_right(obj):
         is_right = 0
         if obj.earn_coin > 0:
@@ -422,45 +447,45 @@ class RecordSerialize(serializers.ModelSerializer):
             is_right = 2
         return is_right
 
-    def get_guess_title(self, obj):  # 股票昵称
-        guess_title = Stock.STOCK[int(obj.periods.stock.name)][1]
-        if self.context['request'].GET.get('language') == 'en':
-            guess_title = Stock.STOCK_EN[int(obj.periods.stock.name_en)][1]
-        return guess_title
+    # def get_guess_title(self, obj):  # 股票昵称
+    #     guess_title = Stock.STOCK[int(obj.periods.stock.name)][1]
+    #     if self.context['request'].GET.get('language') == 'en':
+    #         guess_title = Stock.STOCK_EN[int(obj.periods.stock.name_en)][1]
+    #     return guess_title
 
-    @staticmethod
-    def get_index(obj):  # 本期开奖指数
-        index = ''
-        if obj.earn_coin > 0 or obj.earn_coin < 0:
-            index = obj.periods.lottery_value
-        return index
+    # @staticmethod
+    # def get_index(obj):  # 本期开奖指数
+    #     index = ''
+    #     if obj.earn_coin > 0 or obj.earn_coin < 0:
+    #         index = obj.periods.lottery_value
+    #     return index
+    #
+    # @staticmethod
+    # def get_index_colour(obj):  # 本期指数颜色
+    #     index_colour = ''
+    #     if obj.earn_coin > 0 or obj.earn_coin < 0:
+    #         index = obj.periods.lottery_value
+    #         if index > obj.periods.start_value:
+    #             index_colour = 1
+    #         elif index < obj.periods.start_value:
+    #             index_colour = 2
+    #         else:
+    #             index_colour = 3
+    #     return index_colour
 
-    @staticmethod
-    def get_index_colour(obj):  # 本期指数颜色
-        index_colour = ''
-        if obj.earn_coin > 0 or obj.earn_coin < 0:
-            index = obj.periods.lottery_value
-            if index > obj.periods.start_value:
-                index_colour = 1
-            elif index < obj.periods.start_value:
-                index_colour = 2
-            else:
-                index_colour = 3
-        return index_colour
-
-    def get_guess_result(self, obj):  # 开奖结果
-        up_and_down = obj.periods.up_and_down
-        if self.context['request'].GET.get('language') == 'en':
-            up_and_down = obj.periods.up_and_down_en
-        size = obj.periods.size
-        if self.context['request'].GET.get('language') == 'en':
-            size = obj.periods.size_en
-        points = obj.periods.points
-        pair = obj.periods.pair
-        if up_and_down == None or up_and_down == '':
-            list = ''
-        elif pair == None or pair == '':
-            list = str(size) + "、 " + str(points)
-        else:
-            list = str(size) + "、 " + str(points) + "、 " + str(pair)
-        return list
+    # def get_guess_result(self, obj):  # 开奖结果
+    #     up_and_down = obj.periods.up_and_down
+    #     if self.context['request'].GET.get('language') == 'en':
+    #         up_and_down = obj.periods.up_and_down_en
+    #     size = obj.periods.size
+    #     if self.context['request'].GET.get('language') == 'en':
+    #         size = obj.periods.size_en
+    #     points = obj.periods.points
+    #     pair = obj.periods.pair
+    #     if up_and_down == None or up_and_down == '':
+    #         list = ''
+    #     elif pair == None or pair == '':
+    #         list = str(size) + "、 " + str(points)
+    #     else:
+    #         list = str(size) + "、 " + str(points) + "、 " + str(pair)
+    #     return list

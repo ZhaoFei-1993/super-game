@@ -13,7 +13,7 @@ from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
-from utils.functions import value_judge, get_sql
+from utils.functions import value_judge, get_sql, get_club_info
 from django.db.models import Q, Sum
 import time
 from api import settings
@@ -599,11 +599,112 @@ class RecordsListView(ListCreateAPIView):
             return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
+        # 完成数据库查询构造
+        stock_obj_info = {}
+        for stock in Stock.objects.all():
+            stock_obj_info.update({
+                stock.id: {
+                    'name': stock.name, 'name_en': stock.name_en
+                }
+            })
+
+        plays_dic = {}
+        options_dic = {}
+        for play in Play.objects.all():
+            plays_dic.update({
+                play.id:
+                    {
+                        'play_name': play.play_name,
+                    }
+            })
+        for option in Options.objects.all():
+            options_dic.update({
+                option.id:
+                    {
+                        'title': option.title, 'title_en': option.title_en,
+                    }
+            })
+
+        records_obj_dic = {}
+        for record in self.get_queryset():
+            records_obj_dic.update({
+                record: {
+                    'id': record.id, 'play_id': record.play_id, 'options_id': record.options_id,
+                }
+            })
+
+        records_periods_id_list = self.get_queryset().values_list('periods_id', flat=True)
+        period_obj_dic = {}
+        for period in Periods.objects.filter(id__in=records_periods_id_list):
+            if period.id not in period_obj_dic.keys():
+                period_obj_dic.update({
+                    period.id:
+                        {'stock_id': period.stock_id, 'lottery_value': period.lottery_value,
+                         'start_value': period.start_value, 'up_and_down': period.up_and_down,
+                         'up_and_down_en': period.up_and_down_en, 'size': period.size,
+                         'size_en': period.size_en, 'points': period.points, 'pair': period.pair
+                         }
+                })
+
         results = super().list(request, *args, **kwargs)
         Progress = results.data.get('results')
         data = []
         tmp = ''
         for fav in Progress:
+            obj = fav.get('obj')
+            # 构造接口数据
+            record_id = fav.get('id')
+            print('record_id=======', record_id)
+            periods_id = fav.get('periods_id')
+            stock_id = period_obj_dic[periods_id]['stock_id']
+            index = period_obj_dic[periods_id]['lottery_value']
+            start_value = period_obj_dic[periods_id]['start_value']
+            earn_coin = fav.get('earn_coin')
+            earn_coin_result = fav.get('earn_coin_result')
+
+            # 股票昵称
+            stock_name = stock_obj_info[stock_id]['name']
+            stock_name_en = stock_obj_info[stock_id]['name_en']
+            guess_title = Stock.STOCK[int(stock_name)][1]
+            if self.request.GET.get('language') == 'en':
+                guess_title = Stock.STOCK_EN[int(stock_name_en)][1]
+
+            # 本期指数颜色
+            index_colour = ''
+            if earn_coin > 0 or earn_coin < 0:
+                if index > start_value:
+                    index_colour = 1
+                elif index < start_value:
+                    index_colour = 2
+                else:
+                    index_colour = 3
+
+            # 开奖结果
+            up_and_down = period_obj_dic[periods_id]['up_and_down']
+            size = period_obj_dic[periods_id]['size']
+            if self.request.GET.get('language') == 'en':
+                up_and_down = period_obj_dic[periods_id]['up_and_down_en']
+                size = period_obj_dic[periods_id]['size_en']
+            points = period_obj_dic[periods_id]['points']
+            pair = period_obj_dic[periods_id]['pair']
+            if up_and_down is None or up_and_down == '':
+                guess_result = ''
+            elif pair is None or pair == '':
+                guess_result = str(size) + "、 " + str(points)
+            else:
+                guess_result = str(size) + "、 " + str(points) + "、 " + str(pair)
+
+            # 我的玩法选项
+            play_id = records_obj_dic[obj]['play_id']
+            option_id = records_obj_dic[obj]['options_id']
+            play_name = Play.PLAY[int(plays_dic[play_id]['play_name'])][1]
+            option_title = options_dic[option_id]['title']
+            title = str(play_name) + "：" + str(option_title)
+            if self.request.GET.get('language') == 'en':
+                play_name = Play.PLAY_EN[int(plays_dic[play_id]['play_name'])][1]
+                option_title = options_dic[option_id]['title_en']
+                title = str(play_name) + "：" + str(option_title)
+
             pecific_dates = fav.get('created_at')[0].get('years')
             pecific_date = fav.get('created_at')[0].get('year')
             if tmp == pecific_date:
@@ -613,20 +714,20 @@ class RecordsListView(ListCreateAPIView):
                 tmp = pecific_date
             data.append({
                 "id": fav.get('id'),
-                "stock_id": fav.get('stock_id'),
-                "periods_id": fav.get('periods_id'),
-                "guess_title": fav.get('guess_title'),  # 股票昵称
-                'earn_coin': fav.get('earn_coin'),  # 竞猜结果
+                "stock_id": stock_id,
+                "periods_id": periods_id,
+                "guess_title": guess_title,  # 股票昵称
+                'earn_coin': earn_coin_result,  # 竞猜结果
                 'type': fav.get('type'),  # 竞猜结果
                 'pecific_dates': pecific_dates,
                 'pecific_date': pecific_date,
                 'pecific_time': fav.get('created_at')[0].get('time'),
-                'my_option': fav.get('my_option'),  # 投注选项
+                'my_option': title,  # 投注选项
                 'is_right': fav.get('is_right'),  # 是否为正确答案
                 'coin_avatar': fav.get('coin_avatar'),  # 货币图标
-                'index': fav.get('index'),  # 指数
-                'index_colour': fav.get('index_colour'),  # 指数颜色
-                'guess_result': fav.get('guess_result'),  # 当期结果
+                'index': index,  # 指数
+                'index_colour': index_colour,  # 指数颜色
+                'guess_result': guess_result,  # 当期结果
                 'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
