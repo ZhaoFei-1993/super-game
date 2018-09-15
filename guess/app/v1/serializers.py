@@ -422,6 +422,9 @@ class RecordSerialize(serializers.ModelSerializer):
         return coin_name
 
     def get_earn_coin_result(self, obj):  # 结果
+        cache_club_value = get_club_info()
+        coin_accuracy = cache_club_value[obj.club_id]['coin_accuracy']
+
         if obj.earn_coin == 0 or obj.earn_coin == '':
             earn_coin = "待开奖"
             if self.context['request'].GET.get('language') == 'en':
@@ -431,7 +434,7 @@ class RecordSerialize(serializers.ModelSerializer):
             if self.context['request'].GET.get('language') == 'en':
                 earn_coin = "Guess wrong"
         else:
-            earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(obj.club.coin.coin_accuracy)))
+            earn_coin = "+" + str(normalize_fraction(obj.earn_coin, int(coin_accuracy)))
         return earn_coin
 
     @staticmethod
