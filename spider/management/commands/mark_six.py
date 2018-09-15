@@ -94,7 +94,6 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.color = Option.WAVE_CHOICE[color_list[-1] + '波']
     open_price.element = Option.ELEMENT_CHOICE[five_property_list[-1]]
 
-    print(openprice.__dict__)
     open_price.closing = openprice.next_closing
     open_price.open = openprice.next_open
 
@@ -122,7 +121,7 @@ def new_issue(now_issue, now_open_date):
     next_open_date = now_open_date + datetime.timedelta(days=1)
     while next_open_date.isoweekday() not in [2, 4, 6]:
         next_open_date = next_open_date + datetime.timedelta(days=1)
-    next_closing = next_open_date - datetime.timedelta(minutes=30)
+    next_closing = next_open_date - datetime.timedelta(minutes=15)
 
     now_year = now_open_date.strftime('%Y')
     next_year = next_open_date.strftime('%Y')

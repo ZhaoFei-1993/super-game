@@ -450,14 +450,15 @@ class BetsListViews(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         user_id = user.id
+        club_id = self.request.GET.get('club_id')
         # user_id = 2476
         type = self.kwargs['type']
         if type == '0':  # 全部记录
-            res = SixRecord.objects.filter(user_id=user_id)
+            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id)
         elif type == '1':  # 未开奖
-            res = SixRecord.objects.filter(user_id=user_id, status=0)
+            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=0)
         elif type == '2':  # 已开奖
-            res = SixRecord.objects.filter(user_id=user_id, status=1)
+            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=1)
         else:
             return HttpResponse(status=404)
         return res

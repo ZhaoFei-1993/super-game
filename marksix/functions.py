@@ -8,8 +8,9 @@ class CountPage(LimitOffsetPagination):
     limit_query_param = 'limit'  # 往后取几条
     offset_query_param = 'offset'  # 当前所在的位置
 
+
 def date_exchange(dt):
-    return dt.strftime("%Y年%m月%d日 %H:%M:%S")
+    return dt.strftime("%Y年%m月%d日 %H:%M")
 
 
 def valied_content(content, min=0, max=0):
