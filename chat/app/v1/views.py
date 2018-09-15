@@ -64,7 +64,8 @@ class ClublistView(ListAPIView):
                 period = str(number_time_judgment())
                 quiz_number = int(initial_online_user_number[0][period][coin_name]['quiz'])
                 guess_number = int(initial_online_user_number[0][period][coin_name]['guess'])
-                user_number = quiz_number + guess_number
+                six_number = int(initial_online_user_number[0][period][coin_name]['six'])
+                user_number = quiz_number + guess_number + six_number
 
             data.append(
                 {

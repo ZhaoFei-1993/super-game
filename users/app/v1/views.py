@@ -609,7 +609,11 @@ class InfoView(ListAPIView):
 
                 if item.coin_id == coin_id:
                     current_coin_balance = item.balance
-                    current_coin_address = item.address
+
+                    if item.coin_id == Coin.EOS:
+                        current_coin_address = settings.EOS_RECHARGE_ADDRESS
+                    else:
+                        current_coin_address = item.address
 
         Address.objects.initial(user_id, user_coins)
 
@@ -633,6 +637,7 @@ class InfoView(ListAPIView):
             'usercoin_avatar': coin.icon,
             'gsg_icon': gsg.icon,
             'recharge_address': current_coin_address,
+            'eos_code': user.eos_code if coin_id == Coin.EOS else '',
             'integral': normalize_fraction(integral, 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],

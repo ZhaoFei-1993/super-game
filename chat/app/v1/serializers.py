@@ -63,10 +63,20 @@ class ClubRuleSerialize(serializers.ModelSerializer):
         print('initial_online_user_number = ', initial_online_user_number)
         print('period = ', period)
         print('coin_name_key = ', coin_name_key)
-        if int(obj.id) == 1:
-            user_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
-        else:
-            user_number = int(initial_online_user_number[0][period][coin_name_key]['guess'])
+        try:
+            if int(obj.id) == 1:
+                user_number = int(initial_online_user_number[0][period][coin_name_key]['quiz'])
+            elif int(obj.id) == 3:
+                user_number = int(initial_online_user_number[0][period][coin_name_key]['guess'])
+            elif int(obj.id) == 2:
+                user_number = int(initial_online_user_number[0][period][coin_name_key]['six'])
+            elif int(obj.id) == 4:
+                user_number = int(initial_online_user_number[0][period][coin_name_key]['lhd'])
+            else:
+                user_number = int(initial_online_user_number[0][period][coin_name_key]['bjl'])
+        except Exception:
+            user_number = 0
+        
         return user_number
 
 
