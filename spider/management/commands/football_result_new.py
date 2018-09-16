@@ -109,6 +109,7 @@ def get_data(url):
     print('正在发起请求,竞彩网')
     try:
         response = requests.get(url, headers=headers, timeout=20)
+        print('结束请求')
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[12:-2])
@@ -119,6 +120,7 @@ def get_data(url):
 
 @transaction.atomic()
 def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest_team_score=None):
+    print('开始处理数据')
     quiz = Quiz.objects.filter(match_flag=match_flag).first()
 
     rule_all = Rule.objects.filter(quiz=quiz).all()
