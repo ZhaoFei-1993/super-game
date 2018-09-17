@@ -12,6 +12,8 @@ from PIL import Image
 import qrcode
 from chat.models import Club
 from django.db.models import Q, Sum
+from users.models import UserInvitation
+import datetime
 
 
 
@@ -29,10 +31,21 @@ class PromotionInfoView(ListAPIView):
 
         user = self.request.user
         user_avatar = user.avatar          # 用户头像
-        all_club = Club.objects.filter(~Q(is_recommend=0))
-        club_icon_list = [club.icon for club in all_club]
-        club_id_list = [club.id for club in all_club]
-        coin_name_list = [club.coin.name for club in all_club]
+        nowadays_day = datetime.datetime.now().strftime('%Y-%m-%d')
+        nowadays_now = str(nowadays_day) + ' 00:00:00'
+        nowadays_old = str(nowadays_day) + ' 23:59:59'
+        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        yesterday_now = str(nowadays_day) + ' 00:00:00'
+        yesterday_old = str(nowadays_day) + ' 23:59:59'
+        # all_club = Club.objects.filter(~Q(is_recommend=0))
+        # club_icon_list = [club.icon for club in all_club]
+        # club_id_list = [club.id for club in all_club]
+        # coin_name_list = [club.coin.name for club in all_club]
+        nowadays_number = UserInvitation.objects.filter(Q(created_at__lte=nowadays_old)|Q(created_at__gte=nowadays_now), inviter_id=user.id).count()            # 今天邀请人数
+        yesterday_number = UserInvitation.objects.filter(Q(created_at__lte=yesterday_old)|Q(created_at__gte=yesterday_now), inviter_id=user.id).count()        # 昨天邀请人数
+        all_invitation = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1, status=2).aggregate(Sum('money'))        # 昨天邀请人数
+        all_user_number = UserInvitation.objects.filter(inviter_id=user.id, ).aggregate(Sum('money'))        # 昨天邀请人数
+        sum_gsg = all_invitation['money__sum'] if all_invitation['money__sum'] is not None else 0
 
 
         return self.response(
