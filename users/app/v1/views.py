@@ -126,68 +126,38 @@ class UserRegister(object):
         :return:
         """
         token = None
-        if password is None:
-            try:
-                user = User.objects.get(username=username)
-            except Exception:
-                raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
-            if user.is_block == 1:
-                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+        try:
+            if area_code is None:
+                area_code = 86
+            user = User.objects.get(area_code=area_code, username=username)
+        except Exception:
+            raise ParamErrorException(error_code.API_10105_NO_REGISTER)
+
+        if user.is_block == 1:             # 是否被封号
+            raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+
+        if user.check_password(password):         # 校验密码
             token = self.get_access_token(source=source, user=user)
         else:
-            try:
-                if area_code is None:
-                    area_code = 86
-                user = User.objects.get(area_code=area_code, username=username)
-            except Exception:
-                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
-            if user.is_block == 1:
-                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
-            if user.check_password(password):
-                token = self.get_access_token(source=source, user=user)
-            else:
-                raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
-            message = Message.objects.filter(type=1, created_at__gte=user.created_at)
-            ids = [x.id for x in message]
-            user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
-            mes_ids = list(set([x.message_id for x in user_messages]))
-            for i in ids:
-                if i not in mes_ids:
-                    usermessage = UserMessage()
-                    usermessage.user = user
-                    usermessage.message_id = i
-                    usermessage.save()
+            raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
 
-            Address.objects.initial(user.id)
+        message = Message.objects.filter(type=1, created_at__gte=user.created_at)    # 生成为公共消息
+        ids = [x.id for x in message]
+        user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
+        mes_ids = list(set([x.message_id for x in user_messages]))
+        for i in ids:
+            if i not in mes_ids:
+                usermessage = UserMessage()
+                usermessage.user = user
+                usermessage.message_id = i
+                usermessage.save()
 
-            # 更新用户的device_token
-            if device_token is not None and device_token != '':
-                user.device_token = device_token
-                user.save()
+        Address.objects.initial(user.id)          # 生成为基础 usercoin 数据 并且分配地址
 
-            # 注册送HAND币
-            if user.is_money == 0 and user.is_robot == 0:
-                user_money = 10000
-                try:
-                    user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
-                except Exception:
-                    return 0
-                user_balance.balance += user_money
-                user_balance.save()
-                coin_detail = CoinDetail()
-                coin_detail.user = user
-                coin_detail.coin_name = 'HAND'
-                coin_detail.amount = '+' + str(user_money)
-                coin_detail.rest = Decimal(user_balance.balance)
-                coin_detail.sources = 6
-                coin_detail.save()
-                user.is_money = 1
-                user.save()
-                r_msg = UserMessage()  # 注册送hand消息
-                r_msg.status = 0
-                r_msg.user = user
-                r_msg.message_id = 5
-                r_msg.save()
+        # 更新用户的device_token
+        if device_token is not None and device_token != '':
+            user.device_token = device_token
+            user.save()
 
         if request is not None:
             request.user = user
@@ -212,14 +182,15 @@ class UserRegister(object):
         # 32 QQ
         # 28 微信
         # 邀请码注册
+        register_type = self.get_register_type(username)
+        user = User()
 
         if invitation_code != '':  # 是否用邀请码注册
-            invitation_user = User.objects.get(invitation_code=invitation_code)
-            inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
-                                                           is_effective=1, coin=9).count()
+            try:
+                invitation_user = User.objects.get(invitation_code=invitation_code)
+            except Exception:
+                raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
-            register_type = self.get_register_type(username)
-            user = User()
             if area_code is None or area_code == '':
                 area_code = 86
             user.area_code = area_code
@@ -235,41 +206,22 @@ class UserRegister(object):
             user.telephone = username
             user.save()
 
-            give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
-            end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-            today = date.today()
-            today_time = today.strftime("%Y%m%d%H%M%S")
-            user_go_line = UserInvitation()  # 邀请T1是否已达上限
-            if inviter_number < 5 and today_time < end_date and invitation_user.is_robot == False:
-                user_go_line.is_effective = 1
-                user_go_line.money = 3888
-                user_go_line.is_robot = False
+            user_go_line = UserInvitation()           # 生成邀请记录
+            if invitation_user.is_robot == False:
+                user_go_line.inviter_type = 1
+                user_go_line.status = 1
+            else:
+                user_go_line.inviter_type = 2
+                user_go_line.status = 0
+            user_go_line.money = 5
+            user_go_line.old_data = 0
+            user_go_line.coin_id = 6
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
             user_go_line.invitee_one = user.id
             user_go_line.save()
 
-            invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).count()
-            if invitee_one > 0:  # 邀请人为他人T1.
-                try:
-                    invitee = UserInvitation.objects.filter(invitee_one=int(invitation_user.pk)).first()
-                except DailyLog.DoesNotExist:
-                    return 0
-                on_line = invitee.inviter
-                invitee_number = UserInvitation.objects.filter(~Q(invitee_two=0), inviter_id=on_line,
-                                                               is_effective=1, coin=4).count()
-                user_on_line = UserInvitation()  # 邀请T2是否已达上限
-                if invitee_number < 10 and on_line.is_robot == False:
-                    user_on_line.is_effective = 1
-                    user_on_line.money = 2000
-                    user_go_line.is_robot = False
-                user_on_line.inviter = on_line
-                user_on_line.invitee_two = user.id
-                user_on_line.save()
         else:
-            register_type = self.get_register_type(username)
-            user = User()
-
             user.telephone = username
             if area_code is None:
                 area_code = 86
@@ -286,26 +238,23 @@ class UserRegister(object):
             user.save()
 
         # 生成签到记录
-        try:
-            userinfo = User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         daily = DailyLog()
-        daily.user_id = userinfo.id
+        daily.user_id = user.id
         daily.number = 0
         yesterday = datetime.today() + timedelta(-1)
         daily.sign_date = yesterday.strftime("%Y-%m-%d %H:%M:%S")
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
 
-        Address.objects.initial(userinfo.id)
+        Address.objects.initial(user.id)  # 用户生成usercoin 加地址
 
-        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
+        # 活动: 货币赠送
+        give_info = CoinGive.objects.get(pk=1)
         end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
         today = date.today()
         today_time = today.strftime("%Y%m%d%H%M%S")
         if today_time < end_date:  # 活动期间
-            user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=userinfo.id).first()
+            user_coin = UserCoin.objects.filter(coin_id=give_info.coin_id, user_id=user.id).first()
             user_coin_give_records = CoinGiveRecords()
             user_coin_give_records.start_coin = user_coin.balance
             user_coin_give_records.user = user
@@ -326,12 +275,14 @@ class UserRegister(object):
             coin_bankruptcy.rest = Decimal(user_coin.balance)
             coin_bankruptcy.sources = 4
             coin_bankruptcy.save()
-        if invitation_code != '':  # 是否用邀请码注册
+
+        # 活动: INT邀请码   限制2000人
+        if invitation_code != '':
             invitation_user = User.objects.get(invitation_code=invitation_code)
-            if int(invitation_user.pk) == 2638:  # INT邀请活动
+            if int(invitation_user.pk) == 2638:
                 invitation_number = IntInvitation.objects.filter(is_block=0).count()
                 int_invitation = IntInvitation()
-                int_invitation.invitee = userinfo.id
+                int_invitation.invitee = user.id
                 int_invitation.inviter = invitation_user
                 int_invitation.coin = 1
                 int_invitation.invitation_code = invitation_code
@@ -356,29 +307,37 @@ class UserRegister(object):
                     coin_bankruptcy.sources = 4
                     coin_bankruptcy.save()
 
-        # 注册送HAND币
-        if user.is_money == 0 and user.is_robot == 0:
-            user_money = 10000
-            try:
-                user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
-            except Exception:
-                return 0
-            user_balance.balance += user_money
-            user_balance.save()
-            coin_detail = CoinDetail()
-            coin_detail.user = user
-            coin_detail.coin_name = 'HAND'
-            coin_detail.amount = '+' + str(user_money)
-            coin_detail.rest = Decimal(user_balance.balance)
-            coin_detail.sources = 6
-            coin_detail.save()
-            user.is_money = 1
-            user.save()
-            r_msg = UserMessage()  # 注册送hand消息
-            r_msg.status = 0
-            r_msg.user = user
-            r_msg.message_id = 5
-            r_msg.save()
+        # 活动： 注册送HAND币      # 限制2亿
+        all_user_number = User.objects.filter(is_money=1, is_robot=0).count()
+        all_money = 10000 * all_user_number  # 获得总钱数
+        if all_money is not None:
+            all_money += 10000
+        else:
+            all_money = 10000
+        if all_money >= 200000000:
+            if user.is_money == 0 and user.is_robot == 0:
+                user_money = 10000
+                try:
+                    user_balance = UserCoin.objects.get(coin__name='HAND', user_id=user.id)
+                except Exception:
+                    return 0
+                user_balance.balance += user_money
+                user_balance.save()
+                coin_detail = CoinDetail()
+                coin_detail.user = user
+                coin_detail.coin_name = 'HAND'
+                coin_detail.amount = '+' + str(user_money)
+                coin_detail.rest = Decimal(user_balance.balance)
+                coin_detail.sources = 6
+                coin_detail.save()
+                user.is_money = 1
+                user.save()
+                r_msg = UserMessage()  # 注册送hand消息
+                r_msg.status = 0
+                r_msg.user = user
+                r_msg.message_id = 5
+                r_msg.save()
+
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
 
@@ -425,12 +384,13 @@ class LoginView(CreateAPIView):
     def post(self, request, *args, **kwargs):
 
         ur = UserRegister()
-        value = value_judge(request, "username", "type")
+        value = value_judge(request, "username", "type", "password")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         username = request.data.get('username')
         ip_address = request.META.get("REMOTE_ADDR", '')
         source = request.META.get('HTTP_X_API_KEY')
+        password = request.data.get('password')
         # register_type = ur.get_register_type(username)
         register_type = User.REGISTER_TELEPHONE
 
@@ -478,64 +438,41 @@ class LoginView(CreateAPIView):
             if int(type) == 2:
                 raise ParamErrorException(error_code.API_10105_NO_REGISTER)
             nickname = str(username[0:3]) + "***" + str(username[7:])
-            if int(register_type) == 1 or int(register_type) == 2:
-                password = random_salt(8)
-                token = ur.register(source=source, nickname=nickname, username=username, avatar=avatar,
-                                    password=password, device_token=device_token, ip_address=ip_address)
-
+            code = request.data.get('code')
+            if 'area_code' not in request.data:
+                area_code = 86
             else:
-                code = request.data.get('code')
-                if 'area_code' not in request.data:
-                    area_code = 86
-                else:
-                    area_code = request.data.get('area_code')
-                invitation_code = ''
-                if 'invitation_code' in request.data:
-                    invitation_code = request.data.get('invitation_code')
-                    invitation_code = invitation_code.upper()
+                area_code = request.data.get('area_code')
+            invitation_code = ''
+            if 'invitation_code' in request.data:
+                invitation_code = request.data.get('invitation_code')
+                invitation_code = invitation_code.upper()
 
-                record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
-                    '-id').first()
-                if int(record.degree) >= 5:
-                    raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
-                else:
-                    record.degree += 1
-                    record.save()
+            record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
+                '-id').first()
+            if int(record.degree) >= 5:
+                raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+            else:
+                record.degree += 1
+                record.save()
 
-                message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
-                if len(message) == 0:
-                    raise ParamErrorException(error_code.API_20402_INVALID_SMS_CODE)
+            message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
+            if len(message) == 0:
+                raise ParamErrorException(error_code.API_20402_INVALID_SMS_CODE)
 
-                password = request.data.get('password')
-                token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
-                                    avatar=avatar, device_token=device_token,
-                                    password=password, invitation_code=invitation_code, ip_address=ip_address)
+            token = ur.register(source=source, nickname=nickname, username=username, area_code=area_code,
+                                avatar=avatar, device_token=device_token,
+                                password=password, invitation_code=invitation_code, ip_address=ip_address)
         else:
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
-            if int(register_type) == 1 or int(register_type) == 2:
-                password = None
-                token = ur.login(source=source, username=username, device_token=device_token, password=password, request=request)
-            elif int(register_type) == 3:
-                password = ''
-                # area_code = request.data.get('area_code')
-                if 'area_code' not in request.data:
-                    area_code = 86
-                else:
-                    area_code = request.data.get('area_code')
-                if 'password' in request.data:
-                    password = request.data.get('password')
-                token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
-                                 password=password, request=request)
-            else:
-                password = request.data.get('password')
-                # area_code = request.data.get('area_code')
-                if 'area_code' not in request.data:
-                    area_code = 86
-                else:
-                    area_code = request.data.get('area_code')
-                token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
-                                 password=password, request=request)
+
+            area_code = 86           # 区号
+            if 'area_code' in request.data:
+                area_code = request.data.get('area_code')
+
+            token = ur.login(source=source, username=username, device_token=device_token, area_code=area_code,
+                             password=password, request=request)
         return self.response({
             'code': 0,
             'data': {'access_token': token}})
@@ -613,14 +550,14 @@ class InfoView(ListAPIView):
 
         Address.objects.initial(user_id, user_coins)
 
-        # 货币赠送活动
-        CoinGive.objects.usdt_activity(user)
+        # 货币赠送活动    # 目前已经结束 1 号活动   USDT
+        CoinGive.objects.coin_activity(user)
 
         # 破产赠送hand功能
         Record.objects.bankruptcy_hand(user, roomquiz_id)
 
-        # 用户邀请赠送USDT
-        UserInvitation.objects.usdt_activity(user)
+        # 推广人邀请送币活动
+        UserInvitation.objects.activity(user)
 
         is_message = message_hints(user_id)  # 是否有未读消息
 
@@ -1416,13 +1353,17 @@ class AssetView(ListAPIView):
                 address = settings.EOS_RECHARGE_ADDRESS
                 eos_code = user_info.eos_code
 
+            balance = item["balance"]
+            if coin.id == Coin.SOC and base_img != '':
+                balance += 100
+
             temp_dict = {
                 'coin_order': coin.coin_order,
                 'icon': coin.icon,
                 'coin_name': coin.name,
                 'coin': item["coin_id"],
                 'recharge_address': address,
-                'balance': item["balance"],
+                'balance': balance,
                 'locked_coin': locked_coin,
                 'is_reality': coin.is_reality,
                 'is_recharge': coin.is_recharge,
@@ -2427,7 +2368,7 @@ class ImageUpdateView(CreateAPIView):
 
 class InvitationRegisterView(CreateAPIView):
     """
-    用户邀请注册
+    用户扫描二维码注册：传递的是
     """
 
     def get_name_avatar(self):
@@ -2475,7 +2416,6 @@ class InvitationRegisterView(CreateAPIView):
         captcha_valid_code = User.objects.captcha_valid(request)
         if captcha_valid_code > 0:
             raise ParamErrorException(captcha_valid_code)
-            # return self.response({'code': captcha_valid_code})
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
@@ -2497,96 +2437,18 @@ class InvitationRegisterView(CreateAPIView):
             return self.response({
                 'code': error_code.API_20102_TELEPHONE_REGISTERED
             })
-        all_money = UserInvitation.objects.filter(coin=4, is_deleted=1).aggregate(Sum('money'))
-        all_money = all_money['money__sum']  # 获得总钱数
-        if all_money is not None:
-            all_money += 2000
-            if all_money > 200000000:
-                raise ParamErrorException(error_code.API_60101_USER_INVITATION_MONEY)
+        try:
+            invitation_user = User.objects.get(pk=invitation_id)
+        except Exception:
+            raise ParamErrorException(error_code.API_10109_INVITATION_CODE_NOT_NONENTITY)
 
         # 用户注册
         ur = UserRegister()
         avatar = self.get_name_avatar()
         nickname = str(telephone[0:3]) + "***" + str(telephone[7:])
         token = ur.register(source=source, username=telephone, password=password, area_code=area_code, avatar=avatar,
-                            nickname=nickname, ip_address=ip_address, device_token=device_token)
-        invitee_one = UserInvitation.objects.filter(invitee_one=int(invitation_id)).count()
-        try:
-            user = ur.get_user(telephone)
-            user_info = User.objects.get(pk=user.id)
-        except DailyLog.DoesNotExist:
-            return 0
-
-        if invitee_one > 0:  # 邀请人为他人T1.
-            try:
-                invitee = UserInvitation.objects.filter(invitee_one=int(invitation_id)).first()
-            except DailyLog.DoesNotExist:
-                return 0
-            on_line = invitee.inviter
-            invitee_number = UserInvitation.objects.filter(inviter_id=on_line.id, coin=4, is_effective=1).count()
-            try:
-                is_robot = User.objects.get(pk=on_line.id)
-            except DailyLog.DoesNotExist:
-                return 0
-            user_on_line = UserInvitation()  # 邀请T2是否已达上限
-            if invitee_number < 10 and is_robot.is_robot == False:
-                user_on_line.is_effective = 1
-                user_on_line.money = 2000
-                user_on_line.is_robot = False
-            user_on_line.inviter = on_line
-            user_on_line.invitee_two = user_info.id
-            user_on_line.save()
-
-        inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_id), coin=9).count()
-        try:
-            invitation = User.objects.get(pk=invitation_id)
-        except DailyLog.DoesNotExist:
-            return 0
-        try:
-            is_robot = User.objects.get(pk=invitation_id)
-        except DailyLog.DoesNotExist:
-            return 0
-        give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
-        end_date = give_info.end_time.strftime("%Y%m%d%H%M%S")
-        today = date.today()
-        today_time = today.strftime("%Y%m%d%H%M%S")
-        user_go_line = UserInvitation()  # 邀请T1是否已达上限
-        if inviter_number < 5 and today_time < end_date and is_robot.is_robot == False:
-            user_go_line.is_effective = 1
-            user_go_line.money = 3888
-            # user_go_line.coin = 4
-            user_go_line.is_robot = False
-        user_go_line.inviter = invitation
-        user_go_line.invitee_one = user_info.id
-        user_go_line.save()
-
-        if int(invitation.pk) == 2638:  # INT邀请活动
-            invitation_number = IntInvitation.objects.filter(is_block=0).count()
-            int_invitation = IntInvitation()
-            int_invitation.invitee = user_info.id
-            int_invitation.inviter = invitation
-            int_invitation.coin = 1
-            int_invitation.invitation_code = invitation.invitation_code
-            if invitation_number >= 2000:
-                int_invitation.money = 0
-                int_invitation.is_deleted = False
-            int_invitation.save()
-            user_message = UserMessage()
-            user_message.status = 0
-            user_message.user = user_info
-            user_message.message_id = 13
-            user_message.save()
-            if int_invitation.money > 0:
-                int_user_coin = UserCoin.objects.get(user_id=user_info.pk, coin_id=1)
-                int_user_coin.balance += Decimal(int_invitation.money)
-                int_user_coin.save()
-                coin_bankruptcy = CoinDetail()
-                coin_bankruptcy.user = user_info
-                coin_bankruptcy.coin_name = 'INT'
-                coin_bankruptcy.amount = '+' + str(int_invitation.money)
-                coin_bankruptcy.rest = Decimal(int_user_coin.balance)
-                coin_bankruptcy.sources = 4
-                coin_bankruptcy.save()
+                            nickname=nickname, ip_address=ip_address, device_token=device_token,
+                            invitation_code=invitation_user.invitation_code)
 
         return self.response({
             'code': error_code.API_0_SUCCESS,

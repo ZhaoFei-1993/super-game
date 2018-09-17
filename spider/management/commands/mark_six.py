@@ -6,6 +6,7 @@ from marksix.models import OpenPrice, Number, Animals, Option
 import datetime
 from .mark_six_result import ergodic_record
 from users.finance.functions import get_now
+from marksix.consumers import mark_six_result_code
 
 url = 'https://1680660.com/smallSix/findSmallSixHistory.do'
 headers = {
@@ -32,11 +33,11 @@ chinese_zodiac_dic = {
     '鸡': ['02', '14', '26', '38'],
 }
 five_property_dic = {
-    '金': ['04', '05', '18', '19', '26', '27', '34', '35', '48', '49'],
-    '木': ['01', '08', '09', '16', '17', '30', '31', '38', '39', '46', '47'],
-    '水': ['06', '07', '14', '15', '22', '23', '36', '37', '44', '45'],
-    '火': ['02', '03', '10', '11', '24', '25', '32', '33', '40', '41'],
-    '土': ['12', '13', '20', '21', '28', '29', '42', '43'],
+    '金': ['01', '06', '11', '16', '21', '26', '31', '36', '41', '46'],
+    '木': ['02', '07', '12', '17', '22', '27', '32', '37', '42', '47'],
+    '水': ['03', '08', '13', '18', '23', '28', '33', '38', '43', '48'],
+    '火': ['04', '09', '14', '19', '24', '29', '34', '39', '44', '49'],
+    '土': ['05', '10', '15', '20', '25', '30', '35', '40', '45'],
 }
 
 ye_animals = ['鼠', '虎', '兔', '龙', '蛇', '猴']
@@ -81,8 +82,6 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
         'code_list': code_list, 'color_list': color_list, 'chinese_zodiac_list': chinese_zodiac_list,
         'five_property_list': five_property_list,
     }
-    print(answer_dic)
-    ergodic_record(issue, answer_dic)
 
     now = get_now()
     openprice = OpenPrice.objects.filter(open__lt=now).first()
@@ -103,6 +102,14 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     open_price.starting = datetime.datetime.now()
     open_price.next_open = next_issue_dic['next_open']
     open_price.next_closing = next_issue_dic['next_closing']
+    open_price.save()
+
+    # 推送开奖结果
+    mark_six_result_code(issue, next_issue_dic['next_issue'])
+
+    # 处理投注记录
+    print(answer_dic)
+    ergodic_record(issue, answer_dic)
 
     open_price.is_open = True
     open_price.save()

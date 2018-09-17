@@ -17,6 +17,7 @@ from django.conf.urls import url
 from .consumers import QuizConsumer
 from dragon_tiger.dragontigerconsumer import DragonTigerConsumer
 from baccarat.baccaratconsumer import BaccaratConsumer
+from marksix.mark_six_consumers import MarkSixConsumer
 
 websocket_urlpatterns = [
     # 球赛推送
@@ -25,4 +26,6 @@ websocket_urlpatterns = [
     url(r'^dragon_tiger/', DragonTigerConsumer),
     # 百家乐
     url(r'^baccarat/', BaccaratConsumer),
+    # mark_six
+    url(r'^mark_six/', MarkSixConsumer),
 ]

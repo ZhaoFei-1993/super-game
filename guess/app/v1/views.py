@@ -9,7 +9,7 @@ from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserCoin, CoinDetail, Coin
-from utils.functions import value_judge, guess_is_seal, language_switch
+from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
@@ -28,31 +28,147 @@ class StockList(ListAPIView):
     permission_classes = (LoginRequired,)
     serializer_class = StockListSerialize
 
+    last_periods_list = []
+    previous_periods_list = []
+    stock_info = {}
+
     def get_queryset(self):
-        return Stock.objects.all()
+        for stock in Stock.objects.all():
+            title = Stock.STOCK[int(stock.name)][1]
+            if self.request.GET.get('language') == 'en':
+                title = Stock.STOCK_EN[int(stock.name)][1]
+            self.stock_info.update({
+                stock.pk: {
+                    'title': title, 'icon': stock.icon
+                }
+            })
+
+        pre_period = []
+        # 取当前期
+        for period in Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys()):
+            self.last_periods_list.append(period)
+            if period.periods - 1 != 0:
+                pre_period.append(period.periods - 1)
+        # 取上期
+        for pre_period in Periods.objects.filter(stock_id__in=self.stock_info.keys(), periods__in=pre_period):
+            self.previous_periods_list.append(pre_period)
+
+        return self.last_periods_list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
-
         data = []
+
+        previous_periods_dt = {}
+        for previous_period in self.previous_periods_list:
+            previous_result = previous_period.lottery_value  # 上期开奖指数
+
+            if previous_period.periods - 1 == 0 or previous_period.periods == '':  # 上期开奖answer
+                answer = ''
+                previous_result_color = 3
+            else:
+                up_and_down = previous_period.up_and_down
+                size = previous_period.size
+                points = previous_period.points
+                pair = previous_period.pair
+                if pair is None or pair == '':
+                    answer = str(size) + "、  " + str(points)
+                else:
+                    answer = str(size) + "、  " + str(points) + "、  " + str(pair)
+
+                if up_and_down == '涨':  # 上期开奖指数颜色
+                    previous_result_color = 1
+                elif up_and_down == '跌':
+                    previous_result_color = 2
+                else:
+                    previous_result_color = 3
+
+            previous_periods_dt.update(
+                {
+                    previous_period.stock_id: {
+                        'previous_result': previous_result,
+                        'answer': answer,
+                        'previous_result_color': previous_result_color,
+                    }
+                })
+        # 缺少上期情况
+        if len(previous_periods_dt.keys()) < len(self.stock_info.keys()):
+            for stock_id in self.stock_info.keys():
+                if stock_id not in previous_periods_dt.keys():
+                    previous_periods_dt.update(
+                        {
+                            previous_period.stock_id: {
+                                'previous_result': '',
+                                'answer': '',
+                                'previous_result_colour': 3,
+                            }
+                        })
+        # 本期指数颜色
+        index_info = {}
+        sql = 'SELECT periods_id,stock_id,index_value,start_value,index_time FROM guess_index a '
+        sql += 'LEFT JOIN guess_periods ON a.periods_id = guess_periods.id WHERE a.id IN'
+        sql += '(SELECT MAX(a.id) FROM guess_index a ' \
+               'WHERE periods_id IN({periods_id}) ' \
+               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.last_periods_list]))
+        for dt in get_sql(sql):
+            index_info.update({
+                dt[1]: {
+                    'start_value': dt[3], 'index_value': dt[2], 'periods_id': dt[0],
+                }
+            })
+        for stock_id in self.stock_info.keys():
+            if stock_id not in index_info.keys():
+                index_info.update({
+                    stock_id: {
+                        'start_value': None, 'index_value': None, 'periods_id': None,
+                    }
+                })
+        index_dic = {}
+        for period in self.last_periods_list:
+            start_value = index_info[period.stock_id]['start_value']
+            index_value = index_info[period.stock_id]['index_value']
+            if index_value is None or start_value is None:
+                index_status = "竞猜中"
+                index_color = 4
+            else:
+                if index_value > start_value:
+                    index_color = 1
+                elif index_value < start_value:
+                    index_color = 2
+                else:
+                    index_color = 3
+                index_status = index_value
+            index_dic.update({
+                period.stock_id: {
+                    'index_color': index_color, 'index_status': index_status,
+                }
+            })
+
+        # 股票封盘时间
+        closing_time_dic = {}
+        periods_id_dic = {}
         for item in items:
+            closing_time_dic.update(item['closing_time'])
+            periods_id_dic.update(item['periods_id'])
+        # 返回值
+        for stock_id in self.stock_info.keys():
             data.append({
-                "stock_id": item["pk"],
-                "periods_id": item["periods_id"][0]["period_id"],
-                "icon": item["icon"],
-                "title": item["title"],
-                "closing_time": item["closing_time"][0]["start"],
-                "lottery_time": item["closing_time"][0]["start_at"],
-                "status": item["closing_time"][0]["status"],
-                "previous_result": item["previous_result"],
-                "previous_result_colour": item["previous_result_colour"],
-                "index": item["periods_id"][0]["index"],
-                "index_colour": item["index_colour"],
-                "rise": item["periods_id"][0]["rise"],
-                "fall": item["periods_id"][0]["fall"],
-                "is_seal": item["periods_id"][0]["is_seal"],
-                "result_list": item["result_list"]
+                "stock_id": stock_id,
+                "periods_id": periods_id_dic[stock_id]["period_id"],
+                "icon": self.stock_info[stock_id]['icon'],
+                "title": self.stock_info[stock_id]['title'],
+                "closing_time": closing_time_dic[stock_id]['start'],
+                "lottery_time": closing_time_dic[stock_id]["start_at"],
+                "status": closing_time_dic[stock_id]["status"],
+                "previous_result": previous_periods_dt[stock_id]['previous_result'],
+                "previous_result_colour": previous_periods_dt[stock_id]['previous_result_color'],
+                "index": index_dic[stock_id]['index_status'],
+                "index_colour": index_dic[stock_id]['index_color'],
+                "rise": periods_id_dic[stock_id]["rise"],
+                "fall": periods_id_dic[stock_id]["fall"],
+                "is_seal": periods_id_dic[stock_id]["is_seal"],
+                "result_list": previous_periods_dt[stock_id]['answer']
             })
         return self.response({'code': 0, 'data': data})
 
@@ -141,6 +257,50 @@ class PlayView(ListAPIView):
 
         plays = Play.objects.filter(~Q(play_name=0), stock_id=stock_id).order_by('play_name')  # 所有玩法
 
+        plays_id_list = [play.id for play in plays]  # 所有玩法id
+        # 统计各玩法投注人数
+        plays_record_num = {}  # {play_id: 投注人数}
+        for i in plays_id_list:
+            plays_record_num.update({i: 0})
+        records_list = Record.objects.filter(club_id=club_id, periods_id=periods_id,
+                                             play_id__in=plays_id_list).values_list('play_id', flat=True)
+        for i in records_list:
+            plays_record_num[i] += 1
+        # print(plays_record_num)
+
+        # 获取 betlimit
+        betlimit_dic = {}  # {play_id: betlimit obj}
+        for betlimit in BetLimit.objects.filter(club_id=club_id, play_id__in=plays_id_list):
+            betlimit_dic.update({betlimit.play_id: betlimit})
+        # print(betlimit_dic)
+
+        # 获取各个玩法下所有的选项对象
+        options_dic = {}  # {play_id: [option obj]}
+        options = Options.objects.filter(play_id__in=plays_id_list)
+        for option in options:
+            options_dic.update({option.play_id: []})
+        for option in options:
+            options_dic[option.play_id].append(option)
+        # print(options_dic)
+
+        # 获取用户在此期投注的选项
+        option_id_list = []  # 所有玩法所有选项的id
+        for key, value in options_dic.items():
+            for option in value:
+                option_id_list.append(option.id)
+        user_options_list = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                                                  options_id__in=option_id_list).values_list('options_id', flat=True)
+
+        # 计算每个选项投注人数
+        options_record_num_dic = {}  # {option_id: num}
+        for i in option_id_list:
+            options_record_num_dic.update({i: 0})
+        options_record_list = Record.objects.filter(club_id=club_id, periods_id=periods_id,
+                                                    options_id__in=option_id_list).values_list('options_id', flat=True)
+        for i in options_record_list:
+            options_record_num_dic[i] += 1
+        # print('options_record_num_dic: ', options_record_num_dic)
+
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -150,8 +310,9 @@ class PlayView(ListAPIView):
 
         data = []
         for play in plays:
-            user_number = Record.objects.filter(club_id=club_id, periods_id=periods_id, play_id=play.id).count()
-            betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
+            user_number = plays_record_num[play.id]
+            # betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
+            betlimit = betlimit_dic[play.pk]
 
             play_name = Play.PLAY[int(play.play_name)][1]  # 玩法名字
             if self.request.GET.get('language') == 'en':
@@ -168,14 +329,17 @@ class PlayView(ListAPIView):
             bets_max = betlimit.bets_max  # 最大下注值
 
             list = []
-            options_list = Options.objects.filter(play_id=play.pk).order_by("order")
-            for options in options_list:
-                is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
-                                                  options_id=options.pk).count()
+            # options_list = Options.objects.filter(play_id=play.pk).order_by("order")
+            options_list = options_dic[play.pk]
+            for options in reversed(options_list):
+                # is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
+                #                                   options_id=options.pk).count()
 
                 is_choice = 0
-                if int(is_record) > 0:
+                if options.pk in user_options_list:
                     is_choice = 1
+                # if int(is_record) > 0:
+                #     is_choice = 1
 
                 up_and_down = periods.up_and_down
                 if self.request.GET.get('language') == 'en':
@@ -198,8 +362,9 @@ class PlayView(ListAPIView):
                 is_right = 0
                 if title in right_list:
                     is_right = 1
-                options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
-                                                       options_id=options.pk).count()
+                # options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
+                #                                        options_id=options.pk).count()
+                options_number = options_record_num_dic[options.pk]
                 if options_number == 0 or user_number == 0:
                     support_number = 0
                 else:
@@ -480,7 +645,7 @@ class StockGraphListView(ListCreateAPIView):
         index_number = Index.objects.filter(periods_id=periods_id).count()
         if index_number == 0:
             periods_info = Periods.objects.get(id=periods_id)
-            periods_periods = periods_info.periods-1
+            periods_periods = periods_info.periods - 1
             old_periods_info = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
             info = Index.objects.filter(periods_id=old_periods_info.pk).order_by("index_time")
         else:

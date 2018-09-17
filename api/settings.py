@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'dragon_tiger',
     'baccarat',
     'recharge',
+    'promotion',
 ]
 
 MIDDLEWARE = [
@@ -305,3 +306,5 @@ USER_MESSAGE_SAVE_PATH = local_settings.USER_MESSAGE_SAVE_PATH
 USER_MESSAGE_SEPARATOR = local_settings.USER_MESSAGE_SEPARATOR
 
 EOS_RECHARGE_ADDRESS = local_settings.EOS_RECHARGE_ADDRESS
+
+IS_ENABLE_TRANSFER_API = local_settings.IS_ENABLE_TRANSFER_API

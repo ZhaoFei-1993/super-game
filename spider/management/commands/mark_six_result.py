@@ -136,6 +136,7 @@ def two_sides_result(record, answer_dic):
     earn_coin = 0
     one_bet = float(record.bet_coin / record.bet)
     special_code = answer_dic['code_list'][-1]
+    normal_code_list = answer_dic['code_list']
     special_animal = answer_dic['chinese_zodiac_list'][-1]
     if int(special_code) == 49:
         result_dic.update({'特单双': '和局', '特大小': '和局', '合大小': '和局', '合单双': '和局'})
@@ -159,12 +160,15 @@ def two_sides_result(record, answer_dic):
         else:
             result_dic.update({'特单双': '特单'})
         # 合大小
-        if (int(special_code[0]) + int(special_code[1])) < 7:
-            result_dic.update({'合大小': '总小'})
-        else:
+        code_sum = 0
+        for i in normal_code_list:
+            code_sum += int(i)
+        if code_sum >= 175:
             result_dic.update({'合大小': '总大'})
+        else:
+            result_dic.update({'合大小': '总小'})
         # 合单双
-        if (int(special_code[0]) + int(special_code[1])) % 2 == 0:
+        if code_sum % 2 == 0:
             result_dic.update({'合单双': '总双'})
         else:
             result_dic.update({'合单双': '总单'})
@@ -182,6 +186,8 @@ def two_sides_result(record, answer_dic):
             if str(option_id) in record.content.split(','):
                 index = record.content.split(',').index(str(option_id))
                 earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+        else:
+            earn_coin = earn_coin
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:

@@ -10,7 +10,7 @@ from users.finance.functions import get_now
 from marksix.functions import date_exchange, change_num
 from django.db import transaction
 from datetime import datetime
-from utils.functions import value_judge
+from utils.functions import value_judge, handle_zero
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from chat.models import Club
@@ -52,7 +52,8 @@ class SortViews(ListAPIView):
             prev_flat = openprice.flat_code  # 上期平码
             prev_special = openprice.special_code  # 上期特码
             current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
-            current_issue = (3 - len(current_issue)) * '0' + current_issue
+            # current_issue = (3 - len(current_issue)) * '0' + current_issue
+            current_issue = current_issue
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
             begin_at = openprice.next_open.astimezone(pytz.timezone(settings.TIME_ZONE))
             begin_at = time.mktime(begin_at.timetuple())
@@ -137,7 +138,7 @@ class OddsViews(ListAPIView):
             bet_odds = {
                 'option': option,
                 'id': 1,
-                'odds': res[0].odds
+                'odds': int(res[0].odds) if str(res[0].odds).split('.')[1] == '00' else float(res[0].odds)
             }
             bet_odds['num'] = bet_num
         else:
@@ -161,7 +162,7 @@ class OddsViews(ListAPIView):
                 res_dict = {}
                 res_dict['id'] = item.id
                 res_dict['option'] = option
-                res_dict['odds'] = item.odds
+                res_dict['odds'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(item.odds)
                 res_dict['pitch'] = False
 
                 if id == '2':  # 波色
@@ -174,12 +175,12 @@ class OddsViews(ListAPIView):
                     if three_to_three['option'] in res_dict['option']:
                         if tag == 0:
                             three_to_three['id'] = item.id
-                            three_to_three['odds'] = item.odds
+                            three_to_three['odds'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(item.odds)
                             three_to_three['pitch'] = False
                             bet_odds.append(three_to_three)
                             tag = 1
                         else:
-                            three_to_three['odds1'] = item.odds
+                            three_to_three['odds1'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(item.odds)
                             if language == 'zh':
                                 three_to_three['option1'] = '中三'
                             else:
@@ -219,7 +220,8 @@ class OddsViews(ListAPIView):
             prev_issue = openprice.issue  # 上期开奖期数
             prev_flat = openprice.flat_code  # 上期平码
             prev_special = openprice.special_code  # 上期特码
-            current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
+            # current_issue = str(int(prev_issue) + 1)  # 这期开奖期数
+            current_issue = openprice.next_issue  # 这期开奖期数
             current_issue = (3 - len(current_issue)) * '0' + current_issue
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
 
@@ -235,8 +237,8 @@ class OddsViews(ListAPIView):
                 'bet_num': bet_num,
                 'coin_name': coin_name,
                 'play_id': id,
-                'max_limit': limit.max_limit,
-                'min_limit': limit.min_limit
+                'max_limit': handle_zero(limit.max_limit),
+                'min_limit': handle_zero(limit.min_limit)
             }
         else:
             data = {
@@ -248,8 +250,8 @@ class OddsViews(ListAPIView):
                 'current_open': current_open,
                 'coin_name': coin_name,
                 'play_id': id,
-                'max_limit': limit.max_limit,
-                'min_limit': limit.min_limit
+                'max_limit': handle_zero(limit.max_limit),
+                'min_limit': handle_zero(limit.min_limit)
             }
 
         return JsonResponse({'code': 0, 'data': data})
@@ -276,16 +278,21 @@ class BetsViews(ListCreateAPIView):
         issue = request.data.get('issue')
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
+        # 如果是色波玩法，最多允许选两个
+        if int(play_id) == 2:
+            if len(content.split(',')) > 2:
+                raise ParamErrorException(error_code.API_50206_BET_COLOR_OVER)
+
         # 期数判断
         now = get_now()
         openprice = OpenPrice.objects.filter(open__lt=now).first()
         prev_issue = openprice.issue  # 上期开奖期数
 
-        # # 封盘
+        # 封盘
         # if datetime.now() > openprice.next_closing:
         #     raise ParamErrorException(error_code.API_50204_BET_CLOSED)
 
-        if not int(prev_issue) + 1 == int(issue):
+        if int(openprice.next_issue) != int(issue):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         # 注数判断

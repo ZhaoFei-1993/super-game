@@ -14,6 +14,8 @@ from utils.cache import get_cache, set_cache, delete_cache
 from rq import Queue
 from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_avatar
+from datetime import datetime
+from utils.functions import number_time_judgment
 
 redis_conn = Redis()
 q = Queue(connection=redis_conn)
@@ -347,6 +349,17 @@ class Dragontigeroption(ListAPIView):
                 }
             }
 
+        club_liat = Club.objects.get(pk=club_id)
+        coin_name = club_liat.coin.name
+        coin_name_key = str(coin_name.lower())
+        day = datetime.now().strftime('%Y-%m-%d')
+        number_key = "INITIAL_ONLINE_USER_" + str(day)
+        period = str(number_time_judgment())
+        initial_online_user_number = get_cache(number_key)
+        if int(types) == 1:
+            user_number = int(initial_online_user_number[0][period][coin_name_key]['bjl'])
+        else:
+            user_number = int(initial_online_user_number[0][period][coin_name_key]['lhd'])
         return self.response({'code': 0,
                               "user_id":user_id,
                               "user_balance": user_balance,
@@ -361,7 +374,8 @@ class Dragontigeroption(ListAPIView):
                               "bets_four": betlimit_list[3],
                               "bets_four_icon": "https://api.gsg.one/uploads/pokermaterial/web/c_4_m.png",
                               "red_limit": normalize_fraction(float(betlimit_list[4]), int(coin_accuracy)),
-                              "option_info": option_info
+                              "option_info": option_info,
+                              "user_number":user_number
                               })
 
 

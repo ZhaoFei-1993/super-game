@@ -36,6 +36,7 @@ from chat.models import Club
 from urllib.parse import quote_plus
 from utils.functions import get_cache
 from django.shortcuts import get_object_or_404
+from base.eth import Wallet
 
 
 class CoinLockListView(CreateAPIView, FormatListAPIView):
@@ -644,8 +645,10 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
     """
 
     @reversion_Decorator
+    @transaction.atomic()
     def patch(self, request, *args, **kwargs):
         id = kwargs['pk']  # 提现记录id
+        language = request.data.get('language', '')
 
         if 'status' not in request.data \
                 and 'text' not in request.data \
@@ -686,7 +689,6 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 coin_detail.save()
                 if 'text' in request.data:
                     text = request.data.get('text')
-                    language = request.data.get('language', '')
                     item.feedback = text
                     user_message = UserMessage()
                     user_message.status = 0
@@ -702,8 +704,42 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
         if 'is_bill' in request.data:
             bill = request.data.get('is_bill')
             item.is_bill = bill
+
+            # ETH及对应代币转账直接请求转账接口
+            coin = Coin.objects.get_one(pk=item.coin_id)
+            if settings.IS_ENABLE_TRANSFER_API and coin.is_eth_erc20:
+                wallet = Wallet()
+                transfer_data = {
+                    'to': item.address,
+                    'amount': str(item.amount)
+                }
+                if coin.id == Coin.ETC:
+                    url = 'v1/transaction/eth'
+                else:
+                    url = 'v1/transaction/token/send/' + coin.name.lower()
+
+                try:
+                    response = wallet.post(url=url, data=transfer_data)
+                except Exception:
+                    raise ParamErrorException(error_code.API_30202_PRESENTATION_FAIL)
+
+                if response['code'] == 0:
+                    item.txid = response['data']['txn']
+
+                # 发送提现消息
+                user_message = UserMessage()
+                user_message.status = 0
+                if language == 'en':
+                    user_message.content = 'TXID:' + item.txid
+                    user_message.title = 'Present Success'
+                else:
+                    user_message.content = 'TXID:' + item.txid
+                    user_message.title = '提现成功公告'
+                user_message.user = item.user
+                user_message.message_id = 6  # 修改密码
+                # user_message.save()
+
         if 'txid' in request.data:
-            language = request.data.get('language', '')
             txid = request.data.get('txid')
             item.txid = txid
             user_message = UserMessage()
@@ -717,7 +753,7 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
             user_message.user = item.user
             user_message.message_id = 6  # 修改密码
             user_message.save()
-        print(item.txid)
+        print('txid = ', item.txid)
         item.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
