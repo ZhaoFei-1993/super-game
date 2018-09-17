@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
-from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from django.http import JsonResponse
 from ..models import Club, ClubBanner, ClubRule
-from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer
+from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer, CoinSerialize
+from users.models import Coin
 from rest_framework import status
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
@@ -177,3 +178,11 @@ class ClubRuleDetail(RetrieveUpdateDestroyAPIView):
         club_rule.is_deleted = True
         club_rule.save()
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class CoinsList(ListAPIView):
+    """
+    获取货币数据
+    """
+    queryset = Coin.objects.all()
+    serializer_class = CoinSerialize

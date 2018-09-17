@@ -16,4 +16,6 @@ urlpatterns = [
     path('club_rule_list/', views.ClubRuleList.as_view(), name='chat-club_rule_list'),
     # 玩法列表详情
     path('club_rule_list/<int:pk>/', views.ClubRuleDetail.as_view(), name='chat-club_rule_detail'),
+    # 货币数据
+    path('coins/', views.CoinsList.as_view(), name='backend-coin-data'),
 ]
