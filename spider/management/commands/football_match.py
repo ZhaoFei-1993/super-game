@@ -44,6 +44,9 @@ def get_data_info(url):
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
+            if int(match_id) == 111066:
+                continue
+
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
             guest_team = data[1].get('a_cn')
