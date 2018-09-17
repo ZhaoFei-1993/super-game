@@ -64,8 +64,11 @@ def get_data_info(url):
             guest_team_url = 'https://i.sporttery.cn/api/fb_match_info/get_team_data/?f_callback=footb_info&tid=' + guest_team_id
             response_host_team = requests.get(host_team_url, headers=headers)
             response_guest_team = requests.get(guest_team_url, headers=headers)
-            host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
-            guest_team_dt = eval(response_guest_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
+            try:
+                host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
+                guest_team_dt = eval(response_guest_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
+            except Exception:
+                continue
             if host_team_dt['status'] == 0:
                 host_team_en = host_team_dt['result']['official_name']
             else:
