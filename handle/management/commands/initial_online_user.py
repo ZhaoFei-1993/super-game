@@ -15,6 +15,7 @@ class Command(BaseCommand, BaseView):
         number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
         delete_cache(number_key)
         time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
+        delete_cache(time_key)
         initial_online_user_time = get_cache(time_key)
         if initial_online_user_time is not None:
             raise CommandError(str(day) + '初始化人数已经设置')
