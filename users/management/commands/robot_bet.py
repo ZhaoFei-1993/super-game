@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction, connection
-from django.db.models import Q
 
 from quiz.models import Quiz, Option, Record, Rule, OptionOdds, Category
-from users.models import User, UserCoin, CoinValue, Coin
+from users.models import User, CoinValue, Coin
 from chat.models import Club
 from utils.weight_choice import WeightChoice
 from utils.functions import make_insert_sql
@@ -373,13 +372,28 @@ class Command(BaseCommand):
                 3: 5,       # 总进球
                 8: 10       # 亚盘
             }
+            # 判断是否有赛果玩法
+            is_results_play = 0
+            for item in rules:
+                if int(item.type) == 1:
+                    is_results_play = 1
+                    break
+
             if len(rules) == 4:
-                rules_weight = {
-                    0: 60,  # 赛果
-                    1: 20,  # 让分赛果
-                    2: 10,  # 比分
-                    3: 10,  # 总进球
-                }
+                if is_results_play == 1:
+                    rules_weight = {
+                        0: 60,  # 赛果
+                        1: 20,  # 让分赛果
+                        2: 10,  # 比分
+                        3: 10,  # 总进球
+                    }
+                else:
+                    rules_weight = {
+                        1: 60,  # 让分赛果
+                        2: 20,  # 比分
+                        3: 10,  # 总进球
+                        8: 10,  # 亚盘
+                    }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
         rule_type = weight_choice.choice()
