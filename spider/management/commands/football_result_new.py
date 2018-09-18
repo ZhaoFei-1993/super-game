@@ -799,9 +799,9 @@ class Command(BaseCommand):
 
             for delay_quiz in delay_quizs:
                 print('delay quiz id = ', delay_quiz.id)
-                # delay_quiz.status = Quiz.DELAY
-                # handle_delay_game(delay_quiz)
-                # delay_quiz.save()
+                delay_quiz.status = Quiz.DELAY
+                handle_delay_game(delay_quiz)
+                delay_quiz.save()
 
         rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]
         # 在比赛开始时间基础上增加2小时
