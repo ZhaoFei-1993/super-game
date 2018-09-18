@@ -8,7 +8,7 @@ from .serializers_pk import *
 from guess.models import StockPk, Issues, PlayStockPk, OptionStockPk, RecordStockPk, BetLimit
 import datetime
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
-from users.models import UserCoin, CoinDetail
+from users.models import UserCoin, CoinDetail, User
 
 
 class StockPkDetail(ListAPIView):
@@ -36,6 +36,7 @@ class StockPkDetail(ListAPIView):
             right_index = ''
 
         stock_pk_id = issues.stock_pk_id
+        issues_id = issues.id
         issue = issues.issue
         open_time = issues.open.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -124,6 +125,7 @@ class StockPkDetail(ListAPIView):
             'bet_limit': bet_limit_dic,
             'plays_options': plays_dic,
             'issue': issue,
+            'issues_id': 'issues_id',
             'open_time': open_time,
             'coin_dic': coin_dic,
         }
@@ -142,7 +144,6 @@ class StockPkResultList(ListAPIView):
         stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
         issues = Issues.objects.filter(open__gt=time_now,
                                        stock_pk_id__in=stock_pk_id_list).order_by('open').first()
-        print('===========', issues)
         stock_pk_id = issues.stock_pk_id
 
         if issues.issue != 1:
@@ -429,4 +430,71 @@ class StockPkBet(ListCreateAPIView):
             }
         }
         return self.response(response)
+
+
+class StockPKPushView(ListAPIView):
+    """
+    详情页面推送
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        club_id = int(self.request.GET.get('club_id'))
+        issues_id = int(self.request.GET.get('issues_id'))
+        qs = RecordStockPk.objects.filter(club_id=club_id, issue_id=issues_id)
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        records_obj_dic = {}
+        options_id_list = []
+        user_id_list = []
+        for record in self.get_queryset():
+            if record.option_id not in options_id_list:
+                options_id_list.append(record.option_id)
+            if record.user_id not in user_id_list:
+                user_id_list.append(record.user_id)
+            records_obj_dic.update({
+                record.id: {
+                    'issues_id': record.issue_id, 'options_id': record.option_id, 'bets': record.bets,
+                    'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status,
+                    'user_id': record.user_id,
+                }
+            })
+
+        # 处理user
+        user_obj_dic = {}
+        for user in User.objects.filter(id__in=user_id_list):
+            user_obj_dic.update({
+                user.id: {
+                    'nickname': user.nickname,
+                }
+            })
+
+        # 处理选项
+        options_obj_dic = {}
+        for option in OptionStockPk.objects.filter(id__in=options_id_list):
+            options_obj_dic.update({
+                option.id: {
+                    'play_id': option.play_id, 'title': option.title, 'title_en': option.title_en,
+                }
+            })
+
+        data = []
+        for item_key, item_value in records_obj_dic.items():
+            user_id = item_value['user_id']
+            options_id = item_value['options_id']
+
+            user_name = user_obj_dic[user_id]['nickname'][0] + '**'
+            my_option = options_obj_dic[options_id]['title']
+            if self.request.GET.get('language') == 'en':
+                my_option = options_obj_dic[options_id]['title_en']
+            bet = round(float(item_value['bets']), 3)
+
+            data.append({
+                "record_id": item_key,
+                "username": user_name,
+                "my_option": my_option,
+                "bet": bet,
+            })
+        return self.response({"code": 0, "data": data})
 

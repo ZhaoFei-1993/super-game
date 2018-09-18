@@ -32,4 +32,6 @@ urlpatterns = [
     path('stock_pk_records/list/', views_pk.StockPkRecordsList.as_view(), name="app-stock_pk-records_list"),
     # 下注
     path('stock_pk_bet/', views_pk.StockPkBet.as_view(), name="app-stock_pk-bet"),
+    # 推送
+    path('stock_pk_push/list/', views_pk.StockPKPushView.as_view(), name="app-stock_pk-push"),
 ]
