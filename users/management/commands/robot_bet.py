@@ -220,29 +220,29 @@ class Command(BaseCommand):
             index += 1
 
         quiz_choice = {
-            0: 7,
-            1: 2,
+            0: 6,
+            1: 3,
             2: 1,
         }
         if len(items) == 4:
             quiz_choice = {
-                0: 6,
-                1: 2,
+                0: 5,
+                1: 3,
                 2: 1,
                 3: 1,
             }
         elif len(items) == 5:
             quiz_choice = {
-                0: 60,
-                1: 13,
+                0: 50,
+                1: 23,
                 2: 12,
                 3: 8,
                 4: 7
             }
         elif len(items) >= 6:
             quiz_choice = {
-                0: 65,
-                1: 8,
+                0: 55,
+                1: 18,
                 2: 8,
                 3: 7,
                 4: 7,
@@ -292,7 +292,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(100, 300)
+        user_total = random.randint(200, 300)
         start_date, end_date = self.get_date()
 
         random_datetime = []
