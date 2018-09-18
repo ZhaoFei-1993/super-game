@@ -253,6 +253,9 @@ class Command(BaseCommand):
             items[index] = obj[idx]
             index += 1
 
+        if len(items) <= date_index:
+            date_index = len(items) - 1
+
         return items[date_index]
 
     @staticmethod
