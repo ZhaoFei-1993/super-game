@@ -38,7 +38,7 @@ class Command(BaseCommand, BaseView):
                 "1": {
                     "int": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20))
@@ -80,14 +80,14 @@ class Command(BaseCommand, BaseView):
                     },
                     "soc": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20)),
                     },
                     "db": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20)),
@@ -154,7 +154,7 @@ class Command(BaseCommand, BaseView):
                 "3": {
                     "int": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20)),
@@ -196,14 +196,14 @@ class Command(BaseCommand, BaseView):
                     },
                     "soc": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20)),
                     },
                     "db": {
                         "quiz": int(random.uniform(6, 8)),
-                        "guess": int(random.uniform(3, 4)),
+                        "guess": int(random.uniform(5, 7)),
                         "six": int(random.uniform(6, 8)),
                         "bjl": int(random.uniform(30, 40)),
                         "lhd": int(random.uniform(15, 20)),

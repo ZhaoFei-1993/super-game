@@ -42,6 +42,8 @@ urlpatterns = [
     path('dragon_tiger/', include('dragon_tiger.urls')),
     # 百家乐
     path('baccarat/', include('baccarat.urls')),
+    # 推荐人
+    path('promotion/', include('promotion.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
