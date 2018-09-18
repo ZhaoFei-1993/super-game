@@ -197,40 +197,6 @@ class Command(BaseCommand):
         :param quizs:
         :return:
         """
-        quiz_choice = {
-            0: 7,
-            1: 2,
-            2: 1,
-        }
-        if len(quizs) == 4:
-            quiz_choice = {
-                0: 6,
-                1: 2,
-                2: 1,
-                3: 1,
-            }
-        elif len(quizs) == 5:
-            quiz_choice = {
-                0: 60,
-                1: 13,
-                2: 12,
-                3: 8,
-                4: 7
-            }
-        elif len(quizs) >= 6:
-            quiz_choice = {
-                0: 65,
-                1: 8,
-                2: 8,
-                3: 7,
-                4: 7,
-                5: 5
-            }
-
-        weight_choice = WeightChoice()
-        weight_choice.set_choices(quiz_choice)
-        date_index = weight_choice.choice()
-
         # 竞猜以日期分组
         obj = {}
         for quiz in quizs:
@@ -252,6 +218,40 @@ class Command(BaseCommand):
         for idx in sorted(obj):
             items[index] = obj[idx]
             index += 1
+
+        quiz_choice = {
+            0: 7,
+            1: 2,
+            2: 1,
+        }
+        if len(items) == 4:
+            quiz_choice = {
+                0: 6,
+                1: 2,
+                2: 1,
+                3: 1,
+            }
+        elif len(items) == 5:
+            quiz_choice = {
+                0: 60,
+                1: 13,
+                2: 12,
+                3: 8,
+                4: 7
+            }
+        elif len(items) >= 6:
+            quiz_choice = {
+                0: 65,
+                1: 8,
+                2: 8,
+                3: 7,
+                4: 7,
+                5: 5
+            }
+
+        weight_choice = WeightChoice()
+        weight_choice.set_choices(quiz_choice)
+        date_index = weight_choice.choice()
 
         if len(items) <= date_index:
             date_index = len(items) - 1
