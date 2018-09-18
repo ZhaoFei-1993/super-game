@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 import requests
 import json
 from bs4 import BeautifulSoup
-from quiz.models import Quiz, Rule, Option, Record, CashBackLog
+from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
@@ -134,7 +134,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         result_list = []
         new_url = 'http://www.310win.com/jingcaizuqiu/kaijiang_jc_all.html'
         print('正在发起请求,彩客网')
-        response = requests.get(new_url, headers=headers, timeout=20)
+        response = requests.get(new_url, headers=headers, timeout=30)
         print('结束请求')
         soup = BeautifulSoup(response.text, 'lxml')
         data = list(soup.select('div[id="lottery_container"]')[0].children)
@@ -323,16 +323,72 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         record_false_list = []
         user_coin_dic = {}
         i = 0
-        for record in records:
-            # i += 1
-            # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
 
-            cache_club_value = Club.objects.get_club_info()
+        cache_club_value = Club.objects.get_club_info()
+
+        # 获取下注记录所有用户ID
+        user_ids = []
+        rule_ids = []
+        option_odds_id = []
+        for item in records:
+            user_ids.append(item.user_id)
+            rule_ids.append(item.rule_id)
+            option_odds_id.append(item.option_id)
+        user_ids = list(set(user_ids))  # user id去重
+        rule_ids = list(set(rule_ids))  # rule id去重
+        option_odds_id = list(set(option_odds_id))  # option_odds_id去重
+
+        map_user_coin = {}
+        user_coins = UserCoin.objects.filter(user_id__in=user_ids)
+        for uc in user_coins:
+            key = str(uc.user_id) + '_' + str(uc.coin_id)
+            map_user_coin[key] = uc
+
+        rules = Rule.objects.filter(id__in=rule_ids)
+        map_rule = {}
+        for rule in rules:
+            map_rule[rule.id] = rule
+
+        # 玩法对应的选项映射数据
+        map_rule_option = {}
+        options = Option.objects.filter(rule_id__in=rule_ids, is_right=True)
+        for opt in options:
+            rule_id = opt.rule_id
+
+            opt.rule_tip = map_rule[rule_id].tips
+            opt.rule_tip_en = map_rule[rule_id].tips_en
+            map_rule_option[rule_id] = opt
+
+        # option info
+        option_odds = OptionOdds.objects.filter(id__in=option_odds_id)
+        option_ids = []
+        map_options_odd = {}
+        for option_odd in option_odds:
+            option_id = option_odd.option_id
+
+            option_ids.append(option_id)
+            if option_id not in map_options_odd:
+                map_options_odd[option_id] = []
+            map_options_odd[option_id].append(option_odd.id)
+
+        map_option_odd_id_option = {}
+        options = Option.objects.filter(id__in=option_ids)
+        for option in options:
+            if option.id not in map_options_odd:
+                continue
+
+            for odd_id in map_options_odd[option.id]:
+                map_option_odd_id_option[odd_id] = option
+
+        for record in records:
+            user_id = record.user_id
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
             club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']
             coin_name = cache_club_value[record.roomquiz_id]['coin_name']
             coin_accuracy = cache_club_value[record.roomquiz_id]['coin_accuracy']
+
+            key_user_coin_id = str(user_id) + '_' + str(coin_id)
 
             flag = True
             # 判断是否回答正确
@@ -369,27 +425,32 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if is_right is True:
                 # user_coin
                 if record.user_id not in user_coin_dic.keys():
-                    user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
+                    print('coin_id ====== ', coin_id)
+                    # user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
+                    user_coin = map_user_coin[key_user_coin_id]
                     user_coin_dic.update({
                         record.user_id: {
                             coin_id: {'balance': float(user_coin.balance)}
                         }
                     })
                 if coin_id not in user_coin_dic[record.user_id].keys():
-                    user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
+                    # user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
+                    user_coin = map_user_coin[key_user_coin_id]
                     user_coin_dic[record.user_id].update({
                         coin_id: {'balance': float(user_coin.balance)}
                     })
 
                 # 用户资金明细表
-                user_coin_dic[record.user_id][coin_id]['balance'] = user_coin_dic[record.user_id][coin_id][
+                user_coin_dic[user_id][coin_id]['balance'] = user_coin_dic[user_id][coin_id][
                                                                         'balance'] + earn_coin
                 now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 coin_detail_list.append({
-                    'user_id': str(record.user_id),
-                    'coin_name': coin_name, 'amount': str(float(earn_coin)),
-                    'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
-                    'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
+                    'user_id': str(user_id),
+                    'coin_name': coin_name,
+                    'amount': str(float(earn_coin)),
+                    'rest': str(user_coin_dic[user_id][coin_id]['balance']),
+                    'sources': str(CoinDetail.OPEB_PRIZE),
+                    'is_delete': '0',
                     'created_at': now_time,
                 })
 
@@ -399,21 +460,24 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # else:
             #     handle_activity(record, coin, 0)
 
-            option_right = Option.objects.get(rule=record.rule, is_right=True)
+            # option_right = Option.objects.get(rule=record.rule, is_right=True)
+            rule_info = map_rule[record.rule_id]
+            option_right = map_rule_option[record.rule_id]
+            option_info = map_option_odd_id_option[record.option_id]
             title = club_name + '开奖公告'
             title_en = 'Lottery announcement from' + club_name_en
             if is_right is False:
-                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
-                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '-' + option_right.option_en + ',Your answer is:' + option_right.rule.tips + '-' + record.option.option.option_en + '，You are wrong.'
+                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您答错了。'
+                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '-' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '-' + option_info.option_en + '，You are wrong.'
             elif is_right is True:
-                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您的奖金是:' + str(
+                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您的奖金是:' + str(
                     round(earn_coin, 5))
-                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，Your bonus is:' + str(
+                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '  ' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '  ' + option_info.option_en + '，Your bonus is:' + str(
                     round(earn_coin, 5))
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             user_message_list.append(
                 {
-                    'user_id': str(record.user_id), 'status': '0',
+                    'user_id': str(user_id), 'status': '0',
                     'message_id': '6', 'title': title, 'title_en': title_en,
                     'content': content, 'content_en': content_en,
                     'created_at': now_time,
@@ -495,6 +559,8 @@ def handle_delay_game(delay_quiz):
         user_message_list = []
         user_coin_dic = {}
 
+        cache_club_value = Club.objects.get_club_info()
+
         # 开始遍历record表取得信息
         i = 0
         for record in records:
@@ -503,7 +569,6 @@ def handle_delay_game(delay_quiz):
             # 延迟比赛，返回用户投注的钱
             return_coin = float(record.bet)
 
-            cache_club_value = Club.objects.get_club_info()
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
             club_name_en = cache_club_value[record.roomquiz_id]['club_name_en']
@@ -722,42 +787,33 @@ def cash_back(quiz):
 class Command(BaseCommand):
     help = "爬取足球开奖结果"
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('match_flag', type=str)
-
     def handle(self, *args, **options):
-        print('进入脚本')
+        print('正在执行开奖脚本...')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
-        print(Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                                  category__parent_id=2).exists())
-        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                               category__parent_id=2).exists():
-            delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                                              category__parent_id=2)
 
-            print(delay_quizs)
+        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING), category__parent_id=2).exists():
+            delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING), category__parent_id=2)
+
+            print('检测到', len(delay_quizs), '条延迟开奖记录')
             print('----------------------------------------')
 
             for delay_quiz in delay_quizs:
+                print('delay quiz id = ', delay_quiz.id)
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
                 delay_quiz.save()
 
-        # 在此基础上增加2小时
         rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]
-
+        # 在比赛开始时间基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
         quizs = Quiz.objects.filter(
             (Q(status=str(Quiz.PUBLISHING)) | Q(status=str(Quiz.ENDED))) & Q(begin_at__lt=after_2_hours) & Q(
-                category__parent_id=2) & ~Q(match_flag__in=rule_data_lack))
+                category__parent_id=2) & ~Q(match_flag__in=rule_data_lack)).order_by('id')
         if quizs.exists():
             print(len(list(quizs)))
             print(list(quizs))
             for quiz in list(quizs)[:10]:
                 print('quiz.match_flag = ', quiz.match_flag)
-                # if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]:
-                #     print('玩法Rule数据不全，跳过')
-                #     continue
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
                                     guest_team=quiz.guest_team).count() >= 2:
@@ -772,6 +828,3 @@ class Command(BaseCommand):
                             pass
         else:
             print('暂无比赛需要开奖')
-
-        # quiz = Quiz.objects.filter(match_flag=options['match_flag']).first()
-        # get_data_info(base_url, options['match_flag'])

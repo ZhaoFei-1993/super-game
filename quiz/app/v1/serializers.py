@@ -92,7 +92,10 @@ class QuizSerialize(serializers.ModelSerializer):
         win_rate = check_key(quiz_KEY)
         if win_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
-            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            rule_obj = Rule.objects.filter(Q(type=Rule.RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
+            # 有些比赛没有“赛果”玩法，所以取“让分赛果”的赔率
+            if len(rule_obj) == 0:
+                rule_obj = Rule.objects.filter(Q(type=Rule.POLITENESS_RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
             win_rate = 0
             for rule in rule_obj:
                 try:
@@ -116,7 +119,10 @@ class QuizSerialize(serializers.ModelSerializer):
             if quiz_type.name == "篮球":
                 odds = ''
                 return odds
-            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            rule_obj = Rule.objects.filter(Q(type=Rule.RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
+            # 有些比赛没有“赛果”玩法，所以取“让分赛果”的赔率
+            if len(rule_obj) == 0:
+                rule_obj = Rule.objects.filter(Q(type=Rule.POLITENESS_RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
             for rule in rule_obj:
                 try:
                     option = OptionOdds.objects.get(option__rule_id=rule.pk, option__flag="d", club_id=roomquiz_id)
@@ -132,7 +138,10 @@ class QuizSerialize(serializers.ModelSerializer):
         if quiz_lose_rate == 0:
             roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
 
-            rule_obj = Rule.objects.filter(Q(type=0) | Q(type=4), quiz_id=obj.pk)
+            rule_obj = Rule.objects.filter(Q(type=Rule.RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
+            # 有些比赛没有“赛果”玩法，所以取“让分赛果”的赔率
+            if len(rule_obj) == 0:
+                rule_obj = Rule.objects.filter(Q(type=Rule.POLITENESS_RESULTS) | Q(type=Rule.RESULT), quiz_id=obj.pk)
             quiz_lose_rate = 0
             for rule in rule_obj:
                 try:

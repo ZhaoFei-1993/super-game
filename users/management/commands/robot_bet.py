@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction, connection
-from django.db.models import Q
 
 from quiz.models import Quiz, Option, Record, Rule, OptionOdds, Category
-from users.models import User, UserCoin, CoinValue, Coin
+from users.models import User, CoinValue, Coin
 from chat.models import Club
 from utils.weight_choice import WeightChoice
 from utils.functions import make_insert_sql
@@ -197,40 +196,6 @@ class Command(BaseCommand):
         :param quizs:
         :return:
         """
-        quiz_choice = {
-            0: 7,
-            1: 2,
-            2: 1,
-        }
-        if len(quizs) == 4:
-            quiz_choice = {
-                0: 6,
-                1: 2,
-                2: 1,
-                3: 1,
-            }
-        elif len(quizs) == 5:
-            quiz_choice = {
-                0: 60,
-                1: 13,
-                2: 12,
-                3: 8,
-                4: 7
-            }
-        elif len(quizs) >= 6:
-            quiz_choice = {
-                0: 65,
-                1: 8,
-                2: 8,
-                3: 7,
-                4: 7,
-                5: 5
-            }
-
-        weight_choice = WeightChoice()
-        weight_choice.set_choices(quiz_choice)
-        date_index = weight_choice.choice()
-
         # 竞猜以日期分组
         obj = {}
         for quiz in quizs:
@@ -252,6 +217,43 @@ class Command(BaseCommand):
         for idx in sorted(obj):
             items[index] = obj[idx]
             index += 1
+
+        quiz_choice = {
+            0: 6,
+            1: 3,
+            2: 1,
+        }
+        if len(items) == 4:
+            quiz_choice = {
+                0: 5,
+                1: 3,
+                2: 1,
+                3: 1,
+            }
+        elif len(items) == 5:
+            quiz_choice = {
+                0: 50,
+                1: 23,
+                2: 12,
+                3: 8,
+                4: 7
+            }
+        elif len(items) >= 6:
+            quiz_choice = {
+                0: 55,
+                1: 18,
+                2: 8,
+                3: 7,
+                4: 7,
+                5: 5
+            }
+
+        weight_choice = WeightChoice()
+        weight_choice.set_choices(quiz_choice)
+        date_index = weight_choice.choice()
+
+        if len(items) <= date_index:
+            date_index = len(items) - 1
 
         return items[date_index]
 
@@ -289,7 +291,7 @@ class Command(BaseCommand):
         设置今日随机值，写入到缓存中，缓存24小时后自己销毁
         :return:
         """
-        user_total = random.randint(100, 300)
+        user_total = random.randint(200, 300)
         start_date, end_date = self.get_date()
 
         random_datetime = []
@@ -370,13 +372,28 @@ class Command(BaseCommand):
                 3: 5,       # 总进球
                 8: 10       # 亚盘
             }
+            # 判断是否有赛果玩法
+            is_results_play = 0
+            for item in rules:
+                if int(item.type) == 0:
+                    is_results_play = 1
+                    break
+
             if len(rules) == 4:
-                rules_weight = {
-                    0: 60,  # 赛果
-                    1: 20,  # 让分赛果
-                    2: 10,  # 比分
-                    3: 10,  # 总进球
-                }
+                if is_results_play == 1:
+                    rules_weight = {
+                        0: 60,  # 赛果
+                        1: 20,  # 让分赛果
+                        2: 10,  # 比分
+                        3: 10,  # 总进球
+                    }
+                else:
+                    rules_weight = {
+                        1: 60,  # 让分赛果
+                        2: 20,  # 比分
+                        3: 10,  # 总进球
+                        8: 10,  # 亚盘
+                    }
         weight_choice = WeightChoice()
         weight_choice.set_choices(rules_weight)
         rule_type = weight_choice.choice()
