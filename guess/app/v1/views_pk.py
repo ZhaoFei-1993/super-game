@@ -107,7 +107,7 @@ class StockPkDetail(ListAPIView):
             if self.request.GET.get('language') == 'en':
                 title = option.title_en
             options_dic[option.play_id].append({
-                'option_id': option.id, 'title': title, 'odds': option.odds,
+                'option_id': option.id, 'title': title, 'odds': handle_zero(option.odds),
                 'is_choice': is_choice, 'support_rate': support_rate,
             })
 
@@ -118,7 +118,9 @@ class StockPkDetail(ListAPIView):
         data = {
             'stock_pk_id': stock_pk_id,
             'left_index_value': '',
+            'left_index_color': '',
             'right_index_value': '',
+            'right_index_clolr': '',
             'betlimit': bet_limit_dic,
             'plays_options': plays_dic,
             'issue': issue,
@@ -171,6 +173,9 @@ class StockPkResultList(ListAPIView):
                 }
             })
 
+        result_flag = {
+            '和': 0, '上证大': 1, '深证大': 2,
+        }
         data = []
         for item in items:
             if item['size_pk_result'] != '':
@@ -190,6 +195,7 @@ class StockPkResultList(ListAPIView):
                     'right_result_num': str(item['right_stock_index']).split('.')[1][1],
 
                     'result_answer': item['size_pk_result'],
+                    'result_flag': result_flag[item['size_pk_result']]
                 })
         return self.response({'code': 0, 'data': data})
 
