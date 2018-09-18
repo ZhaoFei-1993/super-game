@@ -375,7 +375,7 @@ class Command(BaseCommand):
             # 判断是否有赛果玩法
             is_results_play = 0
             for item in rules:
-                if int(item.type) == 1:
+                if int(item.type) == 0:
                     is_results_play = 1
                     break
 
