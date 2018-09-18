@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 import random
 from base.app import BaseView
 from datetime import datetime
-from utils.cache import get_cache, set_cache
+from utils.cache import get_cache, set_cache, delete_cache
 
 
 class Command(BaseCommand, BaseView):
@@ -13,6 +13,7 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         day = datetime.now().strftime('%Y-%m-%d')
         number_key = "NOW_INITIAL_ONLINE_USER_" + str(day)
+        delete_cache(number_key)
         time_key = "INITIAL_ONLINE_TIME_NOW_" + str(day)
         initial_online_user_time = get_cache(time_key)
         if initial_online_user_time is not None:
@@ -38,7 +39,7 @@ class Command(BaseCommand, BaseView):
                 "1": {
                     "int": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20))
@@ -80,14 +81,14 @@ class Command(BaseCommand, BaseView):
                     },
                     "soc": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20)),
                     },
                     "db": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20)),
@@ -154,7 +155,7 @@ class Command(BaseCommand, BaseView):
                 "3": {
                     "int": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20)),
@@ -196,14 +197,14 @@ class Command(BaseCommand, BaseView):
                     },
                     "soc": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20)),
                     },
                     "db": {
                         "quiz": int(random.uniform(6,8)),
-                        "guess": int(random.uniform(3,4)),
+                        "guess": int(random.uniform(5,7)),
                         "six": int(random.uniform(6,8)),
                         "bjl": int(random.uniform(30,40)),
                         "lhd": int(random.uniform(15,20)),
