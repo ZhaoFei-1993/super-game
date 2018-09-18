@@ -121,7 +121,7 @@ class StockPkDetail(ListAPIView):
             'left_index_color': '',
             'right_index_value': '',
             'right_index_clolr': '',
-            'betlimit': bet_limit_dic,
+            'bet_limit': bet_limit_dic,
             'plays_options': plays_dic,
             'issue': issue,
             'open_time': open_time,
