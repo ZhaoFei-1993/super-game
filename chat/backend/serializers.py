@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
 from ..models import Club, ClubBanner, ClubRule
+from users.models import Coin
 
 
 class ClubBackendSerializer(serializers.ModelSerializer):
@@ -57,3 +58,12 @@ class ClubRuleBackendSerializer(serializers.ModelSerializer):
     def get_created_at(obj):
         created_at = obj.created_at.strftime('%Y-%m-%d %H:%M')
         return created_at
+
+
+class CoinSerialize(serializers.ModelSerializer):
+    """
+    货币数据序列化
+    """
+    class Meta:
+        model = Coin
+        fields = ('id', 'name')

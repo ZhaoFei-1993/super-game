@@ -369,7 +369,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if is_right is True:
                 # user_coin
                 if record.user_id not in user_coin_dic.keys():
-                    print('coin_id ====== ', coin_id)
                     user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
                     user_coin_dic.update({
                         record.user_id: {
