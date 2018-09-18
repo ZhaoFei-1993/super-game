@@ -125,7 +125,7 @@ class StockPkDetail(ListAPIView):
             'bet_limit': bet_limit_dic,
             'plays_options': plays_dic,
             'issue': issue,
-            'issues_id': 'issues_id',
+            'issues_id': issues_id,
             'open_time': open_time,
             'coin_dic': coin_dic,
         }
