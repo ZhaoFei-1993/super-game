@@ -134,7 +134,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         result_list = []
         new_url = 'http://www.310win.com/jingcaizuqiu/kaijiang_jc_all.html'
         print('正在发起请求,彩客网')
-        response = requests.get(new_url, headers=headers, timeout=20)
+        response = requests.get(new_url, headers=headers, timeout=30)
         print('结束请求')
         soup = BeautifulSoup(response.text, 'lxml')
         data = list(soup.select('div[id="lottery_container"]')[0].children)
@@ -381,9 +381,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 map_option_odd_id_option[odd_id] = option
 
         for record in records:
-            # i += 1
-            # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
-
             user_id = record.user_id
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
@@ -449,9 +446,11 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 coin_detail_list.append({
                     'user_id': str(user_id),
-                    'coin_name': coin_name, 'amount': str(float(earn_coin)),
+                    'coin_name': coin_name,
+                    'amount': str(float(earn_coin)),
                     'rest': str(user_coin_dic[user_id][coin_id]['balance']),
-                    'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
+                    'sources': str(CoinDetail.OPEB_PRIZE),
+                    'is_delete': '0',
                     'created_at': now_time,
                 })
 
@@ -788,9 +787,6 @@ def cash_back(quiz):
 class Command(BaseCommand):
     help = "爬取足球开奖结果"
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('match_flag', type=str)
-
     def handle(self, *args, **options):
         print('正在执行开奖脚本...')
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
@@ -818,9 +814,6 @@ class Command(BaseCommand):
             print(list(quizs))
             for quiz in list(quizs)[:10]:
                 print('quiz.match_flag = ', quiz.match_flag)
-                # if int(quiz.match_flag) in [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265]:
-                #     print('玩法Rule数据不全，跳过')
-                #     continue
                 if int(Quiz.objects.filter(match_flag=quiz.match_flag).first().status) != Quiz.BONUS_DISTRIBUTION:
                     if quizs.filter(begin_at=quiz.begin_at, host_team=quiz.host_team,
                                     guest_team=quiz.guest_team).count() >= 2:
@@ -835,6 +828,3 @@ class Command(BaseCommand):
                             pass
         else:
             print('暂无比赛需要开奖')
-
-        # quiz = Quiz.objects.filter(match_flag=options['match_flag']).first()
-        # get_data_info(base_url, options['match_flag'])
