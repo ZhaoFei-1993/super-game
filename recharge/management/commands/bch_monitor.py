@@ -27,6 +27,8 @@ class Command(BaseCommand, BaseView):
         q = Queue(connection=redis_conn)
         q.enqueue(bitcoin_cash_monitor, block_height)
 
+        set_cache(self.cacheKey, block_height)
+
         self.stdout.write(self.style.SUCCESS('监控高度=' + str(block_height) + '的BCH充值数据'))
 
     @staticmethod
@@ -59,12 +61,12 @@ class Command(BaseCommand, BaseView):
         cache_block_height = get_cache(self.cacheKey)
         if cache_block_height is None:
             cache_block_height = block_height
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, block_height)
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
         if cache_block_height > block_height:
-            set_cache(self.cacheKey, block_height, 86400)
+            set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)
         for block in range(cache_block_height, block_height + 1):
