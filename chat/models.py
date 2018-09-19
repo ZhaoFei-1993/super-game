@@ -95,7 +95,7 @@ class ClubManager(BaseManager):
         cache_file = settings.CACHE_DIR + '/club_online/' + str(club_id)
         play_online = None
         if os.path.exists(cache_file):
-            play_online = open(cache_file).readlines()
+            play_online = open(cache_file).readlines()[0]
 
         return play_online
 
