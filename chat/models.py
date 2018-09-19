@@ -54,13 +54,20 @@ class ClubManager(BaseManager):
         if len(clubs) == 0:
             return {}
 
+        map_coin = {}
+        coins = Coin.objects.get_all()
+        for coin in coins:
+            map_coin[coin.id] = coin
+
         for club in clubs:
+            coin = map_coin[club.coin_id]
+
             club_values[club.id] = {
                 'coin_id': club.coin_id,
                 'club_name': club.room_title,
                 'club_name_en': club.room_title_en,
                 'coin_name': club.room_title.replace('俱乐部', ''),
-                'coin_accuracy': club.coin.coin_accuracy,
+                'coin_accuracy': coin.coin_accuracy,
             }
         return club_values
 
