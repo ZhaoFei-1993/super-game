@@ -112,6 +112,12 @@ class ClubManager(BaseManager):
         club_id = int(club_id)
         club_play_id = int(club_play_id) if club_play_id is not None else None
 
+        # 获取所有玩法数据，未开放的不在统计范围内
+        club_plays = ClubRule.objects.get_all()
+        map_club_play = {}
+        for club_play in club_plays:
+            map_club_play[club_play.id] = club_play
+
         number = 0
         # 当缓存中有数据，则读取缓存中数据
         if cache_online_users is not None and club_id in cache_online_users:
@@ -122,6 +128,10 @@ class ClubManager(BaseManager):
                 number = online[club_play_id]
             else:
                 for play_id in online:
+                    tmp_play = map_club_play[int(play_id)]
+                    if tmp_play.is_dissolve is False or tmp_play.is_deleted is True:
+                        continue
+
                     number += online[play_id]
         else:
             online = self.get_online_setting(club_id)
@@ -259,6 +269,13 @@ class Club(models.Model):
         verbose_name = verbose_name_plural = "俱乐部表"
 
 
+class ClubRuleManager(BaseManager):
+    """
+    俱乐部玩法数据操作
+    """
+    key = 'club_rule_data'
+
+
 @reversion.register()
 class ClubRule(models.Model):
     title = models.CharField(verbose_name="玩法昵称", max_length=25)
@@ -269,6 +286,8 @@ class ClubRule(models.Model):
     is_dissolve = models.BooleanField(verbose_name="是否开放", default=True)
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    objects = ClubRuleManager()
 
     class Meta:
         ordering = ['-id']
