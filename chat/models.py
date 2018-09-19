@@ -3,6 +3,13 @@ from wc_auth.models import Admin
 from users.models import User, Coin
 import reversion
 from base.models import BaseManager
+import json
+from django.conf import settings
+import linecache
+import os
+from datetime import datetime
+import random
+from utils.cache import set_cache, get_cache, delete_cache
 
 
 class ClubManager(BaseManager):
@@ -10,6 +17,33 @@ class ClubManager(BaseManager):
     俱乐部数据操作
     """
     key = 'club_data'
+
+    # 在线人数时间段
+    periods = {
+        0: {
+            'start': 0,
+            'end': 9,
+        },
+        1: {
+            'start': 9,
+            'end': 12,
+        },
+        2: {
+            'start': 12,
+            'end': 20,
+        },
+        3: {
+            'start': 20,
+            'end': 23,
+        },
+        4: {
+            'start': 23,
+            'end': 0,
+        }
+    }
+
+    key_online_users = 'club_online_users'
+    key_online_period = 'club_online_users_period'
 
     def get_club_info(self):
         """
@@ -30,6 +64,152 @@ class ClubManager(BaseManager):
                 'coin_accuracy': club.coin.coin_accuracy,
             }
         return club_values
+
+    @staticmethod
+    def save_online(online, club_id):
+        """
+        保存在线人数
+        :return:
+        """
+        online = json.loads(online)
+        players_online = {}
+        for play_id in online:
+            players_online[play_id] = online[play_id].split('|')
+        cache_file = settings.CACHE_DIR + '/club_online/' + str(club_id)
+        with open(cache_file, 'w') as file:
+            file.write(json.dumps(players_online))
+
+    @staticmethod
+    def get_online_setting(club_id):
+        """
+        获取俱乐部在线人数配置
+        :param club_id:
+        :return:
+        """
+        cache_file = settings.CACHE_DIR + '/club_online/' + str(club_id)
+        play_online = None
+        if os.path.exists(cache_file):
+            play_online = linecache.getline(cache_file, 1)
+
+        return play_online
+
+    def get_club_online(self, club_id, club_play_id=None):
+        """
+        获取当前俱乐部人数
+        先从缓存中获取，若缓存无数据，则从配置获取当前时间对应俱乐部下各个玩法的在线人数（范围）
+        :param  club_id: 俱乐部ID
+        :param  club_play_id: 玩法ID，若传该值，则返回该玩法下的在线人数，反之，返回该俱乐部下所有玩法人数总和
+        :return:
+        """
+        # 获取缓存中的在线人数
+        cache_online_users = get_cache(self.key_online_users)
+        club_id = int(club_id)
+        club_play_id = int(club_play_id) if club_play_id is not None else None
+
+        number = 0
+        # 当缓存中有数据，则读取缓存中数据
+        if cache_online_users is not None and club_id in cache_online_users:
+            online = cache_online_users[club_id]
+
+            # 是否只取出某个俱乐部下的玩法人数
+            if club_play_id is not None:
+                number = online[club_play_id]
+            else:
+                for play_id in online:
+                    number += online[play_id]
+        else:
+            online = self.get_online_setting(club_id)
+            # 未配置，则返回0
+            if online is None:
+                return 0
+            online = json.loads(online)
+
+            # 判断当前时间在哪个时间范围内
+            hour = int(datetime.now().strftime('%H'))
+            period = 0
+            for p in self.periods:
+                if self.periods[p]['start'] <= hour < self.periods[p]['end']:
+                    period = p
+                    break
+
+            cache_online_users = {club_id: {}}
+            for play_id in online:
+                # 获取当前时间数据范围
+                n = online[play_id][period]
+                start, end = n.split(',')
+                random_number = random.randint(int(start), int(end))
+                cache_online_users[club_id][int(play_id)] = random_number        # club id 对应 play id 随机人数
+
+                # 是否只取出某个俱乐部下的玩法人数
+                if club_play_id is not None:
+                    number = random_number
+                else:
+                    # 俱乐部列表统计总数
+                    number += random_number
+
+            set_cache(self.key_online_users, cache_online_users)
+
+        return number
+
+    def fluctuation_club_online(self):
+        """
+        俱乐部在线人数波动
+        间隔时间：5分钟，crontab实现
+        波动幅度：加减1~5范围内，最小在线人数不能低于1
+        :return:
+        """
+        # 判断当前时间在哪个时间范围内
+        hour = int(datetime.now().strftime('%H'))
+        period = 0
+        for p in self.periods:
+            if self.periods[p]['start'] <= hour < self.periods[p]['end']:
+                period = p
+                break
+
+        # 如果跨区间时间，则直接清除缓存等待重新生成
+        cache_online_users_period = get_cache(self.key_online_period)
+        if cache_online_users_period is None:
+            set_cache(self.key_online_period, period)
+        else:
+            if cache_online_users_period != period:
+                print('跨时区，清除缓存')
+                delete_cache(self.key_online_period)
+                return False
+
+        print('current period = ', period)
+
+        # 未生成缓存则不处理
+        cache_online_users = get_cache(self.key_online_users)
+        if cache_online_users is None:
+            print('未生成缓存，跳过')
+            return False
+
+        cache_online_users_new = {}
+        for club_id in cache_online_users:
+            cache_online_users_new[club_id] = {}
+
+            for play_id in cache_online_users[club_id]:
+                value = cache_online_users[club_id][play_id]
+
+                # 随机加减
+                operator = random.randint(1, 2)     # 1为加，2为减
+
+                # 如果值为1，则强制为加
+                if value == 1:
+                    operator = 2
+
+                # 1~5随机数
+                if operator == 1:
+                    number = value - random.randint(1, 5)
+                else:
+                    number = value + random.randint(1, 5)
+
+                number = number if number > 0 else 1
+
+                cache_online_users_new[club_id][play_id] = number
+
+        set_cache(self.key_online_users, cache_online_users_new)
+        return True
 
 
 @reversion.register()
