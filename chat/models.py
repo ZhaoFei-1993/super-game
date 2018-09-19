@@ -89,7 +89,6 @@ class ClubManager(BaseManager):
         play_online = None
         if os.path.exists(cache_file):
             play_online = open(cache_file).readlines()
-            print('play_online = ', play_online)
 
         return play_online
 
