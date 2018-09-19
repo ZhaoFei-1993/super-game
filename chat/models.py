@@ -138,7 +138,10 @@ class ClubManager(BaseManager):
                     period = p
                     break
 
-            cache_online_users = {club_id: {}} if cache_online_users is None else cache_online_users[club_id] = {}
+            if cache_online_users is None:
+                cache_online_users = {club_id: {}}
+            else:
+                cache_online_users[club_id] = {}
             for play_id in online:
                 # 获取当前时间数据范围
                 n = online[play_id][period]
