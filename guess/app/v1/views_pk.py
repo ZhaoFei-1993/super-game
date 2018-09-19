@@ -288,15 +288,18 @@ class StockPkRecordsList(ListAPIView):
             is_right = 0
             earn_coin = normalize_fraction(item_value['earn_coin'], int(coin_accuracy))
             if int(item_value['status']) == RecordStockPk.AWAIT:
+                record_type = 0
                 earn_coin_result = '待开奖'
                 if self.request.GET.get('language') == 'en':
                     earn_coin_result = 'Wait results'
             elif earn_coin < 0:
+                record_type = 2
                 is_right = 2
                 earn_coin_result = '猜错'
                 if self.request.GET.get('language') == 'en':
                     earn_coin_result = 'Guess wrong'
             elif earn_coin > 0:
+                record_type = 1
                 is_right = 1
                 earn_coin_result = '+' + handle_zero(earn_coin)
 
@@ -325,6 +328,7 @@ class StockPkRecordsList(ListAPIView):
                 'date': date,
                 'time': time,
                 'title': title,
+                'type': record_type,
                 'my_option': my_option,
                 'is_right': is_right,
                 'earn_coin': earn_coin_result,
