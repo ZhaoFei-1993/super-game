@@ -138,9 +138,6 @@ class ClubManager(BaseManager):
                     period = p
                     break
 
-            print('period = ', period)
-            print('online = ', online)
-
             if cache_online_users is None:
                 cache_online_users = {club_id: {}}
             else:
@@ -148,8 +145,12 @@ class ClubManager(BaseManager):
             for play_id in online:
                 # 获取当前时间数据范围
                 n = online[play_id][period]
+                print('club_play_id = ', club_play_id)
+                print('n = ', n)
                 start, end = n.split(',')
                 random_number = random.randint(int(start), int(end))
+                print('random_number = ', random_number)
+                print('')
                 cache_online_users[club_id][int(play_id)] = random_number        # club id 对应 play id 随机人数
 
                 # 是否只取出某个俱乐部下的玩法人数
