@@ -209,7 +209,7 @@ class ClubManager(BaseManager):
                 end = int(end)
 
                 # 随机加减
-                operator = random.randint(1, 2)     # 1为加，2为减
+                operator = random.randint(1, 2)     # 1为减，2为加
 
                 # 1~5随机数
                 if operator == 1:
