@@ -138,6 +138,9 @@ class ClubManager(BaseManager):
                     period = p
                     break
 
+            print('period = ', period)
+            print('online = ', online)
+
             if cache_online_users is None:
                 cache_online_users = {club_id: {}}
             else:
