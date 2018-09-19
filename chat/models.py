@@ -145,6 +145,8 @@ class ClubManager(BaseManager):
             for play_id in online:
                 # 获取当前时间数据范围
                 n = online[play_id][period]
+                print('play_id = ', play_id)
+                print('period = ', period)
                 print('club_play_id = ', club_play_id)
                 print('n = ', n)
                 start, end = n.split(',')
