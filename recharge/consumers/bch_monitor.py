@@ -17,6 +17,7 @@ def bitcoin_cash_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
+    print('block = ', block)
 
     to_address = []
     address_tx = {}
