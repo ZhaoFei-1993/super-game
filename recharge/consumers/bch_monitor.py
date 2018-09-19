@@ -34,9 +34,7 @@ def bitcoin_cash_monitor(block_num):
                     'value': output['value'],
                 })
 
-    print('address_tx = ', address_tx)
-
-    in_address = UserCoin.objects.filter(address__in=to_address).values('address', 'user_id')
+    in_address = UserCoin.objects.filter(coin_id=Coin.BCH, address__in=to_address).values('address', 'user_id')
     if len(in_address) == 0:
         return True
 
