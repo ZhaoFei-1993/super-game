@@ -17,7 +17,6 @@ def bitcoin_cash_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url=BCH_WALLET_API_URL + 'v1/bch/block/transactions/' + str(block_num))
     block = json_obj['data']
-    print('block = ', block)
 
     to_address = []
     address_tx = {}
@@ -34,6 +33,8 @@ def bitcoin_cash_monitor(block_num):
                     'txid': item['txid'],
                     'value': output['value'],
                 })
+
+    print('address_tx = ', address_tx)
 
     in_address = UserCoin.objects.filter(address__in=to_address).values('address', 'user_id')
     if len(in_address) == 0:
@@ -62,7 +63,7 @@ def bitcoin_cash_monitor(block_num):
             recharge_obj.amount = Decimal(recharge['value'])
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block['time']))
-            recharge_obj.save()
+            # recharge_obj.save()
 
             print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin['address'], ' 充值金额 = ', recharge['value'])
 
