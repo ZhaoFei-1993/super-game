@@ -203,7 +203,7 @@ class ClubManager(BaseManager):
             for play_id in cache_online_users[club_id]:
                 value = cache_online_users[club_id][play_id]
 
-                online_range = online[play_id][period]
+                online_range = online[str(play_id)][period]
                 start, end = online_range.split(',')
                 start = int(start)
                 end = int(end)
