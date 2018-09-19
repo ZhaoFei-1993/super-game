@@ -253,6 +253,7 @@ class StockPkRecordsList(ListAPIView):
             issues_obj_dic.update({
                 issue.id: {
                     'size_pk_result': issue.size_pk_result, 'issue': issue.issue,
+                    'stock_pk_id': issue.stock_pk_id,
                 }
             })
 
@@ -262,6 +263,16 @@ class StockPkRecordsList(ListAPIView):
             options_obj_dic.update({
                 option.id: {
                     'play_id': option.play_id, 'title': option.title, 'title_en': option.title_en,
+                }
+            })
+
+        # 处理stock_pk
+        stock_pk_obj_dic = {}
+        for stock_pk in StockPk.objects.all():
+            stock_pk_obj_dic.update({
+                stock_pk.id: {
+                    'left_stock_name': stock_pk.left_stock_name,
+                    'right_stock_name': stock_pk.right_stock_name,
                 }
             })
 
@@ -301,11 +312,19 @@ class StockPkRecordsList(ListAPIView):
             result_answer = ''
             if issues_obj_dic[issues_id]['size_pk_result'] != '':
                 result_answer = issues_obj_dic[issues_id]['size_pk_result']
+
+            # title
+            stock_pk_id = issues_obj_dic[issues_id]['stock_pk_id']
+            left_stock_name = stock_pk_obj_dic[stock_pk_id]['left_stock_name']
+            right_stock_name = stock_pk_obj_dic[stock_pk_id]['right_stock_name']
+            title = left_stock_name + ' PK ' + right_stock_name
+
             data.append({
                 'id': item_key,
                 'year': year,
                 'date': date,
                 'time': time,
+                'title': title,
                 'my_option': my_option,
                 'is_right': is_right,
                 'earn_coin': earn_coin_result,
