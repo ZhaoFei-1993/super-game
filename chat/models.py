@@ -5,7 +5,6 @@ import reversion
 from base.models import BaseManager
 import json
 from django.conf import settings
-import linecache
 import os
 from datetime import datetime
 import random
@@ -89,7 +88,7 @@ class ClubManager(BaseManager):
         cache_file = settings.CACHE_DIR + '/club_online/' + str(club_id)
         play_online = None
         if os.path.exists(cache_file):
-            play_online = linecache.getline(cache_file, 1)
+            play_online = open(cache_file).readlines()
             print('play_online = ', play_online)
 
         return play_online
