@@ -16,4 +16,4 @@ class StockPkResultListSerialize(serializers.ModelSerializer):
 
     @staticmethod
     def get_open_time(obj):
-        return obj.open.strftime('%Y-%m-%d %H:%M:%S')
+        return obj.open.strftime('%Y-%m-%d %H:%M')
