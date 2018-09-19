@@ -164,7 +164,7 @@ class ClubManager(BaseManager):
         """
         俱乐部在线人数波动
         间隔时间：5分钟，crontab实现
-        波动幅度：加减1~5范围内，最小在线人数不能低于1
+        波动幅度：加减1~5范围内，波动人数也必须在设定范围内
         :return:
         """
         # 判断当前时间在哪个时间范围内
@@ -197,23 +197,27 @@ class ClubManager(BaseManager):
         for club_id in cache_online_users:
             cache_online_users_new[club_id] = {}
 
+            online = self.get_online_setting(club_id)
+            online = json.loads(online)
+
             for play_id in cache_online_users[club_id]:
                 value = cache_online_users[club_id][play_id]
+
+                online_range = online[play_id][period]
+                start, end = online_range.split(',')
+                start = int(start)
+                end = int(end)
 
                 # 随机加减
                 operator = random.randint(1, 2)     # 1为加，2为减
 
-                # 如果值为1，则强制为加
-                if value == 1:
-                    operator = 2
-
                 # 1~5随机数
                 if operator == 1:
                     number = value - random.randint(1, 5)
+                    number = number if number >= start else start
                 else:
                     number = value + random.randint(1, 5)
-
-                number = number if number > 0 else 1
+                    number = number if number <= end else end
 
                 cache_online_users_new[club_id][play_id] = number
 
