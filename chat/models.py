@@ -138,6 +138,9 @@ class ClubManager(BaseManager):
                     period = p
                     break
 
+            print('period = ', period)
+            print('online = ', online)
+
             cache_online_users = {club_id: {}}
             for play_id in online:
                 # 获取当前时间数据范围
