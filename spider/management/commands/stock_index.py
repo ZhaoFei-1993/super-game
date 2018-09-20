@@ -248,6 +248,7 @@ class Command(BaseCommand):
     help = "抓取证券指数"
 
     def handle(self, *args, **options):
+        print(' now is ', datetime.datetime.now())
         if Periods.objects.filter(is_result=False).exists() is not True:
             print('暂无行情')
         else:
