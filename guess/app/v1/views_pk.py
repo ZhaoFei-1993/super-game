@@ -8,6 +8,7 @@ from .serializers_pk import *
 from guess.models import (StockPk, Issues, PlayStockPk, OptionStockPk,
                           RecordStockPk, BetLimit, Index, Periods)
 import datetime
+import time
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
 from users.models import UserCoin, CoinDetail, User
 
@@ -29,9 +30,13 @@ class StockPkDetail(ListAPIView):
             issue_pre = Issues.objects.filter(open__lt=time_now).order_by('-open').first()
             if (issue_pre.open + datetime.timedelta(hours=1)) > time_now:
                 qs = issue_pre
-                #  一小时切换status
+                #  一小时切换status, 4: 中to美, 5: 美to中
                 switch_time = qs.open + datetime.timedelta(hours=1)
-                status = 2
+                switch_time = time.mktime(switch_time.timetuple())
+                if issue_pre.stock_pk_id == 1:
+                    status = 4
+                else:
+                    status = 5
             else:
                 qs = issue_last
                 # 休市
@@ -97,6 +102,7 @@ class StockPkDetail(ListAPIView):
         issues_id = issues.id
         issue = issues.issue
         open_time = issues.open.strftime('%Y-%m-%d %H:%M:%S')
+        open_timestamp = time.mktime(issues.open.timetuple())
 
         # 用户余额，对应币信息
         cache_club_value = get_club_info()
@@ -169,11 +175,6 @@ class StockPkDetail(ListAPIView):
                 'option_id': option.id, 'title': title, 'odds': handle_zero(option.odds),
                 'is_choice': is_choice, 'support_rate': support_rate,
             })
-        # stock_pk_type
-        if stock_pk_id == 1:
-            stock_pk_type = '中股'
-        else:
-            stock_pk_type = '美股'
 
         # 构造玩法选项
         for key, value in plays_dic.items():
@@ -181,7 +182,6 @@ class StockPkDetail(ListAPIView):
 
         data = {
             'stock_pk_id': stock_pk_id,
-            'stock_pk_type': stock_pk_type,
             'status': status_dic['status'],
             'switch_time': status_dic['switch_time'],
 
@@ -198,6 +198,7 @@ class StockPkDetail(ListAPIView):
             'issue': issue,
             'issues_id': issues_id,
             'open_time': open_time,
+            'open_timestamp': open_timestamp,
             'coin_dic': coin_dic,
         }
         return self.response({'code': 0, 'data': data})
