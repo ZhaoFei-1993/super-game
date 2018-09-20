@@ -7,10 +7,7 @@ from users.models import Coin
 from rest_framework import status
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
-import json
-from django.conf import settings
-import os
-import linecache
+from utils.cache import delete_cache
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -31,6 +28,9 @@ class ClubBackendListView(ListCreateAPIView):
 
         club = Club(**values, coin_id=int(coin))
         club.save()
+
+        # 修改数据，清除缓存
+        delete_cache(Club.objects.key)
 
         # 写入俱乐部在线人数缓存
         Club.objects.save_online(online=online, club_id=club.id)
@@ -70,6 +70,9 @@ class ClubBackendListDetailView(RetrieveUpdateDestroyAPIView):
 
         club.__dict__.update(**values)
         club.save()
+
+        # 修改数据，清除缓存
+        delete_cache(Club.objects.key)
 
         # 写入俱乐部在线人数缓存
         Club.objects.save_online(online=online, club_id=club.id)
