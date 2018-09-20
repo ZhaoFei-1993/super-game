@@ -228,6 +228,8 @@ class StockPk(models.Model):
 @reversion.register()
 class Issues(models.Model):
     stock_pk = models.ForeignKey(StockPk, on_delete=models.CASCADE)
+    left_periods = models.ForeignKey(Periods, on_delete=models.CASCADE, related_name='left_to_periods')
+    right_periods = models.ForeignKey(Periods, on_delete=models.CASCADE, related_name='right_to_periods')
     left_stock_index = models.DecimalField(verbose_name='左边股指指数值', max_digits=10, decimal_places=2, default=0)
     right_stock_index = models.DecimalField(verbose_name='右边股指指数值', max_digits=10, decimal_places=2, default=0)
     size_pk_result = models.CharField(verbose_name="股指大小pk答案", max_length=100, default='')
@@ -236,12 +238,7 @@ class Issues(models.Model):
     closing = models.DateTimeField(verbose_name="封盘时间", null=True)
     open = models.DateTimeField(verbose_name="开奖时间", null=True)
 
-    next_issue = models.CharField(verbose_name="下期期号", max_length=3, default='')
-    starting = models.DateTimeField(verbose_name="下期开始投注时间", null=True)
-    next_open = models.DateTimeField(verbose_name="下期开奖时间", null=True)
-    next_closing = models.DateTimeField(verbose_name="下期封盘时间", null=True)
-
-    is_result = models.BooleanField(verbose_name="是否有正确答案", default=0)
+    result_confirm = models.IntegerField(verbose_name="开奖指数确认数", default=0)  # 0是未确认，等于3为答案
     is_open = models.BooleanField(verbose_name="是否开奖", default=0)
     update_at = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)

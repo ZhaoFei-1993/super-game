@@ -5,7 +5,8 @@ from base.function import LoginRequired
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from .serializers_pk import *
-from guess.models import StockPk, Issues, PlayStockPk, OptionStockPk, RecordStockPk, BetLimit
+from guess.models import (StockPk, Issues, PlayStockPk, OptionStockPk,
+                          RecordStockPk, BetLimit, Index, Periods)
 import datetime
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
 from users.models import UserCoin, CoinDetail, User
@@ -18,24 +19,81 @@ class StockPkDetail(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
+        # 正常status
+        status = 0
+        switch_time = ''
         time_now = datetime.datetime.now()
-        stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
-        issues = Issues.objects.filter(open__gt=time_now,
-                                       stock_pk_id__in=stock_pk_id_list).order_by('open').first()
-        return issues
+        # stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
+        issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
+        if issue_last.issue == 1:
+            issue_pre = Issues.objects.filter(open__lt=time_now).order_by('-open').first()
+            if (issue_pre.open + datetime.timedelta(hours=1)) > time_now:
+                qs = issue_pre
+                #  一小时切换status
+                switch_time = qs.open + datetime.timedelta(hours=1)
+                status = 2
+            else:
+                qs = issue_last
+                # 休市
+                if qs.stock_pk_id == 1:
+                    open_time = qs.open
+                else:
+                    open_time = qs.open - datetime.timedelta(hours=12)
+                if open_time.isoweekday() == 1:
+                    status = 3
+        else:
+            qs = issue_last
+            # 中场休息status
+            if qs.open.strftime('%H:%M:%S') == '13:05:00':
+                status = 1
+        return qs, {'status': status, 'switch_time': switch_time}
 
     def list(self, request, *args, **kwargs):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
         user = request.user
 
-        issues = self.get_queryset()
-        if issues.issue == 1:
-            pass
-        else:
-            left_index = ''
-            right_index = ''
-
+        issues, status_dic = self.get_queryset()
+        time_now = datetime.datetime.now()
         stock_pk_id = issues.stock_pk_id
+
+        left_periods_id = issues.left_periods_id
+        right_periods_id = issues.right_periods_id
+
+        left_index_value = issues.left_stock_index
+        right_index_value = issues.right_stock_index
+
+        if issues.issue == 1:
+            issue_pre = Issues.objects.filter(stock_pk_id=stock_pk_id, open__lt=time_now).order_by('-open').first()
+            left_index_value = issue_pre.left_stock_index
+            right_index_value = issue_pre.right_stock_index
+
+            left_periods_id = issue_pre.left_periods_id
+            right_periods_id = issue_pre.right_periods_id
+
+        periods_obj_dic = {}
+        for periods in Periods.objects.filter(id__in=[left_periods_id, right_periods_id]):
+            periods_obj_dic.update({
+                periods.id: {
+                    'start_value': periods.start_value,
+                }
+            })
+        # color 1: 涨, 2: 跌, 3: 平
+        left_start_value = periods_obj_dic[left_periods_id]['start_value']
+        if left_index_value > left_start_value:
+            left_index_color = 1
+        elif left_index_value < left_start_value:
+            left_index_color = 2
+        else:
+            left_index_color = 3
+
+        right_start_value = periods_obj_dic[right_periods_id]['start_value']
+        if right_index_value > right_start_value:
+            right_index_color = 1
+        elif right_index_value < right_start_value:
+            right_index_color = 2
+        else:
+            right_index_color = 3
+
         issues_id = issues.id
         issue = issues.issue
         open_time = issues.open.strftime('%Y-%m-%d %H:%M:%S')
@@ -111,6 +169,11 @@ class StockPkDetail(ListAPIView):
                 'option_id': option.id, 'title': title, 'odds': handle_zero(option.odds),
                 'is_choice': is_choice, 'support_rate': support_rate,
             })
+        # stock_pk_type
+        if stock_pk_id == 1:
+            stock_pk_type = '中股'
+        else:
+            stock_pk_type = '美股'
 
         # 构造玩法选项
         for key, value in plays_dic.items():
@@ -118,10 +181,18 @@ class StockPkDetail(ListAPIView):
 
         data = {
             'stock_pk_id': stock_pk_id,
-            'left_index_value': '',
-            'left_index_color': '',
-            'right_index_value': '',
-            'right_index_clolr': '',
+            'stock_pk_type': stock_pk_type,
+            'status': status_dic['status'],
+            'switch_time': status_dic['switch_time'],
+
+            'left_periods_id': left_periods_id,
+            'left_index_value': left_index_value,
+            'left_index_color': left_index_color,
+
+            'right_periods_id': right_periods_id,
+            'right_index_value': right_index_value,
+            'right_index_color': right_index_color,
+
             'bet_limit': bet_limit_dic,
             'plays_options': plays_dic,
             'issue': issue,
@@ -141,24 +212,28 @@ class StockPkResultList(ListAPIView):
 
     def get_queryset(self):
         time_now = datetime.datetime.now()
-        stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
-        issues = Issues.objects.filter(open__gt=time_now,
-                                       stock_pk_id__in=stock_pk_id_list).order_by('open').first()
+        # stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
+        issues = Issues.objects.filter(open__gt=time_now).order_by('open').first()
         stock_pk_id = issues.stock_pk_id
 
         if issues.issue != 1:
-            open_time = issues.open
+            left_periods_id = issues.left_periods_id
+            right_periods_id = issues.right_periods_id
         else:
-            open_time = Issues.objects.filter(stock_pk_id=stock_pk_id, next_open=issues.open).first().open
+            issue_pre = Issues.objects.filter(open__lt=time_now).order_by('-open').first()
+            if (issue_pre.open + datetime.timedelta(hours=1)) > time_now:
+                stock_pk_id = issue_pre.stock_pk_id
+                left_periods_id = issue_pre.left_periods_id
+                right_periods_id = issue_pre.right_periods_id
+            else:
+                issues_pre_two = Issues.objects.filter(stock_pk_id=stock_pk_id,
+                                                       open__lt=time_now).order_by('-open').first()
+                stock_pk_id = issues_pre_two.stock_pk_id
+                left_periods_id = issues_pre_two.left_periods_id
+                right_periods_id = issues_pre_two.right_periods_id
 
-        time_list = open_time.strftime('%Y-%m-%d').split('-')
-        year = int(time_list[0])
-        month = int(time_list[1])
-        day = int(time_list[2])
-        start_with = datetime.datetime(year, month, day, 0, 0, 0)
-        end_with = datetime.datetime(year, month, day, 23, 59, 59)
-        qs = Issues.objects.filter(stock_pk_id=stock_pk_id, open__range=(start_with, end_with),
-                                   is_result=True).order_by('-issue')
+        qs = Issues.objects.filter(stock_pk_id=stock_pk_id, result_confirm=3,
+                                   left_periods_id=left_periods_id, right_periods_id=right_periods_id)
         return qs
 
     def list(self, request, *args, **kwargs):
@@ -520,4 +595,3 @@ class StockPKPushView(ListAPIView):
                 "bet": bet,
             })
         return self.response({"code": 0, "data": data})
-

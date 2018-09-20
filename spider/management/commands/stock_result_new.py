@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from guess.models import Options, Periods, Index_day
+from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, Index, RecordStockPk
 from guess.models import Record as Guess_Record
-from guess.models import Stock
 from datetime import timedelta
 from users.models import CoinDetail
-from chat.models import Club
 from utils.functions import *
 from time import time
 
@@ -49,7 +47,7 @@ def edit_user_message(record, club_name, club_name_en, coin_name):
     title_en = 'Lottery announcement from' + club_name_en
     earn_coin = float(record.earn_coin)
     if earn_coin < 0:
-        content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 '\
+        content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
                   + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
                   '，您答错了。'
 
@@ -58,11 +56,11 @@ def edit_user_message(record, club_name, club_name_en, coin_name):
                      '您答错了。'
     else:
         content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                  record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' +\
+                  record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + \
                   record.options.title + '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
         content_en = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                     record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title +\
+                     record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
                      '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
     now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -76,12 +74,11 @@ def edit_user_message(record, club_name, club_name_en, coin_name):
     )
 
 
-def size_result(record):
+def size_result(record, cache_club_value):
     """
     玩法：大小
     """
     # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -92,15 +89,15 @@ def size_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -108,11 +105,10 @@ def size_result(record):
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
 
-def points_result(record):
+def points_result(record, cache_club_value):
     """
     玩法：点数
     """
-    cache_club_value = Club.objects.get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -124,15 +120,15 @@ def points_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -140,11 +136,10 @@ def points_result(record):
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
 
-def pair_result(record):
+def pair_result(record, cache_club_value):
     """
     玩法：对⼦
     """
-    cache_club_value = Club.objects.get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -155,15 +150,15 @@ def pair_result(record):
         earn_coin = record.bets * record.odds
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -171,11 +166,10 @@ def pair_result(record):
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
 
-def status_result(record, win_sum_dic, lose_sum_dic):
+def status_result(record, win_sum_dic, lose_sum_dic, cache_club_value):
     """
     玩法：涨跌
     """
-    cache_club_value = Club.objects.get_club_info()
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -189,15 +183,15 @@ def status_result(record, win_sum_dic, lose_sum_dic):
         earn_coin = lose_sum * (float(record.bets) / win_sum)
         earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
     else:
         earn_coin = '-' + str(record.bets)
         earn_coin = float(earn_coin)
-        record.earn_coin = earn_coin
-        record.save()
+        # record.earn_coin = earn_coin
+        # record.save()
         # 记录record
         record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -205,13 +199,12 @@ def status_result(record, win_sum_dic, lose_sum_dic):
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
 
-def ergodic_record(period, dt, date):
-    start_time = time()
+def take_result(period, dt, date):
     print(dt)
     print('----------------')
     if dt['auto'] is True:
         """
-        遍历下注表， 填入正确选项
+        填入正确选项
         """
         num = float(dt['num'])
         period.lottery_value = num
@@ -244,8 +237,8 @@ def ergodic_record(period, dt, date):
         #     lose_sum_dic.update({club_name: lose_bet_sum})
         #     win_sum_dic.update({club_name: win_bet_sum})
 
-        win_sum_dic = {}
-        lose_sum_dic = {}
+        # win_sum_dic = {}
+        # lose_sum_dic = {}
         # club_list = []
         # if period.up_and_down == '涨':
         #     lose_option = '跌'
@@ -290,79 +283,90 @@ def ergodic_record(period, dt, date):
             period.save()
 
         # 开始遍历record表
-        i = 0
-        rule_dic = {
-            '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
-        }
-        records = Guess_Record.objects.filter(periods=period, status='0')
-        if len(records) > 0:
-            for record in records:
-                # i += 1
-                # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
-                if record.play.play_name == str(0):
-                    rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic)
-                else:
-                    rule_dic[record.play.play_name](record)
+        ergodic_record(period)
 
-        # 开始执行sql语句
-        # 更新record状态
-        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        update_record_right = 'earn_coin=VALUES(earn_coin),' \
-                              'status=\'1\', is_distribution=\'1\', ' \
-                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
-        update_record_false = 'earn_coin=VALUES(earn_coin),' \
-                              'status=\'1\', is_distribution=\'1\', ' \
-                              'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
-        sql_right = make_batch_update_sql('guess_record', record_right_list, update_record_right)
-        sql_false = make_batch_update_sql('guess_record', record_false_list, update_record_false)
-        # print(sql_right)
-        # print(sql_false)
-        with connection.cursor() as cursor:
-            if sql_right is not False:
-                cursor.execute(sql_right)
-            if sql_false is not False:
-                cursor.execute(sql_false)
 
-        # 插入coin_detail表
-        sql = make_insert_sql('users_coindetail', coin_detail_list)
-        # print(sql)
-        with connection.cursor() as cursor:
-            if sql is not False:
-                cursor.execute(sql)
+def ergodic_record(period, win_sum_dic={}, lose_sum_dic={}):
+    cache_club_value = Club.objects.get_club_info()
+    start_time = time()
+    # 开始遍历record表
+    i = 0
+    rule_dic = {
+        '1': size_result, '2': points_result, '3': pair_result, '0': status_result,
+    }
+    records = Guess_Record.objects.filter(periods=period, status='0')
+    if len(records) > 0:
+        for record in records:
+            # i += 1
+            # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
+            if record.play.play_name == str(0):
+                rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic, cache_club_value)
+            else:
+                rule_dic[record.play.play_name](record, cache_club_value)
 
-        # 更新user_coin表
-        update_user_coin_duplicate_key = 'balance=VALUES(balance)'
-        user_coin_list = []
-        for key, value in user_coin_dic.items():
-            for key_ch, value_ch in value.items():
-                user_coin_list.append({
-                    'user_id': str(key), 'coin_id': str(key_ch), 'balance': str(value_ch['balance']),
-                })
-        sql = make_batch_update_sql('users_usercoin', user_coin_list, update_user_coin_duplicate_key)
-        # print(sql)
-        with connection.cursor() as cursor:
-            if sql is not False:
-                cursor.execute(sql)
+    # 开始执行sql语句
+    # 更新record状态
+    now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    update_record_right = 'earn_coin=VALUES(earn_coin),' \
+                          'status=\'1\', is_distribution=\'1\', ' \
+                          'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
+    update_record_false = 'earn_coin=VALUES(earn_coin),' \
+                          'status=\'1\', is_distribution=\'1\', ' \
+                          'open_prize_time=\'{open_prize_time}\''.format(open_prize_time=now_time)
+    sql_right = make_batch_update_sql('guess_record', record_right_list, update_record_right)
+    sql_false = make_batch_update_sql('guess_record', record_false_list, update_record_false)
+    # print(sql_right)
+    # print(sql_false)
+    with connection.cursor() as cursor:
+        if sql_right is not False:
+            cursor.execute(sql_right)
+        if sql_false is not False:
+            cursor.execute(sql_false)
 
-        # 插入user_message表
-        sql = make_insert_sql('users_usermessage', user_message_list)
-        # print(sql)
-        with connection.cursor() as cursor:
-            if sql is not False:
-                cursor.execute(sql)
+    insert_info()
 
-        # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
-        # index_day.index_value = float(dt['num'])
-        # index_day.index_time = period.lottery_time
-        # index_day.save()
+    # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
+    # index_day.index_value = float(dt['num'])
+    # index_day.index_time = period.lottery_time
+    # index_day.save()
 
-        period.is_result = True
-        period.save()
+    period.is_result = True
+    period.save()
 
-        end_time = time()
-        cost_time = str(round(end_time - start_time)) + '秒'
-        print('执行完成。耗时：' + cost_time)
-        print('----------------------------------------------')
+    end_time = time()
+    cost_time = str(round(end_time - start_time)) + '秒'
+    print('执行完成。耗时：' + cost_time)
+    print('----------------------------------------------')
+
+
+def insert_info():
+    # 插入coin_detail表
+    sql = make_insert_sql('users_coindetail', coin_detail_list)
+    # print(sql)
+    with connection.cursor() as cursor:
+        if sql is not False:
+            cursor.execute(sql)
+
+    # 更新user_coin表
+    update_user_coin_duplicate_key = 'balance=VALUES(balance)'
+    user_coin_list = []
+    for key, value in user_coin_dic.items():
+        for key_ch, value_ch in value.items():
+            user_coin_list.append({
+                'user_id': str(key), 'coin_id': str(key_ch), 'balance': str(value_ch['balance']),
+            })
+    sql = make_batch_update_sql('users_usercoin', user_coin_list, update_user_coin_duplicate_key)
+    # print(sql)
+    with connection.cursor() as cursor:
+        if sql is not False:
+            cursor.execute(sql)
+
+    # 插入user_message表
+    sql = make_insert_sql('users_usermessage', user_message_list)
+    # print(sql)
+    with connection.cursor() as cursor:
+        if sql is not False:
+            cursor.execute(sql)
 
 
 def newobject(periods, stock_id, next_start, next_end):
@@ -372,3 +376,121 @@ def newobject(periods, stock_id, next_start, next_end):
     new_object.lottery_time = next_end
     new_object.rotary_header_time = rotary_header_time
     new_object.save()
+
+    return new_object
+
+
+# ===================== 股指pk =====================
+
+
+def new_issues(left_periods, right_periods, start_time):
+    end_with = left_periods.lottery_time
+    start_with_str = end_with.strftime('%Y-%m-%d') + ' ' + start_time
+    start_with = datetime.datetime.strptime(start_with_str, '%Y-%m-%d %H:%M:%S')
+    stock_pk = StockPk.objects.get(left_stock_id=left_periods.stock_id,
+                                   right_stock_id=right_periods.stock_id)
+
+    rest_start_with = None
+    rest_end_with = None
+    if stock_pk.left_stock_name == '深证成指':
+        rest_start_with = datetime.datetime.strptime(end_with.strftime('%Y-%m-%d') + ' ' + '11:30:00',
+                                                     '%Y-%m-%d %H:%M:%S')
+        rest_end_with = datetime.datetime.strptime(end_with.strftime('%Y-%m-%d') + ' ' + '13:01:00',
+                                                   '%Y-%m-%d %H:%M:%S')
+
+    issue = 0
+    open_time = start_with + datetime.timedelta(minutes=5)
+    while open_time <= end_with:
+        if rest_start_with is not None:
+            if rest_end_with > open_time > rest_start_with:
+                open_time = open_time + datetime.timedelta(minutes=5)
+                continue
+        issue += 1
+        closing = open_time - datetime.timedelta(seconds=45)
+        new_issues_obj = Issues()
+        new_issues_obj.stock_pk_id = stock_pk.id
+        new_issues_obj.left_periods_id = left_periods.id
+        new_issues_obj.right_periods_id = right_periods.id
+        new_issues_obj.issue = issue
+        new_issues_obj.closing = closing
+        new_issues_obj.open = open_time
+        new_issues_obj.save()
+
+        open_time = open_time + datetime.timedelta(minutes=5)
+    print('完成股指pk出题')
+
+
+def take_pk_result(left_periods, right_periods, start_time):
+    time_now = datetime.datetime.now()
+    issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
+    left_periods_id = issue_last.left_periods_id
+    right_periods_id = issue_last.right_periods_id
+    left_index_last = Index.objects.filter(periods_id=left_periods_id).order_by('-index_time').first().index_value
+    right_index_last = Index.objects.filter(periods_id=right_periods_id).order_by('-index_time').first().index_value
+    issue_last.left_stock_index = left_index_last
+    issue_last.right_stock_index = right_index_last
+    issue_last.save()
+
+    # 股指pk出题找答案
+    for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=3).order_by('open'):
+        left_periods_id = issues.left_periods_id
+        right_periods_id = issues.right_periods_id
+        open_time = issues.open
+        index_qs = Index.objects.filter(periods_id__in=[left_periods_id, right_periods_id],
+                                        index_time=open_time)
+        if len(index_qs) == 2:
+            index_dic = {}
+            for index in index_qs:
+                index_dic.update({
+                    index.periods_id: index.index_value
+                })
+            issues.left_stock_index = index_dic[left_periods_id]
+            issues.right_stock_index = index_dic[right_periods_id]
+            issues.result_confirm += 1
+
+            left_last_num = int(str(index_dic[left_periods_id])[-1])
+            right_last_num = int(str(index_dic[right_periods_id])[-1])
+
+            if left_last_num > right_last_num:
+                size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
+            elif left_last_num < right_last_num:
+                size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+            else:
+                size_pk_result = '和'
+            issues.size_pk_result = size_pk_result
+            issues.save()
+
+    # 股指pk出题
+    if left_periods is not None and right_periods is not None:
+        if left_periods.lottery_time == right_periods.lottery_time:
+            new_issues(left_periods, right_periods, start_time)
+
+
+def pk_size(record, option_obj_dic, issue_obj_dic):
+    cache_club_value = Club.objects.get_club_info()
+    coin_id = cache_club_value[record.club.id]['coin_id']
+    coin_name = cache_club_value[record.club.id]['coin_name']
+    coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
+    club_name = cache_club_value[record.club.id]['club_name']
+    club_name_en = cache_club_value[record.club.id]['club_name_en']
+
+    issue_id = record.issue_id
+    option_id = record.option_id
+    if option_obj_dic[option_id]['title'] == issue_obj_dic[issue_id]['size_pk_result']:
+        earn_coin = record.bets * record.odds
+        earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
+        earn_coin = float(earn_coin)
+        record.earn_coin = earn_coin
+        record.save()
+    else:
+        earn_coin = '-' + str(record.bets)
+        earn_coin = float(earn_coin)
+        record.earn_coin = earn_coin
+        record.save()
+    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+
+# def ergodic_pk_record(issue_obj_dic):
+#     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))
+#     for record in records:
+#         pass

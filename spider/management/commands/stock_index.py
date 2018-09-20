@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from guess.models import Index, Periods, Index_day
-from .stock_result_new import ergodic_record, newobject
+from guess.models import Index, Periods, Index_day, Issues
+from .stock_result_new import newobject, take_result, new_issues, take_pk_result
 import requests
 import datetime
 from utils.cache import *
@@ -140,7 +140,7 @@ def get_index_cn(period, base_url):
                     param_dic = {
                         'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
                     }
-                    ergodic_record(period, param_dic, date_day)
+                    take_result(period, param_dic, date_day)
                     return True
                 else:
                     set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
@@ -209,7 +209,7 @@ def get_index_hk_en(period, base_url):
                     param_dic = {
                         'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
                     }
-                    ergodic_record(period, param_dic, date_day)
+                    take_result(period, param_dic, date_day)
                     return True
                 else:
                     set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
@@ -252,6 +252,7 @@ class Command(BaseCommand):
             上证指数，深证成指
             """
             print('上证指数：')
+            shang_periods = None
             if Periods.objects.filter(is_result=False, stock__name='0').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='0').first()
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
@@ -273,11 +274,12 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next_start, next_end)
+                        shang_periods = newobject(str(per), period.stock_id, next_start, next_end)
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
             print('深证成指：')
+            shen_periods = None
             if Periods.objects.filter(is_result=False, stock__name='1').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='1').first()
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='1',
@@ -299,8 +301,10 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next_start, next_end)
+                        shen_periods = newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
+            # 股指pk出题找答案,股指pk出题
+            take_pk_result(shen_periods, shang_periods, market_rest_cn_start_time[0])
 
             """
             恒生指数
