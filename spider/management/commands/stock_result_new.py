@@ -423,13 +423,15 @@ def new_issues(left_periods, right_periods, start_time):
 def take_pk_result(left_periods, right_periods, start_time):
     time_now = datetime.datetime.now()
     issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
-    left_periods_id = issue_last.left_periods_id
-    right_periods_id = issue_last.right_periods_id
-    left_index_last = Index.objects.filter(periods_id=left_periods_id).order_by('-index_time').first().index_value
-    right_index_last = Index.objects.filter(periods_id=right_periods_id).order_by('-index_time').first().index_value
-    issue_last.left_stock_index = left_index_last
-    issue_last.right_stock_index = right_index_last
-    issue_last.save()
+    if issue_last is not None:
+        left_periods_id = issue_last.left_periods_id
+        right_periods_id = issue_last.right_periods_id
+        left_index_last = Index.objects.filter(periods_id=left_periods_id).order_by('-index_time').first()
+        right_index_last = Index.objects.filter(periods_id=right_periods_id).order_by('-index_time').first()
+        if left_index_last is not None and right_index_last is not None:
+            issue_last.left_stock_index = left_index_last.index_value
+            issue_last.right_stock_index = right_index_last.index_value
+            issue_last.save()
 
     # 股指pk出题找答案
     for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=3).order_by('open'):
@@ -463,7 +465,8 @@ def take_pk_result(left_periods, right_periods, start_time):
     # 股指pk出题
     if left_periods is not None and right_periods is not None:
         if left_periods.lottery_time == right_periods.lottery_time:
-            new_issues(left_periods, right_periods, start_time)
+            if Issues.objects.filter(left_periods_id=left_periods.id).exists() is not True:
+                new_issues(left_periods, right_periods, start_time)
 
 
 def pk_size(record, option_obj_dic, issue_obj_dic):

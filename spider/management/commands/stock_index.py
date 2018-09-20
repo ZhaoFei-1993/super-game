@@ -45,7 +45,8 @@ def get_index_cn(period, base_url):
     if period.start_value is None or float(period.start_value) != float(dt_dic['info']['o']):
         period.start_value = float(dt_dic['info']['o'])
         period.save()
-    if date_now < period.lottery_time:
+    if date_now < period.lottery_time or \
+            Index.objects.filter(periods_id=period.id, index_time=period.lottery_time).exists() is not True:
         if data_list[0].split(' ')[0] == date_ymd:
             if get_cache(stock_cache_name) is None:
                 for data in data_list:
@@ -255,6 +256,7 @@ class Command(BaseCommand):
             shang_periods = None
             if Periods.objects.filter(is_result=False, stock__name='0').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='0').first()
+                shang_periods = period
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='0',
                                                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
@@ -282,6 +284,7 @@ class Command(BaseCommand):
             shen_periods = None
             if Periods.objects.filter(is_result=False, stock__name='1').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='1').first()
+                shen_periods = period
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='1',
                                                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
