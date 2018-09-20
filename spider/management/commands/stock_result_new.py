@@ -459,26 +459,25 @@ class GuessPKRecording(GuessRecording):
                 if Issues.objects.filter(left_periods_id=left_periods.id).exists() is not True:
                     self.new_issues(left_periods, right_periods, start_time)
 
-    def pk_size(self, record, option_obj_dic, issue_obj_dic):
+    def pk_size(self, record, option_obj_dic, issues_obj):
         cache_club_value = Club.objects.get_club_info()
         coin_id = cache_club_value[record.club.id]['coin_id']
         coin_name = cache_club_value[record.club.id]['coin_name']
         coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
-        club_name = cache_club_value[record.club.id]['club_name']
-        club_name_en = cache_club_value[record.club.id]['club_name_en']
 
-        issue_id = record.issue_id
         option_id = record.option_id
-        if option_obj_dic[option_id]['title'] == issue_obj_dic[issue_id]['size_pk_result']:
+        if option_obj_dic[option_id]['title'] == issues_obj.size_pk_result:
             earn_coin = record.bets * record.odds
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
             earn_coin = float(earn_coin)
             record.earn_coin = earn_coin
+            record.status = 1
             record.save()
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             record.earn_coin = earn_coin
+            record.status = 1
             record.save()
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 

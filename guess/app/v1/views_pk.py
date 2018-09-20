@@ -374,7 +374,7 @@ class StockPkRecordsList(ListAPIView):
                 earn_coin_result = '猜错'
                 if self.request.GET.get('language') == 'en':
                     earn_coin_result = 'Guess wrong'
-            elif earn_coin > 0:
+            else:
                 record_type = 1
                 is_right = 1
                 earn_coin_result = '+' + handle_zero(earn_coin)
