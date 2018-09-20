@@ -53,7 +53,7 @@ class StockList(ListAPIView):
         for pre_period in Periods.objects.filter(stock_id__in=self.stock_info.keys(), periods__in=pre_period):
             self.previous_periods_list.append(pre_period)
 
-        return self.last_periods_list
+        return Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys())
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -555,7 +555,7 @@ class BetView(ListCreateAPIView):
         coin_detail.coin_name = usercoin.coin.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = usercoin.balance
-        coin_detail.sources = 13
+        coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
         response = {
             'code': 0,
