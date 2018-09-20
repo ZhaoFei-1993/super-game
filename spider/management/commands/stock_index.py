@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from guess.models import Index, Periods, Index_day, Issues
-from .stock_result_new import newobject, take_result, new_issues, take_pk_result
+from .stock_result_new import GuessRecording, GuessPKRecording
 import requests
 import datetime
 from utils.cache import *
@@ -33,6 +33,7 @@ market_en_end_time = ['04:00:00']
 
 
 def get_index_cn(period, base_url):
+    guess_recording = GuessRecording()
     date_now = datetime.datetime.now()
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
@@ -141,7 +142,7 @@ def get_index_cn(period, base_url):
                     param_dic = {
                         'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
                     }
-                    take_result(period, param_dic, date_day)
+                    guess_recording.take_result(period, param_dic, date_day)
                     return True
                 else:
                     set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
@@ -150,6 +151,7 @@ def get_index_cn(period, base_url):
 
 
 def get_index_hk_en(period, base_url):
+    guess_recording = GuessRecording()
     date_now = datetime.datetime.now()
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
@@ -210,7 +212,7 @@ def get_index_hk_en(period, base_url):
                     param_dic = {
                         'num': num, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
                     }
-                    take_result(period, param_dic, date_day)
+                    guess_recording.take_result(period, param_dic, date_day)
                     return True
                 else:
                     set_cache(num_cache_name, num + ',' + time + ',' + str(count), 3600)
@@ -276,7 +278,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        shang_periods = newobject(str(per), period.stock_id, next_start, next_end)
+                        shang_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
@@ -304,10 +306,11 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        shen_periods = newobject(str(per), period.stock_id, next_start, next_end)
+                        shen_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
             # 股指pk出题找答案,股指pk出题
-            take_pk_result(shen_periods, shang_periods, market_rest_cn_start_time[0])
+            guess_pk_recording = GuessPKRecording()
+            guess_pk_recording.take_pk_result(shen_periods, shang_periods, market_rest_cn_start_time[0])
 
             """
             恒生指数
@@ -334,7 +337,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next_start, next_end)
+                        GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
 
             """
@@ -363,5 +366,5 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        newobject(str(per), period.stock_id, next_start, next_end)
+                        GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
