@@ -70,6 +70,9 @@ class Command(BaseCommand, BaseView):
 
         cache_block_height = int(cache_block_height)
         for block in range(cache_block_height, block_height + 1):
+            # 当前获取到的块高若与缓存中的块高相同，则不再获取
+            if block == cache_block_height:
+                continue
             self.set_queue(block)
 
         self.stdout.write(self.style.SUCCESS('执行完成'))
