@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # 获取所有非机器人、非黑名单用户数据
-        users = User.objects.filter(is_robot=False)
+        users = User.objects.filter(is_robot=False, eos_code=0)
         total = len(users)
         print('获取到' + str(total) + '条用户记录')
 
