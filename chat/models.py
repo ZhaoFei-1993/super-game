@@ -265,7 +265,7 @@ class Club(models.Model):
     objects = ClubManager()
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['user']
         verbose_name = verbose_name_plural = "俱乐部表"
 
 
