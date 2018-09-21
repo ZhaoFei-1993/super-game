@@ -260,7 +260,7 @@ class PresentationSerialize(serializers.ModelSerializer):
     def get_address(obj):
         address = obj.address
         if obj.coin_id == Coin.EOS:
-            address += '(' + obj.address_name + ')'
+            address += '(MEMO: ' + obj.address_name + ')'
 
         return address
 
