@@ -15,12 +15,15 @@ class Command(BaseCommand):
         issue_time_dic = get_cache('issue_time_dic')
         if issue_time_dic is None:
             issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
+            issue_pre = Issues.objects.filter(open__lt=time_now).order_by('-open').first()
             issue_time_dic = {
                 'issue_last':
                     {'issue_id': issue_last.id, 'open_time': issue_last.open,
                      'issue': issue_last.issue, 'rest': 0, 'switch': 0,
                      },
-                'issue_pre': {'issue_id': '', 'open_time': '', 'issue': '', },
+                'issue_pre': {'issue_id': issue_pre.id, 'open_time': issue_pre.open,
+                              'issue': issue_pre.issue,
+                              },
             }
             set_cache('issue_time_dic', issue_time_dic)
         else:

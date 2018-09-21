@@ -55,3 +55,23 @@ def guess_pk_result_list(issue_id):
             "type": "result_list.message",
         },
     )
+
+
+def guess_graph(period_id, index_dic):
+    """
+        推送结果列表标志
+        :param period_id 当前期数
+        :param index_dic
+        :return:
+    """
+    group = 'period_' + str(period_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "guess_graph.message",
+            "group": group,
+            "index_dic": index_dic,
+        },
+    )
