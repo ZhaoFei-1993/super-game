@@ -50,7 +50,7 @@ class StockPkDetail(ListAPIView):
             qs = issue_last
             # 中场休息status
             if qs.open.strftime('%H:%M:%S') == '13:05:00':
-                if datetime.datetime.now() < qs.open - datetime.timedelta(minutes=5):
+                if time_now < qs.open - datetime.timedelta(minutes=5):
                     status = 1
                 else:
                     status = 0

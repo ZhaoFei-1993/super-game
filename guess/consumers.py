@@ -21,3 +21,37 @@ def confirm_period(period_id, period_status):
             "period_status": period_status,
         },
     )
+
+
+def guess_pk_detail(issue_id):
+    """
+        推送详情标志
+        :param issue_id 当前期数
+        :return:
+    """
+    group = 'guess_pk_' + str(issue_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "detail.message",
+        },
+    )
+
+
+def guess_pk_result_list(issue_id):
+    """
+        推送结果列表标志
+        :param issue_id 当前期数
+        :return:
+    """
+    group = 'guess_pk_' + str(issue_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "result_list.message",
+        },
+    )
