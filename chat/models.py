@@ -130,6 +130,8 @@ class ClubManager(BaseManager):
                 number = online[club_play_id]
             else:
                 for play_id in online:
+                    if int(play_id) == 6:
+                        continue
                     tmp_play = map_club_play[int(play_id)]
                     if tmp_play.is_dissolve is False or tmp_play.is_deleted is True:
                         continue
