@@ -8,6 +8,7 @@ import datetime
 from utils.cache import *
 import re
 import local_settings
+from guess.consumers import guess_graph
 
 url_HSI = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery172010717678041953493_1532447528063&type=CT&cmd=HSI5&sty=OCGIFO&st=z&js=((x))&token=4f1862fc3b5e77c150a2b985b12db0fd'
 url_DJA = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery17202690225701728284_1532446114928&type=CT&cmd=DJIA_UI&sty=OCGIFO&st=z&js=((x))&token=4f1862fc3b5e77c150a2b985b12db0fd'
@@ -35,6 +36,7 @@ market_en_end_time = ['04:00:00']
 def get_index_cn(period, base_url):
     guess_recording = GuessRecording()
     date_now = datetime.datetime.now()
+    new_index_list = []
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                           "%Y-%m-%d %H:%M:%S")
@@ -65,6 +67,10 @@ def get_index_cn(period, base_url):
                     index.save()
                     index.index_time = index_time
                     index.save()
+                    new_index_list.append(str(value))
+                if len(new_index_list) > 0:
+                    guess_graph(period.id, new_index_list)
+
                 index_day = Index_day()
                 index_day.stock_id = period.stock.id
                 index_day.index_value = float(data_list[-1].split(',')[1])

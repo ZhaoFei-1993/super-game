@@ -80,20 +80,6 @@ class QuizConsumer(BaseConsumer):
             }
         )
 
-    async def stock_message(self, event):
-        """
-        推送封盘状态至客户端
-        :param event:
-        :return:
-        """
-        await self.send_json(
-            {
-                "msg_type": "stock_seal",
-                "period_id": event["period_id"],
-                "period_status": event["period_status"],
-            }
-        )
-
     async def football_time_message(self, event):
         with open('/tmp/debug_mseeage', 'a+') as f:
             f.write(str(event))

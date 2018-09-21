@@ -29,6 +29,8 @@ websocket_urlpatterns = [
     url(r'^baccarat/', BaccaratConsumer),
     # mark_six
     url(r'^mark_six/', MarkSixConsumer),
+    # 股指PK
+    url(r'^guess_pk/', GuessPKConsumer),
     # 股指
     url(r'^guess/', GuessPKConsumer),
 ]
