@@ -71,6 +71,7 @@ def guess_graph(period_id, index_dic):
         group,
         {
             "type": "guess_graph.message",
+            "group": group,
             "index_dic": index_dic,
         },
     )
