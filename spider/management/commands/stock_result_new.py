@@ -6,6 +6,7 @@ from users.models import CoinDetail
 from utils.functions import *
 from time import time
 from django.db.models import Q
+from guess.consumers import guess_pk_result_list
 
 
 class GuessRecording(object):
@@ -425,6 +426,7 @@ class GuessPKRecording(GuessRecording):
                 issue_last.save()
 
         # 股指pk出题找答案
+        issues_result_flag = False
         for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=3).order_by('open'):
             left_periods_id = issues.left_periods_id
             right_periods_id = issues.right_periods_id
@@ -452,6 +454,9 @@ class GuessPKRecording(GuessRecording):
                     size_pk_result = '和'
                 issues.size_pk_result = size_pk_result
                 issues.save()
+                issues_result_flag = True
+        if issues_result_flag is True:
+            guess_pk_result_list(issue_last.id)
 
         # 股指pk出题
         if left_periods is not None and right_periods is not None:

@@ -18,6 +18,7 @@ from .consumers import QuizConsumer
 from dragon_tiger.dragontigerconsumer import DragonTigerConsumer
 from baccarat.baccaratconsumer import BaccaratConsumer
 from marksix.mark_six_consumers import MarkSixConsumer
+from guess.guess_consemers import GuessPKConsumer
 
 websocket_urlpatterns = [
     # 球赛推送
@@ -28,4 +29,6 @@ websocket_urlpatterns = [
     url(r'^baccarat/', BaccaratConsumer),
     # mark_six
     url(r'^mark_six/', MarkSixConsumer),
+    # 股指
+    url(r'^guess/', GuessPKConsumer),
 ]
