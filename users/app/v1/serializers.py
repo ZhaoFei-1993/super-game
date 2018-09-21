@@ -240,6 +240,7 @@ class PresentationSerialize(serializers.ModelSerializer):
     recharge_times = serializers.SerializerMethodField()
     amount = serializers.SerializerMethodField()
     rest = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
 
     class Meta:
         model = UserPresentation
@@ -254,6 +255,14 @@ class PresentationSerialize(serializers.ModelSerializer):
         created_time = obj.created_at
         created_at = created_time.strftime("%Y-%m-%d %H:%M")
         return created_at
+
+    @staticmethod
+    def get_address(obj):
+        address = obj.address
+        if obj.coin_id == Coin.EOS:
+            address += '(' + obj.address_name + ')'
+
+        return address
 
     # @staticmethod
     # def get_ip_count(obj):
