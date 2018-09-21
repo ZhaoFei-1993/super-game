@@ -50,7 +50,10 @@ class StockPkDetail(ListAPIView):
             qs = issue_last
             # 中场休息status
             if qs.open.strftime('%H:%M:%S') == '13:05:00':
-                status = 1
+                if datetime.datetime.now() < qs.open - datetime.timedelta(minutes=5):
+                    status = 1
+                else:
+                    status = 0
         return qs, {'status': status, 'switch_time': switch_time}
 
     def list(self, request, *args, **kwargs):
@@ -103,6 +106,8 @@ class StockPkDetail(ListAPIView):
         issue = issues.issue
         open_time = issues.open.strftime('%Y-%m-%d %H:%M:%S')
         open_timestamp = time.mktime(issues.open.timetuple())
+        if status_dic['status'] == 1:
+            open_timestamp = time.mktime((issues.open - datetime.timedelta(minutes=5)).timetuple())
 
         # 用户余额，对应币信息
         cache_club_value = get_club_info()
