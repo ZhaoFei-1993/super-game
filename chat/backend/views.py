@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
+from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView, CreateAPIView
 from django.http import JsonResponse
 from ..models import Club, ClubBanner, ClubRule
 from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer, CoinSerialize
@@ -88,6 +88,20 @@ class ClubBackendListDetailView(RetrieveUpdateDestroyAPIView):
             return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
         club.is_dissolve = True
         club.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class ClubBackendSortView(CreateAPIView):
+    """
+    俱乐部排序
+    """
+    def post(self, request, *args, **kwargs):
+        sorts = request.data.get('sorts')
+        for club_id in sorts:
+            club = Club.objects.get(pk=club_id)
+            club.user = sorts[club_id]
+            club.save()
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
