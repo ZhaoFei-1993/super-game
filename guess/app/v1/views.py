@@ -110,7 +110,7 @@ class StockList(ListAPIView):
         sql += 'LEFT JOIN guess_periods ON a.periods_id = guess_periods.id WHERE a.id IN'
         sql += '(SELECT MAX(a.id) FROM guess_index a ' \
                'WHERE periods_id IN({periods_id}) ' \
-               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.last_periods_list]))
+               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.get_queryset()]))
         for dt in get_sql(sql):
             index_info.update({
                 dt[1]: {
