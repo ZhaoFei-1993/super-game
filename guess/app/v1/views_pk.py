@@ -116,6 +116,18 @@ class StockPkDetail(ListAPIView):
             'balance': balance, 'coin_name': coin_name, 'coin_icon': coin_icon,
         }
 
+        # stock_pk
+        stock_pk_dic = {}
+        for stock_pk in StockPk.objects.all():
+            stock_pk_dic.update({
+                stock_pk.id: {
+                    'left_stock_name': stock_pk.left_stock_name,
+                    'right_stock_name': stock_pk.right_stock_name,
+                }
+            })
+        left_stock_name = stock_pk_dic[stock_pk_id]['left_stock_name']
+        right_stock_name = stock_pk_dic[stock_pk_id]['right_stock_name']
+
         # 获取 bet_limit, 共用旧股指玩法的限制指数
         bet_limit_dic = {}  # {play_id: bet_limit obj}
         for bet_limit in BetLimit.objects.filter(club_id=club_id, play_id=1):
@@ -185,10 +197,12 @@ class StockPkDetail(ListAPIView):
             'status': status_dic['status'],
             'switch_time': status_dic['switch_time'],
 
+            'left_stock_name': left_stock_name,
             'left_periods_id': left_periods_id,
             'left_index_value': left_index_value,
             'left_index_color': left_index_color,
 
+            'right_stock_name': right_stock_name,
             'right_periods_id': right_periods_id,
             'right_index_value': right_index_value,
             'right_index_color': right_index_color,
