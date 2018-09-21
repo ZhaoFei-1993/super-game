@@ -116,6 +116,8 @@ class ClubManager(BaseManager):
         club_plays = ClubRule.objects.get_all()
         map_club_play = {}
         for club_play in club_plays:
+            if club_play.id == 6:
+                continue
             map_club_play[club_play.id] = club_play
 
         number = 0
@@ -128,6 +130,8 @@ class ClubManager(BaseManager):
                 number = online[club_play_id]
             else:
                 for play_id in online:
+                    if int(play_id) == 6:
+                        continue
                     tmp_play = map_club_play[int(play_id)]
                     if tmp_play.is_dissolve is False or tmp_play.is_deleted is True:
                         continue
