@@ -8,6 +8,7 @@ from rest_framework import status
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
 from utils.cache import delete_cache
+import json
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -97,6 +98,7 @@ class ClubBackendSortView(CreateAPIView):
     """
     def post(self, request, *args, **kwargs):
         sorts = request.data.get('sorts')
+        sorts = json.loads(sorts)
         for club_id in sorts:
             club = Club.objects.get(pk=club_id)
             club.user = sorts[club_id]
