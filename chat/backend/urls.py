@@ -8,6 +8,8 @@ urlpatterns = [
     path('club_backend_list/', views.ClubBackendListView.as_view(), name='chat-club_backend_list'),
     # 俱乐部详情
     path('club_backend_list/<int:pk>/', views.ClubBackendListDetailView.as_view(), name='chat-club_backend_list'),
+    # 俱乐部排序
+    path('club_backend_sort/', views.ClubBackendSortView.as_view(), name='chat-club_backend_sort'),
     # 轮播图列表
     path('banner_list/', views.BannerImage.as_view(), name='chat-banner_list'),
     # 轮播图详情

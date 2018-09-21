@@ -28,6 +28,17 @@ def set_cache(key, value, ttl=-1, cache_type='redis'):
         cache.set(key, value, timeout=ttl)
 
 
+def set_cache_nx(key, value):
+    """
+    设置缓存-模拟redis的SETNX命令
+    :param key:
+    :param value:
+    :return:
+    """
+    cache = get_cache_type('redis')
+    cache.set(key, value, nx=True)
+
+
 def get_cache(key, cache_type='redis'):
     """
     通过键获取数值
