@@ -5,6 +5,7 @@ from base.eth import Wallet
 from local_settings import BCH_WALLET_API_URL
 from users.models import UserRecharge, Coin, UserCoin, CoinDetail
 from decimal import Decimal
+from utils.cache import set_cache, get_cache
 
 
 class Command(BaseCommand, BaseView):
@@ -26,11 +27,16 @@ class Command(BaseCommand, BaseView):
         return json_data['data']
 
     def handle(self, *args, **options):
+        bch_transactions = get_cache('key_bch_transactions')
+        if bch_transactions is None or bch_transactions == 0:
+            raise CommandError('未获取到充值')
+
         confirm_number = 1  # 有效交易确认数
 
         # 获取所有用户ETH交易hash，只获取交易确认数小于指定值的数据
         user_recharges = UserRecharge.objects.filter(coin_id=Coin.BCH, confirmations__lt=confirm_number)
         if len(user_recharges) == 0:
+            set_cache('key_bch_transactions', 0)
             raise CommandError('无充值信息')
 
         self.stdout.write(self.style.SUCCESS('获取到' + str(len(user_recharges)) + '条充值记录'))

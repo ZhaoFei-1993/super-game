@@ -3,6 +3,7 @@ from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
 from decimal import Decimal
 from local_settings import BCH_WALLET_API_URL
+from utils.cache import set_cache
 
 
 def bitcoin_cash_monitor(block_num):
@@ -66,6 +67,10 @@ def bitcoin_cash_monitor(block_num):
             print('获取1条BCH充值记录，TX = ', txid, ' Address = ', user_coin['address'], ' 充值金额 = ', recharge['value'])
 
             recharge_number += 1
+
+    # 有充值记录则写入缓存，缓解监听交易的数据库操作压力
+    if recharge_number > 0:
+        set_cache('key_bch_transactions', 1)
 
     print('块=' + str(block_num) + ' 获取到' + str(recharge_number) + '条交易信息')
     return True
