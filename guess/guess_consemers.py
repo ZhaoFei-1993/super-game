@@ -17,12 +17,12 @@ class GuessPKConsumer(BaseConsumer):
         if command == 'join':
             await self.channel_layer.group_add(group_name, self.channel_name)
 
-    async def detail_message(self):
+    async def detail_message(self, event):
         await self.send_json({
             "msg_type": "detail",
         })
 
-    async def result_list_message(self):
+    async def result_list_message(self, event):
         await self.send_json({
             "msg_type": "result_list",
         })
