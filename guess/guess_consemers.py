@@ -5,7 +5,7 @@ class GuessPKConsumer(BaseConsumer):
     async def receive_json(self, content, **kwargs):
         """
         接收客户端传过来的json数据
-        1. 客户端连接成功后发送join指令，组名为：guess_pk_{issue}
+        1. 客户端连接成功后发送join指令，组名为：guess_pk_{issue_id}
         2. 客户端需做心跳包，保持websocket连接不间断
         :param content:
         :param kwargs:
