@@ -15,9 +15,14 @@ class Command(BaseCommand):
     help = "发送消息"
 
     def handle(self, *args, **options):
-        index_list = ['1234.71', '1298.71', '1245.70', '1567.70', '1111.70']
-        guess_graph(178, index_list)
-        guess_graph(179, list(reversed(index_list)))
+        left_index_dic = {'15:01': '8460.18', '15:02': '8422.18', '15:03': '8433.18', '15:04': '8444.18',
+                          '15:05': '8499.18', }
+
+        right_index_dic = {'15:01': '2755.49', '15:02': '2722.18', '15:03': '2744.18', '15:04': '2766.18',
+                           '15:05': '2799.18', }
+
+        guess_graph(178, left_index_dic)
+        guess_graph(179, right_index_dic)
         print('成功')
 
 

@@ -57,11 +57,11 @@ def guess_pk_result_list(issue_id):
     )
 
 
-def guess_graph(period_id, index_list):
+def guess_graph(period_id, index_dic):
     """
         推送结果列表标志
         :param period_id 当前期数
-        :param index_list
+        :param index_dic
         :return:
     """
     group = 'period_' + str(period_id)
@@ -71,6 +71,6 @@ def guess_graph(period_id, index_list):
         group,
         {
             "type": "guess_graph.message",
-            "index_list": index_list,
+            "index_dic": index_dic,
         },
     )

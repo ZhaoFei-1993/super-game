@@ -36,7 +36,7 @@ market_en_end_time = ['04:00:00']
 def get_index_cn(period, base_url):
     guess_recording = GuessRecording()
     date_now = datetime.datetime.now()
-    new_index_list = []
+    new_index_dic = {}
     date_ymd = datetime.datetime.now().strftime('%Y-%m-%d')
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                           "%Y-%m-%d %H:%M:%S")
@@ -67,9 +67,13 @@ def get_index_cn(period, base_url):
                     index.save()
                     index.index_time = index_time
                     index.save()
-                    new_index_list.append(str(value))
-                if len(new_index_list) > 0:
-                    guess_graph(period.id, new_index_list)
+
+                    new_index_dic.update({
+                        index_time.strftime("%H:%M"): str(value)
+                    })
+
+                if len(new_index_dic.keys()) > 0:
+                    guess_graph(period.id, new_index_dic)
 
                 index_day = Index_day()
                 index_day.stock_id = period.stock.id

@@ -43,6 +43,6 @@ class GuessConsumer(BaseConsumer):
 
     async def guess_graph_message(self, event):
         await self.send_json({
-            "msg_type": "new_index_list",
-            "index_list": event['index_list'],
+            "msg_type": "new_index_dic",
+            "index_dic": event['index_dic'],
         })
