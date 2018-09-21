@@ -76,6 +76,8 @@ class Command(BaseCommand):
 
         users = User.objects.filter(eos_code__in=memos)
         if len(users) == 0:
+            invalid_memos += memos
+            set_cache(self.cache_invalid_memo_key, invalid_memos, -1, 'default')
             raise CommandError('暂无有效充值记录')
 
         is_modified_invalid_memos = False
