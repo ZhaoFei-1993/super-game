@@ -32,7 +32,7 @@ class ClublistView(ListAPIView):
                     Q(room_title__icontains=name) | Q(room_number__istartswith=name)).order_by('user',
                                                                                                '-is_recommend')
         else:
-            chat_list = Club.objects.filter(is_dissolve=0).order_by('-is_recommend')
+            chat_list = Club.objects.filter(is_dissolve=0).order_by('user', '-is_recommend')
         return chat_list
 
     def list(self, request, *args, **kwargs):
