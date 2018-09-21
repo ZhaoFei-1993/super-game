@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue, EosCode
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -213,6 +213,9 @@ class UserRegister(object):
         # 28 微信
         # 邀请码注册
 
+        # 获取eos code
+        eos_code = EosCode.objects.get_eos_code()
+
         if invitation_code != '':  # 是否用邀请码注册
             invitation_user = User.objects.get(invitation_code=invitation_code)
             inviter_number = UserInvitation.objects.filter(inviter_id=int(invitation_user.pk),
@@ -233,6 +236,7 @@ class UserRegister(object):
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
             user.telephone = username
+            user.eos_code = eos_code
             user.save()
 
             give_info = CoinGive.objects.get(pk=1)  # 货币赠送活动
@@ -283,6 +287,7 @@ class UserRegister(object):
             user.nickname = nickname
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
+            user.eos_code = eos_code
             user.save()
 
         # 生成签到记录
@@ -496,6 +501,8 @@ class LoginView(CreateAPIView):
 
                 record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
                     '-id').first()
+                if record is None:
+                    raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
                 if int(record.degree) >= 5:
                     raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
                 else:
