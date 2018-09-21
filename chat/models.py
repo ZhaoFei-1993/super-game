@@ -116,6 +116,8 @@ class ClubManager(BaseManager):
         club_plays = ClubRule.objects.get_all()
         map_club_play = {}
         for club_play in club_plays:
+            if club_play.id == 6:
+                continue
             map_club_play[club_play.id] = club_play
 
         number = 0
