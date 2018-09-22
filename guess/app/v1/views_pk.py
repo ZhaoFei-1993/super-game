@@ -45,7 +45,9 @@ class StockPkDetail(ListAPIView):
                     open_time = qs.open
                 else:
                     open_time = qs.open - datetime.timedelta(hours=12)
-                if open_time.isoweekday() > 5 or open_time.strftime('%Y-%m-%d') in market_rest_cn_list:
+                before_open_time = open_time - datetime.timedelta(days=1)
+                if before_open_time.isoweekday() > 5 or \
+                        before_open_time.strftime('%Y-%m-%d') in market_rest_cn_list:
                     status = 3
         else:
             qs = issue_last
