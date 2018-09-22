@@ -1047,7 +1047,7 @@ class DailyListView(ListAPIView):
         if last_sign_date is not None:
             sign_number = daily_log.number
             # 判断是否大于总签到天数，若是，则重新开始计算
-            if sign_number >= total_sign_days:
+            if sign_number > total_sign_days:
                 if last_sign_date in [DailyLog.YESTERDAY, DailyLog.TODAY]:
                     sign_number -= total_sign_days
 
@@ -1115,15 +1115,12 @@ class DailySignListView(ListCreateAPIView):
             fate = 1
             daily.number = 1
         else:
-            if int(daily.number) == 6:
+            if int(daily.number) > 6:
                 fate = daily.number + 1
                 daily.number = 0
             else:
                 fate = daily.number + 1
                 daily.number += 1
-        # date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # end_date = "2018-06-24 00:00:00"
-        # if date_last > end_date:
 
         total_sign_days = DailySettings.objects.all().count()
         if fate > total_sign_days:
@@ -1156,39 +1153,6 @@ class DailySignListView(ListCreateAPIView):
                    'icon': dailysettings.coin.icon,
                    'name': dailysettings.coin.name
                    }
-        # else:
-        #     if fate == 1:
-        #         rewards = 6
-        #     if fate == 2:
-        #         rewards = 8
-        #     if fate == 3:
-        #         rewards = 10
-        #     if fate == 4:
-        #         rewards = 12
-        #     if fate == 5:
-        #         rewards = 14
-        #     if fate == 6:
-        #         rewards = 16
-        #     if fate == 7:
-        #         rewards = 18
-        #     user.integral += rewards
-        #     user.save()
-        #     daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
-        #     daily.user_id = user_id
-        #     daily.save()
-        #     coin_detail = CoinDetail()
-        #     coin_detail.user = user
-        #     coin_detail.coin_name = 'GSG'
-        #     coin_detail.amount = '+' + str(rewards)
-        #     coin_detail.rest = Decimal(user.integral)
-        #     coin_detail.sources = 7
-        #     coin_detail.save()
-        #
-        #     content = {'code': 0,
-        #                'data': normalize_fraction(rewards, 2),
-        #                'icon': '',
-        #                'name': ''
-        #                }
 
         return self.response(content)
 
