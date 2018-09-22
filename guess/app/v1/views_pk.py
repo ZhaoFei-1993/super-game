@@ -11,6 +11,7 @@ import datetime
 import time
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
 from users.models import UserCoin, CoinDetail, User
+from spider.management.commands.stock_index import market_rest_cn_list
 
 
 class StockPkDetail(ListAPIView):
@@ -44,7 +45,7 @@ class StockPkDetail(ListAPIView):
                     open_time = qs.open
                 else:
                     open_time = qs.open - datetime.timedelta(hours=12)
-                if open_time.isoweekday() == 1:
+                if open_time.isoweekday() > 5 or open_time.strftime('%Y-%m-%d') in market_rest_cn_list:
                     status = 3
         else:
             qs = issue_last
@@ -69,6 +70,11 @@ class StockPkDetail(ListAPIView):
 
         left_index_value = issues.left_stock_index
         right_index_value = issues.right_stock_index
+        if left_index_value == 0:
+            left_index_value = Index.objects.filter(periods_id=left_periods_id).order_by(
+                '-index_time').first().index_value
+            right_index_value = Index.objects.filter(periods_id=right_periods_id).order_by(
+                '-index_time').first().index_value
 
         if issues.issue == 1:
             issue_pre = Issues.objects.filter(stock_pk_id=stock_pk_id, open__lt=time_now).order_by('-open').first()
