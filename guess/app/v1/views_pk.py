@@ -71,10 +71,15 @@ class StockPkDetail(ListAPIView):
         left_index_value = issues.left_stock_index
         right_index_value = issues.right_stock_index
         if left_index_value == 0:
-            left_index_value = Index.objects.filter(periods_id=left_periods_id).order_by(
-                '-index_time').first().index_value
-            right_index_value = Index.objects.filter(periods_id=right_periods_id).order_by(
-                '-index_time').first().index_value
+            left_index = Index.objects.filter(periods_id=left_periods_id).order_by(
+                '-index_time').first()
+            if left_index is not None:
+                left_index_value = left_index.index_value
+
+            right_index = Index.objects.filter(periods_id=right_periods_id).order_by(
+                '-index_time').first()
+            if right_index is not None:
+                right_index_value = right_index.index_value
 
         if issues.issue == 1:
             issue_pre = Issues.objects.filter(stock_pk_id=stock_pk_id, open__lt=time_now).order_by('-open').first()
