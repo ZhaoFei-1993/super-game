@@ -1047,7 +1047,7 @@ class DailyListView(ListAPIView):
         if last_sign_date is not None:
             sign_number = daily_log.number
             # 判断是否大于总签到天数，若是，则重新开始计算
-            if sign_number > total_sign_days:
+            if sign_number >= total_sign_days:
                 if last_sign_date in [DailyLog.YESTERDAY, DailyLog.TODAY]:
                     sign_number -= total_sign_days
 
@@ -1115,7 +1115,7 @@ class DailySignListView(ListCreateAPIView):
             fate = 1
             daily.number = 1
         else:
-            if int(daily.number) > 6:
+            if int(daily.number) == 6:
                 fate = daily.number + 1
                 daily.number = 0
             else:
