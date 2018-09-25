@@ -389,7 +389,7 @@ class StockPkRecordsList(ListAPIView):
             # 时间
             created_at = item_value['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             year = created_at.split(' ')[0].split('-')[0]
-            date = created_at.split(' ')[0].split('-')[1] + '/' + created_at.split(' ')[0].split('-')[1]
+            date = created_at.split(' ')[0].split('-')[1] + '/' + created_at.split(' ')[0].split('-')[2]
             time = created_at.split(' ')[1].split(':')[0] + ':' + created_at.split(' ')[1].split(':')[1]
 
             # earn_coin, is_right
