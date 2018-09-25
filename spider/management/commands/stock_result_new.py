@@ -427,7 +427,9 @@ class GuessPKRecording(GuessRecording):
 
         # 股指pk出题找答案
         issues_result_flag = False
+        issues_id = ''
         for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=3).order_by('open'):
+            issues_id = issues.id
             left_periods_id = issues.left_periods_id
             right_periods_id = issues.right_periods_id
             open_time = issues.open
@@ -456,7 +458,11 @@ class GuessPKRecording(GuessRecording):
                 issues.save()
                 issues_result_flag = True
         if issues_result_flag is True:
-            guess_pk_result_list(issue_last.id)
+            if issue_last is not None:
+                guess_pk_result_list(issue_last.id)
+            else:
+                if issues_id != '':
+                    guess_pk_result_list(issues_id)
 
         # 股指pk出题
         if left_periods is not None and right_periods is not None:
