@@ -185,7 +185,7 @@ class StockPkDetail(ListAPIView):
         for key, value in plays_dic.items():
             options_dic.update({key: []})
 
-        for option in OptionStockPk.objects.filter(stock_pk_id=1).order_by('order'):
+        for option in OptionStockPk.objects.filter(stock_pk_id=stock_pk_id).order_by('order'):
             records_num = len(record_dic.keys())
             options_records_num = 0
             is_choice = 0

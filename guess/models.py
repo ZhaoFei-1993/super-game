@@ -12,12 +12,14 @@ class Stock(models.Model):
     SHENZHEN = 1
     HANGSENG = 2
     DOWJONES = 3
+    NASDAQ = 4
 
     STOCK = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
         (HANGSENG, "恒生指数"),
-        (DOWJONES, "道琼斯")
+        (DOWJONES, "道琼斯"),
+        (NASDAQ, "纳斯达克"),
     )
 
     SSE = 0
@@ -29,7 +31,8 @@ class Stock(models.Model):
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
         (HANGSENG, "恒生指数"),
-        (DOWJONES, "道琼斯")
+        (DOWJONES, "道琼斯"),
+        (NASDAQ, "纳斯达克"),
     )
     name = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
     icon = models.CharField(verbose_name="股票图标", max_length=255, default='')

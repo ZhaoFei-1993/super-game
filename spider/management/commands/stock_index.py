@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from guess.models import Index, Periods, Index_day, Issues
+from guess.models import Index, Periods, Index_day, Issues, Stock
 from .stock_result_new import GuessRecording, GuessPKRecording
 import requests
 import datetime
@@ -15,6 +15,8 @@ url_DJA = 'http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQu
 url_SHANG = 'http://pdfm.eastmoney.com/EM_UBG_PDTI_Fast/api/js?rtntype=5&token=4f1862fc3b5e77c150a2b985b12db0fd&cb=jQuery18302986275421321969_1532447305292&id=0000011'
 url_SHENG = 'http://pdfm.eastmoney.com/EM_UBG_PDTI_Fast/api/js?rtntype=5&token=4f1862fc3b5e77c150a2b985b12db0fd&cb=jQuery18306190742815473158_1532447588005&id=3990012'
 
+url_dji = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF&hilight=disp_data.*.title&sitesign=57f039002f70ed02eec684164dad4e7d&eprop=minute'
+url_ndx = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=纳斯达克&hilight=disp_data.*.title&sitesign=12299ccd2e71da74cd27339159e1a3ba&eprop=minute'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
     'Connection': 'close',
@@ -71,9 +73,6 @@ def get_index_cn(period, base_url):
                     new_index_dic['x'].append(index_time.strftime("%H:%M"))
                     new_index_dic['y'].append(str(value))
 
-                if len(new_index_dic['x']) > 0:
-                    guess_graph(period.id, new_index_dic)
-
                 index_day = Index_day()
                 index_day.stock_id = period.stock.id
                 index_day.index_value = float(data_list[-1].split(',')[1])
@@ -123,12 +122,18 @@ def get_index_cn(period, base_url):
                                 index.index_time = index_time
                                 index.save()
 
+                                new_index_dic['x'].append(index_time.strftime("%H:%M"))
+                                new_index_dic['y'].append(str(value))
+
                             if data_list.index(data) == len(data_list) - 1:
                                 index_day = Index_day.objects.filter(stock_id=period.stock.id,
                                                                      created_at=date_day).first()
                                 index_day.index_value = float(dt[1])
                                 index_day.save()
                     set_cache(stock_cache_name, '@'.join(data_list), 86400)
+            # 推送曲线图数据
+            if len(new_index_dic['x']) > 0:
+                guess_graph(period.id, new_index_dic)
     else:
         num_cache_name = period.stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         num = data_list[-1].split(',')[1]
@@ -229,6 +234,143 @@ def get_index_hk_en(period, base_url):
                 set_cache(num_cache_name, num + ',' + time + ',1', 3600)
 
 
+def get_index_en(period, base_url):
+    guess_recording = GuessRecording()
+    response = requests.get(base_url, headers=headers)
+    data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[:-1]
+    date_ymd = data_list[0].split(',')[2].split(' ')[0].replace('/', '-')
+    index_info = []
+    for i in data_list:
+        info_list = i.split(',')
+        index_time = datetime.datetime.strptime(date_ymd + ' ' + info_list[0] + ':00',
+                                                "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=12)
+        index_time_str = index_time.strftime("%Y-%m-%d %H:%M:%S")
+        index_info.append({
+            'index_time': index_time,
+            'index_time_str': index_time_str,
+            'index_value': info_list[1],
+        })
+
+    cache_time = index_info[0]['index_time_str']
+    cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + cache_time
+
+    date_now = datetime.datetime.now()
+    date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                          "%Y-%m-%d %H:%M:%S")
+    new_index_dic = {'x': [], 'y': []}
+    if period.start_value is None or float(period.start_value) != float(index_info[0]['index_value']):
+        period.start_value = float(index_info[0]['index_value'])
+        period.save()
+    if date_now < period.lottery_time or \
+            Index.objects.filter(periods_id=period.id, index_time=period.lottery_time).exists() is not True:
+        if get_cache(cache_name) is None:
+            for data in index_info:
+                value = float(data['index_value'])
+                index_time = data['index_time']
+
+                print('第一次次开始存储 ')
+                print('value===> ', value)
+                print('time====>', index_time)
+
+                index = Index()
+                index.periods = period
+                index.index_value = value
+                index.save()
+                index.index_time = index_time
+                index.save()
+
+                new_index_dic['x'].append(index_time.strftime("%H:%M"))
+                new_index_dic['y'].append(str(value))
+
+            index_day = Index_day()
+            index_day.stock_id = period.stock.id
+            index_day.index_value = float(data_list[-1].split(',')[1])
+            index_day.save()
+            index_day.created_at = date_day
+            index_day.save()
+
+            set_cache(cache_name, index_info, 86400)
+
+            if len(new_index_dic['x']) > 0:
+                guess_graph(period.id, new_index_dic)
+        else:
+            result_list = get_cache(cache_name)
+            if len(index_info) != len(result_list):
+                for data in index_info:
+                    value = float(data['index_value'])
+                    index_time = data['index_time']
+                    flag = False
+                    if data not in result_list:
+                        for result_data in result_list:
+                            result_value = float(result_data['index_value'])
+                            result_index_time = result_data['index_time']
+                            if index_time == result_index_time:
+                                print('再次开始存储,已存储时间但数值变动')
+                                print('value===> ', value)
+                                print('time====>', index_time)
+
+                                index = Index.objects.filter(periods=period, index_time=result_index_time).first()
+                                index.index_value = result_value
+                                index.save()
+                                flag = True
+                                break
+                        if flag is True:
+                            pass
+                        else:
+                            print('再次开始存储,新时间')
+                            print('value===> ', value)
+                            print('time====>', index_time)
+
+                            index = Index()
+                            index.periods = period
+                            index.index_value = value
+                            index.save()
+                            index.index_time = index_time
+                            index.save()
+
+                            new_index_dic['x'].append(index_time.strftime("%H:%M"))
+                            new_index_dic['y'].append(str(value))
+
+                            if index_info.index(data) == len(index_info) - 1:
+                                index_day = Index_day.objects.filter(stock_id=period.stock.id,
+                                                                     created_at=date_day).first()
+                                index_day.index_value = value
+                                index_day.save()
+
+                set_cache(cache_name, index_info, 86400)
+        # 推送曲线图数据
+        if len(new_index_dic['x']) > 0:
+            guess_graph(period.id, new_index_dic)
+    else:
+        num_cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
+        value = index_info[-1]['index_value']
+        index_time_str = index_info[-1]['index_time_str']
+        if get_cache(num_cache_name) is None:
+            set_cache(num_cache_name, value + ',' + index_time_str + ',1', 3600)
+        else:
+            cache_dt = get_cache(num_cache_name)
+            print(cache_dt)
+            if cache_dt.split(',')[0] == value:
+                count = int(cache_dt.split(',')[2]) + 1
+                if count >= 6:
+                    if float(period.start_value) > float(value):
+                        status = 'down'
+                    elif float(period.start_value) == float(value):
+                        status = 'draw'
+                    elif float(period.start_value) < float(value):
+                        status = 'up'
+
+                    param_dic = {
+                        'num': value, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
+                    }
+                    guess_recording.take_result(period, param_dic, date_day)
+                    return True
+                else:
+                    set_cache(num_cache_name, value + ',' + index_time_str + ',' + str(count), 3600)
+            else:
+                set_cache(num_cache_name, value + ',' + index_time_str + ',1', 3600)
+
+
 def confirm_time(period):
     date_now = datetime.datetime.now()
     lottery_time = period.lottery_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -238,13 +380,13 @@ def confirm_time(period):
     elif period.stock.name == '2':
         date_start = lottery_time.split(' ')[0] + ' ' + market_hk_start_time[0]
         date_end = lottery_time.split(' ')[0] + ' ' + market_hk_end_time[0]
-    elif period.stock.name == '3':
+    elif period.stock.name == '3' or period.stock.name == '4':
         date_start = lottery_time.split(' ')[0] + ' ' + market_en_start_time[0]
         date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time[0]
 
     start = datetime.datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
-    if period.stock.name == '3':
+    if period.stock.name == '3' or period.stock.name == '4':
         start = start - datetime.timedelta(days=1)
 
     if start <= date_now <= end:
@@ -320,7 +462,7 @@ class Command(BaseCommand):
             print('------------------------------------------------------------------------------------')
             # 股指pk出题找答案,股指pk出题
             guess_pk_recording = GuessPKRecording()
-            guess_pk_recording.take_pk_result(shen_periods, shang_periods, market_rest_cn_start_time[0])
+            guess_pk_recording.take_pk_result(shen_periods, shang_periods, market_rest_cn_start_time[0], 1)
 
             """
             恒生指数
@@ -354,15 +496,17 @@ class Command(BaseCommand):
             道琼斯指数
             """
             print('道琼斯：')
+            dji_periods = None
             if Periods.objects.filter(is_result=False, stock__name='3').exists():
                 period = Periods.objects.filter(is_result=False, stock__name='3').first()
+                dji_periods = period
                 if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='3',
                                                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
                     # dt_dja = get_index_hk_en(period, url_DJA)
                     # print(dt_dja)
-                    flag = get_index_hk_en(period, url_DJA)
+                    flag = get_index_en(period, url_dji)
                     if flag is True:
                         # 开奖后放出题目
                         print('放出题目')
@@ -376,5 +520,39 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        dji_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
             print('------------------------------------------------------------------------------------')
+
+            """
+            纳斯达克指数
+            """
+            print('纳斯达克：')
+            ndx_periods = None
+            if Periods.objects.filter(is_result=False, stock__name='4').exists():
+                period = Periods.objects.filter(is_result=False, stock__name='4').first()
+                ndx_periods = period
+                if (confirm_time(period) is not True) and (Periods.objects.filter(is_result=False, stock__name='4',
+                                                                                  lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                    print('空闲时间, 空闲时间')
+                else:
+                    # dt_dja = get_index_hk_en(period, url_DJA)
+                    # print(dt_dja)
+                    flag = get_index_en(period, url_ndx)
+                    if flag is True:
+                        # 开奖后放出题目
+                        print('放出题目')
+                        open_date = period.lottery_time.strftime('%Y-%m-%d')
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                                                                '%Y-%m-%d %H:%M:%S')
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+                        while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
+                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                            next_end += datetime.timedelta(1)
+                            next_start += datetime.timedelta(1)
+                        per = int(period.periods) + 1
+                        ndx_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+            print('------------------------------------------------------------------------------------')
+            guess_pk_recording = GuessPKRecording()
+            guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time[0], 2)
+

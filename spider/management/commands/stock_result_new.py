@@ -376,9 +376,12 @@ class GuessRecording(object):
 
 class GuessPKRecording(GuessRecording):
     @staticmethod
-    def new_issues(left_periods, right_periods, start_time):
+    def new_issues(left_periods, right_periods, start_time, stock_pk):
         end_with = left_periods.lottery_time
-        start_with_str = end_with.strftime('%Y-%m-%d') + ' ' + start_time
+        if stock_pk == 2:
+            start_with_str = (end_with - datetime.timedelta(days=1)).strftime('%Y-%m-%d') + ' ' + start_time
+        else:
+            start_with_str = end_with.strftime('%Y-%m-%d') + ' ' + start_time
         start_with = datetime.datetime.strptime(start_with_str, '%Y-%m-%d %H:%M:%S')
         stock_pk = StockPk.objects.get(left_stock_id=left_periods.stock_id,
                                        right_stock_id=right_periods.stock_id)
@@ -393,6 +396,7 @@ class GuessPKRecording(GuessRecording):
 
         issue = 0
         open_time = start_with + datetime.timedelta(minutes=5)
+        print()
         while open_time <= end_with:
             if rest_start_with is not None:
                 if rest_end_with > open_time > rest_start_with:
@@ -412,7 +416,7 @@ class GuessPKRecording(GuessRecording):
             open_time = open_time + datetime.timedelta(minutes=5)
         print('完成股指pk出题')
 
-    def take_pk_result(self, left_periods, right_periods, start_time):
+    def take_pk_result(self, left_periods, right_periods, start_time, stock_pk):
         time_now = datetime.datetime.now()
         issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
         if issue_last is not None:
@@ -468,7 +472,7 @@ class GuessPKRecording(GuessRecording):
         if left_periods is not None and right_periods is not None:
             if left_periods.lottery_time == right_periods.lottery_time:
                 if Issues.objects.filter(left_periods_id=left_periods.id).exists() is not True:
-                    self.new_issues(left_periods, right_periods, start_time)
+                    self.new_issues(left_periods, right_periods, start_time, stock_pk)
 
     def pk_size(self, record, option_obj_dic, issues_obj):
         cache_club_value = Club.objects.get_club_info()
