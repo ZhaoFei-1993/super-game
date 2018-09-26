@@ -283,7 +283,7 @@ class StockPkResultList(ListAPIView):
             })
 
         result_flag = {
-            '和': 0, '上证大': 1, '深证大': 2,
+            '和': 0, '上证大': 1, '深证大': 2, '纳斯达克大': 3, '道琼斯大': 4,
         }
         data = []
         for item in items:
