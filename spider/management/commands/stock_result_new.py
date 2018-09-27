@@ -34,7 +34,8 @@ class GuessRecording(object):
                 })
 
             # 用户资金明细表
-            self.user_coin_dic[user_id][coin_id]['balance'] = self.user_coin_dic[user_id][coin_id]['balance'] + earn_coin
+            self.user_coin_dic[user_id][coin_id]['balance'] = self.user_coin_dic[user_id][coin_id][
+                                                                  'balance'] + earn_coin
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.coin_detail_list.append({
                 'user_id': str(user_id),
@@ -445,20 +446,27 @@ class GuessPKRecording(GuessRecording):
                     index_dic.update({
                         index.periods_id: index.index_value
                     })
-                issues.left_stock_index = index_dic[left_periods_id]
-                issues.right_stock_index = index_dic[right_periods_id]
-                issues.result_confirm += 1
+                if issues.left_stock_index != index_dic[left_periods_id] or \
+                        issues.right_stock_index != index_dic[right_periods_id]:
+                    issues.left_stock_index = index_dic[left_periods_id]
+                    issues.right_stock_index = index_dic[right_periods_id]
 
-                left_last_num = int(str(index_dic[left_periods_id])[-1])
-                right_last_num = int(str(index_dic[right_periods_id])[-1])
+                    left_last_num = int(str(index_dic[left_periods_id])[-1])
+                    right_last_num = int(str(index_dic[right_periods_id])[-1])
 
-                if left_last_num > right_last_num:
-                    size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
-                elif left_last_num < right_last_num:
-                    size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+                    if left_last_num > right_last_num:
+                        size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
+                    elif left_last_num < right_last_num:
+                        size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+                    else:
+                        size_pk_result = '和'
+                    issues.size_pk_result = size_pk_result
+
+                    # 确认数清零
+                    issues.result_confirm = 0
                 else:
-                    size_pk_result = '和'
-                issues.size_pk_result = size_pk_result
+                    issues.result_confirm += 1
+
                 issues.save()
                 issues_result_flag = True
         if issues_result_flag is True:
@@ -495,7 +503,6 @@ class GuessPKRecording(GuessRecording):
             record.status = 1
             record.save()
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
-
 
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))

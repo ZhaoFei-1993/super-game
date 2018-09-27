@@ -92,7 +92,6 @@ def get_index_cn(period, base_url):
                         if data not in result_list:
                             for i in result_list:
                                 result_dt = i.split(',')
-                                result_value = float(result_dt[1])
                                 result_index_time = datetime.datetime.strptime(result_dt[0] + ':00',
                                                                                "%Y-%m-%d %H:%M:%S")
                                 # print(index_time)
