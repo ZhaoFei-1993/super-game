@@ -103,7 +103,7 @@ def get_index_cn(period, base_url):
                                     print('time====>', index_time)
 
                                     index = Index.objects.filter(periods=period, index_time=result_index_time).first()
-                                    index.index_value = result_value
+                                    index.index_value = value
                                     index.save()
                                     flag = True
                                     break
@@ -300,6 +300,9 @@ def get_index_en(period, base_url):
                     value = float(data['index_value'])
                     index_time = data['index_time']
                     flag = False
+
+                    import pdb;pdb.set_trace()
+
                     if data not in result_list:
                         for result_data in result_list:
                             result_index_time = result_data['index_time']
