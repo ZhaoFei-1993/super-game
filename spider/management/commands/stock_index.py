@@ -251,8 +251,7 @@ def get_index_en(period, base_url):
             'index_value': info_list[1],
         })
 
-    cache_time = index_info[0]['index_time_str']
-    cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + cache_time
+    cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + period.id
 
     date_now = datetime.datetime.now()
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
