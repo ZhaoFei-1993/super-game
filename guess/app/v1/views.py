@@ -772,8 +772,6 @@ class StockGraphListView(ListCreateAPIView):
         # index_number = Index.objects.filter(periods_id=periods_id).count()
         # periods_info = Periods.objects.get(id=periods_id)
         periods_periods = periods_info.periods - 1
-        print('periods_periods ======== ', periods_periods)
-        print('stock_id ======== ', periods_info.stock_id)
         periods_info_old = Periods.objects.get(periods=periods_periods, stock_id=periods_info.stock_id)
 
         new_start_value = periods_info_old.lottery_value
