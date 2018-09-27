@@ -12,6 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         time_now = datetime.datetime.now()
+        print('now is ', time_now)
         issue_time_dic = get_cache('issue_time_dic')
         if issue_time_dic is None:
             issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
