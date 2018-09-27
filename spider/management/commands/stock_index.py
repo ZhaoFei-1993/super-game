@@ -302,7 +302,6 @@ def get_index_en(period, base_url):
                     flag = False
                     if data not in result_list:
                         for result_data in result_list:
-                            result_value = float(result_data['index_value'])
                             result_index_time = result_data['index_time']
                             if index_time == result_index_time:
                                 print('再次开始存储,已存储时间但数值变动')
@@ -310,7 +309,7 @@ def get_index_en(period, base_url):
                                 print('time====>', index_time)
 
                                 index = Index.objects.filter(periods=period, index_time=result_index_time).first()
-                                index.index_value = result_value
+                                index.index_value = value
                                 index.save()
                                 flag = True
                                 break
