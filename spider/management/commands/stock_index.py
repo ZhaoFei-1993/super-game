@@ -146,7 +146,7 @@ def get_index_cn(period, base_url):
                 count = int(cache_dt.split(',')[2]) + 1
                 if count >= 6:
                     # 最后一期的确认
-                    index_time = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
+                    index_time = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
                     index = Index.objects.filter(periods=period, index_time=index_time).first()
                     index.index_value = num
                     index.save()
