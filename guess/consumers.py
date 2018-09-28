@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from channels.consumer import get_channel_layer
 from asgiref.sync import async_to_sync
+from guess.models import Periods
 
 
 def confirm_period(period_id, period_status):
@@ -77,22 +78,50 @@ def guess_graph(period_id, index_dic):
     )
 
 
-def guess_pk_index(issue_id, left_stock_index, right_stock_index):
+def guess_pk_index(issue, left_index_value, right_index_value):
     """
         推送指数
-        :param issue_id 当前期数
-        :param left_stock_index
-        :param right_stock_index
+        :param issue 期数对象
+        :param left_index_value
+        :param right_index_value
         :return:
     """
-    group = 'guess_pk_' + str(issue_id)
+    left_periods_id = issue.left_periods_id
+    right_periods_id = issue.right_periods_id
+    periods_obj_dic = {}
+    for periods in Periods.objects.filter(id__in=[left_periods_id, right_periods_id]):
+        periods_obj_dic.update({
+            periods.id: {
+                'start_value': periods.start_value,
+            }
+        })
+    # color 1: 涨, 2: 跌, 3: 平
+    left_start_value = periods_obj_dic[left_periods_id]['start_value']
+    if left_index_value > left_start_value:
+        left_index_color = 1
+    elif left_index_value < left_start_value:
+        left_index_color = 2
+    else:
+        left_index_color = 3
+
+    right_start_value = periods_obj_dic[right_periods_id]['start_value']
+    if right_index_value > right_start_value:
+        right_index_color = 1
+    elif right_index_value < right_start_value:
+        right_index_color = 2
+    else:
+        right_index_color = 3
+
+    group = 'guess_pk_' + str(issue.id)
 
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         group,
         {
             "type": "index.message",
-            "left_stock_index": left_stock_index,
-            "right_stock_index": right_stock_index,
+            "left_index_value": left_index_value,
+            "right_index_value": right_index_value,
+            "left_index_color": left_index_color,
+            "right_index_color": right_index_color,
         },
     )

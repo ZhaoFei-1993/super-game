@@ -50,6 +50,10 @@ class GuessConsumer(BaseConsumer):
     async def index_message(self, event):
         await self.send_json({
             "msg_type": "index",
-            "left_stock_index": event['left_stock_index'],
-            "right_stock_index": event['right_stock_index'],
+
+            "left_index_value": event['left_index_value'],
+            "left_index_color": event['left_index_color'],
+
+            "right_index_value": event['right_index_value'],
+            "right_index_color": event['right_index_color'],
         })

@@ -342,31 +342,38 @@ def get_index_en(period, base_url):
     else:
         num_cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + date_ymd + '_num'
         value = index_info[-1]['index_value']
+        index_time = index_info[-1]['index_time']
         index_time_str = index_info[-1]['index_time_str']
-        if get_cache(num_cache_name) is None:
-            set_cache(num_cache_name, value + ',' + index_time_str + ',1', 3600)
-        else:
-            cache_dt = get_cache(num_cache_name)
-            print(cache_dt)
-            if cache_dt.split(',')[0] == value:
-                count = int(cache_dt.split(',')[2]) + 1
-                if count >= 6:
-                    if float(period.start_value) > float(value):
-                        status = 'down'
-                    elif float(period.start_value) == float(value):
-                        status = 'draw'
-                    elif float(period.start_value) < float(value):
-                        status = 'up'
-
-                    param_dic = {
-                        'num': value, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
-                    }
-                    guess_recording.take_result(period, param_dic, date_day)
-                    return True
-                else:
-                    set_cache(num_cache_name, value + ',' + index_time_str + ',' + str(count), 3600)
-            else:
+        if period.lottery_time == index_time:
+            if get_cache(num_cache_name) is None:
                 set_cache(num_cache_name, value + ',' + index_time_str + ',1', 3600)
+            else:
+                cache_dt = get_cache(num_cache_name)
+                print(cache_dt)
+                if cache_dt.split(',')[0] == value:
+                    count = int(cache_dt.split(',')[2]) + 1
+                    if count >= 6:
+                        # 最后一期的确认
+                        index = Index.objects.filter(periods=period, index_time=index_time).first()
+                        index.index_value = value
+                        index.save()
+
+                        if float(period.start_value) > float(value):
+                            status = 'down'
+                        elif float(period.start_value) == float(value):
+                            status = 'draw'
+                        elif float(period.start_value) < float(value):
+                            status = 'up'
+
+                        param_dic = {
+                            'num': value, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
+                        }
+                        guess_recording.take_result(period, param_dic, date_day)
+                        return True
+                    else:
+                        set_cache(num_cache_name, value + ',' + index_time_str + ',' + str(count), 3600)
+                else:
+                    set_cache(num_cache_name, value + ',' + index_time_str + ',1', 3600)
 
 
 def confirm_time(period):
