@@ -46,3 +46,10 @@ class GuessConsumer(BaseConsumer):
             "msg_type": "index_dic" + '_' + event['group'].split('_')[-1],
             "index_dic": event['index_dic'],
         })
+
+    async def index_message(self, event):
+        await self.send_json({
+            "msg_type": "index",
+            "left_stock_index": event['left_stock_index'],
+            "right_stock_index": event['right_stock_index'],
+        })

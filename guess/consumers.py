@@ -75,3 +75,24 @@ def guess_graph(period_id, index_dic):
             "index_dic": index_dic,
         },
     )
+
+
+def guess_pk_index(issue_id, left_stock_index, right_stock_index):
+    """
+        推送指数
+        :param issue_id 当前期数
+        :param left_stock_index
+        :param right_stock_index
+        :return:
+    """
+    group = 'guess_pk_' + str(issue_id)
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "index.message",
+            "left_stock_index": left_stock_index,
+            "right_stock_index": right_stock_index,
+        },
+    )

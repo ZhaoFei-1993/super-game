@@ -6,7 +6,7 @@ from users.models import CoinDetail
 from utils.functions import *
 from time import time
 from django.db.models import Q
-from guess.consumers import guess_pk_result_list
+from guess.consumers import guess_pk_result_list, guess_pk_index
 
 
 class GuessRecording(object):
@@ -426,9 +426,13 @@ class GuessPKRecording(GuessRecording):
             left_index_last = Index.objects.filter(periods_id=left_periods_id).order_by('-index_time').first()
             right_index_last = Index.objects.filter(periods_id=right_periods_id).order_by('-index_time').first()
             if left_index_last is not None and right_index_last is not None:
-                issue_last.left_stock_index = left_index_last.index_value
-                issue_last.right_stock_index = right_index_last.index_value
-                issue_last.save()
+                if issue_last.left_stock_index != left_index_last.index_value or \
+                        issue_last.right_stock_index != right_index_last.index_value:
+                    issue_last.left_stock_index = left_index_last.index_value
+                    issue_last.right_stock_index = right_index_last.index_value
+                    issue_last.save()
+
+                    guess_pk_index(issue_last.id, left_index_last.index_value, right_index_last.index_value)
 
         # 股指pk出题找答案
         issues_result_flag = False
