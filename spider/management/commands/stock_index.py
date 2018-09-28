@@ -145,6 +145,12 @@ def get_index_cn(period, base_url):
             if cache_dt.split(',')[0] == num:
                 count = int(cache_dt.split(',')[2]) + 1
                 if count >= 6:
+                    # 最后一期的确认
+                    index_time = datetime.datetime.strftime(time, "%Y-%m-%d %H:%M:%S")
+                    index = Index.objects.filter(periods=period, index_time=index_time).first()
+                    index.index_value = num
+                    index.save()
+
                     if float(period.start_value) > float(num):
                         status = 'down'
                     elif float(period.start_value) == float(num):
