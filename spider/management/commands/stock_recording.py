@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from guess.models import RecordStockPk, Issues, OptionStockPk
+from guess.models import RecordStockPk, Issues, OptionStockPk, Periods
 from .stock_result_new import GuessPKRecording
 import datetime
 
@@ -22,6 +22,9 @@ class Command(BaseCommand):
                 })
             i = 0
             for issue in issues:
+                if issue.stock_pk_id == 2 and issue.issue == 78:
+                        if Periods.objects.get(id=issue.right_periods_id).is_result is not True:
+                            continue
                 i += 1
                 print('正在处理第 ', i, ' 期,issues_id=', issue.id, '   ', datetime.datetime.now())
                 for record_pk in RecordStockPk.objects.filter(issue_id=issue.id, status=str(RecordStockPk.AWAIT)):
