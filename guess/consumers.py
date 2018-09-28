@@ -119,9 +119,11 @@ def guess_pk_index(issue, left_index_value, right_index_value):
         group,
         {
             "type": "index.message",
+
             "left_index_value": str(left_index_value),
-            "right_index_value": right_index_value,
             "left_index_color": left_index_color,
-            "right_index_color": str(right_index_color),
+
+            "right_index_value": str(right_index_value),
+            "right_index_color": right_index_color,
         },
     )
