@@ -470,7 +470,15 @@ class GuessPKRecording(GuessRecording):
                     # 确认数清零
                     issues.result_confirm = 0
                 else:
-                    issues.result_confirm += 1
+                    # 最后一期多重确认
+                    if issues.stock_pk_id == 2 and issues.issue == 78:
+                        if Periods.objects.get(id=issues.right_periods_id).is_result is True:
+                            issues.result_confirm += 1
+                    elif issues.stock_pk_id == 1 and issues.issue == 48:
+                        if Periods.objects.get(id=issues.right_periods_id).is_result is True:
+                            issues.result_confirm += 1
+                    else:
+                        issues.result_confirm += 1
 
                 issues.save()
                 issues_result_flag = True
