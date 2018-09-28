@@ -432,7 +432,7 @@ class GuessPKRecording(GuessRecording):
                     issue_last.right_stock_index = right_index_last.index_value
                     issue_last.save()
 
-                    guess_pk_index(issue_last.id, left_index_last.index_value, right_index_last.index_value)
+                    guess_pk_index(issue_last, left_index_last.index_value, right_index_last.index_value)
                     print('推送index')
 
         # 股指pk出题找答案
