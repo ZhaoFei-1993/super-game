@@ -35,9 +35,6 @@ class StockList(ListAPIView):
     def get_queryset(self):
         for stock in Stock.objects.filter(stock_guess_open=True):
 
-            print(stock.name)
-            print(Stock.STOCK[int(stock.name)][1])
-
             title = Stock.STOCK[int(stock.name)][1]
             if self.request.GET.get('language') == 'en':
                 title = Stock.STOCK_EN[int(stock.name)][1]
