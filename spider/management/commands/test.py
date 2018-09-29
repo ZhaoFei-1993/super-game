@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
         # url_dji = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF&hilight=disp_data.*.title&sitesign=57f039002f70ed02eec684164dad4e7d&eprop=minute'
         # url_ndx = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=纳斯达克&hilight=disp_data.*.title&sitesign=12299ccd2e71da74cd27339159e1a3ba&eprop=minute'
-        # response = requests.get(url_dji)
+        # response = requests.get(url_ndx)
         # data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[
         #             :-1]
         # data_ymd = data_list[0].split(',')[2].split(' ')[0].replace('/', '-')
@@ -44,4 +44,6 @@ class Command(BaseCommand):
 
         # title = Stock.STOCK[int(4)][1]
         # print(title)
-        print('now is ', datetime.datetime.now())
+
+        print(Stock.STOCK[int('0')][1])
+
