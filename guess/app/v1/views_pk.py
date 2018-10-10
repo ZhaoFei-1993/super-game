@@ -575,6 +575,8 @@ class StockPKPushView(ListAPIView):
         return qs
 
     def list(self, request, *args, **kwargs):
+        cache_club_value = get_club_info()
+
         records_obj_dic = {}
         options_id_list = []
         user_id_list = []
@@ -587,7 +589,7 @@ class StockPKPushView(ListAPIView):
                 record.id: {
                     'issues_id': record.issue_id, 'options_id': record.option_id, 'bets': record.bets,
                     'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status,
-                    'user_id': record.user_id,
+                    'user_id': record.user_id, 'coin_name': cache_club_value[record.club_id]['coin_name'],
                 }
             })
 
@@ -619,11 +621,13 @@ class StockPKPushView(ListAPIView):
             if self.request.GET.get('language') == 'en':
                 my_option = options_obj_dic[options_id]['title_en']
             bet = round(float(item_value['bets']), 3)
+            coin_name = item_value['coin_name']
 
             data.append({
                 "record_id": item_key,
                 "username": user_name,
                 "my_option": my_option,
                 "bet": bet,
+                "coin_name": coin_name,
             })
         return self.response({"code": 0, "data": data})
