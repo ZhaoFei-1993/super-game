@@ -47,6 +47,9 @@ from PIL import Image
 from users.models import CoinGiveRecords
 import pygame
 import qrcode
+from promotion.models import Gradient
+from promotion.models import UserPresentation as Presentation
+import calendar
 
 
 def random_string(length=16):
@@ -1293,3 +1296,98 @@ def baccarat_ludan_save(messages, boots, table_id):
                 print("--------珠盘路数据为空--------")
         else:
             print("--------珠盘路暂无数据--------")
+
+
+def opposite_number(values):
+    if Decimal(values) > 0:
+        values = Decimal("-" + str(values))
+    elif Decimal(values) < 0:
+        values = abs(values)
+    else:
+        values = 0
+    return values
+
+
+def reward_gradient(user_id, club_id, income):
+    income = opposite_number(income)
+    year = datetime.date.today().year  # 获取当前年份
+    month = datetime.date.today().month  # 获取当前月份
+    weekDay, monthCountDay = calendar.monthrange(year, month)  # 获取当月第一天的星期和当月的总天数
+    firstDay = datetime.date(year, month, day=1)  # 获取当月第一天
+    lastDay = datetime.date(year, month, day=monthCountDay)  # 获取当前月份最后一天
+
+    gradient_income_key = "GRADIENT_INCOME_" + str(club_id)  # 盈利分红梯度
+    value = get_cache(gradient_income_key)
+    if value is None:
+        all_gradient = Gradient.objects.filter(club_id=club_id)
+        value = {}
+        for gradient in all_gradient:
+            if int(gradient.sources) == 1:
+                value[0] = {
+                    "sources": 0,
+                    "claim": 0,
+                    "claim_max": gradient.claim,
+                    "income_dividend": 0
+                }
+            value[gradient.sources] = {
+                "sources": gradient.sources,
+                "claim": gradient.claim,
+                "claim_max": gradient.claim_max,
+                "income_dividend": gradient.income_dividend
+            }
+        set_cache(gradient_income_key, value)
+
+    all_income = Presentation.objects.filter(Q(created_at__gte=firstDay) | Q(created_at__lte=lastDay), club_id=club_id,
+                             user_id=user_id).aggregate(Sum('income'))
+    sum_income = all_income['income__sum'] if all_income['income__sum'] is not None else 0
+    sum_income = Decimal(sum_income) + Decimal(income)
+
+    income_dividend = 0
+    for i in value:
+        claim = Decimal(value[i]["claim"])
+        claim_max = Decimal(value[i]["claim_max"])
+        if sum_income >= claim and sum_income < claim_max:
+            income_dividend = Decimal(value[i]["income_dividend"])
+        elif int(value[i]["sources"]) == 1 and sum_income < claim:
+            income_dividend = Decimal(value[i]["income_dividend"])
+        elif int(value[i]["sources"]) == 6 and sum_income > claim:
+            income_dividend = Decimal(value[i]["income_dividend"])
+    return income_dividend
+
+
+def reward_gradient_all(club_id, income):
+    income = opposite_number(income)
+
+    gradient_income_key = "GRADIENT_INCOME_" + str(club_id)  # 盈利分红梯度
+    value = get_cache(gradient_income_key)
+    if value is None:
+        all_gradient = Gradient.objects.filter(club_id=club_id)
+        value = {}
+        for gradient in all_gradient:
+            if int(gradient.sources) == 1:
+                value[0] = {
+                    "sources": 0,
+                    "claim": 0,
+                    "claim_max": gradient.claim,
+                    "income_dividend": 0
+                }
+            value[gradient.sources] = {
+                "sources": gradient.sources,
+                "claim": gradient.claim,
+                "claim_max": gradient.claim_max,
+                "income_dividend": gradient.income_dividend
+            }
+        set_cache(gradient_income_key, value)
+    sum_income = Decimal(income)
+
+    income_dividend = 0
+    for i in value:
+        claim = Decimal(value[i]["claim"])
+        claim_max = Decimal(value[i]["claim_max"])
+        if sum_income >= claim and sum_income < claim_max:
+            income_dividend = Decimal(value[i]["income_dividend"])
+        elif int(value[i]["sources"]) == 1 and sum_income < claim:
+            income_dividend = Decimal(value[i]["income_dividend"])
+        elif int(value[i]["sources"]) == 6 and sum_income > claim:
+            income_dividend = Decimal(value[i]["income_dividend"])
+    return income_dividend
