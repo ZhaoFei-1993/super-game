@@ -570,9 +570,8 @@ class StockPKPushView(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
-        club_id = int(self.request.GET.get('club_id'))
         issues_id = int(self.request.GET.get('issues_id'))
-        qs = RecordStockPk.objects.filter(club_id=club_id, issue_id=issues_id)
+        qs = RecordStockPk.objects.filter(issue_id=issues_id)
         return qs
 
     def list(self, request, *args, **kwargs):
