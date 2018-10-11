@@ -970,7 +970,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)  # 股票
+            record_list = get_sql(sql)  # 股票
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -998,7 +998,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            marksix_list = self.get_list_by_sql(sql)  # 六合彩
+            marksix_list = get_sql(sql)  # 六合彩
             for i in marksix_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1026,7 +1026,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            baccarat_list = self.get_list_by_sql(sql)  # 百家乐
+            baccarat_list = get_sql(sql)  # 百家乐
             for i in baccarat_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1054,7 +1054,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            dragontiger_list = self.get_list_by_sql(sql)  # 龙虎斗
+            dragontiger_list = get_sql(sql)  # 龙虎斗
             for i in dragontiger_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1085,7 +1085,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            basketball_list = self.get_list_by_sql(sql)  # 篮球
+            basketball_list = get_sql(sql)  # 篮球
             for i in basketball_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1116,7 +1116,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            football_list = self.get_list_by_sql(sql)  # 足球
+            football_list = get_sql(sql)  # 足球
             for i in football_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1148,7 +1148,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1180,7 +1180,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1209,7 +1209,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1238,7 +1238,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1267,7 +1267,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
@@ -1296,7 +1296,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            record_list = self.get_list_by_sql(sql)
+            record_list = get_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
                     user_list[i[8]] = i[8]
