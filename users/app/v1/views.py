@@ -192,7 +192,7 @@ class UserRegister(object):
         user = User()
 
         # 获取eos code
-        eos_code = EosCode.objects.get_eos_code()
+        # eos_code = EosCode.objects.get_eos_code()
 
         if invitation_code != '':  # 是否用邀请码注册
             try:
