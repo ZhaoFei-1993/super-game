@@ -213,7 +213,7 @@ class UserRegister(object):
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
             user.telephone = username
-            user.eos_code = eos_code
+            # user.eos_code = eos_code
             user.save()
 
             user_go_line = UserInvitation()           # 生成邀请记录
