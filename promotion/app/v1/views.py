@@ -990,6 +990,7 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
+            print("sql=============================", sql)
             record_list = self.get_list_by_sql(sql)  # 股票
             for i in record_list:
                 if i[8] not in user_list:
