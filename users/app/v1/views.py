@@ -245,7 +245,7 @@ class UserRegister(object):
             user.nickname = nickname
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
-            user.eos_code = eos_code
+            # user.eos_code = eos_code
             user.save()
 
         # 生成签到记录
