@@ -430,7 +430,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from guess_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -455,7 +456,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -480,7 +482,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -505,7 +508,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -534,7 +538,8 @@ class ClubDetailView(ListAPIView):
             sql += " where dtr.roomquiz_id = '" + club_id + "'"
             sql += " and c.parent_id = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " group by dtr.user_id, yearss, years, time, created_ats, u.nickname, u.avatar, rule"
@@ -562,7 +567,8 @@ class ClubDetailView(ListAPIView):
             sql += " where dtr.roomquiz_id = '" + club_id + "'"
             sql += " and c.parent_id = 2"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " group by dtr.user_id, yearss, years, time, created_ats, u.nickname, u.avatar, rule"
@@ -591,7 +597,8 @@ class ClubDetailView(ListAPIView):
             sql += " where dtr.roomquiz_id = '" + club_id + "'"
             sql += " and c.parent_id = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " group by dtr.user_id, yearss, years, time, created_ats, u.nickname, u.avatar, rule"
@@ -620,7 +627,8 @@ class ClubDetailView(ListAPIView):
             sql += " where dtr.roomquiz_id = '" + club_id + "'"
             sql += " and c.parent_id = 2"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " group by dtr.user_id, yearss, years, time, created_ats, u.nickname, u.avatar, rule"
@@ -645,7 +653,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from guess_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -671,7 +680,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -697,7 +707,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -723,7 +734,8 @@ class ClubDetailView(ListAPIView):
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
@@ -989,7 +1001,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             print("sql=============================", sql)
@@ -1018,7 +1031,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             marksix_list = self.get_list_by_sql(sql)  # 六合彩
@@ -1046,7 +1060,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             baccarat_list = self.get_list_by_sql(sql)  # 百家乐
@@ -1074,7 +1089,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             dragontiger_list = self.get_list_by_sql(sql)  # 龙虎斗
@@ -1105,7 +1121,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.type in (1, 2)"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             basketball_list = self.get_list_by_sql(sql)  # 篮球
@@ -1136,7 +1153,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.type in (1, 2)"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)  # 足球
@@ -1168,7 +1186,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.type in (1, 2)"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
@@ -1200,7 +1219,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.type in (1, 2)"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
@@ -1229,7 +1249,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
@@ -1258,7 +1279,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
@@ -1287,7 +1309,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
@@ -1316,7 +1339,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.status = 1"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
-            sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
+            if user_id_list != []:
+                sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)
