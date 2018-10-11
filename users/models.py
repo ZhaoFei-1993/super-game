@@ -14,8 +14,8 @@ from django.conf import settings
 from base.error_code import get_code
 from utils.models import CodeModel
 from base.models import BaseManager
-from utils.cache import get_cache, set_cache, delete_cache
-import random
+from utils.cache import get_cache, set_cache, delete_cache, incr_cache
+from django.core.management import call_command
 
 
 class UserManager(BaseUserManager):
@@ -1310,17 +1310,30 @@ class EosCodeManager(models.Manager):
     """
     EOS充值码数据操作
     """
-    def get_random(self):
+    key_daily_eos_code = 'key_daily_eos_code'
+    key_daily_eos_code_index = 'key_daily_eos_code_index'
+
+    def get_eos_code(self):
         """
-        随机获取一条数据
+        获取一个EOS CODE，从0个读取，依次递增
         :return:
         """
-        max_id = self.filter(user_id=0, is_good_code=False).aggregate(max_id=Max('id'))['max_id']
-        while True:
-            eos_code_id = random.randint(1, max_id)
-            eos_code = self.filter(pk=eos_code_id, user_id=0, is_good_code=False).first()
-            if eos_code:
-                return eos_code
+        # TODO: 考虑并发情况进行处理，使用Redis锁机制
+        eos_codes = get_cache(self.key_daily_eos_code)
+        index = get_cache(self.key_daily_eos_code_index)
+        if index is None or index == -1:
+            index = 0
+            set_cache(self.key_daily_eos_code_index, index)
+        else:
+            incr_cache(self.key_daily_eos_code_index)
+        index = get_cache(self.key_daily_eos_code_index)
+
+        eos_code = eos_codes[index]
+        # 当缓存中可用的码只剩下100个的时候，重新生成缓存
+        if len(eos_codes) - index <= 100:
+            call_command('eos_code_recache')
+
+        return int(eos_code[0])
 
 
 class EosCode(models.Model):
@@ -1332,6 +1345,3 @@ class EosCode(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "EOS充值编号生成表"
-
-
-

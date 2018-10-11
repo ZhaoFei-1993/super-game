@@ -197,7 +197,7 @@ class QuizListView(ListCreateAPIView):
         quiz_id_list = ''
         for fav in value:
             if quiz_id_list == '':
-                quiz_id_list = fav.get('id')
+                quiz_id_list = str(fav.get('id'))
             else:
                 quiz_id_list = str(quiz_id_list) + ',' + str(fav.get('id'))
             data.append({

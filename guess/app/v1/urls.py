@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from django.urls import path
 from . import views
+from . import views_pk
 
 urlpatterns = [
     # 股票列表
@@ -20,5 +21,17 @@ urlpatterns = [
     # 曲线图(日)
     path('graph/day/', views.StockGraphDayListView.as_view(), name="app-v1-guess-graph-day"),
     # 玩法规则图
-    path('guess/play_rule/', views.PlayRuleImage.as_view(), name="app-v1-guess-play_rule")
+    path('guess/play_rule/', views.PlayRuleImage.as_view(), name="app-v1-guess-play_rule"),
+
+    # ========== 股指pk ==========
+    # 竞猜详情
+    path('stock_pk_detail/', views_pk.StockPkDetail.as_view(), name="app-stock_pk-stock_pk_detail"),
+    # 开奖记录
+    path('stock_pk_results/list/', views_pk.StockPkResultList.as_view(), name="app-stock_pk-result_list"),
+    # 竞猜记录
+    path('stock_pk_records/list/', views_pk.StockPkRecordsList.as_view(), name="app-stock_pk-records_list"),
+    # 下注
+    path('stock_pk_bet/', views_pk.StockPkBet.as_view(), name="app-stock_pk-bet"),
+    # 推送
+    path('stock_pk_push/list/', views_pk.StockPKPushView.as_view(), name="app-stock_pk-push"),
 ]

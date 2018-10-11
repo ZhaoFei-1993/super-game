@@ -64,6 +64,10 @@ class Command(BaseCommand):
             coin_decimal = 1
         elif coin_name == 'GSG':
             coin_decimal = 10000000000
+        elif coin_name == 'DB':
+            coin_decimal = 1000000
+        elif coin_name == 'SOC':
+            coin_decimal = 1000000000000000000
 
         coin_id = coin.id
         coin_name = coin.name

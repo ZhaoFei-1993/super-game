@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
+from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView, CreateAPIView
 from django.http import JsonResponse
 from ..models import Club, ClubBanner, ClubRule
 from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer, CoinSerialize
@@ -7,6 +7,8 @@ from users.models import Coin
 from rest_framework import status
 from utils.functions import reversion_Decorator, value_judge
 from url_filter.integrations.drf import DjangoFilterBackend
+from utils.cache import delete_cache
+import json
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -18,13 +20,22 @@ class ClubBackendListView(ListCreateAPIView):
 
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
-        value = value_judge(request, ('room_title', 'autograph', 'icon', 'room_number', 'coin', 'is_recommend'))
-        if value:
+        value = value_judge(request, 'room_title', 'autograph', 'icon', 'room_number', 'coin', 'is_recommend')
+        if value == 0:
             return JsonResponse({'Error': '参数不正确'}, status=status.HTTP_400_BAD_REQUEST)
         values = dict(request.data)
         coin = values.pop('coin')
+        online = values.pop('online')
+
         club = Club(**values, coin_id=int(coin))
         club.save()
+
+        # 修改数据，清除缓存
+        delete_cache(Club.objects.key)
+
+        # 写入俱乐部在线人数缓存
+        Club.objects.save_online(online=online, club_id=club.id)
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 
@@ -37,10 +48,15 @@ class ClubBackendListDetailView(RetrieveUpdateDestroyAPIView):
         pk = self.kwargs['pk']
         try:
             club = Club.objects.get(id=pk)
+
+            # 获取在线人数配置
+            play_online = Club.objects.get_online_setting(pk)
         except Exception:
             return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
+
         club_s = ClubBackendSerializer(club)
-        return JsonResponse({'results': club_s.data}, status=status.HTTP_200_OK)
+
+        return JsonResponse({'results': club_s.data, 'online': play_online}, status=status.HTTP_200_OK)
 
     @reversion_Decorator
     def patch(self, request, *args, **kwargs):
@@ -50,8 +66,18 @@ class ClubBackendListDetailView(RetrieveUpdateDestroyAPIView):
         except Exception:
             return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
         values = dict(request.data)
+
+        online = values.pop('online')
+
         club.__dict__.update(**values)
         club.save()
+
+        # 修改数据，清除缓存
+        delete_cache(Club.objects.key)
+
+        # 写入俱乐部在线人数缓存
+        Club.objects.save_online(online=online, club_id=club.id)
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     @reversion_Decorator
@@ -63,6 +89,21 @@ class ClubBackendListDetailView(RetrieveUpdateDestroyAPIView):
             return JsonResponse({'Error:对象不存在'}, status=status.HTTP_400_BAD_REQUEST)
         club.is_dissolve = True
         club.save()
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class ClubBackendSortView(CreateAPIView):
+    """
+    俱乐部排序
+    """
+    def post(self, request, *args, **kwargs):
+        sorts = request.data.get('sorts')
+        sorts = json.loads(sorts)
+        for club_id in sorts:
+            club = Club.objects.get(pk=club_id)
+            club.user = sorts[club_id]
+            club.save()
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
 

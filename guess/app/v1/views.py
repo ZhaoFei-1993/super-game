@@ -33,7 +33,8 @@ class StockList(ListAPIView):
     stock_info = {}
 
     def get_queryset(self):
-        for stock in Stock.objects.all():
+        for stock in Stock.objects.filter(stock_guess_open=True):
+
             title = Stock.STOCK[int(stock.name)][1]
             if self.request.GET.get('language') == 'en':
                 title = Stock.STOCK_EN[int(stock.name)][1]
@@ -53,7 +54,7 @@ class StockList(ListAPIView):
         for pre_period in Periods.objects.filter(stock_id__in=self.stock_info.keys(), periods__in=pre_period):
             self.previous_periods_list.append(pre_period)
 
-        return self.last_periods_list
+        return Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys())
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -110,7 +111,7 @@ class StockList(ListAPIView):
         sql += 'LEFT JOIN guess_periods ON a.periods_id = guess_periods.id WHERE a.id IN'
         sql += '(SELECT MAX(a.id) FROM guess_index a ' \
                'WHERE periods_id IN({periods_id}) ' \
-               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.last_periods_list]))
+               'GROUP BY periods_id)'.format(periods_id=','.join([str(obj.id) for obj in self.get_queryset()]))
         for dt in get_sql(sql):
             index_info.update({
                 dt[1]: {
@@ -555,7 +556,7 @@ class BetView(ListCreateAPIView):
         coin_detail.coin_name = usercoin.coin.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = usercoin.balance
-        coin_detail.sources = 13
+        coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
         response = {
             'code': 0,

@@ -305,10 +305,10 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
                 earn = 'AWAIT OPEN'
         else:
             if earn_coin < 0:
-                earn = str(float(earn_coin))
+                earn = '猜错'
             else:
                 earn = '+' + str(float(earn_coin))
-            handle_zero(earn)
+                earn = handle_zero(earn)
 
         return earn
 

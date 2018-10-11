@@ -32,7 +32,7 @@ class ClublistView(ListAPIView):
                     Q(room_title__icontains=name) | Q(room_number__istartswith=name)).order_by('user',
                                                                                                '-is_recommend')
         else:
-            chat_list = Club.objects.filter(is_dissolve=0).order_by('-is_recommend')
+            chat_list = Club.objects.filter(is_dissolve=0).order_by('user', '-is_recommend')
         return chat_list
 
     def list(self, request, *args, **kwargs):
@@ -53,23 +53,14 @@ class ClublistView(ListAPIView):
 
         data = []
         for item in items:
+            club_id = item['id']
+
             coin = coins[item['coin_id']]
-            coin_name = coin.name.lower()
-            if coin_name == 'eos':
-                user_number = 0
-            else:
-                day = datetime.now().strftime('%Y-%m-%d')
-                number_key = "INITIAL_ONLINE_USER_" + str(day)
-                initial_online_user_number = get_cache(number_key)
-                period = str(number_time_judgment())
-                quiz_number = int(initial_online_user_number[0][period][coin_name]['quiz'])
-                guess_number = int(initial_online_user_number[0][period][coin_name]['guess'])
-                six_number = int(initial_online_user_number[0][period][coin_name]['six'])
-                user_number = quiz_number + guess_number + six_number
+            user_number = Club.objects.get_club_online(club_id)
 
             data.append(
                 {
-                    "club_id": item['id'],
+                    "club_id": club_id,
                     "room_title": item['title'],
                     "autograph": item['club_autograph'],
                     "user_number": user_number,

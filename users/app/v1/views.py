@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue, EosCode
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -126,31 +126,37 @@ class UserRegister(object):
         :return:
         """
         token = None
-        try:
-            if area_code is None:
-                area_code = 86
-            user = User.objects.get(area_code=area_code, username=username)
-        except Exception:
-            raise ParamErrorException(error_code.API_10105_NO_REGISTER)
-
-        if user.is_block == 1:             # 是否被封号
-            raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
-
-        if user.check_password(password):         # 校验密码
+        if password is None:
+            try:
+                user = User.objects.get(username=username)
+            except Exception:
+                raise UserLoginException(error_code=error_code.API_20103_TELEPHONE_UNREGISTER)
+            if user.is_block == 1:
+                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
             token = self.get_access_token(source=source, user=user)
         else:
-            raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
-
-        message = Message.objects.filter(type=1, created_at__gte=user.created_at)    # 生成为公共消息
-        ids = [x.id for x in message]
-        user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
-        mes_ids = list(set([x.message_id for x in user_messages]))
-        for i in ids:
-            if i not in mes_ids:
-                usermessage = UserMessage()
-                usermessage.user = user
-                usermessage.message_id = i
-                usermessage.save()
+            try:
+                if area_code is None:
+                    area_code = 86
+                user = User.objects.get(area_code=area_code, username=username)
+            except Exception:
+                raise ParamErrorException(error_code.API_10105_NO_REGISTER)
+            if user.is_block == 1:
+                raise ParamErrorException(error_code.API_70203_PROHIBIT_LOGIN)
+            if user.check_password(password):
+                token = self.get_access_token(source=source, user=user)
+            else:
+                raise UserLoginException(error_code=error_code.API_20104_LOGIN_ERROR)
+            message = Message.objects.filter(type=1, created_at__gte=user.created_at)
+            ids = [x.id for x in message]
+            user_messages = UserMessage.objects.filter(message_id__in=ids, user=user.id)
+            mes_ids = list(set([x.message_id for x in user_messages]))
+            for i in ids:
+                if i not in mes_ids:
+                    usermessage = UserMessage()
+                    usermessage.user = user
+                    usermessage.message_id = i
+                    usermessage.save()
 
         Address.objects.initial(user.id)          # 生成为基础 usercoin 数据 并且分配地址
 
@@ -185,6 +191,9 @@ class UserRegister(object):
         register_type = self.get_register_type(username)
         user = User()
 
+        # 获取eos code
+        eos_code = EosCode.objects.get_eos_code()
+
         if invitation_code != '':  # 是否用邀请码注册
             try:
                 invitation_user = User.objects.get(invitation_code=invitation_code)
@@ -204,6 +213,7 @@ class UserRegister(object):
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
             user.telephone = username
+            user.eos_code = eos_code
             user.save()
 
             user_go_line = UserInvitation()           # 生成邀请记录
@@ -235,6 +245,7 @@ class UserRegister(object):
             user.nickname = nickname
             user.device_token = device_token
             user.invitation_code = random_invitation_code()
+            user.eos_code = eos_code
             user.save()
 
         # 生成签到记录
@@ -448,13 +459,15 @@ class LoginView(CreateAPIView):
                 invitation_code = request.data.get('invitation_code')
                 invitation_code = invitation_code.upper()
 
-            record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
-                '-id').first()
-            if int(record.degree) >= 5:
-                raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
-            else:
-                record.degree += 1
-                record.save()
+                record = Sms.objects.filter(area_code=area_code, telephone=username).order_by(
+                    '-id').first()
+                if record is None:
+                    raise ParamErrorException(error_code.API_40106_SMS_PARAMETER)
+                if int(record.degree) >= 5:
+                    raise ParamErrorException(error_code.API_40107_SMS_PLEASE_REGAIN)
+                else:
+                    record.degree += 1
+                    record.save()
 
             message = Sms.objects.filter(telephone=username, area_code=area_code, code=code, type=Sms.REGISTER)
             if len(message) == 0:
@@ -1051,9 +1064,6 @@ class DailySignListView(ListCreateAPIView):
             else:
                 fate = daily.number + 1
                 daily.number += 1
-        # date_last = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # end_date = "2018-06-24 00:00:00"
-        # if date_last > end_date:
 
         total_sign_days = DailySettings.objects.all().count()
         if fate > total_sign_days:
@@ -1086,39 +1096,6 @@ class DailySignListView(ListCreateAPIView):
                    'icon': dailysettings.coin.icon,
                    'name': dailysettings.coin.name
                    }
-        # else:
-        #     if fate == 1:
-        #         rewards = 6
-        #     if fate == 2:
-        #         rewards = 8
-        #     if fate == 3:
-        #         rewards = 10
-        #     if fate == 4:
-        #         rewards = 12
-        #     if fate == 5:
-        #         rewards = 14
-        #     if fate == 6:
-        #         rewards = 16
-        #     if fate == 7:
-        #         rewards = 18
-        #     user.integral += rewards
-        #     user.save()
-        #     daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
-        #     daily.user_id = user_id
-        #     daily.save()
-        #     coin_detail = CoinDetail()
-        #     coin_detail.user = user
-        #     coin_detail.coin_name = 'GSG'
-        #     coin_detail.amount = '+' + str(rewards)
-        #     coin_detail.rest = Decimal(user.integral)
-        #     coin_detail.sources = 7
-        #     coin_detail.save()
-        #
-        #     content = {'code': 0,
-        #                'data': normalize_fraction(rewards, 2),
-        #                'icon': '',
-        #                'name': ''
-        #                }
 
         return self.response(content)
 

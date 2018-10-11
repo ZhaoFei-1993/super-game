@@ -78,12 +78,12 @@ def electro_optical_system_monitor(block_num):
             recharge_obj.amount = Decimal(value)
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = convert_localtime(block_time)
-            # recharge_obj.save()
+            recharge_obj.save()
 
             # user coin增加对应值
             user_coin = UserCoin.objects.get(coin_id=Coin.EOS, user_id=user_id)
             user_coin.balance += Decimal(value)
-            # user_coin.save()
+            user_coin.save()
 
             coin_detail = CoinDetail()
             coin_detail.user_id = user_id
@@ -91,7 +91,7 @@ def electro_optical_system_monitor(block_num):
             coin_detail.amount = value
             coin_detail.rest = user_coin.balance
             coin_detail.sources = CoinDetail.RECHARGE
-            # coin_detail.save()
+            coin_detail.save()
 
             print('获取1条EOS充值记录，TX = ', txid, ' 充值码 = ', str(user['eos_code']), ' 充值金额 = ', recharge['value'])
 

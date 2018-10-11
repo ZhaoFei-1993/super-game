@@ -108,6 +108,12 @@ CHANNEL_LAYERS = {
             "hosts": [('127.0.0.1', 6379)],
         },
     },
+    'daphne': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
 }
 SMS_CL_SIGN_NAME = '【超级游戏】'
 SMS_CL_TEMPLATE_REGISTER = '尊敬的用户您好！感谢您注册GSG.one！验证码：{code}'
@@ -183,4 +189,3 @@ EOS_RECHARGE_ADDRESS = 'gsgeosaddress'
 
 # 是否开启接口转账功能，测试期间可控
 IS_ENABLE_TRANSFER_API = False
-

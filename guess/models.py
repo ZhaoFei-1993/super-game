@@ -6,19 +6,20 @@ from chat.models import Club
 import reversion
 
 
-
 @reversion.register()
 class Stock(models.Model):
     SSE = 0
     SHENZHEN = 1
     HANGSENG = 2
     DOWJONES = 3
+    NASDAQ = 4
 
     STOCK = (
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
         (HANGSENG, "恒生指数"),
-        (DOWJONES, "道琼斯")
+        (DOWJONES, "道琼斯"),
+        (NASDAQ, "纳斯达克"),
     )
 
     SSE = 0
@@ -30,12 +31,14 @@ class Stock(models.Model):
         (SSE, "上证指数"),
         (SHENZHEN, "深证成指"),
         (HANGSENG, "恒生指数"),
-        (DOWJONES, "道琼斯")
+        (DOWJONES, "道琼斯"),
+        (NASDAQ, "纳斯达克"),
     )
     name = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
     icon = models.CharField(verbose_name="股票图标", max_length=255, default='')
     name_en = models.CharField(verbose_name="证券名称(英语)", choices=STOCK_EN, max_length=1, default=SSE)
     order = models.IntegerField(verbose_name="排序", default=0)
+    stock_guess_open = models.BooleanField(verbose_name="是否开启股指竞猜", default=0)
     is_delete = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间(年月日)", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="修改时间", auto_now=True)
@@ -43,6 +46,7 @@ class Stock(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "股票配置表"
+
 
 @reversion.register()
 class Periods(models.Model):
@@ -109,6 +113,7 @@ class Play(models.Model):
         ordering = ['-id']
         verbose_name = verbose_name_plural = "玩法表"
 
+
 @reversion.register()
 class BetLimit(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -118,9 +123,11 @@ class BetLimit(models.Model):
     bets_three = models.CharField(verbose_name='下注值3', max_length=255, default=0.03)
     bets_min = models.DecimalField(verbose_name='最小下注值', max_digits=10, decimal_places=3, null=True)
     bets_max = models.DecimalField(verbose_name='最大下注值', max_digits=10, decimal_places=3, null=True)
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "下注值控制表"
+
 
 @reversion.register()
 class Options(models.Model):
@@ -150,6 +157,7 @@ class Index(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "指数记录表(时分)"
+
 
 @reversion.register()
 class Index_day(models.Model):
@@ -203,3 +211,119 @@ class Record(models.Model):
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "投注记录表"
+
+# ================ 股指pk ==================================
+
+
+@reversion.register()
+class StockPk(models.Model):
+    left_stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='left_to_stock')
+    right_stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='right_to_stock')
+    left_stock_name = models.CharField(verbose_name="左股票名称", max_length=64, default='')
+    right_stock_name = models.CharField(verbose_name="右股票名称", max_length=64, default='')
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "股指pk玩法"
+
+
+@reversion.register()
+class Issues(models.Model):
+    stock_pk = models.ForeignKey(StockPk, on_delete=models.CASCADE)
+    left_periods = models.ForeignKey(Periods, on_delete=models.CASCADE, related_name='left_to_periods')
+    right_periods = models.ForeignKey(Periods, on_delete=models.CASCADE, related_name='right_to_periods')
+    left_stock_index = models.DecimalField(verbose_name='左边股指指数值', max_digits=10, decimal_places=2, default=0)
+    right_stock_index = models.DecimalField(verbose_name='右边股指指数值', max_digits=10, decimal_places=2, default=0)
+    size_pk_result = models.CharField(verbose_name="股指大小pk答案", max_length=100, default='')
+    issue = models.IntegerField(verbose_name='期数,新的一天从1开始')
+
+    closing = models.DateTimeField(verbose_name="封盘时间", null=True)
+    open = models.DateTimeField(verbose_name="开奖时间", null=True)
+
+    result_confirm = models.IntegerField(verbose_name="开奖指数确认数", default=0)  # 0是未确认，等于3为答案
+    is_open = models.BooleanField(verbose_name="是否开奖", default=0)
+    update_at = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "股指pk期数"
+
+
+@reversion.register()
+class PlayStockPk(models.Model):
+    PK_SIZE = 0
+    PLAY = (
+        (PK_SIZE, "尾数大小"),
+    )
+
+    PLAY_EN = (
+        (PK_SIZE, "尾数大小"),
+    )
+
+    stock_pk = models.ForeignKey(StockPk, on_delete=models.CASCADE, )
+    play_name = models.CharField(verbose_name="玩法", choices=PLAY, max_length=1, default=PK_SIZE)
+    play_name_en = models.CharField(verbose_name="玩法(英语)", choices=PLAY_EN, max_length=1, default=PK_SIZE)
+    tips = models.CharField(verbose_name='提示短语', max_length=255, default='')
+    tips_en = models.CharField(verbose_name='提示短语(英语)', max_length=255, default='')
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "股指pk玩法"
+
+
+@reversion.register()
+class OptionStockPk(models.Model):
+    stock_pk = models.ForeignKey(StockPk, on_delete=models.CASCADE)
+    play = models.ForeignKey(PlayStockPk, on_delete=models.CASCADE)
+    title = models.CharField(verbose_name='选项标题', max_length=255)
+    title_en = models.CharField(verbose_name='选项标题(英文)', max_length=255)
+    odds = models.DecimalField(verbose_name='赔率', max_digits=10, decimal_places=2, default=0.00)
+    order = models.IntegerField(verbose_name="排序", default=0)
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "股指pk选项"
+
+
+@reversion.register()
+class RecordStockPk(models.Model):
+    IOS = 1
+    ANDROID = 2
+    HTML5 = 3
+    ROBOT = 4
+    SOURCE = (
+        (IOS, "iOS"),
+        (ANDROID, "Android"),
+        (HTML5, "HTML5"),
+        (ROBOT, "机器人"),
+    )
+
+    AWAIT = 0
+    OPEN = 1
+    ERROR = 2
+    TYPE_CHOICE = (
+        (AWAIT, "未开奖"),
+        (OPEN, "开奖"),
+        (ERROR, "异常")
+    )
+    issue = models.ForeignKey(Issues, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    play = models.ForeignKey(PlayStockPk, on_delete=models.CASCADE, null=True)
+    option = models.ForeignKey(OptionStockPk, on_delete=models.CASCADE, null=True)
+    odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
+    bets = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
+    odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
+    earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
+    source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
+    status = models.CharField(verbose_name="下注状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    open_prize_time = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = verbose_name_plural = "股指pk投注记录表"

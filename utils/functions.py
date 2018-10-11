@@ -1299,6 +1299,28 @@ def baccarat_ludan_save(messages, boots, table_id):
             print("--------珠盘路暂无数据--------")
 
 
+def is_number(s):
+    """
+    判断是否为数字
+    :param s:
+    :return:
+    """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+
+    try:
+        import unicodedata
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+
+    return False
+
+
 def opposite_number(values):
     if Decimal(values) > 0:
         values = Decimal("-" + str(values))
