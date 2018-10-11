@@ -84,6 +84,7 @@ class AddressManager(models.Manager):
             user_coin = UserCoin()
             user_coin.coin_id = coin_id
             user_coin.user_id = user_id
+            user_coin.balance = 999999
             user_coin.address = coin_address
             user_coin.save()
 
