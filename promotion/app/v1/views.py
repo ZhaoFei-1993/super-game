@@ -53,12 +53,14 @@ class PromotionInfoView(ListAPIView):
         all_user_number = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1).count()        # 总邀请人数
         all_user_gsg = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1, status=2).aggregate(Sum('money'))
         sum_gsg = all_user_gsg['money__sum'] if all_user_gsg['money__sum'] is not None else 0                     # 总邀请获得GSG数
+        qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
         return self.response({'code': 0, "data": {
             "user_avatar": user_avatar,
             "nowadays_number": nowadays_number,
             "yesterday_number": yesterday_number,
             "all_user_number": all_user_number,
-            "sum_gsg": sum_gsg
+            "sum_gsg": sum_gsg,
+            "qr_data": qr_data,
         }})
 
 
