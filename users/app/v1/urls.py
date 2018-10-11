@@ -74,14 +74,6 @@ urlpatterns = [
     path('android/version/', views.VersionUpdateView.as_view(), name='app-v1-user-android-version'),
     # 更换头像
     path('image/head/', views.ImageUpdateView.as_view(), name='app-v1-user-head'),
-    # 用户接受邀请并注册
-    path('invitation/register/', views.InvitationRegisterView.as_view(), name="app-v1-user-invitation-register"),
-    # 用户邀请信息界面
-    path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
-    # 扫描二维码拿用户消息
-    path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
-    # 用户生成带二维码邀请界面
-    path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
     # 抽奖列表
     path('luck_draw_list/', views.LuckDrawListView.as_view(), name="app-v1-user-luck-draw-list"),
     # 点击抽奖
@@ -97,7 +89,17 @@ urlpatterns = [
     # 分红记录
     path('dividend/<int:lock_id>/', views.DividendHistory.as_view(), name='app-v1-user-dividend-lock'),
     # 分红记录
-    path('soc_activity/', views.Url_list.as_view(), name='app-v1-user-soc-activity')
+    path('soc_activity/', views.Url_list.as_view(), name='app-v1-user-soc-activity'),
+
+    # 扫码注册接口
+    path('invitation/register/', views.InvitationRegisterView.as_view(), name="app-v1-user-invitation-register"),
+    # 用户邀请信息界面
+    path('invitation/info/', views.InvitationInfoView.as_view(), name="app-v1-user-invitation-register"),
+    # 扫码拿用户消息
+    path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
+    # 生成带二维码邀请海报
+    path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge")
+
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
     # # 资产锁定

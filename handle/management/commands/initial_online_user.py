@@ -249,11 +249,11 @@ class Command(BaseCommand, BaseView):
 
                     },
                     "bch": {
-                        "quiz": int(random.uniform(38,45)),
-                        "guess": int(random.uniform(20,25)),
-                        "six": int(random.uniform(38,45)),
-                        "bjl": int(random.uniform(140,160)),
-                        "lhd": int(random.uniform(70,80)),
+                        "quiz": int(random.uniform(38, 45)),
+                        "guess": int(random.uniform(20, 25)),
+                        "six": int(random.uniform(38, 45)),
+                        "bjl": int(random.uniform(140, 160)),
+                        "lhd": int(random.uniform(70, 80)),
                     },
                     "soc": {
                         "quiz": int(random.uniform(40,50)),

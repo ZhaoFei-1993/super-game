@@ -755,7 +755,7 @@ class UserRechargeManager(models.Manager):
         if give_number >= 500:
             return True
         # 判断是否达到赠送条件
-        sum_amount_list = self.filter(user_id=user_id, coin_id=11).aggregate(
+        sum_amount_list = self.objects.filter(user_id=user_id, coin_id=11).aggregate(
             Sum('amount'))
         sum_amount = sum_amount_list['amount__sum'] if sum_amount_list['amount__sum'] is not None else 0
         if sum_amount < 100:
@@ -853,15 +853,15 @@ class UserInvitationManager(models.Manager):
     """
     用户邀请
     """
-    def usdt_activity(self, user):
+    def activity(self, user):
         """
         邀请赠送USDT活动
         :param user:
         :return:
         """
-        user_invitation_number = self.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1).count()
+        user_invitation_number = self.filter(money__gt=0, inviter_id=user.id, inviter_type=1, status=1).count()
         if user_invitation_number > 0:
-            user_invitation_info = self.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1)
+            user_invitation_info = self.filter(money__gt=0, inviter_id=user.id, inviter_type=1, status=1)
             for a in user_invitation_info:
                 try:
                     userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
@@ -895,7 +895,7 @@ class UserInvitationManager(models.Manager):
                 coin_detail.rest = userbalance.balance
                 coin_detail.sources = 8
                 coin_detail.save()
-                a.is_deleted = 1
+                a.status = 2
                 a.save()
 
                 u_mes = UserMessage()  # 邀请注册成功后消息
@@ -910,15 +910,32 @@ class UserInvitationManager(models.Manager):
 
 @reversion.register()
 class UserInvitation(models.Model):
+    OLD = 0
+    ROBOT = 1
+    PROMOTION = 2
+
+    INVITER_TYPE = (
+        (OLD, "旧数据"),
+        (PROMOTION, "推广人"),
+        (ROBOT, "机器人")
+    )
+    INVALID = 0
+    UNACCALIMED = 1
+    RECEIVED = 2
+
+    INVITER_STATUS = (
+        (INVALID, "无效"),
+        (UNACCALIMED, "未领取"),
+        (RECEIVED, "已领取")
+    )
     inviter = models.ForeignKey(User, on_delete=models.CASCADE)
     invitee_one = models.IntegerField(verbose_name="T1被邀请人id", default=0)
     invitee_two = models.IntegerField(verbose_name="T2被邀请人id", default=0)
     invitation_code = models.CharField(verbose_name="邀请码", max_length=20, default='')
     money = models.IntegerField(verbose_name="奖励金额", default=0)
     coin = models.IntegerField(verbose_name="币种ID", default=4)
-    is_effective = models.BooleanField(verbose_name="是否有效", default=False)
-    is_robot = models.BooleanField(verbose_name="是否机器人", default=True)
-    is_deleted = models.BooleanField(verbose_name="是否已领取奖励", default=False)
+    inviter_type = models.CharField(verbose_name="邀请类型", choices=INVITER_TYPE, max_length=1, default=OLD)
+    status = models.CharField(verbose_name="状态", choices=INVITER_STATUS, max_length=1, default=INVALID)
     created_at = models.DateTimeField(verbose_name="邀请时间", auto_now_add=True)
 
     objects = UserInvitationManager()
@@ -1038,7 +1055,7 @@ class CoinGiveManager(models.Manager):
     """
     货币赠送数据操作
     """
-    def usdt_activity(self, user):
+    def coin_activity(self, user):
         """
         USDT赠送活动
         :param: user 用户
