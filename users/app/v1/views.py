@@ -2451,8 +2451,7 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
-                                                               is_effective=1).count()
+        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1).count()
         if user_invitation_number > 0:
             user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
                                                                  is_effective=1)
