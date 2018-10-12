@@ -3,6 +3,7 @@ from marksix.models import SixRecord, Option
 from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail
+from promotion.models import UserPresentation as UserPresentation_new
 
 coin_detail_list = []
 user_message_list = []
@@ -299,7 +300,7 @@ def ergodic_record(issue, answer_dic):
                 income = Decimal(earn_coin - float(record.bet_coin))
             else:
                 income = Decimal(earn_coin)
-            UserPresentation.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
+            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
 
     # 开始执行sql语句
     # 插入coin_detail表

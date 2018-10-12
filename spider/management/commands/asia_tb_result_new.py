@@ -4,7 +4,7 @@ from utils.functions import *
 from chat.models import Club
 from users.models import Coin, UserCoin, CoinDetail
 from quiz.models import Option, Record
-from promotion.models import UserPresentation
+from promotion.models import UserPresentation as UserPresentation_new
 from users.models import UserMessage
 from decimal import Decimal
 
@@ -275,7 +275,8 @@ def asia_result(quiz, records_asia):
             income = Decimal(earn_coin - float(record.bet))
         else:
             income = Decimal(earn_coin)
-        UserPresentation.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
+
     # 开始执行sql语句
     # 插入coin_detail表
     sql = make_insert_sql('users_coindetail', coin_detail_list)

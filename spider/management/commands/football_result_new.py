@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
-from promotion.models import UserPresentation
+from promotion.models import UserPresentation as UserPresentation_new
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
 from django.db import transaction
 import datetime
@@ -417,11 +417,11 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
                 earn_coin = '-' + str(record.bet)
-                record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+                record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
             else:
                 earn_coin = record.bet * record.odds
                 earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
-                record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+                record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
             if is_right is True:
                 # user_coin
@@ -484,6 +484,15 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 }
             )
 
+            # 邀请代理事宜
+            earn_coin = float(earn_coin)
+            if earn_coin > 0:
+                income = Decimal(earn_coin - float(record.bet))
+            else:
+                income = Decimal(earn_coin)
+            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
+                                                              record.bet, income)
+
         # 开始执行sql语句
         # 初始化sql语句
         # 插入coin_detail表
@@ -538,17 +547,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
         if len(records_asia) > 0:
             asia_result(quiz, records_asia)
-
-        # 邀请代理事宜
-        for record_dic in record_right_list + record_false_list:
-            record_obj = record_dic['record']
-            earn_coin = float(record_dic['earn_coin'])
-            if earn_coin > 0:
-                income = Decimal(earn_coin - float(record_obj.bet))
-            else:
-                income = Decimal(earn_coin)
-            UserPresentation.objects.club_flow_statistics(record_obj.user_id, record_obj.roomquiz_id,
-                                                          record_obj.bet, income)
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()

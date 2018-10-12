@@ -3,7 +3,7 @@ from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, In
 from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
-from promotion.models import UserPresentation
+from promotion.models import UserPresentation as UserPresentation_new
 from utils.functions import *
 from time import time
 from django.db.models import Q
@@ -94,16 +94,18 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+        return earn_coin
 
     def points_result(self, record, cache_club_value):
         """
@@ -121,16 +123,18 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+        return earn_coin
 
     def pair_result(self, record, cache_club_value):
         """
@@ -147,16 +151,18 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+        return earn_coin
 
     def status_result(self, record, win_sum_dic, lose_sum_dic, cache_club_value):
         """
@@ -177,16 +183,18 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+        return earn_coin
 
     def take_result(self, period, dt, date):
         print(dt)
@@ -289,9 +297,11 @@ class GuessRecording(object):
                 # i += 1
                 # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
                 if record.play.play_name == str(0):
-                    rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic, cache_club_value)
+                    earn_coin = rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic, cache_club_value)
                 else:
-                    rule_dic[record.play.play_name](record, cache_club_value)
+                    earn_coin = rule_dic[record.play.play_name](record, cache_club_value)
+
+                self.handle_presentation(record, earn_coin)  # 邀请代理事宜
 
         # 开始执行sql语句
         # 更新record状态
@@ -320,8 +330,6 @@ class GuessRecording(object):
 
         self.insert_info()  # 批量插入
 
-        self.handle_presentation()  # 邀请代理事宜
-
         # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
         # index_day.index_value = float(dt['num'])
         # index_day.index_time = period.lottery_time
@@ -336,16 +344,13 @@ class GuessRecording(object):
         print('----------------------------------------------')
 
     # 邀请代理事宜
-    def handle_presentation(self):
-        for record_dic in self.record_right_list + self.record_false_list:
-            record_obj = record_dic['record']
-            earn_coin = float(record_dic['earn_coin'])
-            if earn_coin > 0:
-                income = Decimal(earn_coin - float(record_obj.bet))
-            else:
-                income = Decimal(earn_coin)
-            UserPresentation.objects.club_flow_statistics(record_obj.user_id, record_obj.roomquiz_id,
-                                                          record_obj.bet, income)
+    @staticmethod
+    def handle_presentation(record, earn_coin):
+        if earn_coin > 0:
+            income = Decimal(earn_coin - float(record.bets))
+        else:
+            income = Decimal(earn_coin)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
 
     def insert_info(self):
         # 插入coin_detail表

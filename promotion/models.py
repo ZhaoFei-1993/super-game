@@ -35,8 +35,8 @@ class UserPresentationManager(BaseManager):
         if club_id == 1 or club_id == 5:
             pass
         else:
-            my_inviter  = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
-            if len(my_inviter) > 0:
+            my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
+            if my_inviter is not None:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
                 # year = datetime.date.today().year                                               # 获取当前年份
@@ -83,7 +83,7 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water += Decimal(bet)
-                    day_data.dividend_water += Decimal(bet)*0.005
+                    day_data.dividend_water += Decimal(bet) * Decimal(0.005)
                     day_data.income += Decimal(income)
                     # day_data.income_dividend += Decimal(sum_income)*income_dividend
                     day_data.save()
@@ -92,13 +92,13 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water = Decimal(bet)
-                    day_data.dividend_water = Decimal(bet) * 0.005
+                    day_data.dividend_water = Decimal(bet) * Decimal(0.005)
                     day_data.income = Decimal(income)
                     # day_data.income_dividend = Decimal(sum_income) * income_dividend
                     day_data.created_at = created_at
                     day_data.save()
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                inviter_coin.balance += Decimal(bet) * 0.005
+                inviter_coin.balance += Decimal(bet) * Decimal(0.005)
                 inviter_coin.save()
 
 @reversion.register()
@@ -113,6 +113,7 @@ class UserPresentation(models.Model):
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     objects = UserPresentationManager()
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "推广人下级日流水表"
