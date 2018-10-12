@@ -35,8 +35,8 @@ class UserPresentationManager(BaseManager):
         if club_id == 1 or club_id == 5:
             pass
         else:
-            my_inviter  = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
-            if len(my_inviter) > 0:
+            my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
+            if my_inviter is not None:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
                 # year = datetime.date.today().year                                               # 获取当前年份
