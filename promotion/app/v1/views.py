@@ -951,6 +951,7 @@ class ClubDividendView(ListAPIView):
         month_list = {}
         print("the_month_list[0][1]===============================", the_month_list[0][1])
         if the_month_list[0][1] == None:
+            print("111111111111111111111")
             the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
@@ -958,6 +959,7 @@ class ClubDividendView(ListAPIView):
                 "proportion": 0
             }
         else:
+            print("2222222222222222222222222222")
             the_month_income_sum = normalize_fraction(the_month_list[0][1], coin_accuracy)
             the_month_income_proportion = reward_gradient(user.id, club_id, the_month_income_sum)  # 本月兑换比例比例
             month_list[the_month_list[0][0]] = {
@@ -1006,7 +1008,6 @@ class ClubDividendView(ListAPIView):
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
             sql += " order by created_ats desc"
-            print("sql=============================", sql)
             record_list = self.get_list_by_sql(sql)  # 股票
             for i in record_list:
                 if i[8] not in user_list:
