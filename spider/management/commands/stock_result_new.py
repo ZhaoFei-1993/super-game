@@ -347,7 +347,7 @@ class GuessRecording(object):
     @staticmethod
     def handle_presentation(record, earn_coin):
         if earn_coin > 0:
-            income = Decimal(earn_coin - float(record.bet))
+            income = Decimal(earn_coin - float(record.bets))
         else:
             income = Decimal(earn_coin)
         UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
