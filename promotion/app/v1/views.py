@@ -949,9 +949,10 @@ class ClubDividendView(ListAPIView):
         sql += " and pu.created_at <= '" + str(end) + "'"
         the_month_list = get_sql(sql)
         month_list = {}
+        print("the_month_list[0][1]===============================", the_month_list[0][1])
         if the_month_list[0][1] == None:
             the_month_income_sum = 0
-            the_month_income_proportion = reward_gradient(user.id, club_id, the_month_income_sum)  # 本月兑换比例比例
+            the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
                 "months": datetime.datetime.now().strftime('%Y%m'),
                 "proportion": 0
@@ -990,8 +991,8 @@ class ClubDividendView(ListAPIView):
         user_list = {}
         data_list = []
         if int(type) == 1:  # 1.全部
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '猜股指' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from guess_record dtr"
@@ -1020,8 +1021,8 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-            sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '六合彩' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
@@ -1049,8 +1050,8 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '龙虎斗' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
@@ -1078,8 +1079,8 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '百家乐' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
@@ -1107,8 +1108,8 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from quiz_record dtr"
@@ -1139,8 +1140,8 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from quiz_record dtr"
@@ -1172,8 +1173,8 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         elif int(type) == 2:  # 2. 篮球
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from quiz_record dtr"
@@ -1205,8 +1206,8 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         elif int(type) == 3:  # 3.足球
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from quiz_record dtr"
@@ -1238,8 +1239,8 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         elif int(type) == 4:  # 4. 股票
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '猜股指' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from guess_record dtr"
@@ -1268,8 +1269,8 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         elif int(type) == 5:  # 5. 六合彩
-            sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '六合彩' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats,dtr.user_id"
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
@@ -1298,8 +1299,8 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         elif int(type) == 7:  # 百家乐
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '龙虎斗' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
             sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
@@ -1328,10 +1329,10 @@ class ClubDividendView(ListAPIView):
                     "created_ats": i[7]
                 })
         else:  # 龙虎斗
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
-            sql_list += " date_format( dtr.created_at, '%c/%e' ) as years,"
+            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
+            sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '百家乐' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m%d' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1363,10 +1364,13 @@ class ClubDividendView(ListAPIView):
         tmps = ''
         tmp = ''
         for fav in data_one_list:
+            print("created_ats================================", fav["created_ats"])
+            print("month_list================================", month_list)
             if fav["created_ats"] in month_list:
                 proportion = Decimal(month_list[fav["created_ats"]]["proportion"])
             else:
                 proportion = 0
+            print("proportion===============================", proportion)
 
             if fav["earn_coin"] > 0:
                 reward_coin = fav["earn_coin"] - fav["bets"]
@@ -1384,16 +1388,16 @@ class ClubDividendView(ListAPIView):
             pecific_date = fav["years"]
             if tmps == pecific_dates:
                 pecific_dates = ""
-                if tmp == pecific_date:
-                    pecific_date = ""
-                else:
-                    tmp = pecific_date
+                # if tmp == pecific_date:
+                #     pecific_date = ""
+                # else:
+                #     tmp = pecific_date
             else:
                 tmps = pecific_dates
-                if tmp == pecific_date:
-                    pecific_date = ""
-                else:
-                    tmp = pecific_date
+                # if tmp == pecific_date:
+                #     pecific_date = ""
+                # else:
+                #     tmp = pecific_date
             data.append({
                 "nickname": fav["nickname"],
                 "avatar": fav["avatar"],
