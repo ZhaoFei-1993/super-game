@@ -83,7 +83,7 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water += Decimal(bet)
-                    day_data.dividend_water += Decimal(bet)*0.005
+                    day_data.dividend_water += Decimal(bet) * Decimal(0.005)
                     day_data.income += Decimal(income)
                     # day_data.income_dividend += Decimal(sum_income)*income_dividend
                     day_data.save()
@@ -92,13 +92,13 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water = Decimal(bet)
-                    day_data.dividend_water = Decimal(bet) * 0.005
+                    day_data.dividend_water = Decimal(bet) * Decimal(0.005)
                     day_data.income = Decimal(income)
                     # day_data.income_dividend = Decimal(sum_income) * income_dividend
                     day_data.created_at = created_at
                     day_data.save()
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                inviter_coin.balance += Decimal(bet) * 0.005
+                inviter_coin.balance += Decimal(bet) * Decimal(0.005)
                 inviter_coin.save()
 
 @reversion.register()
