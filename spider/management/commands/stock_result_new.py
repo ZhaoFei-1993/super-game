@@ -3,7 +3,7 @@ from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, In
 from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
-from promotion.models import UserPresentation
+from promotion.models import UserPresentation as UserPresentation_new
 from utils.functions import *
 from time import time
 from django.db.models import Q
@@ -350,7 +350,7 @@ class GuessRecording(object):
             income = Decimal(earn_coin - float(record.bet))
         else:
             income = Decimal(earn_coin)
-        UserPresentation.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
 
     def insert_info(self):
         # 插入coin_detail表

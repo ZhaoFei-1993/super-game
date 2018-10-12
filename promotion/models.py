@@ -113,6 +113,7 @@ class UserPresentation(models.Model):
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     objects = UserPresentationManager()
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "推广人下级日流水表"
