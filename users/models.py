@@ -799,6 +799,8 @@ class UserRecharge(models.Model):
     trade_at = models.DateTimeField(verbose_name='交易时间', default=timezone.now)
     confirm_at = models.DateTimeField(verbose_name='确认时间', auto_now=True)
 
+    objects = UserRechargeManager()
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "用户充值记录"
@@ -827,8 +829,6 @@ class UserPresentation(models.Model):
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
     is_bill = models.BooleanField(verbose_name="是否已打款", default=False)
     txid = models.TextField(verbose_name='txid地址', default="")
-
-    objects = UserRechargeManager()
 
     class Meta:
         ordering = ['-id']
