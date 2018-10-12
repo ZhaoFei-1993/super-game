@@ -276,6 +276,7 @@ def asia_result(quiz, records_asia):
         else:
             income = Decimal(earn_coin)
         UserPresentation.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
+
     # 开始执行sql语句
     # 插入coin_detail表
     sql = make_insert_sql('users_coindetail', coin_detail_list)
