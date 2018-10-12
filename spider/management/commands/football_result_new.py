@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
-from promotion.models import UserPresentation
+from promotion.models import UserPresentation as UserPresentation_new
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
 from django.db import transaction
 import datetime
@@ -490,8 +490,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 income = Decimal(earn_coin - float(record.bet))
             else:
                 income = Decimal(earn_coin)
-            UserPresentation.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
-                                                          record.bet, income)
+            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
+                                                              record.bet, income)
 
         # 开始执行sql语句
         # 初始化sql语句
