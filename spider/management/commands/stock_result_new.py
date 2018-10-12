@@ -350,7 +350,7 @@ class GuessRecording(object):
             income = Decimal(earn_coin - float(record.bet))
         else:
             income = Decimal(earn_coin)
-        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet, income)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
 
     def insert_info(self):
         # 插入coin_detail表
