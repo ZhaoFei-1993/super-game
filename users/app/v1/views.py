@@ -2594,7 +2594,7 @@ class InvitationMergeView(ListAPIView):
         # 设置字体和字号
         font = pygame.font.SysFont("./utils/simsun.ttc", 40)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        ftext = font.render(invitation_code, True, (154,222,251))
+        ftext = font.render(invitation_code, True, (154,222,251), (23,23,59))
         # 保存图片
         invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
