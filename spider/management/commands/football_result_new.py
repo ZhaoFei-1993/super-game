@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
+from promotion.models import UserPresentation
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
 from django.db import transaction
 import datetime
@@ -416,16 +417,15 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
                 earn_coin = '-' + str(record.bet)
-                record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+                record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
             else:
                 earn_coin = record.bet * record.odds
                 earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
-                record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+                record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
 
             if is_right is True:
                 # user_coin
                 if record.user_id not in user_coin_dic.keys():
-                    print('coin_id ====== ', coin_id)
                     # user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
                     user_coin = map_user_coin[key_user_coin_id]
                     user_coin_dic.update({
@@ -442,7 +442,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
                 # 用户资金明细表
                 user_coin_dic[user_id][coin_id]['balance'] = user_coin_dic[user_id][coin_id][
-                                                                        'balance'] + earn_coin
+                                                                 'balance'] + earn_coin
                 now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 coin_detail_list.append({
                     'user_id': str(user_id),
@@ -538,6 +538,17 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
         if len(records_asia) > 0:
             asia_result(quiz, records_asia)
+
+        # 邀请代理事宜
+        for record_dic in record_right_list + record_false_list:
+            record_obj = record_dic['record']
+            earn_coin = float(record_dic['earn_coin'])
+            if earn_coin > 0:
+                income = Decimal(earn_coin - float(record_obj.bet))
+            else:
+                income = Decimal(earn_coin)
+            UserPresentation.objects.club_flow_statistics(record_obj.user_id, record_obj.roomquiz_id,
+                                                          record_obj.bet, income)
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
@@ -792,8 +803,10 @@ class Command(BaseCommand):
         print('now is ', datetime.datetime.now())
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
 
-        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING), category__parent_id=2).exists():
-            delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING), category__parent_id=2)
+        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                               category__parent_id=2).exists():
+            delay_quizs = Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+                                              category__parent_id=2)
 
             print('检测到', len(delay_quizs), '条延迟开奖记录')
             print('----------------------------------------')
