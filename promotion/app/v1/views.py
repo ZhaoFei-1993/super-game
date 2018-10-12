@@ -1359,7 +1359,7 @@ class ClubDividendView(ListAPIView):
                     "avatar": i[5],
                     "created_ats": i[7]
                 })
-        data_one_list = sorted(data_list, key=lambda x: x['created_ats'], reverse=True)
+        data_one_list = sorted(data_list, key=lambda x: x['created_ats'], reverse=False)
 
         data = []
         tmps = ''
