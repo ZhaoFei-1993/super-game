@@ -25,7 +25,6 @@ class UserPresentationManager(BaseManager):
 
     def club_flow_statistics(self, user_id, club_id, bet, income):
         """
-
         :param user_id:            用户ID
         :param club_id:            俱乐部ID
         :param bet:               下注流水
@@ -40,7 +39,6 @@ class UserPresentationManager(BaseManager):
             if len(my_inviter) > 0:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
-
                 # year = datetime.date.today().year                                               # 获取当前年份
                 # month = datetime.date.today().month                                              # 获取当前月份
                 # weekDay, monthCountDay = calendar.monthrange(year, month)  # 获取当月第一天的星期和当月的总天数

@@ -2592,10 +2592,9 @@ class InvitationMergeView(ListAPIView):
 
         pygame.init()
         # 设置字体和字号
-        font = pygame.font.SysFont('Microsoft YaHei', 45)
+        font = pygame.font.SysFont("./utils/simsun.ttc", 40)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        invitation_codes = "邀请码：" + str(invitation_code)
-        ftext = font.render(invitation_codes, False, (154,222,251), (255, 255, 255))
+        ftext = font.render(invitation_code, True, (154,222,251))
         # 保存图片
         invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -2618,7 +2617,7 @@ class InvitationMergeView(ListAPIView):
         base_img.paste(qr_img, (350, 650))
         ftext = Image.open(
             settings.BASE_DIR + '/uploads/spread/' + sub_path + '/invitation_code_' + str(user.id) + '.jpg')
-        base_img.paste(ftext, (350, 784))  # 插入邀请码
+        base_img.paste(ftext, (438, 784))  # 插入邀请码
 
         # 保存二维码图片
         qr_img.save(save_path + '/qrcode_' + str(user.id) + '.jpg')
