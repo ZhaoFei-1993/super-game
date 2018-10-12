@@ -949,9 +949,7 @@ class ClubDividendView(ListAPIView):
         sql += " and pu.created_at <= '" + str(end) + "'"
         the_month_list = get_sql(sql)
         month_list = {}
-        print("the_month_list[0][1]===============================", the_month_list[0][1])
         if the_month_list[0][1] == None:
-            print("111111111111111111111")
             the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
@@ -959,9 +957,9 @@ class ClubDividendView(ListAPIView):
                 "proportion": 0
             }
         else:
-            print("2222222222222222222222222222")
             the_month_income_sum = normalize_fraction(the_month_list[0][1], coin_accuracy)
             the_month_income_proportion = reward_gradient(user.id, club_id, the_month_income_sum)  # 本月兑换比例比例
+            print("the_month_income_proportion===================================", the_month_income_proportion)
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
