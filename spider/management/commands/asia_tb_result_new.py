@@ -4,6 +4,7 @@ from utils.functions import *
 from chat.models import Club
 from users.models import Coin, UserCoin, CoinDetail
 from quiz.models import Option, Record
+from promotion.models import UserPresentation
 from users.models import UserMessage
 from decimal import Decimal
 
@@ -12,7 +13,7 @@ def asia_option(quiz, rule_asia):
     rule_dic = {
         '平手': '0', '平手/半球': '0/0.5', '半球': '0.5', '半球/一球': '0.5/1', '一球': '1',
         '一球/一球半': '1/1.5', '一球半': '1.5', '一球半/两球': '1.5/2', '两球': '2', '两球/两球半': '2/2.5',
-        '两球半': '2.5',  '两球半/三球': '2.5/3', '三球': '3', '三球/三球半': '3/3.5', '三球半': '3.5', '四球': '4',
+        '两球半': '2.5', '两球半/三球': '2.5/3', '三球': '3', '三球/三球半': '3/3.5', '三球半': '3.5', '四球': '4',
     }
 
     handicap = rule_asia.handicap.replace('受让', '')
@@ -242,12 +243,18 @@ def asia_result(quiz, records_asia):
         title = club_name + '开奖公告'
         title_en = 'Lottery announcement from' + club_name_en
         if earn_coin < 0:
-            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您答错了。'
-            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(quiz.host_team_score) + ':' + str(quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，You are wrong.'
+            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
+                quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您答错了。'
+            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
+                quiz.host_team_score) + ':' + str(
+                quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，You are wrong.'
         else:
-            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您的奖金是:' + str(
+            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
+                quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您的奖金是:' + str(
                 round(earn_coin, 3))
-            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(quiz.host_team_score) + ':' + str(quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，Your bonus is:' + str(
+            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
+                quiz.host_team_score) + ':' + str(
+                quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，Your bonus is:' + str(
                 round(earn_coin, 3))
         now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         user_message_list.append(
@@ -263,6 +270,12 @@ def asia_result(quiz, records_asia):
         record.is_distribution = True
         record.save()
 
+        # 邀请代理事宜
+        if earn_coin > 0:
+            income = Decimal(earn_coin - float(record.bet))
+        else:
+            income = Decimal(earn_coin)
+        UserPresentation.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
     # 开始执行sql语句
     # 插入coin_detail表
     sql = make_insert_sql('users_coindetail', coin_detail_list)

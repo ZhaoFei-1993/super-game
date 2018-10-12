@@ -3,6 +3,7 @@ from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, In
 from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
+from promotion.models import UserPresentation
 from utils.functions import *
 from time import time
 from django.db.models import Q
@@ -93,14 +94,14 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
@@ -120,14 +121,14 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
@@ -146,14 +147,14 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
@@ -176,14 +177,14 @@ class GuessRecording(object):
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
         else:
             earn_coin = '-' + str(record.bets)
             earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
-            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
+            self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin), 'record': record})
 
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
@@ -317,7 +318,9 @@ class GuessRecording(object):
             coin_name = cache_club_value[record.club.id]['coin_name']
             self.edit_user_message(record, club_name, club_name_en, coin_name)
 
-        self.insert_info()
+        self.insert_info()  # 批量插入
+
+        self.handle_presentation()  # 邀请代理事宜
 
         # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
         # index_day.index_value = float(dt['num'])
@@ -331,6 +334,18 @@ class GuessRecording(object):
         cost_time = str(round(end_time - start_time)) + '秒'
         print('执行完成。耗时：' + cost_time)
         print('----------------------------------------------')
+
+    # 邀请代理事宜
+    def handle_presentation(self):
+        for record_dic in self.record_right_list + self.record_false_list:
+            record_obj = record_dic['record']
+            earn_coin = float(record_dic['earn_coin'])
+            if earn_coin > 0:
+                income = Decimal(earn_coin - float(record_obj.bet))
+            else:
+                income = Decimal(earn_coin)
+            UserPresentation.objects.club_flow_statistics(record_obj.user_id, record_obj.roomquiz_id,
+                                                          record_obj.bet, income)
 
     def insert_info(self):
         # 插入coin_detail表

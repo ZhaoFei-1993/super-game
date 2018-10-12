@@ -4,7 +4,6 @@ from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail
 
-
 coin_detail_list = []
 user_message_list = []
 user_coin_dic = {}
@@ -58,6 +57,7 @@ def special_code_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def color_result(record, answer_dic):
@@ -80,6 +80,7 @@ def color_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def continuous_result(record, answer_dic):
@@ -123,6 +124,7 @@ def continuous_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def two_sides_result(record, answer_dic):
@@ -196,6 +198,7 @@ def two_sides_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def animal_result(record, answer_dic):
@@ -222,6 +225,7 @@ def animal_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def special_head_tail_result(record, answer_dic):
@@ -252,6 +256,7 @@ def special_head_tail_result(record, answer_dic):
     record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def elements_result(record, answer_dic):
@@ -271,9 +276,9 @@ def elements_result(record, answer_dic):
     else:
         earn_coin = float('-' + str(record.bet_coin))
     record.earn_coin = earn_coin
-    record.save()
 
     base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
 
 
 def ergodic_record(issue, answer_dic):
@@ -285,9 +290,16 @@ def ergodic_record(issue, answer_dic):
     records = SixRecord.objects.filter(issue=issue, status='0')
     if len(records) > 0:
         for record in records:
-            play_dic[record.play_id](record, answer_dic)
+            earn_coin = play_dic[record.play_id](record, answer_dic)
             record.status = '1'
             record.save()
+
+            # 邀请代理事宜
+            if earn_coin > 0:
+                income = Decimal(earn_coin - float(record.bet_coin))
+            else:
+                income = Decimal(earn_coin)
+            UserPresentation.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
 
     # 开始执行sql语句
     # 插入coin_detail表
