@@ -1411,11 +1411,11 @@ def reward_gradient_all(club_id, income):
             print("1111111111111111")
             income_dividend = Decimal(value[i]["income_dividend"])
             break
-        elif int(value[i]["sources"]) == 1 and sum_income < claim:
+        elif int(value[i]["sources"]) == 1 and sum_income < claim and sum_income < claim_max:
             print("2222222222222222")
             income_dividend = Decimal(value[i]["income_dividend"])
             break
-        elif int(value[i]["sources"]) == 6 and sum_income > claim:
+        elif int(value[i]["sources"]) == 6 and sum_income > claim and sum_income < claim_max:
             print("333333333333333333")
             income_dividend = Decimal(value[i]["income_dividend"])
             break
