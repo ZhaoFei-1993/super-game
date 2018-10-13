@@ -965,8 +965,6 @@ class ClubDividendView(ListAPIView):
             start = str(month_first_day) + ' 00:00:00'  # 本月第一天
             end = datetime.date(year=start_year, month=end_month, day=monthCountDay).strftime(
                 '%Y-%m-%d') + ' 23:59:59'  # 当月最后一天
-        print("start=======================================", start)
-        print("end=======================================", end)
 
         sql = "select date_format( pu.created_at, '%Y%m' ) AS created_ats, sum(pu.income) from promotion_userpresentation pu"
         sql += " where pu.club_id = '" + str(club_id) + "'"
@@ -976,6 +974,7 @@ class ClubDividendView(ListAPIView):
         the_month_list = get_sql(sql)
         month_list = {}
         if the_month_list[0][1] == None:
+            print(111111111111111111111111111)
             the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
@@ -983,12 +982,14 @@ class ClubDividendView(ListAPIView):
                 "proportion": 0
             }
         else:
+            print(222222222222222222222222)
             the_month_income_sum = normalize_fraction(the_month_list[0][1], coin_accuracy)
             the_month_income_proportion = reward_gradient_all(club_id, the_month_income_sum)  # 本月兑换比例比例
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
             }
+        print("month_list========================", month_list)
 
 
         sql_list = "date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
