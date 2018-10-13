@@ -908,32 +908,32 @@ class ClubDividendView(ListAPIView):
                 end_year = datetime.datetime(end.year, end.month, 1).year
                 end_month = datetime.datetime(end.year, end.month, 1).month
         else:
-            # # 开始时间
-            # if 'start_day' in self.request.GET:  # 用户选择的开始时间
-            #     start_day = self.request.GET.get('start_day')
-            #     start_time = str(start_day) + ' 00:00:00'
-            #     start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
-            #     start_year = start_day_test.year
-            #     start_month = start_day_test.month
-            # else:  # 默认开始时间
-            start_day = settings.PROMOTER_EXCHANGE_START_DATE
-            start_time = str(start_day) + ' 00:00:00'
-            start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
-            start_year = start_day_test.year
-            start_month = start_day_test.month
+            # 开始时间
+            if 'start_day' in self.request.GET:  # 用户选择的开始时间
+                start_day = self.request.GET.get('start_day')
+                start_time = str(start_day) + ' 00:00:00'
+                start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
+                start_year = start_day_test.year
+                start_month = start_day_test.month
+            else:  # 默认开始时间
+                start_day = settings.PROMOTER_EXCHANGE_START_DATE
+                start_time = str(start_day) + ' 00:00:00'
+                start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
+                start_year = start_day_test.year
+                start_month = start_day_test.month
 
-            # # 结束时间
-            # if 'end_day' in self.request.GET:  # 用户选择的结束时间
-            #     end_day = self.request.GET.get('end_day')
-            #     end_time = str(end_day) + ' 23:59:59'
-            #     end_day_test = datetime.datetime.strptime(end_day, "%Y-%m-%d")
-            #     end_year = end_day_test.year
-            #     end_month = end_day_test.month
-            # else:  # 默认日期  当天结束时间
-            end_day = datetime.datetime.now().strftime('%Y-%m-%d')
-            end_time = str(end_day) + ' 23:59:59'
-            end_year = datetime.datetime.now().year
-            end_month = datetime.datetime.now().month
+            # 结束时间
+            if 'end_day' in self.request.GET:  # 用户选择的结束时间
+                end_day = self.request.GET.get('end_day')
+                end_time = str(end_day) + ' 23:59:59'
+                end_day_test = datetime.datetime.strptime(end_day, "%Y-%m-%d")
+                end_year = end_day_test.year
+                end_month = end_day_test.month
+            else:  # 默认日期  当天结束时间
+                end_day = datetime.datetime.now().strftime('%Y-%m-%d')
+                end_time = str(end_day) + ' 23:59:59'
+                end_year = datetime.datetime.now().year
+                end_month = datetime.datetime.now().month
 
         if start_year == end_year and start_month == end_month:
             current_year = datetime.datetime.now().year
