@@ -983,7 +983,7 @@ class ClubDividendView(ListAPIView):
             }
         else:
             print(222222222222222222222222)
-            s = reward_gradient_all(3,99999999999)
+            s = reward_gradient_all(3,999999)
             print("s============================", s)
             the_month_list_sum = the_month_list[0][1]
             print("the_month_list_sum==========================", the_month_list_sum)
