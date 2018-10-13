@@ -2400,6 +2400,9 @@ class InvitationRegisterView(CreateAPIView):
             raise ParamErrorException(captcha_valid_code)
 
         # 校验手机短信验证码
+        print("telephone================================", telephone)
+        print("code================================", code)
+        print("Sms.REGISTER================================", Sms.REGISTER)
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
         if len(message) == 0:
             return self.response({
