@@ -1406,13 +1406,16 @@ def reward_gradient_all(club_id, income):
     income_dividend = 0
     for i in value:
         claim = Decimal(value[i]["claim"])
+        print("claim======================", claim)
         claim_max = Decimal(value[i]["claim_max"])
+        print("claim_max=================", claim_max)
         if claim <= sum_income < claim_max:
+            print("11111111111111111111")
             income_dividend = Decimal(value[i]["income_dividend"])
-            print("income_dividend=======================", income_dividend)
             break
         else:
             income_dividend = 0
+        print("income_dividend=======================", income_dividend)
         # if sum_income >= claim and sum_income < claim_max:
         #     print("1111111111111111")
         #     income_dividend = Decimal(value[i]["income_dividend"])
