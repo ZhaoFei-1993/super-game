@@ -981,11 +981,8 @@ class ClubDividendView(ListAPIView):
                 "proportion": 0
             }
         else:
-            print("coin_accuracy==========================", coin_accuracy)
             the_month_income_sum = normalize_fraction(the_month_list[0][1], coin_accuracy)
-            print("the_month_income_sum==================================", the_month_income_sum)
             the_month_income_proportion = reward_gradient_all(club_id, the_month_income_sum)  # 本月兑换比例比例
-            print("the_month_income_proportion===================================", the_month_income_proportion)
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
@@ -1020,7 +1017,8 @@ class ClubDividendView(ListAPIView):
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '猜股指' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from guess_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1030,8 +1028,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)  # 股票
             for i in record_list:
                 if i[8] not in user_list:
@@ -1044,12 +1042,14 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
             sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '六合彩' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1059,8 +1059,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             marksix_list = self.get_list_by_sql(sql)  # 六合彩
             for i in marksix_list:
                 if i[8] not in user_list:
@@ -1073,12 +1073,14 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '龙虎斗' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1088,8 +1090,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             baccarat_list = self.get_list_by_sql(sql)  # 百家乐
             for i in baccarat_list:
                 if i[8] not in user_list:
@@ -1102,12 +1104,14 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '百家乐' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1117,8 +1121,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             dragontiger_list = self.get_list_by_sql(sql)  # 龙虎斗
             for i in dragontiger_list:
                 if i[8] not in user_list:
@@ -1131,12 +1135,14 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
             sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from quiz_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " inner join quiz_quiz q on dtr.quiz_id=q.id"
@@ -1149,8 +1155,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             basketball_list = self.get_list_by_sql(sql)  # 篮球
             for i in basketball_list:
                 if i[8] not in user_list:
@@ -1163,12 +1169,14 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
             sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from quiz_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " inner join quiz_quiz q on dtr.quiz_id=q.id"
@@ -1181,8 +1189,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             football_list = self.get_list_by_sql(sql)  # 足球
             for i in football_list:
                 if i[8] not in user_list:
@@ -1195,13 +1203,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         elif int(type) == 2:  # 2. 篮球
             sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from quiz_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " inner join quiz_quiz q on dtr.quiz_id=q.id"
@@ -1214,8 +1224,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1228,13 +1238,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         elif int(type) == 3:  # 3.足球
             sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '足球' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
+                        "dtr.user_id, date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from quiz_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " inner join quiz_quiz q on dtr.quiz_id=q.id"
@@ -1247,8 +1259,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1261,13 +1273,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         elif int(type) == 4:  # 4. 股票
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '猜股指' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from guess_record dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1277,8 +1291,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1291,13 +1305,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         elif int(type) == 5:  # 5. 六合彩
             sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '六合彩' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats,dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats,dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1307,8 +1323,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1321,13 +1337,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         elif int(type) == 7:  # 百家乐
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '龙虎斗' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1337,8 +1355,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1351,13 +1369,15 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
         else:  # 龙虎斗
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
             sql_list += " '百家乐' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
-            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id"
+            sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
+                        "date_format( dtr.created_at, '%Y%m%d%h%i%s' ) as times"
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.club_id = '" + club_id + "'"
@@ -1367,8 +1387,8 @@ class ClubDividendView(ListAPIView):
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
             if user_id_list != []:
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats"
-            sql += " order by created_ats desc"
+            sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+            sql += " order by times desc"
             record_list = self.get_list_by_sql(sql)
             for i in record_list:
                 if i[8] not in user_list:
@@ -1381,21 +1401,19 @@ class ClubDividendView(ListAPIView):
                     "rule": i[3],
                     "nickname": i[4],
                     "avatar": i[5],
-                    "created_ats": i[7]
+                    "created_ats": i[7],
+                    "times": i[9]
                 })
-        data_one_list = sorted(data_list, key=lambda x: x['created_ats'], reverse=False)
+        data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
 
         data = []
         tmps = ''
         tmp = ''
         for fav in data_one_list:
-            print("created_ats================================", fav["created_ats"])
-            print("month_list================================", month_list)
             if fav["created_ats"] in month_list:
                 proportion = Decimal(month_list[fav["created_ats"]]["proportion"])
             else:
                 proportion = 0
-            print("proportion===============================", proportion)
 
             if fav["earn_coin"] > 0:
                 reward_coin = fav["earn_coin"] - fav["bets"]
