@@ -983,8 +983,9 @@ class ClubDividendView(ListAPIView):
             }
         else:
             print(222222222222222222222222)
-            the_month_income_sum = normalize_fraction(the_month_list[0][1], coin_accuracy)
-            the_month_income_proportion = reward_gradient_all(club_id, the_month_income_sum)  # 本月兑换比例比例
+            the_month_list_sum = the_month_list[0][1]
+            the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
+            the_month_income_sum = Decimal(the_month_list[0][1])*the_month_income_proportion
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
@@ -1444,6 +1445,7 @@ class ClubDividendView(ListAPIView):
                 })
         else:
             data = []
+        print("data==================================", data)
 
         return self.response({'code': 0,
                               "the_month_income_sum": the_month_income_sum,
