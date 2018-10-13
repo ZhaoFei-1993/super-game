@@ -440,6 +440,7 @@ class ClubDetailView(ListAPIView):
             record_list = self.get_list_by_sql(sql)   # 股票
             for i in record_list:
                 print("i========================", i)
+                print("i========================", i[9])
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
