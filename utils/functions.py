@@ -1383,7 +1383,7 @@ def reward_gradient_all(club_id, income):
 
     gradient_income_key = "GRADIENT_INCOME_" + str(club_id)  # 盈利分红梯度
     value = get_cache(gradient_income_key)
-    if value is None:
+    if value == {}:
         all_gradient = Gradient.objects.filter(club_id=club_id)
         value = {}
         for gradient in all_gradient:
