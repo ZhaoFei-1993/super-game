@@ -439,6 +439,7 @@ class ClubDetailView(ListAPIView):
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)   # 股票
             for i in record_list:
+                print("i========================", i)
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
