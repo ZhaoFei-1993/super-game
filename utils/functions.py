@@ -1419,4 +1419,5 @@ def reward_gradient_all(club_id, income):
             print("333333333333333333")
             income_dividend = Decimal(value[i]["income_dividend"])
             break
+    print("income_dividend===========================", income_dividend)
     return income_dividend
