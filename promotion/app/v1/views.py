@@ -1444,6 +1444,7 @@ class ClubDividendView(ListAPIView):
                     "pecific_dates": pecific_dates,
                     "pecific_date": pecific_date,
                 })
+                print("data=========================", data)
             else:
                 data = []
             print("data===========================", data)
