@@ -167,7 +167,7 @@ class PromotionListView(ListAPIView):
         data = []
         for i in club_list:
             if i["club_id"] in coin_number_info:
-                income_dividend = reward_gradient(user.id, i["club_id"], monthly_summarys[i["club_id"]])
+                income_dividend = reward_gradient_all(i["club_id"], monthly_summarys[i["club_id"]])
                 all_income_dividend = Decimal(coin_number_info[i["club_id"]][3])
                 all_income_dividend = opposite_number(all_income_dividend)
                 income_dividends = all_income_dividend * Decimal(income_dividend)
@@ -974,7 +974,6 @@ class ClubDividendView(ListAPIView):
         the_month_list = get_sql(sql)
         month_list = {}
         if the_month_list[0][1] == None:
-            print(111111111111111111111111111)
             the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
@@ -982,21 +981,14 @@ class ClubDividendView(ListAPIView):
                 "proportion": 0
             }
         else:
-            print(222222222222222222222222)
-            s = reward_gradient_all(3,999999)
-            print("s============================", s)
             the_month_list_sum = the_month_list[0][1]
-            print("the_month_list_sum==========================", the_month_list_sum)
             the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
-            print("the_month_income_proportion=========================", the_month_income_proportion)
             the_month_income_sum = Decimal(the_month_list[0][1])*the_month_income_proportion
-            print("the_month_income_sum=======================", the_month_income_sum)
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
             }
-        print("month_list========================", month_list)
 
 
         sql_list = "date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
