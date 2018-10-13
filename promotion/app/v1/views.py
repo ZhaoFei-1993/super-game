@@ -1446,7 +1446,7 @@ class ClubDividendView(ListAPIView):
                 })
                 print("data=========================", data)
             else:
-                data = []
+                pass
             print("data===========================", data)
 
         return self.response({'code': 0,
