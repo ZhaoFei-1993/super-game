@@ -1014,6 +1014,7 @@ class ClubDividendView(ListAPIView):
             user_id_list.append(str(i[0]))
 
         user_list = {}
+        data = []
         if user_id_list != []:
             data_list = []
             if int(type) == 1:  # 1.全部
@@ -1397,7 +1398,6 @@ class ClubDividendView(ListAPIView):
                     })
             data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
 
-            data = []
             tmps = ''
             tmp = ''
             for fav in data_one_list:
