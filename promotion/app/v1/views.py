@@ -986,7 +986,7 @@ class ClubDividendView(ListAPIView):
             the_month_list_sum = the_month_list[0][1]
             the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
             the_month_income_sum = Decimal(the_month_list[0][1])*the_month_income_proportion
-            the_month_list_sum = normalize_fraction(Decimal(the_month_income_sum), coin_accuracy)
+            the_month_list_sum = normalize_fraction(float(the_month_income_sum), coin_accuracy)
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
