@@ -1399,6 +1399,7 @@ class ClubDividendView(ListAPIView):
                         "times": i[9]
                     })
             data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
+            print("data_one_list=======================================", data_one_list)
 
             tmps = ''
             for fav in data_one_list:
