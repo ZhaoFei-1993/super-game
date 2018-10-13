@@ -1383,6 +1383,7 @@ def reward_gradient_all(club_id, income):
 
     gradient_income_key = "GRADIENT_INCOME_" + str(club_id)  # 盈利分红梯度
     value = get_cache(gradient_income_key)
+    print("value======================", value)
     if value == {}:
         all_gradient = Gradient.objects.filter(club_id=club_id)
         value = {}
@@ -1401,8 +1402,8 @@ def reward_gradient_all(club_id, income):
                 "income_dividend": gradient.income_dividend
             }
         set_cache(gradient_income_key, value)
+        print("value======================", value)
     sum_income = Decimal(income)
-    print("value======================", value)
 
     income_dividend = 0
     for i in value:
