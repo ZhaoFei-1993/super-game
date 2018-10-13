@@ -1015,7 +1015,9 @@ class ClubDividendView(ListAPIView):
 
         user_list = {}
         data = []
+        print("user_id_list==============================", user_id_list)
         if user_id_list != []:
+            print("111111111111111111111111111")
             data_list = []
             if int(type) == 1:  # 1.全部
                 sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
@@ -1399,7 +1401,6 @@ class ClubDividendView(ListAPIView):
             data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
 
             tmps = ''
-            tmp = ''
             for fav in data_one_list:
                 if fav["created_ats"] in month_list:
                     proportion = Decimal(month_list[fav["created_ats"]]["proportion"])
