@@ -421,7 +421,7 @@ class ClubDetailView(ListAPIView):
             bet_water = str(normalize_fraction(yesterday_amount[0], coin_accuracy)) + " " + coin_name
             dividend_water = str(normalize_fraction(yesterday_amount[1], coin_accuracy)) + " " + coin_name
 
-        user_list = []
+        user_list = {}
         data_list = []
         if int(type) == 1:   # 1.全部
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
@@ -439,8 +439,6 @@ class ClubDetailView(ListAPIView):
             sql += " order by created_ats desc"
             record_list = self.get_list_by_sql(sql)   # 股票
             for i in record_list:
-                print("i========================", i)
-                print("i========================", i[9])
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
