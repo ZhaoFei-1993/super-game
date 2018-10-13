@@ -1410,6 +1410,7 @@ def reward_gradient_all(club_id, income):
         if sum_income >= claim and sum_income < claim_max:
             print("1111111111111111")
             income_dividend = Decimal(value[i]["income_dividend"])
+            print("income_dividend=======================", income_dividend)
             break
         # elif int(value[i]["sources"]) == 1 and sum_income < claim and sum_income < claim_max:
         #     print("2222222222222222")
