@@ -1369,12 +1369,11 @@ def reward_gradient(user_id, club_id, income):
     for i in value:
         claim = Decimal(value[i]["claim"])
         claim_max = Decimal(value[i]["claim_max"])
-        if sum_income >= claim and sum_income < claim_max:
+        if claim <= sum_income < claim_max:
             income_dividend = Decimal(value[i]["income_dividend"])
-        elif int(value[i]["sources"]) == 1 and sum_income < claim:
-            income_dividend = Decimal(value[i]["income_dividend"])
-        elif int(value[i]["sources"]) == 6 and sum_income > claim:
-            income_dividend = Decimal(value[i]["income_dividend"])
+            break
+        else:
+            income_dividend = 0
     return income_dividend
 
 
@@ -1383,7 +1382,7 @@ def reward_gradient_all(club_id, income):
 
     gradient_income_key = "GRADIENT_INCOME_" + str(club_id)  # 盈利分红梯度
     value = get_cache(gradient_income_key)
-    if value is None:
+    if value == {}:
         all_gradient = Gradient.objects.filter(club_id=club_id)
         value = {}
         for gradient in all_gradient:
@@ -1407,10 +1406,9 @@ def reward_gradient_all(club_id, income):
     for i in value:
         claim = Decimal(value[i]["claim"])
         claim_max = Decimal(value[i]["claim_max"])
-        if sum_income >= claim and sum_income < claim_max:
+        if claim <= sum_income < claim_max:
             income_dividend = Decimal(value[i]["income_dividend"])
-        elif int(value[i]["sources"]) == 1 and sum_income < claim:
-            income_dividend = Decimal(value[i]["income_dividend"])
-        elif int(value[i]["sources"]) == 6 and sum_income > claim:
-            income_dividend = Decimal(value[i]["income_dividend"])
+            break
+        else:
+            income_dividend = 0
     return income_dividend

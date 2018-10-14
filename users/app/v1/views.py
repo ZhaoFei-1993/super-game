@@ -2394,10 +2394,10 @@ class InvitationRegisterView(CreateAPIView):
         if 'device_token' in request.data:
             device_token = request.data.get('device_token')
 
-        # 图形验证码，目前只限于HTML5 - 登录请求
-        captcha_valid_code = User.objects.captcha_valid(request)
-        if captcha_valid_code > 0:
-            raise ParamErrorException(captcha_valid_code)
+        # # 图形验证码，目前只限于HTML5 - 登录请求
+        # captcha_valid_code = User.objects.captcha_valid(request)
+        # if captcha_valid_code > 0:
+        #     raise ParamErrorException(captcha_valid_code)
 
         # 校验手机短信验证码
         message = Sms.objects.filter(telephone=telephone, code=code, type=Sms.REGISTER)
