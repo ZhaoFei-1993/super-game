@@ -71,7 +71,7 @@ class UserPresentationManager(BaseManager):
                 inviter_coin.balance += Decimal(bet) * Decimal(0.005)
                 print("112121331==================================", Decimal(bet) * Decimal(0.005))
                 inviter_coin.save()
-                print("balance===========================", balance)
+                print("inviter_coin.balance==============================", inviter_coin.balance)
 
 @reversion.register()
 class UserPresentation(models.Model):
