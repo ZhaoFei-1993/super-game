@@ -1514,8 +1514,7 @@ class CustomerView(ListAPIView):
                 if int(i[4]) == 1:
                     coin_info = "+ 5 GSG"
                 user_list[i[0]] = i[0]
-                print("i[5]==================================", i[5])
-                if i[5] == "":
+                if i[5] == None:
                     login_time = ""
                 else:
                     login_time = i[5].strftime('%Y-%m-%d %H:%M')
