@@ -1939,6 +1939,7 @@ class UserInfoView(ListAPIView):
                     sum_income += income
                     sum_income_water += Decimal(income_dividend) * Decimal(income)
                 sum_bet_water = sum_bet * Decimal(0.005)
+            print("sum_income_water=========================", sum_income_water)
             data.append({
                 "coin_name": coin_name,
                 "coin_icon": coin_icon,
