@@ -864,7 +864,7 @@ class UserInvitationManager(models.Manager):
             user_invitation_info = self.filter(money__gt=0, inviter_id=user.id, inviter_type=1, status=1)
             for a in user_invitation_info:
                 try:
-                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+                    userbalance = UserCoin.objects.get(coin_id=6, user_id=user.id)
                 except UserCoin.DoesNotExist:
                     return 0
                 # if int(a.coin) == 9:
