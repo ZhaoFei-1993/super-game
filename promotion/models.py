@@ -32,24 +32,16 @@ class UserPresentationManager(BaseManager):
         """
 
         club_id = int(club_id)
-        print("club_id==========================", club_id)
-        print("user_id==========================", user_id)
-        print("bet==========================", bet)
-        print("income==========================", income)
         if club_id == 1 or club_id == 5:
-            print("1111111111111111111111111")
             pass
         else:
-            print("222222222222222222222222222")
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
             if my_inviter is not None:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
                 data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
-                print("data_number=======================", data_number)
                 if data_number > 0:
                     day_data = self.get(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at)
-                    print("day_data=========================", day_data)
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water += Decimal(bet)
@@ -66,13 +58,9 @@ class UserPresentationManager(BaseManager):
                     day_data.income = Decimal(income)
                     day_data.created_at = created_at
                     day_data.save()
-                    print("33333333333333333333333333333333")
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                print("inviter_coin===============================", inviter_coin.balance)
                 inviter_coin.balance += Decimal(bet) * Decimal(0.005)
-                print("112121331==================================", Decimal(bet) * Decimal(0.005))
                 inviter_coin.save()
-                print("inviter_coin.balance==============================", inviter_coin.balance)
 
 @reversion.register()
 class UserPresentation(models.Model):
