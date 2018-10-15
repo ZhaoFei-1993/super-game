@@ -96,7 +96,7 @@ class Command(BaseCommand):
         if len(items) == 0:
             raise CommandError('当前无进行中的竞猜')
 
-        # items = self.get_get_quiz(items)
+        items = self.get_get_periods(items)
         item_len = len(items)
 
         idx = 0
@@ -125,7 +125,8 @@ class Command(BaseCommand):
                     continue
 
                 # 随机获取股票
-                stock = self.get_bet_stock()
+                # stock = self.get_bet_stock()
+                stock = Stock.objects.get(item.stock_id)
                 if stock is False:
                     continue
 
@@ -173,17 +174,18 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('下注成功'))
 
     @staticmethod
-    def get_get_quiz(items):
+    def get_get_periods(items):
         """
-        进行中的比赛下注权重
-        3天数据：今天比赛:明天比赛:后天比赛 = 7:2:1
-        4天数据：今天比赛:明天比赛:后天比赛:大后天 = 6:2:1:1
-        5天以上数据，则随机用3天或4天数据
+        随机期数下注
         :param items:
         :return:
         """
-        secure_random = random.SystemRandom()
-        return secure_random.choice(items)
+        choices = []
+        for i in range(0, random.randint(1, 4)):
+            secure_random = random.SystemRandom()
+            choices.append(secure_random.choice(items))
+
+        return choices
 
     @staticmethod
     def get_key(prefix):
