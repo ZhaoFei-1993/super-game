@@ -67,7 +67,7 @@ class UserPresentationManager(BaseManager):
                     day_data.save()
                     print("33333333333333333333333333333333")
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                print("inviter_coin===============================", inviter_coin)
+                print("inviter_coin===============================", inviter_coin.balance)
                 inviter_coin.balance += Decimal(bet) * Decimal(0.005)
                 print("112121331==================================", Decimal(bet) * Decimal(0.005))
                 inviter_coin.save()
