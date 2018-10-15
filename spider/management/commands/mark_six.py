@@ -136,23 +136,30 @@ class Command(BaseCommand):
     help = "mark six result"
 
     def handle(self, *args, **options):
+        now_time = datetime.datetime.now()
+        print(' now is ', now_time)
+
         data = {
             'type': 1,
             'year': 2018,
         }
-
-        response = requests.post(url, data=data, headers=headers)
         open_price = OpenPrice.objects.order_by('-open').first()
-        for body_list in response.json()['result']['data']['bodyList']:
-            pre_draw_date = body_list['preDrawDate']
-            issue = str(body_list['issue'])
-            if issue == open_price.next_issue and datetime.datetime.now() > open_price.next_open:
-                print(pre_draw_date, ' ', issue + '期')
-                # 拿到正码
-                pre_draw_code = body_list['preDrawCode']
-                pre_draw_code_list = pre_draw_code.split(',')
+        next_open = open_price.next_open
+        if now_time > next_open:
+            if now_time < next_open + datetime.timedelta(hours=1) or now_time > next_open + datetime.timedelta(days=1):
+                response = requests.post(url, data=data, headers=headers)
+                open_price = OpenPrice.objects.order_by('-open').first()
+                for body_list in response.json()['result']['data']['bodyList']:
+                    pre_draw_date = body_list['preDrawDate']
+                    issue = str(body_list['issue'])
+                    if issue == open_price.next_issue:
+                        print(pre_draw_date, ' ', issue + '期')
+                        # 拿到正码
+                        pre_draw_code = body_list['preDrawCode']
+                        pre_draw_code_list = pre_draw_code.split(',')
 
-                mark_six_result(pre_draw_code_list, pre_draw_date, issue)
-            else:
-                pass
+                        mark_six_result(pre_draw_code_list, pre_draw_date, issue)
+        else:
+            print('暂不需要处理')
+        print('----------------------------------------------------------------------')
 

@@ -245,7 +245,7 @@ class UserCaptchaValid(CreateAPIView):
         if count == 3:  # 验证超过三次，无法继续验证
             return JsonResponse({'code': 501, 'message': '已验证失败三次，请刷新验证码！'})
 
-        offset = 20
+        offset = 10
         res = map(lambda x, y: y[0][0] - offset <= x[0] <= y[0][1] + offset and y[1][0] - offset <= x[1] <= y[1][1] + offset, user_position,
                   position)  # 判断用户点击坐标
 
