@@ -1447,7 +1447,7 @@ class ClubDividendView(ListAPIView):
                 })
         else:
             data = []
-        print("data==================================", data)
+        print("data==================================", the_month_income_proportion)
 
         return self.response({'code': 0,
                               "the_month_income_sum": the_month_income_sum,
