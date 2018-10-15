@@ -1925,7 +1925,6 @@ class UserInfoView(ListAPIView):
             coin_accuracy = club_list[i]["coin_accuracy"]
             club_id = club_list[i]["club_id"]
             coin_name = club_list[i]["coin_name"]
-            coin_name = club_list[i]["coin_name"]
             coin_icon = club_list[i]["coin_icon"]
             sum_bet = 0
             sum_bet_water = 0
@@ -1935,7 +1934,9 @@ class UserInfoView(ListAPIView):
                 for s in data_list[club_id]:
                     sum_bet += normalize_fraction(data_list[club_id][s]["bets"], int(coin_accuracy))
                     income = normalize_fraction(data_list[club_id][s]["earn_coin"], int(coin_accuracy))
+                    print("income=========================", income)
                     income_dividend = reward_gradient_all(club_id, income)
+                    print("income_dividend====================", income_dividend)
                     sum_income += income
                     sum_income_water += Decimal(income_dividend) * Decimal(income)
                 sum_bet_water = sum_bet * Decimal(0.005)
