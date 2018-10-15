@@ -803,7 +803,7 @@ class ClubDetailView(ListAPIView):
                     status = "Settled"
 
             divided_into = fav["bets"] * Decimal(0.005)
-            divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy)) + " " + coin_name
+            divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
 
             pecific_dates = fav["years"]
@@ -1412,43 +1412,32 @@ class ClubDividendView(ListAPIView):
 
                 if fav["earn_coin"] > 0:
                     reward_coin = fav["earn_coin"] - fav["bets"]
+                    result = 1
                 else:
+                    result = 0
                     reward_coin = fav["earn_coin"]
 
                 dividend = normalize_fraction((opposite_number(reward_coin) * proportion), coin_accuracy)
-
-                # if Decimal(dividend) > 0:
-                #     dividend = "+ " + str(dividend) + " " + coin_name
-                # else:
-                #     dividend = " " + str(dividend) + " " + coin_name
 
                 pecific_dates = fav["yearss"]
                 pecific_date = fav["years"]
                 if tmps == pecific_dates:
                     pecific_dates = ""
-                    # if tmp == pecific_date:
-                    #     pecific_date = ""
-                    # else:
-                    #     tmp = pecific_date
                 else:
                     tmps = pecific_dates
-                    # if tmp == pecific_date:
-                    #     pecific_date = ""
-                    # else:
-                    #     tmp = pecific_date
                 data.append({
                     "nickname": fav["nickname"],
                     "avatar": fav["avatar"],
                     "bets": normalize_fraction(fav["bets"], coin_accuracy),
                     "reward_coin": normalize_fraction(reward_coin, coin_accuracy),
                     "dividend": dividend,
+                    "result": result,
                     "rule": fav["rule"],
                     "pecific_dates": pecific_dates,
                     "pecific_date": pecific_date,
                 })
         else:
             data = []
-        print("data==================================", the_month_income_proportion)
 
         return self.response({'code': 0,
                               "the_month_income_sum": the_month_income_sum,
