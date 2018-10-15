@@ -32,60 +32,29 @@ class UserPresentationManager(BaseManager):
         """
 
         club_id = int(club_id)
+        print("club_id==========================", club_id)
+        print("user_id==========================", user_id)
+        print("bet==========================", bet)
+        print("income==========================", income)
         if club_id == 1 or club_id == 5:
+            print("1111111111111111111111111")
             pass
         else:
+            print("222222222222222222222222222")
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
             if my_inviter is not None:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
-                # year = datetime.date.today().year                                               # 获取当前年份
-                # month = datetime.date.today().month                                              # 获取当前月份
-                # weekDay, monthCountDay = calendar.monthrange(year, month)  # 获取当月第一天的星期和当月的总天数
-                # firstDay = datetime.date(year, month, day=1)             # 获取当月第一天
-                # lastDay = datetime.date(year, month, day=monthCountDay)       # 获取当前月份最后一天
-                #
-                # gradient_income_key = "GRADIENT_INCOME_" + str(club_id)      # 盈利分红梯度
-                # value = get_cache(gradient_income_key)
-                # if value is None:
-                #     all_gradient = Gradient.objects.filter(club_id=club_id)
-                #     value = {}
-                #     for gradient in all_gradient:
-                #         if int(gradient.sources) == 1:
-                #             value[0] = {
-                #                 "sources": 0,
-                #                 "claim": 0,
-                #                 "claim_max": gradient.claim,
-                #                 "income_dividend": 0
-                #             }
-                #         value[gradient.sources] = {
-                #             "sources": gradient.sources,
-                #             "claim": gradient.claim,
-                #             "claim_max": gradient.claim_max,
-                #             "income_dividend": gradient.income_dividend
-                #         }
-                #     set_cache(gradient_income_key, value)
-                #
-                # all_income = self.filter(Q(created_at__gte=firstDay) | Q(created_at__lte=lastDay), club_id=club_id, user_id=user_id).aggregate(Sum('income'))
-                # sum_income = all_income['income__sum'] if all_income['income__sum'] is not None else 0
-                # sum_income = Decimal(sum_income)+Decimal(income)
-                #
-                # income_dividend = 0
-                # for i in value:
-                #     claim = Decimal(i["claim"])
-                #     claim_max = Decimal(i["claim_max"])
-                #     if sum_income >= claim and sum_income < claim_max:
-                #         income_dividend = Decimal(i["income_dividend"])
-
                 data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
+                print("data_number=======================", data_number)
                 if data_number > 0:
                     day_data = self.get(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at)
+                    print("day_data=========================", day_data)
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water += Decimal(bet)
                     day_data.dividend_water += Decimal(bet) * Decimal(0.005)
                     day_data.income += Decimal(income)
-                    # day_data.income_dividend += Decimal(sum_income)*income_dividend
                     day_data.save()
                 else:
                     day_data = UserPresentation()
@@ -94,12 +63,15 @@ class UserPresentationManager(BaseManager):
                     day_data.bet_water = Decimal(bet)
                     day_data.dividend_water = Decimal(bet) * Decimal(0.005)
                     day_data.income = Decimal(income)
-                    # day_data.income_dividend = Decimal(sum_income) * income_dividend
                     day_data.created_at = created_at
                     day_data.save()
+                    print("33333333333333333333333333333333")
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
+                print("inviter_coin===============================", inviter_coin)
                 inviter_coin.balance += Decimal(bet) * Decimal(0.005)
+                print("112121331==================================", Decimal(bet) * Decimal(0.005))
                 inviter_coin.save()
+                print("balance===========================", balance)
 
 @reversion.register()
 class UserPresentation(models.Model):
@@ -108,7 +80,6 @@ class UserPresentation(models.Model):
     bet_water = models.DecimalField(verbose_name='下注流水', max_digits=32, decimal_places=10, default=0.0000000000)
     dividend_water = models.DecimalField(verbose_name='分红流水', max_digits=32, decimal_places=10, default=0.0000000000)
     income = models.DecimalField(verbose_name='盈亏', max_digits=32, decimal_places=10, default=0.0000000000)
-    # income_dividend = models.DecimalField(verbose_name='盈亏分红', max_digits=32, decimal_places=10, default=0.0000000000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
