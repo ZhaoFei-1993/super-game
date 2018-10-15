@@ -81,7 +81,7 @@ class UserPresentation(models.Model):
     bet_water = models.DecimalField(verbose_name='下注流水', max_digits=32, decimal_places=10, default=0.0000000000)
     dividend_water = models.DecimalField(verbose_name='分红流水', max_digits=32, decimal_places=10, default=0.0000000000)
     income = models.DecimalField(verbose_name='盈亏', max_digits=32, decimal_places=10, default=0.0000000000)
-    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", null=True)
     updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     objects = UserPresentationManager()
