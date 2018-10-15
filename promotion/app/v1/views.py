@@ -1514,13 +1514,18 @@ class CustomerView(ListAPIView):
                 if int(i[4]) == 1:
                     coin_info = "+ 5 GSG"
                 user_list[i[0]] = i[0]
+                print("i[5]==================================", i[5])
+                if i[5] == "":
+                    login_time = ""
+                else:
+                    login_time = i[5].strftime('%Y-%m-%d %H:%M')
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
                     "nickname": i[2],
                     "created_at": i[3].strftime('%Y-%m-%d %H:%M'),
                     "coin_info": coin_info,
-                    "login_time": i[5].strftime('%Y-%m-%d %H:%M')
+                    "login_time": login_time
                 })
         else:
             sql_list = "l.user_id, u.avatar, u.nickname, u.created_at,"
