@@ -174,7 +174,10 @@ class PromotionListView(ListAPIView):
                 i["bet_water"] = normalize_fraction(coin_number_info[i["club_id"]][1], i["coin_accuracy"])
                 i["dividend_water"] = normalize_fraction(coin_number_info[i["club_id"]][2], i["coin_accuracy"])
                 i["income"] = normalize_fraction(coin_number_info[i["club_id"]][3], i["coin_accuracy"])
-                i["income_dividends"] = normalize_fraction(income_dividends, i["coin_accuracy"])
+                income_dividends_s =  normalize_fraction(income_dividends, i["coin_accuracy"])
+                if income_dividends_s <= 0:
+                    income_dividends_s = 0
+                i["income_dividends"] = income_dividends_s
             else:
                 i["bet_water"] = 0
                 i["dividend_water"] = 0
@@ -982,6 +985,8 @@ class ClubDividendView(ListAPIView):
         else:
             the_month_list_sum = the_month_list[0][1]
             the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
+            if the_month_income_proportion <= 0:
+                the_month_income_proportion = 0
             the_month_income_sum = Decimal(the_month_list[0][1])*the_month_income_proportion
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
             month_list[the_month_list[0][0]] = {
