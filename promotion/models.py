@@ -55,6 +55,7 @@ class UserPresentationManager(BaseManager):
                     day_data.bet_water += Decimal(bet)
                     day_data.dividend_water += Decimal(bet) * Decimal(0.005)
                     day_data.income += Decimal(income)
+                    day_data.created_at = created_at
                     day_data.save()
                 else:
                     day_data = UserPresentation()
