@@ -1581,11 +1581,16 @@ class ClubDividendView(ListAPIView):
                     pecific_dates = ""
                 else:
                     tmps = pecific_dates
+
+                reward_coin = normalize_fraction(reward_coin, coin_accuracy)
+                if reward_coin < 0:
+                    reward_coin = -(reward_coin)
+                    reward_coin = "- "+str(reward_coin)
                 data.append({
                     "nickname": fav["nickname"],
                     "avatar": fav["avatar"],
                     "bets": normalize_fraction(fav["bets"], coin_accuracy),
-                    "reward_coin": normalize_fraction(reward_coin, coin_accuracy),
+                    "reward_coin": reward_coin,
                     "dividend": dividend,
                     "result": result,
                     "rule": fav["rule"],
