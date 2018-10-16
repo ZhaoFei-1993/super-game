@@ -1546,6 +1546,8 @@ class ClubDividendView(ListAPIView):
             print("test_proportion======================", test_proportion)
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
+            if the_month_income_sum == 0:
+                the_month_income_sum = 0
 
             tmps = ''
             # sum_coin = 0
