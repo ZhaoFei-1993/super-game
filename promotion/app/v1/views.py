@@ -1540,6 +1540,8 @@ class ClubDividendView(ListAPIView):
                 if list["created_ats"] == test_created_ats:
                     sum_coin += opposite_number(reward_coin)
 
+            print("test_created_ats============================", test_created_ats)
+            print("month_list============================", month_list)
             test_proportion = month_list[test_created_ats]["proportion"]
             print("test_proportion======================", test_proportion)
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
