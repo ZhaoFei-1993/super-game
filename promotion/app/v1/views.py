@@ -1532,22 +1532,16 @@ class ClubDividendView(ListAPIView):
             sum_coin = 0
             # test_created_ats = datetime.datetime.now().strftime('%Y%m')
             for list in data_lists:
-                if list["created_ats"] in month_list:
-                    proportion = Decimal(month_list[list["created_ats"]]["proportion"])
-                else:
-                    proportion = 0
-
                 if list["earn_coin"] > 0:
                     reward_coin = list["earn_coin"] - list["bets"]
-                    result = 1
                 else:
-                    result = 0
                     reward_coin = list["earn_coin"]
 
                 if list["created_ats"] == test_created_ats:
                     sum_coin += opposite_number(reward_coin)
 
             test_proportion = month_list[test_created_ats]["proportion"]
+            print("test_proportion======================", test_proportion)
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
 
