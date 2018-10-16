@@ -47,7 +47,7 @@ class Command(BaseCommand, BaseView):
             presentation_month.is_receive = 1
             presentation_month.created_at = start_time
             presentation_month.save()
-            if income > 0:
+            if income_dividend > 0:
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
                 coin_info.save()
