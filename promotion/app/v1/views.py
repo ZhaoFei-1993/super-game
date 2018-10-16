@@ -1962,6 +1962,7 @@ class UserInfoView(ListAPIView):
         sql += " and pm.created_at <= '" + str(end_time) + "'"
         amount_list = get_sql(sql)
         for i in amount_list:
+            print("reward_gradient_all(i[0], i[2])=======================", reward_gradient_all(i[0], i[2]))
             if i[0] is not None:
                 if i[0] not in month_list:
                     month_list[i[0]] = {
