@@ -2016,7 +2016,7 @@ class UserInfoView(ListAPIView):
                     # income_dividend = reward_gradient_all(club_id, income)
                     # print("income_dividend====================", income_dividend)
                     sum_income += income
-                    sum_income_water += Decimal(income_dividend) * Decimal(income)
+                    sum_income_water += Decimal(income_dividend) * Decimal(opposite_number(income))
                 sum_bet_water = sum_bet * Decimal(0.005)
             print("sum_income_water=========================", sum_income_water)
             data.append({
