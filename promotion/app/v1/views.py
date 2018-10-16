@@ -1571,6 +1571,9 @@ class ClubDividendView(ListAPIView):
                 dividend = normalize_fraction((opposite_number(reward_coin) * proportion), coin_accuracy)
                 if dividend == 0:
                     dividend = 0
+                if dividend < 0 and dividend != 0:
+                    dividend = -(dividend)
+                    dividend = "- " + dividend
 
                 pecific_dates = fav["yearss"]
                 pecific_date = fav["years"]
