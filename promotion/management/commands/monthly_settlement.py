@@ -5,7 +5,7 @@ import random
 from base.app import BaseView
 import datetime
 from datetime import timedelta
-from utils.functions import get_sql, reward_gradient_all, normalize_fraction
+from utils.functions import get_sql, reward_gradient_all, opposite_number
 from promotion.models import PresentationMonth
 from users.models import UserCoin
 
@@ -37,7 +37,7 @@ class Command(BaseCommand, BaseView):
             income = i[2]
             print("income=============================", income)
             proportion = reward_gradient_all(i[4], i[2])
-            income_dividend = proportion*i[2]
+            income_dividend = proportion*opposite_number(i[2])
             presentation_month = PresentationMonth()
             presentation_month.user_id = i[3]
             presentation_month.club_id = i[4]
