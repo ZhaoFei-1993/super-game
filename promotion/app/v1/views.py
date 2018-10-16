@@ -410,19 +410,19 @@ class ClubDetailView(ListAPIView):
         user_id_list = []
         for i in invitee_id_list:
             user_id_list.append(str(i[0]))
-
-        sql = "select sum(pu.bet_water), sum(pu.dividend_water) from promotion_userpresentation pu"
-        sql += " where pu.club_id = '" + str(club_id) + "'"
-        sql += " and pu.user_id = '" + str(user.id) + "'"
-        sql += " and pu.created_at >= '" + str(start_time) + "'"
-        sql += " and pu.created_at <= '" + str(end_time) + "'"
-        yesterday_amount = get_sql(sql)[0]
-        if yesterday_amount[0] == None:
-            bet_water = str(0) + " " + coin_name
-            dividend_water = str(0) + " " + coin_name
-        else:
-            bet_water = str(normalize_fraction(yesterday_amount[0], coin_accuracy)) + " " + coin_name
-            dividend_water = str(normalize_fraction(yesterday_amount[1], coin_accuracy)) + " " + coin_name
+        #
+        # sql = "select sum(pu.bet_water), sum(pu.dividend_water) from promotion_userpresentation pu"
+        # sql += " where pu.club_id = '" + str(club_id) + "'"
+        # sql += " and pu.user_id = '" + str(user.id) + "'"
+        # sql += " and pu.created_at >= '" + str(start_time) + "'"
+        # sql += " and pu.created_at <= '" + str(end_time) + "'"
+        # yesterday_amount = get_sql(sql)[0]
+        # if yesterday_amount[0] == None:
+        #     bet_water = str(0) + " " + coin_name
+        #     dividend_water = str(0) + " " + coin_name
+        # else:
+        #     bet_water = str(normalize_fraction(yesterday_amount[0], coin_accuracy)) + " " + coin_name
+        #     dividend_water = str(normalize_fraction(yesterday_amount[1], coin_accuracy)) + " " + coin_name
 
         user_list = {}
         data_list = []
@@ -784,7 +784,8 @@ class ClubDetailView(ListAPIView):
         data_one_list = sorted(data_list, key=lambda x: x['created_ats'], reverse = True)
         data = []
         tmps = ''
-        tmp = ''
+        bet_water = 0
+
         for fav in data_one_list:
             if int(fav["status"]) == 0:
                 status = "待结算"
@@ -803,6 +804,7 @@ class ClubDetailView(ListAPIView):
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
 
+            bet_water += fav["bets"]
             divided_into = fav["bets"] * Decimal(0.005)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
@@ -831,6 +833,10 @@ class ClubDetailView(ListAPIView):
                 "pecific_dates": pecific_dates,
                 "pecific_date": pecific_date,
             })
+        dividend_water = bet_water*0.005
+        bet_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+
         return self.response({'code': 0,
                               "invite_number": len(user_list),
                               "bet_water": bet_water,
