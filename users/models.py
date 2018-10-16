@@ -902,7 +902,7 @@ class UserInvitationManager(models.Manager):
                 u_mes.status = 0
                 u_mes.user = user
                 if a.invitee_one != 0:
-                    u_mes.message_id = 1  # 邀请t1消息
+                    u_mes.message_id = 19  # 邀请t1消息
                 else:
                     u_mes.message_id = 2  # 邀请t2消息
                 u_mes.save()

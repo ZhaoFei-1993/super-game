@@ -44,6 +44,8 @@ urlpatterns = [
     path('baccarat/', include('baccarat.urls')),
     # 推荐人
     path('promotion/', include('promotion.urls')),
+    # 联合做庄
+    path('banker/', include('banker.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

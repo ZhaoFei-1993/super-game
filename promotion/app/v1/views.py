@@ -587,7 +587,6 @@ class ClubDetailView(ListAPIView):
             sql += " group by dtr.user_id, yearss, years, time, created_ats, u.nickname, u.avatar, rule"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)       # 足球
-            print("sql==================", sql)
             for i in football_list:
                 if i[4] is not  None:
                     if i[9] not in user_list:
@@ -985,7 +984,6 @@ class ClubDividendView(ListAPIView):
         sql += " and pu.created_at <= '" + str(end) + "'"
         the_month_list = get_sql(sql)
         month_list = {}
-        print("the_month_list[0][1]=========================", the_month_list[0][1])
         if the_month_list[0][1] == None:
             # the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
@@ -996,7 +994,6 @@ class ClubDividendView(ListAPIView):
         else:
             the_month_list_sum = the_month_list[0][1]
             the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
-            print("the_month_income_proportion==========================", the_month_income_proportion)
             # the_month_income_sums = Decimal(the_month_list[0][1])*the_month_income_proportion
             # the_month_income_sum = -(the_month_income_sums)
             # if the_month_income_sum <= 0:
@@ -1007,8 +1004,6 @@ class ClubDividendView(ListAPIView):
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
             }
-        print("month_list=========================", month_list)
-
 
         sql_list = "date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
         sql = "select " + sql_list + " from promotion_presentationmonth pm"
@@ -1540,13 +1535,10 @@ class ClubDividendView(ListAPIView):
                 if list["created_ats"] == test_created_ats:
                     sum_coin += opposite_number(reward_coin)
 
-            print("test_created_ats============================", test_created_ats)
-            print("month_list============================", month_list)
             if test_created_ats not in month_list:
                 test_proportion = 0
             else:
                 test_proportion = month_list[test_created_ats]["proportion"]
-            print("test_proportion======================", test_proportion)
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
             if the_month_income_sum == 0:

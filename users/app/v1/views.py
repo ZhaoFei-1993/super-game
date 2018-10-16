@@ -2451,51 +2451,52 @@ class InvitationInfoView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1).count()
-        if user_invitation_number > 0:
-            user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
-                                                                 is_effective=1)
-            for a in user_invitation_info:
-                try:
-                    userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
-                except Exception:
-                    return 0
-                # if int(a.coin) == 9:
-                #     usdt_balance.balance += a.money
-                #     usdt_balance.save()
-                #     coin_detail = CoinDetail()
-                #     coin_detail.user = user
-                #     coin_detail.coin_name = 'USDT'
-                #     coin_detail.amount = '+' + str(a.money)
-                #     coin_detail.rest = usdt_balance.balance
-                #     coin_detail.sources = 8
-                #     coin_detail.save()
-                #     try:
-                #         usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
-                #     except Exception:
-                #         return 0
-                #     usdt_give.lock_coin += a.money
-                #     usdt_give.save()
-                # else:
-                userbalance.balance += a.money
-                userbalance.save()
-                coin_detail = CoinDetail()
-                coin_detail.user = user
-                coin_detail.coin_name = userbalance.coin.name
-                coin_detail.amount = '+' + str(a.money)
-                coin_detail.rest = userbalance.balance
-                coin_detail.sources = 8
-                coin_detail.save()
-                a.is_deleted = 1
-                a.save()
-                u_mes = UserMessage()  # 邀请注册成功后消息
-                u_mes.status = 0
-                u_mes.user = user
-                if a.invitee_one != 0:
-                    u_mes.message_id = 1  # 邀请t1消息
-                else:
-                    u_mes.message_id = 2  # 邀请t2消息
-                u_mes.save()
+        UserInvitation.objects.activity(user)
+        # user_invitation_number = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id, is_effective=1).count()
+        # if user_invitation_number > 0:
+        #     user_invitation_info = UserInvitation.objects.filter(money__gt=0, is_deleted=0, inviter_id=user.id,
+        #                                                          is_effective=1)
+        #     for a in user_invitation_info:
+        #         try:
+        #             userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
+        #         except Exception:
+        #             return 0
+        #         # if int(a.coin) == 9:
+        #         #     usdt_balance.balance += a.money
+        #         #     usdt_balance.save()
+        #         #     coin_detail = CoinDetail()
+        #         #     coin_detail.user = user
+        #         #     coin_detail.coin_name = 'USDT'
+        #         #     coin_detail.amount = '+' + str(a.money)
+        #         #     coin_detail.rest = usdt_balance.balance
+        #         #     coin_detail.sources = 8
+        #         #     coin_detail.save()
+        #         #     try:
+        #         #         usdt_give = CoinGiveRecords.objects.get(user_id=user.id)
+        #         #     except Exception:
+        #         #         return 0
+        #         #     usdt_give.lock_coin += a.money
+        #         #     usdt_give.save()
+        #         # else:
+        #         userbalance.balance += a.money
+        #         userbalance.save()
+        #         coin_detail = CoinDetail()
+        #         coin_detail.user = user
+        #         coin_detail.coin_name = userbalance.coin.name
+        #         coin_detail.amount = '+' + str(a.money)
+        #         coin_detail.rest = userbalance.balance
+        #         coin_detail.sources = 8
+        #         coin_detail.save()
+        #         a.is_deleted = 1
+        #         a.save()
+        #         u_mes = UserMessage()  # 邀请注册成功后消息
+        #         u_mes.status = 0
+        #         u_mes.user = user
+        #         if a.invitee_one != 0:
+        #             u_mes.message_id = 19  # 邀请t1消息
+        #         else:
+        #             u_mes.message_id = 2  # 邀请t2消息
+        #         u_mes.save()
 
         if user.invitation_code == '':
             invitation_code = random_invitation_code()
