@@ -1960,6 +1960,7 @@ class UserInfoView(ListAPIView):
         sql += " and pm.user_id = '" + str(user.id) + "'"
         sql += " and pm.created_at >= '" + str(start) + "'"
         sql += " and pm.created_at <= '" + str(end_time) + "'"
+        sql += " group by pm.club_id, created_ats"
         amount_list = get_sql(sql)
 
         print("coin_id_list==============================", coin_id_list)
