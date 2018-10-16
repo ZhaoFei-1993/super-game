@@ -1021,10 +1021,12 @@ class ClubDividendView(ListAPIView):
             user_id_list.append(str(i[0]))
 
         user_list = {}
+        user_lists = {}
         data = []
         the_month_income_sum = 0
         if user_id_list != []:
             data_list = []
+            data_lists = []
             if int(type) == 1:  # 1.全部
                 sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
@@ -1213,6 +1215,23 @@ class ClubDividendView(ListAPIView):
                             "created_ats": i[7],
                             "times": i[9]
                         })
+
+                football_lists = get_sql(sql)  # 足球
+                for i in football_lists:
+                    if i[4] is not None:
+                        if i[8] not in user_list:
+                            user_list[i[8]] = i[8]
+                        data_lists.append({
+                            "bets": Decimal(i[0]),
+                            "earn_coin": Decimal(i[6]),
+                            "yearss": i[1],
+                            "years": i[2],
+                            "rule": i[3],
+                            "nickname": i[4],
+                            "avatar": i[5],
+                            "created_ats": i[7],
+                            "times": i[9]
+                        })
             elif int(type) == 2:  # 2. 篮球
                 sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
@@ -1237,6 +1256,21 @@ class ClubDividendView(ListAPIView):
                     if i[8] not in user_list:
                         user_list[i[8]] = i[8]
                     data_list.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
                         "bets": Decimal(i[0]),
                         "earn_coin": Decimal(i[6]),
                         "yearss": i[1],
@@ -1281,6 +1315,21 @@ class ClubDividendView(ListAPIView):
                         "created_ats": i[7],
                         "times": i[9]
                     })
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
             elif int(type) == 4:  # 4. 股票
                 sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
@@ -1302,6 +1351,21 @@ class ClubDividendView(ListAPIView):
                     if i[8] not in user_list:
                         user_list[i[8]] = i[8]
                     data_list.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
                         "bets": Decimal(i[0]),
                         "earn_coin": Decimal(i[6]),
                         "yearss": i[1],
@@ -1343,6 +1407,21 @@ class ClubDividendView(ListAPIView):
                         "created_ats": i[7],
                         "times": i[9]
                     })
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
             elif int(type) == 7:  # 百家乐
                 sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%h:%i:%s' ) as years,"
@@ -1364,6 +1443,21 @@ class ClubDividendView(ListAPIView):
                     if i[8] not in user_list:
                         user_list[i[8]] = i[8]
                     data_list.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
                         "bets": Decimal(i[0]),
                         "earn_coin": Decimal(i[6]),
                         "yearss": i[1],
@@ -1405,11 +1499,49 @@ class ClubDividendView(ListAPIView):
                         "created_ats": i[7],
                         "times": i[9]
                     })
-            data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
+                record_lists = get_sql(sql)
+                for i in record_lists:
+                    if i[8] not in user_list:
+                        user_list[i[8]] = i[8]
+                    data_lists.append({
+                        "bets": Decimal(i[0]),
+                        "earn_coin": Decimal(i[6]),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "rule": i[3],
+                        "nickname": i[4],
+                        "avatar": i[5],
+                        "created_ats": i[7],
+                        "times": i[9]
+                    })
+            # data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
+            data_one_list = data_list
 
-            tmps = ''
             sum_coin = 0
             test_created_ats = datetime.datetime.now().strftime('%Y%m')
+            for list in data_lists:
+                if list["created_ats"] in month_list:
+                    proportion = Decimal(month_list[list["created_ats"]]["proportion"])
+                else:
+                    proportion = 0
+
+                if list["earn_coin"] > 0:
+                    reward_coin = list["earn_coin"] - list["bets"]
+                    result = 1
+                else:
+                    result = 0
+                    reward_coin = list["earn_coin"]
+
+                if list["created_ats"] == test_created_ats:
+                    sum_coin += opposite_number(reward_coin)
+
+            test_proportion = month_list[datetime.datetime.now().strftime('%Y%m')]["proportion"]
+            the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
+            the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
+
+            tmps = ''
+            # sum_coin = 0
+            # test_created_ats = datetime.datetime.now().strftime('%Y%m')
             for fav in data_one_list:
                 if fav["created_ats"] in month_list:
                     proportion = Decimal(month_list[fav["created_ats"]]["proportion"])
@@ -1423,8 +1555,8 @@ class ClubDividendView(ListAPIView):
                     result = 0
                     reward_coin = fav["earn_coin"]
 
-                if fav["created_ats"] == test_created_ats:
-                    sum_coin += opposite_number(reward_coin)
+                # if fav["created_ats"] == test_created_ats:
+                #     sum_coin += opposite_number(reward_coin)
 
                 dividend = normalize_fraction((opposite_number(reward_coin) * proportion), coin_accuracy)
 
@@ -1445,9 +1577,9 @@ class ClubDividendView(ListAPIView):
                     "pecific_dates": pecific_dates,
                     "pecific_date": pecific_date,
                 })
-            test_proportion = month_list[datetime.datetime.now().strftime('%Y%m')]["proportion"]
-            the_month_income_sum = Decimal(sum_coin)*Decimal(test_proportion)
-            the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
+            # test_proportion = month_list[datetime.datetime.now().strftime('%Y%m')]["proportion"]
+            # the_month_income_sum = Decimal(sum_coin)*Decimal(test_proportion)
+            # the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
         else:
             data = []
             the_month_income_sum = 0
