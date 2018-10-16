@@ -410,7 +410,7 @@ class ClubDetailView(ListAPIView):
         user_id_list = []
         for i in invitee_id_list:
             user_id_list.append(str(i[0]))
-        #
+
         # sql = "select sum(pu.bet_water), sum(pu.dividend_water) from promotion_userpresentation pu"
         # sql += " where pu.club_id = '" + str(club_id) + "'"
         # sql += " and pu.user_id = '" + str(user.id) + "'"
@@ -813,16 +813,8 @@ class ClubDetailView(ListAPIView):
             pecific_date = fav["time"]
             if tmps == pecific_dates:
                 pecific_dates = ""
-                # if tmp == pecific_date:
-                #     pecific_date = ""
-                # else:
-                #     tmp = pecific_date
             else:
                 tmps = pecific_dates
-                # if tmp == pecific_date:
-                #     pecific_date = ""
-                # else:
-                #     tmp = pecific_date
             data.append({
                 "status": status,
                 "divided_into": divided_into,
@@ -1028,6 +1020,7 @@ class ClubDividendView(ListAPIView):
 
         user_list = {}
         data = []
+        the_month_income_sum = 0
         if user_id_list != []:
             data_list = []
             if int(type) == 1:  # 1.全部
@@ -1412,6 +1405,8 @@ class ClubDividendView(ListAPIView):
             data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
 
             tmps = ''
+            sum_coin = 0
+            test_created_ats = datetime.datetime.now().strftime('%Y%m')
             for fav in data_one_list:
                 if fav["created_ats"] in month_list:
                     proportion = Decimal(month_list[fav["created_ats"]]["proportion"])
@@ -1424,6 +1419,9 @@ class ClubDividendView(ListAPIView):
                 else:
                     result = 0
                     reward_coin = fav["earn_coin"]
+
+                if fav["created_ats"] == test_created_ats:
+                    sum_coin += opposite_number(reward_coin)
 
                 dividend = normalize_fraction((opposite_number(reward_coin) * proportion), coin_accuracy)
 
@@ -1444,8 +1442,12 @@ class ClubDividendView(ListAPIView):
                     "pecific_dates": pecific_dates,
                     "pecific_date": pecific_date,
                 })
+            test_proportion = month_list[datetime.datetime.now().strftime('%Y%m')]["proportion"]
+            the_month_income_sum = Decimal(sum_coin)*Decimal(test_proportion)
+            the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
         else:
             data = []
+            the_month_income_sum = 0
         return self.response({'code': 0,
                               "the_month_income_sum": the_month_income_sum,
                               "the_month_user_number": len(user_list),
