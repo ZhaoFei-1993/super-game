@@ -806,8 +806,7 @@ class ClubDetailView(ListAPIView):
                 status = "已结算"
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
-
-            bet_water += fav["bets"]
+                bet_water += fav["bets"]
             divided_into = fav["bets"] * Decimal(0.005)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
