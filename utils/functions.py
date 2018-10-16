@@ -1402,7 +1402,6 @@ def reward_gradient_all(club_id, income):
         set_cache(gradient_income_key, value)
     sum_income = Decimal(income)
 
-    print("value================================", value)
     income_dividend = 0
     for i in value:
         claim = Decimal(value[i]["claim"])

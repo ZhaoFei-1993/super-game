@@ -1621,6 +1621,7 @@ class UserInfoView(ListAPIView):
             before_start = str(before_first_day) + ' 00:00:00'  # 本月第一天
         start = str(month_first_day) + ' 00:00:00'  # 本月第一天
 
+        print("start===============================", start)
         data_list = {}
         if start != start_time:
             sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
@@ -1920,6 +1921,69 @@ class UserInfoView(ListAPIView):
                             "earn_coin": s[3]
                         }
                     }
+
+
+        month_list = {}
+        sql_list = "pm.club_id, date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
+        sql = "select " + sql_list + " from promotion_presentationmonth pm"
+        sql += " where pm.club_id in (" + ','.join(coin_id_list) + ")"
+        sql += " and pm.user_id = '" + str(user.id) + "'"
+        sql += " and pm.created_at >= '" + str(start_time) + "'"
+        sql += " and pm.created_at <= '" + str(end_time) + "'"
+        sql += " group by pm.club_id, created_ats"
+        amount_list = get_sql(sql)
+
+        for i in amount_list:
+            # coin_accuracy = club_list[i[0]]["coin_accuracy"]
+            if i[0] not in month_list:
+                month_list[i[0]] = {
+                    i[1]: {
+                        "months": i[1],
+                        "proportion": i[2]
+                    }
+                }
+            else:
+                if i[1] in month_list[i[0]]:
+                    month_list[i[0]][i[1]]["months"] = i[1]
+                    month_list[i[0]][i[1]]["proportion"] = i[2]
+                else:
+                    month_list[i[0]] = {
+                        i[1]: {
+                            "months": i[1],
+                            "proportion": i[2]
+                        }
+                    }
+
+        sql_list = "pm.club_id, date_format( pm.created_at, '%Y%m' ) AS created_ats, sum(pm.income)"
+        sql = "select " + sql_list + " from promotion_userpresentation pm"
+        sql += " where pm.club_id in (" + ','.join(coin_id_list) + ")"
+        sql += " and pm.user_id = '" + str(user.id) + "'"
+        sql += " and pm.created_at >= '" + str(start) + "'"
+        sql += " and pm.created_at <= '" + str(end_time) + "'"
+        amount_list = get_sql(sql)
+        for i in amount_list:
+            if i[0] is not None:
+                if i[0] not in month_list:
+                    month_list[i[0]] = {
+                        i[1]: {
+                            "months": i[1],
+                            "proportion": reward_gradient_all(i[0], i[2])
+                        }
+                    }
+                else:
+                    if i[1] in month_list[i[0]]:
+                        month_list[i[0]][i[1]]["months"] = i[1]
+                        month_list[i[0]][i[1]]["proportion"] = reward_gradient_all(i[0], i[2])
+                    else:
+                        month_list[i[0]] = {
+                            i[1]: {
+                                "months": i[1],
+                                "proportion": reward_gradient_all(i[0], i[2])
+                            }
+                        }
+
+        print("month_list==========================", month_list)
+
         data = []
         for i in club_list:
             coin_accuracy = club_list[i]["coin_accuracy"]
@@ -1930,13 +1994,19 @@ class UserInfoView(ListAPIView):
             sum_bet_water = 0
             sum_income = 0
             sum_income_water = 0
+            print("club_id===========================", club_id)
+            print("data_list===========================", data_list)
             if club_id in data_list:
                 for s in data_list[club_id]:
+                    if club_id in month_list:
+                        income_dividend = month_list[club_id][s]["proportion"]
+                    else:
+                        income_dividend = 0
                     sum_bet += normalize_fraction(data_list[club_id][s]["bets"], int(coin_accuracy))
                     income = normalize_fraction(data_list[club_id][s]["earn_coin"], int(coin_accuracy))
-                    print("income=========================", income)
-                    income_dividend = reward_gradient_all(club_id, income)
-                    print("income_dividend====================", income_dividend)
+                    # print("income=========================", income)
+                    # income_dividend = reward_gradient_all(club_id, income)
+                    # print("income_dividend====================", income_dividend)
                     sum_income += income
                     sum_income_water += Decimal(income_dividend) * Decimal(income)
                 sum_bet_water = sum_bet * Decimal(0.005)
