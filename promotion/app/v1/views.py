@@ -950,11 +950,17 @@ class ClubDividendView(ListAPIView):
             if last_month_year == end_year and last_month_month == end_month:
                 this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
                 end = this_month_start - timedelta(days=1)  # 上个月的最后一天
+
+                test_created_ats = datetime.datetime(end.year, end.month, 1).strftime('%Y%m')
+
                 start = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
                 end = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
             else:
                 start_year = datetime.datetime.now().year
                 end_month = datetime.datetime.now().month
+
+                test_created_ats = str(start_year) + str(end_month)
+
                 weekDay, monthCountDay = calendar.monthrange(start_year, end_month)  # 当月第一天的星期 当月的总天数
                 month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
                 start = str(month_first_day) + ' 00:00:00'  # 本月第一天
@@ -963,6 +969,9 @@ class ClubDividendView(ListAPIView):
         else:
             start_year = datetime.datetime.now().year
             end_month = datetime.datetime.now().month
+
+            test_created_ats = str(start_year)+str(end_month)
+
             weekDay, monthCountDay = calendar.monthrange(start_year, end_month)  # 当月第一天的星期 当月的总天数
             month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
             start = str(month_first_day) + ' 00:00:00'  # 本月第一天
@@ -1520,7 +1529,7 @@ class ClubDividendView(ListAPIView):
             data_one_list = data_list
 
             sum_coin = 0
-            test_created_ats = datetime.datetime.now().strftime('%Y%m')
+            # test_created_ats = datetime.datetime.now().strftime('%Y%m')
             for list in data_lists:
                 if list["created_ats"] in month_list:
                     proportion = Decimal(month_list[list["created_ats"]]["proportion"])
