@@ -36,20 +36,18 @@ class Command(BaseCommand, BaseView):
         for i in userpresentation_list:
             income = i[2]
             print("income=============================", income)
-            # proportion = 0
-            # income_dividend = 0
+            proportion = reward_gradient_all(i[4], i[2])
+            income_dividend = proportion*i[2]
+            presentation_month = PresentationMonth()
+            presentation_month.user_id = i[3]
+            presentation_month.club_id = i[4]
+            presentation_month.income = i[2]
+            presentation_month.income_dividend = income_dividend
+            presentation_month.proportion = proportion
+            presentation_month.is_receive = 1
+            presentation_month.created_at = start_time
+            presentation_month.save()
             if income > 0:
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
-                proportion = reward_gradient_all(i[4], i[2])
-                income_dividend = proportion*i[2]
                 coin_info.balance += income_dividend
                 coin_info.save()
-                presentation_month = PresentationMonth()
-                presentation_month.user_id = i[3]
-                presentation_month.club_id = i[4]
-                presentation_month.income = i[2]
-                presentation_month.income_dividend = income_dividend
-                presentation_month.proportion = proportion
-                presentation_month.is_receive = 1
-                presentation_month.created_at = start_time
-                presentation_month.save()
