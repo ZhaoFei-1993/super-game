@@ -833,7 +833,7 @@ class ClubDetailView(ListAPIView):
                 "pecific_dates": pecific_dates,
                 "pecific_date": pecific_date,
             })
-        dividend_water = bet_water*0.005
+        dividend_water = Decimal(bet_water)*Decimal(0.005)
         bet_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
         dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
 
