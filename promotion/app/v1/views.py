@@ -1961,8 +1961,11 @@ class UserInfoView(ListAPIView):
         sql += " and pm.created_at >= '" + str(start) + "'"
         sql += " and pm.created_at <= '" + str(end_time) + "'"
         amount_list = get_sql(sql)
+        print("amount_list==============================", amount_list)
         for i in amount_list:
             print("reward_gradient_all(i[0], i[2])=======================", reward_gradient_all(i[0], i[2]))
+            print("i[2]=======================", i[2])
+            print("i[0]=======================", i[0])
             if i[0] is not None:
                 if i[0] not in month_list:
                     month_list[i[0]] = {
@@ -1995,8 +1998,6 @@ class UserInfoView(ListAPIView):
             sum_bet_water = 0
             sum_income = 0
             sum_income_water = 0
-            print("club_id===========================", club_id)
-            print("data_list===========================", data_list)
             if club_id in data_list:
                 for s in data_list[club_id]:
                     if club_id in month_list:
