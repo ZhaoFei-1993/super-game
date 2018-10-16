@@ -263,6 +263,7 @@ class PromotioncClubView(ListAPIView):
         sql += " where pm.club_id = '" + str(club_id) + "'"
         sql += " and pm.user_id = '" + str(user.id) + "'"
         amount_list = get_sql(sql)
+        print("amount_list=====================", amount_list)
         month_list = []
         sum_coin = Decimal(all_dividend_water)
         for i in amount_list:

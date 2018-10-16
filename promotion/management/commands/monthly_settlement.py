@@ -27,6 +27,7 @@ class Command(BaseCommand, BaseView):
         userpresentation_list = get_sql(sql)
         for i in userpresentation_list:
             income = i[2]
+            print("income=============================", income)
             # proportion = 0
             # income_dividend = 0
             if income > 0:
