@@ -1542,7 +1542,10 @@ class ClubDividendView(ListAPIView):
 
             print("test_created_ats============================", test_created_ats)
             print("month_list============================", month_list)
-            test_proportion = month_list[test_created_ats]["proportion"]
+            if test_created_ats not in month_list:
+                test_proportion = 0
+            else:
+                test_proportion = month_list[test_created_ats]["proportion"]
             print("test_proportion======================", test_proportion)
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
             the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
