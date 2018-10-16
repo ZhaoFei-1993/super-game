@@ -1961,6 +1961,11 @@ class UserInfoView(ListAPIView):
         sql += " and pm.created_at >= '" + str(start) + "'"
         sql += " and pm.created_at <= '" + str(end_time) + "'"
         amount_list = get_sql(sql)
+
+        print("coin_id_list==============================", coin_id_list)
+        print("start==============================", start)
+        print("end_time==============================", end_time)
+        print("user.id==============================", user.id)
         print("amount_list==============================", amount_list)
         for i in amount_list:
             print("reward_gradient_all(i[0], i[2])=======================", reward_gradient_all(i[0], i[2]))
