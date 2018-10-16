@@ -32,7 +32,7 @@ class Command(BaseCommand, BaseView):
             if income > 0:
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 proportion = reward_gradient_all(i[4], i[2])
-                income_dividend = normalize_fraction(proportion*i[2], i[4])
+                income_dividend = proportion*i[2]
                 coin_info.balance += income_dividend
                 coin_info.save()
                 presentation_month = PresentationMonth()
