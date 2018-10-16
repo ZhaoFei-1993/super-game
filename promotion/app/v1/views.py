@@ -834,7 +834,7 @@ class ClubDetailView(ListAPIView):
                 "pecific_date": pecific_date,
             })
         dividend_water = Decimal(bet_water)*Decimal(0.005)
-        bet_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
         dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
 
         return self.response({'code': 0,
