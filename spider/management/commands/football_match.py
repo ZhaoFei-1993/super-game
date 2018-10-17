@@ -70,13 +70,13 @@ def get_data_info(url):
             try:
                 host_team_dt = eval(response_host_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
                 guest_team_dt = eval(response_guest_team.text.encode("utf-8").decode('unicode_escape')[11:-2])
-            except Exception:
+            except Exception as e:
                 continue
-            if host_team_dt['status'] == 0:
+            if host_team_dt['status']['code'] == 0:
                 host_team_en = host_team_dt['result']['official_name']
             else:
                 host_team_en = ''
-            if guest_team_dt['status'] == 0:
+            if guest_team_dt['status']['code'] == 0:
                 guest_team_en = guest_team_dt['result']['official_name']
             else:
                 guest_team_en = ''

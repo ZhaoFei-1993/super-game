@@ -500,7 +500,7 @@ class BetsListViews(ListAPIView):
         elif type == '2':  # 已开奖
             res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=1)
         else:
-            return HttpResponse(status=404)
+            res = []
         return res
 
     def list(self, request, *args, **kwargs):
