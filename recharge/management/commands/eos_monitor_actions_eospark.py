@@ -65,12 +65,11 @@ class Command(BaseCommand):
 
             memos.append(memo)
 
-            dt = time.localtime(int(time.mktime(ts)) + 8 * 3600)
             transactions.append({
                 'txid': tx_hash,
                 'amount': transfer['quantity'],
                 'memo': memo,
-                'time': dt,
+                'time': int(time.mktime(ts)) + 8 * 3600,
             })
 
         if len(transactions) == 0:
