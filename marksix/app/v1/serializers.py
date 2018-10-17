@@ -232,7 +232,6 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         language = self.context['request'].GET.get('language', 'zh')
         res_list = res.split(',')
         if (play.id != 1 and not option_id) or play.id == 8:  # 排除连码和特码
-            print('option_id   ', option_id)
             content_list = []
             for pk in res_list:
                 if language == 'zh':
@@ -251,11 +250,12 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         if option_id:
             title = Option.objects.get(id=option_id).option
 
-        if play.id != 3 or title == '平码':
-            next = '共' + str(len(res.split(','))) + last
-            res = res + '/' + next
-        elif play.id == 8:
+        if play.id == 8:
             next = '共' + str(obj.bet) + last
+            res = res + '/' + next
+            print(res)
+        elif play.id != 3 or title == '平码':
+            next = '共' + str(len(res.split(','))) + last
             res = res + '/' + next
         else:
             n = len(res.split(','))
