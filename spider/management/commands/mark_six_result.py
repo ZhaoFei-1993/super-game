@@ -45,10 +45,10 @@ def special_code_result(record, answer_dic, cache_club_value):
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_code = answer_dic['code_list'][-1]
     if special_code in record.content.split(','):
-        earn_coin = one_bet * float(record.odds)
+        earn_coin = one_bet * Decimal(record.odds)
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -64,11 +64,11 @@ def color_result(record, answer_dic, cache_club_value):
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_color_id = answer_dic['special_color_id']
     if special_color_id in record.content.split(','):
         index = record.content.split(',').index(special_color_id)
-        earn_coin = one_bet * float(record.odds.split(',')[index])
+        earn_coin = one_bet * Decimal(record.odds.split(',')[index])
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -85,31 +85,31 @@ def continuous_result(record, answer_dic, cache_club_value):
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     code_result_list = answer_dic['code_list'][:-1]
     if record.option.option == '平码':
         for code in code_result_list:
             if code in record.content.split(','):
-                earn_coin = earn_coin + (one_bet * float(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
     elif record.option.option == '二中二':
         for dt in list(combinations(record.content.split(','), 2)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 2:
-                earn_coin = earn_coin + (one_bet * float(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
     elif '三中二' in record.option.option:
         for dt in list(combinations(record.content.split(','), 3)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 3:
                 odd = Option.objects.get(option='三中二(中三)').odds
-                earn_coin = earn_coin + (one_bet * float(odd))
+                earn_coin = earn_coin + (one_bet * Decimal(odd))
             elif len(right_list) == 2:
                 odd = Option.objects.get(option='三中二(中二)').odds
-                earn_coin = earn_coin + (one_bet * float(odd))
+                earn_coin = earn_coin + (one_bet * Decimal(odd))
     elif record.option.option == '三中三':
         for dt in list(combinations(record.content.split(','), 3)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 3:
-                earn_coin = earn_coin + (one_bet * float(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -128,7 +128,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
 
     result_dic = {}
     earn_coin = 0
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_code = answer_dic['code_list'][-1]
     normal_code_list = answer_dic['code_list']
     special_animal = answer_dic['chinese_zodiac_list'][-1]
@@ -173,7 +173,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
             option_id = answer_dic['twq_side_op'][value]
             if str(option_id) in record.content.split(','):
                 index = record.content.split(',').index(str(option_id))
-                earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+                earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
 
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
@@ -192,12 +192,12 @@ def animal_result(record, answer_dic, cache_club_value):
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     animal_result_list = answer_dic['animal_result_list']
     for choose_animal in record.content.split(','):
         if choose_animal in animal_result_list:
             index = record.content.split(',').index(choose_animal)
-            earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+            earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -215,15 +215,15 @@ def special_head_tail_result(record, answer_dic, cache_club_value):
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_code_head_id = answer_dic['special_code_head_id']
     special_code_tail_id = answer_dic['special_code_tail_id']
     if special_code_head_id in record.content.split(','):
         index = record.content.split(',').index(special_code_head_id)
-        earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+        earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
     if special_code_tail_id in record.content.split(','):
         index = record.content.split(',').index(special_code_tail_id)
-        earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
+        earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -240,11 +240,11 @@ def elements_result(record, answer_dic, cache_club_value):
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_elements_id = answer_dic['special_elements_id']
     if special_elements_id in record.content.split(','):
         index = record.content.split(',').index(special_elements_id)
-        earn_coin = one_bet * float(record.odds.split(',')[index])
+        earn_coin = one_bet * Decimal(record.odds.split(',')[index])
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -260,15 +260,19 @@ def special_animal(record, answer_dic, cache_club_value):
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
-    one_bet = float(record.bet_coin / record.bet)
+    one_bet = Decimal(record.bet_coin / record.bet)
     special_animal_id = answer_dic['special_animal_id']
-    for dt in list(combinations(record.content.split(','), 6)):
-        if special_animal_id in dt:
-            earn_coin = earn_coin + (one_bet * float(record.odds))
-    if earn_coin == 0:
-        earn_coin = float('-' + str(record.bet_coin))
+    special_code = answer_dic['special_code']
+    if special_code == '49':  # 平局
+        earn_coin = record.bet_coin
     else:
-        earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
+        for dt in list(combinations(record.content.split(','), 6)):
+            if special_animal_id in dt:
+                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
+        if earn_coin == 0:
+            earn_coin = float('-' + str(record.bet_coin))
+        else:
+            earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     record.earn_coin = earn_coin
     record.save()
 
