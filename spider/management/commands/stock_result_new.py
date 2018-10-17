@@ -52,19 +52,19 @@ class GuessRecording(object):
         title_en = 'Lottery announcement from' + club_name_en
         earn_coin = float(record.earn_coin)
         if earn_coin < 0:
-            content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
+            content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
                       + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
                       '，您答错了。'
 
-            content_en = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+            content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
                          record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
                          '您答错了。'
         else:
-            content = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+            content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
                       record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + \
                       record.options.title + '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
-            content_en = club_name + '已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+            content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
                          record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
                          '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
