@@ -295,11 +295,43 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
 
 # 去掉decimal类型数值后面的0
 def normalize_fraction(d, b):
-    d = Decimal(str(d))
-    dd = round(d, b)
-    normalized = dd.normalize()
-    sign, digit, exponent = normalized.as_tuple()
-    return normalized if exponent <= 0 else normalized.quantize(1)
+    if type(d) is float:
+        a = str(d).split(".")
+        if len(a[1]) < b:
+            point_after_list = list(a[1])
+            for i in reversed(point_after_list):
+                if i == '0':
+                    point_after_list.remove(i)
+                else:
+                    break
+            if len(point_after_list) != 0:
+                normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                return normalized
+            else:
+                return a[0]
+        else:
+            f = a[1][:b]
+
+            point_after_list = list(f)
+            for i in reversed(point_after_list):
+                if i == '0':
+                    point_after_list.remove(i)
+                else:
+                    break
+            if len(point_after_list) != 0:
+                normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                return normalized
+            else:
+                return a[0]
+    else:
+        normalized = d
+        return normalized
+
+    # d = Decimal(str(d))
+    # dd = round(d, b)
+    # normalized = dd.normalize()
+    # sign, digit, exponent = normalized.as_tuple()
+    # return normalized if exponent <= 0 else normalized.quantize(1)
 
 
 def handle_zero(num):
