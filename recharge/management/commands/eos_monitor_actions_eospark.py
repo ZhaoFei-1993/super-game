@@ -46,7 +46,7 @@ class Command(BaseCommand):
         for transfer in transfers['data']['token_transactions']:
             memo = transfer['memo']
             tx_hash = transfer['hash']
-            ts = time.strptime(transfer['trx_timestamp'], '%Y-%m-%d %H:%M:%S.%f')
+            ts = time.strptime(transfer['trx_timestamp'].replace('T', ' '), '%Y-%m-%d %H:%M:%S.%f')
 
             if transfer['direction'] != 'in' or transfer['issue_account'] != 'eosio.token' or transfer['status'] != 'executed' or transfer['symbol'] != 'EOS':
                 continue
