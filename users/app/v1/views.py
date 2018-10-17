@@ -1250,7 +1250,6 @@ class AssetView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         user_info = request.user
         base_img = soc_activity(user_info)
-        print("base_img=================================", base_img)
         user_id = user_info.id
         items = results.data.get('results')
         data = []
@@ -1291,7 +1290,7 @@ class AssetView(ListAPIView):
         coin_payment = {}
         for charge in coin_out_charges:
             print('charge = ', charge.__dict__)
-            coin_id_charges[charge.coin_out_id] = normalize_fraction(charge.value, 4)
+            coin_id_charges[charge.coin_out_id] = normalize_fraction(charge.value, 8)
             coin_payment[charge.coin_out_id] = map_coins[charge.coin_payment_id].name
 
         # 获取锁定币数：提现锁定数量+用户锁定GSG数量
@@ -1308,7 +1307,7 @@ class AssetView(ListAPIView):
         for item in items:
             coin_id = item['coin_id']
             coin = map_coins[coin_id]
-            min_present = normalize_fraction(coin.cash_control, int(coin.coin_accuracy))
+            min_present = normalize_fraction(coin.cash_control, 8)
 
             # 常用地址.
             user_presentations = map_user_presentation[coin_id] if coin_id in map_user_presentation else []
@@ -1356,7 +1355,7 @@ class AssetView(ListAPIView):
                 'eos_code': eos_code,
             }
             if temp_dict['coin_name'] == 'HAND':
-                temp_dict['eth_balance'] = normalize_fraction(eth.balance, coin.coin_accuracy)
+                temp_dict['eth_balance'] = normalize_fraction(eth.balance, 8)
                 temp_dict['eth_address'] = eth.address
                 temp_dict['eth_coin_id'] = eth.coin_id
             if temp_dict['coin_name'] == 'GSG':
@@ -1374,7 +1373,7 @@ class AssetView(ListAPIView):
             'code': 0,
             'user_name': user_info.nickname,
             'user_avatar': user_info.avatar,
-            'user_integral': normalize_fraction(user_gsg.balance, 2),
+            'user_integral': normalize_fraction(user_gsg.balance, 8),
             'least_lock_amount': settings.GSG_LEAST_LOCK_AMOUNT,
             'data': data,
             'base_img': base_img
