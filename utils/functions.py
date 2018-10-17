@@ -310,9 +310,11 @@ def normalize_fraction(d, b):
                     break
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                normalized = Decimal(normalized)
                 return normalized
             else:
-                return a[0]
+                normalized = Decimal(a[0])
+                return normalized
         else:
             f = a[1][:b]
 
@@ -324,9 +326,11 @@ def normalize_fraction(d, b):
                     break
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                normalized = Decimal(normalized)
                 return normalized
             else:
-                return a[0]
+                normalized = Decimal(a[0])
+                return normalized
 
     else:
         normalized = d
