@@ -7,6 +7,11 @@ import traceback
 from .code import API_ERROR_MESSAGE
 from .code_en import API_ERROR_MESSAGE_EN
 
+from redis import Redis
+from rq import Queue
+from handle.consumers import send_alert_email
+from django.conf import settings
+
 
 class CCBaseException(Exception):
     """
@@ -65,6 +70,13 @@ class UserLoginException(CCBaseException):
 def wc_exception_handler(exception, context):
     response = exception_handler(exception, context)
     print('exception = ', exception, ' type is ', type(exception))
+    if settings.IS_ENABLE_EMAIL_ALERT:
+        if type(exception) not in [SystemParamException, SignatureNotMatchException, NotLoginException, ResultNotFoundException, ParamErrorException, UserLoginException]:
+            # 非预定义抛出的异常发送邮件报警
+            print('call here')
+            redis_conn = Redis()
+            q = Queue(connection=redis_conn)
+            q.enqueue(send_alert_email, exception, traceback.format_exc(), context['request'].get_full_path())
     print('context = ', context)
     traceback.print_exc()
 
