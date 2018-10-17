@@ -297,6 +297,7 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
 def normalize_fraction(d, b):
     if type(d) is float or type(d) is decimal.Decimal:
         a = str(d).split(".")
+        print("a========================", a)
         if len(a[1]) < b:
 
             point_after_list = list(a[1])
