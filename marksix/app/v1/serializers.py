@@ -254,6 +254,9 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
         if play.id != 3 or title == '平码':
             next = '共' + str(len(res.split(','))) + last
             res = res + '/' + next
+        elif play.id == 8:
+            next = '共' + str(obj.bet) + last
+            res = res + '/' + next
         else:
             n = len(res.split(','))
             if title == '二中二':
