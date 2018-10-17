@@ -48,7 +48,7 @@ def special_code_result(record, answer_dic, cache_club_value):
     one_bet = Decimal(record.bet_coin / record.bet)
     special_code = answer_dic['code_list'][-1]
     if special_code in record.content.split(','):
-        earn_coin = one_bet * Decimal(record.odds)
+        earn_coin = one_bet * Decimal(str(record.odds))
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -68,7 +68,7 @@ def color_result(record, answer_dic, cache_club_value):
     special_color_id = answer_dic['special_color_id']
     if special_color_id in record.content.split(','):
         index = record.content.split(',').index(special_color_id)
-        earn_coin = one_bet * Decimal(record.odds.split(',')[index])
+        earn_coin = one_bet * Decimal(str(record.odds.split(',')[index]))
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -90,26 +90,26 @@ def continuous_result(record, answer_dic, cache_club_value):
     if record.option.option == '平码':
         for code in code_result_list:
             if code in record.content.split(','):
-                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
     elif record.option.option == '二中二':
         for dt in list(combinations(record.content.split(','), 2)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 2:
-                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
     elif '三中二' in record.option.option:
         for dt in list(combinations(record.content.split(','), 3)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 3:
                 odd = Option.objects.get(option='三中二(中三)').odds
-                earn_coin = earn_coin + (one_bet * Decimal(odd))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
             elif len(right_list) == 2:
                 odd = Option.objects.get(option='三中二(中二)').odds
-                earn_coin = earn_coin + (one_bet * Decimal(odd))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
     elif record.option.option == '三中三':
         for dt in list(combinations(record.content.split(','), 3)):
             right_list = list(set(dt).intersection(set(code_result_list)))
             if len(right_list) == 3:
-                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -173,7 +173,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
             option_id = answer_dic['twq_side_op'][value]
             if str(option_id) in record.content.split(','):
                 index = record.content.split(',').index(str(option_id))
-                earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds.split(',')[index])))
 
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
@@ -197,7 +197,7 @@ def animal_result(record, answer_dic, cache_club_value):
     for choose_animal in record.content.split(','):
         if choose_animal in animal_result_list:
             index = record.content.split(',').index(choose_animal)
-            earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
+            earn_coin = earn_coin + (one_bet * Decimal(str(record.odds.split(',')[index])))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -220,10 +220,10 @@ def special_head_tail_result(record, answer_dic, cache_club_value):
     special_code_tail_id = answer_dic['special_code_tail_id']
     if special_code_head_id in record.content.split(','):
         index = record.content.split(',').index(special_code_head_id)
-        earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
+        earn_coin = earn_coin + (one_bet * Decimal(str(record.odds.split(',')[index])))
     if special_code_tail_id in record.content.split(','):
         index = record.content.split(',').index(special_code_tail_id)
-        earn_coin = earn_coin + (one_bet * Decimal(record.odds.split(',')[index]))
+        earn_coin = earn_coin + (one_bet * Decimal(str(record.odds.split(',')[index])))
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -244,7 +244,7 @@ def elements_result(record, answer_dic, cache_club_value):
     special_elements_id = answer_dic['special_elements_id']
     if special_elements_id in record.content.split(','):
         index = record.content.split(',').index(special_elements_id)
-        earn_coin = one_bet * Decimal(record.odds.split(',')[index])
+        earn_coin = one_bet * Decimal(str(record.odds.split(',')[index]))
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
@@ -268,7 +268,7 @@ def special_animal(record, answer_dic, cache_club_value):
     else:
         for dt in list(combinations(record.content.split(','), 6)):
             if special_animal_id in dt:
-                earn_coin = earn_coin + (one_bet * Decimal(record.odds))
+                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
         if earn_coin == 0:
             earn_coin = float('-' + str(record.bet_coin))
         else:
