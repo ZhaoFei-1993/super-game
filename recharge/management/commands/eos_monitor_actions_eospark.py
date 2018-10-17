@@ -85,7 +85,7 @@ class Command(BaseCommand):
             raise CommandError('暂无有效充值记录')
 
         is_modified_invalid_memos = False
-        print('获得有效充值数量为', len(users))
+        count_valid_recharge = 0
         for user in users:
             for transaction in transactions:
                 memo = transaction['memo']
@@ -126,7 +126,9 @@ class Command(BaseCommand):
                 coin_detail.save()
 
                 print('获取一条EOS充值', amount, 'MEMO', memo, 'TXID为', txid)
+                count_valid_recharge += 1
 
+        print('获得', count_valid_recharge, ' 条有效充值记录')
         delete_cache(self.cache_txid_key, 'default')
         if is_modified_invalid_memos:
             set_cache(self.cache_invalid_memo_key, invalid_memos, -1, 'default')
