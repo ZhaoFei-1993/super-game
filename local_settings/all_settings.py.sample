@@ -189,3 +189,13 @@ EOS_RECHARGE_ADDRESS = 'gsgeosaddress'
 
 # 是否开启接口转账功能，测试期间可控
 IS_ENABLE_TRANSFER_API = False
+
+# 发送警报邮件配置
+IS_ENABLE_EMAIL_ALERT = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'supergamealert@gmail.com'
+EMAIL_HOST_PASSWORD = 'gsgAlert@999'
+EMAIL_RECIPIENT_LIST = ['rexlin0624@gmail.com']

@@ -78,9 +78,34 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     flat_code = ','.join(pre_draw_code_list[:-1])
     special_code = str(pre_draw_code_list[-1])
 
+    special_code_head = special_code[0] + '头'
+    special_code_tail = special_code[1] + '尾'
+    special_code_head_id = str(Option.objects.get(option=special_code_head).id)
+    special_code_tail_id = str(Option.objects.get(option=special_code_tail).id)
+
+    special_color = color_list[-1] + '波'
+    special_color_id = str(Option.objects.get(option=special_color).id)
+
+    special_animal = chinese_zodiac_list[-1]
+    special_animal_id = str(Option.objects.get(option=special_animal).id)
+
+    special_elements = five_property_list[-1]
+    special_elements_id = str(Option.objects.get(option=special_elements).id)
+
+    twq_side_op = {}
+    for option in ['特家肖', '特野肖', '特小', '特大', '特双', '特单', '总大', '总小', '总双', '总单']:
+        twq_side_op.update({option: str(Option.objects.get(option=option).id)})
+
+    animal_result_list = []
+    for animal in chinese_zodiac_list:
+        animal_result_list.append(str(Option.objects.get(option=animal).id))
+
     answer_dic = {
         'code_list': code_list, 'color_list': color_list, 'chinese_zodiac_list': chinese_zodiac_list,
-        'five_property_list': five_property_list,
+        'five_property_list': five_property_list, 'special_code_head_id': special_code_head_id,
+        'special_code_tail_id': special_code_tail_id, 'special_color_id': special_color_id,
+        'special_animal_id': special_animal_id, 'special_elements_id': special_elements_id,
+        'twq_side_op': twq_side_op, 'animal_result_list': animal_result_list,
     }
 
     now = get_now()

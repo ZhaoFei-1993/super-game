@@ -15,5 +15,4 @@ urlpatterns = [
     path('list/<str:type>/',views.BetsListViews.as_view(),name='marksix-app-betslist'),
     # 返回数字对应的颜色
     path('color/',views.ColorViews.as_view(),name='marksix-app-color')
-
 ]

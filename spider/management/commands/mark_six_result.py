@@ -40,9 +40,7 @@ def base_functions(user_id, coin_id, coin_name, earn_coin):
         })
 
 
-def special_code_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def special_code_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -61,16 +59,13 @@ def special_code_result(record, answer_dic):
     return earn_coin
 
 
-def color_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def color_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     one_bet = float(record.bet_coin / record.bet)
-    special_color = answer_dic['color_list'][-1] + '波'
-    special_color_id = str(Option.objects.get(option=special_color).id)
+    special_color_id = answer_dic['special_color_id']
     if special_color_id in record.content.split(','):
         index = record.content.split(',').index(special_color_id)
         earn_coin = one_bet * float(record.odds.split(',')[index])
@@ -84,9 +79,7 @@ def color_result(record, answer_dic):
     return earn_coin
 
 
-def continuous_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def continuous_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -128,9 +121,7 @@ def continuous_result(record, answer_dic):
     return earn_coin
 
 
-def two_sides_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def two_sides_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
@@ -144,12 +135,6 @@ def two_sides_result(record, answer_dic):
     if int(special_code) == 49:
         result_dic.update({'特单双': '和局', '特大小': '和局', '合大小': '和局', '合单双': '和局'})
         record_content = record.content.split(',')
-        ye_id = Option.objects.get(option='特家肖').id
-        jia_id = Option.objects.get(option='特野肖').id
-        if str(ye_id) in record_content:
-            record_content.remove(str(ye_id))
-        if str(jia_id) in record_content:
-            record_content.remove(str(jia_id))
         earn_coin = earn_coin + (len(record_content) * one_bet)
     else:
         # 特大小
@@ -185,12 +170,11 @@ def two_sides_result(record, answer_dic):
 
     for key, value in result_dic.items():
         if value != '和局':
-            option_id = Option.objects.get(option=value).id
+            option_id = answer_dic['twq_side_op'][value]
             if str(option_id) in record.content.split(','):
                 index = record.content.split(',').index(str(option_id))
                 earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
-        else:
-            earn_coin = earn_coin
+
     if earn_coin == 0:
         earn_coin = float('-' + str(record.bet_coin))
     else:
@@ -202,18 +186,14 @@ def two_sides_result(record, answer_dic):
     return earn_coin
 
 
-def animal_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def animal_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
-    animal_result_list = []
     one_bet = float(record.bet_coin / record.bet)
-    for animal in answer_dic['chinese_zodiac_list']:
-        animal_result_list.append(str(Option.objects.get(option=animal).id))
+    animal_result_list = answer_dic['animal_result_list']
     for choose_animal in record.content.split(','):
         if choose_animal in animal_result_list:
             index = record.content.split(',').index(choose_animal)
@@ -229,20 +209,15 @@ def animal_result(record, answer_dic):
     return earn_coin
 
 
-def special_head_tail_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def special_head_tail_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     earn_coin = 0
     one_bet = float(record.bet_coin / record.bet)
-    special_code = answer_dic['code_list'][-1]
-    special_code_head = special_code[0] + '头'
-    special_code_tail = special_code[1] + '尾'
-    special_code_head_id = str(Option.objects.get(option=special_code_head).id)
-    special_code_tail_id = str(Option.objects.get(option=special_code_tail).id)
+    special_code_head_id = answer_dic['special_code_head_id']
+    special_code_tail_id = answer_dic['special_code_tail_id']
     if special_code_head_id in record.content.split(','):
         index = record.content.split(',').index(special_code_head_id)
         earn_coin = earn_coin + (one_bet * float(record.odds.split(',')[index]))
@@ -260,16 +235,13 @@ def special_head_tail_result(record, answer_dic):
     return earn_coin
 
 
-def elements_result(record, answer_dic):
-    # 获取币信息
-    cache_club_value = Club.objects.get_club_info()
+def elements_result(record, answer_dic, cache_club_value):
     coin_id = cache_club_value[record.club.id]['coin_id']
     coin_name = cache_club_value[record.club.id]['coin_name']
     coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
     one_bet = float(record.bet_coin / record.bet)
-    special_elements = answer_dic['five_property_list'][-1]
-    special_elements_id = str(Option.objects.get(option=special_elements).id)
+    special_elements_id = answer_dic['special_elements_id']
     if special_elements_id in record.content.split(','):
         index = record.content.split(',').index(special_elements_id)
         earn_coin = one_bet * float(record.odds.split(',')[index])
@@ -282,16 +254,39 @@ def elements_result(record, answer_dic):
     return earn_coin
 
 
+def special_animal(record, answer_dic, cache_club_value):
+    coin_id = cache_club_value[record.club.id]['coin_id']
+    coin_name = cache_club_value[record.club.id]['coin_name']
+    coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
+
+    earn_coin = 0
+    one_bet = float(record.bet_coin / record.bet)
+    special_animal_id = answer_dic['special_animal_id']
+    for dt in list(combinations(record.content.split(','), 6)):
+        if special_animal_id in dt:
+            earn_coin = earn_coin + (one_bet * float(record.odds))
+    if earn_coin == 0:
+        earn_coin = float('-' + str(record.bet_coin))
+    else:
+        earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
+    record.earn_coin = earn_coin
+    record.save()
+
+    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    return earn_coin
+
+
 def ergodic_record(issue, answer_dic):
+    cache_club_value = Club.objects.get_club_info()
     issue = (3 - len(issue)) * '0' + issue
     play_dic = {
         1: special_code_result, 2: color_result, 3: continuous_result, 4: two_sides_result,
-        5: animal_result, 6: special_head_tail_result, 7: elements_result,
+        5: animal_result, 6: special_head_tail_result, 7: elements_result, 8: special_animal,
     }
     records = SixRecord.objects.filter(issue=issue, status='0')
     if len(records) > 0:
         for record in records:
-            earn_coin = play_dic[record.play_id](record, answer_dic)
+            earn_coin = play_dic[record.play_id](record, answer_dic, cache_club_value)
             record.status = '1'
             record.save()
 
