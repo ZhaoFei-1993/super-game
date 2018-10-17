@@ -133,7 +133,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
     normal_code_list = answer_dic['code_list']
     special_animal = answer_dic['chinese_zodiac_list'][-1]
     if int(special_code) == 49:
-        result_dic.update({'特单双': '和局', '特大小': '和局', '合大小': '和局', '合单双': '和局'})
+        result_dic.update({'特单双': '和局', '特大小': '和局', '总大小': '和局', '总单双': '和局'})
         record_content = record.content.split(',')
         earn_coin = earn_coin + (len(record_content) * one_bet)
     else:
@@ -152,14 +152,14 @@ def two_sides_result(record, answer_dic, cache_club_value):
         for i in normal_code_list:
             code_sum += int(i)
         if code_sum >= 175:
-            result_dic.update({'合大小': '总大'})
+            result_dic.update({'总大小': '总大'})
         else:
-            result_dic.update({'合大小': '总小'})
+            result_dic.update({'总大小': '总小'})
         # 合单双
         if code_sum % 2 == 0:
-            result_dic.update({'合单双': '总双'})
+            result_dic.update({'总单双': '总双'})
         else:
-            result_dic.update({'合单双': '总单'})
+            result_dic.update({'总单双': '总单'})
     # 野家肖
     if special_animal in ['鼠', '虎', '兔', '龙', '蛇', '猴']:
         result_dic.update({'野家肖': '特野肖'})
