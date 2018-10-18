@@ -1127,7 +1127,7 @@ class ClubDividendView(ListAPIView):
             if int(type) == 1:  # 1.全部
                 sql_list = "dtr.bets, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (CASE WHEN dtr.user_id IS NULL THEN  "" ELSE '猜股指' END) AS rule, " \
+                sql_list += " (CASE WHEN dtr.user_id IS Null THEN '' ELSE '猜股指' END) AS rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1142,7 +1142,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bets, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (CASE WHEN dtr.user_id IS NULL THEN  "" ELSE '股指PK' END) AS rule, " \
+                sql_list += " (CASE WHEN dtr.user_id IS Null THEN '' ELSE '股指PK' END) AS rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1157,7 +1157,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bet_coin, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (case when dtr.user_id = "" then  "" else '六合彩' end) as rule, " \
+                sql_list += " (case when dtr.user_id is Null then '' else '六合彩' end) as rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1172,7 +1172,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bets, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (case when dtr.user_id = "" then  "" else '龙虎斗' end) as rule, " \
+                sql_list += " (case when dtr.user_id is Null then '' else '龙虎斗' end) as rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1187,7 +1187,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bets, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (case when dtr.user_id = "" then  "" else '百家乐' end) as rule, " \
+                sql_list += " (case when dtr.user_id IS Null then '' else '百家乐' end) as rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1202,7 +1202,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bet, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (case when dtr.user_id = "" then  "" else '篮球' end) as rule, " \
+                sql_list += " (case when dtr.user_id IS Null then '' else '篮球' end) as rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
@@ -1220,7 +1220,7 @@ class ClubDividendView(ListAPIView):
 
                 sql_list = "dtr.bet, date_format( dtr.created_at, '%Y-%m-%d' ) as yearss,"
                 sql_list += " date_format( dtr.created_at, '%H:%i:%s' ) as years,"
-                sql_list += " (case when dtr.user_id = "" then  "" else '足球' end) as rule, " \
+                sql_list += " (case when dtr.user_id IS Null then '' else '足球' end) as rule, " \
                             "u.nickname, u.avatar, dtr.earn_coin,"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
