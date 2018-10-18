@@ -539,10 +539,10 @@ class GuessPKRecording(GuessRecording):
 
         # 邀请代理事宜
         if earn_coin > 0:
-            income = Decimal(earn_coin - float(record.bet_coin))
+            income = Decimal(earn_coin - float(record.bets))
         else:
             income = Decimal(earn_coin)
-        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
 
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))
