@@ -291,25 +291,24 @@ class StockPkResultList(ListAPIView):
         }
         data = []
         for item in items:
-            if item['size_pk_result'] != '':
-                left_stock_name = stock_pk_dic[item['stock_pk_id']]['left_stock_name']
-                right_stock_name = stock_pk_dic[item['stock_pk_id']]['right_stock_name']
+            left_stock_name = stock_pk_dic[item['stock_pk_id']]['left_stock_name']
+            right_stock_name = stock_pk_dic[item['stock_pk_id']]['right_stock_name']
 
-                data.append({
-                    'issue': item['issue'],
-                    'open_time': item['open_time'],
+            data.append({
+                'issue': item['issue'],
+                'open_time': item['open_time'],
 
-                    'left_stock_name': left_stock_name,
-                    'left_index': item['left_stock_index'],
-                    'left_result_num': str(item['left_stock_index']).split('.')[1][1],
+                'left_stock_name': left_stock_name,
+                'left_index': item['left_stock_index'],
+                'left_result_num': str(item['left_stock_index']).split('.')[1][1],
 
-                    'right_stock_name': right_stock_name,
-                    'right_index': item['right_stock_index'],
-                    'right_result_num': str(item['right_stock_index']).split('.')[1][1],
+                'right_stock_name': right_stock_name,
+                'right_index': item['right_stock_index'],
+                'right_result_num': str(item['right_stock_index']).split('.')[1][1],
 
-                    'result_answer': item['size_pk_result'],
-                    'result_flag': result_flag[item['size_pk_result']]
-                })
+                'result_answer': item['size_pk_result'],
+                'result_flag': result_flag[item['size_pk_result']]
+            })
         return self.response({'code': 0, 'data': data})
 
 
