@@ -324,6 +324,7 @@ def normalize_fraction(d, b):
                     print("i=========================", i)
                     point_after_list.remove(i)
                 else:
+                    print("i=========================", i)
                     continue
             print("point_after_list================================", point_after_list)
             if len(point_after_list) != 0:
