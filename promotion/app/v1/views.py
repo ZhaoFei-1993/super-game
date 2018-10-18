@@ -346,6 +346,7 @@ class ClubDetailView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
+        print("user_id=========================", user.id)
         if 'club_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = self.request.GET.get('club_id')
