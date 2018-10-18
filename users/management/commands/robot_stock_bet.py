@@ -92,7 +92,7 @@ class Command(BaseCommand):
             raise CommandError('非自动下注时间')
 
         # 获取所有进行中的竞猜
-        items = Periods.objects.filter(is_seal=False, is_result=False).order_by('rotary_header_time')
+        items = Periods.objects.filter(~Q(stock_id=9), is_seal=False, is_result=False).order_by('rotary_header_time')
         if len(items) == 0:
             raise CommandError('当前无进行中的竞猜')
 
@@ -126,12 +126,14 @@ class Command(BaseCommand):
 
                 # 随机获取股票
                 # stock = self.get_bet_stock()
-                stock = Stock.objects.get(item.stock_id)
+                stock =  Stock.objects.get(pk=item.stock_id)
                 if stock is False:
                     continue
 
                 # 获取上期开奖结果
                 last_period_number = item.periods - 1
+                print('stock = ', stock)
+                print('last_period_number = ', last_period_number)
                 last_periods = Periods.objects.get(stock=stock, periods=last_period_number)
 
                 # 随机抽取玩法
@@ -174,18 +176,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('下注成功'))
 
     @staticmethod
-    def get_get_periods(items):
+    def get_get_quiz(items):
         """
-        随机期数下注
+        进行中的比赛下注权重
+        3天数据：今天比赛:明天比赛:后天比赛 = 7:2:1
+        4天数据：今天比赛:明天比赛:后天比赛:大后天 = 6:2:1:1
+        5天以上数据，则随机用3天或4天数据
         :param items:
         :return:
         """
-        choices = []
-        for i in range(0, random.randint(1, 4)):
-            secure_random = random.SystemRandom()
-            choices.append(secure_random.choice(items))
-
-        return choices
+        secure_random = random.SystemRandom()
+        return secure_random.choice(items)
 
     @staticmethod
     def get_key(prefix):
@@ -271,7 +272,7 @@ class Command(BaseCommand):
         获取股票信息
         :return:
         """
-        stocks = Stock.objects.filter(is_delete=False)
+        stocks = Stock.objects.filter(is_delete=False, stock_guess_open=True)
         secure_random = random.SystemRandom()
         return secure_random.choice(stocks)
 
@@ -346,6 +347,20 @@ class Command(BaseCommand):
         users = User.objects.filter(is_robot=True)
         secure_random = random.SystemRandom()
         return secure_random.choice(users)
+
+    @staticmethod
+    def get_get_periods(items):
+        """
+        随机期数下注
+        :param items:
+        :return:
+        """
+        choices = []
+        for i in range(0, random.randint(1, 4)):
+            secure_random = random.SystemRandom()
+            choices.append(secure_random.choice(items))
+
+        return choices
 
     @staticmethod
     def get_bet_wager(club_id, play_id):

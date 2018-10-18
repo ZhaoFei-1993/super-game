@@ -101,11 +101,12 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
         animal_result_list.append(str(Option.objects.get(option=animal).id))
 
     answer_dic = {
-        'code_list': code_list, 'color_list': color_list, 'chinese_zodiac_list': chinese_zodiac_list,
-        'five_property_list': five_property_list, 'special_code_head_id': special_code_head_id,
-        'special_code_tail_id': special_code_tail_id, 'special_color_id': special_color_id,
-        'special_animal_id': special_animal_id, 'special_elements_id': special_elements_id,
-        'twq_side_op': twq_side_op, 'animal_result_list': animal_result_list,
+        'special_code': special_code, 'code_list': code_list, 'color_list': color_list,
+        'chinese_zodiac_list': chinese_zodiac_list, 'five_property_list': five_property_list,
+        'special_code_head_id': special_code_head_id, 'special_code_tail_id': special_code_tail_id,
+        'special_color_id': special_color_id, 'special_animal_id': special_animal_id,
+        'special_elements_id': special_elements_id, 'twq_side_op': twq_side_op,
+        'animal_result_list': animal_result_list,
     }
 
     now = get_now()
@@ -187,4 +188,3 @@ class Command(BaseCommand):
         else:
             print('暂不需要处理')
         print('----------------------------------------------------------------------')
-
