@@ -319,8 +319,9 @@ def normalize_fraction(d, b):
             print("f===========================", f)
             point_after_list = list(f)
             for i in reversed(point_after_list):
+                print('I1===========================', i)
                 if i == '0':
-                    print('I===========================', i)
+                    print('I2===========================', i)
                     point_after_list.pop()
                 else:
                     continue
