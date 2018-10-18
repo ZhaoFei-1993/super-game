@@ -320,7 +320,8 @@ def normalize_fraction(d, b):
 
             point_after_list = list(f)
             print("point_after_list=======================", point_after_list)
-            print("point_after_list=======================", reversed(point_after_list))
+            a = reversed(point_after_list)
+            print("a=======================", a)
             for i in reversed(point_after_list):
                 if i == '0':
                     point_after_list.remove(i)
