@@ -738,6 +738,7 @@ class ClubDetailView(ListAPIView):
         bet_water = 0
 
         for fav in data_one_list:
+            bets = Decimal(0)
             if int(fav["status"]) == 0:
                 status = "待结算"
                 if self.request.GET.get('language') == 'en':
@@ -754,8 +755,9 @@ class ClubDetailView(ListAPIView):
                 status = "已结算"
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
+                bets = Decimal(fav["bets"])
                 bet_water += Decimal(fav["bets"])
-            divided_into = Decimal(fav["bets"]) * Decimal(0.005)
+            divided_into = bets * Decimal(0.005)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
 
