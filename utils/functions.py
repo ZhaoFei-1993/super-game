@@ -326,7 +326,9 @@ def normalize_fraction(d, b):
             print("len(point_after_list)=============================", len(point_after_list))
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                print("normalized===========================", normalized)
                 normalized = Decimal(normalized)
+                print("normalized============================", normalized)
                 return normalized
             else:
                 print("错误===================")
