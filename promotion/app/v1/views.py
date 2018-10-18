@@ -633,7 +633,6 @@ class ClubDetailView(ListAPIView):
             for i in record_list:
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
-                print("normalize_fraction(i[0], coin_accuracy)================================", normalize_fraction(i[0], coin_accuracy))
                 data_list.append({
                     "bets": normalize_fraction(i[0], coin_accuracy),
                     "yearss": i[1],
@@ -756,10 +755,9 @@ class ClubDetailView(ListAPIView):
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
                 bet_water += Decimal(fav["bets"])
-            print("bets==========================================", Decimal(fav["bets"]))
             divided_into = Decimal(fav["bets"]) * Decimal(0.005)
-            print("divided_into===================================", divided_into)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
+            print(divided_into)
 
 
             pecific_dates = fav["years"]
@@ -778,9 +776,13 @@ class ClubDetailView(ListAPIView):
                 "pecific_dates": pecific_dates,
                 "pecific_date": pecific_date,
             })
+        print("bet_water==============================", bet_water)
         dividend_water = Decimal(bet_water)*Decimal(0.005)
+        print("dividend_water=============================", dividend_water)
         bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
+        print("bet_water=============================", bet_water)
         dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        print("dividend_water=====================================", dividend_water)
 
         return self.response({'code': 0,
                               "invite_number": len(user_list),
