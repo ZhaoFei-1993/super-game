@@ -319,6 +319,7 @@ def normalize_fraction(d, b):
             f = a[1][:b]
 
             point_after_list = list(f)
+            print("原值=======================", point_after_list)
             for i in reversed(point_after_list):
                 if i == '0':
                     print("i=========================", i)
@@ -326,7 +327,7 @@ def normalize_fraction(d, b):
                 else:
                     print("s=========================", i)
                     continue
-            print("point_after_list================================", point_after_list)
+            print("改值================================", point_after_list)
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
                 normalized = Decimal(normalized)
