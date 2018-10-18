@@ -508,8 +508,6 @@ class ClubDetailView(ListAPIView):
             sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, rule, dtr.user_id, dtr.type"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)       # 足球
-            print("sql============================", sql)
-            print("football_list============================", football_list)
             for i in football_list:
                 if i[4] is not  None:
                     if i[9] not in user_list:
@@ -1233,6 +1231,8 @@ class ClubDividendView(ListAPIView):
                 sql += "group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
                 sql += " order by times desc"
                 football_list = self.get_list_by_sql(sql)  # 足球
+                print("sql====================================", sql)
+                print("football_list===============================", football_list)
                 for i in football_list:
                     if i[4] is not None:
                         if i[8] not in user_list:
