@@ -400,7 +400,7 @@ class ClubDetailView(ListAPIView):
 
 
         type = str(self.request.GET.get('type'))
-        regex = re.compile(r'^(1|2|3|4|5|6|7)$')  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股指PK
+        regex = re.compile(r'^(1|2|3|4|5|6|7|8)$')  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股指PK
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         sql = "select ui.invitee_one from users_userinvitation ui"
