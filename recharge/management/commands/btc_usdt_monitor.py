@@ -64,7 +64,7 @@ class Command(BaseCommand, BaseView):
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
-        if cache_block_height > block_height:
+        if int(cache_block_height) > int(block_height):
             set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)

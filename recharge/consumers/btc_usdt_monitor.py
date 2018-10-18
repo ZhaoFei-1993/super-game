@@ -65,7 +65,7 @@ def bitcoin_usdt_monitor(block_num):
                 usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
                 usdt_data = json.loads(usdt_resp.text)
                 print('usdt_data = ', usdt_data)
-                if usdt_data['type'] != 'Error - Not Found':
+                if 'type' not in usdt_data or usdt_data['type'] != 'Error - Not Found':
                     to_address += addresses
                     for address in addresses:
                         if address not in address_tx_usdt:

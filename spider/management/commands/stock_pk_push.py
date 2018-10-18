@@ -5,12 +5,17 @@ from utils.cache import get_cache, set_cache
 from guess.models import Issues
 import datetime
 from guess.consumers import guess_pk_detail
+from rq import Queue
+from redis import Redis
 
 
 class Command(BaseCommand):
     help = "股指PK推送脚本"
 
     def handle(self, *args, **options):
+        redis_conn = Redis()
+        q = Queue(connection=redis_conn)
+
         time_now = datetime.datetime.now()
         print('now is ', time_now)
         issue_time_dic = get_cache('issue_time_dic')
@@ -38,7 +43,8 @@ class Command(BaseCommand):
 
             if time_now > last_open_time:
                 print('推送')
-                guess_pk_detail(last_issue_id)
+                q.enqueue(guess_pk_detail, last_issue_id)
+                # guess_pk_detail(last_issue_id)
 
                 issue_last_obj = Issues.objects.filter(open__gt=time_now).order_by('open').first()
                 issue_last = {'issue_id': issue_last_obj.id, 'open_time': issue_last_obj.open,
@@ -53,7 +59,8 @@ class Command(BaseCommand):
                 if time_now > (last_open_time - datetime.timedelta(minutes=5)):
                     if rest == 0:
                         print('推送')
-                        guess_pk_detail(last_issue_id)
+                        q.enqueue(guess_pk_detail, last_issue_id)
+                        # guess_pk_detail(last_issue_id)
 
                         issue_time_dic['issue_last']['rest'] = 1
                         set_cache('issue_time_dic', issue_time_dic)
@@ -61,7 +68,8 @@ class Command(BaseCommand):
                 if time_now > (pre_open_time + datetime.timedelta(hours=1)):
                     if switch == 0:
                         print('推送')
-                        guess_pk_detail(last_issue_id)
+                        q.enqueue(guess_pk_detail, last_issue_id)
+                        # guess_pk_detail(last_issue_id)
 
                         issue_time_dic['issue_last']['switch'] = 1
                         set_cache('issue_time_dic', issue_time_dic)
