@@ -305,7 +305,7 @@ def normalize_fraction(d, b):
             point_after_list = list(a[1])
             for i in reversed(point_after_list):
                 if i == '0':
-                    point_after_list.pop(i)
+                    point_after_list.pop()
                 else:
                     continue
             if len(point_after_list) != 0:
@@ -324,7 +324,7 @@ def normalize_fraction(d, b):
             for i in reversed(point_after_list):
                 if i == '0':
                     print("i=========================", i)
-                    point_after_list.pop(i)
+                    point_after_list.pop()
                 else:
                     print("s=========================", i)
                     continue
@@ -359,7 +359,7 @@ def handle_zero(num):
     point_after_list = list(num_list[1])
     for i in reversed(point_after_list):
         if i == '0':
-            point_after_list.pop(i)
+            point_after_list.pop()
         else:
             continue
     if len(point_after_list) != 0:
