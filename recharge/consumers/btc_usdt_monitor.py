@@ -92,6 +92,7 @@ def consumer_bitcoin_usdt_monitor(block_num):
 
     in_address = UserCoin.objects.filter(coin_id__in=[Coin.BTC, Coin.USDT], address__in=to_address).values('address', 'user_id', 'coin_id')
     if len(in_address) == 0:
+        print('暂无充值记录')
         return True
 
     # 所有充值记录
