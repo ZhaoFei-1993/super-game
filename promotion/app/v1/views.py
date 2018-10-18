@@ -1421,7 +1421,7 @@ class ClubDividendView(ListAPIView):
                 sql_list += " '猜股指' as rule, u.nickname, u.avatar, sum(dtr.earn_coin),"
                 sql_list += " date_format( dtr.created_at, '%Y%m' ) AS created_ats, dtr.user_id, " \
                             "date_format( dtr.created_at, '%Y%m%d%H%i%s' ) as times"
-                sql = "select " + sql_list + " from guess_record dtr"
+                sql = "select " + sql_list + " from guess_recordstockpk dtr"
                 sql += " inner join users_user u on dtr.user_id=u.id"
                 sql += " where dtr.club_id = '" + club_id + "'"
                 sql += " and dtr.created_at >= '" + str(start_time) + "'"
