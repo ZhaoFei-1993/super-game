@@ -300,6 +300,7 @@ def normalize_fraction(d, b):
         return 0
     print("type(d)=========================", type(d))
     if type(d) is float or type(d) is decimal.Decimal:
+        print("进入========================")
         a = str(d).split(".")
         if len(a[1]) < b:
 
