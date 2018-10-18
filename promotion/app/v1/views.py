@@ -756,8 +756,8 @@ class ClubDetailView(ListAPIView):
                     status = "Settled"
                 bet_water += Decimal(fav["bets"])
             divided_into = Decimal(fav["bets"]) * Decimal(0.005)
-            divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
             print("s============================", normalize_fraction(divided_into, coin_accuracy))
+            divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
             print("coin_accuracy============================", coin_accuracy)
             print("divided_into============================", divided_into)
 
