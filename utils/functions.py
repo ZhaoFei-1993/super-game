@@ -316,26 +316,17 @@ def normalize_fraction(d, b):
                 return normalized
         else:
             f = a[1][:b]
-            print("f===========================", f)
             point_after_list = list(f)
             for i in reversed(point_after_list):
-                print('I1===========================', i)
                 if i == '0':
-                    print('I2===========================', i)
                     point_after_list.pop()
                 else:
                     break
-            print("point_after_list=============================", point_after_list)
-            print("len(point_after_list)=============================", len(point_after_list))
             if len(point_after_list) != 0:
-                print("point_after_list=========================", point_after_list)
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
-                print("normalized===========================", normalized)
                 normalized = Decimal(normalized)
-                print("normalized============================", normalized)
                 return normalized
             else:
-                print("错误===================")
                 normalized = Decimal(a[0])
                 return normalized
 
