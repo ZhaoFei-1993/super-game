@@ -304,8 +304,10 @@ class ClubRuleView(ListAPIView):
         for s in quiz_rule:
             if s[0] == "篮球":
                 number = 2
+                a = 2
             else:
                 number = 3
+                a = 1
             data.append({
                 "name": s[0],
                 "number": number
@@ -317,22 +319,29 @@ class ClubRuleView(ListAPIView):
         for i in club_rule_info:
             if i[0] == "猜股指":
                 number = 4
+                a = 4
             elif i[0] == "六合彩":
                 number = 5
+                a = 3
             elif i[0] == "龙虎斗":
                 number = 6
+                a = 6
             elif i[0] == "百家乐":
                 number = 7
+                a = 7
             elif i[0] == "股指PK":
                 number = 8
+                a = 5
             else:
                 number = 9
+                a = 8
             data.append({
                 "name": i[0],
-                "number": number
+                "number": number,
+                "a": a
             })
-
-        return self.response({'code': 0, "data":data})
+        data_one_list = sorted(data, key=lambda x: x['a'], reverse=True)
+        return self.response({'code': 0, "data":data_one_list})
 
 
 class ClubDetailView(ListAPIView):
@@ -1237,9 +1246,7 @@ class ClubDividendView(ListAPIView):
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
                 sql += "group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
                 sql += " order by times desc"
-                print("sql====================================", sql)
                 football_list = self.get_list_by_sql(sql)  # 足球
-                print("football_list===============================", football_list)
                 for i in football_list:
                     if i[4] is not None:
                         if i[8] not in user_list:
