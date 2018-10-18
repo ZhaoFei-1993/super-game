@@ -479,15 +479,16 @@ class GuessPKRecording(GuessRecording):
                     left_last_num = int(str(index_dic[left_periods_id])[-1])
                     right_last_num = int(str(index_dic[right_periods_id])[-1])
 
+                    size_pk_result = '1111'
                     if left_last_num > right_last_num:
                         if issues.stock_pk_id == 1:
                             size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
-                        elif issues.stock_pk_id == 2:
+                        if issues.stock_pk_id == 2:
                             size_pk_result = issues.stock_pk.left_stock_name + '大'
                     elif left_last_num < right_last_num:
                         if issues.stock_pk_id == 1:
                             size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
-                        elif issues.stock_pk_id == 2:
+                        if issues.stock_pk_id == 2:
                             size_pk_result = issues.stock_pk.right_stock_name + '大'
                     else:
                         size_pk_result = '和'
