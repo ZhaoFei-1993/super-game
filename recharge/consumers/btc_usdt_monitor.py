@@ -12,7 +12,7 @@ OMNI_URL = 'https://api.omniexplorer.info/v1/transaction/tx/'
 BTC_DECIMAL = 100000000
 
 
-def bitcoin_usdt_monitor(block_num):
+def consumer_bitcoin_usdt_monitor(block_num):
     """
     消费block_num队列
     """
@@ -26,11 +26,10 @@ def bitcoin_usdt_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url='https://chain.api.btc.com/v3/block/' + str(block_num) + '/tx')
     block = json_obj['data']
-    print('block = ', block)
     block_time = block['list'][0]['block_time']
 
     # 计算出总页数
-    total_page = math.ceil(block['total_count'] / block['pagesize'])
+    total_page = int(math.ceil(block['total_count'] / block['pagesize']))
     print('总页数 =', total_page)
 
     if total_page > 1:
@@ -64,8 +63,7 @@ def bitcoin_usdt_monitor(block_num):
             if value == 546:
                 usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
                 usdt_data = json.loads(usdt_resp.text)
-                print('usdt_data = ', usdt_data)
-                if 'type' not in usdt_data or usdt_data['type'] != 'Error - Not Found':
+                if 'amount' in usdt_data:
                     to_address += addresses
                     for address in addresses:
                         if address not in address_tx_usdt:

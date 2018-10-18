@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
             # 用户充值成功
             user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin.id)
-            user_coin.balance += Decimal(recharge.amount)
+            user_coin.balance += Decimal(str(recharge.amount))
             user_coin.save()
 
             # 用户余额变更记录
