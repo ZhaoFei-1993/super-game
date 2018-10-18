@@ -266,9 +266,14 @@ def special_animal(record, answer_dic, cache_club_value):
     if special_code == '49':  # 平局
         earn_coin = record.bet_coin
     else:
-        for dt in list(combinations(record.content.split(','), 6)):
-            if special_animal_id in dt:
-                earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
+        if record.option_id == 100:
+            for dt in list(combinations(record.content.split(','), 6)):
+                if special_animal_id in dt:
+                    earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
+        else:
+            for dt in list(combinations(record.content.split(','), 6)):
+                if special_animal_id not in dt:
+                    earn_coin = earn_coin + (one_bet * Decimal(str(record.odds)))
         if earn_coin == 0:
             earn_coin = float('-' + str(record.bet_coin))
         else:
