@@ -320,6 +320,7 @@ def normalize_fraction(d, b):
 
             point_after_list = list(f)
             print("原值=======================", point_after_list)
+            print("原值=======================", type(point_after_list))
             for i in reversed(point_after_list):
                 if i == '0':
                     print("i=========================", i)
