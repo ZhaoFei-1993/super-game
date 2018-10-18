@@ -508,6 +508,7 @@ class ClubDetailView(ListAPIView):
             sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, rule, dtr.user_id, dtr.type"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)       # 足球
+            print("sql============================", sql)
             print("football_list============================", football_list)
             for i in football_list:
                 if i[4] is not  None:
