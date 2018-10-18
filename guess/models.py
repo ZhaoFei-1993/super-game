@@ -317,7 +317,6 @@ class RecordStockPk(models.Model):
     option = models.ForeignKey(OptionStockPk, on_delete=models.CASCADE, null=True)
     odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
     bets = models.DecimalField(verbose_name="下注金额", max_digits=15, decimal_places=3, default=0.000)
-    odds = models.DecimalField(verbose_name="下注赔率", max_digits=15, decimal_places=3, default=0.000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=18, decimal_places=8, default=0.00000000)
     source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
     status = models.CharField(verbose_name="下注状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
