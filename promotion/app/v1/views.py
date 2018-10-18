@@ -633,6 +633,7 @@ class ClubDetailView(ListAPIView):
             for i in record_list:
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
+                print("normalize_fraction(i[0], coin_accuracy)================================", normalize_fraction(i[0], coin_accuracy))
                 data_list.append({
                     "bets": normalize_fraction(i[0], coin_accuracy),
                     "yearss": i[1],
@@ -755,7 +756,9 @@ class ClubDetailView(ListAPIView):
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
                 bet_water += Decimal(fav["bets"])
+            print("bets==========================================", Decimal(fav["bets"]))
             divided_into = Decimal(fav["bets"]) * Decimal(0.005)
+            print("divided_into===================================", divided_into)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
 
