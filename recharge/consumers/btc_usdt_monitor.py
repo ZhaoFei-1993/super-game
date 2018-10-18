@@ -78,20 +78,6 @@ def consumer_bitcoin_usdt_monitor(block_num):
 
             # 如果value的值等于546，则有可能是USDT的交易数据，从OMNI平台中获取交易数据
             maybe_usdt_tx = True if value == 546 else False
-            # if value == 546:
-            #     usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
-            #     usdt_data = json.loads(usdt_resp.text)
-            #     if 'amount' in usdt_data:
-            #         to_address += addresses
-            #         for address in addresses:
-            #             if address not in address_tx_usdt:
-            #                 address_tx_usdt[address] = []
-            #
-            #             address_tx_usdt[address].append({
-            #                 'txid': txid,
-            #                 'value': usdt_data['amount'],
-            #             })
-            #         continue
 
             to_address += addresses
             for address in addresses:
@@ -104,7 +90,7 @@ def consumer_bitcoin_usdt_monitor(block_num):
                     'value': value / BTC_DECIMAL,
                 })
 
-    in_address = UserCoin.objects.filter(coin_id__in=[Coin.BTC, Coin.USDT], address__in=to_address).values('address', 'user_id')
+    in_address = UserCoin.objects.filter(coin_id__in=[Coin.BTC, Coin.USDT], address__in=to_address).values('address', 'user_id', 'coin_id')
     if len(in_address) == 0:
         return True
 
@@ -119,25 +105,22 @@ def consumer_bitcoin_usdt_monitor(block_num):
     for user_coin in in_address:
         address = user_coin['address']
         address_recharges = address_tx[address]
-        # coin_id = Coin.BTC
-        #
-        # if address in address_tx:
-        #     address_recharges = address_tx_btc[address]
-        #     coin_id = Coin.BTC
-        # else:
-        #     address_recharges = address_tx_usdt[address]
-        #     coin_id = Coin.USDT
 
         for recharge in address_recharges:
             txid = recharge['txid']
             amount = recharge['value']
             coin_id = Coin.BTC
+            coin_name = 'BTC'
 
             if recharge['maybe_usdt']:
                 usdt_recharge = get_usdt_transaction(txid)
                 txid = usdt_recharge['txid']
                 amount = usdt_recharge['value']
                 coin_id = Coin.USDT
+                coin_name = 'USDT'
+
+            if user_coin['coin_id'] != coin_id:
+                continue
 
             if txid in txids:
                 continue
@@ -152,7 +135,7 @@ def consumer_bitcoin_usdt_monitor(block_num):
             recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block_time))
             recharge_obj.save()
 
-            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', address, ' 充值金额 = ', recharge['value'])
+            print('获取1条' + coin_name + '充值记录，TX = ', txid, ' Address = ', address, ' 充值金额 = ', amount)
 
             recharge_number += 1
 
