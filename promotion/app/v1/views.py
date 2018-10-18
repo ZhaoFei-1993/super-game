@@ -340,8 +340,8 @@ class ClubRuleView(ListAPIView):
                 "number": number,
                 "a": a
             })
-        data_one_list = sorted(data, key=lambda x: x['a'], reverse=True)
-        return self.response({'code': 0, "data":data_one_list})
+        # data_one_list = sorted(data, key=lambda x: x['a'], reverse=True)
+        return self.response({'code': 0, "data":data})
 
 
 class ClubDetailView(ListAPIView):
