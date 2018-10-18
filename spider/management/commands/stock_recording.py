@@ -23,7 +23,8 @@ class Command(BaseCommand):
             i = 0
             for issue in issues:
                 i += 1
-                print('正在处理第 ', i, ' 期,issues_id=', issue.id, '   ', datetime.datetime.now())
+                print('正在处理第 ', i, ' 期,issues_id=', issue.id, '   ', '期数是: ', issue.issue, '    ',
+                      datetime.datetime.now())
                 for record_pk in RecordStockPk.objects.filter(issue_id=issue.id, status=str(RecordStockPk.AWAIT)):
                     record_stock_pk.pk_size(record_pk, option_obj_dic, issue)
                     record_stock_pk.insert_info()
