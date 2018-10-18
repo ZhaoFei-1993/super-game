@@ -310,7 +310,8 @@ class ClubRuleView(ListAPIView):
                 a = 1
             data.append({
                 "name": s[0],
-                "number": number
+                "number": number,
+                "a": a
             })
 
         sql = "select title from chat_clubrule"
@@ -340,7 +341,7 @@ class ClubRuleView(ListAPIView):
                 "number": number,
                 "a": a
             })
-        # data_one_list = sorted(data, key=lambda x: x['a'], reverse=True)
+        data = sorted(data, key=lambda x: x["a"], reverse=False)
         return self.response({'code': 0, "data":data})
 
 
