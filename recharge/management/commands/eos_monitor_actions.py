@@ -110,7 +110,7 @@ class Command(BaseCommand):
 
                 # user coin增加对应值
                 user_coin = UserCoin.objects.get(coin_id=Coin.EOS, user_id=user_id)
-                user_coin.balance += Decimal(amount)
+                user_coin.balance += Decimal(str(amount))
                 user_coin.save()
 
                 coin_detail = CoinDetail()
