@@ -480,9 +480,15 @@ class GuessPKRecording(GuessRecording):
                     right_last_num = int(str(index_dic[right_periods_id])[-1])
 
                     if left_last_num > right_last_num:
-                        size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
+                        if issues.stock_pk_id == 1:
+                            size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
+                        elif issues.stock_pk_id == 2:
+                            size_pk_result = issues.stock_pk.left_stock_name + '大'
                     elif left_last_num < right_last_num:
-                        size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+                        if issues.stock_pk_id == 1:
+                            size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+                        elif issues.stock_pk_id == 2:
+                            size_pk_result = issues.stock_pk.right_stock_name + '大'
                     else:
                         size_pk_result = '和'
                     issues.size_pk_result = size_pk_result
@@ -536,6 +542,13 @@ class GuessPKRecording(GuessRecording):
             record.status = 1
             record.save()
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+
+        # 邀请代理事宜
+        if earn_coin > 0:
+            income = Decimal(earn_coin - float(record.bets))
+        else:
+            income = Decimal(earn_coin)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
 
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))

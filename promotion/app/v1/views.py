@@ -346,7 +346,6 @@ class ClubDetailView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        print("user_id=========================", user.id)
         if 'club_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = self.request.GET.get('club_id')
@@ -1083,7 +1082,6 @@ class ClubDividendView(ListAPIView):
         the_month_list = get_sql(sql)
         month_list = {}
         if the_month_list[0][1] == None:
-            # the_month_income_sum = 0
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
                 "months": datetime.datetime.now().strftime('%Y%m'),
@@ -1092,12 +1090,6 @@ class ClubDividendView(ListAPIView):
         else:
             the_month_list_sum = the_month_list[0][1]
             the_month_income_proportion = reward_gradient_all(club_id, the_month_list_sum)  # 本月兑换比例比例
-            # the_month_income_sums = Decimal(the_month_list[0][1])*the_month_income_proportion
-            # the_month_income_sum = -(the_month_income_sums)
-            # if the_month_income_sum <= 0:
-            #     the_month_income_sum = 0
-            # else:
-            #     the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
             month_list[the_month_list[0][0]] = {
                 "months": the_month_list[0][0],
                 "proportion": the_month_income_proportion
@@ -1236,9 +1228,11 @@ class ClubDividendView(ListAPIView):
                 sql += " and dtr.type in (1, 2)"
                 sql += " and dtr.created_at > '2018-09-07 00:00:00'"
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-                sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+                sql += "group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
                 sql += " order by times desc"
                 football_list = self.get_list_by_sql(sql)  # 足球
+                print("sql====================================", sql)
+                print("football_list===============================", football_list)
                 for i in football_list:
                     if i[4] is not None:
                         if i[8] not in user_list:
@@ -1288,7 +1282,7 @@ class ClubDividendView(ListAPIView):
                 sql += " and dtr.type in (1, 2)"
                 sql += " and dtr.created_at > '2018-09-07 00:00:00'"
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
-                sql += " group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
+                sql += "group by dtr.user_id, yearss, years, u.nickname, u.avatar, rule, created_ats, times"
                 sql += " order by times desc"
                 record_list = self.get_list_by_sql(sql)
                 for i in record_list:
