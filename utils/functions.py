@@ -307,7 +307,7 @@ def normalize_fraction(d, b):
                 if i == '0':
                     point_after_list.remove(i)
                 else:
-                    break
+                    continue
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
                 normalized = Decimal(normalized)
@@ -323,7 +323,7 @@ def normalize_fraction(d, b):
                 if i == '0':
                     point_after_list.remove(i)
                 else:
-                    break
+                    continue
             print("point_after_list================================", point_after_list)
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
@@ -357,7 +357,7 @@ def handle_zero(num):
         if i == '0':
             point_after_list.remove(i)
         else:
-            break
+            continue
     if len(point_after_list) != 0:
         return num_list[0] + '.' + ''.join(point_after_list)
     else:
