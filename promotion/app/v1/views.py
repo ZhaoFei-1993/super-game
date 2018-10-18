@@ -505,9 +505,10 @@ class ClubDetailView(ListAPIView):
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
-            sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, rule, dtr.user_id"
+            sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, rule, dtr.user_id, dtr.type"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)       # 足球
+            print("football_list============================", football_list)
             for i in football_list:
                 if i[4] is not  None:
                     if i[9] not in user_list:
