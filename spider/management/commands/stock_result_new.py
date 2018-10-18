@@ -537,6 +537,13 @@ class GuessPKRecording(GuessRecording):
             record.save()
         self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
 
+        # 邀请代理事宜
+        if earn_coin > 0:
+            income = Decimal(earn_coin - float(record.bet_coin))
+        else:
+            income = Decimal(earn_coin)
+        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
+
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))
 #     for record in records:

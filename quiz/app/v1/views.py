@@ -360,7 +360,7 @@ class RecordsListView(ListCreateAPIView):
                 guest_team = quiz.guest_team
 
             status = int(quiz.status)
-            earn_coin = Decimal(float(fav.get('earn_coin')))
+            earn_coin = Decimal(str(float(fav.get('earn_coin'))))
 
             # 获取盈亏数据
             earn_coin_str = '待开奖'
