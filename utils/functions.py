@@ -299,7 +299,6 @@ def normalize_fraction(d, b):
         return 0
     if type(d) is float or type(d) is decimal.Decimal:
         a = str(d).split(".")
-        print("a========================", a)
         if len(a[1]) < b:
 
             point_after_list = list(a[1])
@@ -319,16 +318,11 @@ def normalize_fraction(d, b):
             f = a[1][:b]
 
             point_after_list = list(f)
-            print("原值=======================", point_after_list)
-            print("原值=======================", type(point_after_list))
             for i in reversed(point_after_list):
                 if i == '0':
-                    print("i=========================", i)
                     point_after_list.pop()
                 else:
-                    print("s=========================", i)
                     continue
-            print("改值================================", point_after_list)
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
                 normalized = Decimal(normalized)

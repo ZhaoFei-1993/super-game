@@ -781,6 +781,8 @@ class ClubDetailView(ListAPIView):
         bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
         print("normalize_fraction(dividend_water, coin_accuracy) ==================================", normalize_fraction(dividend_water, coin_accuracy))
         dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        print("bet_water=========================", bet_water)
+        print("dividend_water=========================", dividend_water)
 
         return self.response({'code': 0,
                               "invite_number": len(user_list),
