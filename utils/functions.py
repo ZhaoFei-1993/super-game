@@ -295,12 +295,9 @@ def resize_img(image, dst_w=0, dst_h=0, qua=95):
 
 # 去掉decimal类型数值后面的0
 def normalize_fraction(d, b):
-    print("d==============================", d)
     if d == 0:
         return 0
-    print("type(d)=========================", type(d))
     if type(d) is float or type(d) is decimal.Decimal:
-        print("进入========================")
         a = str(d).split(".")
         if len(a[1]) < b:
 
@@ -326,11 +323,13 @@ def normalize_fraction(d, b):
                     point_after_list.pop()
                 else:
                     continue
+            print("len(point_after_list)=============================", len(point_after_list))
             if len(point_after_list) != 0:
                 normalized = str(a[0]) + '.' + ''.join(point_after_list)
                 normalized = Decimal(normalized)
                 return normalized
             else:
+                print("错误===================")
                 normalized = Decimal(a[0])
                 return normalized
 
