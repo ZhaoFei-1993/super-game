@@ -414,6 +414,7 @@ class ClubDetailView(ListAPIView):
 
         user_list = {}
         data_list = []
+        data_lists = []
         if int(type) == 1:   # 1.全部
             sql_list = "dtr.bets, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
@@ -522,6 +523,23 @@ class ClubDetailView(ListAPIView):
                         "nickname": i[7],
                         "avatar": i[8]
                     })
+
+            football_list = get_sql(sql)  # 足球
+            for i in football_list:
+                if i[4] is not None:
+                    if i[9] not in user_list:
+                        user_list[i[9]] = i[9]
+                    data_lists.append({
+                        "bets": normalize_fraction(i[0], coin_accuracy),
+                        "yearss": i[1],
+                        "years": i[2],
+                        "time": i[3],
+                        "created_ats": i[4],
+                        "status": i[5],
+                        "rule": i[6],
+                        "nickname": i[7],
+                        "avatar": i[8]
+                    })
         elif int(type) == 2:       # 2. 篮球
             sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
@@ -544,6 +562,21 @@ class ClubDetailView(ListAPIView):
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
                     "bets": normalize_fraction(i[0], coin_accuracy),
                     "yearss": i[1],
                     "years": i[2],
@@ -586,6 +619,21 @@ class ClubDetailView(ListAPIView):
                     "nickname": i[7],
                     "avatar": i[8]
                 })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
         elif int(type) == 4: # 4. 股票
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
@@ -605,6 +653,21 @@ class ClubDetailView(ListAPIView):
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
                     "bets": normalize_fraction(i[0], coin_accuracy),
                     "yearss": i[1],
                     "years": i[2],
@@ -644,6 +707,21 @@ class ClubDetailView(ListAPIView):
                     "nickname": i[7],
                     "avatar": i[8]
                 })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
         elif int(type) == 7:       # 百家乐
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
@@ -663,6 +741,21 @@ class ClubDetailView(ListAPIView):
                 if i[9] not in user_list:
                     user_list[i[9]] = i[9]
                 data_list.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
                     "bets": normalize_fraction(i[0], coin_accuracy),
                     "yearss": i[1],
                     "years": i[2],
@@ -702,6 +795,21 @@ class ClubDetailView(ListAPIView):
                     "nickname": i[7],
                     "avatar": i[8]
                 })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
         else:        # 龙虎斗
             sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
@@ -731,13 +839,50 @@ class ClubDetailView(ListAPIView):
                     "nickname": i[7],
                     "avatar": i[8]
                 })
+            record_list = get_sql(sql)
+            for i in record_list:
+                if i[9] not in user_list:
+                    user_list[i[9]] = i[9]
+                data_lists.append({
+                    "bets": normalize_fraction(i[0], coin_accuracy),
+                    "yearss": i[1],
+                    "years": i[2],
+                    "time": i[3],
+                    "created_ats": i[4],
+                    "status": i[5],
+                    "rule": i[6],
+                    "nickname": i[7],
+                    "avatar": i[8]
+                })
+
         # data_one_list = sorted(data_list, key=lambda x: x['created_ats'], reverse = True)
         data_one_list = data_list
         data = []
         tmps = ''
         bet_water = 0
 
-        print("data_one_list================================", data_one_list)
+        for fav in data_lists:
+            if int(fav["status"]) == 0:
+                status = "待结算"
+                if self.request.GET.get('language') == 'en':
+                    status = "Pending settlement"
+            elif fav["rule"] not in ["篮球", "足球"] and int(fav["status"]) == 2:
+                status = "流盘"
+                if self.request.GET.get('language') == 'en':
+                    status = "Flow disk"
+            elif fav["rule"] in ["篮球", "足球"] and int(fav["status"]) == 3:
+                status = "流盘"
+                if self.request.GET.get('language') == 'en':
+                    status = "Flow disk"
+            else:
+                status = "已结算"
+                if self.request.GET.get('language') == 'en':
+                    status = "Settled"
+                bet_water += Decimal(fav["bets"])
+        dividend_water = Decimal(bet_water) * Decimal(0.005)
+        bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
+        dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+
         for fav in data_one_list:
             bets = Decimal(0)
             if int(fav["status"]) == 0:
@@ -757,7 +902,7 @@ class ClubDetailView(ListAPIView):
                 if self.request.GET.get('language') == 'en':
                     status = "Settled"
                 bets = Decimal(fav["bets"])
-                bet_water += Decimal(fav["bets"])
+                # bet_water += Decimal(fav["bets"])
             divided_into = bets * Decimal(0.005)
             divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
 
@@ -778,9 +923,9 @@ class ClubDetailView(ListAPIView):
                 "pecific_dates": pecific_dates,
                 "pecific_date": pecific_date,
             })
-        dividend_water = Decimal(bet_water)*Decimal(0.005)
-        bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
-        dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        # dividend_water = Decimal(bet_water)*Decimal(0.005)
+        # bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
+        # dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
 
         return self.response({'code': 0,
                               "invite_number": len(user_list),
