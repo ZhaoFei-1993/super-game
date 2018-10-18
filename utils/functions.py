@@ -316,13 +316,14 @@ def normalize_fraction(d, b):
                 return normalized
         else:
             f = a[1][:b]
-
+            print("f===========================", f)
             point_after_list = list(f)
             for i in reversed(point_after_list):
                 if i == '0':
                     point_after_list.pop()
                 else:
                     continue
+            print("point_after_list=============================", point_after_list)
             print("len(point_after_list)=============================", len(point_after_list))
             if len(point_after_list) != 0:
                 print("point_after_list=========================", point_after_list)
