@@ -480,9 +480,9 @@ class GuessPKRecording(GuessRecording):
                     right_last_num = int(str(index_dic[right_periods_id])[-1])
 
                     if left_last_num > right_last_num:
-                        size_pk_result = issues.stock_pk.left_stock_name[:-2] + '大'
+                        size_pk_result = issues.stock_pk.left_stock_name + '大'
                     elif left_last_num < right_last_num:
-                        size_pk_result = issues.stock_pk.right_stock_name[:-2] + '大'
+                        size_pk_result = issues.stock_pk.right_stock_name + '大'
                     else:
                         size_pk_result = '和'
                     issues.size_pk_result = size_pk_result
