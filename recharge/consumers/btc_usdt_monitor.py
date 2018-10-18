@@ -26,6 +26,7 @@ def bitcoin_usdt_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url='https://chain.api.btc.com/v3/block/' + str(block_num) + '/tx')
     block = json_obj['data']
+    print('block = ', block)
     block_time = block['list'][0]['block_time']
 
     # 计算出总页数
