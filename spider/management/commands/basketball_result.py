@@ -234,8 +234,8 @@ def get_data_info(url, match_flag):
                 if record.option.option_id == option_wnm.id:
                     is_right = True
 
-            earn_coin = record.bet * record.odds
-            earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
+            earn_coin = Decimal(str(record.bet)) * Decimal(str(record.odds))
+            earn_coin = float(normalize_fraction(earn_coin, int(coin.coin_accuracy)))
             record.type = Record.CORRECT
             # 对于用户来说，答错只是记录下注的金额
             if is_right is False:
@@ -468,7 +468,7 @@ class Command(BaseCommand):
             for quiz in quizs:
                 flag = get_data_info(base_url, quiz.match_flag)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
-                if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
-                    cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
+                # if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
+                #     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
         else:
             print('暂无比赛需要开奖')
