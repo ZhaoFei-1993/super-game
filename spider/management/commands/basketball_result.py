@@ -146,28 +146,32 @@ def get_data_info(url, match_flag):
         try:
             result_mnl = result_list[0].select('span[class="win"]')[0].string.replace(' ', '')
             result_mnl_flag = result_match['result_mnl'][result_mnl]
-        except:
+        except Exception as e:
+            print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
 
         try:
             result_hdc = result_list[1].select('span[class="win"]')[0].string
             result_hdc_flag = result_match['result_hdc'][result_hdc]
-        except:
+        except Exception as e:
+            print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
 
         try:
             result_hilo = result_list[2].select('span[class="win"]')[0].string
             result_hilo_flag = result_match['result_hilo'][result_hilo]
-        except:
+        except Exception as e:
+            print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
 
         try:
             result_wnm = result_list[3].select('span[class="win"]')[0].string
             result_wnm_flag = result_match['result_wnm'][result_wnm]
-        except:
+        except Exception as e:
+            print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
 
