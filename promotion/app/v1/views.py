@@ -415,7 +415,7 @@ class ClubDetailView(ListAPIView):
         user_list = {}
         data_list = []
         if int(type) == 1:   # 1.全部
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bets, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.status, '猜股指' as rule, u.nickname, u.avatar, dtr.user_id"
             sql = "select " + sql_list + " from guess_record dtr"
@@ -427,7 +427,7 @@ class ClubDetailView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
 
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bets, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.status, '股指PK' as rule, u.nickname, u.avatar, dtr.user_id"
             sql += " union all select " + sql_list + " from guess_recordstockpk dtr"
@@ -439,7 +439,7 @@ class ClubDetailView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
 
-            sql_list = "sum(dtr.bet_coin), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bet_coin, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.status, '六合彩' as rule, u.nickname, u.avatar, dtr.user_id"
             sql += " union all select " + sql_list + " from marksix_sixrecord dtr"
@@ -463,7 +463,7 @@ class ClubDetailView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
 
-            sql_list = "sum(dtr.bets), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bets, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.status,  '百家乐' as rule, u.nickname, u.avatar, dtr.user_id"
             sql += " union all select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
@@ -475,7 +475,7 @@ class ClubDetailView(ListAPIView):
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
             sql += " and dtr.created_at > '2018-09-07 00:00:00'"
 
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bet, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.type, '足球' as rule, u.nickname, u.avatar, dtr.user_id"
             sql += " union all select " + sql_list + " from quiz_record dtr"
@@ -490,7 +490,7 @@ class ClubDetailView(ListAPIView):
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
 
-            sql_list = "sum(dtr.bet), date_format( dtr.created_at, '%Y' ) as yearss,"
+            sql_list = "dtr.bet, date_format( dtr.created_at, '%Y' ) as yearss,"
             sql_list += " date_format( dtr.created_at, '%Y-%m-%d' ) as years, date_format( dtr.created_at, '%h:%i:%s' ) as time,"
             sql_list += " date_format( dtr.created_at, '%Y%m%d%h%i%s' ) AS created_ats, dtr.type, '足球' as rule, u.nickname, u.avatar, dtr.user_id"
             sql += " union all select " + sql_list + " from quiz_record dtr"
