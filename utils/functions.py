@@ -298,41 +298,40 @@ def normalize_fraction(d, b):
     if d == 0:
         return 0
     if type(d) is float or type(d) is decimal.Decimal:
-        a = str(d).split(".")
-        if len(a[1]) < b:
+        if '.' in str(d):
+            a = str(d).split(".")
+            if len(a[1]) < b:
 
-            point_after_list = list(a[1])
-            for i in reversed(point_after_list):
-                if i == '0':
-                    point_after_list.pop()
+                point_after_list = list(a[1])
+                for i in reversed(point_after_list):
+                    if i == '0':
+                        point_after_list.pop()
+                    else:
+                        break
+                if len(point_after_list) != 0:
+                    normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                    normalized = Decimal(normalized)
+                    return normalized
                 else:
-                    break
-            if len(point_after_list) != 0:
-                normalized = str(a[0]) + '.' + ''.join(point_after_list)
-                normalized = Decimal(normalized)
-                return normalized
+                    normalized = Decimal(a[0])
+                    return normalized
             else:
-                normalized = Decimal(a[0])
-                return normalized
-        else:
-            f = a[1][:b]
-            point_after_list = list(f)
-            for i in reversed(point_after_list):
-                if i == '0':
-                    point_after_list.pop()
+                f = a[1][:b]
+                point_after_list = list(f)
+                for i in reversed(point_after_list):
+                    if i == '0':
+                        point_after_list.pop()
+                    else:
+                        break
+                if len(point_after_list) != 0:
+                    normalized = str(a[0]) + '.' + ''.join(point_after_list)
+                    normalized = Decimal(normalized)
+                    return normalized
                 else:
-                    break
-            if len(point_after_list) != 0:
-                normalized = str(a[0]) + '.' + ''.join(point_after_list)
-                normalized = Decimal(normalized)
-                return normalized
-            else:
-                normalized = Decimal(a[0])
-                return normalized
-
-    else:
-        normalized = d
-        return normalized
+                    normalized = Decimal(a[0])
+                    return normalized
+    normalized = d
+    return normalized
 
     # d = Decimal(str(d))
     # dd = round(d, b)
