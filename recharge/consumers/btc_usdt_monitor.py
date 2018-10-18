@@ -26,6 +26,7 @@ def bitcoin_usdt_monitor(block_num):
     wallet = Wallet()
     json_obj = wallet.get(url='https://chain.api.btc.com/v3/block/' + str(block_num) + '/tx')
     block = json_obj['data']
+    print('block = ', block)
     block_time = block['list'][0]['block_time']
 
     # 计算出总页数
@@ -63,6 +64,7 @@ def bitcoin_usdt_monitor(block_num):
             if value == 546:
                 usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
                 usdt_data = json.loads(usdt_resp.text)
+                print('usdt_data = ', usdt_data)
                 if usdt_data['type'] != 'Error - Not Found':
                     to_address += addresses
                     for address in addresses:
