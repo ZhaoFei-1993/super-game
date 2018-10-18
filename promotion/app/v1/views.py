@@ -504,7 +504,7 @@ class ClubDetailView(ListAPIView):
                 sql += " and dtr.user_id in (" + ','.join(user_id_list) + ")"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
             sql += " and dtr.created_at <= '" + str(end_time) + "'"
-            sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, rule, dtr.user_id"
+            sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, dtr.user_id"
             sql += " order by created_ats desc"
             football_list = self.get_list_by_sql(sql)       # 足球
             for i in football_list:
