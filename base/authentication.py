@@ -168,9 +168,9 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('date = ', api_date)
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
-        # if api_date_timestamp + 60 < time.time():
-        #     raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
-        #     pass  # TODO: remove it!!!!
+        if api_date_timestamp + 180 < time.time():
+            raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
+            pass  # TODO: remove it!!!!
 
         # Check if request has a "Signature" request header.
         authorization_header = self.header_canonical('Authorization')

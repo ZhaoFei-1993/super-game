@@ -11,16 +11,18 @@ from utils.functions import is_number
 
 class Command(BaseCommand):
     """
-    EOS充值账号转账监控，5秒查询一次
+    EOS充值账号转账监控，5秒查询一次--eospark.com平台
     为减少UserRecharge表的数据库查询次数，缓存EOS所有TXID（文件缓存），有新交易产生后重新生成缓存
     """
-    help = "EOS充值监控"
-    cache_txid_key = 'key_eos_txid'
-    cache_invalid_memo_key = 'key_eos_invalid_memo'
-    eos_monitor_url = 'https://api.eosmonitor.io/v1/actions?account=supergameeos&name=transfer&page=1&per_page=1000'
+    help = "EOS充值监控--eospark.com平台"
+    cache_txid_key = 'key_eos_txid_eospark'
+    cache_invalid_memo_key = 'key_eos_invalid_memo_eospark'
+    eos_monitor_url = 'https://eospark.com/interface_main?n=get_account_related_trx_info'
 
     def handle(self, *args, **options):
-        response = requests.get(self.eos_monitor_url)
+        post_data = '{"interface_name":"get_account_related_trx_info","tab_name":"token","account_name":"supergameeos","page_num":1,"page_size":50,"hide_small_quantity":1}'
+        user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+        response = requests.post(url=self.eos_monitor_url, data=post_data, headers={'User-Agent': user_agent})
         transfers = json.loads(response.text)
 
         eos_cache_txid = get_cache(self.cache_txid_key, 'default')
@@ -41,10 +43,12 @@ class Command(BaseCommand):
 
         transactions = []
         memos = []
-        for transfer in transfers['data']['data']:
-            memo = transfer['data']['memo']
+        for transfer in transfers['data']['token_transactions']:
+            memo = transfer['memo']
+            tx_hash = transfer['hash']
+            ts = time.strptime(transfer['trx_timestamp'].replace('T', ' '), '%Y-%m-%d %H:%M:%S.%f')
 
-            if transfer['name'] != 'transfer':
+            if transfer['direction'] != 'in' or transfer['issue_account'] != 'eosio.token' or transfer['status'] != 'executed' or transfer['symbol'] != 'EOS':
                 continue
 
             # 判断MEMO值是否为数字，非数字则为无效充值记录
@@ -52,7 +56,7 @@ class Command(BaseCommand):
                 continue
 
             # 判断该充值交易号是否已经入账
-            if transfer['trx_id'] in tx_ids:
+            if tx_hash in tx_ids:
                 continue
 
             memo = int(memo)
@@ -62,10 +66,10 @@ class Command(BaseCommand):
             memos.append(memo)
 
             transactions.append({
-                'txid': transfer['trx_id'],
-                'amount': transfer['data']['quantity'].replace(' ', '').replace('EOS', ''),
+                'txid': tx_hash,
+                'amount': transfer['quantity'],
                 'memo': memo,
-                'time': transfer['expiration'] + 8 * 3600,
+                'time': int(time.mktime(ts)) + 8 * 3600,
             })
 
         if len(transactions) == 0:
@@ -81,7 +85,7 @@ class Command(BaseCommand):
             raise CommandError('暂无有效充值记录')
 
         is_modified_invalid_memos = False
-        print('获得有效充值数量为', len(users))
+        count_valid_recharge = 0
         for user in users:
             for transaction in transactions:
                 memo = transaction['memo']
@@ -110,7 +114,7 @@ class Command(BaseCommand):
 
                 # user coin增加对应值
                 user_coin = UserCoin.objects.get(coin_id=Coin.EOS, user_id=user_id)
-                user_coin.balance += Decimal(str(amount))
+                user_coin.balance += Decimal(amount)
                 user_coin.save()
 
                 coin_detail = CoinDetail()
@@ -122,7 +126,9 @@ class Command(BaseCommand):
                 coin_detail.save()
 
                 print('获取一条EOS充值', amount, 'MEMO', memo, 'TXID为', txid)
+                count_valid_recharge += 1
 
+        print('获得', count_valid_recharge, ' 条有效充值记录')
         delete_cache(self.cache_txid_key, 'default')
         if is_modified_invalid_memos:
             set_cache(self.cache_invalid_memo_key, invalid_memos, -1, 'default')

@@ -1,4 +1,3 @@
-import time
 from users.models import UserRecharge, UserCoin, Coin
 from base.eth import Wallet
 from decimal import Decimal
@@ -12,7 +11,26 @@ OMNI_URL = 'https://api.omniexplorer.info/v1/transaction/tx/'
 BTC_DECIMAL = 100000000
 
 
-def bitcoin_usdt_monitor(block_num):
+def get_usdt_transaction(txid):
+    """
+    获取USDT交易数据
+    :param txid:
+    :return:
+    """
+    usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
+    usdt_data = json.loads(usdt_resp.text)
+
+    response = None
+    if 'amount' in usdt_data:
+        response = {
+            'txid': txid,
+            'value': usdt_data['amount'],
+        }
+
+    return response
+
+
+def consumer_bitcoin_usdt_monitor(block_num):
     """
     消费block_num队列
     """
@@ -29,7 +47,7 @@ def bitcoin_usdt_monitor(block_num):
     block_time = block['list'][0]['block_time']
 
     # 计算出总页数
-    total_page = math.ceil(block['total_count'] / block['pagesize'])
+    total_page = int(math.ceil(block['total_count'] / block['pagesize']))
     print('总页数 =', total_page)
 
     if total_page > 1:
@@ -48,8 +66,7 @@ def bitcoin_usdt_monitor(block_num):
             block['list'] += json_obj['data']['list']
 
     to_address = []
-    address_tx_btc = {}
-    address_tx_usdt = {}
+    address_tx = {}
     for index, item in enumerate(block['list']):
         outputs = item['outputs']
         for output in outputs:
@@ -60,33 +77,22 @@ def bitcoin_usdt_monitor(block_num):
                 continue
 
             # 如果value的值等于546，则有可能是USDT的交易数据，从OMNI平台中获取交易数据
-            if value == 546:
-                usdt_resp = requests.get(OMNI_URL + txid, headers={'content-type': 'application/json'})
-                usdt_data = json.loads(usdt_resp.text)
-                if usdt_data['type'] != 'Error - Not Found':
-                    to_address += addresses
-                    for address in addresses:
-                        if address not in address_tx_usdt:
-                            address_tx_usdt[address] = []
-
-                        address_tx_usdt[address].append({
-                            'txid': txid,
-                            'value': usdt_data['amount'],
-                        })
-                    continue
+            maybe_usdt_tx = True if value == 546 else False
 
             to_address += addresses
             for address in addresses:
-                if address not in address_tx_btc:
-                    address_tx_btc[address] = []
+                if address not in address_tx:
+                    address_tx[address] = []
 
-                address_tx_btc[address].append({
+                address_tx[address].append({
                     'txid': txid,
+                    'maybe_usdt': maybe_usdt_tx,
                     'value': value / BTC_DECIMAL,
                 })
 
-    in_address = UserCoin.objects.filter(coin_id__in=[Coin.BTC, Coin.USDT], address__in=to_address).values('address', 'user_id')
+    in_address = UserCoin.objects.filter(coin_id__in=[Coin.BTC, Coin.USDT], address__in=to_address).values('address', 'user_id', 'coin_id')
     if len(in_address) == 0:
+        print('暂无充值记录')
         return True
 
     # 所有充值记录
@@ -99,16 +105,24 @@ def bitcoin_usdt_monitor(block_num):
     recharge_number = 0
     for user_coin in in_address:
         address = user_coin['address']
-
-        if address in address_tx_btc:
-            address_recharges = address_tx_btc[address]
-            coin_id = Coin.BTC
-        else:
-            address_recharges = address_tx_usdt[address]
-            coin_id = Coin.USDT
+        address_recharges = address_tx[address]
 
         for recharge in address_recharges:
             txid = recharge['txid']
+            amount = recharge['value']
+            coin_id = Coin.BTC
+            coin_name = 'BTC'
+
+            if recharge['maybe_usdt']:
+                usdt_recharge = get_usdt_transaction(txid)
+                txid = usdt_recharge['txid']
+                amount = usdt_recharge['value']
+                coin_id = Coin.USDT
+                coin_name = 'USDT'
+
+            if user_coin['coin_id'] != coin_id:
+                continue
+
             if txid in txids:
                 continue
 
@@ -117,12 +131,12 @@ def bitcoin_usdt_monitor(block_num):
             recharge_obj.coin_id = coin_id
             recharge_obj.txid = txid
             recharge_obj.user_id = user_coin['user_id']
-            recharge_obj.amount = Decimal(recharge['value'])
+            recharge_obj.amount = Decimal(str(amount))
             recharge_obj.confirmations = 0
             recharge_obj.trade_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block_time))
             recharge_obj.save()
 
-            print('获取1条BCH充值记录，TX = ', txid, ' Address = ', address, ' 充值金额 = ', recharge['value'])
+            print('获取1条' + coin_name + '充值记录，TX = ', txid, ' Address = ', address, ' 充值金额 = ', amount)
 
             recharge_number += 1
 

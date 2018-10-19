@@ -24,6 +24,7 @@ import pytz
 import time
 from utils.cache import set_cache, get_cache, delete_cache
 from users.models import Coin
+from itertools import combinations
 
 
 class SortViews(ListAPIView):
@@ -128,7 +129,20 @@ class OddsViews(ListAPIView):
 
         if not language:
             language = 'zh'
-        res = Option.objects.filter(play_id=id)
+
+        # 如果是六肖中特玩法，拿出生肖options
+        bet_odds_top = []
+        if id == '8':
+            for option in Option.objects.filter(play_id=int(id)):
+                bet_odds_top.append({
+                    'id': option.id,
+                    'option': option.option,
+                    'odds': option.odds,
+                })
+            res = Option.objects.filter(play_id='5')
+        else:
+            res = Option.objects.filter(play_id=int(id))
+
         if id == '1':  # 特码，暂时只要获取一个赔率，因为目前赔率都相等
             play = Play.objects.get(id=1)
             if language == 'zh':
@@ -175,18 +189,20 @@ class OddsViews(ListAPIView):
                     if three_to_three['option'] in res_dict['option']:
                         if tag == 0:
                             three_to_three['id'] = item.id
-                            three_to_three['odds'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(item.odds)
+                            three_to_three['odds'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(
+                                item.odds)
                             three_to_three['pitch'] = False
                             bet_odds.append(three_to_three)
                             tag = 1
                         else:
-                            three_to_three['odds1'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(item.odds)
+                            three_to_three['odds1'] = int(item.odds) if str(item.odds).split('.')[1] == '00' else float(
+                                item.odds)
                             if language == 'zh':
                                 three_to_three['option1'] = '中三'
                             else:
                                 three_to_three['option1'] = 'Three Hit Three'
                         continue
-                elif id == '5':  # 平特一肖
+                elif id == '5' or id == '8':  # 平特一肖或六肖中特
                     # 获取当前年份
                     year = datetime.now().year
                     animal_id = Option.ANIMAL_CHOICE[item.option]
@@ -204,7 +220,8 @@ class OddsViews(ListAPIView):
                         res_dict['num_list'][num_list.index(i)] = change_num(i)
 
                 bet_odds.append(res_dict)
-            # if id == '3':
+
+        # if id == '3':
             #     bet_odds.append(three_to_three)
 
         # 获取上期开奖时间和本期开奖时间
@@ -226,33 +243,34 @@ class OddsViews(ListAPIView):
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
 
         limit = MarkSixBetLimit.objects.get(club_id=club_id, options_id=id)
+        base_data = {
+            'prev_issue': prev_issue,
+            'prev_flat': prev_flat,
+            'prev_special': prev_special,
+            'current_issue': current_issue,
+            'current_open': current_open,
+            'coin_name': coin_name,
+            'play_id': id,
+            'max_limit': handle_zero(limit.max_limit),
+            'min_limit': handle_zero(limit.min_limit)
+        }
         if id == '3':
             data = {
                 'bet_odds': bet_odds,
-                'prev_issue': prev_issue,
-                'prev_flat': prev_flat,
-                'prev_special': prev_special,
-                'current_issue': current_issue,
-                'current_open': current_open,
                 'bet_num': bet_num,
-                'coin_name': coin_name,
-                'play_id': id,
-                'max_limit': handle_zero(limit.max_limit),
-                'min_limit': handle_zero(limit.min_limit)
             }
+            data.update(base_data)
+        elif id == '8':
+            data = {
+                'bet_odds_top': bet_odds_top,
+                'bet_odds': bet_odds,
+            }
+            data.update(base_data)
         else:
             data = {
                 'bet_odds': bet_odds,
-                'prev_issue': prev_issue,
-                'prev_flat': prev_flat,
-                'prev_special': prev_special,
-                'current_issue': current_issue,
-                'current_open': current_open,
-                'coin_name': coin_name,
-                'play_id': id,
-                'max_limit': handle_zero(limit.max_limit),
-                'min_limit': handle_zero(limit.min_limit)
             }
+            data.update(base_data)
 
         return JsonResponse({'code': 0, 'data': data})
 
@@ -315,6 +333,17 @@ class BetsViews(ListCreateAPIView):
             else:
                 if int(bet) != len(content.split(',')):
                     raise ParamErrorException(error_code.API_50203_BET_ERROR)
+
+        elif play_id == '8':  # 六肖中特
+            try:
+                option_id = request.data.get('option_id')
+            except Exception:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if not option_id:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            if int(bet) != len(list(combinations(content.split(','), 6))):
+                raise ParamErrorException(error_code.API_50203_BET_ERROR)
+
         else:
             if int(bet) != len(content.split(',')):
                 raise ParamErrorException(error_code.API_50203_BET_ERROR)
@@ -360,6 +389,16 @@ class BetsViews(ListCreateAPIView):
             if not op:
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             odds = op.odds
+
+        elif play_id == '8':  # 六肖中特
+            try:
+                option_id = request.data.get('option_id')
+            except Exception:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+            res = valied_content(content, 6, 8)
+            if not res:
+                raise ParamErrorException(error_code.API_50201_BET_LIMITED)
+            odds = Option.objects.filter(play_id=play_id)[0].odds
 
         else:  # 当为其他类型时，赔率多个
             option_id = ''
@@ -411,8 +450,9 @@ class BetsViews(ListCreateAPIView):
             source = 2
         else:
             source = 3
-        if user.is_robot == True:
+        if user.is_robot is True:
             source = 4
+
         # 更新下注表
         sixcord = SixRecord()
         sixcord.play_id = play_id
@@ -460,7 +500,7 @@ class BetsListViews(ListAPIView):
         elif type == '2':  # 已开奖
             res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=1)
         else:
-            return HttpResponse(status=404)
+            res = []
         return res
 
     def list(self, request, *args, **kwargs):

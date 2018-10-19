@@ -33,7 +33,8 @@ class StockPkDetail(ListAPIView):
                 qs = issue_pre
                 #  一小时切换status, 4: 中to美, 5: 美to中
                 switch_time = qs.open + datetime.timedelta(hours=1)
-                switch_time = time.mktime(switch_time.timetuple())
+                switch_time = time.mktime(switch_time.timetuple()) - time.time()
+                switch_time = int(switch_time)
                 if issue_pre.stock_pk_id == 1:
                     status = 4
                 else:
@@ -118,9 +119,12 @@ class StockPkDetail(ListAPIView):
         issues_id = issues.id
         issue = issues.issue
         open_time = issues.open.strftime('%Y-%m-%d %H:%M:%S')
-        open_timestamp = time.mktime(issues.open.timetuple())
+        open_timestamp = time.mktime(issues.open.timetuple()) - time.time()
+        open_timestamp = int(open_timestamp)
+
         if status_dic['status'] == 1:
-            open_timestamp = time.mktime((issues.open - datetime.timedelta(minutes=5)).timetuple())
+            open_timestamp = time.mktime((issues.open - datetime.timedelta(minutes=5)).timetuple()) - time.time()
+            open_timestamp = int(open_timestamp)
 
         # 用户余额，对应币信息
         cache_club_value = get_club_info()
@@ -287,25 +291,24 @@ class StockPkResultList(ListAPIView):
         }
         data = []
         for item in items:
-            if item['size_pk_result'] != '':
-                left_stock_name = stock_pk_dic[item['stock_pk_id']]['left_stock_name']
-                right_stock_name = stock_pk_dic[item['stock_pk_id']]['right_stock_name']
+            left_stock_name = stock_pk_dic[item['stock_pk_id']]['left_stock_name']
+            right_stock_name = stock_pk_dic[item['stock_pk_id']]['right_stock_name']
 
-                data.append({
-                    'issue': item['issue'],
-                    'open_time': item['open_time'],
+            data.append({
+                'issue': item['issue'],
+                'open_time': item['open_time'],
 
-                    'left_stock_name': left_stock_name,
-                    'left_index': item['left_stock_index'],
-                    'left_result_num': str(item['left_stock_index']).split('.')[1][1],
+                'left_stock_name': left_stock_name,
+                'left_index': item['left_stock_index'],
+                'left_result_num': str(item['left_stock_index']).split('.')[1][1],
 
-                    'right_stock_name': right_stock_name,
-                    'right_index': item['right_stock_index'],
-                    'right_result_num': str(item['right_stock_index']).split('.')[1][1],
+                'right_stock_name': right_stock_name,
+                'right_index': item['right_stock_index'],
+                'right_result_num': str(item['right_stock_index']).split('.')[1][1],
 
-                    'result_answer': item['size_pk_result'],
-                    'result_flag': result_flag[item['size_pk_result']]
-                })
+                'result_answer': item['size_pk_result'],
+                'result_flag': result_flag[item['size_pk_result']]
+            })
         return self.response({'code': 0, 'data': data})
 
 

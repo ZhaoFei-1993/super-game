@@ -43,7 +43,7 @@ urlpatterns = [
     path('detail/<int:user_message_id>/', views.DetailView.as_view(), name="app-v1-user-detail"),
     # 一键阅读所有消息公告
     path('message/all-read/', views.AllreadView.as_view(), name="app-v1-user-all-read"),
-    # 列出资产情况
+    # 钱包
     path('asset/', views.AssetView.as_view(), name="app-v1-user-asset"),
     # 提交提现申请
     path('asset/presentation/', views.UserPresentationView.as_view(), name="app-v1-user-asset-presentation"),

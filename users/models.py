@@ -1345,3 +1345,18 @@ class EosCode(models.Model):
 
     class Meta:
         verbose_name = verbose_name_plural = "EOS充值编号生成表"
+
+
+class MobileCoin(models.Model):
+    """
+    转账记录表
+    """
+    sponsor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='sponsor_user', verbose_name="委托人id")
+    recipient = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='recipient_user', verbose_name="接受人id")
+    coin = models.ForeignKey(Coin, on_delete=models.DO_NOTHING, related_name='mobile_coin', verbose_name="货币id")
+    remarks = models.CharField(verbose_name="备注", max_length=255, default='')
+    balance = models.DecimalField(verbose_name='操作金额', max_digits=32, decimal_places=18, default=0.000000000000000000)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "转账记录表"

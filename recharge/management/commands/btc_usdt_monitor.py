@@ -4,7 +4,7 @@ from base.app import BaseView
 from utils.cache import get_cache, set_cache
 from redis import Redis
 from rq import Queue
-from recharge.consumers.btc_usdt_monitor import bitcoin_usdt_monitor
+from recharge.consumers.btc_usdt_monitor import consumer_bitcoin_usdt_monitor
 from base.eth import Wallet
 
 
@@ -19,12 +19,12 @@ class Command(BaseCommand, BaseView):
     def set_queue(self, block_height):
         """
         写入消息队列
-        :param block_height:
+        :param block_height:    块高度
         :return:
         """
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
-        q.enqueue(bitcoin_usdt_monitor, block_height)
+        q.enqueue(consumer_bitcoin_usdt_monitor, block_height)
 
         set_cache(self.cacheKey, block_height)
 
@@ -54,7 +54,7 @@ class Command(BaseCommand, BaseView):
         # 只监控某个块高度数据
         if options['only_one_block']:
             self.set_queue(block_height)
-            raise CommandError('')
+            raise CommandError('Done')
 
         # 获取缓存中的块高度值，若缓存未设置，则首次设置的值为当前区块链块高
         cache_block_height = get_cache(self.cacheKey)
@@ -64,7 +64,7 @@ class Command(BaseCommand, BaseView):
 
         # 当缓存中的块高度值大于参数传过来的高度值，则重新写入缓存中的块高度值为参数指定的高度值
         # 如缓存中块高为123，参数传100，区块链上高度为125，则会监控100~125间的所有块数据
-        if cache_block_height > block_height:
+        if int(cache_block_height) > int(block_height):
             set_cache(self.cacheKey, block_height)
 
         cache_block_height = int(cache_block_height)
