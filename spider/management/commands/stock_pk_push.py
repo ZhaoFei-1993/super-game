@@ -25,7 +25,8 @@ class Command(BaseCommand):
             issue_time_dic = {
                 'issue_last':
                     {'issue_id': issue_last.id, 'open_time': issue_last.open,
-                     'issue': issue_last.issue, 'rest': 0, 'switch': 0,
+                     'issue': issue_last.issue, 'rest': 0, 'switch': 0, 'open_mark_before': 0,
+                     'open_mark_after': 0,
                      },
                 'issue_pre': {'issue_id': issue_pre.id, 'open_time': issue_pre.open,
                               'issue': issue_pre.issue,
@@ -40,6 +41,8 @@ class Command(BaseCommand):
             last_issue = issue_time_dic['issue_last']['issue']
             rest = issue_time_dic['issue_last']['rest']
             switch = issue_time_dic['issue_last']['switch']
+            open_mark_before = issue_time_dic['issue_last']['open_mark_before']
+            open_mark_after = issue_time_dic['issue_last']['open_mark_after']
 
             if time_now > last_open_time:
                 print('推送')
@@ -72,6 +75,20 @@ class Command(BaseCommand):
                         # guess_pk_detail(last_issue_id)
 
                         issue_time_dic['issue_last']['switch'] = 1
+                        set_cache('issue_time_dic', issue_time_dic)
+                elif time_now <= (last_open_time - datetime.timedelta(minutes=5)):
+                    if open_mark_before == 0:
+                        print('推送')
+                        q.enqueue(guess_pk_detail, last_issue_id)
+
+                        issue_time_dic['issue_last']['open_mark_before'] = 1
+                        set_cache('issue_time_dic', issue_time_dic)
+                else:
+                    if open_mark_after == 0:
+                        print('推送')
+                        q.enqueue(guess_pk_detail, last_issue_id)
+
+                        issue_time_dic['issue_last']['open_mark_after'] = 1
                         set_cache('issue_time_dic', issue_time_dic)
             else:
                 print('暂无需变换')
