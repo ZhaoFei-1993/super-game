@@ -82,6 +82,7 @@ class QuizSerialize(serializers.ModelSerializer):
         club_info = Club.objects.get_one(pk=roomquiz_id)
         coin = Coin.objects.get_one(pk=club_info.coin_id)
         total_people = normalize_fraction(total_people, coin.coin_accuracy)
+        print("total_people================================", total_people)
         return total_people
 
     def get_total_coin_avatar(self, obj):
