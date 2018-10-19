@@ -124,6 +124,31 @@ class Gradient(models.Model):
         verbose_name = verbose_name_plural = "梯度表"
 
 
+class PromotionRecordManager(BaseManager):
+    """
+    推广人下注记录数据库操作
+    """
+
+    def insert_record(self, user, club, bets, source, created_at):
+        """
+        :param user: 用户对象
+        :param club: 俱乐部对象
+        :param bets: 下注值
+        :param source: 类型(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗)
+        :param created_at:创建时间
+        :return:
+        """
+        promotionrecord = PromotionRecord()
+        promotionrecord.user = user
+        promotionrecord.club = club
+        promotionrecord.bets = bets
+        promotionrecord.earn_coin = 0
+        promotionrecord.source = source
+        promotionrecord.status = 0
+        promotionrecord.created_at = created_at
+        promotionrecord.save()
+
+
 @reversion.register()
 class PromotionRecord(models.Model):
     FOOTBALL = 1
@@ -158,6 +183,8 @@ class PromotionRecord(models.Model):
     source = models.CharField(verbose_name="类型", choices=SOURCE, max_length=1, default=FOOTBALL)
     status = models.CharField(verbose_name="下注状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)
+
+    objects = PromotionRecordManager()
 
     class Meta:
         ordering = ['-id']
