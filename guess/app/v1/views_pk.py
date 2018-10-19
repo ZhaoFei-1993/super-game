@@ -129,7 +129,7 @@ class StockPkDetail(ListAPIView):
         open_timestamp = time.mktime(issues.open.timetuple()) - time.time()
         open_timestamp = int(open_timestamp)
 
-        if status_dic['status'] == 1:
+        if status_dic['status'] == 1 or status_dic['status'] == 6:
             open_timestamp = time.mktime((issues.open - datetime.timedelta(minutes=5)).timetuple()) - time.time()
             open_timestamp = int(open_timestamp)
 
