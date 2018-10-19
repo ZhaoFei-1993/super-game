@@ -248,7 +248,11 @@ class Command(BaseCommand):
             2: 100,
             3: 100,
             4: 100,
-            6: 350
+            5: 300,
+            6: 350,
+            7: 100,
+            8: 200,
+            9: 300,
         }
 
         weight_choice = WeightChoice()
