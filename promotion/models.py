@@ -129,10 +129,11 @@ class PromotionRecordManager(BaseManager):
     推广人下注记录数据库操作
     """
 
-    def insert_record(self, user, club, bets, source, created_at):
+    def insert_record(self, user, club, record_id, bets, source, created_at):
         """
         :param user: 用户对象
         :param club: 俱乐部对象
+        :param record_id: 记录表ID
         :param bets: 下注值
         :param source: 类型(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗)
         :param created_at:创建时间
@@ -141,6 +142,7 @@ class PromotionRecordManager(BaseManager):
         promotionrecord = PromotionRecord()
         promotionrecord.user = user
         promotionrecord.club = club
+        promotionrecord.record_id = record_id
         promotionrecord.bets = bets
         promotionrecord.earn_coin = 0
         promotionrecord.source = source
@@ -178,6 +180,7 @@ class PromotionRecord(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    record_id = models.IntegerField(verbose_name="记录表ID", default=0)
     bets = models.DecimalField(verbose_name="下注金额", max_digits=20, decimal_places=8, default=0.00000000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=20, decimal_places=8, default=0.00000000)
     source = models.CharField(verbose_name="类型", choices=SOURCE, max_length=1, default=FOOTBALL)
