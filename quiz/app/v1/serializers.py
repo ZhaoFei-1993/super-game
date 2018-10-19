@@ -79,10 +79,6 @@ class QuizSerialize(serializers.ModelSerializer):
         """
         roomquiz_id = self.context['request'].parser_context['kwargs']['roomquiz_id']
         total_people = Record.objects.get_club_quiz_bet_count(quiz_id=obj.pk, club_id=roomquiz_id)
-        club_info = Club.objects.get_one(pk=roomquiz_id)
-        coin = Coin.objects.get_one(pk=club_info.coin_id)
-        total_people = normalize_fraction(total_people, coin.coin_accuracy)
-        print("total_people================================", total_people)
         return total_people
 
     def get_total_coin_avatar(self, obj):
