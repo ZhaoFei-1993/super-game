@@ -581,7 +581,8 @@ class StockPKPushView(ListAPIView):
 
     def get_queryset(self):
         issues_id = int(self.request.GET.get('issues_id'))
-        qs = RecordStockPk.objects.filter(issue_id=issues_id)
+        club_id = int(self.request.GET.get('club_id'))
+        qs = RecordStockPk.objects.filter(issue_id=issues_id, club_id=club_id)
         return qs
 
     def list(self, request, *args, **kwargs):
