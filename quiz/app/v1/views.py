@@ -233,8 +233,7 @@ class QuizListView(ListCreateAPIView):
             for s in total_coin:
                 for a in data:
                     if a['id'] == s[0]:
-                        a['total_coin'] = int(s[1])
-                        a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+                        a['total_coin'] = normalize_fraction(s[1], int(club.coin.coin_accuracy))
 
         return self.response({"code": 0, "data": data})
 
