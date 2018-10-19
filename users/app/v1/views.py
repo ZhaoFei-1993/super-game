@@ -24,7 +24,8 @@ from decimal import Decimal
 from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
-from utils.functions import random_salt, message_hints, language_switch, resize_img, normalize_fraction, random_invitation_code
+from utils.functions import random_salt, message_hints, language_switch, resize_img, normalize_fraction, \
+    random_invitation_code
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -158,7 +159,7 @@ class UserRegister(object):
                     usermessage.message_id = i
                     usermessage.save()
 
-        Address.objects.initial(user.id)          # 生成为基础 usercoin 数据 并且分配地址
+        Address.objects.initial(user.id)  # 生成为基础 usercoin 数据 并且分配地址
 
         # 更新用户的device_token
         if device_token is not None and device_token != '':
@@ -216,7 +217,7 @@ class UserRegister(object):
             # user.eos_code = eos_code
             user.save()
 
-            user_go_line = UserInvitation()           # 生成邀请记录
+            user_go_line = UserInvitation()  # 生成邀请记录
             if invitation_user.is_robot == False:
                 user_go_line.inviter_type = 1
                 user_go_line.status = 1
@@ -480,7 +481,7 @@ class LoginView(CreateAPIView):
             if int(type) == 1:
                 raise ParamErrorException(error_code.API_10106_TELEPHONE_REGISTER)
 
-            area_code = 86           # 区号
+            area_code = 86  # 区号
             if 'area_code' in request.data:
                 area_code = request.data.get('area_code')
 
@@ -546,9 +547,9 @@ class InfoView(ListAPIView):
 
         user_coins = UserCoin.objects.filter(user_id=user_id)
         map_user_coin = {}
-        integral = 0        # GSG余额
-        current_coin_balance = 0    # 当前俱乐部币余额
-        current_coin_address = ''   # 当前俱乐部币充值地址
+        integral = 0  # GSG余额
+        current_coin_balance = 0  # 当前俱乐部币余额
+        current_coin_address = ''  # 当前俱乐部币充值地址
         if len(user_coins) > 0:
             for item in user_coins:
                 map_user_coin[item.coin_id] = item
@@ -717,8 +718,7 @@ class RankingView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = request.user
         user_id = user.id
-        sql = "SELECT a.balance from users_usercoin a where coin_id = 6 and user_id=" + str(
-            user_id)
+        sql = "SELECT a.balance from users_usercoin a where coin_id = 6 and user_id=" + str(user_id)
         user_coin = get_sql(sql)[0][0]  # 用户拥有的ETH
 
         GSG_ICON = "gsg_icon_in_cache"  # key
@@ -1271,9 +1271,10 @@ class AssetView(ListAPIView):
                 coin_ids.append(coin.id)
 
         # 近期使用地址
-        user_presentation = UserPresentation.objects.filter(user_id=user_id, coin_id__in=coin_ids).order_by('-created_at')
+        user_presentation = UserPresentation.objects.filter(user_id=user_id, coin_id__in=coin_ids).order_by(
+            '-created_at')
         map_user_presentation = {}
-        map_user_presentation_amount = {}   # 币提现锁定数量
+        map_user_presentation_amount = {}  # 币提现锁定数量
         if len(user_presentation) > 0:
             for presentation in user_presentation:
                 if presentation.coin_id not in map_user_presentation:
@@ -2581,12 +2582,16 @@ class InvitationMergeView(ListAPIView):
             invitation_code = user.invitation_code
 
         if self.request.GET.get('language') == 'en':
-            if os.access(settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news_en.jpg', os.F_OK):
-                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news_en.jpg'
+            if os.access(
+                    settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news_en.jpg',
+                    os.F_OK):
+                base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(
+                    user.id) + '_news_en.jpg'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
         else:
-            if os.access(settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news.jpg', os.F_OK):
+            if os.access(settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news.jpg',
+                         os.F_OK):
                 base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '_news.jpg'
                 qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
                 return self.response({'code': 0, "base_img": base_img, "qr_data": qr_data})
@@ -2595,7 +2600,7 @@ class InvitationMergeView(ListAPIView):
         # 设置字体和字号
         font = pygame.font.SysFont("./utils/simsun.ttc", 40)
         # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
-        ftext = font.render(invitation_code, True, (154,222,251), (23,23,59))
+        ftext = font.render(invitation_code, True, (154, 222, 251), (23, 23, 59))
         # 保存图片
         invitation_code_address = save_path + '/invitation_code_' + str(user.id) + '.jpg'
         pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -2934,21 +2939,21 @@ class DividendHistory(ListAPIView):
         items = super().list(request, *args, **kwargs)
         results = items.data.get('results')
         data = []
-        temp_dic={}
+        temp_dic = {}
         temp_date = 0
         i = 0
         for x in results:
             y, m, d = x['date'].split('-')
             md = m + '/' + d
-            if x['date']!=temp_date:
+            if x['date'] != temp_date:
                 if data:
-                    i +=1
-                temp_date=x['date']
+                    i += 1
+                temp_date = x['date']
                 data.append(
                     {
-                        'year' :str(y),
+                        'year': str(y),
                         'month_day': md,
-                        'results':[
+                        'results': [
                             {
                                 'coin_name': x['coin_name'],
                                 'divide': normalize_fraction(x['divide'], 12),
@@ -2964,8 +2969,6 @@ class DividendHistory(ListAPIView):
                         'coin_icon': x['coin_icon']
                     }
                 )
-
-
 
             # temp = {
             #     'year': y,
@@ -3041,7 +3044,7 @@ class Url_list(ListAPIView):
 
             if os.access(save_path + '/qrcode_' + str(user.id) + '.jpg', os.F_OK):
                 base_img = settings.MEDIA_DOMAIN_HOST + '/soc_activity/' + sub_path + '/spread_' + str(
-                    user.id) + '.jpg'    # 界面地址
+                    user.id) + '.jpg'  # 界面地址
                 return self.response({'code': 0, "base_img": base_img})
 
             pygame.init()
@@ -3070,7 +3073,7 @@ class Url_list(ListAPIView):
 
                     if l < r3:
                         pimb[i - (r - r3), j - (r - r3)] = pima[i, j]
-            imb.save(save_path + "/test_circle.png")           # 保存圆角头像
+            imb.save(save_path + "/test_circle.png")  # 保存圆角头像
 
             font = pygame.font.Font("./utils/simsun.ttc", 22)
             # 渲染图片，设置背景颜色和字体样式,前面的颜色是字体颜色
@@ -3105,3 +3108,36 @@ class Url_list(ListAPIView):
             base_img.save(save_path + '/spread_' + str(user.id) + '.jpg', quality=90)
             base_img = settings.MEDIA_DOMAIN_HOST + '/spread/' + sub_path + '/spread_' + str(user.id) + '.jpg'
             return self.response({'code': 0, "base_img": base_img})
+
+
+class MoveCoinView(ListAPIView):
+    """
+       转账
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        club_id = request.GET.get('club_id')
+        club_info = Club.objects.get(id=club_id)
+        coin_id = club_info.coin.id
+        user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
+        user_info = {}
+        if 'telephone' in request.GET:
+            telephone = request.GET.get('telephone')
+            user = User.objects.get(telephone=telephone)
+            nickname = user.nickname
+            avatar = user.avatar
+            user_info = {
+                "nickname": nickname,
+                "avatar": avatar
+            }
+        return self.response({'code': 0,
+                              "icon": club_info.coin.icon,
+                              "name": club_info.coin.name,
+                              "balance": user_coin.balance,
+                              "user_info": user_info
+                              })
