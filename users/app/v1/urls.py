@@ -53,12 +53,13 @@ urlpatterns = [
     path('asset/list_pre/<int:coin_id>/<int:p_id>/', views.PresentationDetailView.as_view(),
          name='app-v1-user-asset-list_pre-detail'),
     # 充值记录表
-    path('asset/list_recharge/<int:coin_id>/', views.RechargeListView.as_view(), name='app-v1-user-asset-list_recharge'),
+    path('asset/list_recharge/<int:coin_id>/', views.RechargeListView.as_view(),
+         name='app-v1-user-asset-list_recharge'),
     # 充值记录表明细
     path('asset/list_recharge/<int:coin_id>/<int:r_id>/', views.RechargeDetailView.as_view(),
          name='app-v1-user-asset-list_recharge-detail'),
     # 用户GSG锁定
-    path('asset/lock/',views.AssetLock.as_view(), name='app-v1-user-asset-lock'),
+    path('asset/lock/', views.AssetLock.as_view(), name='app-v1-user-asset-lock'),
     # 用户GSG锁定记录列表
     path('asset/lock_list/', views.LockListView.as_view(), name='app-v1-user-asset-lock_list'),
     # 用户GSG锁定记录详情及延长锁定设置
@@ -98,7 +99,10 @@ urlpatterns = [
     # 扫码拿用户消息
     path('invitation/user/', views.InvitationUserView.as_view(), name="app-v1-user-invitation-register"),
     # 生成带二维码邀请海报
-    path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge")
+    path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
+
+    #  转账
+    path('move/coin/', views.MoveCoinView.as_view(), name="move_coin"),
 
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),

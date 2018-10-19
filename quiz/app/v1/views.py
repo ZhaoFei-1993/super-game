@@ -120,7 +120,7 @@ class HotestView(ListAPIView):
                 'host_team_score': fav.get('host_team_score'),
                 'begin_at': fav.get('begin_at'),
                 'total_people': fav.get('total_people'),
-                'total_coin': '',
+                'total_coin': '0',
                 'is_bet': fav.get('is_bet'),
                 'category': fav.get('category'),
                 'is_end': fav.get('is_end'),
@@ -143,8 +143,8 @@ class HotestView(ListAPIView):
             for s in total_coin:
                 for a in data:
                     if a['id'] == s[0]:
-                        a['total_coin'] = int(s[1])
-                        a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+                        print("1=================================", normalize_fraction(s[1], int(club.coin.coin_accuracy)))
+                        a['total_coin'] = normalize_fraction(s[1], int(club.coin.coin_accuracy))
 
         return self.response({'code': 0, 'data': data})
 
@@ -211,7 +211,7 @@ class QuizListView(ListCreateAPIView):
                 'guest_team_score': fav.get('guest_team_score'),
                 'begin_at': fav.get('begin_at'),
                 'total_people': fav.get('total_people'),
-                'total_coin': '',
+                'total_coin': '0',
                 'is_bet': fav.get('is_bet'),
                 'category': fav.get('category'),
                 'is_end': fav.get('is_end'),
@@ -234,8 +234,7 @@ class QuizListView(ListCreateAPIView):
             for s in total_coin:
                 for a in data:
                     if a['id'] == s[0]:
-                        a['total_coin'] = int(s[1])
-                        a['total_coin'] = normalize_fraction(str(s[1]), int(club.coin.coin_accuracy))
+                        a['total_coin'] = normalize_fraction(s[1], int(club.coin.coin_accuracy))
 
         return self.response({"code": 0, "data": data})
 
