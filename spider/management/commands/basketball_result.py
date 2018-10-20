@@ -213,7 +213,7 @@ def get_data_info(url, match_flag):
 
     flag = False
     # 分配奖金
-    records = Record.objects.filter(quiz=quiz, is_distribution=False)
+    records = Record.objects.filter(quiz=quiz, is_distribution=False, user__is_robot=False)
     if len(records) > 0:
         i = 0
         for record in records:
