@@ -139,6 +139,7 @@ class PromotionRecordManager(BaseManager):
         :param created_at:创建时间
         :return:
         """
+        print("club=============================", club)
         if int(club.id) == 1:
             pass
         else:
