@@ -126,8 +126,7 @@ def get_data(url):
         response = requests.get(url, headers=headers, timeout=20)
         print('请求结束')
         if response.status_code == 200:
-            response.encoding = 'gbk'
-            dt = response.text
+            dt = response.content
             return dt
     except requests.ConnectionError as e:
         print('Error', e)
