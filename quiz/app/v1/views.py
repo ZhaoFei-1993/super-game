@@ -928,6 +928,7 @@ class BetView(ListCreateAPIView):
             source = 1
             if int(quiz.category.parent_id) == 1:
                 source = 2
+            print("roomquiz_id=============================", roomquiz_id)
             club = Club.objects.get_one(pk=roomquiz_id)
             print("club=============================", club)
             PromotionRecord.objects.insert_record(user, club, record.id, coins, source, record.created_at)
