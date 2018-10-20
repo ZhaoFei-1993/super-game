@@ -483,7 +483,7 @@ class BetsViews(ListCreateAPIView):
         if int(club_id) == 1:
             pass
         else:
-            clubinfo = Club.objects.get_one(pk=club_id)
+            clubinfo = Club.objects.get_one(pk=int(club_id))
             PromotionRecord.objects.insert_record(user, clubinfo, sixcord.id, Decimal(bet), 3, sixcord.created_at)
 
         return self.response({'code': 0})

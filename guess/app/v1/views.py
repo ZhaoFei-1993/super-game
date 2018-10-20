@@ -458,7 +458,7 @@ class BetView(ListCreateAPIView):
         coins = float(coins)
 
         periods_info = Periods.objects.get(pk=periods_id)
-        clubinfo = Club.objects.get_one(pk=club_id)
+        clubinfo = Club.objects.get_one(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
 
