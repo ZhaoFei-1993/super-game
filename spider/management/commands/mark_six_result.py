@@ -299,12 +299,12 @@ def ergodic_record(issue, answer_dic):
             record.status = '1'
             record.save()
 
-            # 邀请代理事宜
-            if earn_coin > 0:
-                income = Decimal(earn_coin - float(record.bet_coin))
-            else:
-                income = Decimal(earn_coin)
-            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
+            # # 邀请代理事宜
+            # if earn_coin > 0:
+            #     income = Decimal(earn_coin - float(record.bet_coin))
+            # else:
+            #     income = Decimal(earn_coin)
+            # UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
 
     # 开始执行sql语句
     # 插入coin_detail表
