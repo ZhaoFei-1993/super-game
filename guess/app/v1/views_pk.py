@@ -457,7 +457,7 @@ class StockPkRecordsList(ListAPIView):
                 'coin_icon': coin_icon,
                 'issue': issue,
                 'result_answer': result_answer,
-                'bet': item_value['bets'],
+                'bet': normalize_fraction(item_value['bets'], coin_accuracy),
             })
         return self.response({'code': 0, 'data': data})
 
