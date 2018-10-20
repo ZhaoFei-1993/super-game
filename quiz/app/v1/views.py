@@ -749,7 +749,7 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
-        coinss = Decimal(coins)
+        coins = Decimal(coins)
         # coins = float(coins)
 
         clubinfo = Club.objects.get(pk=roomquiz_id)
@@ -798,8 +798,8 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
-        coin_betting_control = float(clubinfo.coin.betting_control)
-        coin_betting_toplimit = float(clubinfo.coin.betting_toplimit)
+        coin_betting_control = Decimal(clubinfo.coin.betting_control)
+        coin_betting_toplimit = Decimal(clubinfo.coin.betting_toplimit)
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
