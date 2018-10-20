@@ -2180,7 +2180,6 @@ class UserInfoView(ListAPIView):
         amount_list = get_sql(sql)
 
         for i in amount_list:
-            # coin_accuracy = club_list[i[0]]["coin_accuracy"]
             if i[0] not in month_list:
                 month_list[i[0]] = {
                     i[1]: {
@@ -2209,15 +2208,7 @@ class UserInfoView(ListAPIView):
         sql += " group by pm.club_id, created_ats"
         amount_list = get_sql(sql)
 
-        print("coin_id_list==============================", coin_id_list)
-        print("start==============================", start)
-        print("end_time==============================", end_time)
-        print("user.id==============================", user.id)
-        print("amount_list==============================", amount_list)
         for i in amount_list:
-            print("reward_gradient_all(i[0], i[2])=======================", reward_gradient_all(i[0], i[2]))
-            print("i[2]=======================", i[2])
-            print("i[0]=======================", i[0])
             if i[0] is not None:
                 if i[0] not in month_list:
                     month_list[i[0]] = {
@@ -2238,8 +2229,6 @@ class UserInfoView(ListAPIView):
                             }
                         }
 
-        print("month_list==========================", month_list)
-
         data = []
         for i in club_list:
             coin_accuracy = club_list[i]["coin_accuracy"]
@@ -2258,13 +2247,9 @@ class UserInfoView(ListAPIView):
                         income_dividend = 0
                     sum_bet += normalize_fraction(data_list[club_id][s]["bets"], int(coin_accuracy))
                     income = normalize_fraction(data_list[club_id][s]["earn_coin"], int(coin_accuracy))
-                    # print("income=========================", income)
-                    # income_dividend = reward_gradient_all(club_id, income)
-                    # print("income_dividend====================", income_dividend)
                     sum_income += income
                     sum_income_water += Decimal(income_dividend) * Decimal(opposite_number(income))
                 sum_bet_water = sum_bet * Decimal(0.005)
-            print("sum_income_water=========================", sum_income_water)
             data.append({
                 "coin_name": coin_name,
                 "coin_icon": coin_icon,
