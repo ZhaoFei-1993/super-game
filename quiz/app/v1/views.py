@@ -749,8 +749,8 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
-        coinss = Decimal(coins)
-        coins = float(coins)
+        coins = Decimal(coins)
+        # coins = float(coins)
 
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
@@ -798,8 +798,8 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
-        coin_betting_control = float(clubinfo.coin.betting_control)
-        coin_betting_toplimit = float(clubinfo.coin.betting_toplimit)
+        coin_betting_control = Decimal(clubinfo.coin.betting_control)
+        coin_betting_toplimit = Decimal(clubinfo.coin.betting_toplimit)
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
@@ -926,10 +926,12 @@ class BetView(ListCreateAPIView):
             pass
         else:
             source = 1
-            if int(quiz.category.parent) == 1:
+            if int(quiz.category.parent_id) == 1:
                 source = 2
-            club = Club.objects.get_one(pk=roomquiz_id)
-            PromotionRecord.objects.insert_record(user, club, record.id, coinss, source, record.created_at)
+            print("roomquiz_id=============================", roomquiz_id)
+            club = Club.objects.get(pk=roomquiz_id)
+            print("club=============================", club)
+            PromotionRecord.objects.insert_record(user, club, record.id, coins, source, record.created_at)
 
         coin_detail = CoinDetail()
         coin_detail.user = user
