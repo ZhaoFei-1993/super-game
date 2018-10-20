@@ -16,6 +16,7 @@ from decimal import Decimal
 from utils.cache import get_cache, set_cache
 from users.models import UserInvitation, UserCoin
 # from utils.functions import normalize_fraction
+from django.db import connection
 
 
 class UserPresentationManager(BaseManager):
@@ -37,7 +38,7 @@ class UserPresentationManager(BaseManager):
         else:
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
             if my_inviter is not None:
-                created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')       # 当天日期
+                created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
                 data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
                 if data_number > 0:
@@ -61,6 +62,7 @@ class UserPresentationManager(BaseManager):
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
                 inviter_coin.balance += Decimal(bet) * Decimal(0.005)
                 inviter_coin.save()
+
 
 @reversion.register()
 class UserPresentation(models.Model):
@@ -88,6 +90,7 @@ class PresentationMonth(models.Model):
     proportion = models.DecimalField(verbose_name='分成比例', max_digits=5, decimal_places=2, default=0.00)
     is_receive = models.BooleanField(verbose_name="是否已经获得盈亏分红", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
     # updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
     class Meta:
@@ -153,17 +156,30 @@ class PromotionRecordManager(BaseManager):
             promotionrecord.created_at = created_at
             promotionrecord.save()
 
-    def insert_all(self, list):
+    def insert_all(self, values):
         """
         批量更新推广下注记录表
-        :param list: (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
+        :param values: (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
         earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
         例子： ['(1,2,3,4)', '(2,3,4,5)','(4,5,6,7)']
+
+        :param values: [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
+
+        (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
+        earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
         :return:
         """
-        sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(list)
+        arr_values = []
+        for value in values:
+            arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
+        sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(
+            arr_values)
         sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
-        return (sql)
+
+        with connection.cursor() as cursor:
+            if sql is not False:
+                cursor.execute(sql)
+
 
 @reversion.register()
 class PromotionRecord(models.Model):

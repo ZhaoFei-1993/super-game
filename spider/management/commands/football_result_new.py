@@ -484,14 +484,14 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 }
             )
 
-            # 邀请代理事宜
-            earn_coin = float(earn_coin)
-            if earn_coin > 0:
-                income = Decimal(earn_coin - float(record.bet))
-            else:
-                income = Decimal(earn_coin)
-            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
-                                                              record.bet, income)
+            # # 邀请代理事宜
+            # earn_coin = float(earn_coin)
+            # if earn_coin > 0:
+            #     income = Decimal(earn_coin - float(record.bet))
+            # else:
+            #     income = Decimal(earn_coin)
+            # UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
+            #                                                   record.bet, income)
 
         # 开始执行sql语句
         # 初始化sql语句
