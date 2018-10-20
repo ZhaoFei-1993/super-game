@@ -19,6 +19,7 @@ class Command(BaseCommand, BaseView):
         for i in record_list:
             info = PromotionRecord()
             info.user = i.user
+            print("i.roomquiz_id==================================", i.roomquiz_id)
             club_info = Club.objects.get_one(i.roomquiz_id)
             info.club = club_info
             info.bets = i.bet
