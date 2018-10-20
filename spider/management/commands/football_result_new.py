@@ -469,7 +469,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if is_right is False:
                 content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您答错了。'
                 content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '-' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '-' + option_info.option_en + '，You are wrong.'
-            elif is_right is True:
+            else:
                 content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您的奖金是:' + str(
                     round(earn_coin, 5))
                 content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '  ' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '  ' + option_info.option_en + '，Your bonus is:' + str(

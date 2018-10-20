@@ -450,6 +450,7 @@ class Command(BaseCommand):
     #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
+        print('正在执行开奖脚本...  ', 'now is ', datetime.datetime.now())
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                category__parent_id=2).exists():
