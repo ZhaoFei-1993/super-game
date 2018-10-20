@@ -79,8 +79,8 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     flat_code = ','.join(pre_draw_code_list[:-1])
     special_code = str(pre_draw_code_list[-1])
 
-    special_code_head = code_list[-1] + '头'
-    special_code_tail = code_list[-1] + '尾'
+    special_code_head = code_list[-1][0] + '头'
+    special_code_tail = code_list[-1][1] + '尾'
 
     special_code_head_id = str(Option.objects.get(option=special_code_head).id)
     special_code_tail_id = str(Option.objects.get(option=special_code_tail).id)
