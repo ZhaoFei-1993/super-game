@@ -750,7 +750,7 @@ class BetView(ListCreateAPIView):
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
         coinss = Decimal(coins)
-        coins = float(coins)
+        # coins = float(coins)
 
         clubinfo = Club.objects.get(pk=roomquiz_id)
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
@@ -926,7 +926,7 @@ class BetView(ListCreateAPIView):
             pass
         else:
             source = 1
-            if int(quiz.category.parent) == 1:
+            if int(quiz.category.parent_id) == 1:
                 source = 2
             club = Club.objects.get_one(pk=roomquiz_id)
             PromotionRecord.objects.insert_record(user, club, record.id, coinss, source, record.created_at)
