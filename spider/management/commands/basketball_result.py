@@ -122,9 +122,11 @@ def handle_activity(record, coin, earn_coin):
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        print('发起请求')
+        response = requests.get(url, headers=headers, timeout=20)
+        print('请求结束')
         if response.status_code == 200:
-            dt = response.content
+            dt = response.text
             return dt
     except requests.ConnectionError as e:
         print('Error', e.args)
@@ -135,6 +137,7 @@ def get_data_info(url, match_flag):
     soup = BeautifulSoup(datas, 'lxml')
 
     result_score = soup.select('span[class="k_bt"]')[0].string
+    print('result_score   ======== ', result_score)
     if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0:
         host_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][1]
         guest_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][0]
