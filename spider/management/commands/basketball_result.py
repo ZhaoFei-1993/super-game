@@ -129,10 +129,11 @@ def get_data(url):
             dt = response.text
             return dt
     except requests.ConnectionError as e:
-        print('Error', e.args)
+        print('Error', e)
 
 
 def get_data_info(url, match_flag):
+    print('match_flag === ', match_flag)
     datas = get_data(url + match_flag)
     soup = BeautifulSoup(datas, 'lxml')
 
