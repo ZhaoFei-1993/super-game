@@ -215,7 +215,10 @@ def get_data_info(url, match_flag):
     # 分配奖金
     records = Record.objects.filter(quiz=quiz, is_distribution=False)
     if len(records) > 0:
+        i = 0
         for record in records:
+            i += 1
+            print(i, ' / ', len(records))
             # 用户增加对应币金额
             club = Club.objects.get(pk=record.roomquiz_id)
 
