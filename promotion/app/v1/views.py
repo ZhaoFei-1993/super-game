@@ -1741,7 +1741,7 @@ class CustomerView(ListAPIView):
                 sql += " and (u.nickname like '" + name_now + "'"
                 sql += " or u.username = '" + str(name) + "')"
             sql += " group by ui.invitee_one"
-            sql += " order by login_time desc"
+            sql += " order by created_at desc"
             invitee_list = self.get_list_by_sql(sql)
             data = []
             for i in invitee_list:
