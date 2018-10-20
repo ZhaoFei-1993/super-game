@@ -27,6 +27,7 @@ class Command(BaseCommand, BaseView):
                 club_info = Club.objects.get_one(pk=i.roomquiz_id)
                 info.club = club_info
                 info.bets = i.bet
+                info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 if int(i.quiz.category.parent) == 1:
                     source = 2
@@ -55,6 +56,7 @@ class Command(BaseCommand, BaseView):
             info.user = i.user
             info.club = i.club
             info.bets = i.bets
+            info.record_id = i.pk
             info.earn_coin = i.earn_coin
             info.source = 5
             if int(i.status) == 0:
@@ -81,6 +83,7 @@ class Command(BaseCommand, BaseView):
                 s += 1
                 info.club = i.club
                 info.bets = i.bets
+                info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 4
                 if int(i.status) == 0:
@@ -108,6 +111,7 @@ class Command(BaseCommand, BaseView):
                 s += 1
                 info.club = i.club
                 info.bets = i.bet_coin
+                info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 3
                 if int(i.type) == 0:
@@ -132,6 +136,7 @@ class Command(BaseCommand, BaseView):
                 s += 1
                 info.club = i.club
                 info.bets = i.bets
+                info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 7
                 if int(i.type) == 0:
@@ -158,6 +163,7 @@ class Command(BaseCommand, BaseView):
                 s += 1
                 info.club = i.club
                 info.bets = i.bets
+                info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 6
                 if int(i.type) == 0:
