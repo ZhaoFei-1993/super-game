@@ -803,24 +803,24 @@ class BetView(ListCreateAPIView):
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
-        # HAND币单场比赛最大下注
-        bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
-            Sum('bet'))
-        if coin_id == Coin.HAND:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.INT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.ETH:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.BTC:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.USDT:
-            if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # # HAND币单场比赛最大下注
+        # bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
+        #     Sum('bet'))
+        # if coin_id == Coin.HAND:
+        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
+        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # elif coin_id == Coin.INT:
+        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
+        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # elif coin_id == Coin.ETH:
+        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
+        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # elif coin_id == Coin.BTC:
+        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
+        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # elif coin_id == Coin.USDT:
+        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
+        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
@@ -830,97 +830,29 @@ class BetView(ListCreateAPIView):
 
         # 调整赔率
         Option.objects.change_odds(rule_id, coin_id, roomquiz_id)
-        if clubinfo.coin.name == "SOC":  # USDT下注
+        if clubinfo.coin.name == "SOC":
             pass
 
-        if clubinfo.coin.name == "USDT":  # USDT下注
-            give_coin = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
-            coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
-            balance = normalize_fraction(usercoin.balance, coin_accuracy)  # 总下注额
-            usercoin.balance = balance - coins  # 用户余额表减下注额
-            usercoin.save()
-            lock_coin = normalize_fraction(give_coin.lock_coin, coin_accuracy)
-            if lock_coin != float(0) and coins > lock_coin:
-                coins_give = coins - lock_coin  # 正常币下注额
-
-                record = Record()  # 正常币记录
-                record.user = user
-                record.quiz = quiz
-                record.roomquiz_id = roomquiz_id
-                record.rule_id = rule_id
-                record.option = option_odds
-                record.bet = coins_give
-                record.odds = option_odds.odds
-                record.save()
-                earn_coins = coins_give * option_odds.odds
-                earn_coins_one = normalize_fraction(earn_coins, coin_accuracy)
-
-                record = Record()  # 赠送币记录
-                record.user = user
-                record.quiz = quiz
-                record.roomquiz_id = roomquiz_id
-                record.rule_id = rule_id
-                record.option = option_odds
-                record.source = 2
-                record.bet = lock_coin
-                record.odds = option_odds.odds
-                record.save()
-                earn_coins = lock_coin * option_odds.odds
-                earn_coins_two = normalize_fraction(earn_coins, coin_accuracy)
-
-                give_coin.lock_coin -= lock_coin
-                give_coin.save()
-
-                earn_coins = earn_coins_one + earn_coins_two
-            elif coins < lock_coin or coins == lock_coin:
-                record = Record()  # 赠送币记录
-                record.user = user
-                record.quiz = quiz
-                record.roomquiz_id = roomquiz_id
-                record.rule_id = rule_id
-                record.option = option_odds
-                record.source = 2
-                record.bet = coins
-                record.odds = option_odds.odds
-                record.save()
-                earn_coins = coins * option_odds.odds
-                earn_coins = normalize_fraction(earn_coins, coin_accuracy)
-
-                give_coin.lock_coin -= coins
-                give_coin.save()
-            else:
-                record = Record()  # 充值币记录
-                record.user = user
-                record.quiz = quiz
-                record.roomquiz_id = roomquiz_id
-                record.rule_id = rule_id
-                record.option = option_odds
-                record.bet = coins
-                record.odds = option_odds.odds
-                record.save()
-                earn_coins = coins * option_odds.odds
-                earn_coins = normalize_fraction(earn_coins, coin_accuracy)
-        else:
-            coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
-            record = Record()
-            record.user = user
-            record.quiz = quiz
-            record.roomquiz_id = roomquiz_id
-            record.rule_id = rule_id
-            record.option = option_odds
-            record.bet = coins
-            record.odds = option_odds.odds
-            if int(option_odds.option.rule.type) == Rule.AISA_RESULTS:
-                record.handicap = option_odds.option.rule.handicap
-            record.save()
-            earn_coins = coins * option_odds.odds
-            earn_coins = normalize_fraction(earn_coins, coin_accuracy)
-            # 用户减少金币
-            balance = normalize_fraction(usercoin.balance, coin_accuracy)
-            usercoin.balance = balance - coins
-            usercoin.save()
-            quiz.total_people += 1
-            quiz.save()
+        coins = normalize_fraction(coins, coin_accuracy)  # 总下注额
+        record = Record()
+        record.user = user
+        record.quiz = quiz
+        record.roomquiz_id = roomquiz_id
+        record.rule_id = rule_id
+        record.option = option_odds
+        record.bet = coins
+        record.odds = option_odds.odds
+        if int(option_odds.option.rule.type) == Rule.AISA_RESULTS:
+            record.handicap = option_odds.option.rule.handicap
+        record.save()
+        earn_coins = coins * option_odds.odds
+        earn_coins = normalize_fraction(earn_coins, coin_accuracy)
+        # 用户减少金币
+        balance = normalize_fraction(usercoin.balance, coin_accuracy)
+        usercoin.balance = balance - coins
+        usercoin.save()
+        quiz.total_people += 1
+        quiz.save()
 
         if int(roomquiz_id) == 1:
             pass
@@ -928,9 +860,7 @@ class BetView(ListCreateAPIView):
             source = 1
             if int(quiz.category.parent_id) == 1:
                 source = 2
-            print("roomquiz_id=============================", roomquiz_id)
             club = Club.objects.get(pk=roomquiz_id)
-            print("club=============================", club)
             PromotionRecord.objects.insert_record(user, club, record.id, coins, source, record.created_at)
 
         coin_detail = CoinDetail()
