@@ -29,7 +29,7 @@ class Command(BaseCommand, BaseView):
                 info.bets = i.bet
                 info.record_id = i.pk
                 info.earn_coin = i.earn_coin
-                if int(i.quiz.category.parent) == 1:
+                if int(i.quiz.category.parent_id) == 1:
                     source = 2
                 else:
                     source = 1
