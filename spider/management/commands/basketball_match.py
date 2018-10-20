@@ -47,8 +47,11 @@ def get_data_info(url):
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
             guest_team = data[1].get('a_cn')
+            guest_team_id = data[1].get('a_id_dc')
             guest_team_abbr = data[1].get('a_cn_abbr')
+
             host_team = data[1].get('h_cn')
+            host_team_id = data[1].get('h_id_dc')
             host_team_abbr = data[1].get('h_cn_abbr')
             host_team_order = data[1].get('h_order')
             guest_team_order = data[1].get('a_order')
@@ -57,6 +60,24 @@ def get_data_info(url):
                 guest_team_order = ' '
             else:
                 pass
+
+            host_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + host_team_id
+            guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
+            response_host_team = requests.get(host_team_url, headers=headers)
+            response_guest_team = requests.get(guest_team_url, headers=headers)
+
+            host_team_dt = response_host_team.json()
+            guest_team_dt = response_guest_team.json()
+
+            if host_team_dt['status']['code'] == 0:
+                host_team_en = host_team_dt['result']['official_name']
+            else:
+                host_team_en = ''
+            if guest_team_dt['status']['code'] == 0:
+                guest_team_en = guest_team_dt['result']['official_name']
+            else:
+                guest_team_en = ''
+
             time = data[1].get('date') + ' ' + data[1].get('time')
             created_at = get_time()
 
@@ -155,52 +176,57 @@ def get_data_info(url):
                 with open('match_cache.txt', 'a+') as f:
                     f.write(match_id + ',')
 
-                host_team_avatar = ''
-                guest_team_avatar = ''
+                host_team_avatar = '篮球主队.jpg'
+                guest_team_avatar = '篮球客队.jpg'
+                os.chdir(img_dir)
+                if os.path.exists(host_team_abbr + '.png'):
+                    host_team_avatar = host_team_abbr + '.png'
+                if os.path.exists(guest_team_abbr + '.png'):
+                    guest_team_avatar = guest_team_abbr + '.png'
 
-                try:
-                    img_base_url = 'http://info.sporttery.cn/basketball/info/bk_match_mnl.php?m=' + match_id
-                    response_img_url = requests.get(img_base_url, headers=headers)
-                    if response_img_url.status_code == 200:
-                        soup = BeautifulSoup(response_img_url.text, 'lxml')
-                        img_list = soup.select('div[class="aga-m"]')
-                        host_team_img_url = img_list[1].img['src']
-                        guest_team_img_url = img_list[0].img['src']
-
-                        if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
-                                len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
-                            host_team_avatar = \
-                                re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][1].replace(
-                                    '/', '_')
-                            guest_team_avatar = \
-                                re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
-                                    1].replace('/', '_')
-
-                            files = []
-                            source_dir = img_dir
-                            for root, sub_dirs, files in os.walk(source_dir):
-                                files = files
-
-                            if host_team_avatar not in files:
-                                response_img = requests.get(host_team_img_url)
-                                img = response_img.content
-                                os.chdir(img_dir)
-                                with open(host_team_avatar, 'wb') as f:
-                                    f.write(img)
-                            else:
-                                print('图片已经存在')
-
-                            if guest_team_avatar not in files:
-                                response_img = requests.get(guest_team_img_url)
-                                img = response_img.content
-                                os.chdir(img_dir)
-                                with open(guest_team_avatar, 'wb') as f:
-                                    f.write(img)
-                            else:
-                                print('图片已经存在')
-
-                except requests.ConnectionError as e:
-                    print('Error', e.args)
+                # try:
+                #     img_base_url = 'http://info.sporttery.cn/basketball/info/bk_match_mnl.php?m=' + match_id
+                #     response_img_url = requests.get(img_base_url, headers=headers)
+                #     if response_img_url.status_code == 200:
+                #         soup = BeautifulSoup(response_img_url.text, 'lxml')
+                #         img_list = soup.select('div[class="aga-m"]')
+                #         host_team_img_url = img_list[1].img['src']
+                #         guest_team_img_url = img_list[0].img['src']
+                #
+                #         if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
+                #                 len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
+                #             host_team_avatar = \
+                #                 re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][1].replace(
+                #                     '/', '_')
+                #             guest_team_avatar = \
+                #                 re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
+                #                     1].replace('/', '_')
+                #
+                #             files = []
+                #             source_dir = img_dir
+                #             for root, sub_dirs, files in os.walk(source_dir):
+                #                 files = files
+                #
+                #             if host_team_avatar not in files:
+                #                 response_img = requests.get(host_team_img_url)
+                #                 img = response_img.content
+                #                 os.chdir(img_dir)
+                #                 with open(host_team_avatar, 'wb') as f:
+                #                     f.write(img)
+                #             else:
+                #                 print('图片已经存在')
+                #
+                #             if guest_team_avatar not in files:
+                #                 response_img = requests.get(guest_team_img_url)
+                #                 img = response_img.content
+                #                 os.chdir(img_dir)
+                #                 with open(guest_team_avatar, 'wb') as f:
+                #                     f.write(img)
+                #             else:
+                #                 print('图片已经存在')
+                #
+                # except requests.ConnectionError as e:
+                #     print('Error', e.args)
 
             # ------------------------------------------------------------------------------------------------------
                 if Quiz.objects.filter(match_flag=match_id).first() is None and \
@@ -221,9 +247,11 @@ def get_data_info(url):
 
                     quiz.host_team = host_team_abbr
                     quiz.host_team_fullname = host_team
+                    quiz.host_team_en = host_team_en
                     quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + host_team_avatar
                     quiz.guest_team = guest_team_abbr
                     quiz.guest_team_fullname = guest_team
+                    quiz.guest_team_en = guest_team_en
                     quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + guest_team_avatar
                     quiz.match_name = league_abbr
                     quiz.begin_at = time

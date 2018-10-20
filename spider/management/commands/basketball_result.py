@@ -122,19 +122,24 @@ def handle_activity(record, coin, earn_coin):
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        print('发起请求')
+        response = requests.get(url, headers=headers, timeout=20)
+        print('请求结束')
         if response.status_code == 200:
-            dt = response.content
+            response.encoding = 'gbk'
+            dt = response.text
             return dt
     except requests.ConnectionError as e:
-        print('Error', e.args)
+        print('Error', e)
 
 
 def get_data_info(url, match_flag):
+    print('match_flag === ', match_flag)
     datas = get_data(url + match_flag)
     soup = BeautifulSoup(datas, 'lxml')
 
     result_score = soup.select('span[class="k_bt"]')[0].string
+    print('result_score   ======== ', result_score)
     if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0:
         host_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][1]
         guest_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][0]
@@ -450,6 +455,7 @@ class Command(BaseCommand):
     #     parser.add_argument('match_flag', type=str)
 
     def handle(self, *args, **options):
+        print('正在执行开奖脚本...  ', 'now is ', datetime.datetime.now())
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
                                category__parent_id=2).exists():
