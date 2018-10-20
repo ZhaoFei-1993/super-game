@@ -20,7 +20,7 @@ class Command(BaseCommand, BaseView):
             info = PromotionRecord()
             info.user = i.user
             print("i.roomquiz_id==================================", i.roomquiz_id)
-            club_info = Club.objects.get_one(i.roomquiz_id)
+            club_info = Club.objects.get_one(pk=i.roomquiz_id)
             info.club = club_info
             info.bets = i.bet
             info.earn_coin = i.earn_coin
