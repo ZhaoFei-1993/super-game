@@ -19,6 +19,7 @@ from baccarat.models import Baccaratrecord, Number_tab
 
 redis_conn = Redis()
 q = Queue(connection=redis_conn)
+from promotion.models import PromotionRecord
 
 
 class Table_boots(ListAPIView):
@@ -218,13 +219,13 @@ class DragontigerBet(ListCreateAPIView):
         option_id = self.request.data['option_id']  # 获取俱乐部ID
         club_id = self.request.data['club_id']  # 获取俱乐部ID
         coins = self.request.data['bet']  # 获取投注金额
-        coins = float(coins)
+        coins = Decimal(coins)
 
         try:
             number_tab_info = Number_tab.objects.get(pk=number_tab_id)
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        clubinfo = Club.objects.get(pk=club_id)
+        clubinfo = Club.objects.get_one(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 货币ID
         coin_accuracy = int(clubinfo.coin.coin_accuracy)  # 货币精度
 
@@ -294,14 +295,14 @@ class DragontigerBet(ListCreateAPIView):
         sql += " where dtr.option_id = '" + str(option_id) + "'"
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number_in = get_sql(sql)[0][0]
-        earn_coin = float(option_odds.odds) * coins  # 应赔金额
+        earn_coin = Decimal(option_odds.odds) * coins  # 应赔金额
         if coin_number_in == None or coin_number_in == 0:
             coin_number_in = 0
             all_earn_coin = earn_coin  # 应赔金额
         else:
             coin_number_in = normalize_fraction(coin_number_in, int(coin_accuracy))
             coin_number_in = coin_number_in*Decimal(option_odds.odds)
-            all_earn_coin = float(coin_number_in) + earn_coin
+            all_earn_coin = Decimal(coin_number_in) + earn_coin
         print("一共要赔======================", all_earn_coin)
 
         if all_earn_coin > all_earn_coins:
@@ -312,7 +313,7 @@ class DragontigerBet(ListCreateAPIView):
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if float(usercoin.balance) < coins:
+        if Decimal(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         record = Baccaratrecord()
@@ -374,6 +375,11 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 16
         coin_detail.save()
+
+        if int(club_id) == 1:
+            pass
+        else:
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 6, record.created_at)
         response = {
             'code': 0,
             'data': {

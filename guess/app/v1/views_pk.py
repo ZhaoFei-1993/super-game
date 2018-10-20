@@ -457,7 +457,7 @@ class StockPkRecordsList(ListAPIView):
                 'coin_icon': coin_icon,
                 'issue': issue,
                 'result_answer': result_answer,
-                'bet': item_value['bets'],
+                'bet': normalize_fraction(item_value['bets'], coin_accuracy),
             })
         return self.response({'code': 0, 'data': data})
 
@@ -479,7 +479,7 @@ class StockPkBet(ListCreateAPIView):
         club_id = int(self.request.data.get('club_id'))
         play_id = int(self.request.data.get('play_id'))
         option_id = int(self.request.data.get('option_id'))
-        bet = float(self.request.data.get('bet'))
+        bet = Decimal(self.request.data.get('bet'))
         stock_pk_id = int(self.request.data.get('stock_pk_id'))
         open_time = datetime.datetime.strptime(self.request.data.get('open_time'), '%Y-%m-%d %H:%M:%S')
 
@@ -502,7 +502,7 @@ class StockPkBet(ListCreateAPIView):
                                                stock_pk_id=stock_pk_id).first()
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        if 0 >= float(bet):
+        if 0 >= Decimal(bet):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         # 是否封盘
@@ -524,12 +524,12 @@ class StockPkBet(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
-        if bet > float(bet_limit_dic['bets_max']) or bet < float(bet_limit_dic['bets_min']):
+        if bet > Decimal(bet_limit_dic['bets_max']) or bet < Decimal(bet_limit_dic['bets_min']):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if bet > float(user_coin.balance):
+        if bet > Decimal(user_coin.balance):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         bet = normalize_fraction(bet, coin_accuracy)
