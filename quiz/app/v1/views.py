@@ -752,7 +752,7 @@ class BetView(ListCreateAPIView):
         coins = Decimal(coins)
         # coins = float(coins)
 
-        clubinfo = Club.objects.get(pk=roomquiz_id)
+        clubinfo = Club.objects.get_one(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
         # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -860,8 +860,7 @@ class BetView(ListCreateAPIView):
             source = 1
             if int(quiz.category.parent_id) == 1:
                 source = 2
-            club = Club.objects.get(pk=roomquiz_id)
-            PromotionRecord.objects.insert_record(user, club, record.id, coins, source, record.created_at)
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, coins, source, record.created_at)
 
         coin_detail = CoinDetail()
         coin_detail.user = user

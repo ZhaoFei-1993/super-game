@@ -569,7 +569,7 @@ class StockPkBet(ListCreateAPIView):
         if int(club_id) == 1:
             pass
         else:
-            clubinfo = Club.objects.get_one(pk=club_id)
+            clubinfo = Club.objects.get_one(pk=int(club_id))
             PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(bet), 5, record.created_at)
 
         response = {
