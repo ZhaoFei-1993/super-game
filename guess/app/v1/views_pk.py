@@ -24,6 +24,7 @@ class StockPkDetail(ListAPIView):
         # 正常status
         status = 0
         switch_time = ''
+        open_market_time = ''
         time_now = datetime.datetime.now()
         # stock_pk_id_list = StockPk.objects.all().values_list('id', flat=True)
         issue_last = Issues.objects.filter(open__gt=time_now).order_by('open').first()
@@ -50,6 +51,12 @@ class StockPkDetail(ListAPIView):
                 if before_open_time.isoweekday() > 5 or \
                         before_open_time.strftime('%Y-%m-%d') in market_rest_cn_list:
                     status = 3
+                # 平日休市
+                else:
+                    status = 6
+                open_market_time = qs.open - datetime.timedelta(minutes=5)
+                open_market_time = time.mktime(open_market_time.timetuple()) - time.time()
+                open_market_time = int(open_market_time)
         else:
             qs = issue_last
             # 中场休息status
@@ -58,7 +65,7 @@ class StockPkDetail(ListAPIView):
                     status = 1
                 else:
                     status = 0
-        return qs, {'status': status, 'switch_time': switch_time}
+        return qs, {'status': status, 'switch_time': switch_time, 'open_market_time': open_market_time}
 
     def list(self, request, *args, **kwargs):
         club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
@@ -122,7 +129,7 @@ class StockPkDetail(ListAPIView):
         open_timestamp = time.mktime(issues.open.timetuple()) - time.time()
         open_timestamp = int(open_timestamp)
 
-        if status_dic['status'] == 1:
+        if status_dic['status'] == 1 or status_dic['status'] == 6:
             open_timestamp = time.mktime((issues.open - datetime.timedelta(minutes=5)).timetuple()) - time.time()
             open_timestamp = int(open_timestamp)
 
@@ -574,7 +581,8 @@ class StockPKPushView(ListAPIView):
 
     def get_queryset(self):
         issues_id = int(self.request.GET.get('issues_id'))
-        qs = RecordStockPk.objects.filter(issue_id=issues_id)
+        club_id = int(self.request.GET.get('club_id'))
+        qs = RecordStockPk.objects.filter(issue_id=issues_id, club_id=club_id)
         return qs
 
     def list(self, request, *args, **kwargs):

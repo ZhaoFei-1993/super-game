@@ -7,6 +7,7 @@ import datetime
 from .mark_six_result import ergodic_record
 from users.finance.functions import get_now
 from marksix.consumers import mark_six_result_code
+from bs4 import BeautifulSoup
 
 url = 'https://1680660.com/smallSix/findSmallSixHistory.do'
 headers = {
@@ -144,10 +145,29 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
 
 
 def new_issue(now_issue, now_open_date):
-    next_open_date = now_open_date + datetime.timedelta(days=1)
-    while next_open_date.isoweekday() not in [2, 4, 6]:
-        next_open_date = next_open_date + datetime.timedelta(days=1)
-    next_closing = next_open_date - datetime.timedelta(minutes=15)
+    now_open_ymd = now_open_date.strftime('%Y-%m-%d')
+    now_open_hms = now_open_date.strftime('%H:%M:%S')
+
+    six_url = 'https://www.lotto-8.com/listltohk.asp'
+    response = requests.get(url=six_url, headers=headers)
+    soup = BeautifulSoup(response.text, 'lxml')
+    next_open_oth_ymd = ''
+    for td_tag in soup.select('table[class="auto-style4"]')[0].find_all('tr')[1:5]:
+        now_open_oth_ymd = td_tag.find_all('td')[0].text.replace('/', '-')
+        next_open_oth_ymd = td_tag.find_all('td')[3].text.replace('/', '-')
+        if now_open_ymd == now_open_oth_ymd:
+            break
+
+    if next_open_oth_ymd != '':
+        print('next_open_oth_ymd  next_open_oth_ymd', next_open_oth_ymd)
+        next_open_date = next_open_oth_ymd + ' ' + now_open_hms
+        next_open_date = datetime.datetime.strptime(next_open_date, '%Y-%m-%d %H:%M:%S')
+        next_closing = next_open_date - datetime.timedelta(minutes=15)
+    else:
+        next_open_date = now_open_date + datetime.timedelta(days=1)
+        while next_open_date.isoweekday() not in [2, 4, 6]:
+            next_open_date = next_open_date + datetime.timedelta(days=1)
+        next_closing = next_open_date - datetime.timedelta(minutes=15)
 
     now_year = now_open_date.strftime('%Y')
     next_year = next_open_date.strftime('%Y')
