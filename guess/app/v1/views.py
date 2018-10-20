@@ -19,6 +19,7 @@ import time
 from api import settings
 import pytz
 from api.settings import MEDIA_DOMAIN_HOST
+from promotion.models import PromotionRecord
 
 
 class StockList(ListAPIView):
@@ -457,7 +458,7 @@ class BetView(ListCreateAPIView):
         coins = float(coins)
 
         periods_info = Periods.objects.get(pk=periods_id)
-        clubinfo = Club.objects.get(pk=club_id)
+        clubinfo = Club.objects.get_one(pk=club_id)
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
 
@@ -558,6 +559,11 @@ class BetView(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
+
+        if int(club_id) == 1:
+            pass
+        else:
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 4, record.created_at)
         response = {
             'code': 0,
             'data': {
