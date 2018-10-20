@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from utils.functions import normalize_fraction
 from utils.cache import get_cache, set_cache
+from promotion.models import PromotionRecord
 
 
 class CategoryView(ListAPIView):
@@ -748,6 +749,7 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
+        coinss = Decimal(coins)
         coins = float(coins)
 
         clubinfo = Club.objects.get(pk=roomquiz_id)
@@ -919,6 +921,15 @@ class BetView(ListCreateAPIView):
             usercoin.save()
             quiz.total_people += 1
             quiz.save()
+
+        if int(roomquiz_id) == 1:
+            pass
+        else:
+            source = 1
+            if int(quiz.category.parent) == 1:
+                source = 2
+            club = Club.objects.get_one(pk=roomquiz_id)
+            PromotionRecord.objects.insert_record(user, club, record.id, coinss, source, record.created_at)
 
         coin_detail = CoinDetail()
         coin_detail.user = user

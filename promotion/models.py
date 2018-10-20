@@ -32,7 +32,7 @@ class UserPresentationManager(BaseManager):
         """
 
         club_id = int(club_id)
-        if club_id == 1 or club_id == 5:
+        if club_id == 1:
             pass
         else:
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
@@ -139,17 +139,31 @@ class PromotionRecordManager(BaseManager):
         :param created_at:创建时间
         :return:
         """
-        promotionrecord = PromotionRecord()
-        promotionrecord.user = user
-        promotionrecord.club = club
-        promotionrecord.record_id = record_id
-        promotionrecord.bets = bets
-        promotionrecord.earn_coin = 0
-        promotionrecord.source = source
-        promotionrecord.status = 0
-        promotionrecord.created_at = created_at
-        promotionrecord.save()
+        if int(club.id) == 1:
+            pass
+        else:
+            promotionrecord = PromotionRecord()
+            promotionrecord.user = user
+            promotionrecord.club = club
+            promotionrecord.record_id = record_id
+            promotionrecord.bets = bets
+            promotionrecord.earn_coin = 0
+            promotionrecord.source = source
+            promotionrecord.status = 0
+            promotionrecord.created_at = created_at
+            promotionrecord.save()
 
+    def insert_all(self, list):
+        """
+        批量更新推广下注记录表
+        :param list: (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
+        earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
+        例子： ['(1,2,3,4)', '(2,3,4,5)','(4,5,6,7)']
+        :return:
+        """
+        sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(list)
+        sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
+        return (sql)
 
 @reversion.register()
 class PromotionRecord(models.Model):
@@ -183,12 +197,13 @@ class PromotionRecord(models.Model):
     record_id = models.IntegerField(verbose_name="记录表ID", default=0)
     bets = models.DecimalField(verbose_name="下注金额", max_digits=20, decimal_places=8, default=0.00000000)
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=20, decimal_places=8, default=0.00000000)
-    source = models.CharField(verbose_name="类型", choices=SOURCE, max_length=1, default=FOOTBALL)
-    status = models.CharField(verbose_name="下注状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
+    source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
+    status = models.IntegerField(verbose_name="下注状态", choices=TYPE_CHOICE, default=AWAIT)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)
 
     objects = PromotionRecordManager()
 
     class Meta:
         ordering = ['-id']
+        unique_together = ("source", "record_id")
         verbose_name = verbose_name_plural = "推广下注记录表"

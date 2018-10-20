@@ -25,6 +25,7 @@ import time
 from utils.cache import set_cache, get_cache, delete_cache
 from users.models import Coin
 from itertools import combinations
+from promotion.models import PromotionRecord
 
 
 class SortViews(ListAPIView):
@@ -478,6 +479,12 @@ class BetsViews(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
+
+        if int(club_id) == 1:
+            pass
+        else:
+            clubinfo = Club.objects.get_one(pk=club_id)
+            PromotionRecord.objects.insert_record(user, clubinfo, sixcord.id, Decimal(bet), 3, sixcord.created_at)
 
         return self.response({'code': 0})
 

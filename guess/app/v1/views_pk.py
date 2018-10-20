@@ -12,6 +12,9 @@ import time
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
 from users.models import UserCoin, CoinDetail, User
 from spider.management.commands.stock_index import market_rest_cn_list
+from promotion.models import PromotionRecord
+from chat.models import Club
+from decimal import Decimal
 
 
 class StockPkDetail(ListAPIView):
@@ -562,6 +565,12 @@ class StockPkBet(ListCreateAPIView):
         coin_detail.rest = user_coin.balance
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
+
+        if int(club_id) == 1:
+            pass
+        else:
+            clubinfo = Club.objects.get_one(pk=club_id)
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(bet), 5, record.created_at)
 
         response = {
             'code': 0,
