@@ -363,6 +363,7 @@ class CoinDetail(models.Model):
     UNLOCK = 14
     DRAGON_TIGER = 15
     BACCARAT = 16
+    MOBILE = 17
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -382,6 +383,7 @@ class CoinDetail(models.Model):
         (DEVIDEND, "分红"),
         (EXCHANGE, "兑换"),
         (UNLOCK, "解锁"),
+        (MOBILE, "转账"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
