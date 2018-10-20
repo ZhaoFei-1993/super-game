@@ -1708,7 +1708,7 @@ class CustomerView(ListAPIView):
             start_time = self.request.GET.get('start_time')
             start_time = str(start_time) + ' 00:00:00'
         else:
-            start_time = str(settings.PROMOTER_EXCHANGE_START_DATE) + ' 00:00:00'    # 开始时间
+            start_time = '2010-01-01 00:00:00'    # 开始时间
 
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
