@@ -3,11 +3,11 @@ from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, In
 from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
-from promotion.models import UserPresentation as UserPresentation_new
 from utils.functions import *
 from time import time
 from django.db.models import Q
 from guess.consumers import guess_pk_result_list, guess_pk_index
+from promotion.models import PromotionRecord
 
 
 class GuessRecording(object):
@@ -17,8 +17,12 @@ class GuessRecording(object):
         self.user_coin_dic = {}
         self.record_right_list = []
         self.record_false_list = []
+        self.promotion_list = []
 
-    def base_functions(self, user_id, coin_id, coin_name, earn_coin):
+    def base_functions(self, record_id, user_id, coin_id, coin_name, earn_coin):
+        # 构建promotion_dic
+        self.promotion_list.append({'record_id': record_id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+
         if Decimal(earn_coin) > 0:
             # user_coin
             if user_id not in self.user_coin_dic.keys():
@@ -103,7 +107,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
 
         return earn_coin
 
@@ -132,7 +136,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
 
         return earn_coin
 
@@ -160,7 +164,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
 
         return earn_coin
 
@@ -192,7 +196,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
 
         return earn_coin
 
@@ -301,8 +305,6 @@ class GuessRecording(object):
                 else:
                     earn_coin = rule_dic[record.play.play_name](record, cache_club_value)
 
-                self.handle_presentation(record, earn_coin)  # 邀请代理事宜
-
         # 开始执行sql语句
         # 更新record状态
         now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -343,15 +345,6 @@ class GuessRecording(object):
         print('执行完成。耗时：' + cost_time)
         print('----------------------------------------------')
 
-    # 邀请代理事宜
-    @staticmethod
-    def handle_presentation(record, earn_coin):
-        if earn_coin > 0:
-            income = Decimal(earn_coin - float(record.bets))
-        else:
-            income = Decimal(earn_coin)
-        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
-
     def insert_info(self):
         # 插入coin_detail表
         sql = make_insert_sql('users_coindetail', self.coin_detail_list)
@@ -380,6 +373,9 @@ class GuessRecording(object):
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
+
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(self.promotion_list)
 
     @staticmethod
     def newobject(periods, stock_id, next_start, next_end):
@@ -541,14 +537,7 @@ class GuessPKRecording(GuessRecording):
             record.earn_coin = earn_coin
             record.status = 1
             record.save()
-        self.base_functions(record.user_id, coin_id, coin_name, earn_coin)
-
-        # 邀请代理事宜
-        if earn_coin > 0:
-            income = Decimal(earn_coin - float(record.bets))
-        else:
-            income = Decimal(earn_coin)
-        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bets, income)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
 
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))

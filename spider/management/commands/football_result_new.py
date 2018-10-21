@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
-from promotion.models import UserPresentation as UserPresentation_new
+from promotion.models import PromotionRecord
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql, to_decimal
 from django.db import transaction
 import datetime
@@ -322,6 +322,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         user_message_list = []
         record_right_list = []
         record_false_list = []
+        promotion_list = []
         user_coin_dic = {}
         i = 0
 
@@ -493,6 +494,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             # UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
             #                                                   record.bet, income)
 
+            # 构建promotion_dic
+            promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+
         # 开始执行sql语句
         # 初始化sql语句
         # 插入coin_detail表
@@ -543,6 +547,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if sql_false is not False:
                 cursor.execute(sql_false)
 
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
+
         # 分配亚盘奖金
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
         if len(records_asia) > 0:
@@ -566,6 +573,7 @@ def handle_delay_game(delay_quiz):
     if len(records) > 0:
         coin_detail_list = []
         user_message_list = []
+        promotion_list = []
         user_coin_dic = {}
 
         cache_club_value = Club.objects.get_club_info()
@@ -599,8 +607,8 @@ def handle_delay_game(delay_quiz):
                 })
 
             # 用户资金明细表
-            user_coin_dic[record.user_id][coin_id]['balance'] = user_coin_dic[record.user_id][coin_id][
-                                                                    'balance'] + return_coin
+            user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(user_coin_dic[record.user_id][coin_id][
+                                                                    'balance']) + to_decimal(return_coin)
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             coin_detail_list.append({
                 'user_id': str(record.user_id),
@@ -624,6 +632,9 @@ def handle_delay_game(delay_quiz):
                     'created_at': now_time,
                 }
             )
+
+            # 构建promotion_dic
+            promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': return_coin, 'status': 2})
 
         # 开始执行sql语句
         # 插入coin_detail表
@@ -669,6 +680,9 @@ def handle_delay_game(delay_quiz):
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
+
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
 
     delay_quiz.status = Quiz.DELAY
     delay_quiz.save()
