@@ -422,7 +422,7 @@ def get_data_info(url):
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
                 change_time = get_time()
                 quiz = Quiz.objects.get(match_flag=match_id)
-                print('=======================>', quiz.match_flag)
+                print('=======================>', quiz.match_flag, 'now is ', datetime.datetime.now())
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
                 rule_had = rule_all.filter(type=0).first()
@@ -473,5 +473,4 @@ class Command(BaseCommand):
     help = "刷新足球赔率"
 
     def handle(self, *args, **options):
-        print('now is ', datetime.datetime.now())
         get_data_info(base_url)
