@@ -306,10 +306,10 @@ def get_data_info(url, match_flag):
 
                 record.save()
 
-            quiz.status = Quiz.BONUS_DISTRIBUTION
-            quiz.save()
-            print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
-            return flag
+        quiz.status = Quiz.BONUS_DISTRIBUTION
+        quiz.save()
+        print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+        return flag
 
 
 def handle_delay_game(delay_quiz):
