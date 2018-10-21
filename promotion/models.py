@@ -169,16 +169,20 @@ class PromotionRecordManager(BaseManager):
         earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
         :return:
         """
-        arr_values = []
-        for value in values:
-            arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
-        sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(
-            arr_values)
-        sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
+        if len(values) > 0:
+            print('处理推广功能')
+            arr_values = []
+            for value in values:
+                arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
+            sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(
+                arr_values)
+            sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
-        with connection.cursor() as cursor:
-            if sql is not False:
-                cursor.execute(sql)
+            with connection.cursor() as cursor:
+                if sql is not False:
+                    cursor.execute(sql)
+        else:
+            print('无需处理推广功能')
 
 
 @reversion.register()
