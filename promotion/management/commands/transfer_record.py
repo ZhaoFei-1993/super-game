@@ -114,7 +114,7 @@ class Command(BaseCommand, BaseView):
                 info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 3
-                if int(i.type) == 0:
+                if int(i.status) == 0:
                     status = 1
                 else:
                     status = 2
@@ -139,9 +139,9 @@ class Command(BaseCommand, BaseView):
                 info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 7
-                if int(i.type) == 0:
+                if int(i.status) == 0:
                     status = 1
-                elif int(i.type) == 1:
+                elif int(i.status) == 1:
                     status = 2
                 else:
                     status = 3
@@ -166,9 +166,9 @@ class Command(BaseCommand, BaseView):
                 info.record_id = i.pk
                 info.earn_coin = i.earn_coin
                 info.source = 6
-                if int(i.type) == 0:
+                if int(i.status) == 0:
                     status = 1
-                elif int(i.type) == 1:
+                elif int(i.status) == 1:
                     status = 2
                 else:
                     status = 3

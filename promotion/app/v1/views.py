@@ -1762,37 +1762,40 @@ class CustomerView(ListAPIView):
                     "login_time": login_time
                 })
         else:
-            sql_list = "l.user_id, u.avatar, u.nickname, u.created_at,"
-            sql_list += " (select ui.invitee_one from users_userinvitation ui " \
-                        "where ui.invitee_one = l.user_id and ui.inviter_id = '" + str(user.id) + \
-                        "') as inviter_type, l.login_time"
-            sql = "select " + sql_list + " from users_loginrecord l"
-            sql += " inner join users_user u on l.user_id=u.id"
-            sql += " and l.login_time >= '" + str(start_time) + "'"
-            sql += " and l.login_time <= '" + str(end_time) + "'"
-            sql += " and l.user_id in (select ui.invitee_one from users_userinvitation ui " \
-                   "where ui.invitee_one != 0 and ui.inviter_id = '" + str(user.id) + "')"
+            sql_list = "ui.invitee_one, u.avatar, u.nickname, u.created_at, ui.inviter_type,"
+            sql_list += " (select l.login_time from users_loginrecord l where " \
+                        "l.user_id=ui.invitee_one order by l.login_time desc limit 1) as login_time"
+            sql = "select " + sql_list + " from users_userinvitation ui"
+            sql += " inner join users_user u on ui.invitee_one=u.id"
+            sql += " where ui.invitee_one != 0"
+            sql += " and ui.inviter_id = '" + str(user.id) + "'"
+            sql += " and ui.created_at >= '" + str(start_time) + "'"
+            sql += " and ui.created_at <= '" + str(end_time) + "'"
             if "name" in self.request.GET:
                 name = self.request.GET.get('name')
                 name_now = "%" + str(name) + "%"
                 sql += " and (u.nickname like '" + name_now + "'"
                 sql += " or u.username = '" + str(name) + "')"
-            # sql += " group by ui.invitee_one"
-            sql += " order by l.login_time desc"
+            sql += " group by ui.invitee_one"
+            sql += " order by login_time desc"
             invitee_list = self.get_list_by_sql(sql)
             data = []
             for i in invitee_list:
                 coin_info = ""
-                if int(i[4])==1:
+                if int(i[4]) == 1:
                     coin_info = "+ 5 GSG"
                 user_list[i[0]] = i[0]
+                if i[5] == None:
+                    login_time = ""
+                else:
+                    login_time = i[5].strftime('%Y-%m-%d %H:%M')
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
                     "nickname": i[2],
                     "created_at": i[3].strftime('%Y-%m-%d %H:%M'),
                     "coin_info": coin_info,
-                    "login_time": i[5].strftime('%Y-%m-%d %H:%M')
+                    "login_time": login_time
                 })
         user_number = len(user_list)
         return self.response({'code': 0, "user_number":user_number, "data":data})
