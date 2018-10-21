@@ -419,7 +419,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 earn_coin = '-' + str(record.bet)
                 record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
             else:
-                earn_coin = record.bet * record.odds
+                earn_coin = Decimal(str(record.bet)) * Decimal(str(record.odds))
                 earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
                 record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -465,7 +465,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             option_right = map_rule_option[record.rule_id]
             option_info = map_option_odd_id_option[record.option_id]
             title = club_name + '开奖公告'
-            title_en = 'Lottery announcement from' + club_name_en
+            title_en = 'Lottery announcement from ' + club_name_en
             if is_right is False:
                 content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您答错了。'
                 content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '-' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '-' + option_info.option_en + '，You are wrong.'
@@ -508,6 +508,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
+        print('11111')
 
         # 更新user_coin表
         update_user_coin_duplicate_key = 'balance=VALUES(balance)'

@@ -241,7 +241,7 @@ def asia_result(quiz, records_asia):
 
         # 发送信息
         title = club_name + '开奖公告'
-        title_en = 'Lottery announcement from' + club_name_en
+        title_en = 'Lottery announcement from ' + club_name_en
         if earn_coin < 0:
             content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
                 quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您答错了。'
