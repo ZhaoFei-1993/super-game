@@ -76,8 +76,9 @@ class Command(BaseCommand):
 
         from quiz.models import Record
         from promotion.models import PromotionRecord
+        from django.db.models import Q
         promotion_list = []
-        for record in Record.objects.filter(quiz_id=3986, source=str(Record.CONSOLE)):
+        for record in Record.objects.filter(~Q(source=str(Record.CONSOLE)), quiz_id=3986):
             # 构建promotion_dic
             if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
                 promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': record.earn_coin, 'status': 1})
