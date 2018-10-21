@@ -548,8 +548,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if sql_false is not False:
                 cursor.execute(sql_false)
 
-        # # 推广代理事宜
-        # PromotionRecord.objects.insert_all(promotion_list)
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
 
         # 分配亚盘奖金
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
@@ -683,8 +683,8 @@ def handle_delay_game(delay_quiz):
             if sql is not False:
                 cursor.execute(sql)
 
-        # # 推广代理事宜
-        # PromotionRecord.objects.insert_all(promotion_list)
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
 
     delay_quiz.status = Quiz.DELAY
     delay_quiz.save()
