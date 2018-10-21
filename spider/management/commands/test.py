@@ -82,6 +82,7 @@ class Command(BaseCommand):
             # 构建promotion_dic
             if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
                 promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': record.earn_coin, 'status': 1})
+        print('promotion_list len ======= ', len(promotion_list))
         # 推广代理事宜
         PromotionRecord.objects.insert_all(promotion_list)
 

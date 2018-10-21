@@ -683,8 +683,8 @@ def handle_delay_game(delay_quiz):
             if sql is not False:
                 cursor.execute(sql)
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(promotion_list)
+        # # 推广代理事宜
+        # PromotionRecord.objects.insert_all(promotion_list)
 
     delay_quiz.status = Quiz.DELAY
     delay_quiz.save()
