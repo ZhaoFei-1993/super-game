@@ -376,10 +376,10 @@ def handle_delay_game(delay_quiz):
             record.save()
 
             # 构建promotion_dic
-            promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': return_coin, 'status': 2})
+            promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': return_coin, 'status': 2})
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(promotion_list)
+        # # 推广代理事宜
+        # PromotionRecord.objects.insert_all(promotion_list)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 

@@ -374,8 +374,8 @@ class GuessRecording(object):
             if sql is not False:
                 cursor.execute(sql)
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(self.promotion_list)
+        # # 推广代理事宜
+        # PromotionRecord.objects.insert_all(self.promotion_list)
 
     @staticmethod
     def newobject(periods, stock_id, next_start, next_end):
