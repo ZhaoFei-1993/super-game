@@ -504,11 +504,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
         # 插入user_message表
         sql = make_insert_sql('users_usermessage', user_message_list)
-        print(sql)
+        # print(sql)
         with connection.cursor() as cursor:
             if sql is not False:
                 cursor.execute(sql)
-        print('11111')
 
         # 更新user_coin表
         update_user_coin_duplicate_key = 'balance=VALUES(balance)'

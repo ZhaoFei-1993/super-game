@@ -179,7 +179,7 @@ def get_data_info(url, match_flag):
             print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
-            is_open = True
+        is_open = True
 
     else:
         print(match_flag + ',' + '未有开奖信息')
