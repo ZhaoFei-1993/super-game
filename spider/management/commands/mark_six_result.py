@@ -16,7 +16,7 @@ promotion_list = []
 
 def base_functions(record_id, user_id, coin_id, coin_name, earn_coin):
     # 构建promotion_dic
-    promotion_list.append({'record_id': record_id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+    promotion_list.append({'record_id': record_id, 'source': 3, 'earn_coin': earn_coin, 'status': 1})
 
     if Decimal(earn_coin) > 0:
         # user_coin
