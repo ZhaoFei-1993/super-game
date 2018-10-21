@@ -9,7 +9,7 @@ from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
 from chat.models import Club
 from promotion.models import UserPresentation as UserPresentation_new
-from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql
+from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql, to_decimal
 from django.db import transaction
 import datetime
 from decimal import Decimal
@@ -419,7 +419,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 earn_coin = '-' + str(record.bet)
                 record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
             else:
-                earn_coin = Decimal(str(record.bet)) * Decimal(str(record.odds))
+                earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
                 earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
                 record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
@@ -441,8 +441,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     })
 
                 # 用户资金明细表
-                user_coin_dic[user_id][coin_id]['balance'] = user_coin_dic[user_id][coin_id][
-                                                                 'balance'] + earn_coin
+                user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
+                    user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
                 now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 coin_detail_list.append({
                     'user_id': str(user_id),

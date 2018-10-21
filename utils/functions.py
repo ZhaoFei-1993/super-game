@@ -1450,3 +1450,12 @@ def reward_gradient_all(club_id, income):
         else:
             income_dividend = 0
     return income_dividend
+
+
+def to_decimal(num):
+    """
+    把传进来数字改变成decimal类型保持精度
+    :param num:
+    :return:
+    """
+    return Decimal(str(num))

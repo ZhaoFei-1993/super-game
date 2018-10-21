@@ -9,6 +9,7 @@ from .get_time import get_time
 from quiz.models import Quiz, Rule, Option, QuizOddsLog, OptionOdds
 from chat.models import Club
 from decimal import Decimal
+import datetime
 
 base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
 asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
@@ -472,4 +473,5 @@ class Command(BaseCommand):
     help = "刷新足球赔率"
 
     def handle(self, *args, **options):
+        print('now is ', datetime.datetime.now())
         get_data_info(base_url)

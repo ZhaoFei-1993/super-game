@@ -9,8 +9,9 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGiveRecords
 from chat.models import Club
-from utils.functions import normalize_fraction
+from utils.functions import normalize_fraction, to_decimal
 from decimal import Decimal
+from time import sleep
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -243,7 +244,7 @@ def get_data_info(url, match_flag):
                     if record.option.option_id == option_wnm.id:
                         is_right = True
 
-                earn_coin = Decimal(str(record.bet)) * Decimal(str(record.odds))
+                earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
                 earn_coin = float(normalize_fraction(earn_coin, int(coin.coin_accuracy)))
                 record.type = Record.CORRECT
                 # 对于用户来说，答错只是记录下注的金额
@@ -262,7 +263,7 @@ def get_data_info(url, match_flag):
 
                     user_coin.coin_id = club.coin_id
                     user_coin.user_id = record.user_id
-                    user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
+                    user_coin.balance = to_decimal(user_coin.balance) + to_decimal(earn_coin)
                     user_coin.save()
 
                     # 增加系统赠送锁定金额
@@ -335,7 +336,7 @@ def handle_delay_game(delay_quiz):
 
             user_coin.coin_id = club.coin_id
             user_coin.user_id = record.user_id
-            user_coin.balance = Decimal(user_coin.balance) + Decimal(return_coin)
+            user_coin.balance = to_decimal(user_coin.balance) + to_decimal(return_coin)
             user_coin.save()
 
             # 用户资金明细表
@@ -477,6 +478,7 @@ class Command(BaseCommand):
         if quizs.exists():
             for quiz in quizs:
                 flag = get_data_info(base_url, quiz.match_flag)
+                sleep(10)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                 # if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                 #     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))

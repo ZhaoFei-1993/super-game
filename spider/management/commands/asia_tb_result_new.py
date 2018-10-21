@@ -121,6 +121,10 @@ def asia_result(quiz, records_asia):
         host_team_score = int(quiz.host_team_score)
         guest_team_score = int(quiz.guest_team_score)
 
+        earn_coin = 0
+        record_bet = to_decimal(record.bet)
+        record_odds = to_decimal(record.odds)
+
         if '受让' in record.handicap:
             clean_score = guest_team_score - host_team_score
             position_dic = {'主队': '下盘', '客队': '上盘'}
@@ -132,85 +136,85 @@ def asia_result(quiz, records_asia):
             if position_dic[record.option.option.option] == '上盘':
                 earn_coin = '-' + str(record.bet)
             else:
-                earn_coin = record.bet * record.odds
+                earn_coin = record_bet * record_odds
                 earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            print('上盘全负， 下盘全胜')
+            # print('上盘全负， 下盘全胜')
         else:
-            print(handicap)
-            print(rule_dic[handicap])
+            # print(handicap)
+            # print(rule_dic[handicap])
             if len(rule_dic[handicap].split('/')) == 1:
                 if len(rule_dic[handicap]) == 1:
                     if clean_score == int(rule_dic[handicap]):
                         earn_coin = record.bet
-                        print('上，下 退还本金')
+                        # print('上，下 退还本金')
 
                     elif clean_score < int(rule_dic[handicap]):
                         if position_dic[record.option.option.option] == '上盘':
                             earn_coin = '-' + str(record.bet)
                         else:
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-                        print('上盘全负， 下盘全胜')
+                        # print('上盘全负， 下盘全胜')
 
                     elif clean_score > int(rule_dic[handicap]):
                         if position_dic[record.option.option.option] == '上盘':
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
                         else:
                             earn_coin = '-' + str(record.bet)
-                        print('上盘全胜， 下盘全负')
+                        # print('上盘全胜， 下盘全负')
                 else:
                     if float(clean_score) > float(rule_dic[handicap]):
                         if position_dic[record.option.option.option] == '上盘':
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
                         else:
                             earn_coin = '-' + str(record.bet)
-                        print('上盘全胜， 下盘全负')
+                        # print('上盘全胜， 下盘全负')
 
                     elif float(clean_score) < float(rule_dic[handicap]):
                         if position_dic[record.option.option.option] == '上盘':
                             earn_coin = '-' + str(record.bet)
                         else:
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-                        print('上盘全负， 下盘全胜')
+                        # print('上盘全负， 下盘全胜')
 
             else:
-                half_one = Decimal(0.5)
+                half_one = Decimal('0.5')
                 if str(clean_score) in rule_dic[handicap].split('/'):
                     if rule_dic[handicap].split('/').index(str(clean_score)) == 0:
                         if position_dic[record.option.option.option] == '上盘':
                             earn_coin = normalize_fraction(record.bet * half_one, int(coin_accuracy))
                         else:
-                            earn_coin = (record.bet * record.odds - record.bet) * half_one + record.bet
+                            earn_coin = (record_bet * record_odds - record_bet) * half_one + record_bet
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-                        print('上盘负一半， 下盘胜一半')
+                        # print('上盘负一半， 下盘胜一半')
 
                     elif rule_dic[handicap].split('/').index(str(clean_score)) == 1:
                         if position_dic[record.option.option.option] == '上盘':
-                            earn_coin = (record.bet * record.odds - record.bet) * half_one + record.bet
+                            earn_coin = (record_bet * record_odds - record_bet) * half_one + record_bet
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
                         else:
                             earn_coin = normalize_fraction(record.bet * half_one, int(coin_accuracy))
-                        print('上盘胜一半， 下盘输一半')
+                        # print('上盘胜一半， 下盘输一半')
 
                 else:
                     if float(clean_score) < float(rule_dic[handicap].split('/')[0]):
                         if position_dic[record.option.option.option] == '上盘':
                             earn_coin = '-' + str(record.bet)
                         else:
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-                        print('上盘全负， 下盘全胜')
+                        # print('上盘全负， 下盘全胜')
 
                     elif float(clean_score) > float(rule_dic[handicap].split('/')[1]):
                         if position_dic[record.option.option.option] == '上盘':
-                            earn_coin = record.bet * record.odds
+                            earn_coin = record_bet * record_odds
                             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
                         else:
                             earn_coin = '-' + str(record.bet)
-                        print('上盘全胜， 下盘全负')
+                        # print('上盘全胜， 下盘全负')
 
         earn_coin = float(earn_coin)
         if earn_coin > 0:
@@ -228,8 +232,8 @@ def asia_result(quiz, records_asia):
                 })
 
             # 用户资金明细表
-            user_coin_dic[record.user_id][coin_id]['balance'] = user_coin_dic[record.user_id][coin_id][
-                                                                    'balance'] + earn_coin
+            user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(
+                user_coin_dic[record.user_id][coin_id]['balance']) + to_decimal(earn_coin)
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             coin_detail_list.append({
                 'user_id': str(record.user_id),
