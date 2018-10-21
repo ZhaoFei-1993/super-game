@@ -313,7 +313,8 @@ def get_data_info(url, match_flag):
                 record.save()
 
                 # 构建promotion_dic
-                promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': earn_coin, 'status': 1})
+                if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                    promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': earn_coin, 'status': 1})
 
             # 推广代理事宜
             PromotionRecord.objects.insert_all(promotion_list)
@@ -376,10 +377,11 @@ def handle_delay_game(delay_quiz):
             record.save()
 
             # 构建promotion_dic
-            promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': return_coin, 'status': 2})
+            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': return_coin, 'status': 2})
 
-        # # 推广代理事宜
-        # PromotionRecord.objects.insert_all(promotion_list)
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 

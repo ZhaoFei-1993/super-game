@@ -14,7 +14,9 @@ record_false_list = []
 promotion_list = []
 
 
-def base_functions(record_id, user_id, coin_id, coin_name, earn_coin):
+def base_functions(record, coin_id, coin_name, earn_coin):
+    record_id = record.id
+    user_id = record.user_id
     # 构建promotion_dic
     promotion_list.append({'record_id': record_id, 'source': 3, 'earn_coin': earn_coin, 'status': 1})
 
@@ -60,7 +62,7 @@ def special_code_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -80,7 +82,7 @@ def color_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -122,7 +124,7 @@ def continuous_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -187,7 +189,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -210,7 +212,7 @@ def animal_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -236,7 +238,7 @@ def special_head_tail_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -255,7 +257,7 @@ def elements_result(record, answer_dic, cache_club_value):
         earn_coin = float('-' + str(record.bet_coin))
     record.earn_coin = earn_coin
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -286,7 +288,7 @@ def special_animal(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 

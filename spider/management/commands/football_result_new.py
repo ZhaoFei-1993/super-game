@@ -495,7 +495,8 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             #                                                   record.bet, income)
 
             # 构建promotion_dic
-            promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
 
         # 开始执行sql语句
         # 初始化sql语句
@@ -634,7 +635,8 @@ def handle_delay_game(delay_quiz):
             )
 
             # 构建promotion_dic
-            promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': return_coin, 'status': 2})
+            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': return_coin, 'status': 2})
 
         # 开始执行sql语句
         # 插入coin_detail表
