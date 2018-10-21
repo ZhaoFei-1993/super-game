@@ -19,9 +19,9 @@ class GuessRecording(object):
         self.record_false_list = []
         self.promotion_list = []
 
-    def base_functions(self, record_id, user_id, coin_id, coin_name, earn_coin):
+    def base_functions(self, record_id, user_id, coin_id, coin_name, earn_coin, source):
         # 构建promotion_dic
-        self.promotion_list.append({'record_id': record_id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+        self.promotion_list.append({'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': 1})
 
         if Decimal(earn_coin) > 0:
             # user_coin
@@ -107,7 +107,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin, 3)
 
         return earn_coin
 
@@ -136,7 +136,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin, 3)
 
         return earn_coin
 
@@ -164,7 +164,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin, 3)
 
         return earn_coin
 
@@ -196,7 +196,7 @@ class GuessRecording(object):
             # 记录record
             self.record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
-        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin, 3)
 
         return earn_coin
 
@@ -537,7 +537,7 @@ class GuessPKRecording(GuessRecording):
             record.earn_coin = earn_coin
             record.status = 1
             record.save()
-        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin)
+        self.base_functions(record.id, record.user_id, coin_id, coin_name, earn_coin, 4)
 
 # def ergodic_pk_record(issue_obj_dic):
 #     records = RecordStockPk.objects.filter(issues_id=issues.id, status=str(RecordStockPk.AWAIT))
