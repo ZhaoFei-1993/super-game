@@ -173,7 +173,7 @@ class PromotionRecordManager(BaseManager):
             print('处理推广功能')
             arr_values = []
             for value in values:
-                arr_values.append('(\'' + '\',\''.join(list(value.values())) + '\')')
+                arr_values.append('(\'' + '\',\''.join(list(str(value.values()))) + '\')')
             sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(
                 arr_values)
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
