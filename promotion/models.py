@@ -183,7 +183,7 @@ class PromotionRecordManager(BaseManager):
 
         print('record_source ======== ', record_source)
         print('records ========', records)
-        print(real_records = records.filter(~Q(source=record_source)))
+        print(records.filter(~Q(source=record_source)))
 
         # 排除hand俱乐部
         if source == 1 or source == 2:
