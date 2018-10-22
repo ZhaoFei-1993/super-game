@@ -865,12 +865,12 @@ class UserInvitationManager(models.Manager):
         if user_invitation_number > 0:
             user_invitation_info = self.filter(money__gt=0, inviter_id=user.id, inviter_type=1, status=1)
             for a in user_invitation_info:
-                try:
-                    userbalance = UserCoin.objects.get(coin_id=6, user_id=user.id)
-                except UserCoin.DoesNotExist:
-                    return 0
-                login_number = LoginRecord.objects.filter(user_id=user.id).count()
+                login_number = LoginRecord.objects.filter(user_id=user_invitation_info.invitee_one).count()
                 if login_number > 0:
+                    try:
+                        userbalance = UserCoin.objects.get(coin_id=6, user_id=user.id)
+                    except UserCoin.DoesNotExist:
+                        return 0
                     # if int(a.coin) == 9:
                     #     a.is_deleted = 1
                     #     a.save()
