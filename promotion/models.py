@@ -159,47 +159,17 @@ class PromotionRecordManager(BaseManager):
             promotionrecord.created_at = created_at
             promotionrecord.save()
 
-    def insert_all(self, records, source, status):
+    def insert_all(self, real_records, source, status):
         """
         批量更新推广下注记录表
-        :param records: 投注记录
+        :param real_records: 投注记录
         :param source: 类型 (1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
         :param status:  状态 (0,未开奖 1.已开奖 2.异常)
         :return:
         """
         # promotion_list such as [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
         promotion_list = []
-        # 排除系统下注
-        if source == 1 or source == 2:
-            record_source = str(Quiz_Record.CONSOLE)
-        elif source == 3:
-            record_source = str(SixRecord.ROBOT)
-        elif source == 4:
-            record_source = str(Guess_Record.ROBOT)
-        elif source == 5:
-            record_source = str(Pk_Record.ROBOT)
-        else:
-            record_source = 0  # 有待添加
-
-        print(type(record_source))
-        print('record_source ======== ', record_source)
-        print('records ========', records)
-        print(records.filter(~Q(source=record_source)))
-        print(records.filter(~Q(source=4)))
-        print(records.filter(~Q(source='4')))
-
-        print('-------------------------------')
-        print(records.filter(~Q(club_id=1)))
-        print('-------------------------------')
-        print(records.filter(Q(source='1')))
-
-
-        # 排除hand俱乐部
-        if source == 1 or source == 2:
-            real_records = records.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
-        else:
-            real_records = records.filter(~Q(source=record_source), ~Q(club_id=1))
-
+        # 开始处理
         if len(real_records) > 0:
             for record in real_records:
                 promotion_list.append(

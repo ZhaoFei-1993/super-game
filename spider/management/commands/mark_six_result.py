@@ -5,7 +5,6 @@ from utils.functions import *
 from users.models import CoinDetail
 from promotion.models import PromotionRecord
 
-
 coin_detail_list = []
 user_message_list = []
 user_coin_dic = {}
@@ -324,5 +323,6 @@ def ergodic_record(issue, answer_dic):
             cursor.execute(sql)
 
     # 推广代理事宜
-    if len(records) > 0:
-        PromotionRecord.objects.insert_all(records, 3, 1)
+    real_records = SixRecord.objects.filter(~Q(source=str(SixRecord.ROBOT)), ~Q(club_id=1), issue=issue, status='1')
+    if len(real_records) > 0:
+        PromotionRecord.objects.insert_all(real_records, 3, 1)

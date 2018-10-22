@@ -5,6 +5,7 @@ from guess.models import RecordStockPk, Issues, OptionStockPk, Periods
 from .stock_result_new import GuessPKRecording
 import datetime
 from django.db.models import Q
+from promotion.models import PromotionRecord
 
 
 class Command(BaseCommand):
@@ -30,8 +31,16 @@ class Command(BaseCommand):
                 if len(records) > 0:
                     for record_pk in records:
                         record_stock_pk.pk_size(record_pk, option_obj_dic, issue)
-                    record_stock_pk.insert_info(records, 5)
+                    record_stock_pk.insert_info()
                     issue.is_open = True
                     issue.save()
+
+                    real_records = RecordStockPk.objects.filter(~Q(source=str(RecordStockPk.ROBOT)), ~Q(club_id=1),
+                                                                issue_id=issue.id, status=str(RecordStockPk.OPEN))
+                    # 推广代理事宜
+                    if len(real_records) > 0:
+                        PromotionRecord.objects.insert_all(real_records, 5, 1)
+
+
         else:
             print('当前无需要处理的数据')

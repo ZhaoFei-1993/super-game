@@ -15,7 +15,6 @@ from time import sleep
 from utils.functions import normalize_fraction, to_decimal
 from promotion.models import PromotionRecord
 
-
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
@@ -82,7 +81,8 @@ def handle_activity(record, coin, earn_coin):
                     u_mes.user_id = record.user_id
                     u_mes.message_id = 6  # 私人信息
                     u_mes.title = Club.objects.get(coin=coin).room_title + '活动公告'
-                    u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(coin=coin).room_title_en
+                    u_mes.title_en = 'Notifications of upcoming Events from ' + Club.objects.get(
+                        coin=coin).room_title_en
                     u_mes.content = '恭喜您获得USDT活动奖励共 10USDT，祝贺您。'
                     u_mes.content_en = 'Congratulations on your USDT event award, 10 USDT in total.Congratulations for you.'
                     u_mes.save()
@@ -310,11 +310,14 @@ def get_data_info(url, match_flag):
 
                 record.save()
 
-            # 推广代理事宜
-            PromotionRecord.objects.insert_all(records, 2, 1)
-
         quiz.status = Quiz.BONUS_DISTRIBUTION
         quiz.save()
+
+        # 推广代理事宜
+        real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=quiz,
+                                             is_distribution=True)
+        if len(real_records) > 0:
+            PromotionRecord.objects.insert_all(real_records, 2, 1)
 
         print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
         return flag
@@ -369,8 +372,11 @@ def handle_delay_game(delay_quiz):
             record.is_distribution = True
             record.save()
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(records, 2, 2)
+    # 推广代理事宜
+    real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=delay_quiz,
+                                         is_distribution=True)
+    if len(real_records) > 0:
+        PromotionRecord.objects.insert_all(real_records, 2, 2)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
