@@ -167,6 +167,8 @@ class PromotionRecordManager(BaseManager):
         :param status:  状态 (0,未开奖 1.已开奖 2.异常)
         :return:
         """
+        real_records = []
+
         # promotion_list such as [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
         promotion_list = []
         # 排除系统下注
@@ -183,10 +185,15 @@ class PromotionRecordManager(BaseManager):
 
         # 排除hand俱乐部
         if source == 1 or source == 2:
-            real_records = records.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
+            for record in list(records):
+                if record.source != record_source and record.roomquiz_id != 1:
+                    real_records.append(record)
         else:
-            real_records = records.filter(~Q(source=record_source), ~Q(club_id=1))
+            for record in list(records):
+                if record.source != record_source and record.club_id != 1:
+                    real_records.append(record)
 
+        # 开始处理
         if len(real_records) > 0:
             for record in real_records:
                 promotion_list.append(
