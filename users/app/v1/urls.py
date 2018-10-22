@@ -101,9 +101,11 @@ urlpatterns = [
     # 生成带二维码邀请海报
     path('invitation/qr_merge/', views.InvitationMergeView.as_view(), name="app-v1-user-invitation-qr-merge"),
 
-    #  转账
+    #  转账:余额信息
     path('move/coin/', views.MoveCoinView.as_view(), name="move_coin"),
-    #  转账完成
+    # 转账:收款人信息
+    path('move/recipient/', views.MoveRecipientView.as_view(), name="move_recipient"),
+    #  点击转账
     path('move/finish/', views.MoveFilishView.as_view(), name="move_finish"),
     # 转账记录
     path('move/record/', views.MoveRecordView.as_view(), name="move_record"),
