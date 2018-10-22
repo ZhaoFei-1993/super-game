@@ -226,7 +226,7 @@ class UserRegister(object):
                 user_go_line.status = 0
             user_go_line.money = 5
             user_go_line.old_data = 0
-            user_go_line.coin_id = 6
+            user_go_line.coin = 6
             user_go_line.inviter = invitation_user
             user_go_line.invitation_code = invitation_code
             user_go_line.invitee_one = user.id
