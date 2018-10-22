@@ -53,7 +53,6 @@ def special_code_result(record, answer_dic, cache_club_value):
         earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
     else:
         earn_coin = float('-' + str(record.bet_coin))
-    print('earn_coin ======== ', earn_coin)
     record.earn_coin = earn_coin
     record.save()
 
