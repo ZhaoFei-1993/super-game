@@ -316,8 +316,8 @@ def get_data_info(url, match_flag):
                 if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
                     promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': earn_coin, 'status': 1})
 
-            # 推广代理事宜
-            PromotionRecord.objects.insert_all(promotion_list)
+            # # 推广代理事宜
+            # PromotionRecord.objects.insert_all(promotion_list)
 
         quiz.status = Quiz.BONUS_DISTRIBUTION
         quiz.save()

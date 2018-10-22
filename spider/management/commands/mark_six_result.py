@@ -328,5 +328,5 @@ def ergodic_record(issue, answer_dic):
         if sql is not False:
             cursor.execute(sql)
 
-    # 推广代理事宜
-    PromotionRecord.objects.insert_all(promotion_list)
+    # # 推广代理事宜
+    # PromotionRecord.objects.insert_all(promotion_list)

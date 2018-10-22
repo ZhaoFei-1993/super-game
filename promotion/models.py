@@ -180,7 +180,7 @@ class PromotionRecordManager(BaseManager):
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
             with connection.cursor() as cursor:
-                # print(sql)
+                print(sql)
                 if sql is not False:
                     cursor.execute(sql)
         else:
