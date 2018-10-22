@@ -534,9 +534,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if sql_false is not False:
                 cursor.execute(sql_false)
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(records, 1, 1)
-
         # 分配亚盘奖金
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
         if len(records_asia) > 0:
@@ -544,6 +541,12 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
+
+    # 推广代理事宜
+    real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=quiz,
+                                         is_distribution=True)
+    if len(real_records) > 0:
+        PromotionRecord.objects.insert_all(records, 1, 1)
 
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
@@ -594,7 +597,7 @@ def handle_delay_game(delay_quiz):
 
             # 用户资金明细表
             user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(user_coin_dic[record.user_id][coin_id][
-                                                                    'balance']) + to_decimal(return_coin)
+                                                                               'balance']) + to_decimal(return_coin)
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             coin_detail_list.append({
                 'user_id': str(record.user_id),
@@ -664,11 +667,14 @@ def handle_delay_game(delay_quiz):
             if sql is not False:
                 cursor.execute(sql)
 
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(records, 1, 2)
-
     delay_quiz.status = Quiz.DELAY
     delay_quiz.save()
+
+    # 推广代理事宜
+    real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=delay_quiz,
+                                         is_distribution=True)
+    if len(real_records) > 0:
+        PromotionRecord.objects.insert_all(records, 1, 2)
 
     end_time = time()
     cost_time = str(round(end_time - start_time)) + '秒'

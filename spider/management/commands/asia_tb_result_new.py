@@ -4,9 +4,9 @@ from utils.functions import *
 from chat.models import Club
 from users.models import Coin, UserCoin, CoinDetail
 from quiz.models import Option, Record
-from promotion.models import UserPresentation as UserPresentation_new
 from users.models import UserMessage
 from decimal import Decimal
+from promotion.models import PromotionRecord
 
 
 def asia_option(quiz, rule_asia):
@@ -273,13 +273,6 @@ def asia_result(quiz, records_asia):
         record.earn_coin = earn_coin
         record.is_distribution = True
         record.save()
-
-        # 邀请代理事宜
-        if earn_coin > 0:
-            income = Decimal(earn_coin - float(record.bet))
-        else:
-            income = Decimal(earn_coin)
-        UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id, record.bet, income)
 
     # 开始执行sql语句
     # 插入coin_detail表
