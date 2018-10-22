@@ -1746,7 +1746,7 @@ class CustomerView(ListAPIView):
             data = []
             for i in invitee_list:
                 coin_info = ""
-                if int(i[4]) == 1:
+                if int(i[4]) == 1 and i[5] is not None:
                     coin_info = "+ 5 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] == None:
