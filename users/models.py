@@ -869,45 +869,47 @@ class UserInvitationManager(models.Manager):
                     userbalance = UserCoin.objects.get(coin_id=6, user_id=user.id)
                 except UserCoin.DoesNotExist:
                     return 0
-                # if int(a.coin) == 9:
-                #     a.is_deleted = 1
-                #     a.save()
-                #     usdt_balance.balance += a.money
-                #     usdt_balance.save()
-                #     coin_detail = CoinDetail()
-                #     coin_detail.user = user
-                #     coin_detail.coin_name = 'USDT'
-                #     coin_detail.amount = '+' + str(a.money)
-                #     coin_detail.rest = usdt_balance.balance
-                #     coin_detail.sources = 8
-                #     coin_detail.save()
-                #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
-                #     usdt_give.lock_coin += a.money
-                #     usdt_give.save()
-                # else:
-                userbalance.balance += a.money
-                userbalance.save()
+                login_number = LoginRecord.objects.filter(user_id=user.id).count()
+                if login_number > 0:
+                    # if int(a.coin) == 9:
+                    #     a.is_deleted = 1
+                    #     a.save()
+                    #     usdt_balance.balance += a.money
+                    #     usdt_balance.save()
+                    #     coin_detail = CoinDetail()
+                    #     coin_detail.user = user
+                    #     coin_detail.coin_name = 'USDT'
+                    #     coin_detail.amount = '+' + str(a.money)
+                    #     coin_detail.rest = usdt_balance.balance
+                    #     coin_detail.sources = 8
+                    #     coin_detail.save()
+                    #     usdt_give = CoinGiveRecords.objects.get(user_id=user.id, coin_give_id=1)
+                    #     usdt_give.lock_coin += a.money
+                    #     usdt_give.save()
+                    # else:
+                    userbalance.balance += a.money
+                    userbalance.save()
 
-                coin = Coin.objects.get_one(pk=a.coin)
+                    coin = Coin.objects.get_one(pk=a.coin)
 
-                coin_detail = CoinDetail()
-                coin_detail.user = user
-                coin_detail.coin_name = coin.name
-                coin_detail.amount = '+' + str(a.money)
-                coin_detail.rest = userbalance.balance
-                coin_detail.sources = 8
-                coin_detail.save()
-                a.status = 2
-                a.save()
+                    coin_detail = CoinDetail()
+                    coin_detail.user = user
+                    coin_detail.coin_name = coin.name
+                    coin_detail.amount = '+' + str(a.money)
+                    coin_detail.rest = userbalance.balance
+                    coin_detail.sources = 8
+                    coin_detail.save()
+                    a.status = 2
+                    a.save()
 
-                u_mes = UserMessage()  # 邀请注册成功后消息
-                u_mes.status = 0
-                u_mes.user = user
-                if a.invitee_one != 0:
-                    u_mes.message_id = 19  # 邀请t1消息
-                else:
-                    u_mes.message_id = 2  # 邀请t2消息
-                u_mes.save()
+                    u_mes = UserMessage()  # 邀请注册成功后消息
+                    u_mes.status = 0
+                    u_mes.user = user
+                    if a.invitee_one != 0:
+                        u_mes.message_id = 19  # 邀请t1消息
+                    else:
+                        u_mes.message_id = 2  # 邀请t2消息
+                    u_mes.save()
 
 
 @reversion.register()
