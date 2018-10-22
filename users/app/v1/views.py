@@ -10,7 +10,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
-    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue, EosCode
+    UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue, EosCode, MobileCoin
 from chat.models import Club
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
@@ -3120,23 +3120,140 @@ class MoveCoinView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        club_id = request.GET.get('club_id')
-        club_info = Club.objects.get(id=club_id)
-        coin_id = club_info.coin.id
+        if 'coin_id' not in request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        coin_id = request.GET.get('coin_id')
+        coin_info = Coin.objects.get(pk=coin_id)
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         user_info = {}
         if 'telephone' in request.GET:
             telephone = request.GET.get('telephone')
-            user = User.objects.get(telephone=telephone)
-            nickname = user.nickname
-            avatar = user.avatar
-            user_info = {
-                "nickname": nickname,
-                "avatar": avatar
-            }
+            user_nuber = User.objects.filter(telephone=telephone).count()
+
+            if user_nuber == 1:
+                user = User.objects.get(telephone=telephone)
+                nickname = user.nickname
+                avatar = user.avatar
+                user_info = {
+                    # 收款昵称
+                    "nickname": nickname,
+                    # 收款人头像
+                    "avatar": avatar,
+                    # 收款人的id
+                    "recipient_id": user.id
+
+                }
+
         return self.response({'code': 0,
-                              "icon": club_info.coin.icon,
-                              "name": club_info.coin.name,
-                              "balance": user_coin.balance,
+                              "icon": coin_info.icon,
+                              "name": coin_info.name,
+                              "sponsor_id": user_id,
+                              "balance": normalize_fraction(user_coin.balance, coin_info.coin_accuracy),
                               "user_info": user_info
+                              })
+
+
+class MoveFilishView(ListCreateAPIView):
+    """
+        转账完成
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, "sponsor_id", "recipient_id", "coin_id", "balance", "created_at")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        sponsor_id = self.request.data['sponsor_id']  # 获取用户id
+        recipient_id = self.request.data['recipient_id']  # 获取收款人ID
+        recipient_user = User.objects.filter(id=recipient_id)
+        coin_id = self.request.data['coin_id']  # 获取货币ID
+        if not recipient_user:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        remarks = ''
+        if 'remarks' in self.request.data:
+            remarks = self.request.data.get('remarks')  # 获取备注
+        balance = self.request.data['balance']  # 获取转账的金额
+        created_at = self.request.data['created_at']  # 获取创建时间
+        # 将前段传过来的数据保存到数据库中
+        MobileCoin.objects.create(sponsor_id=sponsor_id, recipient_id=recipient_id, coin_id=coin_id, remarks=remarks,
+                                  balance=balance)
+
+        # 用户的余额
+        sponsor_user_coin = UserCoin.objects.filter(user_id=sponsor_id, coin_id=coin_id)
+        sponsor_user_coin.balance = sponsor_user_coin.balance - balance
+        # 收款人的余额
+        recipient_user_coin = UserCoin.objects.filter(user_id=recipient_id, coin_id=coin_id)
+        recipient_user_coin.balance = recipient_user_coin.balance + balance
+        if sponsor_user_coin.balance < 0:
+            raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+        else:
+            sponsor_user_coin.save()
+            recipient_user_coin.save()
+            coin_info = Coin.objects.get(pk=coin_id)
+            sponsor_user_coin = UserCoin.objects.filter(user_id=sponsor_id, coin_id=coin_id)
+            balance = normalize_fraction(sponsor_user_coin.balance, coin_info.coin_accuracy)
+
+        return self.response({'code': 0, "balance": balance})
+
+
+class MoveRecordView(ListAPIView):
+    """
+       转账记录
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        return
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        if 'coin_id' not in request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        coin_id = request.GET.get('coin_id')
+        coin_info = Coin.objects.get(pk=coin_id)
+        mobile_coins = MobileCoin.objects.filter(coin_id=coin_id, sponsor_id=user_id).order_by("-created_at")
+        data = []
+        for mobile_coin in mobile_coins:
+            # 操作余额
+            balance = normalize_fraction(mobile_coin.balance, coin_info.coin_accuracy)
+            # 货币的图标
+            icon = mobile_coin.coin.icon
+            # 货币的名字
+            name = mobile_coin.coin.name
+            # 操作转账　的时间
+            create_at = mobile_coin.created_at
+            # 备注
+            remarks = mobile_coin.remarks
+            time_list = create_at.split(" ")[0].split("-")
+            year = time_list[0]
+            month = time_list[1]
+            day = time_list[2]
+            # 转账人的用户名
+            username = mobile_coin.recipient.username
+            # 转账人的头像
+            avatar = mobile_coin.recipient.avatar
+            if username == User.objects.get(id=user_id).username:
+                balance = +balance
+            else:
+                balance = -balance
+            avatar = mobile_coin.recipient.avatar
+            data.append({
+                "year": year,
+                "month": month,
+                "day": day,
+                "icon": icon,
+                "name": name,
+                "username": username,
+                "remarks": remarks,
+                "avatar": avatar,
+                "balance": balance
+            })
+
+        return self.response({'code': 0,
+                              "data": data,
                               })

@@ -10,6 +10,6 @@ urlpatterns = [
     # 联合坐庄：   俱乐部
     path('banker/club/', views.BankerClubView.as_view(), name='banker_club'),
     # 联合坐庄：   坐庄
-    path('banker/detail/', views.BankerDetailView.as_view(), name='banker_detail'),
+    # path('banker/detail/', views.BankerDetailView.as_view(), name='banker_detail'),
 
 ]

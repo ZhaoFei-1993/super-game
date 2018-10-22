@@ -103,6 +103,10 @@ urlpatterns = [
 
     #  转账
     path('move/coin/', views.MoveCoinView.as_view(), name="move_coin"),
+    #  转账完成
+    path('move/finish/', views.MoveFilishView.as_view(), name="move_finish"),
+    # 转账记录
+    path('move/record/', views.MoveRecordView.as_view(), name="move_record"),
 
     # # get:币种切换列表   post：币种切换
     # path('coin/type/<int:index>/', views.CoinTypeView.as_view(), name='app-v1-user-coin-type'),
