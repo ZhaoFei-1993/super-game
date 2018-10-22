@@ -17,13 +17,9 @@ class GuessRecording(object):
         self.user_coin_dic = {}
         self.record_right_list = []
         self.record_false_list = []
-        self.promotion_list = []
 
-    def base_functions(self, record, coin_id, coin_name, earn_coin, source):
-        record_id = record.id
+    def base_functions(self, record, coin_id, coin_name, earn_coin):
         user_id = record.user_id
-        # 构建promotion_dic
-        self.promotion_list.append({'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': 1})
 
         if Decimal(earn_coin) > 0:
             # user_coin
@@ -332,7 +328,7 @@ class GuessRecording(object):
             coin_name = cache_club_value[record.club.id]['coin_name']
             self.edit_user_message(record, club_name, club_name_en, coin_name)
 
-        self.insert_info()  # 批量插入
+        self.insert_info(records, 4)  # 批量插入
 
         # index_day = Index_day.objects.filter(stock_id=period.stock.id, created_at=date).first()
         # index_day.index_value = float(dt['num'])
@@ -347,7 +343,7 @@ class GuessRecording(object):
         print('执行完成。耗时：' + cost_time)
         print('----------------------------------------------')
 
-    def insert_info(self):
+    def insert_info(self, records, source):
         # 插入coin_detail表
         sql = make_insert_sql('users_coindetail', self.coin_detail_list)
         # print(sql)
@@ -376,8 +372,9 @@ class GuessRecording(object):
             if sql is not False:
                 cursor.execute(sql)
 
-        # # 推广代理事宜
-        # PromotionRecord.objects.insert_all(self.promotion_list)
+        # 推广代理事宜
+        if len(records) > 0:
+            PromotionRecord.objects.insert_all(records, source, 1)
 
     @staticmethod
     def newobject(periods, stock_id, next_start, next_end):

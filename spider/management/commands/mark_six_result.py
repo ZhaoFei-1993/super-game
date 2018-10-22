@@ -11,15 +11,10 @@ user_message_list = []
 user_coin_dic = {}
 record_right_list = []
 record_false_list = []
-promotion_list = []
 
 
 def base_functions(record, coin_id, coin_name, earn_coin):
-    record_id = record.id
     user_id = record.user_id
-    # 构建promotion_dic
-    promotion_list.append({'record_id': record_id, 'source': 3, 'earn_coin': earn_coin, 'status': 1})
-
     if Decimal(earn_coin) > 0:
         # user_coin
         if user_id not in user_coin_dic.keys():
@@ -328,5 +323,6 @@ def ergodic_record(issue, answer_dic):
         if sql is not False:
             cursor.execute(sql)
 
-    # # 推广代理事宜
-    # PromotionRecord.objects.insert_all(promotion_list)
+    # 推广代理事宜
+    if len(records) > 0:
+        PromotionRecord.objects.insert_all(records, 3, 1)
