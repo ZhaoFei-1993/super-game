@@ -16,174 +16,138 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         start_time = '2018-10-18 01:00:00'  # 开始时间
         record_list = Record.objects.filter(created_at__gte=start_time, source=0)
-        e = 0
         s = 0
-        a = 0
         for i in record_list:
-            e += 1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                club_info = Club.objects.get_one(pk=i.roomquiz_id)
-                info.club = club_info
-                info.bets = i.bet
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                if int(i.quiz.category.parent_id) == 1:
-                    source = 2
-                else:
-                    source = 1
-                info.source = source
-                if int(i.type) == 1:
-                    status = 1
-                elif int(i.type) == 2 or int(i.type) == 3:
-                    status = 2
-                else:
-                    status = 3
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            club_info = Club.objects.get_one(pk=i.roomquiz_id)
+            info.club = club_info
+            info.bets = i.bet
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            if int(i.quiz.category.parent_id) == 1:
+                source = 2
             else:
-                a += 1
-        print("足球，篮球转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                source = 1
+            info.source = source
+            if int(i.type) == 1:
+                status = 1
+            elif int(i.type) == 2 or int(i.type) == 3:
+                status = 2
+            else:
+                status = 3
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("足球，篮球转移记录完成！存入真实用户记录", s, "条")
         pk_list = RecordStockPk.objects.filter(created_at__gte=start_time, source=3)
-        e = 0
         s = 0
-        a = 0
         for i in pk_list:
-            e += 1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                info.club = i.club
-                info.bets = i.bets
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                info.source = 5
-                if int(i.status) == 0:
-                    status = 1
-                elif int(i.status) == 1:
-                    status = 2
-                else:
-                    status = 3
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            info.club = i.club
+            info.bets = i.bets
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            info.source = 5
+            if int(i.status) == 0:
+                status = 1
+            elif int(i.status) == 1:
+                status = 2
             else:
-                a += 1
-        print("股票PK转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                status = 3
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("股票PK转移记录完成！存入真实用户记录", s, "条")
 
         guess_list = StockRecord.objects.filter(created_at__gte=start_time, source=3)
-        e = 0
         s = 0
-        a = 0
         for i in guess_list:
-            e += 1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                info.club = i.club
-                info.bets = i.bets
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                info.source = 4
-                if int(i.status) == 0:
-                    status = 1
-                elif int(i.status) == 1:
-                    status = 2
-                else:
-                    status = 3
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            info.club = i.club
+            info.bets = i.bets
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            info.source = 4
+            if int(i.status) == 0:
+                status = 1
+            elif int(i.status) == 1:
+                status = 2
             else:
-                a += 1
-        print("股票转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                status = 3
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("股票转移记录完成！存入真实用户记录", s, "条")
 
         six_list = SixRecord.objects.filter(created_at__gte=start_time, source=3)
-        e = 0
         s = 0
-        a = 0
         for i in six_list:
-            e += 1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                info.club = i.club
-                info.bets = i.bet_coin
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                info.source = 3
-                if int(i.status) == 0:
-                    status = 1
-                else:
-                    status = 2
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            info.club = i.club
+            info.bets = i.bet_coin
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            info.source = 3
+            if int(i.status) == 0:
+                status = 1
             else:
-                a += 1
-        print("六合彩转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                status = 2
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("六合彩转移记录完成！存入真实用户记录", s, "条")
 
         dragontiger_list = Dragontigerrecord.objects.filter(created_at__gte=start_time, source=3)
-        e = 0
         s = 0
-        a = 0
         for i in dragontiger_list:
-            e += 1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                info.club = i.club
-                info.bets = i.bets
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                info.source = 7
-                if int(i.status) == 0:
-                    status = 1
-                elif int(i.status) == 1:
-                    status = 2
-                else:
-                    status = 3
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            info.club = i.club
+            info.bets = i.bets
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            info.source = 7
+            if int(i.status) == 0:
+                status = 1
+            elif int(i.status) == 1:
+                status = 2
             else:
-                a += 1
-        print("龙虎斗转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                status = 3
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("龙虎斗转移记录完成！存入真实用户记录", s, "条")
 
         baccarat_list = Baccaratrecord.objects.filter(created_at__gte=start_time, source=3)
-        e = 0
         s = 0
-        a = 0
         for i in baccarat_list:
-            e +=1
             info = PromotionRecord()
             info.user = i.user
-            if i.user.is_robot != 1:
-                s += 1
-                info.club = i.club
-                info.bets = i.bets
-                info.record_id = i.pk
-                info.earn_coin = i.earn_coin
-                info.source = 6
-                if int(i.status) == 0:
-                    status = 1
-                elif int(i.status) == 1:
-                    status = 2
-                else:
-                    status = 3
-                info.status = status
-                info.created_at = i.created_at
-                info.save()
+            s += 1
+            info.club = i.club
+            info.bets = i.bets
+            info.record_id = i.pk
+            info.earn_coin = i.earn_coin
+            info.source = 6
+            if int(i.status) == 0:
+                status = 1
+            elif int(i.status) == 1:
+                status = 2
             else:
-                a += 1
-        print("百家乐转移记录完成！忽略机器人记录", a, "条， 存入真实用户记录", s, "条，一共", e, "条")
+                status = 3
+            info.status = status
+            info.created_at = i.created_at
+            info.save()
+        print("百家乐转移记录完成！存入真实用户记录", s, "条")
 
 
 
