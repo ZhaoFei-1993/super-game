@@ -583,7 +583,7 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.sources = 15
         coin_detail.save()
 
-        if int(club_id) == 1:
+        if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
             PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 7, record.created_at)

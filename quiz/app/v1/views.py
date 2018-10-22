@@ -854,7 +854,7 @@ class BetView(ListCreateAPIView):
         quiz.total_people += 1
         quiz.save()
 
-        if int(roomquiz_id) == 1:
+        if int(roomquiz_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
             source = 1

@@ -480,7 +480,7 @@ class BetsViews(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        if int(club_id) == 1:
+        if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
             clubinfo = Club.objects.get_one(pk=int(club_id))
