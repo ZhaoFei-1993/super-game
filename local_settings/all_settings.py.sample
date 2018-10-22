@@ -200,3 +200,6 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'supergamealert@gmail.com'
 EMAIL_HOST_PASSWORD = 'gsgAlert@999'
 EMAIL_RECIPIENT_LIST = ['rexlin0624@gmail.com']
+
+# 是否开启用户EOS Code
+IS_ENABLE_USER_EOS_CODE = True
