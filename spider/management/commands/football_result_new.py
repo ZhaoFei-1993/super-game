@@ -322,7 +322,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         user_message_list = []
         record_right_list = []
         record_false_list = []
-        promotion_list = []
         user_coin_dic = {}
         i = 0
 
@@ -485,19 +484,6 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 }
             )
 
-            # # 邀请代理事宜
-            # earn_coin = float(earn_coin)
-            # if earn_coin > 0:
-            #     income = Decimal(earn_coin - float(record.bet))
-            # else:
-            #     income = Decimal(earn_coin)
-            # UserPresentation_new.objects.club_flow_statistics(record.user_id, record.roomquiz_id,
-            #                                                   record.bet, income)
-
-            # 构建promotion_dic
-            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
-                promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
-
         # 开始执行sql语句
         # 初始化sql语句
         # 插入coin_detail表
@@ -549,7 +535,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 cursor.execute(sql_false)
 
         # 推广代理事宜
-        PromotionRecord.objects.insert_all(promotion_list)
+        PromotionRecord.objects.insert_all(records, 1, 1)
 
         # 分配亚盘奖金
         records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
@@ -574,7 +560,6 @@ def handle_delay_game(delay_quiz):
     if len(records) > 0:
         coin_detail_list = []
         user_message_list = []
-        promotion_list = []
         user_coin_dic = {}
 
         cache_club_value = Club.objects.get_club_info()
@@ -634,10 +619,6 @@ def handle_delay_game(delay_quiz):
                 }
             )
 
-            # 构建promotion_dic
-            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
-                promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': return_coin, 'status': 2})
-
         # 开始执行sql语句
         # 插入coin_detail表
         sql = make_insert_sql('users_coindetail', coin_detail_list)
@@ -683,8 +664,8 @@ def handle_delay_game(delay_quiz):
             if sql is not False:
                 cursor.execute(sql)
 
-        # # 推广代理事宜
-        # PromotionRecord.objects.insert_all(promotion_list)
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(records, 1, 2)
 
     delay_quiz.status = Quiz.DELAY
     delay_quiz.save()

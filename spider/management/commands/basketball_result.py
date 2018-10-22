@@ -221,8 +221,6 @@ def get_data_info(url, match_flag):
         # 分配奖金
         records = Record.objects.filter(quiz=quiz, is_distribution=False, user__is_robot=False)
         if len(records) > 0:
-            promotion_list = []
-
             i = 0
             for record in records:
                 i += 1
@@ -312,12 +310,8 @@ def get_data_info(url, match_flag):
 
                 record.save()
 
-                # 构建promotion_dic
-                if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
-                    promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': earn_coin, 'status': 1})
-
-            # # 推广代理事宜
-            # PromotionRecord.objects.insert_all(promotion_list)
+            # 推广代理事宜
+            PromotionRecord.objects.insert_all(records, 2, 1)
 
         quiz.status = Quiz.BONUS_DISTRIBUTION
         quiz.save()
@@ -328,7 +322,6 @@ def get_data_info(url, match_flag):
 
 def handle_delay_game(delay_quiz):
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
-    promotion_list = []
     if len(records) > 0:
         for record in records:
             # 延迟比赛，返回用户投注的钱
@@ -376,12 +369,8 @@ def handle_delay_game(delay_quiz):
             record.is_distribution = True
             record.save()
 
-            # 构建promotion_dic
-            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
-                promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': return_coin, 'status': 2})
-
         # 推广代理事宜
-        PromotionRecord.objects.insert_all(promotion_list)
+        PromotionRecord.objects.insert_all(records, 2, 2)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 

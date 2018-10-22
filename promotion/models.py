@@ -17,6 +17,9 @@ from utils.cache import get_cache, set_cache
 from users.models import UserInvitation, UserCoin
 # from utils.functions import normalize_fraction
 from django.db import connection
+from quiz.models import Record as Quiz_Record
+from marksix.models import SixRecord
+from guess.models import Record as Guess_Record, RecordStockPk as Pk_Record
 
 
 class UserPresentationManager(BaseManager):
@@ -156,23 +159,42 @@ class PromotionRecordManager(BaseManager):
             promotionrecord.created_at = created_at
             promotionrecord.save()
 
-    def insert_all(self, values):
+    def insert_all(self, records, source, status):
         """
         批量更新推广下注记录表
-        :param values: (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
-        earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
-        例子： ['(1,2,3,4)', '(2,3,4,5)','(4,5,6,7)']
-
-        :param values: [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
-
-        (record_id（记录表ID）, source(1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
-        earn_coin(获得金额，不用减本金), status(0,未开奖 1.已开奖 2.异常))
+        :param records: 投注记录
+        :param source: 类型 (1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗),
+        :param status:  状态 (0,未开奖 1.已开奖 2.异常)
         :return:
         """
-        if len(values) > 0:
+        # promotion_list such as [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
+        promotion_list = []
+        # 排除系统下注
+        if source == 1 or source == 2:
+            record_source = str(Quiz_Record.CONSOLE)
+        elif source == 3:
+            record_source = str(SixRecord.ROBOT)
+        elif source == 4:
+            record_source = str(Guess_Record.ROBOT)
+        elif source == 5:
+            record_source = str(Pk_Record.ROBOT)
+        else:
+            record_source = 0  # 有待添加
+
+        # 排除hand俱乐部
+        if source == 1 or source == 2:
+            real_records = records.objects.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
+        else:
+            real_records = records.objects.filter(~Q(source=record_source), ~Q(club_id=1))
+
+        if len(real_records) > 0:
+            for record in real_records:
+                promotion_list.append(
+                    {'record_id': record.id, 'source': source, 'earn_coin': record.earn_coin, 'status': status})
+
             print('处理推广功能')
             arr_values = []
-            for value in values:
+            for value in promotion_list:
                 values_list = [str(i) for i in list(value.values())]
                 arr_values.append('(\'' + '\',\''.join(values_list) + '\')')
             sql = "INSERT INTO promotion_promotionrecord (record_id, source, earn_coin, status) VALUES " + ','.join(
@@ -180,7 +202,7 @@ class PromotionRecordManager(BaseManager):
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
             with connection.cursor() as cursor:
-                print(sql)
+                # print(sql)
                 if sql is not False:
                     cursor.execute(sql)
         else:
