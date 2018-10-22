@@ -868,7 +868,7 @@ class UserInvitationManager(models.Manager):
                 login_number = LoginRecord.objects.filter(user_id=a.invitee_one).count()
                 if login_number > 0:
                     try:
-                        userbalance = UserCoin.objects.get(coin_id=6, user_id=user.id)
+                        userbalance = UserCoin.objects.get(coin_id=a.coin, user_id=user.id)
                     except UserCoin.DoesNotExist:
                         return 0
                     # if int(a.coin) == 9:
