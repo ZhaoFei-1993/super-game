@@ -469,7 +469,7 @@ class GuessPKRecording(GuessRecording):
                         index.periods_id: index.index_value
                     })
                 if issues.left_stock_index != index_dic[left_periods_id] or \
-                        issues.right_stock_index != index_dic[right_periods_id]:
+                        issues.right_stock_index != index_dic[right_periods_id] or issues.size_pk_result == '':
                     issues.left_stock_index = index_dic[left_periods_id]
                     issues.right_stock_index = index_dic[right_periods_id]
 
