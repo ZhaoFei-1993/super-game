@@ -1322,6 +1322,9 @@ class EosCodeManager(models.Manager):
         获取一个EOS CODE，从0个读取，依次递增
         :return:
         """
+        if settings.IS_ENABLE_USER_EOS_CODE is False:
+            return 0
+
         # TODO: 考虑并发情况进行处理，使用Redis锁机制
         eos_codes = get_cache(self.key_daily_eos_code)
         index = get_cache(self.key_daily_eos_code_index)
