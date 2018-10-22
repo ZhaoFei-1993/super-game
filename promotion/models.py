@@ -183,9 +183,11 @@ class PromotionRecordManager(BaseManager):
 
         # 排除hand俱乐部
         if source == 1 or source == 2:
-            real_records = records.objects.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
+            real_records = records.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
         else:
-            real_records = records.objects.filter(~Q(source=record_source), ~Q(club_id=1))
+            real_records = records.filter(~Q(source=record_source), ~Q(club_id=1))
+
+        SixRecord.objects
 
         if len(real_records) > 0:
             for record in real_records:
