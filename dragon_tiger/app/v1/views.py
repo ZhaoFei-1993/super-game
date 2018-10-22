@@ -16,6 +16,7 @@ from redis import Redis
 from dragon_tiger.consumers import dragon_tiger_avatar
 from datetime import datetime
 from utils.functions import number_time_judgment
+from promotion.models import PromotionRecord
 
 redis_conn = Redis()
 q = Queue(connection=redis_conn)
@@ -398,13 +399,13 @@ class DragontigerBet(ListCreateAPIView):
         option_id = self.request.data['option_id']  # 获取俱乐部ID
         club_id = self.request.data['club_id']  # 获取俱乐部ID
         coins = self.request.data['bet']  # 获取投注金额
-        coins = float(coins)
+        coins = Decimal(coins)
 
         try:
             number_tab_info = Number_tab.objects.get(pk=number_tab_id)
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        clubinfo = Club.objects.get(pk=club_id)
+        clubinfo = Club.objects.get_one(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 货币ID
         coin_accuracy = int(clubinfo.coin.coin_accuracy)  # 货币精度
 
@@ -477,7 +478,7 @@ class DragontigerBet(ListCreateAPIView):
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if float(usercoin.balance) < coins:
+        if Decimal(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         record = Dragontigerrecord()
@@ -581,6 +582,11 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 15
         coin_detail.save()
+
+        if int(club_id) == 1 or int(user.is_robot) == 1:
+            pass
+        else:
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 7, record.created_at)
 
         response = {
             'code': 0,

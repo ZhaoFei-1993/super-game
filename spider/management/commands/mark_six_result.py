@@ -3,16 +3,23 @@ from marksix.models import SixRecord, Option
 from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail
-from promotion.models import UserPresentation as UserPresentation_new
+from promotion.models import PromotionRecord
+
 
 coin_detail_list = []
 user_message_list = []
 user_coin_dic = {}
 record_right_list = []
 record_false_list = []
+promotion_list = []
 
 
-def base_functions(user_id, coin_id, coin_name, earn_coin):
+def base_functions(record, coin_id, coin_name, earn_coin):
+    record_id = record.id
+    user_id = record.user_id
+    # 构建promotion_dic
+    promotion_list.append({'record_id': record_id, 'source': 3, 'earn_coin': earn_coin, 'status': 1})
+
     if Decimal(earn_coin) > 0:
         # user_coin
         if user_id not in user_coin_dic.keys():
@@ -55,7 +62,7 @@ def special_code_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -75,7 +82,7 @@ def color_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -117,7 +124,7 @@ def continuous_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -182,7 +189,7 @@ def two_sides_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -205,7 +212,7 @@ def animal_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -231,7 +238,7 @@ def special_head_tail_result(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -250,7 +257,7 @@ def elements_result(record, answer_dic, cache_club_value):
         earn_coin = float('-' + str(record.bet_coin))
     record.earn_coin = earn_coin
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -281,7 +288,7 @@ def special_animal(record, answer_dic, cache_club_value):
     record.earn_coin = earn_coin
     record.save()
 
-    base_functions(record.user_id, coin_id, coin_name, earn_coin)
+    base_functions(record, coin_id, coin_name, earn_coin)
     return earn_coin
 
 
@@ -298,13 +305,6 @@ def ergodic_record(issue, answer_dic):
             earn_coin = play_dic[record.play_id](record, answer_dic, cache_club_value)
             record.status = '1'
             record.save()
-
-            # 邀请代理事宜
-            if earn_coin > 0:
-                income = Decimal(earn_coin - float(record.bet_coin))
-            else:
-                income = Decimal(earn_coin)
-            UserPresentation_new.objects.club_flow_statistics(record.user_id, record.club_id, record.bet_coin, income)
 
     # 开始执行sql语句
     # 插入coin_detail表
@@ -327,3 +327,6 @@ def ergodic_record(issue, answer_dic):
     with connection.cursor() as cursor:
         if sql is not False:
             cursor.execute(sql)
+
+    # # 推广代理事宜
+    # PromotionRecord.objects.insert_all(promotion_list)

@@ -455,10 +455,10 @@ class BetView(ListCreateAPIView):
         play_id = self.request.data['play_id']  # 获取俱乐部ID
         option = self.request.data['option_id']  # 获取选项ID
         coins = self.request.data['bet']  # 获取投注金额
-        coins = float(coins)
+        coins = Decimal(coins)
 
         periods_info = Periods.objects.get(pk=periods_id)
-        clubinfo = Club.objects.get_one(pk=club_id)
+        clubinfo = Club.objects.get_one(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 破产赠送hand功能
         coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
 
@@ -491,8 +491,8 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
-        coin_betting_control = float(bet_limit.bets_min)
-        coin_betting_toplimit = float(bet_limit.bets_max)
+        coin_betting_control = Decimal(bet_limit.bets_min)
+        coin_betting_toplimit = Decimal(bet_limit.bets_max)
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
@@ -501,7 +501,7 @@ class BetView(ListCreateAPIView):
             Sum('bets'))
 
         bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
-        bet_sum = float(bet_sum) + float(coins)
+        bet_sum = Decimal(bet_sum) + Decimal(coins)
 
         if coin_id == Coin.HAND:
             if bet_sum >= 5000000:
@@ -521,7 +521,7 @@ class BetView(ListCreateAPIView):
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if float(usercoin.balance) < coins:
+        if Decimal(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
         play_info = option_odds.play
 
@@ -560,7 +560,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
 
-        if int(club_id) == 1:
+        if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
             PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 4, record.created_at)

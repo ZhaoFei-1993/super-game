@@ -9,8 +9,12 @@ from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog
 from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGiveRecords
 from chat.models import Club
-from utils.functions import normalize_fraction
+from utils.functions import normalize_fraction, to_decimal
 from decimal import Decimal
+from time import sleep
+from utils.functions import normalize_fraction, to_decimal
+from promotion.models import PromotionRecord
+
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -134,6 +138,7 @@ def get_data(url):
 
 def get_data_info(url, match_flag):
     print('match_flag === ', match_flag)
+    is_open = False
     datas = get_data(url + match_flag)
     soup = BeautifulSoup(datas, 'lxml')
 
@@ -178,137 +183,152 @@ def get_data_info(url, match_flag):
             print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
+        is_open = True
 
     else:
         print(match_flag + ',' + '未有开奖信息')
 
     # ------------------------------------------------------------------------------------------------
-
-    quiz = Quiz.objects.filter(match_flag=match_flag).first()
-    quiz.host_team_score = host_team_score
-    quiz.guest_team_score = guest_team_score
-    quiz.save()
-
-    rule_all = Rule.objects.filter(quiz=quiz).all()
-    rule_mnl = rule_all.filter(type=4).first()
-    rule_hdc = rule_all.filter(type=5).first()
-    rule_hilo = rule_all.filter(type=6).first()
-    rule_wnm = rule_all.filter(type=7).first()
-
-    option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
-    option_mnl.is_right = 1
-    option_mnl.save()
-
-    option_hdc = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
-    option_hdc.is_right = 1
-    option_hdc.save()
-
-    option_hilo = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
-    option_hilo.is_right = 1
-    option_hilo.save()
-
-    option_wnm = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
-    option_wnm.is_right = 1
-    option_wnm.save()
-
     flag = False
-    # 分配奖金
-    records = Record.objects.filter(quiz=quiz, is_distribution=False)
-    if len(records) > 0:
-        for record in records:
-            # 用户增加对应币金额
-            club = Club.objects.get(pk=record.roomquiz_id)
+    if is_open is True:
+        quiz = Quiz.objects.filter(match_flag=match_flag).first()
+        quiz.host_team_score = host_team_score
+        quiz.guest_team_score = guest_team_score
+        quiz.save()
 
-            # 获取币信息
-            coin = Coin.objects.get(pk=club.coin_id)
+        rule_all = Rule.objects.filter(quiz=quiz).all()
+        rule_mnl = rule_all.filter(type=4).first()
+        rule_hdc = rule_all.filter(type=5).first()
+        rule_hilo = rule_all.filter(type=6).first()
+        rule_wnm = rule_all.filter(type=7).first()
 
-            flag = True
-            # 判断是否回答正确
-            is_right = False
-            if record.rule_id == rule_mnl.id:
-                if record.option.option_id == option_mnl.id:
-                    is_right = True
-            if record.rule_id == rule_hdc.id:
-                if record.option.option_id == option_hdc.id:
-                    is_right = True
-            if record.rule_id == rule_hilo.id:
-                if record.option.option_id == option_hilo.id:
-                    is_right = True
-            if record.rule_id == rule_wnm.id:
-                if record.option.option_id == option_wnm.id:
-                    is_right = True
+        option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
+        option_mnl.is_right = 1
+        option_mnl.save()
 
-            earn_coin = Decimal(str(record.bet)) * Decimal(str(record.odds))
-            earn_coin = float(normalize_fraction(earn_coin, int(coin.coin_accuracy)))
-            record.type = Record.CORRECT
-            # 对于用户来说，答错只是记录下注的金额
-            if is_right is False:
-                earn_coin = '-' + str(record.bet)
-                record.type = Record.MISTAKE
-            record.earn_coin = earn_coin
-            record.is_distribution = True
-            record.save()
+        option_hdc = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
+        option_hdc.is_right = 1
+        option_hdc.save()
 
-            if is_right is True:
-                try:
-                    user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
-                except UserCoin.DoesNotExist:
-                    user_coin = UserCoin()
+        option_hilo = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
+        option_hilo.is_right = 1
+        option_hilo.save()
 
-                user_coin.coin_id = club.coin_id
-                user_coin.user_id = record.user_id
-                user_coin.balance = Decimal(user_coin.balance) + Decimal(earn_coin)
-                user_coin.save()
+        option_wnm = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
+        option_wnm.is_right = 1
+        option_wnm.save()
 
-                # 增加系统赠送锁定金额
-                if int(record.source) == Record.GIVE:
-                    coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
-                    coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
-                    coin_give_records.save()
+        # 分配奖金
+        records = Record.objects.filter(quiz=quiz, is_distribution=False, user__is_robot=False)
+        if len(records) > 0:
+            promotion_list = []
 
-                # 用户资金明细表
-                coin_detail = CoinDetail()
-                coin_detail.user_id = record.user_id
-                coin_detail.coin_name = coin.name
-                coin_detail.amount = Decimal(earn_coin)
-                coin_detail.rest = user_coin.balance
-                coin_detail.sources = CoinDetail.OPEB_PRIZE
-                coin_detail.save()
+            i = 0
+            for record in records:
+                i += 1
+                print(i, ' / ', len(records))
+                # 用户增加对应币金额
+                club = Club.objects.get(pk=record.roomquiz_id)
 
-            # handle  USDT活动
-            if is_right is True:
-                handle_activity(record, coin, earn_coin)
-            else:
-                handle_activity(record, coin, 0)
+                # 获取币信息
+                coin = Coin.objects.get(pk=club.coin_id)
 
-            # 发送信息
-            u_mes = UserMessage()
-            u_mes.status = 0
-            u_mes.user_id = record.user_id
-            u_mes.message_id = 6  # 私人信息
-            u_mes.title = club.room_title + '开奖公告'
-            u_mes.title_en = 'Lottery announcement from ' + club.room_title_en
-            option_right = Option.objects.get(rule=record.rule, is_right=True)
-            if is_right is False:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
-                u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，You are wrong.'
-            elif is_right is True:
-                u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您的奖金是:' + str(
-                    round(earn_coin, 3))
-                u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，Your bonus is:' + str(
-                    round(earn_coin, 3))
-            u_mes.save()
+                flag = True
+                # 判断是否回答正确
+                is_right = False
+                if record.rule_id == rule_mnl.id:
+                    if record.option.option_id == option_mnl.id:
+                        is_right = True
+                if record.rule_id == rule_hdc.id:
+                    if record.option.option_id == option_hdc.id:
+                        is_right = True
+                if record.rule_id == rule_hilo.id:
+                    if record.option.option_id == option_hilo.id:
+                        is_right = True
+                if record.rule_id == rule_wnm.id:
+                    if record.option.option_id == option_wnm.id:
+                        is_right = True
 
-            record.save()
+                earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
+                earn_coin = float(normalize_fraction(earn_coin, int(coin.coin_accuracy)))
+                record.type = Record.CORRECT
+                # 对于用户来说，答错只是记录下注的金额
+                if is_right is False:
+                    earn_coin = '-' + str(record.bet)
+                    record.type = Record.MISTAKE
+                record.earn_coin = earn_coin
+                record.is_distribution = True
+                record.save()
 
-    quiz.status = Quiz.BONUS_DISTRIBUTION
-    quiz.save()
-    print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
-    return flag
+                if is_right is True:
+                    try:
+                        user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
+                    except UserCoin.DoesNotExist:
+                        user_coin = UserCoin()
+
+                    user_coin.coin_id = club.coin_id
+                    user_coin.user_id = record.user_id
+                    user_coin.balance = to_decimal(user_coin.balance) + to_decimal(earn_coin)
+                    user_coin.save()
+
+                    # 增加系统赠送锁定金额
+                    if int(record.source) == Record.GIVE:
+                        coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                        coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                        coin_give_records.save()
+
+                    # 用户资金明细表
+                    coin_detail = CoinDetail()
+                    coin_detail.user_id = record.user_id
+                    coin_detail.coin_name = coin.name
+                    coin_detail.amount = Decimal(earn_coin)
+                    coin_detail.rest = user_coin.balance
+                    coin_detail.sources = CoinDetail.OPEB_PRIZE
+                    coin_detail.save()
+
+                # # handle  USDT活动
+                # if is_right is True:
+                #     handle_activity(record, coin, earn_coin)
+                # else:
+                #     handle_activity(record, coin, 0)
+
+                # 发送信息
+                u_mes = UserMessage()
+                u_mes.status = 0
+                u_mes.user_id = record.user_id
+                u_mes.message_id = 6  # 私人信息
+                u_mes.title = club.room_title + '开奖公告'
+                u_mes.title_en = 'Lottery announcement from ' + club.room_title_en
+                option_right = Option.objects.get(rule=record.rule, is_right=True)
+                if is_right is False:
+                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
+                    u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，You are wrong.'
+                elif is_right is True:
+                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您的奖金是:' + str(
+                        round(earn_coin, 3))
+                    u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，Your bonus is:' + str(
+                        round(earn_coin, 3))
+                u_mes.save()
+
+                record.save()
+
+                # 构建promotion_dic
+                if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                    promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': earn_coin, 'status': 1})
+
+            # # 推广代理事宜
+            # PromotionRecord.objects.insert_all(promotion_list)
+
+        quiz.status = Quiz.BONUS_DISTRIBUTION
+        quiz.save()
+
+        print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
+        return flag
 
 
 def handle_delay_game(delay_quiz):
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
+    promotion_list = []
     if len(records) > 0:
         for record in records:
             # 延迟比赛，返回用户投注的钱
@@ -330,7 +350,7 @@ def handle_delay_game(delay_quiz):
 
             user_coin.coin_id = club.coin_id
             user_coin.user_id = record.user_id
-            user_coin.balance = Decimal(user_coin.balance) + Decimal(return_coin)
+            user_coin.balance = to_decimal(user_coin.balance) + to_decimal(return_coin)
             user_coin.save()
 
             # 用户资金明细表
@@ -356,7 +376,14 @@ def handle_delay_game(delay_quiz):
             record.is_distribution = True
             record.save()
 
-            print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
+            # 构建promotion_dic
+            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
+                promotion_list.append({'record_id': record.id, 'source': 2, 'earn_coin': return_coin, 'status': 2})
+
+        # 推广代理事宜
+        PromotionRecord.objects.insert_all(promotion_list)
+
+    print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
 
 def cash_back(quiz):
@@ -472,6 +499,7 @@ class Command(BaseCommand):
         if quizs.exists():
             for quiz in quizs:
                 flag = get_data_info(base_url, quiz.match_flag)
+                sleep(10)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                 # if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                 #     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))

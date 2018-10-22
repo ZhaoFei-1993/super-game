@@ -73,11 +73,11 @@ def get_data_info(url):
             except Exception as e:
                 continue
             if host_team_dt['status']['code'] == 0:
-                host_team_en = host_team_dt['result']['official_name']
+                host_team_en = host_team_dt['result']['official_name'].replace('\'', ' ')
             else:
                 host_team_en = ''
             if guest_team_dt['status']['code'] == 0:
-                guest_team_en = guest_team_dt['result']['official_name']
+                guest_team_en = guest_team_dt['result']['official_name'].replace('\'', ' ')
             else:
                 guest_team_en = ''
 

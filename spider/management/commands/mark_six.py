@@ -79,8 +79,9 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
     flat_code = ','.join(pre_draw_code_list[:-1])
     special_code = str(pre_draw_code_list[-1])
 
-    special_code_head = special_code[0] + '头'
-    special_code_tail = special_code[1] + '尾'
+    special_code_head = code_list[-1][0] + '头'
+    special_code_tail = code_list[-1][1] + '尾'
+
     special_code_head_id = str(Option.objects.get(option=special_code_head).id)
     special_code_tail_id = str(Option.objects.get(option=special_code_tail).id)
 
@@ -192,19 +193,20 @@ class Command(BaseCommand):
         open_price = OpenPrice.objects.order_by('-open').first()
         next_open = open_price.next_open
         if now_time > next_open:
-            if now_time < next_open + datetime.timedelta(hours=1) or now_time > next_open + datetime.timedelta(days=1):
-                response = requests.post(url, data=data, headers=headers)
-                open_price = OpenPrice.objects.order_by('-open').first()
-                for body_list in response.json()['result']['data']['bodyList']:
-                    pre_draw_date = body_list['preDrawDate']
-                    issue = str(body_list['issue'])
-                    if issue == open_price.next_issue:
-                        print(pre_draw_date, ' ', issue + '期')
-                        # 拿到正码
-                        pre_draw_code = body_list['preDrawCode']
-                        pre_draw_code_list = pre_draw_code.split(',')
+            # if now_time < next_open + datetime.timedelta(hours=1) or now_time > next_open + datetime.timedelta(days=1):
 
-                        mark_six_result(pre_draw_code_list, pre_draw_date, issue)
+            response = requests.post(url, data=data, headers=headers)
+            open_price = OpenPrice.objects.order_by('-open').first()
+            for body_list in response.json()['result']['data']['bodyList']:
+                pre_draw_date = body_list['preDrawDate']
+                issue = str(body_list['issue'])
+                if issue == open_price.next_issue:
+                    print(pre_draw_date, ' ', issue + '期')
+                    # 拿到正码
+                    pre_draw_code = body_list['preDrawCode']
+                    pre_draw_code_list = pre_draw_code.split(',')
+
+                    mark_six_result(pre_draw_code_list, pre_draw_date, issue)
         else:
             print('暂不需要处理')
         print('----------------------------------------------------------------------')

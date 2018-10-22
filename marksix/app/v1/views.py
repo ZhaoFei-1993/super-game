@@ -480,10 +480,10 @@ class BetsViews(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        if int(club_id) == 1:
+        if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
-            clubinfo = Club.objects.get_one(pk=club_id)
+            clubinfo = Club.objects.get_one(pk=int(club_id))
             PromotionRecord.objects.insert_record(user, clubinfo, sixcord.id, Decimal(bet), 3, sixcord.created_at)
 
         return self.response({'code': 0})

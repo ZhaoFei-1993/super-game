@@ -6,6 +6,7 @@ from users.models import Coin, UserCoin, CoinDetail
 from quiz.models import Option, Record
 from users.models import UserMessage
 from decimal import Decimal
+from promotion.models import PromotionRecord
 
 
 def asia_option(quiz, rule_asia):
@@ -100,6 +101,8 @@ def asia_result(quiz, records_asia):
         '一球半': '1.5', '球半/两球': '1.5/2', '两球': '2', '两球/两球半': '2/2.5', '三球': '3', '三球/三球半': '3/3.5',
         '四球': '4',
     }
+
+    promotion_list = []
 
     for record in records_asia:
         # 用户增加对应币金额
@@ -200,6 +203,9 @@ def asia_result(quiz, records_asia):
                             earn_coin = '-' + str(record.bet)
                         print('上盘全胜， 下盘全负')
 
+        # 构建promotion_dic
+        promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': earn_coin, 'status': 1})
+
         record.earn_coin = earn_coin
         record.is_distribution = True
         record.save()
@@ -247,5 +253,7 @@ def asia_result(quiz, records_asia):
         record.is_distribution = True
         record.save()
 
-        print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records_asia)) + '条亚盘投注记录！')
+    # 推广代理事宜
+    PromotionRecord.objects.insert_all(promotion_list)
+    print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records_asia)) + '条亚盘投注记录！')
 
