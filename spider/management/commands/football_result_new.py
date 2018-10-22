@@ -546,7 +546,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
     real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=quiz,
                                          is_distribution=True)
     if len(real_records) > 0:
-        PromotionRecord.objects.insert_all(records, 1, 1)
+        PromotionRecord.objects.insert_all(real_records, 1, 1)
 
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
@@ -674,7 +674,7 @@ def handle_delay_game(delay_quiz):
     real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=delay_quiz,
                                          is_distribution=True)
     if len(real_records) > 0:
-        PromotionRecord.objects.insert_all(records, 1, 2)
+        PromotionRecord.objects.insert_all(real_records, 1, 2)
 
     end_time = time()
     cost_time = str(round(end_time - start_time)) + '秒'
