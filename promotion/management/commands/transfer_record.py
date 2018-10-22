@@ -39,7 +39,7 @@ class Command(BaseCommand, BaseView):
                 status = 3
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("足球，篮球转移记录完成！存入真实用户记录", s, "条")
         pk_list = RecordStockPk.objects.filter(created_at__gte=start_time, source=3)
         s = 0
@@ -60,7 +60,7 @@ class Command(BaseCommand, BaseView):
                 status = 3
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("股票PK转移记录完成！存入真实用户记录", s, "条")
 
         guess_list = StockRecord.objects.filter(created_at__gte=start_time, source=3)
@@ -82,7 +82,7 @@ class Command(BaseCommand, BaseView):
                 status = 3
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("股票转移记录完成！存入真实用户记录", s, "条")
 
         six_list = SixRecord.objects.filter(created_at__gte=start_time, source=3)
@@ -102,7 +102,7 @@ class Command(BaseCommand, BaseView):
                 status = 2
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("六合彩转移记录完成！存入真实用户记录", s, "条")
 
         dragontiger_list = Dragontigerrecord.objects.filter(created_at__gte=start_time, source=3)
@@ -124,7 +124,7 @@ class Command(BaseCommand, BaseView):
                 status = 3
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("龙虎斗转移记录完成！存入真实用户记录", s, "条")
 
         baccarat_list = Baccaratrecord.objects.filter(created_at__gte=start_time, source=3)
@@ -146,7 +146,7 @@ class Command(BaseCommand, BaseView):
                 status = 3
             info.status = status
             info.created_at = i.created_at
-            info.save()
+            # info.save()
         print("百家乐转移记录完成！存入真实用户记录", s, "条")
 
 
