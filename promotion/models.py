@@ -189,7 +189,7 @@ class PromotionRecordManager(BaseManager):
         print(records.filter(~Q(source='4')))
 
         print('-------------------------------')
-        print(records.filter(~Q(roomquiz_id=1)))
+        print(records.filter(~Q(club_id=1)))
         print('-------------------------------')
         print(records.filter(Q(source='1')))
 
