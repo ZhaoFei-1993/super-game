@@ -181,19 +181,6 @@ class PromotionRecordManager(BaseManager):
         else:
             record_source = 0  # 有待添加
 
-        print(type(record_source))
-        print('record_source ======== ', record_source)
-        print('records ========', records)
-        print(records.filter(~Q(source=record_source)))
-        print(records.filter(~Q(source=4)))
-        print(records.filter(~Q(source='4')))
-
-        print('-------------------------------')
-        print(records.filter(~Q(club_id=1)))
-        print('-------------------------------')
-        print(records.filter(Q(source='1')))
-
-
         # 排除hand俱乐部
         if source == 1 or source == 2:
             real_records = records.filter(~Q(source=record_source), ~Q(roomquiz_id=1))
