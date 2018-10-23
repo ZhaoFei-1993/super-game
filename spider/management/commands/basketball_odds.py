@@ -54,6 +54,12 @@ def update_odds(result, quiz, rule, change_time, play_flag):
         for dt in result:
             # 对应选项赔率相应变化
             option = Option.objects.get(rule=rule, flag=dt[0])
+            if play_flag == 1:
+                rule.home_let_score = dt[-2]
+                rule.save()
+            elif play_flag == 2:
+                option.option = dt[1].replace('+', '')
+
             option.odds = dt[-1]
             option.save()
 
