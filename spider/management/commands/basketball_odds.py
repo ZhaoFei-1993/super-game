@@ -10,6 +10,7 @@ from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
 from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
 from wc_auth.models import Admin
 from .get_time import get_time
+from django.db import transaction
 
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
@@ -29,6 +30,45 @@ def get_data(url):
         print('Error', e.args)
 
 
+# 更改篮球比赛赔率放方法
+def update_odds(result, quiz, rule, change_time, play_flag):
+    # play_flag: {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
+    mark = False
+    for dt in result:
+        option = Option.objects.get(rule=rule, flag=dt[0])
+        if play_flag == 0 or play_flag == 3:
+            if float(option.odds) != float(dt[-1]):
+                mark = True
+                break
+        elif play_flag == 1:
+            home_let_score = float(dt[-2])
+            if float(option.odds) != float(dt[-1]) or home_let_score != float(rule.home_let_score):
+                mark = True
+                break
+        elif play_flag == 2:
+            if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
+                mark = True
+                break
+
+    if mark is True:
+        for dt in result:
+            # 对应选项赔率相应变化
+            option = Option.objects.get(rule=rule, flag=dt[0])
+            option.odds = dt[-1]
+            option.save()
+
+            clubs = Club.objects.all()
+            for club in clubs:
+                option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
+                option_odds.odds = dt[-1]
+                option_odds.save()
+        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
+        print('=================================================')
+    else:
+        print('无变化')
+
+
+@transaction.atomic()
 def get_data_info(url):
     datas = get_data(url)
     if len(datas['data']) != 0:
@@ -124,13 +164,18 @@ def get_data_info(url):
                 quiz = Quiz.objects.get(match_flag=match_id)
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
-                rule_had = rule_all.filter(type=0).first()
-                rule_hhad = rule_all.filter(type=1).first()
-                rule_ttg = rule_all.filter(type=3).first()
-                rule_crs = rule_all.filter(type=2).first()
+                rule_had = rule_all.filter(type=4).first()
+                rule_hhad = rule_all.filter(type=5).first()
+                rule_ttg = rule_all.filter(type=6).first()
+                rule_crs = rule_all.filter(type=7).first()
 
                 change_time = get_time()
 
+                # {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
+                result_odds_dic = {0: result_mnl, 1: result_hdc, 2: result_hilo, 3: result_wnm}
+                rule_odds_dic = {0: rule_had, 1: rule_hhad, 2: rule_ttg, 3: rule_crs}
+                for i in range(0, 4):
+                    update_odds(result_odds_dic[i], quiz, rule_odds_dic[i], change_time, i)
     else:
         print('未请求到任何数据')
 

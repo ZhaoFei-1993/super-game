@@ -105,7 +105,7 @@ class StockList(ListAPIView):
                 if stock_id not in previous_periods_dt.keys():
                     previous_periods_dt.update(
                         {
-                            previous_period.stock_id: {
+                            stock_id: {
                                 'previous_result': '',
                                 'answer': '',
                                 'previous_result_colour': 3,

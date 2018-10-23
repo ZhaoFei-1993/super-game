@@ -10,6 +10,7 @@ from quiz.models import Quiz, Rule, Option, QuizOddsLog, OptionOdds
 from chat.models import Club
 from decimal import Decimal
 import datetime
+from django.db import transaction
 
 base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
 asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
@@ -182,7 +183,7 @@ def update_odds(result, rule, quiz, change_time, flag):
         print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
         print('=================================================')
     else:
-        pass
+        print('无变化')
 
 
 def get_data(url):
@@ -196,6 +197,7 @@ def get_data(url):
         print('Error', e.args)
 
 
+@transaction.atomic()
 def get_data_info(url):
     datas = get_data(url)
     if len(datas['data']) != 0:
