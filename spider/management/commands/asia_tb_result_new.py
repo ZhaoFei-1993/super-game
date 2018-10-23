@@ -216,7 +216,7 @@ def asia_result(quiz, records_asia):
                             earn_coin = '-' + str(record.bet)
                         # print('上盘全胜， 下盘全负')
 
-        earn_coin = float(earn_coin)
+        earn_coin = to_decimal(earn_coin)
         if earn_coin > 0:
             if record.user_id not in user_coin_dic.keys():
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
@@ -231,13 +231,13 @@ def asia_result(quiz, records_asia):
                     coin_id: {'balance': float(user_coin.balance)}
                 })
 
-            # 用户资金明细表
             user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(
                 user_coin_dic[record.user_id][coin_id]['balance']) + to_decimal(earn_coin)
+            # 用户资金明细表
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             coin_detail_list.append({
                 'user_id': str(record.user_id),
-                'coin_name': coin_name, 'amount': str(float(earn_coin)),
+                'coin_name': coin_name, 'amount': str(earn_coin),
                 'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
                 'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
                 'created_at': now_time,

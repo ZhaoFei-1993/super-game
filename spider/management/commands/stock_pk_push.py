@@ -51,7 +51,8 @@ class Command(BaseCommand):
 
                 issue_last_obj = Issues.objects.filter(open__gt=time_now).order_by('open').first()
                 issue_last = {'issue_id': issue_last_obj.id, 'open_time': issue_last_obj.open,
-                              'issue': issue_last_obj.issue, 'rest': 0, 'switch': 0, }
+                              'issue': issue_last_obj.issue, 'rest': 0, 'switch': 0, 'open_mark_before': 0,
+                              'open_mark_after': 0, }
                 issue_pre = {'issue_id': last_issue_id, 'open_time': last_open_time,
                              'issue': last_issue, }
                 issue_time_dic['issue_last'] = issue_last
