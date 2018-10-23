@@ -51,6 +51,7 @@ class StockList(ListAPIView):
             self.last_periods_list.append(period)
             if period.periods - 1 != 0:
                 pre_period.append({period.stock_id: period.periods - 1})
+        print('pre_period =========== ', pre_period)
         # 取上期
         for pre_period in Periods.objects.filter(
                 Q(Q(stock_id=list(pre_period[0].keys())[0]) | Q(periods=list(pre_period[0].values())[0])) | Q(
