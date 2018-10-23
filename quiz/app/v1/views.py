@@ -656,9 +656,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, 6),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                    "estimate_score": normalize_fraction(i.estimate_score, 6),
                     "list_win": win,
                     "list_flat": flat,
                     "list_loss": loss
@@ -700,9 +700,9 @@ class RuleView(ListAPIView):
                         "quiz_id": i.quiz_id,
                         "type": i.TYPE_CHOICE[int(i.type)][1],
                         "tips": tips,
-                        "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                        "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                        "home_let_score": normalize_fraction(i.home_let_score, 6),
+                        "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                        "estimate_score": normalize_fraction(i.estimate_score, 6),
                         "handicap": i.handicap,
                         "list": list
                     })
@@ -717,9 +717,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, 6),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                    "estimate_score": normalize_fraction(i.estimate_score, 6),
                     "list": list
                 })
         return self.response({'code': 0, 'data': data,
