@@ -155,8 +155,8 @@ def new_issue(now_issue, now_open_date):
     next_open_oth_ymd = ''
     for td_tag in soup.select('table[class="auto-style4"]')[0].find_all('tr')[1:5]:
         now_open_oth_ymd = td_tag.find_all('td')[0].text.replace('/', '-')
-        next_open_oth_ymd = td_tag.find_all('td')[3].text.replace('/', '-')
         if now_open_ymd == now_open_oth_ymd:
+            next_open_oth_ymd = td_tag.find_all('td')[3].text.replace('/', '-')
             break
 
     if next_open_oth_ymd != '':

@@ -307,8 +307,13 @@ def get_data_info(url):
                 os.chdir(img_dir)
                 if os.path.exists(host_team_abbr + '.png'):
                     host_team_avatar = host_team_abbr + '.png'
+                elif os.path.exists(host_team + '.png'):
+                    host_team_avatar = host_team + '.png'
+
                 if os.path.exists(guest_team_abbr + '.png'):
                     guest_team_avatar = guest_team_abbr + '.png'
+                elif os.path.exists(guest_team + '.png'):
+                    host_team_avatar = guest_team + '.png'
 
                 # os.chdir(cache_dir)
                 # with open('match_cache.txt', 'r+') as f:

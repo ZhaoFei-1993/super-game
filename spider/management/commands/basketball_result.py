@@ -248,7 +248,7 @@ def get_data_info(url, match_flag):
                         is_right = True
 
                 earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
-                earn_coin = float(normalize_fraction(earn_coin, int(coin.coin_accuracy)))
+                earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
                 record.type = Record.CORRECT
                 # 对于用户来说，答错只是记录下注的金额
                 if is_right is False:
@@ -269,17 +269,17 @@ def get_data_info(url, match_flag):
                     user_coin.balance = to_decimal(user_coin.balance) + to_decimal(earn_coin)
                     user_coin.save()
 
-                    # 增加系统赠送锁定金额
-                    if int(record.source) == Record.GIVE:
-                        coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
-                        coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
-                        coin_give_records.save()
+                    # # 增加系统赠送锁定金额
+                    # if int(record.source) == Record.GIVE:
+                    #     coin_give_records = CoinGiveRecords.objects.get(user=record.user, coin_give__coin=coin)
+                    #     coin_give_records.lock_coin = coin_give_records.lock_coin + Decimal(earn_coin)
+                    #     coin_give_records.save()
 
                     # 用户资金明细表
                     coin_detail = CoinDetail()
                     coin_detail.user_id = record.user_id
                     coin_detail.coin_name = coin.name
-                    coin_detail.amount = Decimal(earn_coin)
+                    coin_detail.amount = str(to_decimal(earn_coin))
                     coin_detail.rest = user_coin.balance
                     coin_detail.sources = CoinDetail.OPEB_PRIZE
                     coin_detail.save()
@@ -353,7 +353,7 @@ def handle_delay_game(delay_quiz):
             coin_detail = CoinDetail()
             coin_detail.user_id = record.user_id
             coin_detail.coin_name = coin.name
-            coin_detail.amount = Decimal(return_coin)
+            coin_detail.amount = str(return_coin)
             coin_detail.rest = user_coin.balance
             coin_detail.sources = CoinDetail.RETURN
             coin_detail.save()
