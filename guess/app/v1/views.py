@@ -53,10 +53,10 @@ class StockList(ListAPIView):
                 pre_period.append({period.stock_id: period.periods - 1})
         # 取上期
         for pre_period in Periods.objects.filter(
-                Q(Q(stock_id=list(pre_period[0].keys())[0]) | Q(period=list(pre_period[0].values())[0])) | Q(
-                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(period=list(pre_period[0].values())[0])) | Q(
-                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(period=list(pre_period[0].values())[0])) | Q(
-                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(period=list(pre_period[0].values())[0]))):
+                Q(Q(stock_id=list(pre_period[0].keys())[0]) | Q(periods=list(pre_period[0].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(periods=list(pre_period[0].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(periods=list(pre_period[0].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[0].keys())[0]) | Q(periods=list(pre_period[0].values())[0]))):
             self.previous_periods_list.append(pre_period)
 
         return Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys())
