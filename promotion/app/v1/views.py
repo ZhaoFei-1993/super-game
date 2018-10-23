@@ -38,14 +38,10 @@ class PromotionInfoView(ListAPIView):
         user = self.request.user
         nowadays_day = datetime.datetime.now().strftime('%Y-%m-%d')
         nowadays_now = str(nowadays_day) + ' 00:00:00'
-        print("nowadays_day===============", nowadays_day)
-        print("nowadays_now===============", nowadays_now)
         nowadays_old = str(nowadays_day) + ' 23:59:59'
         yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         yesterday_now = str(yesterday) + ' 00:00:00'
         yesterday_old = str(yesterday) + ' 23:59:59'
-        print("yesterday_now======================", yesterday_now)
-        print("yesterday_old========================", yesterday_old)
 
         user_avatar = user.avatar          # 用户头像
         nowadays_number = UserInvitation.objects.filter(Q(created_at__lte=nowadays_old),Q(created_at__gte=nowadays_now), inviter_id=user.id).count()            # 今天邀请人数

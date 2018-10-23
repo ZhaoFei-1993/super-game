@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'baccarat',
     'recharge',
     'promotion',
+    'banker',
 ]
 
 MIDDLEWARE = [

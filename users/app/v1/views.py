@@ -3234,11 +3234,14 @@ class MoveRecordView(ListAPIView):
         coin_name = coin_info.name
         coin_icon = coin_info.icon
 
-        sql_list = " u.avatar, u.telephone, date_format( m.created_at, '%Y%m%d%H%i%s' ) as times,"
+        sql_list = " (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN ui.avatar ELSE u.avatar END) as avatar,"
+        sql_list += " (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN ui.telephone ELSE u.telephone END) as telephone, "
+        sql_list += "date_format( m.created_at, '%Y%m%d%H%i%s' ) as times,"
         sql_list += " date_format( m.created_at, '%Y' ) as years, date_format( m.created_at, '%m/%d' ) as month,"
-        sql_list += " m.remarks, m.balance"
+        sql_list += " m.remarks, m.balance, (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN 1 ELSE 2 END) as type"
         sql = "select " + sql_list + " from users_mobilecoin m"
         sql += " inner join users_user u on m.sponsor_id=u.id"
+        sql += " inner join users_user ui on m.recipient_id=ui.id"
         sql += " where (m.sponsor_id = '" + str(user_id) + "'"
         sql += " or m.recipient_id = '" + str(user_id) + "')"
         sql += " and m.coin_id = '" + str(coin_id) + "'"
@@ -3273,7 +3276,8 @@ class MoveRecordView(ListAPIView):
                 "telephone": mobile_coin[1],
                 "avatar": mobile_coin[0],
                 "remarks": mobile_coin[5],
-                "balance": balance
+                "balance": balance,
+                "type": mobile_coin[7]            # 1.转出   2.转入
             })
 
         return self.response({'code': 0,
