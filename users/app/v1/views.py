@@ -224,7 +224,7 @@ class UserRegister(object):
             else:
                 user_go_line.inviter_type = 2
                 user_go_line.status = 0
-            user_go_line.money = 5
+            user_go_line.money = 20
             user_go_line.old_data = 0
             user_go_line.coin = 6
             user_go_line.inviter = invitation_user
@@ -572,7 +572,7 @@ class InfoView(ListAPIView):
         CoinGive.objects.coin_activity(user)
 
         # 破产赠送hand功能
-        Record.objects.bankruptcy_hand(user, roomquiz_id)
+        # Record.objects.bankruptcy_hand(user, roomquiz_id)
 
         # 推广人邀请送币活动
         UserInvitation.objects.activity(user)
