@@ -41,10 +41,17 @@ def update_odds(result, quiz, rule, change_time, play_flag):
                 mark = True
                 break
         elif play_flag == 1:
-            home_let_score = float(dt[-2])
-            if float(option.odds) != float(dt[-1]) or home_let_score != float(rule.home_let_score):
-                mark = True
-                break
+            let_score = dt[-2]
+            if '-' in let_score:
+                home_let_score = let_score.replace('-', '')
+                if float(option.odds) != float(dt[-1]) or float(home_let_score) != float(rule.home_let_score):
+                    mark = True
+                    break
+            else:
+                guest_let_score = let_score.replace('+', '')
+                if float(option.odds) != float(dt[-1]) or float(guest_let_score) != float(rule.guest_let_score):
+                    mark = True
+                    break
         elif play_flag == 2:
             if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
                 mark = True
