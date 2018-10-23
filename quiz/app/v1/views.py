@@ -753,8 +753,8 @@ class BetView(ListCreateAPIView):
         # coins = float(coins)
 
         clubinfo = Club.objects.get_one(pk=int(roomquiz_id))
-        coin_id = clubinfo.coin.pk  # 破产赠送hand功能
-        coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
+        coin_id = clubinfo.coin.pk
+        coin_accuracy = clubinfo.coin.coin_accuracy
         # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
         #     today = date.today()

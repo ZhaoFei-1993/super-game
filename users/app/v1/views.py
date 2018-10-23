@@ -224,7 +224,7 @@ class UserRegister(object):
             else:
                 user_go_line.inviter_type = 2
                 user_go_line.status = 0
-            user_go_line.money = 5
+            user_go_line.money = 20
             user_go_line.old_data = 0
             user_go_line.coin = 6
             user_go_line.inviter = invitation_user
@@ -572,7 +572,7 @@ class InfoView(ListAPIView):
         CoinGive.objects.coin_activity(user)
 
         # 破产赠送hand功能
-        Record.objects.bankruptcy_hand(user, roomquiz_id)
+        # Record.objects.bankruptcy_hand(user, roomquiz_id)
 
         # 推广人邀请送币活动
         UserInvitation.objects.activity(user)
@@ -973,6 +973,7 @@ class DailyListView(ListAPIView):
 
         # 签到赠送的币种
         sign_coin = Coin.objects.get_one(pk=Coin.HAND)
+        sign_coins = Coin.objects.get_one(pk=Coin.GSG)
 
         # 用户签到数据
         daily_log = DailyLog.objects.filter(user_id=request.user.id).order_by('-id').first()
@@ -1005,6 +1006,9 @@ class DailyListView(ListAPIView):
         data = []
         index = 0
         for item in items:
+            coin_icon = sign_coin
+            if int(item["days"]) == 3 or int(item["days"]) == 6:
+                coin_icon = sign_coins
             is_sign = 0
             if sign_number > 0 and index < sign_number:
                 is_sign = 1
@@ -1016,8 +1020,8 @@ class DailyListView(ListAPIView):
             data.append({
                 "id": item["id"],
                 "days": item["days"],
-                "icon": sign_coin.icon,
-                "name": sign_coin.name,
+                "icon": coin_icon.icon,
+                "name": coin_icon.name,
                 "rewards": item["rewards"],
                 "is_sign": is_sign,
                 "is_selected": is_selected
