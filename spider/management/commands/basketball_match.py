@@ -176,13 +176,18 @@ def get_data_info(url):
                 with open('match_cache.txt', 'a+') as f:
                     f.write(match_id + ',')
 
-                host_team_avatar = '篮球主队.jpg'
-                guest_team_avatar = '篮球客队.jpg'
+                host_team_avatar = '篮球主队.png'
+                guest_team_avatar = '篮球客队.png'
                 os.chdir(img_dir)
                 if os.path.exists(host_team_abbr + '.png'):
                     host_team_avatar = host_team_abbr + '.png'
+                elif os.path.exists(host_team + '.png'):
+                    host_team_avatar = host_team + '.png'
+
                 if os.path.exists(guest_team_abbr + '.png'):
                     guest_team_avatar = guest_team_abbr + '.png'
+                elif os.path.exists(guest_team + '.png'):
+                    host_team_avatar = guest_team + '.png'
 
                 # try:
                 #     img_base_url = 'http://info.sporttery.cn/basketball/info/bk_match_mnl.php?m=' + match_id
