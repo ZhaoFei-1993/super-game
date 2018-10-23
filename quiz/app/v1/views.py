@@ -865,7 +865,7 @@ class BetView(ListCreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = usercoin.coin.name
-        coin_detail.amount = '-' + str(coins)
+        coin_detail.amount = Decimal('-' + str(coins))
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()

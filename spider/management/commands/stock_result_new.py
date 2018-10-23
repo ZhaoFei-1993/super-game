@@ -21,28 +21,28 @@ class GuessRecording(object):
     def base_functions(self, record, coin_id, coin_name, earn_coin):
         user_id = record.user_id
 
-        if Decimal(earn_coin) > 0:
+        if earn_coin > 0:
             # user_coin
             if user_id not in self.user_coin_dic.keys():
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
                 self.user_coin_dic.update({
                     user_id: {
-                        coin_id: {'balance': float(user_coin.balance)}
+                        coin_id: {'balance': user_coin.balance}
                     }
                 })
             if coin_id not in self.user_coin_dic[user_id].keys():
                 user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
                 self.user_coin_dic[user_id].update({
-                    coin_id: {'balance': float(user_coin.balance)}
+                    coin_id: {'balance': user_coin.balance}
                 })
 
             # 用户资金明细表
-            self.user_coin_dic[user_id][coin_id]['balance'] = self.user_coin_dic[user_id][coin_id][
-                                                                  'balance'] + earn_coin
+            self.user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
+                self.user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.coin_detail_list.append({
                 'user_id': str(user_id),
-                'coin_name': coin_name, 'amount': str(float(earn_coin)),
+                'coin_name': coin_name, 'amount': str(earn_coin),
                 'rest': str(self.user_coin_dic[user_id][coin_id]['balance']),
                 'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
                 'created_at': now_time,
@@ -52,7 +52,7 @@ class GuessRecording(object):
         # 编辑开奖公告
         title = club_name + '开奖公告'
         title_en = 'Lottery announcement from' + club_name_en
-        earn_coin = float(record.earn_coin)
+        earn_coin = record.earn_coin
         if earn_coin < 0:
             content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
                       + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
@@ -90,16 +90,14 @@ class GuessRecording(object):
         coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
         if record.periods.size == record.options.title:
-            earn_coin = record.bets * record.odds
+            earn_coin = to_decimal(record.bets) * to_decimal(record.odds)
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
             self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
-            earn_coin = '-' + str(record.bets)
-            earn_coin = float(earn_coin)
+            earn_coin = to_decimal('-' + str(record.bets))
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
@@ -119,16 +117,14 @@ class GuessRecording(object):
 
         num_list = record.periods.points
         if str(record.options.title) in num_list:
-            earn_coin = record.bets * record.odds
+            earn_coin = to_decimal(record.bets) * to_decimal(record.odds)
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
             self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
-            earn_coin = '-' + str(record.bets)
-            earn_coin = float(earn_coin)
+            earn_coin = to_decimal('-' + str(record.bets))
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
@@ -147,16 +143,14 @@ class GuessRecording(object):
         coin_accuracy = cache_club_value[record.club.id]['coin_accuracy']
 
         if record.periods.pair == record.options.title:
-            earn_coin = record.bets * record.odds
+            earn_coin = to_decimal(record.bets) * to_decimal(record.odds)
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
             self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
-            earn_coin = '-' + str(record.bets)
-            earn_coin = float(earn_coin)
+            earn_coin = to_decimal('-' + str(record.bets))
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
@@ -181,14 +175,12 @@ class GuessRecording(object):
         if record.periods.up_and_down == record.options.title:
             earn_coin = lose_sum * (float(record.bets) / win_sum)
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            earn_coin = float(earn_coin)
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
             self.record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
         else:
-            earn_coin = '-' + str(record.bets)
-            earn_coin = float(earn_coin)
+            earn_coin = to_decimal('-' + str(record.bets))
             # record.earn_coin = earn_coin
             # record.save()
             # 记录record
@@ -299,9 +291,9 @@ class GuessRecording(object):
                 # i += 1
                 # print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
                 if record.play.play_name == str(0):
-                    earn_coin = rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic, cache_club_value)
+                    rule_dic[record.play.play_name](record, win_sum_dic, lose_sum_dic, cache_club_value)
                 else:
-                    earn_coin = rule_dic[record.play.play_name](record, cache_club_value)
+                    rule_dic[record.play.play_name](record, cache_club_value)
 
         # 开始执行sql语句
         # 更新record状态
@@ -526,15 +518,13 @@ class GuessPKRecording(GuessRecording):
 
         option_id = record.option_id
         if option_obj_dic[option_id]['title'] == issues_obj.size_pk_result:
-            earn_coin = record.bets * record.odds
+            earn_coin = to_decimal(record.bets) * to_decimal(record.odds)
             earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
-            earn_coin = float(earn_coin)
             record.earn_coin = earn_coin
             record.status = 1
             record.save()
         else:
-            earn_coin = '-' + str(record.bets)
-            earn_coin = float(earn_coin)
+            earn_coin = to_decimal('-' + str(record.bets))
             record.earn_coin = earn_coin
             record.status = 1
             record.save()

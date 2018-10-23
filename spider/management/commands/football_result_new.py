@@ -420,7 +420,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 record_false_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
             else:
                 earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
-                earn_coin = float(normalize_fraction(earn_coin, int(coin_accuracy)))
+                earn_coin = normalize_fraction(earn_coin, int(coin_accuracy))
                 record_right_list.append({'id': str(record.id), 'earn_coin': str(earn_coin)})
 
             if is_right is True:
@@ -430,24 +430,24 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                     user_coin = map_user_coin[key_user_coin_id]
                     user_coin_dic.update({
                         record.user_id: {
-                            coin_id: {'balance': float(user_coin.balance)}
+                            coin_id: {'balance': user_coin.balance}
                         }
                     })
                 if coin_id not in user_coin_dic[record.user_id].keys():
                     # user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
                     user_coin = map_user_coin[key_user_coin_id]
                     user_coin_dic[record.user_id].update({
-                        coin_id: {'balance': float(user_coin.balance)}
+                        coin_id: {'balance': user_coin.balance}
                     })
 
-                # 用户资金明细表
                 user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
                     user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
+                # 用户资金明细表
                 now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 coin_detail_list.append({
                     'user_id': str(user_id),
                     'coin_name': coin_name,
-                    'amount': str(float(earn_coin)),
+                    'amount': str(to_decimal(earn_coin)),
                     'rest': str(user_coin_dic[user_id][coin_id]['balance']),
                     'sources': str(CoinDetail.OPEB_PRIZE),
                     'is_delete': '0',
@@ -573,7 +573,7 @@ def handle_delay_game(delay_quiz):
             i += 1
             print('正在处理record_id为: ', record.id, ', 共 ', len(records), '条, 当前第 ', i, ' 条')
             # 延迟比赛，返回用户投注的钱
-            return_coin = float(record.bet)
+            return_coin = record.bet
 
             coin_id = cache_club_value[record.roomquiz_id]['coin_id']
             club_name = cache_club_value[record.roomquiz_id]['club_name']
@@ -586,13 +586,13 @@ def handle_delay_game(delay_quiz):
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
                 user_coin_dic.update({
                     record.user_id: {
-                        coin_id: {'balance': float(user_coin.balance)}
+                        coin_id: {'balance': user_coin.balance}
                     }
                 })
             if coin_id not in user_coin_dic[record.user_id].keys():
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin_id=coin_id)
                 user_coin_dic[record.user_id].update({
-                    coin_id: {'balance': float(user_coin.balance)}
+                    coin_id: {'balance': user_coin.balance}
                 })
 
             # 用户资金明细表
@@ -601,7 +601,7 @@ def handle_delay_game(delay_quiz):
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             coin_detail_list.append({
                 'user_id': str(record.user_id),
-                'coin_name': coin_name, 'amount': str(float(return_coin)),
+                'coin_name': coin_name, 'amount': str(return_coin),
                 'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
                 'sources': str(CoinDetail.RETURN), 'is_delete': '0',
                 'created_at': now_time,
