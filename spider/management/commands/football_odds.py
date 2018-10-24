@@ -438,7 +438,7 @@ def get_data_info(url):
                     dt = response_asia.text.encode("utf-8").decode('unicode_escape')
                     json_dt = eval(dt[8:-2])
                 except Exception as e:
-                    raise CommandError('Error is : ', e)
+                    raise CommandError('亚盘 Error is : ', e)
                 else:
                     if json_dt['status']['code'] == 0:
                         if rule_all.filter(type=8).exists():

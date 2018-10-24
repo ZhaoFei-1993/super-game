@@ -606,6 +606,8 @@ class RuleView(ListAPIView):
 
             list = []
             total = record_rule_total[i.id] if i.id in record_rule_total else 0
+
+            accuracy_list = []
             for s in option:
                 option_info = map_options[s.option_id]
 
@@ -618,7 +620,11 @@ class RuleView(ListAPIView):
                     accuracy = "0"
                 else:
                     accuracy = number / total
-                    accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                    accuracy = Decimal(str(accuracy)).quantize(Decimal('0.00'))
+                    if s == option[-1]:
+                        accuracy = Decimal('100') - sum(accuracy_list)
+                    else:
+                        accuracy_list.append(accuracy)
                 option_title = option_info.option
                 if language == 'en':
                     option_title = option_info.option_en
