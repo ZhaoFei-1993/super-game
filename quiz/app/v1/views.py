@@ -622,7 +622,7 @@ class RuleView(ListAPIView):
                     accuracy = number / total
                     accuracy = Decimal(str(accuracy)).quantize(Decimal('0.00'))
                     if s == option[-1]:
-                        accuracy = Decimal('100') - sum(accuracy_list)
+                        accuracy = Decimal('1') - sum(accuracy_list)
                     else:
                         accuracy_list.append(accuracy)
                 option_title = option_info.option
