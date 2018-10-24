@@ -50,9 +50,14 @@ class StockList(ListAPIView):
         for period in Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys()):
             self.last_periods_list.append(period)
             if period.periods - 1 != 0:
-                pre_period.append(period.periods - 1)
+                pre_period.append({period.stock_id: period.periods - 1})
+        print('pre_period =========== ', pre_period)
         # 取上期
-        for pre_period in Periods.objects.filter(stock_id__in=self.stock_info.keys(), periods__in=pre_period):
+        for pre_period in Periods.objects.filter(
+                Q(Q(stock_id=list(pre_period[0].keys())[0]) & Q(periods=list(pre_period[0].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[1].keys())[0]) & Q(periods=list(pre_period[1].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[2].keys())[0]) & Q(periods=list(pre_period[2].values())[0])) | Q(
+                    Q(stock_id=list(pre_period[3].keys())[0]) & Q(periods=list(pre_period[3].values())[0]))):
             self.previous_periods_list.append(pre_period)
 
         return Periods.objects.filter(is_result=False, stock_id__in=self.stock_info.keys())
@@ -100,7 +105,7 @@ class StockList(ListAPIView):
                 if stock_id not in previous_periods_dt.keys():
                     previous_periods_dt.update(
                         {
-                            previous_period.stock_id: {
+                            stock_id: {
                                 'previous_result': '',
                                 'answer': '',
                                 'previous_result_colour': 3,

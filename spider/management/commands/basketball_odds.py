@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import os
 import re
 import requests
@@ -10,6 +10,8 @@ from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
 from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
 from wc_auth.models import Admin
 from .get_time import get_time
+from django.db import transaction
+import datetime
 
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
@@ -20,15 +22,74 @@ headers = {
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
             return result
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    except Exception as e:
+        print('Error:  ', e)
+        raise CommandError('Error Out! ! !')
 
 
+# 更改篮球比赛赔率放方法
+def update_odds(result, quiz, rule, change_time, play_flag):
+    # play_flag: {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
+    mark = False
+    for dt in result:
+        option = Option.objects.get(rule=rule, flag=dt[0])
+        if play_flag == 0 or play_flag == 3:
+            if float(option.odds) != float(dt[-1]):
+                mark = True
+                break
+        elif play_flag == 1:
+            let_score = dt[-2]
+            if '-' in let_score:
+                home_let_score = let_score.replace('-', '')
+                if float(option.odds) != float(dt[-1]) or float(home_let_score) != float(rule.home_let_score):
+                    mark = True
+                    break
+            else:
+                guest_let_score = let_score.replace('+', '')
+                if float(option.odds) != float(dt[-1]) or float(guest_let_score) != float(rule.guest_let_score):
+                    mark = True
+                    break
+        elif play_flag == 2:
+            if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
+                mark = True
+                break
+
+    if mark is True:
+        for dt in result:
+            # 对应选项赔率相应变化
+            option = Option.objects.get(rule=rule, flag=dt[0])
+            if play_flag == 1:
+                let_score = dt[-2]
+                if '-' in let_score:
+                    rule.home_let_score = let_score.replace('-', '')
+                    rule.guest_let_score = 0
+                else:
+                    rule.guest_let_score = let_score.replace('+', '')
+                    rule.home_let_score = 0
+                rule.save()
+            elif play_flag == 2:
+                option.option = dt[1].replace('+', '')
+
+            option.odds = dt[-1]
+            option.save()
+
+            clubs = Club.objects.all()
+            for club in clubs:
+                option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
+                option_odds.odds = dt[-1]
+                option_odds.save()
+        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
+        print('=================================================')
+    else:
+        print('无变化')
+
+
+@transaction.atomic()
 def get_data_info(url):
     datas = get_data(url)
     if len(datas['data']) != 0:
@@ -122,15 +183,21 @@ def get_data_info(url):
 
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
                 quiz = Quiz.objects.get(match_flag=match_id)
+                print('=======================>', quiz.match_flag, 'now is ', datetime.datetime.now())
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
-                rule_had = rule_all.filter(type=0).first()
-                rule_hhad = rule_all.filter(type=1).first()
-                rule_ttg = rule_all.filter(type=3).first()
-                rule_crs = rule_all.filter(type=2).first()
+                rule_had = rule_all.filter(type=4).first()
+                rule_hhad = rule_all.filter(type=5).first()
+                rule_ttg = rule_all.filter(type=6).first()
+                rule_crs = rule_all.filter(type=7).first()
 
                 change_time = get_time()
 
+                # {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
+                result_odds_dic = {0: result_mnl, 1: result_hdc, 2: result_hilo, 3: result_wnm}
+                rule_odds_dic = {0: rule_had, 1: rule_hhad, 2: rule_ttg, 3: rule_crs}
+                for i in range(0, 4):
+                    update_odds(result_odds_dic[i], quiz, rule_odds_dic[i], change_time, i)
     else:
         print('未请求到任何数据')
 
@@ -139,4 +206,7 @@ class Command(BaseCommand):
     help = "爬取篮球比赛"
 
     def handle(self, *args, **options):
-        get_data_info(base_url)
+        try:
+            get_data_info(base_url)
+        except Exception as e:
+            raise CommandError('Error is : ', e)

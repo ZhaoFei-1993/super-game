@@ -605,6 +605,8 @@ class RuleView(ListAPIView):
 
             list = []
             total = record_rule_total[i.id] if i.id in record_rule_total else 0
+
+            accuracy_list = []
             for s in option:
                 option_info = map_options[s.option_id]
 
@@ -617,7 +619,11 @@ class RuleView(ListAPIView):
                     accuracy = "0"
                 else:
                     accuracy = number / total
-                    accuracy = Decimal(accuracy).quantize(Decimal('0.00'))
+                    accuracy = Decimal(str(accuracy)).quantize(Decimal('0.00'))
+                    if s == option[-1]:
+                        accuracy = Decimal('1') - sum(accuracy_list)
+                    else:
+                        accuracy_list.append(accuracy)
                 option_title = option_info.option
                 if language == 'en':
                     option_title = option_info.option_en
@@ -655,9 +661,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, 6),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                    "estimate_score": normalize_fraction(i.estimate_score, 6),
                     "list_win": win,
                     "list_flat": flat,
                     "list_loss": loss
@@ -699,9 +705,9 @@ class RuleView(ListAPIView):
                         "quiz_id": i.quiz_id,
                         "type": i.TYPE_CHOICE[int(i.type)][1],
                         "tips": tips,
-                        "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                        "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                        "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                        "home_let_score": normalize_fraction(i.home_let_score, 6),
+                        "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                        "estimate_score": normalize_fraction(i.estimate_score, 6),
                         "handicap": i.handicap,
                         "list": list
                     })
@@ -716,9 +722,9 @@ class RuleView(ListAPIView):
                     "quiz_id": i.quiz_id,
                     "type": i.TYPE_CHOICE[int(i.type)][1],
                     "tips": tips,
-                    "home_let_score": normalize_fraction(i.home_let_score, int(coin.coin_accuracy)),
-                    "guest_let_score": normalize_fraction(i.guest_let_score, int(coin.coin_accuracy)),
-                    "estimate_score": normalize_fraction(i.estimate_score, int(coin.coin_accuracy)),
+                    "home_let_score": normalize_fraction(i.home_let_score, 6),
+                    "guest_let_score": normalize_fraction(i.guest_let_score, 6),
+                    "estimate_score": normalize_fraction(i.estimate_score, 6),
                     "list": list
                 })
         return self.response({'code': 0, 'data': data,
