@@ -252,8 +252,9 @@ def get_live_data():
             else:
                 print('warming')
                 print('-----------------------------')
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    except Exception as e:
+        print('Error', e)
+        raise CommandError('Error Out! ! !')
 
 
 def live_football():

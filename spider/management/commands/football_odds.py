@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 import os
 import requests
@@ -111,6 +111,7 @@ def update_asia_odds(json_dt, rule, quiz, change_time):
 def update_odds(result, rule, quiz, change_time, flag):
     mark = False
     for dt in result:
+        option = Option.objects.filter(rule=rule, flag=dt[0]).first()
         if flag == 1:
             guest_let_score = 0
             home_let_score = 0
@@ -119,13 +120,11 @@ def update_odds(result, rule, quiz, change_time, flag):
             else:
                 home_let_score = dt[1][1]
 
-            option = Option.objects.get(rule=rule, flag=dt[0])
             if float(option.odds) != float(dt[2]) or float(guest_let_score) != float(rule.guest_let_score) or float(
                     home_let_score) != float(rule.home_let_score):
                 mark = True
                 break
         else:
-            option = Option.objects.get(rule=rule, flag=dt[0])
             if float(option.odds) != float(dt[2]):
                 mark = True
                 break
@@ -188,13 +187,14 @@ def update_odds(result, rule, quiz, change_time, flag):
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
             return result
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    except Exception as e:
+        print('Error', e)
+        raise CommandError('Error', e)
 
 
 @transaction.atomic()
@@ -434,11 +434,11 @@ def get_data_info(url):
 
                 # 亚盘玩法
                 try:
-                    response_asia = requests.get(asia_url + match_id, headers=headers)
+                    response_asia = requests.get(asia_url + match_id, headers=headers, timeout=15)
                     dt = response_asia.text.encode("utf-8").decode('unicode_escape')
                     json_dt = eval(dt[8:-2])
-                except requests.ConnectionError as e:
-                    print('Error', e.args)
+                except Exception as e:
+                    raise CommandError('Error is : ', e)
                 else:
                     if json_dt['status']['code'] == 0:
                         if rule_all.filter(type=8).exists():
@@ -475,4 +475,7 @@ class Command(BaseCommand):
     help = "刷新足球赔率"
 
     def handle(self, *args, **options):
-        get_data_info(base_url)
+        try:
+            get_data_info(base_url)
+        except Exception as e:
+            raise CommandError('Error is : ', e)

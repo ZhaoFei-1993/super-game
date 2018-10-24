@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import os
 import re
 import requests
@@ -11,6 +11,7 @@ from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOdds
 from wc_auth.models import Admin
 from .get_time import get_time
 from django.db import transaction
+import datetime
 
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
@@ -21,13 +22,14 @@ headers = {
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
             return result
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    except Exception as e:
+        print('Error:  ', e)
+        raise CommandError('Error Out! ! !')
 
 
 # 更改篮球比赛赔率放方法
@@ -181,6 +183,7 @@ def get_data_info(url):
 
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
                 quiz = Quiz.objects.get(match_flag=match_id)
+                print('=======================>', quiz.match_flag, 'now is ', datetime.datetime.now())
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
                 rule_had = rule_all.filter(type=4).first()
@@ -203,4 +206,7 @@ class Command(BaseCommand):
     help = "爬取篮球比赛"
 
     def handle(self, *args, **options):
-        get_data_info(base_url)
+        try:
+            get_data_info(base_url)
+        except Exception as e:
+            raise CommandError('Error is : ', e)
