@@ -234,14 +234,14 @@ class Command(BaseCommand):
         print('今日总下注数 = ', random_total)
         print('今日剩余下注数 = ', len(diff_random_datetime))
 
-        current_generate_time = ''
-        for dt in diff_random_datetime:
-            if self.get_current_timestamp() >= dt:
-                current_generate_time = dt
-                break
-
-        if current_generate_time == '':
-            raise CommandError('非自动下注时间')
+        # current_generate_time = ''
+        # for dt in diff_random_datetime:
+        #     if self.get_current_timestamp() >= dt:
+        #         current_generate_time = dt
+        #         break
+        #
+        # if current_generate_time == '':
+        #     raise CommandError('非自动下注时间')
 
         # 获取进行中的竞猜
         print(datetime.now())
@@ -286,7 +286,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(bet_message))
             self.stdout.write(self.style.SUCCESS(''))
 
-        user_generated_datetime.append(current_generate_time)
-        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
+        # user_generated_datetime.append(current_generate_time)
+        # set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
 
         self.stdout.write(self.style.SUCCESS('下注成功'))
