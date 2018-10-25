@@ -27,7 +27,7 @@ class Command(BaseCommand):
     key_today_random_datetime = 'robot_pk_bet_datetime'
 
     # 本日已生成的系统用户时间
-    key_today_generated = 'robot_pk_bet_datetime'
+    key_today_generated = 'robot_pk_bet_past_datetime'
 
     robot_bet_change_odds = False
 
