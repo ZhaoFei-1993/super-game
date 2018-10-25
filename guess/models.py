@@ -26,6 +26,7 @@ class Stock(models.Model):
     SHENZHEN = 1
     HANGSENG = 2
     DOWJONES = 3
+    NASDAQ = 4
 
     STOCK_EN = (
         (SSE, "上证指数"),

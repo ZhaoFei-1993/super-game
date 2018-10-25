@@ -77,5 +77,21 @@ class BankerRecord(models.Model):
         verbose_name = verbose_name_plural = "做庄记录表"
 
 
+class BankerBigHeadRecord(models.Model):
+    """
+    联合做庄： 局头记录表
+    """
+
+    club = models.ForeignKey(Club, on_delete=models.DO_NOTHING, related_name='banker_big_head_record_club', verbose_name="俱乐部ID")
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='banker_big_head_record_user', verbose_name="用户ID")
+    proportion = models.DecimalField(verbose_name='局头份额占比', max_digits=3, decimal_places=2, default=0.35)
+    is_receive = models.BooleanField(verbose_name="是否已有效", default=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    end_time = models.DateTimeField(verbose_name="失效时间", null=True)
+
+    class Meta:
+        verbose_name = verbose_name_plural = "做庄局头表表"
+
+
 
 
