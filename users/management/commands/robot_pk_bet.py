@@ -21,13 +21,13 @@ class Command(BaseCommand):
     help = "系统用户自动下注-猜股指"
 
     # 本日生成的系统用户总量
-    key_today_random = 'robot_stock_bet_total'
+    key_today_random = 'robot_pk_bet_total'
 
     # 本日生成的系统用户随机时间
-    key_today_random_datetime = 'robot_stock_bet_datetime'
+    key_today_random_datetime = 'robot_pk_bet_datetime'
 
     # 本日已生成的系统用户时间
-    key_today_generated = 'robot_stock_bet_quiz_datetime'
+    key_today_generated = 'robot_pk_bet_datetime'
 
     robot_bet_change_odds = False
 
