@@ -29,10 +29,12 @@ class Command(BaseCommand):
         # except Quiz.DoesNotExist:
         #     msg = 'quiz_id = ' + str(quiz_id) + ' ,quiz_id无效'
         #     raise CommandError(msg)
-
-        if Quiz.objects.filter(pk=quiz_id).exists():
-            quiz = Quiz.objects.get(pk=quiz_id)
-
+        try:
+            quiz_list = Quiz.objects.filter(pk=quiz_id)
+        except Exception as e:
+            raise CommandError('exit ! ! !')
+        if len(quiz_list) != 0:
+            quiz = quiz_list.first()
             match_flag = quiz.match_flag
 
             url = base_url

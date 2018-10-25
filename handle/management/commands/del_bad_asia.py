@@ -17,8 +17,11 @@ class Command(BaseCommand):
 
         bad_option_list = list(Option.objects.filter(rule_id__in=bad_rules_list))
 
-        QuizOddsLog.objects.filter(option_id__in=bad_option_list).delete()
-        OptionOdds.objects.filter(option_id__in=bad_option_list).delete()
-        Option.objects.filter(rule__in=bad_rules_list).delete()
-        Rule.objects.filter(id__in=bad_rules_list).delete()
-        print('删除成功')
+        if len(bad_rules_list) > 1:
+            QuizOddsLog.objects.filter(option_id__in=bad_option_list).delete()
+            OptionOdds.objects.filter(option_id__in=bad_option_list).delete()
+            Option.objects.filter(rule__in=bad_rules_list).delete()
+            Rule.objects.filter(id__in=bad_rules_list).delete()
+            print('删除成功')
+        else:
+            print('无需删除')

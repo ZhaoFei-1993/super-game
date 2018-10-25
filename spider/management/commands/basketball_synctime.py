@@ -27,9 +27,9 @@ class Command(BaseCommand):
         quiz_id = options['quiz_id']
         try:
             quiz = Quiz.objects.get(pk=quiz_id)
-        except Quiz.DoesNotExist:
+        except Exception as e:
             msg = 'quiz_id = ' + str(quiz_id) + ' ,quiz_id无效'
-            raise CommandError(msg)
+            raise CommandError(msg, e)
         match_flag = quiz.match_flag
 
         url = live_url

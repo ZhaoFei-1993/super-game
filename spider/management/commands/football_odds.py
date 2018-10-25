@@ -11,6 +11,8 @@ from chat.models import Club
 from decimal import Decimal
 import datetime
 from django.db import transaction
+from utils.cache import set_cache, get_cache
+from time import sleep
 
 base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
 asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
@@ -202,6 +204,7 @@ def get_data_info(url):
     datas = get_data(url)
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
+            sleep(5)
             match_id = data[1].get('id')
 
             option_data_had = data[1].get('had')
@@ -475,7 +478,21 @@ class Command(BaseCommand):
     help = "刷新足球赔率"
 
     def handle(self, *args, **options):
-        try:
-            get_data_info(base_url)
-        except Exception as e:
-            raise CommandError('Error is : ', e)
+        # 缓存锁 football_odds_lock 锁为1时锁住不执行，锁为0时则可执行
+        key = 'football_odds_lock'
+        value = get_cache(key)
+        if value is None:
+            set_cache(key, 0)
+            value = get_cache(key)
+
+        if value == 1:
+            raise CommandError('lock out, exit！! !')
+        else:
+            print('通过缓存锁，可以运行')
+            set_cache(key, 1)
+            try:
+                get_data_info(base_url)
+            except Exception as e:
+                set_cache(key, 0)
+                raise CommandError('Error is : ', e)
+            set_cache(key, 0)
