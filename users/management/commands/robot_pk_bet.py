@@ -117,6 +117,7 @@ class Command(BaseCommand):
     def get_bet_option(issue, last_issue):
         """
         获取下注选项
+        :param issue
         :param last_issue 上期数据
         :return:
         """
@@ -286,7 +287,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(bet_message))
             self.stdout.write(self.style.SUCCESS(''))
 
-        user_generated_datetime.append(current_generate_time)
-        set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
+            user_generated_datetime.append(current_generate_time)
+            set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
 
-        self.stdout.write(self.style.SUCCESS('下注成功'))
+            self.stdout.write(self.style.SUCCESS('下注成功'))
