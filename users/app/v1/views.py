@@ -3130,7 +3130,7 @@ class MoveCoinView(ListAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_100101_USER_MOBILE_COIN)
-        coin_info = Coin.objects.get(pk=coin_id)
+        coin_info = Coin.objects.get_one(pk=coin_id)
         user_coin = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
         return self.response({'code': 0,
                               "icon": coin_info.icon,
@@ -3235,7 +3235,7 @@ class MoveRecordView(ListAPIView):
         coin_id = request.GET.get('coin_id')
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        coin_info = Coin.objects.get(pk=coin_id)
+        coin_info = Coin.objects.get_one(pk=coin_id)
         coin_name = coin_info.name
         coin_icon = coin_info.icon
 
