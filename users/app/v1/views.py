@@ -3150,13 +3150,17 @@ class MoveRecipientView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
+        if 'area_code' not in request.data:
+            area_code = 86
+        else:
+            area_code = request.data.get('area_code')
         telephone = request.GET.get('telephone')
         if is_number(telephone) is False:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        user_nuber = User.objects.filter(telephone=telephone).count()
+        user_nuber = User.objects.filter(area_code=area_code, telephone=telephone).count()
         if user_nuber != 1:
             raise ParamErrorException(error_code.API_100102_USER_MOBILE_COIN)
-        user = User.objects.get(telephone=telephone)
+        user = User.objects.get(area_code=area_code, telephone=telephone)
         if int(user_id) == int(user.id):
             raise ParamErrorException(error_code.API_100103_USER_MOBILE_COIN)
         return self.response({'code': 0,

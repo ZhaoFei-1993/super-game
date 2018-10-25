@@ -44,7 +44,7 @@ class SmsView(ListCreateAPIView):
         # ip_users = User.objects.filter(ip_address__startswith=startswith).count()
         # if ip_users > 15:
         #     raise ParamErrorException(error_code.API_20101_TELEPHONE_ERROR)
-        if int(code_type) not in range(1, 9):
+        if int(code_type) not in range(1, 10):
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         if int(code_type) == 5:
             user_list = User.objects.filter(username=telephone, telephone=telephone).count()
@@ -75,6 +75,8 @@ class SmsView(ListCreateAPIView):
                 sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_TEMPLATE_PASSWORD_EN
             elif int(code_type) == 8:  # 修改密码
                 sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_CHANGE_PASSWORD_EN
+            elif int(code_type) == 9:  # 转账
+                sms_message = settings.SMS_CL_SIGN_NAME_EN + settings.SMS_CL_CHANGE_PASSWORD_EN
         else:
             sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_REGISTER  # 用户注册
             if int(code_type) == 1:  # 绑定手机00
@@ -88,6 +90,8 @@ class SmsView(ListCreateAPIView):
             elif int(code_type) == 6:  # 密保校验
                 sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_TEMPLATE_PASSWORD
             elif int(code_type) == 8:  # 修改密码
+                sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_CHANGE_PASSWORD
+            elif int(code_type) == 9:  # 转账
                 sms_message = settings.SMS_CL_SIGN_NAME + settings.SMS_CL_CHANGE_PASSWORD
 
         if area_code is None or area_code == '':

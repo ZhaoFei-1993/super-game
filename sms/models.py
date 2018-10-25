@@ -13,6 +13,7 @@ class Sms(models.Model):
     PROVING_PASSWORD = 6
     BAKEND_CHANGE_MESSAGE = 7
     CHANGE_REGISTER = 8
+    TRANSFER = 9
 
     READY = 1
     SUCCESS = 2
@@ -26,7 +27,8 @@ class Sms(models.Model):
         (FORGET_REGISTER, "忘记密码"),
         (PROVING_PASSWORD, "验证密保"),
         (BAKEND_CHANGE_MESSAGE, '后台修改密码'),
-        (CHANGE_REGISTER, '修改密码')
+        (CHANGE_REGISTER, '修改密码'),
+        (TRANSFER, '转账')
     )
 
     STATUS_CHOICE = (
