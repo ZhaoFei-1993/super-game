@@ -1743,7 +1743,7 @@ class CustomerView(ListAPIView):
             for i in invitee_list:
                 coin_info = ""
                 if int(i[4]) == 1 and i[5] is not None:
-                    coin_info = "+ 5 GSG"
+                    coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] == None:
                     login_time = ""
@@ -1866,7 +1866,6 @@ class UserInfoView(ListAPIView):
             before_start = str(before_first_day) + ' 00:00:00'  # 本月第一天
         start = str(month_first_day) + ' 00:00:00'  # 本月第一天
 
-        print("start===============================", start)
         data_list = {}
         if start != start_time:
             sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \

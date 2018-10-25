@@ -991,9 +991,9 @@ class DailyListView(ListAPIView):
         if last_sign_date is not None:
             sign_number = daily_log.number
             # 判断是否大于总签到天数，若是，则重新开始计算
-            if sign_number >= total_sign_days:
-                if last_sign_date in [DailyLog.YESTERDAY, DailyLog.TODAY]:
-                    sign_number -= total_sign_days
+            if sign_number == 0:
+                if last_sign_date in [DailyLog.TODAY]:
+                    sign_number = 7
 
         # 判断当前应该选择哪一天签到
         selected_number = 0
@@ -2985,7 +2985,7 @@ class DividendHistory(ListAPIView):
 
 class Url_list(ListAPIView):
     """
-    test
+    soc 活动图片生成
     """
     permission_classes = (LoginRequired,)
 
@@ -3083,7 +3083,6 @@ class Url_list(ListAPIView):
             nickname = user.nickname[0:7]
             ftext = font.render(nickname, True, (0, 0, 0), (227, 185, 59))
             ftext_width = ftext.get_width()
-            print("size=======================", ftext_width)
             # 保存图片
             invitation_code_address = save_path + '/nickname_' + str(user.id) + '.jpg'
             pygame.image.save(ftext, invitation_code_address)  # 图片保存地址
@@ -3182,7 +3181,6 @@ class MoveFilishView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
         recipient_id = self.request.data['recipient_id']  # 获取收款人ID
-        print("recipient_id==========================", recipient_id)
         if int(recipient_id) == int(user.id):
             raise ParamErrorException(error_code.API_100103_USER_MOBILE_COIN)
         if is_number(recipient_id) is False:
@@ -3202,7 +3200,6 @@ class MoveFilishView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         mobile_record = MobileCoin.objects.create(sponsor_id=user.id, recipient_id=int(recipient_id),
                                                   coin_id=int(coin_id), remarks=remarks, balance=amount)
-        print("mobile_record============================", mobile_record)
 
         # 用户的余额
         sponsor_user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)

@@ -89,7 +89,7 @@ urlpatterns = [
     path('home/message/', views.HomeMessageView.as_view(), name='app-v1-user-message-home'),
     # 分红记录
     path('dividend/<int:lock_id>/', views.DividendHistory.as_view(), name='app-v1-user-dividend-lock'),
-    # 分红记录
+    # soc 活动图片生成
     path('soc_activity/', views.Url_list.as_view(), name='app-v1-user-soc-activity'),
 
     # 扫码注册接口
