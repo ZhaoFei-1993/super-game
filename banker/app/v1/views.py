@@ -6,11 +6,17 @@ from base.exceptions import ParamErrorException
 from django.db.models import Q
 from chat.models import ClubRule, Club
 from quiz.models import Category
+from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
+from users.models import Coin
+import re
+import datetime
+from utils.functions import normalize_fraction, value_judge, get_sql
+from banker.models import BankerBigHeadRecord
 
 
-class BankerRuleView(ListAPIView):
+class BankerHomeView(ListAPIView):
     """
-       联合坐庄：   玩法
+       联合坐庄：   首页
     """
     permission_classes = (LoginRequired,)
 
@@ -18,28 +24,55 @@ class BankerRuleView(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        quiz_info = Category.objects.filter(Q(id=2) | Q(id=1))
-        rule_info = ClubRule.objects.filter(Q(id=2) | Q(id=3)).order_by('id')
+        BANKER_RULE_INFO = "BANKER_RULE_INFO"  # 再来一次次数
+        # delete_cache(BANKER_RULE_INFO)
+        banker_rule_info = get_cache(BANKER_RULE_INFO)
+        if banker_rule_info is None:
+            quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
+            rule_info = ClubRule.objects.filter(~Q(id__in=[1,4,5,6])).order_by('banker_sort')
 
-        data = []
-        for i in quiz_info:
-            data.append({
-                "icon": i.icon,
-                "name": i.name
+            banker_rule_info = []
+            a = True
+            m = 0
+            for i in quiz_info:
+                m += 1
+                banker_rule_info.append({
+                    "type": m,
+                    "icon": i.icon,
+                    "name": i.name,
+                    "stop": a,
+                    "order": m
+                })
+
+            for s in rule_info:
+                id = int(s.id) + 1
+                banker_rule_info.append({
+                    "type": id,                    # id
+                    "icon": s.banker_icon,          # 图片
+                    "name": s.title,             # 标题
+                    "stop": s.is_banker,              # 是否停止     1.是     2.否
+                    "order": s.banker_sort   # 排序
+                })
+            banker_rule_info = sorted(banker_rule_info, key=lambda x: x['order'], reverse=False)
+            set_cache(BANKER_RULE_INFO, banker_rule_info)
+
+        club_info = Club.objects.filter(~Q(is_recommend=0), is_banker=1).order_by("user")
+        banker_club_info = []
+        for c in club_info:
+            coin_info = Coin.objects.get(pk=c.coin_id)
+            # coin_info = Coin.objects.get_one(pk=c.coin_id)
+            banker_club_info.append({
+                "club_id": c.pk,
+                "icon": coin_info.icon,
+                "name": coin_info.name,
             })
 
-        for s in rule_info:
-            data.append({
-                "icon": s.icon,
-                "name": s.title
-            })
-
-        return self.response({"code": 0, "data": data})
+        return self.response({"code": 0, "banker_rule_info": banker_rule_info, "banker_club_info": banker_club_info})
 
 
-class BankerClubView(ListAPIView):
+class BankerInfoView(ListAPIView):
     """
-        联合坐庄：   俱乐部
+        联合坐庄：  详情
     """
 
     permission_classes = (LoginRequired,)
@@ -48,108 +81,55 @@ class BankerClubView(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        club_info = Club.objects.filter(~Q(is_recommend=0)).order_by("room_title")
+        user = self.request.user
+        type = self.request.GET.get('type')
+        club_id = self.request.GET.get('club_id')
+        # club_info = Club.objects.get(pk=club_id)
+        # club_info = Club.objects.get_one(pk=club_id)
+        begin_at = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+        regex = re.compile(r'^(1|2|3|4)$')
+        if type is None or not regex.match(type):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        if int(type) in (1, 2):      # 1.足球 2.篮球
+            if request.GET.get('language') == 'en':
+                sql_list = "q.id, q.host_team_en, q.host_team_avatar, q.guest_team_en, q.guest_team_avatar"
+            else:
+                sql_list = "q.host_team, q.host_team_avatar, q.guest_team, q.guest_team_avatar,"
+            sql_list += " date_format( q.begin_at, '%Y%m%d%H%i%s' ) as times,"
+            sql_list += " date_format( q.begin_at, '%m%d' ) as yeas,"
+            sql_list += " date_format( q.begin_at, '%H%i' ) as time"
+            sql = "select " + sql_list + " from quiz_quiz q"
+            sql += " inner join quiz_category c on q.category_id=c.id"
+            if int(type) == 2:
+                sql += " where c.parent_id = 1"
+            else:
+                sql += " where c.parent_id = 2"
+            sql += " and q.begin_at > '" + str(begin_at) + "'"
+            sql += " order by times desc"
+            list = self.get_list_by_sql(sql)
+        elif type == 3:        # 3.六合彩
+            sql_list = " m.id, m.issue, "
+            sql_list += " date_format( m.begin_at, '%Y%m%d%H%i%s' ) as times,"
+            sql_list += " date_format( m.begin_at, '%m%d' ) as yeas,"
+            sql_list += " date_format( m.begin_at, '%H%i' ) as time"
+            sql = "select " + sql_list + " from marksix_openprice m"
+            sql += " order by created_at desc limit 3"
+            list = get_sql(sql)
+        else:                # 4.猜股票
+            sql_list = " g.id, s.name, "
+            sql_list += " date_format( g.lottery_time, '%Y%m%d%H%i%s' ) as times,"
+            sql_list += " date_format( g.lottery_time, '%m%d' ) as yeas,"
+            sql_list += " date_format( g.lottery_time, '%H%i' ) as time"
+            sql = "select " + sql_list + " from guess_periods g"
+            sql += " inner join guess_stock s on g.stock_id=s.id"
+            sql += " where s.stock_guess_open = 0"
+            sql += " and s.is_delete = 0"
+            sql += " and g.lottery_time > '" + str(begin_at) + "'"
+            sql += " group by s.id"
+            sql += " order by times desc limit 4"
+            print("sql===============================", sql)
+            list = get_sql(sql)
 
-        data = []
-        for i in club_info:
-            coin_name = i.coin.name
-            data.append({
-                "icon": i.icon,
-                "title": i.coin.name,
-                "club_id": i.id,
-            })
-
-        return self.response({"code": 0, "data": data})
+        return self.response({"code": 0})
 
 
-# class BankerDetailView(ListAPIView):
-#     """
-#         联合坐庄：   坐庄
-#     """
-#     permission_classes = (LoginRequired,)
-#
-#     serializer_class = QuizSerialize
-#
-#     def get_queryset(self):
-#         # 竞猜赛事分类
-#         category_id = None
-#         if 'category' in self.request.GET and self.request.GET.get('category') != '':
-#             category_id = self.request.GET.get('category')
-#
-#         # 赛事类型：1＝未结束，2＝已结束
-#         quiz_type = 1
-#         if 'type' in self.request.GET and self.request.GET['type'] != '':
-#             quiz_type = int(self.request.GET.get('type'))
-#
-#         if 'is_user' not in self.request.GET:
-#             if category_id is None:
-#                 if quiz_type == 1:  # 未结束
-#                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by(
-#                         'begin_at')
-#                 elif quiz_type == 2:  # 已结束
-#                     return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by(
-#                         '-begin_at')
-#             else:
-#                 category_id = str(category_id)
-#                 category_arr = category_id.split(',')
-#                 if quiz_type == 1:  # 未开始
-#                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
-#                                                is_delete=False, category__in=category_arr).order_by('begin_at')
-#                 elif quiz_type == 2:  # 已结束
-#                     return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
-#                                                is_delete=False, category__in=category_arr).order_by('-begin_at')
-#         else:
-#             user_id = self.request.user.id
-#             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-#             quiz_id = list(
-#                 set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
-#             my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
-#             return my_quiz
-#
-#     def list(self, request, *args, **kwargs):
-#         results = super().list(request, *args, **kwargs)
-#         value = results.data.get('results')
-#         data = []
-#         quiz_id_list = ''
-#         for fav in value:
-#             if quiz_id_list == '':
-#                 quiz_id_list = str(fav.get('id'))
-#             else:
-#                 quiz_id_list = str(quiz_id_list) + ',' + str(fav.get('id'))
-#             data.append({
-#                 "id": fav.get('id'),
-#                 "match_name": fav.get('match_name'),
-#                 "host_team": fav.get('host_team'),
-#                 'host_team_avatar': fav.get('host_team_avatar'),
-#                 'host_team_score': fav.get('host_team_score'),
-#                 'guest_team': fav.get('guest_team'),
-#                 'guest_team_avatar': fav.get('guest_team_avatar'),
-#                 'guest_team_score': fav.get('guest_team_score'),
-#                 'begin_at': fav.get('begin_at'),
-#                 'total_people': fav.get('total_people'),
-#                 'total_coin': '0',
-#                 'is_bet': fav.get('is_bet'),
-#                 'category': fav.get('category'),
-#                 'is_end': fav.get('is_end'),
-#                 'win_rate': fav.get('win_rate'),
-#                 'planish_rate': fav.get('planish_rate'),
-#                 'lose_rate': fav.get('lose_rate'),
-#                 'total_coin_avatar': fav.get('total_coin_avatar'),
-#                 'status': fav.get('status'),
-#             })
-#
-#         quiz_id_list = '(' + quiz_id_list + ')'
-#         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-#         if len(quiz_id_list) > 2:
-#             sql = "select  a.quiz_id, sum(a.bet) from quiz_record a"
-#             sql += " where a.quiz_id in " + str(quiz_id_list)
-#             sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
-#             sql += " group by a.quiz_id"
-#             total_coin = get_sql(sql)  # 投注金额
-#             club = Club.objects.get(pk=roomquiz_id)
-#             for s in total_coin:
-#                 for a in data:
-#                     if a['id'] == s[0]:
-#                         a['total_coin'] = normalize_fraction(s[1], int(club.coin.coin_accuracy))
-#
-#         return self.response({"code": 0, "data": data})
