@@ -106,6 +106,7 @@ class BankerInfoView(ListAPIView):
                 sql += " where c.parent_id = 2"
             sql += " and q.begin_at > '" + str(begin_at) + "'"
             sql += " order by times desc"
+            print("sql=========================", sql)
             list = self.get_list_by_sql(sql)
         elif type == 3:        # 3.六合彩
             sql_list = " m.id, m.issue, "
@@ -124,11 +125,12 @@ class BankerInfoView(ListAPIView):
             sql += " inner join guess_stock s on g.stock_id=s.id"
             sql += " where s.stock_guess_open = 0"
             sql += " and s.is_delete = 0"
+            sql += " and g.start_value is null"
             sql += " and g.lottery_time > '" + str(begin_at) + "'"
-            sql += " group by s.id"
-            sql += " order by times desc limit 4"
+            sql += " order by times desc"
             print("sql===============================", sql)
             list = get_sql(sql)
+        print("list============================", list)
 
         return self.response({"code": 0})
 
