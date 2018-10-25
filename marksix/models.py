@@ -169,9 +169,10 @@ class SixRecord(models.Model):
     issue = models.CharField(verbose_name="期数", max_length=3)
     content = models.CharField(verbose_name="下注内容", max_length=1000)
     source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)
+    open_prize_time = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
 
     class Meta:
-        ordering = ['-issue','-created_at']
+        ordering = ['-issue', '-created_at']
         verbose_name = verbose_name_plural = "用户下注表"
 
 

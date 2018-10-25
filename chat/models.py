@@ -68,6 +68,7 @@ class ClubManager(BaseManager):
                 'club_name_en': club.room_title_en,
                 'coin_name': club.room_title.replace('俱乐部', ''),
                 'coin_accuracy': coin.coin_accuracy,
+                'coin_icon': coin.icon,
             }
         return club_values
 
