@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 import time
-from datetime import datetime
 import datetime
 from utils.cache import get_cache, set_cache
 import random
@@ -246,19 +245,19 @@ class Command(BaseCommand):
             raise CommandError('非自动下注时间')
 
         # 获取进行中的竞猜
-        print(datetime.now())
-        items = Issues.objects.filter(open__gt=datetime.now()).order_by('open')
+        now_time = datetime.datetime.now()
+        items = Issues.objects.filter(open__gt=now_time).order_by('open')
         if items is None:
             raise CommandError('当前无进行中的竞猜')
         # 获取上期开奖结果
-        last_issue = Issues.objects.filter(~Q(size_pk_result=''), open__lt=datetime.now()).order_by('-open').first()
+        last_issue = Issues.objects.filter(~Q(size_pk_result=''), open__lt=now_time).order_by('-open').first()
 
         # 按照比赛时间顺序递减下注数
         bet_number = random.randrange(10, 13)
 
         # 如果有竞猜距离开奖五分钟就投当前期，否则随机投所有存在的期数
         for n in range(1, bet_number):
-            if (items.first().open - datetime.now()) <= datetime.timedelta(minutes=5):
+            if (items.first().open - now_time) <= datetime.timedelta(minutes=5):
                 item = items.first()
             else:
                 secure_random = random.SystemRandom()
@@ -292,7 +291,7 @@ class Command(BaseCommand):
             record.save()
 
             bet_message = club.room_title + '-' + '股指pk' + '-' + '投注选项为:' + option.title + '：金额=' + str(
-                wager) + '  ' + datetime.now()
+                wager) + '  ' + now_time
             self.stdout.write(self.style.SUCCESS(bet_message))
             self.stdout.write(self.style.SUCCESS(''))
 
