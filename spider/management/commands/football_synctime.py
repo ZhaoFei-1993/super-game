@@ -97,4 +97,7 @@ class Command(BaseCommand):
                 # # 推送比分
                 # q.enqueue(quiz_send_score, quiz_id, 10, 0)
         except Exception as e:
+            print('===============================================')
+            print('Error is : ', e)
+            print('===============================================')
             raise CommandError('exit ! ! !')
