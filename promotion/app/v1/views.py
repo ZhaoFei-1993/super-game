@@ -1779,7 +1779,7 @@ class CustomerView(ListAPIView):
             for i in invitee_list:
                 coin_info = ""
                 if int(i[4]) == 1:
-                    coin_info = "+ 5 GSG"
+                    coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] == None:
                     login_time = ""
