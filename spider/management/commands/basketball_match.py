@@ -22,13 +22,13 @@ cache_dir = BASE_DIR + '/cache'
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
             return result
-    except requests.ConnectionError as e:
-        print('Error', e.args)
+    except Exception as e:
+        print('Error', e)
 
 
 def get_data_info(url):

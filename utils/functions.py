@@ -30,7 +30,8 @@ from wc_auth.functions import save_operation
 from django.db import connection
 from PIL import Image, ImageDraw, ImageFont
 import random
-from utils.cache import get_cache, set_cache
+import requests
+from utils.cache import get_cache, set_cache, delete_cache
 from dragon_tiger.models import Showroad, Bigroad, Psthway, Bigeyeroad, Roach
 from baccarat.models import Showroad_baccarat,Bigroad_baccarat,Psthway_baccarat,Bigeyeroad_baccarat,Roach_baccarat
 from dragon_tiger.consumers import dragon_tiger_showroad, dragon_tiger_bigroad, dragon_tiger_bigeyeroad, \
@@ -1459,3 +1460,45 @@ def to_decimal(num):
     :return:
     """
     return Decimal(str(num))
+
+
+def get_proxies_from_url(key):
+    """
+        把传进来数字改变成decimal类型保持精度
+        :param key: 缓存的key名
+        :return: proxies
+    """
+    proxy_url = settings.PROXIES_URL
+    response_proxy = requests.get(proxy_url)
+    proxy_json = response_proxy.json()
+    if proxy_json['code'] == 0:
+        proxy = '{ip}:{port}'.format(ip=proxy_json['data'][0]['ip'], port=proxy_json['data'][0]['port'])
+        proxies = {
+            'http': 'http://' + proxy,
+            'https': 'https://' + proxy
+        }
+        # 存入缓存
+        expire_time = datetime.datetime.strptime(proxy_json['data'][0]['expire_time'], '%Y-%m-%d %H:%M:%S')
+        value = {'proxies': proxies, 'expire_time': expire_time}
+        ttl = int((expire_time - datetime.datetime.now()).seconds)
+        set_cache(key, value, ttl=ttl)
+        return value['proxies']
+    else:
+        return None
+
+
+def get_proxies():
+    """
+        把传进来数字改变成decimal类型保持精度
+        :return proxies:
+    """
+    key = 'PROXIES_URL'
+    proxies_dic = get_cache(key)
+    if proxies_dic is None:
+        return get_proxies_from_url(key)
+    else:
+        if datetime.datetime.now() > proxies_dic['expire_time']:
+            delete_cache(key)
+            return get_proxies_from_url(key)
+        else:
+            return proxies_dic['proxies']

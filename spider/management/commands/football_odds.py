@@ -13,6 +13,8 @@ import datetime
 from django.db import transaction
 from utils.cache import set_cache, get_cache
 from time import sleep
+from utils.functions import get_proxies
+
 
 base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
 asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
@@ -437,7 +439,8 @@ def get_data_info(url):
 
                 # 亚盘玩法
                 try:
-                    response_asia = requests.get(asia_url + match_id, headers=headers, timeout=15)
+                    proxies = get_proxies()
+                    response_asia = requests.get(asia_url + match_id, headers=headers, proxies=proxies, timeout=15)
                     dt = response_asia.text.encode("utf-8").decode('unicode_escape')
                     json_dt = eval(dt[8:-2])
                 except Exception as e:
