@@ -35,7 +35,7 @@ class Command(BaseCommand):
         url = live_url
         time = get_time()[0:10]
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 dt = response.content.decode('utf-8')
                 match_list = re.findall(r'CDATA\[(.*?)]]>', dt)

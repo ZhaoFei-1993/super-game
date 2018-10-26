@@ -10,6 +10,8 @@ from quiz.models import Quiz, Rule, Option, QuizOddsLog, OptionOdds, Club
 from quiz.models import Category
 from wc_auth.models import Admin
 from .get_time import get_time
+from django.db import transaction
+import datetime
 
 base_url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=had&poolcode[]=hhad&poolcode[]=ttg&poolcode[]=crs&poolcode[]=hafu'
 asia_url = 'https://i.sporttery.cn/api/fb_match_info/get_asia/?f_callback=asia_tb&mid='
@@ -21,16 +23,19 @@ cache_dir = BASE_DIR + '/cache'
 
 
 def get_data(url):
+    print('发起常规请求', datetime.datetime.now())
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
             return result
     except requests.ConnectionError as e:
         print('match Error ', e.args)
+    print('结束常规请求', datetime.datetime.now())
 
 
+@transaction.atomic()
 def get_data_info(url):
     os.chdir(cache_dir)
     files = []
@@ -44,8 +49,6 @@ def get_data_info(url):
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
-            if int(match_id) == 111066:
-                continue
 
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
@@ -570,13 +573,13 @@ def get_data_info(url):
                                 rule.min_odd = min(odds_pool_ttg)
                                 rule.save()
                                 odds_pool_ttg.clear()
-
                     # 亚盘玩法
+                    print('发起亚盘请求', datetime.datetime.now())
                     try:
-                        response_asia = requests.get(asia_url + match_id, headers=headers)
+                        response_asia = requests.get(asia_url + match_id, headers=headers, timeout=10)
                         dt = response_asia.text.encode("utf-8").decode('unicode_escape')
                         json_dt = eval(dt[8:-2])
-                    except requests.ConnectionError as e:
+                    except Exception as e:
                         print('asia Error', e.args)
                     else:
                         if json_dt['status']['code'] == 0:
@@ -602,6 +605,7 @@ def get_data_info(url):
                                     option.odds = json_dt['result']['data'][0]['o2']
                                 option.order = i
                                 option.save()
+                    print('结束亚盘请求', datetime.datetime.now())
 
                     # 记录初始赔率
                     change_time = get_time()

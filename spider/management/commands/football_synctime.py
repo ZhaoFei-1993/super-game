@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 str_list = ''
                 time = get_time()[0:10]
                 try:
-                    response = requests.get(url, headers=headers)
+                    response = requests.get(url, headers=headers, timeout=10)
                     if response.status_code == 200:
                         dt = response.text
                         for i in dt[22:-3].strip('').split('},{'):
@@ -95,7 +95,7 @@ class Command(BaseCommand):
                         print('推送成功')
                         print('-----------------------')
 
-                except requests.ConnectionError as e:
+                except Exception as e:
                     print('Error', e.args)
 
                 # with open('/tmp/debug_football_synctime', 'a+') as f:
