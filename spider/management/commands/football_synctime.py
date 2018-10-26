@@ -100,4 +100,4 @@ class Command(BaseCommand):
             print('===============================================')
             print('Error is : ', e)
             print('===============================================')
-            raise CommandError('exit ! ! !')
+            raise CommandError('exit ! ! !', e)
