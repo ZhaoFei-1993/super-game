@@ -323,3 +323,6 @@ EMAIL_RECIPIENT_LIST = local_settings.EMAIL_RECIPIENT_LIST
 
 # 是否开启用户EOS Code
 IS_ENABLE_USER_EOS_CODE = local_settings.IS_ENABLE_USER_EOS_CODE
+
+# proxies地址
+PROXIES_URL = local_settings.PROXIES_URL
