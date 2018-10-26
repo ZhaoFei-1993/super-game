@@ -252,8 +252,8 @@ class Command(BaseCommand):
         # 获取上期开奖结果
         last_issue = Issues.objects.filter(~Q(size_pk_result=''), open__lt=now_time).order_by('-open').first()
 
-        # 按照比赛时间顺序递减下注数
-        bet_number = random.randrange(10, 13)
+        # 单次投注投注数量
+        bet_number = random.randrange(5, 11)
 
         # 如果有竞猜距离开奖五分钟就投当前期，否则随机投所有存在的期数
         for n in range(1, bet_number):
