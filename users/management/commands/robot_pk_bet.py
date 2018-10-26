@@ -2,6 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import time
 from datetime import datetime
+import datetime
 from utils.cache import get_cache, set_cache
 import random
 from django.db import transaction
@@ -246,16 +247,23 @@ class Command(BaseCommand):
 
         # 获取进行中的竞猜
         print(datetime.now())
-        item = Issues.objects.filter(open__gt=datetime.now()).order_by('open').first()
-        if item is None:
+        items = Issues.objects.filter(open__gt=datetime.now()).order_by('open')
+        if items is None:
             raise CommandError('当前无进行中的竞猜')
         # 获取上期开奖结果
         last_issue = Issues.objects.filter(~Q(size_pk_result=''), open__lt=datetime.now()).order_by('-open').first()
 
         # 按照比赛时间顺序递减下注数
-        bet_number = random.randrange(2, 4)
+        bet_number = random.randrange(10, 13)
 
+        # 如果有竞猜距离开奖五分钟就投当前期，否则随机投所有存在的期数
         for n in range(1, bet_number):
+            if (items.first().open - datetime.now()) <= datetime.timedelta(minutes=5):
+                item = items.first()
+            else:
+                secure_random = random.SystemRandom()
+                item = secure_random.choice(items)
+
             # 随机获取俱乐部
             club = self.get_bet_club()
             if club is False:
@@ -283,11 +291,12 @@ class Command(BaseCommand):
             record.source = RecordStockPk.ROBOT
             record.save()
 
-            bet_message = club.room_title + '-' + '股指pk' + '-' + '投注选项为:' + option.title + '：金额=' + str(wager)
+            bet_message = club.room_title + '-' + '股指pk' + '-' + '投注选项为:' + option.title + '：金额=' + str(
+                wager) + '  ' + datetime.now()
             self.stdout.write(self.style.SUCCESS(bet_message))
             self.stdout.write(self.style.SUCCESS(''))
 
             user_generated_datetime.append(current_generate_time)
             set_cache(self.get_key(self.key_today_generated), user_generated_datetime)
 
-            self.stdout.write(self.style.SUCCESS('下注成功'))
+        self.stdout.write(self.style.SUCCESS('下注成功'))
