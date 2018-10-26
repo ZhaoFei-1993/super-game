@@ -291,7 +291,7 @@ class Command(BaseCommand):
             record.save()
 
             bet_message = club.room_title + '-' + '股指pk' + '-' + '投注选项为:' + option.title + '：金额=' + str(
-                wager) + '  ' + now_time
+                wager) + '  ' + now_time.strftime('%Y-%m-%d %H:%M:%S')
             self.stdout.write(self.style.SUCCESS(bet_message))
             self.stdout.write(self.style.SUCCESS(''))
 
