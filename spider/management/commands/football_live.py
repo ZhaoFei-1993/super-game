@@ -12,6 +12,7 @@ from rq import Queue
 from redis import Redis
 from quiz.consumers import quiz_send_score, quiz_send_football_time
 from .get_time import get_time
+from utils.cache import set_cache, get_cache
 
 schedule = sched.scheduler(time.time, time.sleep)
 base_url = 'http://i.sporttery.cn/api/match_live_2/get_match_updated?callback=?'
@@ -19,6 +20,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 cache_dir = BASE_DIR + '/cache/live_cache/football'
+key_quiz_live_time = 'quiz_live_time'
 
 
 def perform_command(fun, inc):
@@ -32,6 +34,15 @@ def timming_exe(fun, inc=60):
     schedule.enter(inc, 0, perform_command, (fun, inc))
     # 持续运行，直到计划时间队列变成空为止
     schedule.run()
+
+
+def cache_live_time(match_id, data_list):
+    quiz_live_time_dic = get_cache(key_quiz_live_time)
+    if quiz_live_time_dic is None:
+        set_cache(key_quiz_live_time, {match_id: data_list})
+    else:
+        quiz_live_time_dic[match_id] = data_list
+        set_cache(key_quiz_live_time, quiz_live_time_dic)
 
 
 def get_live_data():
@@ -81,6 +92,9 @@ def get_live_data():
                     if Quiz.objects.filter(match_flag=match_id).first() is not None:
                         quiz = Quiz.objects.filter(match_flag=match_id).first()
 
+                        # 存入缓存供推送脚本使用
+                        cache_live_time(match_id, data_list)
+
                         # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
                         host_team_score = data_list['fs_h']
                         guest_team_score = data_list['fs_a']
@@ -109,6 +123,8 @@ def get_live_data():
                             q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                         elif data_list['status'] == 'Playing':
+                            gaming_time = int(data_list['minute']) * 60
+
                             game_status = 0
 
                             # 推送比赛时间
@@ -120,12 +136,12 @@ def get_live_data():
                                     f.write(data.split(',')[1] + ',')
                                     f.write(data.split(',')[2] + ',')
                                     f.write(str(game_status))
-                                q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                q.enqueue(quiz_send_football_time, quiz.id, game_status, gaming_time)
 
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
                                 quiz.status = quiz.REPEALED
-                                quiz.gaming_time = int(data_list['minute']) * 60
+                                quiz.gaming_time = gaming_time
 
                             if data_list['match_period'] == 'HT':
                                 game_status = 1
@@ -140,7 +156,8 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    q.enqueue(quiz_send_football_time, quiz.id, game_status, int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_football_time, quiz.id, game_status,
+                                              int(data_list['minute']) * 60)
                         quiz.save()
 
                         # 比分推送
@@ -153,6 +170,9 @@ def get_live_data():
                     else:
                         print('不存在该比赛')
                 else:
+                    # 存入缓存供推送脚本使用
+                    cache_live_time(match_id, data_list)
+
                     with open(cache_name, 'r') as f:
                         score = f.readline()
 
@@ -204,6 +224,8 @@ def get_live_data():
                                 q.enqueue(quiz_send_football_time, quiz.id, game_status, 0)
 
                             elif data_list['status'] == 'Playing':
+                                gaming_time = int(data_list['minute']) * 60
+
                                 game_status = 0
 
                                 # 推送比赛时间
@@ -215,13 +237,12 @@ def get_live_data():
                                         f.write(data.split(',')[1] + ',')
                                         f.write(data.split(',')[2] + ',')
                                         f.write(str(game_status))
-                                    q.enqueue(quiz_send_football_time, quiz.id, game_status,
-                                              int(data_list['minute']) * 60)
+                                    q.enqueue(quiz_send_football_time, quiz.id, game_status, gaming_time)
 
                                     quiz.host_team_score = host_team_score
                                     quiz.guest_team_score = guest_team_score
                                     quiz.status = quiz.REPEALED
-                                    quiz.gaming_time = int(data_list['minute']) * 60
+                                    quiz.gaming_time = gaming_time
 
                                 if data_list['match_period'] == 'HT':
                                     game_status = 1
@@ -236,8 +257,7 @@ def get_live_data():
                                             f.write(data.split(',')[1] + ',')
                                             f.write(data.split(',')[2] + ',')
                                             f.write(str(game_status))
-                                        q.enqueue(quiz_send_football_time, quiz.id, game_status,
-                                                  int(data_list['minute']) * 60)
+                                        q.enqueue(quiz_send_football_time, quiz.id, game_status, gaming_time)
                             quiz.save()
 
                             # 比分推送
@@ -263,7 +283,7 @@ def live_football():
     # print(Quiz.objects.filter(category__parent_id=2, status__in=[Quiz.REPEALED, Quiz.HALF_TIME]))
     if Quiz.objects.filter(category__parent_id=2,
                            status__in=[str(Quiz.REPEALED), str(Quiz.HALF_TIME)]).exists() or quiz_list.filter(
-            begin_at__lt=datetime.datetime.now()).exists():
+        begin_at__lt=datetime.datetime.now()).exists():
         get_live_data()
     else:
         # print('no match！！！')
