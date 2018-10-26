@@ -186,7 +186,7 @@ def update_odds(result, rule, quiz, change_time, flag):
         print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
         print('=================================================')
     else:
-        print('无变化')
+        print('无变化', datetime.datetime.now())
 
 
 def get_data(url):

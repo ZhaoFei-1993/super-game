@@ -39,7 +39,7 @@ def get_live_data():
     str_list = ''
     time = get_time()[0:10]
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             dt = response.text
             for i in dt[22:-3].strip('').split('},{'):
@@ -254,7 +254,7 @@ def get_live_data():
                 print('-----------------------------')
     except Exception as e:
         print('Error', e)
-        raise CommandError('Error Out! ! !')
+        raise CommandError('Error Out! ! !', datetime.datetime.now())
 
 
 def live_football():
@@ -266,8 +266,8 @@ def live_football():
             begin_at__lt=datetime.datetime.now()).exists():
         get_live_data()
     else:
-        print('no match！！！')
-        raise CommandError('no match！！！')
+        # print('no match！！！')
+        raise CommandError('no match！！！', datetime.datetime.now())
 
 
 class Command(BaseCommand):
