@@ -9,7 +9,7 @@ url_CNY = 'https://api.coinmarketcap.com/v1/ticker/?convert=CNY&limit=0'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-coin_list = ['BTC', 'HAND', 'EOS', 'INT', 'ETH', 'USDT', 'SOC', 'BCH']
+coin_list = ['BTC', 'HAND', 'EOS', 'INT', 'ETH', 'USDT', 'SOC', 'BCH', 'ETC']
 
 
 def trunc(f, n):
