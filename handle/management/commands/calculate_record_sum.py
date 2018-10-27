@@ -233,10 +233,10 @@ class Command(BaseCommand):
 
         print('计算record完成', datetime.datetime.now())
 
-        # # 计算返现值
-        # cash_back.cal_cash_back(date_last)
-        # # 批量插入数据
-        # cash_back.insert_info()
+        # 计算返现值
+        cash_back.cal_cash_back(date_last)
+        # 批量插入数据
+        cash_back.insert_info()
 
         print('脚本结束', datetime.datetime.now())
 
