@@ -14,7 +14,7 @@ base_url = 'http://i.sporttery.cn/api/match_live_2/get_match_updated?callback=?'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
-key_quiz_live_time = 'quiz_live_time'
+key_football_live_dt = 'football_live_dt'
 
 
 class Command(BaseCommand):
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         q = Queue(connection=redis_conn)
 
         try:
-            quiz_live_time_dic = get_cache(key_quiz_live_time)
+            quiz_live_time_dic = get_cache(key_football_live_dt)
             data_list = quiz_live_time_dic[quiz_id]
         except KeyError as e:
             raise CommandError(e)

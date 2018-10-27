@@ -20,7 +20,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 cache_dir = BASE_DIR + '/cache/live_cache/football'
-key_quiz_live_time = 'quiz_live_time'
+key_football_live_dt = 'football_live_dt'
 
 
 def perform_command(fun, inc):
@@ -37,12 +37,12 @@ def timming_exe(fun, inc=60):
 
 
 def cache_live_time(quiz_id, data_list):
-    quiz_live_time_dic = get_cache(key_quiz_live_time)
+    quiz_live_time_dic = get_cache(key_football_live_dt)
     if quiz_live_time_dic is None:
-        set_cache(key_quiz_live_time, {quiz_id: data_list})
+        set_cache(key_football_live_dt, {quiz_id: data_list})
     else:
         quiz_live_time_dic[quiz_id] = data_list
-        set_cache(key_quiz_live_time, quiz_live_time_dic)
+        set_cache(key_football_live_dt, quiz_live_time_dic)
 
 
 def get_live_data():

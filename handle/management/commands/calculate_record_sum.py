@@ -199,13 +199,13 @@ class Command(BaseCommand):
                                              is_distribution=True,
                                              open_prize_time__range=(start_with, end_with))
         guess_records = Guess_Record.objects.filter(~Q(club=Club.objects.get(room_title='HAND俱乐部')),
-                                                    ~Q(roomquiz_id=Club.objects.get(room_title='DB俱乐部').id),
+                                                    ~Q(club_id=Club.objects.get(room_title='DB俱乐部').id),
                                                     status='1', open_prize_time__range=(start_with, end_with))
         pk_records = Pk_Record.objects.filter(~Q(club=Club.objects.get(room_title='HAND俱乐部')),
-
+                                              ~Q(club_id=Club.objects.get(room_title='DB俱乐部').id),
                                               status='1', open_prize_time__range=(start_with, end_with))
         six_records = Six_Record.objects.filter(~Q(club=Club.objects.get(room_title='HAND俱乐部')),
-
+                                                ~Q(club_id=Club.objects.get(room_title='DB俱乐部').id),
                                                 status='1', open_prize_time__range=(start_with, end_with))
 
         print('开始')
