@@ -171,11 +171,13 @@ class CashBack(object):
 
 
 def handle_is_robot(record):
-    is_robot = record.user.is_robot
-    if is_robot is True:
-        is_robot = 1
+    is_robot = 0
+    if 'quiz_id' in record.__dict__.keys():
+        if record.source == str(Record.CONSOLE):
+            is_robot = 1
     else:
-        is_robot = 0
+        if record.source == str(Six_Record.ROBOT):
+            is_robot = 1
     return is_robot
 
 
