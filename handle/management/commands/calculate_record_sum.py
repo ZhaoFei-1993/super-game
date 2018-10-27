@@ -32,26 +32,25 @@ class CashBack(object):
 
     @staticmethod
     def cache_price(coin_name):
-        rmb_price = 'currency_corresponds_to_rmb_price_' + str(coin_name)
-        usd_price = 'currency_corresponds_to_usd_price_' + str(coin_name)
-        price_rmb = get_cache(rmb_price)
-        price_usd = get_cache(usd_price)
-        if price_rmb is None:
+        key_currency_coin_price = 'currency_coin_price'
+        coin_price_dic = get_cache(key_currency_coin_price)
+        if coin_price_dic is None or coin_name not in coin_price_dic:
             coin_price = CoinPrice.objects.get(coin_name=coin_name)
             price_rmb = coin_price.price
-            set_cache(rmb_price, coin_price.price, 24 * 3600)
-        if price_usd is None:
+
             coin_price = CoinPrice.objects.get(coin_name=coin_name)
             price_usd = coin_price.price_usd
-            set_cache(usd_price, price_usd, 24 * 3600)
-        return {'price_rmb': price_rmb, 'price_usd': price_usd}
+
+            coin_price_dic = {coin_name: {'price_rmb': price_rmb, 'price_usd': price_usd}}
+            set_cache(key_currency_coin_price, coin_price_dic, 24 * 3600)
+        return coin_price_dic[coin_name]
 
     def handle_record_sum(self, record, bet_coin, club_id):
-        user_id = record.user_id
+        user_id = record['user_id']
         coin_name = self.cache_club_value[club_id]['coin_name']
         is_robot = handle_is_robot(record)
         cache_price = self.cache_price(coin_name)
-        if user_id not in self.user_map.keys():
+        if user_id not in self.user_map:
             self.user_map.update({user_id: {'record_sum': bet_coin * to_decimal(cache_price['price_rmb']),
                                             'record_sum_usd': bet_coin * to_decimal(
                                                 cache_price['price_usd']),
@@ -59,21 +58,21 @@ class CashBack(object):
         else:
             self.user_map[user_id]['record_sum'] += bet_coin * to_decimal(cache_price['price_rmb'])
             self.user_map[user_id]['record_sum_usd'] += bet_coin * to_decimal(cache_price['price_usd'])
-            if coin_name not in self.user_map[user_id]['record_coin'].keys():
+            if coin_name not in self.user_map[user_id]['record_coin']:
                 self.user_map[user_id]['record_coin'][coin_name] = bet_coin
             else:
                 self.user_map[user_id]['record_coin'][coin_name] += bet_coin
 
     def base_functions(self, user_id, coin_id, coin_name, cash_back_coin, sources):
         # user_coin
-        if user_id not in self.user_coin_dic.keys():
+        if user_id not in self.user_coin_dic:
             user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
             self.user_coin_dic.update({
                 user_id: {
                     coin_id: {'balance': user_coin.balance}
                 }
             })
-        if coin_id not in self.user_coin_dic[user_id].keys():
+        if coin_id not in self.user_coin_dic[user_id]:
             user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
             self.user_coin_dic[user_id].update({
                 coin_id: {'balance': user_coin.balance}
@@ -172,11 +171,11 @@ class CashBack(object):
 
 def handle_is_robot(record):
     is_robot = 0
-    if 'quiz_id' in record.__dict__.keys():
-        if record.source == str(Record.CONSOLE):
+    if 'roomquiz_id' in record:
+        if record['source'] == str(Record.CONSOLE):
             is_robot = 1
     else:
-        if record.source == str(Six_Record.ROBOT):
+        if record['source'] == str(Six_Record.ROBOT):
             is_robot = 1
     return is_robot
 
@@ -213,21 +212,21 @@ class Command(BaseCommand):
         print('脚本开始', datetime.datetime.now())
 
         # 球赛
-        for record in quiz_records:
-            bet_coin = record.bet
-            cash_back.handle_record_sum(record, bet_coin, record.roomquiz_id)
+        for record in quiz_records.values('user_id', 'roomquiz_id', 'bet', 'source'):
+            bet_coin = record['bet']
+            cash_back.handle_record_sum(record, bet_coin, record['roomquiz_id'])
         # 猜股指
-        for record in guess_records:
-            bet_coin = record.bets
-            cash_back.handle_record_sum(record, bet_coin, record.club_id)
+        for record in guess_records.values('user_id', 'club_id', 'bets', 'source'):
+            bet_coin = record['bets']
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
         # 股指pk
-        for record in pk_records:
-            bet_coin = record.bets
-            cash_back.handle_record_sum(record, bet_coin, record.club_id)
+        for record in pk_records.values('user_id', 'club_id', 'bets', 'source'):
+            bet_coin = record['bets']
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
         # 六合彩
-        for record in six_records:
-            bet_coin = record.bet_coin
-            cash_back.handle_record_sum(record, bet_coin, record.club_id)
+        for record in six_records.values('user_id', 'club_id', 'bets', 'source'):
+            bet_coin = record['bets']
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
 
         print('计算record完成', datetime.datetime.now())
 
