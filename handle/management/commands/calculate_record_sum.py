@@ -54,7 +54,7 @@ class CashBack(object):
         user_id = record['user_id']
         coin_name = self.cache_club_value[club_id]['coin_name']
         is_robot = handle_is_robot(record)
-        cache_price = coin_price_dic(coin_name)
+        cache_price = coin_price_dic[coin_name]
         if user_id not in self.user_map:
             self.user_map.update({user_id: {'record_sum': bet_coin * to_decimal(cache_price['price_rmb']),
                                             'record_sum_usd': bet_coin * to_decimal(
