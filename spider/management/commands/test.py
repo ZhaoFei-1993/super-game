@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from time import sleep
 import random
 from django.core.management import call_command
+from quiz.models import *
 
 
 class Command(BaseCommand):
@@ -42,51 +43,17 @@ class Command(BaseCommand):
         #     next_open_oth_ymd = td_tag.find_all('td')[3].text.replace('/', '-')
         #     print(next_open_oth_ymd)
 
-        # url_dji = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=%E9%81%93%E7%90%BC%E6%96%AF&hilight=disp_data.*.title&sitesign=57f039002f70ed02eec684164dad4e7d&eprop=minute'
-        # url_ndx = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8191&from_mid=1&query=纳斯达克&hilight=disp_data.*.title&sitesign=12299ccd2e71da74cd27339159e1a3ba&eprop=minute'
-        # response = requests.get(url_dji, headers=headers)
-        # data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[
-        #             :-1]
-        # date_ymd = data_list[0].split(',')[2].split(' ')[0].replace('/', '-')
-        # print(data_list[0].split(','))
-
-        # if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0:
-        #     host_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][1]
-        #     guest_team_score = re.findall('.*\((.*?):(.*?)\)', result_score)[0][0]
-        #     print(host_team_score)
-        #
-        #     result_list = soup.select('table[class="kj-table"]')
-        #     result_mnl = result_list[0].select('span[class="win"]')[0].string.replace(' ', '')
-        #     print(result_mnl)
-        #
-        #     result_hdc = result_list[1].select('span[class="win"]')[0].string
-        #     result_hdc_flag = result_match['result_hdc'][result_hdc]
-        #     print(result_hdc_flag)
-        #
-        #     result_hilo = result_list[2].select('span[class="win"]')[0].string
-        #     result_hilo_flag = result_match['result_hilo'][result_hilo]
-        #     print(result_hilo_flag)
-        #
-        #     result_wnm = result_list[3].select('span[class="win"]')[0].string
-        #     result_wnm_flag = result_match['result_wnm'][result_wnm]
-        #     print(result_wnm_flag)
-        #
-        # else:
-        #     print(match_flag + ',' + '未有开奖信息')
-
-        from quiz.models import Record
-        from promotion.models import PromotionRecord
-        from django.db.models import Q
-        promotion_list = []
-        for record in Record.objects.filter(~Q(source=str(Record.CONSOLE)), quiz_id=3986):
-            # 构建promotion_dic
-            if record.source != str(Record.CONSOLE) and record.roomquiz_id != 1:
-                promotion_list.append({'record_id': record.id, 'source': 1, 'earn_coin': record.earn_coin, 'status': 1})
-        print('promotion_list len ======= ', len(promotion_list))
-        # 推广代理事宜
-        PromotionRecord.objects.insert_all(promotion_list)
 
 
+        # import datetime
+        # now_time = datetime.datetime.now()
+        # last_time = datetime.datetime.now() + datetime.timedelta(minutes=4, seconds=31)
+        # a = last_time - now_time
+        # print(now_time.timetuple())
+
+        from utils.cache import get_cache
+        key_quiz_live_time = 'quiz_live_time'
+        print(get_cache(key_quiz_live_time))
 
 
 

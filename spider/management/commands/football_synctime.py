@@ -32,7 +32,7 @@ class Command(BaseCommand):
             quiz_live_time_dic = get_cache(key_quiz_live_time)
             data_list = quiz_live_time_dic[quiz_id]
         except KeyError as e:
-            print(e)
+            raise CommandError(e)
             # if int(quiz.status) == int(Quiz.BONUS_DISTRIBUTION):
             #     # 比赛已经结束和分配奖金
             #     # 推送比赛时间
