@@ -36,12 +36,12 @@ def timming_exe(fun, inc=60):
     schedule.run()
 
 
-def cache_live_time(match_id, data_list):
+def cache_live_time(quiz_id, data_list):
     quiz_live_time_dic = get_cache(key_quiz_live_time)
     if quiz_live_time_dic is None:
-        set_cache(key_quiz_live_time, {match_id: data_list})
+        set_cache(key_quiz_live_time, {quiz_id: data_list})
     else:
-        quiz_live_time_dic[match_id] = data_list
+        quiz_live_time_dic[quiz_id] = data_list
         set_cache(key_quiz_live_time, quiz_live_time_dic)
 
 
@@ -89,11 +89,10 @@ def get_live_data():
                         f.write(data_list['status'] + ',')
                         f.write(data_list['match_period'] + ',')
 
-                    if Quiz.objects.filter(match_flag=match_id).first() is not None:
-                        quiz = Quiz.objects.filter(match_flag=match_id).first()
-
+                    quiz = Quiz.objects.filter(match_flag=match_id).first()
+                    if quiz is not None:
                         # 存入缓存供推送脚本使用
-                        cache_live_time(match_id, data_list)
+                        cache_live_time(quiz.id, data_list)
 
                         # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
                         host_team_score = data_list['fs_h']
@@ -170,8 +169,10 @@ def get_live_data():
                     else:
                         print('不存在该比赛')
                 else:
-                    # 存入缓存供推送脚本使用
-                    cache_live_time(match_id, data_list)
+                    quiz = Quiz.objects.filter(match_flag=match_id).first()
+                    if quiz is not None:
+                        # 存入缓存供推送脚本使用
+                        cache_live_time(quiz.id, data_list)
 
                     with open(cache_name, 'r') as f:
                         score = f.readline()
@@ -193,9 +194,7 @@ def get_live_data():
                             f.write(data_list['match_period'] + ',')
                             f.write(game_status)
 
-                        if Quiz.objects.filter(match_flag=match_id).first() is not None:
-                            quiz = Quiz.objects.filter(match_flag=match_id).first()
-
+                        if quiz is not None:
                             # 2H是下半场,1H是上半场,ht， fs_h是主队进球，fs_a是客队进球
                             host_team_score = data_list['fs_h']
                             guest_team_score = data_list['fs_a']
