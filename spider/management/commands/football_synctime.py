@@ -24,7 +24,7 @@ class Command(BaseCommand):
         parser.add_argument('quiz_id', type=str)
 
     def handle(self, *args, **options):
-        quiz_id = options['quiz_id']
+        quiz_id = int(options['quiz_id'])
         redis_conn = Redis()
         q = Queue(connection=redis_conn)
 
