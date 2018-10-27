@@ -227,8 +227,8 @@ class Command(BaseCommand):
             bet_coin = record['bets']
             cash_back.handle_record_sum(record, bet_coin, record['club_id'], coin_price_dic)
         # 六合彩
-        for record in six_records.values('user_id', 'club_id', 'bets', 'source'):
-            bet_coin = record['bets']
+        for record in six_records.values('user_id', 'club_id', 'bet_coin', 'source'):
+            bet_coin = record['bet_coin']
             cash_back.handle_record_sum(record, bet_coin, record['club_id'], coin_price_dic)
 
         print('计算record完成', datetime.datetime.now())
