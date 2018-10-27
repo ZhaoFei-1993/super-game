@@ -822,8 +822,9 @@ class Command(BaseCommand):
 
                 # 删除缓存中直播的数据
                 football_live_dt = get_cache(key_football_live_dt)
-                del football_live_dt[delay_quiz.id]
-                set_cache(key_football_live_dt, football_live_dt)
+                if delay_quiz.id in football_live_dt.keys():
+                    del football_live_dt[delay_quiz.id]
+                    set_cache(key_football_live_dt, football_live_dt)
 
         rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265, 111051]
         # 在比赛开始时间基础上增加2小时
@@ -850,7 +851,8 @@ class Command(BaseCommand):
                             pass
                 # 删除缓存中直播的数据
                 football_live_dt = get_cache(key_football_live_dt)
-                del football_live_dt[quiz.id]
-                set_cache(key_football_live_dt, football_live_dt)
+                if quiz.id in football_live_dt.keys():
+                    del football_live_dt[quiz.id]
+                    set_cache(key_football_live_dt, football_live_dt)
         else:
             print('暂无比赛需要开奖')
