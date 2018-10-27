@@ -81,15 +81,15 @@ class QuizConsumer(BaseConsumer):
         )
 
     async def football_time_message(self, event):
-        with open('/tmp/debug_mseeage', 'a+') as f:
-            f.write(str(event))
-            f.write("\n")
+        # with open('/tmp/debug_mseeage', 'a+') as f:
+        #     f.write(str(event))
+        #     f.write("\n")
         quiz_id = event['quiz_id']
         call_command('football_synctime', quiz_id)
 
     async def basketball_time_message(self, event):
-        with open('/tmp/debug_mseeage', 'a+') as f:
-            f.write(str(event))
-            f.write("\n")
+        # with open('/tmp/debug_mseeage', 'a+') as f:
+        #     f.write(str(event))
+        #     f.write("\n")
         quiz_id = event['quiz_id']
         call_command('basketball_synctime', quiz_id)
