@@ -208,7 +208,7 @@ class Command(BaseCommand):
                                                 ~Q(club_id=Club.objects.get(room_title='DB俱乐部').id),
                                                 status='1', open_prize_time__range=(start_with, end_with))
 
-        print('开始')
+        print('脚本开始', datetime.datetime.now())
 
         # 球赛
         for record in quiz_records:
@@ -227,12 +227,14 @@ class Command(BaseCommand):
             bet_coin = record.bet_coin
             cash_back.handle_record_sum(record, bet_coin, record.club_id)
 
+        print('计算record完成', datetime.datetime.now())
+
         # 计算返现值
         cash_back.cal_cash_back(date_last)
         # 批量插入数据
         cash_back.insert_info()
 
-        print('结束')
+        print('脚本结束', datetime.datetime.now())
 
         # 兑换功能
         # i = 1
