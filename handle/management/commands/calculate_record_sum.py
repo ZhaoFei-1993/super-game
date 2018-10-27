@@ -40,10 +40,7 @@ class CashBack(object):
                 coin_name = coin.name
                 coin_price = CoinPrice.objects.get(coin_name=coin_name)
                 price_rmb = coin_price.price
-
-                coin_price = CoinPrice.objects.get(coin_name=coin_name)
                 price_usd = coin_price.price_usd
-
                 coin_price_dic.update({coin_name: {'price_rmb': price_rmb, 'price_usd': price_usd}})
 
             set_cache(key_currency_coin_price, coin_price_dic, 23 * 3600)
