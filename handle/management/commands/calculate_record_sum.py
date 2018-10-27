@@ -128,7 +128,7 @@ class CashBack(object):
                 content_part = ''
                 for coin_name, coin_sum in value['record_coin'].items():
                     content_part = content_part + str(coin_sum) + '个' + coin_name + '，'
-                    self.edit_user_message(user_id, cash_back_gsg, value['record_sum_usd'], date_last, content_part)
+                self.edit_user_message(user_id, cash_back_gsg, value['record_sum_usd'], date_last, content_part)
 
                 # 组装投注价值表
                 self.edit_injection_value(user_id, value['record_sum'], cash_back_gsg, value['is_robot'], date_last)
