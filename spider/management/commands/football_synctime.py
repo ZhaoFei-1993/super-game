@@ -29,8 +29,8 @@ class Command(BaseCommand):
         q = Queue(connection=redis_conn)
 
         try:
-            quiz_live_time_dic = get_cache(key_football_live_dt)
-            data_list = quiz_live_time_dic[quiz_id]
+            football_live_dt = get_cache(key_football_live_dt)
+            data_list = football_live_dt[quiz_id]
         except KeyError as e:
             raise CommandError(e)
             # if int(quiz.status) == int(Quiz.BONUS_DISTRIBUTION):

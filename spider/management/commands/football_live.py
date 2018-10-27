@@ -37,12 +37,12 @@ def timming_exe(fun, inc=60):
 
 
 def cache_live_time(quiz_id, data_list):
-    quiz_live_time_dic = get_cache(key_football_live_dt)
-    if quiz_live_time_dic is None:
+    football_live_dt = get_cache(key_football_live_dt)
+    if football_live_dt is None:
         set_cache(key_football_live_dt, {quiz_id: data_list})
     else:
-        quiz_live_time_dic[quiz_id] = data_list
-        set_cache(key_football_live_dt, quiz_live_time_dic)
+        football_live_dt[quiz_id] = data_list
+        set_cache(key_football_live_dt, football_live_dt)
 
 
 def get_live_data():

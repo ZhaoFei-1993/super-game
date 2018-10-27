@@ -16,12 +16,14 @@ from decimal import Decimal
 from .asia_tb_result_new import asia_result, asia_option
 from time import time
 from django.db import connection
+from utils.cache import get_cache, set_cache
 
 base_url = 'https://i.sporttery.cn/api/fb_match_info/get_pool_rs/?f_callback=pool_prcess&mid='
 live_url = 'https://i.sporttery.cn/api/match_info_live_2/get_match_live?m_id='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
+key_football_live_dt = 'football_live_dt'
 
 
 def trunc(f, n):
@@ -818,6 +820,11 @@ class Command(BaseCommand):
                 handle_delay_game(delay_quiz)
                 delay_quiz.save()
 
+                # 删除缓存中直播的数据
+                football_live_dt = get_cache(key_football_live_dt)
+                del football_live_dt[delay_quiz.id]
+                set_cache(key_football_live_dt, football_live_dt)
+
         rule_data_lack = [110208, 110322, 110207, 110200, 110189, 110186, 110178, 110255, 110265, 111051]
         # 在比赛开始时间基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
@@ -841,5 +848,9 @@ class Command(BaseCommand):
                                 match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                             # cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
                             pass
+                # 删除缓存中直播的数据
+                football_live_dt = get_cache(key_football_live_dt)
+                del football_live_dt[quiz.id]
+                set_cache(key_football_live_dt, football_live_dt)
         else:
             print('暂无比赛需要开奖')
