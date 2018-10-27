@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from quiz.models import Record
-from users.models import CoinPrice, UserCoin, CoinDetail
+from users.models import CoinPrice, UserCoin, CoinDetail, Coin
 from chat.models import Club
 from utils.functions import normalize_fraction
 from django.db.models import Q
@@ -31,25 +31,30 @@ class CashBack(object):
             self.gsg_to_rmb = to_decimal(0.65)
 
     @staticmethod
-    def cache_price(coin_name):
+    def cache_price():
         key_currency_coin_price = 'currency_coin_price'
         coin_price_dic = get_cache(key_currency_coin_price)
-        if coin_price_dic is None or coin_name not in coin_price_dic:
-            coin_price = CoinPrice.objects.get(coin_name=coin_name)
-            price_rmb = coin_price.price
+        if coin_price_dic is None:
+            coin_price_dic = {}
+            for coin in Coin.objects.all():
+                coin_name = coin.name
+                coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                price_rmb = coin_price.price
 
-            coin_price = CoinPrice.objects.get(coin_name=coin_name)
-            price_usd = coin_price.price_usd
+                coin_price = CoinPrice.objects.get(coin_name=coin_name)
+                price_usd = coin_price.price_usd
 
-            coin_price_dic = {coin_name: {'price_rmb': price_rmb, 'price_usd': price_usd}}
-            set_cache(key_currency_coin_price, coin_price_dic, 24 * 3600)
-        return coin_price_dic[coin_name]
+                coin_price_dic.update({coin_name: {'price_rmb': price_rmb, 'price_usd': price_usd}})
 
-    def handle_record_sum(self, record, bet_coin, club_id):
+            set_cache(key_currency_coin_price, coin_price_dic, 23 * 3600)
+            coin_price_dic = get_cache(key_currency_coin_price)
+        return coin_price_dic
+
+    def handle_record_sum(self, record, bet_coin, club_id, coin_price_dic):
         user_id = record['user_id']
         coin_name = self.cache_club_value[club_id]['coin_name']
         is_robot = handle_is_robot(record)
-        cache_price = self.cache_price(coin_name)
+        cache_price = coin_price_dic(coin_name)
         if user_id not in self.user_map:
             self.user_map.update({user_id: {'record_sum': bet_coin * to_decimal(cache_price['price_rmb']),
                                             'record_sum_usd': bet_coin * to_decimal(
@@ -211,29 +216,30 @@ class Command(BaseCommand):
 
         print('脚本开始', datetime.datetime.now())
 
+        coin_price_dic = cash_back.cache_price()
         # 球赛
         for record in quiz_records.values('user_id', 'roomquiz_id', 'bet', 'source'):
             bet_coin = record['bet']
-            cash_back.handle_record_sum(record, bet_coin, record['roomquiz_id'])
+            cash_back.handle_record_sum(record, bet_coin, record['roomquiz_id'], coin_price_dic)
         # 猜股指
         for record in guess_records.values('user_id', 'club_id', 'bets', 'source'):
             bet_coin = record['bets']
-            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'], coin_price_dic)
         # 股指pk
         for record in pk_records.values('user_id', 'club_id', 'bets', 'source'):
             bet_coin = record['bets']
-            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'], coin_price_dic)
         # 六合彩
         for record in six_records.values('user_id', 'club_id', 'bets', 'source'):
             bet_coin = record['bets']
-            cash_back.handle_record_sum(record, bet_coin, record['club_id'])
+            cash_back.handle_record_sum(record, bet_coin, record['club_id'], coin_price_dic)
 
         print('计算record完成', datetime.datetime.now())
 
-        # 计算返现值
-        cash_back.cal_cash_back(date_last)
-        # 批量插入数据
-        cash_back.insert_info()
+        # # 计算返现值
+        # cash_back.cal_cash_back(date_last)
+        # # 批量插入数据
+        # cash_back.insert_info()
 
         print('脚本结束', datetime.datetime.now())
 
