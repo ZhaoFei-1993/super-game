@@ -188,7 +188,7 @@ class StockPkDetail(ListAPIView):
 
         # 投注情况
         user_options_list = RecordStockPk.objects.filter(user_id=user.pk, issue_id=issues.id, club_id=club_id,
-                                                         play_id__in=plays_dic).values_list('options_id', flat=True)
+                                                         play_id__in=plays_dic).values_list('option_id', flat=True)
         # record_dic = {}
         # for record in RecordStockPk.objects.filter(issue_id=issues.id, club_id=club_id, play_id__in=plays_dic.keys()):
         #     record_dic.update({
