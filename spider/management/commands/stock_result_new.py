@@ -371,16 +371,17 @@ class GuessRecording(object):
                 cursor.execute(sql)
 
     @staticmethod
-    def newobject(periods, stock_id, next_start, next_end):
+    def newobject(periods, stock_id, next_start, next_end, period):
         rotary_header_time = next_end - timedelta(minutes=30)
         new_object = Periods(periods=periods, stock_id=stock_id)
-        new_object.save()
         new_object.lottery_time = next_end
         new_object.rotary_header_time = rotary_header_time
         new_object.save()
 
-        # 缓存看大看小人数
-        key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
+        # 缓存看大看小人数, 先删除旧一期的缓存，再生成新一期的
+        delete_cache('record_stock_bet_count' + '_' + str(period.id))
+
+        key_record_bet_count = 'record_stock_bet_count' + '_' + str(new_object.id)
         set_cache(key_record_bet_count, {'rise': 0, 'fall': 0})
 
         return new_object

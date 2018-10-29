@@ -164,6 +164,16 @@ class Command(BaseCommand):
                 record.source = Record.ROBOT
                 record.save()
 
+                # 猜大小人数统计到缓存中
+                key_record_bet_count = 'record_stock_bet_count' + '_' + str(item.id)
+                record_stock_bet_count = get_cache(key_record_bet_count)
+                if option.id in [1, 2, 3, 4]:
+                    record_stock_bet_count['rise'] += 1
+                    set_cache(key_record_bet_count, record_stock_bet_count)
+                if option.id in [5, 6, 7, 8]:
+                    record_stock_bet_count['fall'] += 1
+                    set_cache(key_record_bet_count, record_stock_bet_count)
+
                 bet_message = club.room_title + '-' + self.get_stock(stock.name) + '-' + self.get_play(rule.play_name) + '投注' + option.title + '：金额=' + str(wager)
                 self.stdout.write(self.style.SUCCESS(bet_message))
                 self.stdout.write(self.style.SUCCESS(''))

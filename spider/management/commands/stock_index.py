@@ -446,7 +446,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        shang_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        shang_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
@@ -474,7 +474,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        shen_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        shen_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
             # 股指pk出题找答案,股指pk出题
             guess_pk_recording = GuessPKRecording()
@@ -505,7 +505,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
 
             """
@@ -536,7 +536,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        dji_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        dji_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
 
             """
@@ -567,7 +567,7 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        ndx_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end)
+                        ndx_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
             guess_pk_recording = GuessPKRecording()
             guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time[0], 2)

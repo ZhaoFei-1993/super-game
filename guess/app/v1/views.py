@@ -543,7 +543,7 @@ class BetView(ListCreateAPIView):
         record.source = source
         record.save()
 
-        # 缓存看大看小人数
+        # 猜大小人数统计到缓存中
         key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
         record_stock_bet_count = get_cache(key_record_bet_count)
         if option_odds.id in [1, 2, 3, 4]:
