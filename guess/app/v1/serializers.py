@@ -83,12 +83,12 @@ class StockListSerialize(serializers.ModelSerializer):
         # periods = Periods.objects.filter(stock_id=obj.id).order_by("-periods").first()
         # rise = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
         #                               options_id__in=[49, 50, 51, 52]).count()           # 看涨人数
-        rise = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
-                                     options_id__in=[1, 2, 3, 4]).count()  # 看涨人数
+        # rise = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
+        #                              options_id__in=[1, 2, 3, 4]).count()  # 看涨人数
         # fall = Record.objects.filter(periods_id=period.id, options__play__stock_id=obj.id,
         #                               options_id__in=[53, 54, 55, 56]).count()         # 看跌人数
-        fall = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
-                                     options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
+        # fall = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
+        #                              options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
 
         # 缓存看大看小人数
         key_record_bet_count = 'record_stock_bet_count' + '_' + str(obj.id)

@@ -266,15 +266,6 @@ class PlayView(ListAPIView):
         plays = Play.objects.filter(~Q(play_name=0), stock_id=stock_id).order_by('play_name')  # 所有玩法
 
         plays_id_list = [play.id for play in plays]  # 所有玩法id
-        # 统计各玩法投注人数
-        plays_record_num = {}  # {play_id: 投注人数}
-        for i in plays_id_list:
-            plays_record_num.update({i: 0})
-        records_list = Record.objects.filter(club_id=club_id, periods_id=periods_id,
-                                             play_id__in=plays_id_list).values_list('play_id', flat=True)
-        for i in records_list:
-            plays_record_num[i] += 1
-        # print(plays_record_num)
 
         # 获取 betlimit
         betlimit_dic = {}  # {play_id: betlimit obj}
@@ -299,16 +290,15 @@ class PlayView(ListAPIView):
         user_options_list = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
                                                   options_id__in=option_id_list).values_list('options_id', flat=True)
 
-        clubinfo = Club.objects.get(pk=int(club_id))
-        coin_id = clubinfo.coin.pk  # 俱乐部coin_id
+        cache_club_value = get_club_info()
+        coin_id = cache_club_value[club_id]['coin_id']  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
-        coin_icon = user_coin.coin.icon
-        coin_name = user_coin.coin.name
+        coin_icon = cache_club_value[club_id]['coin_icon']
+        coin_name = cache_club_value[club_id]['coin_name']
         balance = normalize_fraction(user_coin.balance, int(user_coin.coin.coin_accuracy))  # 用户余额
 
         data = []
         for play in plays:
-            user_number = plays_record_num[play.id]
             # betlimit = BetLimit.objects.get(club_id=club_id, play_id=play.pk)
             betlimit = betlimit_dic[play.pk]
 
