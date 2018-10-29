@@ -374,6 +374,7 @@ class GuessRecording(object):
     def newobject(periods, stock_id, next_start, next_end, period):
         rotary_header_time = next_end - timedelta(minutes=30)
         new_object = Periods(periods=periods, stock_id=stock_id)
+        new_object.save()
         new_object.lottery_time = next_end
         new_object.rotary_header_time = rotary_header_time
         new_object.save()
