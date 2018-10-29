@@ -333,8 +333,11 @@ class PlayView(ListAPIView):
             key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
             record_stock_bet_count = get_cache(key_record_bet_count)
             bet_sum = record_stock_bet_count['rise'] + record_stock_bet_count['fall']
-            support_rise = round(record_stock_bet_count['rise'] / bet_sum * 100, 2)
-            support_fall = to_decimal(100) - to_decimal(support_rise)
+            support_rise = 0
+            support_fall = 0
+            if bet_sum != 0:
+                support_rise = round(record_stock_bet_count['rise'] / bet_sum * 100, 2)
+                support_fall = to_decimal(100) - to_decimal(support_rise)
 
             options_list = options_dic[play.pk]
             for options in reversed(options_list):

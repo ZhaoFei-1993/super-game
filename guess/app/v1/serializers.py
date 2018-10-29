@@ -92,9 +92,6 @@ class StockListSerialize(serializers.ModelSerializer):
 
         # 缓存看大看小人数
         key_record_bet_count = 'record_stock_bet_count' + '_' + str(obj.id)
-        print('===========================')
-        print(key_record_bet_count)
-        print('===========================')
         record_stock_bet_count = get_cache(key_record_bet_count)
 
         is_seal = obj.is_seal  # 是否封盘
