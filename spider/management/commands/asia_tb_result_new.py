@@ -270,6 +270,10 @@ def asia_result(quiz, records_asia):
             }
         )
 
+        if earn_coin < 0:
+            record.type = str(Record.MISTAKE)
+        else:
+            record.type = str(Record.CORRECT)
         record.earn_coin = earn_coin
         record.is_distribution = True
         record.save()
