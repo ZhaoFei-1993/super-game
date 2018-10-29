@@ -168,9 +168,9 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         print('date = ', api_date)
         api_date_dt = dateparser.parse(api_date)
         api_date_timestamp = time.mktime(api_date_dt.timetuple()) + 8 * 3600
-        if api_date_timestamp + 180 < time.time():
+        if api_date_timestamp + 300 < time.time():
             raise SystemParamException(code.API_10103_REQUEST_EXPIRED)
-            pass  # TODO: remove it!!!!
+            # pass  # TODO: remove it!!!!
 
         # Check if request has a "Signature" request header.
         authorization_header = self.header_canonical('Authorization')
@@ -190,6 +190,7 @@ class SignatureAuthentication(authentication.BaseAuthentication):
         # TODO: prevent replay request!!!，把nonce传入缓存中，60秒有效，60秒内如果有相同的nonce值，则deny
         if get_cache('api_nonce') == sent_nonce:
             raise SystemParamException(code.API_10110_REQUEST_REPLY_DENY)
+            # pass
         set_cache('api_nonce', sent_nonce, 60)
 
         # 登录验证
