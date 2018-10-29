@@ -43,8 +43,6 @@ class Command(BaseCommand):
         #     next_open_oth_ymd = td_tag.find_all('td')[3].text.replace('/', '-')
         #     print(next_open_oth_ymd)
 
-
-
         # import datetime
         # now_time = datetime.datetime.now()
         # last_time = datetime.datetime.now() + datetime.timedelta(minutes=4, seconds=31)
@@ -60,7 +58,8 @@ class Command(BaseCommand):
         # delete_cache('record_stock_bet_count_' + '394')
         print('进入脚本')
         from guess.models import Issues, OptionStockPk
-        if get_cache('record_pk_bet_count' + '_' + str(1)) is None and get_cache('record_pk_bet_count' + '_' + str(2)):
+        if get_cache('record_pk_bet_count' + '_' + str(1)) is None and get_cache(
+                'record_pk_bet_count' + '_' + str(2)) is None:
             set_cache('record_pk_bet_count' + '_' + str(1), {})
             set_cache('record_pk_bet_count' + '_' + str(2), {})
 
@@ -68,7 +67,8 @@ class Command(BaseCommand):
                 key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issues.stock_pk_id)
                 pk_bet_count = get_cache(key_pk_bet_count)
                 pk_bet_count.update({issues.id: {}})
-                for option in OptionStockPk.objects.filter(stock_pk_id=issues.stock_pk_id).order_by('order').values('id'):
+                for option in OptionStockPk.objects.filter(stock_pk_id=issues.stock_pk_id).order_by('order').values(
+                        'id'):
                     pk_bet_count[issues.id].update({option['id']: 0})
                 set_cache(key_pk_bet_count, pk_bet_count)
             print('结束脚本 1')
@@ -77,19 +77,3 @@ class Command(BaseCommand):
         print('---------------------------------------------')
         print(get_cache('record_pk_bet_count' + '_' + str(2)))
         print('结束脚本 2')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
