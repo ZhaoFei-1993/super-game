@@ -372,7 +372,7 @@ class PlayView(ListAPIView):
                 if title in right_list:
                     is_right = 1
 
-                if options.play_id == Play.SIZE:
+                if options.title == '大':
                     if options.order == 1:
                         support_number = support_rise  # 看大支持率
                     else:
