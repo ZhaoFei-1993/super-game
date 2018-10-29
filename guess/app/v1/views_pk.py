@@ -203,7 +203,7 @@ class StockPkDetail(ListAPIView):
             options_dic.update({key: []})
 
         # 从缓存拿出各个选项的投注人数，计算各个支持率
-        key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
+        key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issues.stock_pk_id)
         pk_bet_count = get_cache(key_pk_bet_count)
 
         pk_bet_rate = {}

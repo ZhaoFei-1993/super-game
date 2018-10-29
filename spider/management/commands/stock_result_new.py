@@ -429,7 +429,7 @@ class GuessPKRecording(GuessRecording):
             new_issues_obj.save()
 
             # 为投注人数支持率创建缓存
-            key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
+            key_pk_bet_count = 'record_pk_bet_count' + '_' + str(new_issues_obj.stock_pk_id)
             pk_bet_count = get_cache(key_pk_bet_count)
             pk_bet_count.update({new_issues_obj.id: {}})
             for option in OptionStockPk.objects.filter(stock_pk_id=stock_pk.id).order_by('order').values('id'):
