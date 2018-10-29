@@ -51,11 +51,33 @@ class Command(BaseCommand):
         # a = last_time - now_time
         # print(now_time.timetuple())
 
-        from utils.cache import get_cache, set_cache
-        set_cache('record_stock_bet_count_' + '395', {'rise': 0, 'fall': 0})
-        set_cache('record_stock_bet_count_' + '396', {'rise': 0, 'fall': 0})
-        set_cache('record_stock_bet_count_' + '397', {'rise': 0, 'fall': 0})
-        set_cache('record_stock_bet_count_' + '398', {'rise': 0, 'fall': 0})
+        # from utils.cache import get_cache, set_cache, delete_cache
+        # set_cache('record_stock_bet_count_' + '400', {'rise': 0, 'fall': 0})
+        # set_cache('record_stock_bet_count_' + '396', {'rise': 0, 'fall': 0})
+        # set_cache('record_stock_bet_count_' + '397', {'rise': 0, 'fall': 0})
+        # set_cache('record_stock_bet_count_' + '398', {'rise': 0, 'fall': 0})
+        #
+        # delete_cache('record_stock_bet_count_' + '394')
+        print('进入脚本')
+        from guess.models import Issues, OptionStockPk
+        if get_cache('record_pk_bet_count' + '_' + str(1)) is None and get_cache('record_pk_bet_count' + '_' + str(2)):
+            set_cache('record_pk_bet_count' + '_' + str(1), {})
+            set_cache('record_pk_bet_count' + '_' + str(2), {})
+
+            for issues in Issues.objects.filter(is_open=0):
+                key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issues.stock_pk_id)
+                pk_bet_count = get_cache(key_pk_bet_count)
+                pk_bet_count.update({issues.id: {}})
+                for option in OptionStockPk.objects.filter(stock_pk_id=issues.stock_pk_id).order_by('order').values('id'):
+                    pk_bet_count[issues.id].update({option['id']: 0})
+                set_cache(key_pk_bet_count, pk_bet_count)
+            print('结束脚本 1')
+
+        print(get_cache('record_pk_bet_count' + '_' + str(1)))
+        print('---------------------------------------------')
+        print(get_cache('record_pk_bet_count' + '_' + str(2)))
+        print('结束脚本 2')
+
 
 
 

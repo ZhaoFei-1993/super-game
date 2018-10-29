@@ -2,6 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from guess.models import RecordStockPk, Issues, OptionStockPk, Periods
+from utils.cache import set_cache, get_cache
 from .stock_result_new import GuessPKRecording
 import datetime
 from django.db.models import Q
@@ -32,6 +33,12 @@ class Command(BaseCommand):
                     for record_pk in records:
                         record_stock_pk.pk_size(record_pk, option_obj_dic, issue)
                     record_stock_pk.insert_info()
+
+                    # 删除缓存中的投注人数
+                    key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
+                    pk_bet_count = get_cache(key_pk_bet_count)
+                    del pk_bet_count[issue.id]
+                    set_cache(key_pk_bet_count, pk_bet_count)
 
                     real_records = RecordStockPk.objects.filter(~Q(source=str(RecordStockPk.ROBOT)), ~Q(club_id=1),
                                                                 issue_id=issue.id, status=str(RecordStockPk.OPEN))

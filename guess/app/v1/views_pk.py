@@ -9,7 +9,8 @@ from guess.models import (StockPk, Issues, PlayStockPk, OptionStockPk,
                           RecordStockPk, BetLimit, Index, Periods)
 import datetime
 import time
-from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero
+from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero, to_decimal
+from utils.cache import get_cache, set_cache
 from users.models import UserCoin, CoinDetail, User
 from spider.management.commands.stock_index import market_rest_cn_list
 from promotion.models import PromotionRecord
@@ -186,32 +187,47 @@ class StockPkDetail(ListAPIView):
             })
 
         # 投注情况
-        record_dic = {}
-        for record in RecordStockPk.objects.filter(issue_id=issues.id, club_id=club_id, play_id__in=plays_dic.keys()):
-            record_dic.update({
-                record.id: {
-                    'user_id': record.user_id, 'option_id': record.option_id
-                }
-            })
+        user_options_list = RecordStockPk.objects.filter(user_id=user.pk, issue_id=issues.id, club_id=club_id,
+                                                         play_id__in=plays_dic).values_list('options_id', flat=True)
+        # record_dic = {}
+        # for record in RecordStockPk.objects.filter(issue_id=issues.id, club_id=club_id, play_id__in=plays_dic.keys()):
+        #     record_dic.update({
+        #         record.id: {
+        #             'user_id': record.user_id, 'option_id': record.option_id
+        #         }
+        #     })
 
         # 获取选项
         options_dic = {}
         for key, value in plays_dic.items():
             options_dic.update({key: []})
 
+        # 从缓存拿出各个选项的投注人数，计算各个支持率
+        key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
+        pk_bet_count = get_cache(key_pk_bet_count)
+
+        pk_bet_rate = {}
+        rate = 0
+        list_item = list(pk_bet_count[issue.id].items())
+        bet_num_sum = sum(pk_bet_count[issue.id].values())
+        for option_id, option_bet_num in list_item[:-1]:
+            rate += to_decimal(option_bet_num)
+            support_rate = 0
+            if bet_num_sum != 0:
+                support_rate = round(option_bet_num / bet_num_sum * 100, 2)
+            pk_bet_rate.update({option_id: support_rate})
+        if bet_num_sum != 0:
+            pk_bet_rate.update({list_item[-1][0]: to_decimal(100) - rate})
+        else:
+            pk_bet_rate.update({list_item[-1][0]: 0})
+
         for option in OptionStockPk.objects.filter(stock_pk_id=stock_pk_id).order_by('order'):
-            records_num = len(record_dic.keys())
-            options_records_num = 0
             is_choice = 0
-            for key, value in record_dic.items():
-                if value['option_id'] == option.id and value['user_id'] == user.id:
-                    is_choice = 1
-                if value['option_id'] == option.id:
-                    options_records_num += 1
-            if records_num == 0:
-                support_rate = 0
-            else:
-                support_rate = round((int(options_records_num) / int(records_num)) * 100, 2)  # 支持率
+            if option.pk in user_options_list:
+                is_choice = 1  # 是否已选
+
+            support_rate = pk_bet_rate[option.id]  # 支持率
+
             title = option.title
             if self.request.GET.get('language') == 'en':
                 title = option.title_en
@@ -552,6 +568,12 @@ class StockPkBet(ListCreateAPIView):
             source = RecordStockPk.ROBOT
         record.source = source
         record.save()
+
+        # 投注累积进缓存
+        key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issues_obj.stock_pk_id)
+        pk_bet_count = get_cache(key_pk_bet_count)
+        pk_bet_count[issues_obj.id][option_id] += 1
+        set_cache(key_pk_bet_count, pk_bet_count)
 
         # 用户减少金币
         balance = normalize_fraction(user_coin.balance, coin_accuracy)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, Index, RecordStockPk
+from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, Index, RecordStockPk, OptionStockPk
 from guess.models import Record as Guess_Record
 from datetime import timedelta
 from users.models import CoinDetail
@@ -427,6 +427,14 @@ class GuessPKRecording(GuessRecording):
             new_issues_obj.closing = closing
             new_issues_obj.open = open_time
             new_issues_obj.save()
+
+            # 为投注人数支持率创建缓存
+            key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
+            pk_bet_count = get_cache(key_pk_bet_count)
+            pk_bet_count.update({new_issues_obj.id: {}})
+            for option in OptionStockPk.objects.filter(stock_pk_id=stock_pk.id).order_by('order').values('id'):
+                pk_bet_count[new_issues_obj.id].update({option['id']: 0})
+            set_cache(key_pk_bet_count, pk_bet_count)
 
             open_time = open_time + datetime.timedelta(minutes=5)
         print('完成股指pk出题')
