@@ -208,8 +208,8 @@ class StockPkDetail(ListAPIView):
 
         pk_bet_rate = {}
         rate = 0
-        list_item = list(pk_bet_count[issue.id].items())
-        bet_num_sum = sum(pk_bet_count[issue.id].values())
+        list_item = list(pk_bet_count[issues.id].items())
+        bet_num_sum = sum(pk_bet_count[issues.id].values())
         for option_id, option_bet_num in list_item[:-1]:
             rate += to_decimal(option_bet_num)
             support_rate = 0
