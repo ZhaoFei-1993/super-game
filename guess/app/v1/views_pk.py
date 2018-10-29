@@ -211,11 +211,11 @@ class StockPkDetail(ListAPIView):
         list_item = list(pk_bet_count[issues.id].items())
         bet_num_sum = sum(pk_bet_count[issues.id].values())
         for option_id, option_bet_num in list_item[:-1]:
-            rate += to_decimal(option_bet_num)
             support_rate = 0
             if bet_num_sum != 0:
                 support_rate = round(option_bet_num / bet_num_sum * 100, 2)
             pk_bet_rate.update({option_id: support_rate})
+            rate += to_decimal(support_rate)
         if bet_num_sum != 0:
             pk_bet_rate.update({list_item[-1][0]: to_decimal(100) - rate})
         else:
