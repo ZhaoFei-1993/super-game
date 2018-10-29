@@ -302,6 +302,12 @@ class Command(BaseCommand):
             record.source = RecordStockPk.ROBOT
             record.save()
 
+            # 竞猜人数统计到缓存中
+            key_pk_bet_count = 'record_pk_bet_count' + '_' + str(item.stock_pk_id)
+            pk_bet_count = get_cache(key_pk_bet_count)
+            pk_bet_count[item.id][option.id] += 1
+            set_cache(key_pk_bet_count, pk_bet_count)
+
             bet_message = club.room_title + '-' + '股指pk' + '-' + '投注选项为:' + option.title + '：金额=' + str(
                 wager) + '  ' + now_time.strftime('%Y-%m-%d %H:%M:%S')
             self.stdout.write(self.style.SUCCESS(bet_message))
