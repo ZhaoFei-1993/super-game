@@ -13,13 +13,14 @@ from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
 from datetime import datetime, timedelta
-from utils.functions import value_judge, get_sql, get_club_info
+from utils.functions import value_judge, get_sql, get_club_info, to_decimal
 from django.db.models import Q, Sum
 import time
 from api import settings
 import pytz
 from api.settings import MEDIA_DOMAIN_HOST
 from promotion.models import PromotionRecord
+from utils.cache import get_cache, set_cache
 
 
 class StockList(ListAPIView):
@@ -298,16 +299,6 @@ class PlayView(ListAPIView):
         user_options_list = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
                                                   options_id__in=option_id_list).values_list('options_id', flat=True)
 
-        # 计算每个选项投注人数
-        options_record_num_dic = {}  # {option_id: num}
-        for i in option_id_list:
-            options_record_num_dic.update({i: 0})
-        options_record_list = Record.objects.filter(club_id=club_id, periods_id=periods_id,
-                                                    options_id__in=option_id_list).values_list('options_id', flat=True)
-        for i in options_record_list:
-            options_record_num_dic[i] += 1
-        # print('options_record_num_dic: ', options_record_num_dic)
-
         clubinfo = Club.objects.get(pk=int(club_id))
         coin_id = clubinfo.coin.pk  # 俱乐部coin_id
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -337,6 +328,14 @@ class PlayView(ListAPIView):
 
             list = []
             # options_list = Options.objects.filter(play_id=play.pk).order_by("order")
+
+            # 看大，看小，人数支持率
+            key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
+            record_stock_bet_count = get_cache(key_record_bet_count)
+            bet_sum = record_stock_bet_count['rise'] + record_stock_bet_count['fall']
+            support_rise = round(record_stock_bet_count['rise'] / bet_sum * 100, 2)
+            support_fall = to_decimal(100) - to_decimal(support_rise)
+
             options_list = options_dic[play.pk]
             for options in reversed(options_list):
                 # is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
@@ -369,13 +368,14 @@ class PlayView(ListAPIView):
                 is_right = 0
                 if title in right_list:
                     is_right = 1
-                # options_number = Record.objects.filter(club_id=club_id, periods_id=periods_id,
-                #                                        options_id=options.pk).count()
-                options_number = options_record_num_dic[options.pk]
-                if options_number == 0 or user_number == 0:
-                    support_number = 0
+
+                if options.play_id == Play.SIZE:
+                    if options.order == 1:
+                        support_number = support_rise  # 看大支持率
+                    else:
+                        support_number = support_fall  # 看小支持率
                 else:
-                    support_number = round((int(options_number) / int(user_number)) * 100, 2)  # 支持人数
+                    support_number = 0
 
                 odds = options.odds  # 赔率
 
@@ -546,10 +546,21 @@ class BetView(ListCreateAPIView):
             source = 2
         else:
             source = 3
-        if user.is_robot == True:
+        if user.is_robot is True:
             source = 4
         record.source = source
         record.save()
+
+        # 缓存看大看小人数
+        key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
+        record_stock_bet_count = get_cache(key_record_bet_count)
+        if option_odds.id in [1, 2, 3, 4]:
+                record_stock_bet_count['rise'] += 1
+                set_cache(key_record_bet_count, record_stock_bet_count)
+        if option_odds.id in [5, 6, 7, 8]:
+                record_stock_bet_count['fall'] += 1
+                set_cache(key_record_bet_count, record_stock_bet_count)
+
         earn_coins = coins * option_odds.odds
         earn_coins = normalize_fraction(earn_coins, coin_accuracy)
         # 用户减少金币

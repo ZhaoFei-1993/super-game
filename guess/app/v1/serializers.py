@@ -8,6 +8,7 @@ import pytz
 from datetime import datetime
 from chat.models import Club
 from utils.functions import guess_is_seal, normalize_fraction, get_club_info
+from utils.cache import get_cache, set_cache
 
 
 class PeriodsListSerialize(serializers.ModelSerializer):
@@ -89,14 +90,18 @@ class StockListSerialize(serializers.ModelSerializer):
         fall = Record.objects.filter(periods_id=obj.id, options__play__stock_id=obj.stock_id,
                                      options_id__in=[5, 6, 7, 8]).count()  # 看跌人数
 
+        # 缓存看大看小人数
+        key_record_bet_count = 'record_stock_bet_count' + '_' + str(obj.id)
+        record_stock_bet_count = get_cache(key_record_bet_count)
+
         is_seal = obj.is_seal  # 是否封盘
 
         data = {
             obj.stock_id: {
                 "period_id": obj.id,
-                "rise": rise,
+                "rise": record_stock_bet_count['rise'],
                 "is_seal": is_seal,
-                "fall": fall,
+                "fall": record_stock_bet_count['fall'],
             }
         }
         return data

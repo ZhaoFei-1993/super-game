@@ -51,9 +51,12 @@ class Command(BaseCommand):
         # a = last_time - now_time
         # print(now_time.timetuple())
 
-        from utils.cache import get_cache
-        key_quiz_live_time = 'quiz_live_time'
-        print(get_cache(key_quiz_live_time))
+        from utils.cache import get_cache, set_cache
+        set_cache('record_stock_bet_count_' + '395', {'rise': 0, 'fall': 0})
+        set_cache('record_stock_bet_count_' + '396', {'rise': 0, 'fall': 0})
+        set_cache('record_stock_bet_count_' + '397', {'rise': 0, 'fall': 0})
+        set_cache('record_stock_bet_count_' + '398', {'rise': 0, 'fall': 0})
+
 
 
 

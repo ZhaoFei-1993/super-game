@@ -379,6 +379,10 @@ class GuessRecording(object):
         new_object.rotary_header_time = rotary_header_time
         new_object.save()
 
+        # 缓存看大看小人数
+        key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
+        set_cache(key_record_bet_count, {'rise': 0, 'fall': 0})
+
         return new_object
 
 
