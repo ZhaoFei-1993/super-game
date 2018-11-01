@@ -3151,9 +3151,8 @@ class MoveRecipientView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
         if 'area_code' not in request.data:
-            area_code = 86
-        else:
-            area_code = request.data.get('area_code')
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        area_code = request.data.get('area_code')
         telephone = request.GET.get('telephone')
         if is_number(telephone) is False:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
