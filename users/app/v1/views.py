@@ -3193,8 +3193,8 @@ class MoveFilishView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_100101_USER_MOBILE_COIN)
-        coin_info = Coin.objects.get_one(pk=coin_id)
-        print("coin_info============", coin_info)
+        print("coin_info============", coin_id)
+        coin_info = Coin.objects.get_one(pk=int(coin_id))
         remarks = ''
         if 'remarks' in self.request.data:
             remarks = self.request.data.get('remarks')  # 获取备注
