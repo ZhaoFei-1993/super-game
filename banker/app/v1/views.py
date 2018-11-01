@@ -10,7 +10,7 @@ from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cac
 from users.models import Coin, UserCoin
 import re
 import datetime
-from banker.models import BankerShare
+from banker.models import BankerShare, BankerRecord
 from utils.functions import  get_sql, is_number
 
 
@@ -177,6 +177,7 @@ class BankerDetailsView(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
+        user = self.request.user
         type = self.request.GET.get('type')
         key_id = self.request.GET.get('key_id')       # 玩法对应的key_id
         if is_number(key_id) is False:
@@ -196,14 +197,25 @@ class BankerDetailsView(ListAPIView):
         coin_name = coin_info.name   # 货币昵称
         coin_icon = coin_info.icon   # 货币图标
         banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
-        print("banker_share==================", banker_share)
         share = banker_share.balance   # 份额
-        proportion = int(banker_share.proportion)*100     # 占比
+        proportion = banker_share.proportion*100
         print("proportion=================", proportion)
         print("share=================", share)
         print("coin_name=================", coin_name)
         print("coin_icon=================", coin_icon)
-        return self.response({"code": 0})
+
+        sql_list = " SUM(r.balance) AS balance, SUM(r.proportion) AS proportion"
+        sql = "select " + sql_list + " from banker_bankerrecord r"
+        sql += " where r.user_id = '" + str(user.id) + "'"
+        sql += " and r.club_id = '" + str(club_id) + "'"
+        sql += " and r.key_id = '" + str(key_id) + "'"
+        sql += " and r.source = '" + str(type) + "'"
+        user_banker = get_sql(sql)[0]
+        user_banker_balance = user_banker[0] if user_banker[0] is not None else 0
+        user_banker_proportion = user_banker[1] if user_banker[1] is not None else 0
 
 
-
+        return self.response({"code": 0,
+                              "user_banker_balance": user_banker_balance,   # 用户已购份额
+                              "user_banker_proportion": user_banker_proportion    # 用户已购占比
+                            })

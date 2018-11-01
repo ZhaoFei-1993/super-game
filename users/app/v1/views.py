@@ -3194,6 +3194,7 @@ class MoveFilishView(CreateAPIView):
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_100101_USER_MOBILE_COIN)
         coin_info = Coin.objects.get_one(pk=coin_id)
+        print("coin_info============", coin_info)
         remarks = ''
         if 'remarks' in self.request.data:
             remarks = self.request.data.get('remarks')  # 获取备注

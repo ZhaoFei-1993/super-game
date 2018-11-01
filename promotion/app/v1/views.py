@@ -1869,7 +1869,8 @@ class UserInfoView(ListAPIView):
         data_list = {}
         if start != start_time:
             sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
             sql = "select " + sql_list + " from guess_record dtr"
             sql += " where dtr.user_id = '" + str(invitee_id) + "'"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
@@ -1886,7 +1887,8 @@ class UserInfoView(ListAPIView):
                 }
 
             sql_list = "dtr.club_id, sum(dtr.bet_coin), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
+                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                       "dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
             sql = "select " + sql_list + " from marksix_sixrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.user_id = '" + str(invitee_id) + "'"
@@ -1918,7 +1920,8 @@ class UserInfoView(ListAPIView):
                         }
 
             sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
             sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
             sql += " where dtr.user_id = '" + str(invitee_id) + "'"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
@@ -1949,7 +1952,8 @@ class UserInfoView(ListAPIView):
                         }
 
             sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
             sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " where dtr.user_id = '" + str(invitee_id) + "'"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
@@ -1980,7 +1984,8 @@ class UserInfoView(ListAPIView):
                         }
 
             sql_list = "dtr.roomquiz_id, sum(dtr.bet), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bet ELSE dtr.earn_coin END)) AS earn_coin"
+                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                       "dtr.earn_coin - dtr.bet ELSE dtr.earn_coin END)) AS earn_coin"
             sql = "select " + sql_list + " from quiz_record dtr"
             sql += " where dtr.user_id = '" + str(invitee_id) + "'"
             sql += " and dtr.created_at >= '" + str(start_time) + "'"
@@ -2011,7 +2016,8 @@ class UserInfoView(ListAPIView):
                         }
 
         sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
         sql = "select " + sql_list + " from guess_record dtr"
         sql += " where dtr.user_id = '" + str(invitee_id) + "'"
         sql += " and dtr.created_at >= '" + str(start) + "'"
@@ -2042,7 +2048,8 @@ class UserInfoView(ListAPIView):
                     }
 
         sql_list = "dtr.club_id, sum(dtr.bet_coin), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
+                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                   "dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
         sql = "select " + sql_list + " from marksix_sixrecord dtr"
         sql += " inner join users_user u on dtr.user_id=u.id"
         sql += " where dtr.user_id = '" + str(invitee_id) + "'"
@@ -2074,7 +2081,8 @@ class UserInfoView(ListAPIView):
                     }
 
         sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
         sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
         sql += " where dtr.user_id = '" + str(invitee_id) + "'"
         sql += " and dtr.created_at >= '" + str(start) + "'"
@@ -2105,7 +2113,8 @@ class UserInfoView(ListAPIView):
                     }
 
         sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
+                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
+                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
         sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
         sql += " where dtr.user_id = '" + str(invitee_id) + "'"
         sql += " and dtr.created_at >= '" + str(start) + "'"
@@ -2256,6 +2265,4 @@ class UserInfoView(ListAPIView):
                 "sum_income": sum_income,
                 "sum_income_water": normalize_fraction(sum_income_water, int(coin_accuracy))
             })
-
-
         return self.response({'code': 0, "user_info": user_info, "data": data})
