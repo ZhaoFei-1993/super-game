@@ -3164,11 +3164,10 @@ class MoveRecipientView(ListAPIView):
         if int(user_id) == int(user.id):
             raise ParamErrorException(error_code.API_100103_USER_MOBILE_COIN)
         return self.response({'code': 0,
-                                    "nickname": user.nickname,
-                                    "avatar": user.avatar,
-                                    "recipient_id": user.id
-                                  })
-
+                              "nickname": user.nickname,
+                              "avatar": user.avatar,
+                              "recipient_id": user.id
+                              })
 
 
 class MoveFilishView(CreateAPIView):
@@ -3216,7 +3215,8 @@ class MoveFilishView(CreateAPIView):
         recipient_user_coin.balance += amount
         recipient_user_coin.save()
 
-        return self.response({'code': 0, "balance": normalize_fraction(sponsor_user_coin.balance, coin_info.coin_accuracy)})
+        return self.response(
+            {'code': 0, "balance": normalize_fraction(sponsor_user_coin.balance, coin_info.coin_accuracy)})
 
 
 class MoveRecordView(ListAPIView):
@@ -3235,12 +3235,13 @@ class MoveRecordView(ListAPIView):
         coin_id = request.GET.get('coin_id')
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        coin_info = Coin.objects.get_one(pk=coin_id)
+        coin_info = Coin.objects.get_one(pk=int(coin_id))
         coin_name = coin_info.name
         coin_icon = coin_info.icon
 
         sql_list = " (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN ui.avatar ELSE u.avatar END) as avatar,"
-        sql_list += " (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN ui.telephone ELSE u.telephone END) as telephone, "
+        sql_list += " (CASE WHEN m.sponsor_id = '" + str(
+            user_id) + "' THEN ui.telephone ELSE u.telephone END) as telephone, "
         sql_list += "date_format( m.created_at, '%Y%m%d%H%i%s' ) as times,"
         sql_list += " date_format( m.created_at, '%Y' ) as years, date_format( m.created_at, '%m/%d' ) as month,"
         sql_list += " m.remarks, m.balance, (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN 1 ELSE 2 END) as type"
@@ -3252,7 +3253,6 @@ class MoveRecordView(ListAPIView):
         sql += " and m.coin_id = '" + str(coin_id) + "'"
         sql += " order by times desc"
         list = self.get_list_by_sql(sql)
-
 
         data = []
         tmp = ''
@@ -3282,7 +3282,7 @@ class MoveRecordView(ListAPIView):
                 "avatar": mobile_coin[0],
                 "remarks": mobile_coin[5],
                 "balance": balance,
-                "type": mobile_coin[7]            # 1.转出   2.转入
+                "type": mobile_coin[7]  # 1.转出   2.转入
             })
 
         return self.response({'code': 0,

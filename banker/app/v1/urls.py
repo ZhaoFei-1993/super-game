@@ -7,6 +7,8 @@ urlpatterns = [
     path('banker/home/', views.BankerHomeView.as_view(), name="banker_home"),
     # 联合坐庄：  详情
     path('banker/info/', views.BankerInfoView.as_view(), name='banker_info'),
+    # 联合坐庄：  认购信息
+    path('banker/details/', views.BankerDetailsView.as_view(), name='banker_details'),
     # 联合坐庄：   坐庄
     # path('banker/detail/', views.BankerDetailView.as_view(), name='banker_detail'),
 
