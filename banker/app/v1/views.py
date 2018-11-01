@@ -7,9 +7,10 @@ from django.db.models import Q
 from chat.models import ClubRule, Club
 from quiz.models import Category
 from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cache
-from users.models import Coin
+from users.models import Coin, UserCoin
 import re
 import datetime
+from banker.models import BankerShare
 from utils.functions import  get_sql, is_number
 
 
@@ -85,8 +86,10 @@ class BankerInfoView(ListAPIView):
         club_id = self.request.GET.get('club_id')
         if 'club_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        # club_info = Club.objects.get(pk=club_id)
+        club_info = Club.objects.get(pk=club_id)
         # club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get(pk=club_info.coin_id)
+        # coin_info = Coin.objects.get_one(pk=club_info.coin_id)
         begin_at = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
         regex = re.compile(r'^(1|2|3|4)$')
         if type is None or not regex.match(type):
@@ -156,9 +159,11 @@ class BankerInfoView(ListAPIView):
                     "day_time": i[3],
                     "time": i[4]
                 })
+        user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
 
         return self.response({"code": 0,
-                              "data": data
+                              "data": data,
+                              "balance": user_coin.balance
                               })
 
 
@@ -173,7 +178,7 @@ class BankerDetailsView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         type = self.request.GET.get('type')
-        key_id = self.request.GET.get('key_id')
+        key_id = self.request.GET.get('key_id')       # 玩法对应的key_id
         if is_number(key_id) is False:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = self.request.GET.get('club_id')
@@ -188,9 +193,16 @@ class BankerDetailsView(ListAPIView):
         # club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get(id=club_info.coin_id)
         # coin_info = Coin.objects.get_one(pk=club_info.coin_id)
-        coin_name = coin_info.name
-        coin_icon = coin_info.icon
-
+        coin_name = coin_info.name   # 货币昵称
+        coin_icon = coin_info.icon   # 货币图标
+        banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
+        print("banker_share==================", banker_share)
+        share = banker_share.share   # 份额
+        proportion = int(banker_share.proportion)*100     # 占比
+        print("proportion=================", proportion)
+        print("share=================", share)
+        print("coin_name=================", coin_name)
+        print("coin_icon=================", coin_icon)
         return self.response({"code": 0})
 
 

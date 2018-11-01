@@ -3150,7 +3150,7 @@ class MoveRecipientView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
-        if 'area_code' not in request.data:
+        if 'area_code' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         area_code = request.data.get('area_code')
         telephone = request.GET.get('telephone')
@@ -3200,8 +3200,8 @@ class MoveFilishView(CreateAPIView):
         amount = Decimal(self.request.data['amount'])  # 获取转账的金额
         if amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        mobile_record = MobileCoin.objects.create(sponsor_id=user.id, recipient_id=int(recipient_id),
-                                                  coin_id=int(coin_id), remarks=remarks, balance=amount)
+        MobileCoin.objects.create(sponsor_id=user.id, recipient_id=int(recipient_id),
+                                  coin_id=int(coin_id), remarks=remarks, balance=amount)
 
         # 用户的余额
         sponsor_user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
