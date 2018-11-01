@@ -197,7 +197,7 @@ class BankerDetailsView(ListAPIView):
         coin_icon = coin_info.icon   # 货币图标
         banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
         print("banker_share==================", banker_share)
-        share = banker_share.share   # 份额
+        share = banker_share.balance   # 份额
         proportion = int(banker_share.proportion)*100     # 占比
         print("proportion=================", proportion)
         print("share=================", share)
