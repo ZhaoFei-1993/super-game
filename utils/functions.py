@@ -1464,7 +1464,7 @@ def to_decimal(num):
 
 def get_proxies_from_url(key):
     """
-        把传进来数字改变成decimal类型保持精度
+        从服务商获取代理ip并存入缓存
         :param key: 缓存的key名
         :return: proxies
     """
@@ -1489,7 +1489,7 @@ def get_proxies_from_url(key):
 
 def get_proxies():
     """
-        把传进来数字改变成decimal类型保持精度
+        获取代理，如果缓存中代理过期则重新从服务商获取代理
         :return proxies:
     """
     key = 'PROXIES_URL'
@@ -1502,3 +1502,4 @@ def get_proxies():
             return get_proxies_from_url(key)
         else:
             return proxies_dic['proxies']
+

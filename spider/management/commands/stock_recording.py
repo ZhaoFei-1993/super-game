@@ -34,11 +34,16 @@ class Command(BaseCommand):
                         record_stock_pk.pk_size(record_pk, option_obj_dic, issue)
                     record_stock_pk.insert_info()
 
-                    # 删除缓存中的投注人数
+                    # 删除缓存中的投注人数, 如果是当日最后一日则不删除缓存，知道下一期的第一期再删除
                     key_pk_bet_count = 'record_pk_bet_count' + '_' + str(issue.stock_pk_id)
                     pk_bet_count = get_cache(key_pk_bet_count)
-                    del pk_bet_count[issue.id]
-                    set_cache(key_pk_bet_count, pk_bet_count)
+                    if issue.issue == 48 or issue.issue == 78:
+                        pass
+                    else:
+                        if issue.issue == 1:
+                            del pk_bet_count[sorted(pk_bet_count)[0]]
+                        del pk_bet_count[issue.id]
+                        set_cache(key_pk_bet_count, pk_bet_count)
 
                     real_records = RecordStockPk.objects.filter(~Q(source=str(RecordStockPk.ROBOT)), ~Q(club_id=1),
                                                                 issue_id=issue.id, status=str(RecordStockPk.OPEN))
