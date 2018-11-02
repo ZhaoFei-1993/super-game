@@ -700,7 +700,8 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                         user_message.title = '提现失败公告'
                     user_message.user = item.user
                     user_message.message_id = 6  # 修改密码
-                    user_message.save()
+                    if item.user.is_robot is False:
+                        user_message.save()
         if 'is_bill' in request.data:
             bill = request.data.get('is_bill')
             item.is_bill = bill
@@ -737,7 +738,8 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                     user_message.title = '提现成功公告'
                 user_message.user = item.user
                 user_message.message_id = 6  # 修改密码
-                # user_message.save()
+                # if item.user.is_robot is False:
+                #     user_message.save()
 
         if 'txid' in request.data:
             txid = request.data.get('txid')
@@ -752,7 +754,8 @@ class CoinPresentCheckView(RetrieveUpdateAPIView):
                 user_message.title = '提现成功公告'
             user_message.user = item.user
             user_message.message_id = 6  # 修改密码
-            user_message.save()
+            if item.user.is_robot is False:
+                user_message.save()
         print('txid = ', item.txid)
         item.save()
 

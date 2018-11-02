@@ -60,7 +60,8 @@ def process_main(records):
                 u_mes.content_en = '由于系统原因导致' + record.quiz.host_team + ' VS ' + record.quiz.guest_team + '赛事结算出错,现已讲您的奖金' + str(
                     earn_coin) \
                                    + '重新发放,请查收！'
-                u_mes.save()
+                if record.user.is_robot is False:
+                    u_mes.save()
 
 
 class Command(BaseCommand):

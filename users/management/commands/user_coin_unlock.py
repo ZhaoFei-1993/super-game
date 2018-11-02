@@ -90,7 +90,8 @@ class Command(BaseCommand):
             user_message.title = 'GSG锁定到期提醒'
             user_message.user_id = user_id
             user_message.message_id = 6
-            user_message.save()
+            if user_message.user.is_robot is False:
+                user_message.save()
 
             # 将余额返回给用户
             user_coin = UserCoin.objects.select_for_update().get(user_id=user_id, coin_id=Coin.GSG)
@@ -104,7 +105,8 @@ class Command(BaseCommand):
             coin_detail.amount = str(user_coin_lock.amount)
             coin_detail.rest = user_coin.balance
             coin_detail.sources = CoinDetail.UNLOCK
-            coin_detail.save()
+            if user_message.user.is_robot is False:
+                coin_detail.save()
         else:
             self.pre_release_unlock_message(user_coin_lock)
 

@@ -784,7 +784,8 @@ class BetView(ListCreateAPIView):
         #         user_message.status = 0
         #         user_message.user = user
         #         user_message.message_id = 10
-        #         user_message.save()
+        #         if user.is_robot is False:
+        #            user_message.save()
 
         try:  # 判断选项ID是否有效
             option_odds = OptionOdds.objects.get(pk=option)

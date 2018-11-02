@@ -37,6 +37,7 @@ class Command(BaseCommand):
             user_message.title = 'GSG锁定解除通知'
             user_message.user_id = user_coin_lock.user_id
             user_message.message_id = 6
-            user_message.save()
+            if user_coin_lock.user.is_robot is False:
+                user_message.save()
 
         self.stdout.write(self.style.SUCCESS('解锁完成'))

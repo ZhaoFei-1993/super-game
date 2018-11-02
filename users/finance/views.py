@@ -517,7 +517,8 @@ class PresentDetailView(ListCreateAPIView):
                         user_message.title = '提现失败公告'
                     user_message.user = item.user
                     user_message.message_id = 6  # 修改密码
-                    user_message.save()
+                    if item.user.is_robot is False:
+                        user_message.save()
         item.save()
         return self.response({'code': 0})
 
@@ -573,7 +574,8 @@ class BillView(ListCreateAPIView):
             user_message.user = item.user
             user_message.message_id = 6  # 修改密码
             user_message.save()
-            item.save()
+            if item.user.is_robot is False:
+                item.save()
             return self.response({'code': 0})
         else:
             return JsonResponse({'Error': 'Present Fail'}, status=status.HTTP_400_BAD_REQUEST)

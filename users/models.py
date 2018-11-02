@@ -915,7 +915,8 @@ class UserInvitationManager(models.Manager):
                         u_mes.message_id = 19  # 邀请t1消息
                     else:
                         u_mes.message_id = 2  # 邀请t2消息
-                    u_mes.save()
+                    if user.is_robot is False:
+                        u_mes.save()
 
 
 @reversion.register()
@@ -1098,7 +1099,8 @@ class CoinGiveManager(models.Manager):
         user_message.status = 0
         user_message.user = user
         user_message.message_id = 11
-        user_message.save()
+        if user.is_robot is False:
+            user_message.save()
 
         coin_bankruptcy = CoinDetail()
         coin_bankruptcy.user = user
@@ -1106,7 +1108,8 @@ class CoinGiveManager(models.Manager):
         coin_bankruptcy.amount = '+' + str(activity.number)
         coin_bankruptcy.rest = Decimal(user_coin.balance)
         coin_bankruptcy.sources = 4
-        coin_bankruptcy.save()
+        if user.is_robot is False:
+            coin_bankruptcy.save()
 
 
 @reversion.register()

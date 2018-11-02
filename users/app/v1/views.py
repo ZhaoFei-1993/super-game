@@ -157,7 +157,8 @@ class UserRegister(object):
                     usermessage = UserMessage()
                     usermessage.user = user
                     usermessage.message_id = i
-                    usermessage.save()
+                    if user.is_robot is False:
+                        usermessage.save()
 
         Address.objects.initial(user.id)  # 生成为基础 usercoin 数据 并且分配地址
 
@@ -279,14 +280,16 @@ class UserRegister(object):
             user_message.status = 0
             user_message.user = user
             user_message.message_id = 11
-            user_message.save()
+            if user.is_robot is False:
+                user_message.save()
             coin_bankruptcy = CoinDetail()
             coin_bankruptcy.user = user
             coin_bankruptcy.coin_name = 'USDT'
             coin_bankruptcy.amount = '+' + str(give_info.number)
             coin_bankruptcy.rest = Decimal(user_coin.balance)
             coin_bankruptcy.sources = 4
-            coin_bankruptcy.save()
+            if user.is_robot is False:
+                coin_bankruptcy.save()
 
         # 活动: INT邀请码   限制2000人
         if invitation_code != '':
@@ -306,7 +309,8 @@ class UserRegister(object):
                 user_message.status = 0
                 user_message.user = user
                 user_message.message_id = 13
-                user_message.save()
+                if user.is_robot is False:
+                    user_message.save()
                 if int_invitation.money > 0:
                     int_user_coin = UserCoin.objects.get(user_id=user.pk, coin_id=1)
                     int_user_coin.balance += Decimal(int_invitation.money)
@@ -317,7 +321,8 @@ class UserRegister(object):
                     coin_bankruptcy.amount = '+' + str(int_invitation.money)
                     coin_bankruptcy.rest = Decimal(int_user_coin.balance)
                     coin_bankruptcy.sources = 4
-                    coin_bankruptcy.save()
+                    if user.is_robot is False:
+                        coin_bankruptcy.save()
 
         # 活动： 注册送HAND币      # 限制2亿
         all_user_number = User.objects.filter(is_money=1, is_robot=0).count()
@@ -348,7 +353,8 @@ class UserRegister(object):
                 r_msg.status = 0
                 r_msg.user = user
                 r_msg.message_id = 5
-                r_msg.save()
+                if user.is_robot is False:
+                    r_msg.save()
 
         # 生成客户端加密串
         token = self.get_access_token(source=source, user=user)
@@ -2093,7 +2099,8 @@ class ForgetPasswordView(ListAPIView):
         # u_mes.status = 0
         # u_mes.user = userinfo
         # u_mes.message_id = 7  # 修改密码
-        # u_mes.save()
+        # if user_info.is_robot is False:
+        #    u_mes.save()
 
         content = {'code': 0}
         return self.response(content)
@@ -2500,7 +2507,8 @@ class InvitationInfoView(ListAPIView):
         #             u_mes.message_id = 19  # 邀请t1消息
         #         else:
         #             u_mes.message_id = 2  # 邀请t2消息
-        #         u_mes.save()
+        #         if user.is_robot is False:
+        #            u_mes.save()
 
         if user.invitation_code == '':
             invitation_code = random_invitation_code()
