@@ -195,8 +195,11 @@ def user_captcha_generate(request):
         co.key = key
         co.position = str(position)
         co.save()
-    except:
-        return JsonResponse({'code': 501, 'message': '服务器错误！'})
+    except Exception as e:
+        print('==================================================')
+        print('error is : ', e)
+        print('==================================================')
+        return JsonResponse({'code': 501, 'message': '服务器错误！', 'error': e})
 
     try:
         if not os.path.exists(SAVE_PATH):
