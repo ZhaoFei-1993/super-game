@@ -364,6 +364,7 @@ class CoinDetail(models.Model):
     DRAGON_TIGER = 15
     BACCARAT = 16
     MOBILE = 17
+    BANKER = 18
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -384,6 +385,7 @@ class CoinDetail(models.Model):
         (EXCHANGE, "兑换"),
         (UNLOCK, "解锁"),
         (MOBILE, "转账"),
+        (BANKER, "联合做庄"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
@@ -600,7 +602,8 @@ class UserMessageManager(models.Manager):
             user_message = UserMessage()
             user_message.user = user
             user_message.message = message
-            user_message.save()
+            if user.is_robot is False:
+                user_message.save()
 
         return True
 
@@ -732,7 +735,8 @@ class UserRechargeManager(models.Manager):
             user_message.status = UserMessage.UNREAD
             user_message.user_id = user_id
             user_message.message_id = 3
-            user_message.save()
+            if user_message.user.is_robot is False:
+                user_message.save()
 
     def soc_gift_event(self, user):
         """
@@ -775,7 +779,8 @@ class UserRechargeManager(models.Manager):
         user_message.status = 0
         user_message.user = user
         user_message.message_id = 11
-        user_message.save()
+        if user.is_robot is False:
+            user_message.save()
 
         coin_bankruptcy = CoinDetail()
         coin_bankruptcy.user = user
@@ -783,7 +788,8 @@ class UserRechargeManager(models.Manager):
         coin_bankruptcy.amount = '+' + str(activity.number)
         coin_bankruptcy.rest = Decimal(user_coin.balance)
         coin_bankruptcy.sources = 4
-        coin_bankruptcy.save()
+        if user.is_robot is False:
+            coin_bankruptcy.save()
 
 
 @reversion.register()

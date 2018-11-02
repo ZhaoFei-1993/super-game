@@ -9,7 +9,9 @@ urlpatterns = [
     path('banker/info/', views.BankerInfoView.as_view(), name='banker_info'),
     # 联合坐庄：  认购信息
     path('banker/details/', views.BankerDetailsView.as_view(), name='banker_details'),
-    # 联合坐庄：   坐庄
-    # path('banker/detail/', views.BankerDetailView.as_view(), name='banker_detail'),
+    # 联合坐庄：  点击认购
+    path('banker/buy/', views.BankerBuyView.as_view(), name='banker_buy'),
+    # 联合坐庄：   投注流水
+    path('banker/record/', views.BankerRecordView.as_view(), name='banker_record'),
 
 ]

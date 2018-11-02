@@ -513,7 +513,8 @@ class RecordManager(models.Manager):
                 user_message.status = 0
                 user_message.user = user
                 user_message.message_id = 10  # 修改密码
-                user_message.save()
+                if user.is_robot is False:
+                    user_message.save()
 
 
 @reversion.register()

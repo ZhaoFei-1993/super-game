@@ -1191,7 +1191,7 @@ class DetailView(ListAPIView):
         user_message.save()
 
         # 系统消息类型
-        message = Message.objects.get_one(pk=user_message.message_id)
+        message = Message.objects.get_one(pk=int(user_message.message_id))
         message_type = int(message.type)
         system_message_content = message.content
         system_message_content_en = message.content_en
@@ -3125,7 +3125,7 @@ class MoveCoinView(ListAPIView):
         user_id = self.request.user.id
         if 'coin_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        coin_id = request.GET.get('coin_id')
+        coin_id = int(request.GET.get('coin_id'))
         if is_number(coin_id) is False:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(coin_id) in (4, 6):
@@ -3193,7 +3193,6 @@ class MoveFilishView(CreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_100101_USER_MOBILE_COIN)
-        print("coin_info============", coin_id)
         coin_info = Coin.objects.get_one(pk=int(coin_id))
         remarks = ''
         if 'remarks' in self.request.data:
