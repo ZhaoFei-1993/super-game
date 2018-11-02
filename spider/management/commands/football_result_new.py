@@ -444,17 +444,20 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
 
                 user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
                     user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
-                # 用户资金明细表
-                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                coin_detail_list.append({
-                    'user_id': str(user_id),
-                    'coin_name': coin_name,
-                    'amount': str(to_decimal(earn_coin)),
-                    'rest': str(user_coin_dic[user_id][coin_id]['balance']),
-                    'sources': str(CoinDetail.OPEB_PRIZE),
-                    'is_delete': '0',
-                    'created_at': now_time,
-                })
+
+                # 排除机器人
+                if record.source != str(Record.CONSOLE):
+                    # 用户资金明细表
+                    now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    coin_detail_list.append({
+                        'user_id': str(user_id),
+                        'coin_name': coin_name,
+                        'amount': str(to_decimal(earn_coin)),
+                        'rest': str(user_coin_dic[user_id][coin_id]['balance']),
+                        'sources': str(CoinDetail.OPEB_PRIZE),
+                        'is_delete': '0',
+                        'created_at': now_time,
+                    })
 
             # handle  USDT活动
             # if is_right is True:
@@ -463,28 +466,30 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             #     handle_activity(record, coin, 0)
 
             # option_right = Option.objects.get(rule=record.rule, is_right=True)
-            rule_info = map_rule[record.rule_id]
-            option_right = map_rule_option[record.rule_id]
-            option_info = map_option_odd_id_option[record.option_id]
-            title = club_name + '开奖公告'
-            title_en = 'Lottery announcement from ' + club_name_en
-            if is_right is False:
-                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您答错了。'
-                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '-' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '-' + option_info.option_en + '，You are wrong.'
-            else:
-                content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您的奖金是:' + str(
-                    round(earn_coin, 5))
-                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '  ' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '  ' + option_info.option_en + '，Your bonus is:' + str(
-                    round(earn_coin, 5))
-            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            user_message_list.append(
-                {
-                    'user_id': str(user_id), 'status': '0',
-                    'message_id': '6', 'title': title, 'title_en': title_en,
-                    'content': content, 'content_en': content_en,
-                    'created_at': now_time,
-                }
-            )
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                rule_info = map_rule[record.rule_id]
+                option_right = map_rule_option[record.rule_id]
+                option_info = map_option_odd_id_option[record.option_id]
+                title = club_name + '开奖公告'
+                title_en = 'Lottery announcement from ' + club_name_en
+                if is_right is False:
+                    content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您答错了。'
+                    content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '-' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '-' + option_info.option_en + '，You are wrong.'
+                else:
+                    content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + rule_info.tips + '  ' + option_right.option + ',您选的答案是:' + rule_info.tips + '  ' + option_info.option + '，您的奖金是:' + str(
+                        round(earn_coin, 5))
+                    content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' Lottery has already been announced.The correct answer is：' + rule_info.tips_en + '  ' + option_right.option_en + ',Your answer is:' + rule_info.tips_en + '  ' + option_info.option_en + '，Your bonus is:' + str(
+                        round(earn_coin, 5))
+                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                user_message_list.append(
+                    {
+                        'user_id': str(user_id), 'status': '0',
+                        'message_id': '6', 'title': title, 'title_en': title_en,
+                        'content': content, 'content_en': content_en,
+                        'created_at': now_time,
+                    }
+                )
 
         # 开始执行sql语句
         # 初始化sql语句
@@ -597,32 +602,37 @@ def handle_delay_game(delay_quiz):
                     coin_id: {'balance': user_coin.balance}
                 })
 
-            # 用户资金明细表
             user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(user_coin_dic[record.user_id][coin_id][
                                                                                'balance']) + to_decimal(return_coin)
-            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            coin_detail_list.append({
-                'user_id': str(record.user_id),
-                'coin_name': coin_name, 'amount': str(return_coin),
-                'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
-                'sources': str(CoinDetail.RETURN), 'is_delete': '0',
-                'created_at': now_time,
-            })
 
-            # 发送信息
-            title = club_name + '退回公告'
-            title_en = 'Return to announcement from ' + club_name_en
-            content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
-            content_en = delay_quiz.host_team_en + ' VS ' + delay_quiz.guest_team_en + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
-            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            user_message_list.append(
-                {
-                    'user_id': str(record.user_id), 'status': '0',
-                    'message_id': '6', 'title': title, 'title_en': title_en,
-                    'content': content, 'content_en': content_en,
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                # 用户资金明细表
+                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                coin_detail_list.append({
+                    'user_id': str(record.user_id),
+                    'coin_name': coin_name, 'amount': str(return_coin),
+                    'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
+                    'sources': str(CoinDetail.RETURN), 'is_delete': '0',
                     'created_at': now_time,
-                }
-            )
+                })
+
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                # 发送信息
+                title = club_name + '退回公告'
+                title_en = 'Return to announcement from ' + club_name_en
+                content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
+                content_en = delay_quiz.host_team_en + ' VS ' + delay_quiz.guest_team_en + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
+                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                user_message_list.append(
+                    {
+                        'user_id': str(record.user_id), 'status': '0',
+                        'message_id': '6', 'title': title, 'title_en': title_en,
+                        'content': content, 'content_en': content_en,
+                        'created_at': now_time,
+                    }
+                )
 
         # 开始执行sql语句
         # 插入coin_detail表

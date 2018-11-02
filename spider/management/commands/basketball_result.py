@@ -276,13 +276,15 @@ def get_data_info(url, match_flag):
                     #     coin_give_records.save()
 
                     # 用户资金明细表
-                    coin_detail = CoinDetail()
-                    coin_detail.user_id = record.user_id
-                    coin_detail.coin_name = coin.name
-                    coin_detail.amount = str(to_decimal(earn_coin))
-                    coin_detail.rest = user_coin.balance
-                    coin_detail.sources = CoinDetail.OPEB_PRIZE
-                    coin_detail.save()
+                    # 排除机器人
+                    if record.source != str(Record.CONSOLE):
+                        coin_detail = CoinDetail()
+                        coin_detail.user_id = record.user_id
+                        coin_detail.coin_name = coin.name
+                        coin_detail.amount = str(to_decimal(earn_coin))
+                        coin_detail.rest = user_coin.balance
+                        coin_detail.sources = CoinDetail.OPEB_PRIZE
+                        coin_detail.save()
 
                 # # handle  USDT活动
                 # if is_right is True:
@@ -291,22 +293,24 @@ def get_data_info(url, match_flag):
                 #     handle_activity(record, coin, 0)
 
                 # 发送信息
-                u_mes = UserMessage()
-                u_mes.status = 0
-                u_mes.user_id = record.user_id
-                u_mes.message_id = 6  # 私人信息
-                u_mes.title = club.room_title + '开奖公告'
-                u_mes.title_en = 'Lottery announcement from ' + club.room_title_en
-                option_right = Option.objects.get(rule=record.rule, is_right=True)
-                if is_right is False:
-                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
-                    u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，You are wrong.'
-                elif is_right is True:
-                    u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您的奖金是:' + str(
-                        round(earn_coin, 3))
-                    u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，Your bonus is:' + str(
-                        round(earn_coin, 3))
-                u_mes.save()
+                # 排除机器人
+                if record.source != str(Record.CONSOLE):
+                    u_mes = UserMessage()
+                    u_mes.status = 0
+                    u_mes.user_id = record.user_id
+                    u_mes.message_id = 6  # 私人信息
+                    u_mes.title = club.room_title + '开奖公告'
+                    u_mes.title_en = 'Lottery announcement from ' + club.room_title_en
+                    option_right = Option.objects.get(rule=record.rule, is_right=True)
+                    if is_right is False:
+                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您答错了。'
+                        u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，You are wrong.'
+                    elif is_right is True:
+                        u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖，正确答案是：' + option_right.rule.tips + '  ' + option_right.option + ',您选的答案是:' + option_right.rule.tips + '  ' + record.option.option.option + '，您的奖金是:' + str(
+                            round(earn_coin, 3))
+                        u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced.The correct answer is：' + option_right.rule.tips_en + '  ' + option_right.option_en + ',Your answer is:' + option_right.rule.tips_en + '  ' + record.option.option.option_en + '，Your bonus is:' + str(
+                            round(earn_coin, 3))
+                    u_mes.save()
 
                 record.save()
 

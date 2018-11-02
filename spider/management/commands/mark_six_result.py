@@ -29,17 +29,20 @@ def base_functions(record, coin_id, coin_name, earn_coin):
                 coin_id: {'balance': user_coin.balance}
             })
 
-        # 用户资金明细表
         user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
             user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
-        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        coin_detail_list.append({
-            'user_id': str(user_id),
-            'coin_name': coin_name, 'amount': str(earn_coin),
-            'rest': str(user_coin_dic[user_id][coin_id]['balance']),
-            'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
-            'created_at': now_time,
-        })
+
+        # 排除机器人
+        if record.source != str(SixRecord.ROBOT):
+            # 用户资金明细表
+            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            coin_detail_list.append({
+                'user_id': str(user_id),
+                'coin_name': coin_name, 'amount': str(earn_coin),
+                'rest': str(user_coin_dic[user_id][coin_id]['balance']),
+                'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
+                'created_at': now_time,
+            })
 
 
 def special_code_result(record, answer_dic, cache_club_value):

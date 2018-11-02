@@ -36,49 +36,53 @@ class GuessRecording(object):
                     coin_id: {'balance': user_coin.balance}
                 })
 
-            # 用户资金明细表
             self.user_coin_dic[user_id][coin_id]['balance'] = to_decimal(
                 self.user_coin_dic[user_id][coin_id]['balance']) + to_decimal(earn_coin)
-            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.coin_detail_list.append({
-                'user_id': str(user_id),
-                'coin_name': coin_name, 'amount': str(earn_coin),
-                'rest': str(self.user_coin_dic[user_id][coin_id]['balance']),
-                'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
-                'created_at': now_time,
-            })
+
+            # 排除机器人
+            if record.source != str(Guess_Record.ROBOT):
+                # 用户资金明细表
+                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.coin_detail_list.append({
+                    'user_id': str(user_id),
+                    'coin_name': coin_name, 'amount': str(earn_coin),
+                    'rest': str(self.user_coin_dic[user_id][coin_id]['balance']),
+                    'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
+                    'created_at': now_time,
+                })
 
     def edit_user_message(self, record, club_name, club_name_en, coin_name):
         # 编辑开奖公告
-        title = club_name + '开奖公告'
-        title_en = 'Lottery announcement from' + club_name_en
-        earn_coin = record.earn_coin
-        if earn_coin < 0:
-            content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
-                      + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
-                      '，您答错了。'
+        if record.source != str(Guess_Record.ROBOT):
+            title = club_name + '开奖公告'
+            title_en = 'Lottery announcement from' + club_name_en
+            earn_coin = record.earn_coin
+            if earn_coin < 0:
+                content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' \
+                          + record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
+                          '，您答错了。'
 
-            content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                         record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
-                         '您答错了。'
-        else:
-            content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                      record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + \
-                      record.options.title + '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
+                content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+                             record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
+                             '您答错了。'
+            else:
+                content = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+                          record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + \
+                          record.options.title + '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
-            content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
-                         record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
-                         '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
+                content_en = '猜股指已开奖，' + Stock.STOCK[int(record.periods.stock.name)][1] + '的正确答案是：收盘 ' + \
+                             record.periods.size + '， ' + record.periods.points + '， 您选的答案是: ' + record.options.title + \
+                             '，您的奖金是：' + str(round(earn_coin, 5)) + coin_name
 
-        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.user_message_list.append(
-            {
-                'user_id': str(record.user_id), 'status': '0',
-                'message_id': '6', 'title': title, 'title_en': title_en,
-                'content': content, 'content_en': content_en,
-                'created_at': now_time,
-            }
-        )
+            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.user_message_list.append(
+                {
+                    'user_id': str(record.user_id), 'status': '0',
+                    'message_id': '6', 'title': title, 'title_en': title_en,
+                    'content': content, 'content_en': content_en,
+                    'created_at': now_time,
+                }
+            )
 
     def size_result(self, record, cache_club_value):
         """

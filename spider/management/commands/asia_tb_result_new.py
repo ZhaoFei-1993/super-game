@@ -233,42 +233,47 @@ def asia_result(quiz, records_asia):
 
             user_coin_dic[record.user_id][coin_id]['balance'] = to_decimal(
                 user_coin_dic[record.user_id][coin_id]['balance']) + to_decimal(earn_coin)
-            # 用户资金明细表
-            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            coin_detail_list.append({
-                'user_id': str(record.user_id),
-                'coin_name': coin_name, 'amount': str(earn_coin),
-                'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
-                'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
-                'created_at': now_time,
-            })
+
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                # 用户资金明细表
+                now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                coin_detail_list.append({
+                    'user_id': str(record.user_id),
+                    'coin_name': coin_name, 'amount': str(earn_coin),
+                    'rest': str(user_coin_dic[record.user_id][coin_id]['balance']),
+                    'sources': str(CoinDetail.OPEB_PRIZE), 'is_delete': '0',
+                    'created_at': now_time,
+                })
 
         # 发送信息
-        title = club_name + '开奖公告'
-        title_en = 'Lottery announcement from ' + club_name_en
-        if earn_coin < 0:
-            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
-                quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您答错了。'
-            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
-                quiz.host_team_score) + ':' + str(
-                quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，You are wrong.'
-        else:
-            content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
-                quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您的奖金是:' + str(
-                round(earn_coin, 3))
-            content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
-                quiz.host_team_score) + ':' + str(
-                quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，Your bonus is:' + str(
-                round(earn_coin, 3))
-        now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        user_message_list.append(
-            {
-                'user_id': str(record.user_id), 'status': '0',
-                'message_id': '6', 'title': title, 'title_en': title_en,
-                'content': content, 'content_en': content_en,
-                'created_at': now_time,
-            }
-        )
+        # 排除机器人
+        if record.source != str(Record.CONSOLE):
+            title = club_name + '开奖公告'
+            title_en = 'Lottery announcement from ' + club_name_en
+            if earn_coin < 0:
+                content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
+                    quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您答错了。'
+                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
+                    quiz.host_team_score) + ':' + str(
+                    quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，You are wrong.'
+            else:
+                content = quiz.host_team + ' VS ' + quiz.guest_team + '比分是：' + str(quiz.host_team_score) + ':' + str(
+                    quiz.guest_team_score) + ' 已经开奖，您选的是：' + record.rule.tips + '(' + record.handicap + ')' + record.option.option.option + '，您的奖金是:' + str(
+                    round(earn_coin, 3))
+                content_en = quiz.host_team_en + ' VS ' + quiz.guest_team_en + ' result is：' + str(
+                    quiz.host_team_score) + ':' + str(
+                    quiz.guest_team_score) + ',Your answer is:' + record.rule.tips_en + '(' + record.handicap + ')' + record.option.option.option + '，Your bonus is:' + str(
+                    round(earn_coin, 3))
+            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            user_message_list.append(
+                {
+                    'user_id': str(record.user_id), 'status': '0',
+                    'message_id': '6', 'title': title, 'title_en': title_en,
+                    'content': content, 'content_en': content_en,
+                    'created_at': now_time,
+                }
+            )
 
         if earn_coin < 0:
             record.type = str(Record.MISTAKE)
