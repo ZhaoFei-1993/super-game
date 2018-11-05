@@ -24,15 +24,17 @@ headers = {
 
 market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04', '2018-10-05']
 market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
-market_rese_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
+market_rest_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
 
 market_rest_cn_start_time = ['09:30:00']
 market_hk_start_time = ['09:30:00']
 market_en_start_time = ['21:30:00']
+market_en_start_time_winter = ['22:30:00']
 
 market_rest_cn_end_time = ['15:00:00']
 market_hk_end_time = ['16:10:00']
 market_en_end_time = ['04:00:00']
+market_en_end_time_winter = ['05:00:00']
 
 
 def get_index_cn(period, base_url):
@@ -397,8 +399,8 @@ def confirm_time(period):
         date_start = lottery_time.split(' ')[0] + ' ' + market_hk_start_time[0]
         date_end = lottery_time.split(' ')[0] + ' ' + market_hk_end_time[0]
     elif period.stock.name == '3' or period.stock.name == '4':
-        date_start = lottery_time.split(' ')[0] + ' ' + market_en_start_time[0]
-        date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time[0]
+        date_start = lottery_time.split(' ')[0] + ' ' + market_en_start_time_winter[0]
+        date_end = lottery_time.split(' ')[0] + ' ' + market_en_end_time_winter[0]
 
     start = datetime.datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
@@ -501,7 +503,7 @@ class Command(BaseCommand):
                                                                 '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         next_end = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-                        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+                        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_hk_dic:
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
@@ -532,7 +534,7 @@ class Command(BaseCommand):
                         next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
-                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
@@ -563,7 +565,7 @@ class Command(BaseCommand):
                         next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
-                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+                                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
