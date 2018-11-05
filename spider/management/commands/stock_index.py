@@ -529,9 +529,9 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time_winter[0],
                                                                 '%Y-%m-%d %H:%M:%S')
-                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time_winter[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
                                 next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
@@ -560,9 +560,9 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time_winter[0],
                                                                 '%Y-%m-%d %H:%M:%S')
-                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time_winter[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
                                 next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
@@ -572,4 +572,4 @@ class Command(BaseCommand):
                         ndx_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
             guess_pk_recording = GuessPKRecording()
-            guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time[0], 2)
+            guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time_winter[0], 2)
