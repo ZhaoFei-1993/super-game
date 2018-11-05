@@ -250,6 +250,9 @@ class UserRegister(object):
             user.eos_code = eos_code
             user.save()
 
+        # 推广人邀请送币活动
+        UserInvitation.objects.user_activity(user)
+
         # 生成签到记录
         daily = DailyLog()
         daily.user_id = user.id
