@@ -759,33 +759,8 @@ class BetView(ListCreateAPIView):
 
         clubinfo = Club.objects.get_one(pk=int(roomquiz_id))
         coin_id = clubinfo.coin.pk
-        coin_accuracy = clubinfo.coin.coin_accuracy
-        # usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
-        # if int(usercoin.balance) < 1000 and int(roomquiz_id) == 1:
-        #     today = date.today()
-        #     is_give = BankruptcyRecords.objects.filter(user_id=user.id, coin_name="HAND", money=10000,
-        #                                                created_at__gte=today).count()
-        #     if is_give <= 0:
-        #         usercoin.balance += Decimal(10000)
-        #         usercoin.save()
-        #         coin_bankruptcy = CoinDetail()
-        #         coin_bankruptcy.user = user
-        #         coin_bankruptcy.coin_name = 'HAND'
-        #         coin_bankruptcy.amount = '+' + str(10000)
-        #         coin_bankruptcy.rest = Decimal(usercoin.balance)
-        #         coin_bankruptcy.sources = 4
-        #         coin_bankruptcy.save()
-        #         bankruptcy_info = BankruptcyRecords()
-        #         bankruptcy_info.user = user
-        #         bankruptcy_info.coin_name = 'HAND'
-        #         bankruptcy_info.money = Decimal(10000)
-        #         bankruptcy_info.save()
-        #         user_message = UserMessage()
-        #         user_message.status = 0
-        #         user_message.user = user
-        #         user_message.message_id = 10
-        #         if user.is_robot is False:
-        #            user_message.save()
+        coin_info = Coin.objects.get_one(pk=coin_id)
+        coin_accuracy = coin_info.coin_accuracy
 
         try:  # 判断选项ID是否有效
             option_odds = OptionOdds.objects.get(pk=option)
@@ -809,24 +784,13 @@ class BetView(ListCreateAPIView):
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
-        # # HAND币单场比赛最大下注
-        # bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
-        #     Sum('bet'))
-        # if coin_id == Coin.HAND:
-        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 5000000:
-        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        # elif coin_id == Coin.INT:
-        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 20000:
-        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        # elif coin_id == Coin.ETH:
-        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 6:
-        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        # elif coin_id == Coin.BTC:
-        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 0.5:
-        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        # elif coin_id == Coin.USDT:
-        #     if bet_sum['bet__sum'] is not None and bet_sum['bet__sum'] >= 3100:
-        #         raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        # 单场投注上限限制
+        coin_betting_toplimit = coin_info.betting_toplimit
+        bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
+            Sum('bet'))
+
+        if bet_sum['bet__sum'] is not None and Decimal(bet_sum['bet__sum']) >= coin_betting_toplimit:
+            raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
@@ -836,7 +800,7 @@ class BetView(ListCreateAPIView):
 
         # 调整赔率
         Option.objects.change_odds(rule_id, coin_id, roomquiz_id)
-        if clubinfo.coin.name == "SOC":
+        if coin_info.name == "SOC":
             pass
 
         coins = normalize_fraction(coins, coin_accuracy)  # 总下注额

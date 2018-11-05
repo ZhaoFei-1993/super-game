@@ -416,8 +416,8 @@ class PlayView(ListAPIView):
                 'bets_one': bets_one,
                 'bets_two': bets_two,
                 'bets_three': bets_three,
-                'bets_min': bets_min,
-                'bets_max': bets_max,
+                'bets_min': normalize_fraction(str(bets_min), int(club.coin.coin_accuracy)),
+                'bets_max': normalize_fraction(str(bets_max), int(club.coin.coin_accuracy)),
                 "list": list
             })
         coin_list = {'balance': balance,
