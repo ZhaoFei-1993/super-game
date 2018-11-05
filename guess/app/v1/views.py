@@ -295,7 +295,18 @@ class PlayView(ListAPIView):
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         coin_icon = cache_club_value[club_id]['coin_icon']
         coin_name = cache_club_value[club_id]['coin_name']
+        coin_accuracy = cache_club_value[club_id]['coin_accuracy']
         balance = normalize_fraction(user_coin.balance, int(user_coin.coin.coin_accuracy))  # 用户余额
+
+        # 看大，看小，人数支持率
+        key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
+        record_stock_bet_count = get_cache(key_record_bet_count)
+        bet_sum = record_stock_bet_count['rise'] + record_stock_bet_count['fall']
+        support_rise = 0
+        support_fall = 0
+        if bet_sum != 0:
+            support_rise = round(record_stock_bet_count['rise'] / bet_sum * 100, 2)
+            support_fall = to_decimal(100) - to_decimal(support_rise)
 
         data = []
         for play in plays:
@@ -318,16 +329,6 @@ class PlayView(ListAPIView):
 
             list = []
             # options_list = Options.objects.filter(play_id=play.pk).order_by("order")
-
-            # 看大，看小，人数支持率
-            key_record_bet_count = 'record_stock_bet_count' + '_' + str(periods.id)
-            record_stock_bet_count = get_cache(key_record_bet_count)
-            bet_sum = record_stock_bet_count['rise'] + record_stock_bet_count['fall']
-            support_rise = 0
-            support_fall = 0
-            if bet_sum != 0:
-                support_rise = round(record_stock_bet_count['rise'] / bet_sum * 100, 2)
-                support_fall = to_decimal(100) - to_decimal(support_rise)
 
             options_list = options_dic[play.pk]
             for options in reversed(options_list):
@@ -416,8 +417,8 @@ class PlayView(ListAPIView):
                 'bets_one': bets_one,
                 'bets_two': bets_two,
                 'bets_three': bets_three,
-                'bets_min': normalize_fraction(str(bets_min), int(club.coin.coin_accuracy)),
-                'bets_max': normalize_fraction(str(bets_max), int(club.coin.coin_accuracy)),
+                'bets_min': normalize_fraction(str(bets_min), coin_accuracy),
+                'bets_max': normalize_fraction(str(bets_max), coin_accuracy),
                 "list": list
             })
         coin_list = {'balance': balance,
