@@ -908,15 +908,49 @@ class UserInvitationManager(models.Manager):
                     a.status = 2
                     a.save()
 
-                    u_mes = UserMessage()  # 邀请注册成功后消息
-                    u_mes.status = 0
-                    u_mes.user = user
                     if a.invitee_one != 0:
+                        u_mes = UserMessage()  # 邀请注册成功后消息
                         u_mes.message_id = 19  # 邀请t1消息
-                    else:
-                        u_mes.message_id = 2  # 邀请t2消息
-                    if user.is_robot is False:
-                        u_mes.save()
+                        u_mes.status = 0
+                        u_mes.user = user
+
+                        if user.is_robot is False:
+                            u_mes.save()
+
+    def user_activity(self, user):
+        """
+        邀请赠送USDT活动
+        :param user:
+        :return:
+        """
+        user_invitation_number = self.filter(money__gt=0, invitee_one=int(user.id), inviter_type=1, status=1).count()
+        if user_invitation_number == 1:
+            user_invitation_info = self.get(money__gt=0, invitee_one=int(user.id), inviter_type=1, status=1)
+            inviter_id = int(user_invitation_info.inviter_id)
+            coin_id = int(user_invitation_info.coin)
+            userbalance = UserCoin.objects.get(coin_id=coin_id, user_id=inviter_id)
+
+            userbalance.balance += user_invitation_info.money
+            userbalance.save()
+
+            coin = Coin.objects.get_one(pk=coin_id)
+
+            coin_detail = CoinDetail()
+            coin_detail.user_id = inviter_id
+            coin_detail.coin_name = coin.name
+            coin_detail.amount = '+' + str(user_invitation_info.money)
+            coin_detail.rest = userbalance.balance
+            coin_detail.sources = 8
+            coin_detail.save()
+            user_invitation_info.status = 2
+            user_invitation_info.save()
+
+            u_mes = UserMessage()  # 邀请注册成功后消息
+            u_mes.status = 0
+            u_mes.user_id = inviter_id
+            u_mes.message_id = 19  # 邀请t1消息
+            if user.is_robot is False:
+                u_mes.save()
 
 
 @reversion.register()
