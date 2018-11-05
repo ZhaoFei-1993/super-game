@@ -333,7 +333,14 @@ class BankerRecordView(ListAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-
+        user = self.request.user
+        banker_list = BankerRecord.objects.filter(use_id=user.id)
+        for i in banker_list:
+            print("i=========================", i)
+            quiz_list = []
+            # if i.source in (1, 2):
+            #
+            pass
         return self.response({"code": 0})
 
 
