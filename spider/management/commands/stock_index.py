@@ -247,17 +247,17 @@ def get_index_en(period, base_url):
     data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[:-1]
     date_ymd = data_list[0].split(',')[2].split(' ')[0].replace('/', '-')
     index_info = []
-    if data_list[0].split(',')[2].split(' ')[0].replace('/', '-') == (
-            period.lottery_time - datetime.timedelta(hours=12)).strftime('%Y-%m-%d'):
-        for i in data_list:
-            info_list = i.split(',')
-            index_time = datetime.datetime.strptime(date_ymd + ' ' + info_list[0] + ':00',
-                                                    "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=12)
-            index_time_str = index_time.strftime("%Y-%m-%d %H:%M:%S")
-            index_info.append({
-                'index_time': index_time,
-                'index_time_str': index_time_str,
-                'index_value': info_list[1],
+    # if data_list[0].split(',')[2].split(' ')[0].replace('/', '-') == (
+    #         period.lottery_time - datetime.timedelta(hours=12)).strftime('%Y-%m-%d'):
+    for i in data_list:
+        info_list = i.split(',')
+        index_time = datetime.datetime.strptime(date_ymd + ' ' + info_list[0] + ':00',
+                                                "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=12)
+        index_time_str = index_time.strftime("%Y-%m-%d %H:%M:%S")
+        index_info.append({
+            'index_time': index_time,
+            'index_time_str': index_time_str,
+            'index_value': info_list[1],
             })
     if len(data_list) == 0:
         print('未有数据')
