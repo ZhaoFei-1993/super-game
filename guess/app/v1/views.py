@@ -457,8 +457,9 @@ class BetView(ListCreateAPIView):
 
         periods_info = Periods.objects.get(pk=periods_id)
         clubinfo = Club.objects.get_one(pk=int(club_id))
-        coin_id = clubinfo.coin.pk  # 破产赠送hand功能
-        coin_accuracy = clubinfo.coin.coin_accuracy  # 破产赠送hand功能
+        coin_info = Coin.objects.get_one(pk=int(clubinfo.coin.pk))
+        coin_id = coin_info.pk
+        coin_accuracy = coin_info.coin_accuracy
 
         try:  # 判断选项ID是否有效
             option_odds = Options.objects.get(pk=option)
@@ -501,21 +502,9 @@ class BetView(ListCreateAPIView):
         bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
         bet_sum = Decimal(bet_sum) + Decimal(coins)
 
-        if coin_id == Coin.HAND:
-            if bet_sum >= 5000000:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.INT:
-            if bet_sum >= 20000:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.ETH:
-            if bet_sum >= 6:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.BTC:
-            if bet_sum >= 0.5:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
-        elif coin_id == Coin.USDT:
-            if bet_sum >= 3100:
-                raise ParamErrorException(error_code.API_50109_BET_LIMITED)
+        betting_toplimit = coin_info.betting_toplimit
+        if Decimal(bet_sum) >= betting_toplimit:
+            raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
@@ -563,7 +552,7 @@ class BetView(ListCreateAPIView):
 
         coin_detail = CoinDetail()
         coin_detail.user = user
-        coin_detail.coin_name = usercoin.coin.name
+        coin_detail.coin_name = coin_info.name
         coin_detail.amount = '-' + str(coins)
         coin_detail.rest = usercoin.balance
         coin_detail.sources = CoinDetail.BETS
@@ -577,9 +566,9 @@ class BetView(ListCreateAPIView):
             'code': 0,
             'data': {
                 'message': '下注成功，金额总数为 ' + str(
-                    normalize_fraction(coins, int(usercoin.coin.coin_accuracy))) + '，预计可得猜币 ' + str(
-                    normalize_fraction(earn_coins, int(usercoin.coin.coin_accuracy))),
-                'balance': normalize_fraction(usercoin.balance, int(usercoin.coin.coin_accuracy))
+                    normalize_fraction(coins, int(coin_accuracy))) + '，预计可得猜币 ' + str(
+                    normalize_fraction(earn_coins, int(coin_accuracy))),
+                'balance': normalize_fraction(usercoin.balance, int(coin_accuracy))
             }
         }
         return self.response(response)

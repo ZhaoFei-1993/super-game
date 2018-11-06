@@ -16,6 +16,8 @@ from spider.management.commands.stock_index import market_rest_cn_list
 from promotion.models import PromotionRecord
 from chat.models import Club
 from decimal import Decimal
+from django.db.models import Sum
+from users.models import Coin
 
 
 class StockPkDetail(ListAPIView):
@@ -542,6 +544,18 @@ class StockPkBet(ListCreateAPIView):
 
         if bet > Decimal(bet_limit_dic['bets_max']) or bet < Decimal(bet_limit_dic['bets_min']):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
+
+        # 单场比赛最大下注
+        bet_sum = RecordStockPk.objects.filter(user_id=user.id, club_id=club_id, issue_id=issues_obj.id).aggregate(
+            Sum('bets'))
+
+        bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
+        bet_sum = Decimal(bet_sum) + Decimal(bet)
+
+        coin_info = Coin.objects.get_one(pk=coin_id)
+        betting_toplimit = coin_info.betting_toplimit
+        if Decimal(bet_sum) >= betting_toplimit:
+            raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
