@@ -245,10 +245,10 @@ def get_index_en(period, base_url):
     guess_recording = GuessRecording()
     response = requests.get(base_url, headers=headers)
     data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[:-1]
-    date_ymd = data_list[0].split(',')[2].split(' ')[0].replace('/', '-')
+    date_ymd = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update']['text'].replace(
+        '/', '-').split(' ')[0]
     index_info = []
-    if data_list[0].split(',')[2].split(' ')[0].replace('/', '-') == (
-            period.lottery_time - datetime.timedelta(hours=12)).strftime('%Y-%m-%d'):
+    if date_ymd == (period.lottery_time - datetime.timedelta(hours=12)).strftime('%Y-%m-%d'):
         for i in data_list:
             info_list = i.split(',')
             index_time = datetime.datetime.strptime(date_ymd + ' ' + info_list[0] + ':00',
@@ -448,7 +448,8 @@ class Command(BaseCommand):
                             next_end += datetime.timedelta(1)
                             next_start += datetime.timedelta(1)
                         per = int(period.periods) + 1
-                        shang_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
+                        shang_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end,
+                                                                 period)
 
             print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
 
@@ -529,9 +530,9 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time_winter[0],
                                                                 '%Y-%m-%d %H:%M:%S')
-                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time_winter[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
                                 next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
@@ -560,9 +561,9 @@ class Command(BaseCommand):
                         # 开奖后放出题目
                         print('放出题目')
                         open_date = period.lottery_time.strftime('%Y-%m-%d')
-                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+                        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time_winter[0],
                                                                 '%Y-%m-%d %H:%M:%S')
-                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+                        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time_winter[0],
                                                               '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
                         while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
                                 next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_rest_en_dic:
@@ -572,4 +573,4 @@ class Command(BaseCommand):
                         ndx_periods = GuessRecording.newobject(str(per), period.stock_id, next_start, next_end, period)
             print('------------------------------------------------------------------------------------')
             guess_pk_recording = GuessPKRecording()
-            guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time[0], 2)
+            guess_pk_recording.take_pk_result(ndx_periods, dji_periods, market_en_start_time_winter[0], 2)
