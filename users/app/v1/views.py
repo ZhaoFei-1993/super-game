@@ -1469,6 +1469,7 @@ class UserPresentationView(CreateAPIView):
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
         value = value_judge(request, 'p_address', 'p_address_name', 'code', 'password', 'p_amount', 'c_id')
+
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         userid = self.request.user.id
@@ -3189,7 +3190,7 @@ class MoveFilishView(CreateAPIView):
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
         user = request.user
-        value = value_judge(request, "recipient_id", "coin_id", "amount")
+        value = value_judge(request, "recipient_id", "coin_id", "amount", "password", "code")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
@@ -3202,6 +3203,21 @@ class MoveFilishView(CreateAPIView):
         coin_id = self.request.data['coin_id']  # 获取货币ID
         if recipient_number != 1:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        userinfo = User.objects.get(id=recipient_id)
+        password = request.data.get('password')
+        if not userinfo.check_password(password):
+            raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
+        code = request.data.get('code')
+        sms = Sms.objects.filter(telephone=userinfo.telephone, type=9).order_by('-id').first()
+        if (sms is None) or (sms.code != code):
+            return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
+        # 判断验证码是否已过期
+        sent_time = sms.created_at.astimezone(pytz.timezone(settings.TIME_ZONE))
+        current_time = time.mktime(datetime.now().timetuple())
+        if current_time - time.mktime(sent_time.timetuple()) >= settings.SMS_CODE_EXPIRE_TIME:
+            return self.response({'code': error_code.API_20403_SMS_CODE_EXPIRE})
+
         if int(coin_id) in (4, 6):
             raise ParamErrorException(error_code.API_100101_USER_MOBILE_COIN)
         coin_info = Coin.objects.get_one(pk=int(coin_id))
