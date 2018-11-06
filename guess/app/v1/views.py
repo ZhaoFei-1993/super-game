@@ -478,7 +478,7 @@ class BetView(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
         is_seal = guess_is_seal(periods)  # 是否达到封盘时间，如达到则修改is_seal字段并且返回
-        if is_seal == True:
+        if is_seal is True:
             raise ParamErrorException(error_code.API_80101_STOP_BETTING)
 
         nowtime = datetime.now()
