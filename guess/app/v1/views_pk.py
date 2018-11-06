@@ -59,7 +59,10 @@ class StockPkDetail(ListAPIView):
                     status = 3
                 # 平日休市
                 else:
-                    status = 6
+                    if time_now > qs.open:
+                        status = 1
+                    else:
+                        status = 6
                 open_market_time = qs.open - datetime.timedelta(minutes=5)
                 open_market_time = time.mktime(open_market_time.timetuple()) - time.time()
                 open_market_time = int(open_market_time)
