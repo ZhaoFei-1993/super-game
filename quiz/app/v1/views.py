@@ -789,7 +789,7 @@ class BetView(ListCreateAPIView):
         bet_sum = Record.objects.filter(user_id=user.id, roomquiz_id=roomquiz_id, quiz_id=quiz_id).aggregate(
             Sum('bet'))
 
-        bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
+        bet_sum = bet_sum['bet__sum'] if bet_sum['bet__sum'] else 0
         bet_sum = Decimal(bet_sum) + Decimal(coins)
 
         if Decimal(bet_sum) >= coin_betting_toplimit:
