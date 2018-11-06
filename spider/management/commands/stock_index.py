@@ -246,7 +246,7 @@ def get_index_en(period, base_url):
     response = requests.get(base_url, headers=headers)
     data_list = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['tab']['p'].split(';')[:-1]
     date_ymd = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']['update']['text'].replace(
-        '/', '-').strftime('%Y-%m-%d')
+        '/', '-').split(' ')[0]
     index_info = []
     if date_ymd == (period.lottery_time - datetime.timedelta(hours=12)).strftime('%Y-%m-%d'):
         for i in data_list:
