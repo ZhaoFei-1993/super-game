@@ -423,7 +423,7 @@ class BetsViews(ListCreateAPIView):
         bet_sum = Decimal(bet_sum) + Decimal(bet_coin)
 
         betting_toplimit = coin_info.betting_toplimit
-        if Decimal(bet_sum) >= betting_toplimit:
+        if Decimal(bet_sum) > betting_toplimit:
             raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         # 查看用户余额是否足够
