@@ -554,7 +554,7 @@ class StockPkBet(ListCreateAPIView):
 
         coin_info = Coin.objects.get_one(pk=coin_id)
         betting_toplimit = coin_info.betting_toplimit
-        if Decimal(bet_sum) >= betting_toplimit:
+        if Decimal(bet_sum) > betting_toplimit:
             raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
