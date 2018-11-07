@@ -8,22 +8,24 @@ from datetime import timedelta
 from utils.functions import get_sql, reward_gradient_all, opposite_number
 from promotion.models import PresentationMonth
 from users.models import UserCoin
+from console.models import Address
+
 
 class Command(BaseCommand, BaseView):
     help = "推广人月结算"
 
     def handle(self, *args, **options):
-        # this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
-        # end = this_month_start - timedelta(days=1)  # 上个月的最后一天
-        # start_time = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
-        # end_time = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
+        this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
+        end = this_month_start - timedelta(days=1)  # 上个月的最后一天
+        start_time = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
+        end_time = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
 
-        year = datetime.date.today().year  # 获取当前年份
-        month = datetime.date.today().month  # 获取当前月份
-        start = datetime.date(year, month, day=1).strftime('%Y-%m-%d')  # 获取当月第一天
-        start_time = str(start) + ' 00:00:00'
-        created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
-        end_time = str(created_at_day) + ' 23:59:59'  # 一天结束时间
+        # year = datetime.date.today().year  # 获取当前年份
+        # month = datetime.date.today().month  # 获取当前月份
+        # start = datetime.date(year, month, day=1).strftime('%Y-%m-%d')  # 获取当月第一天
+        # start_time = str(start) + ' 00:00:00'
+        # created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
+        # end_time = str(created_at_day) + ' 23:59:59'  # 一天结束时间
 
         sql_list = "sum(pu.bet_water), sum(pu.dividend_water), sum(pu.income), pu.user_id, pu.club_id, c.coin_id"
         sql = "select " + sql_list + " from promotion_userpresentation pu"
@@ -36,6 +38,8 @@ class Command(BaseCommand, BaseView):
         for i in userpresentation_list:
             income = i[2]
             print("income=============================", income)
+            print("user_id=============================", i[3])
+            print("coin_id=============================", i[5])
             proportion = reward_gradient_all(i[4], i[2])
             income_dividend = proportion*opposite_number(i[2])
             presentation_month = PresentationMonth()
@@ -47,7 +51,9 @@ class Command(BaseCommand, BaseView):
             presentation_month.is_receive = 1
             presentation_month.created_at = start_time
             presentation_month.save()
+            print("income_dividend=================", income_dividend)
             if income_dividend > 0:
+                Address.objects.initial(int(i[3]))  # 用户生成usercoin 加地址
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
                 coin_info.save()
