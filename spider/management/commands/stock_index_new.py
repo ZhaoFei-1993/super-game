@@ -176,7 +176,7 @@ class StockIndex(object):
         if begin_time != period.lottery_time.strftime('%Y-%m-%d'):
             raise CommandError('警告：时间不吻合，请及时处理')
 
-        cache_name = str(Stock.STOCK[int(stock_name)][0]) + '_' + str(period.id)
+        cache_name = str(Stock.STOCK[int(stock_name)][0]) + '_' + 'period_' + str(period.id)
         date_now = datetime.datetime.now()
         date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                               "%Y-%m-%d %H:%M:%S")
