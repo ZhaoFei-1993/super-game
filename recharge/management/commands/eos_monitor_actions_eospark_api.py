@@ -18,7 +18,7 @@ class Command(BaseCommand):
     help = "EOS充值监控--eospark.com平台"
     cache_txid_key = 'key_eos_txid_eospark'
     cache_invalid_memo_key = 'key_eos_invalid_memo_eospark'
-    eos_monitor_url = 'https://api.eospark.com/api?module=account&action=get_account_related_trx_info&apikey=a9564ebc3289b7a14551baf8ad5ec60a&account=' + settings.EOS_RECHARGE_ADDRESS + '&page=1&size=100&symbol=EOS&code=eosio.token'
+    eos_monitor_url = 'https://api.eospark.com/api?module=account&action=get_account_related_trx_info&apikey=4a73296ca87b57296cd93cc09af5d9f9&account=' + settings.EOS_RECHARGE_ADDRESS + '&page=1&size=100&symbol=EOS&code=eosio.token'
 
     def handle(self, *args, **options):
         # post_data = '{"interface_name":"get_account_related_trx_info","tab_name":"token","account_name":"supergameeos","page_num":1,"page_size":50,"hide_small_quantity":1}'

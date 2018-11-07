@@ -18,14 +18,9 @@ class Command(BaseCommand, BaseView):
         this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
         end = this_month_start - timedelta(days=1)  # 上个月的最后一天
         start_time = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
+        print("start_time===================", start_time)
         end_time = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
-
-        # year = datetime.date.today().year  # 获取当前年份
-        # month = datetime.date.today().month  # 获取当前月份
-        # start = datetime.date(year, month, day=1).strftime('%Y-%m-%d')  # 获取当月第一天
-        # start_time = str(start) + ' 00:00:00'
-        # created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
-        # end_time = str(created_at_day) + ' 23:59:59'  # 一天结束时间
+        print("end_time===================", end_time)
 
         sql_list = "sum(pu.bet_water), sum(pu.dividend_water), sum(pu.income), pu.user_id, pu.club_id, c.coin_id"
         sql = "select " + sql_list + " from promotion_userpresentation pu"

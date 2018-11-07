@@ -34,7 +34,7 @@ class BankerHomeView(ListAPIView):
         banker_rule_info = get_cache(BANKER_RULE_INFO)
         if banker_rule_info is None:
             quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
-            rule_info = ClubRule.objects.filter(~Q(id__in=[1,4,5,6])).order_by('banker_sort')
+            rule_info = ClubRule.objects.filter(~Q(id__in=[1, 4, 5, 6])).order_by('banker_sort')
 
             banker_rule_info = []
             a = True
@@ -64,8 +64,8 @@ class BankerHomeView(ListAPIView):
         club_info = Club.objects.filter(~Q(is_recommend=0), is_banker=1).order_by("user")
         banker_club_info = []
         for c in club_info:
-            coin_info = Coin.objects.get(pk=c.coin_id)
-            # coin_info = Coin.objects.get_one(pk=c.coin_id)
+            # coin_info = Coin.objects.get(pk=c.coin_id)
+            coin_info = Coin.objects.get_one(pk=c.coin_id)
             banker_club_info.append({
                 "club_id": c.pk,
                 "icon": coin_info.icon,
@@ -91,10 +91,10 @@ class BankerInfoView(ListAPIView):
         club_id = int(self.request.GET.get('club_id'))
         if 'club_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        club_info = Club.objects.get(pk=club_id)
-        # club_info = Club.objects.get_one(pk=club_id)
-        coin_info = Coin.objects.get(pk=club_info.coin_id)
-        # coin_info = Coin.objects.get_one(pk=club_info.coin_id)
+        # club_info = Club.objects.get(pk=club_id)
+        club_info = Club.objects.get_one(pk=club_id)
+        # coin_info = Coin.objects.get(pk=club_info.coin.id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         begin_at = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
         regex = re.compile(r'^(1|2|3|4)$')
         if type is None or not regex.match(type):
@@ -195,10 +195,10 @@ class BankerDetailsView(ListAPIView):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        club_info = Club.objects.get(pk=club_id)
-        # club_info = Club.objects.get_one(pk=club_id)
-        coin_info = Coin.objects.get(id=club_info.coin_id)
-        # coin_info = Coin.objects.get_one(pk=club_info.coin_id)
+        # club_info = Club.objects.get(pk=club_id)
+        club_info = Club.objects.get_one(pk=club_id)
+        # coin_info = Coin.objects.get(id=club_info.coin_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         coin_name = coin_info.name   # 货币昵称
         coin_icon = coin_info.icon   # 货币图标
         banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
@@ -265,10 +265,10 @@ class BankerBuyView(CreateAPIView):
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         key_id = int(self.request.data['key_id'])  # key_id
         amount = Decimal(self.request.data['amount'])  # 金额
-        club_info = Club.objects.get(pk=club_id)
-        # club_info = Club.objects.get_one(pk=club_id)
-        coin_info = Coin.objects.get(id=club_info.coin_id)
-        # coin_info = Coin.objects.get_one(pk=club_info.coin_id)
+        # club_info = Club.objects.get(pk=club_id)
+        club_info = Club.objects.get_one(pk=club_id)
+        # coin_info = Coin.objects.get(id=club_info.coin_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
         if amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
