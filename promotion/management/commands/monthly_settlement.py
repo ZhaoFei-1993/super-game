@@ -37,6 +37,8 @@ class Command(BaseCommand, BaseView):
         for i in userpresentation_list:
             income = i[2]
             print("income=============================", income)
+            print("user_id=============================", i[3])
+            print("coin_id=============================", I[5])
             proportion = reward_gradient_all(i[4], i[2])
             income_dividend = proportion*opposite_number(i[2])
             presentation_month = PresentationMonth()
