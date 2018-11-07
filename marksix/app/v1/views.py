@@ -415,6 +415,7 @@ class BetsViews(ListCreateAPIView):
 
         # 判断投注是否上限
         club = Club.objects.get_one(pk=int(club_id))
+        print("club===========", club)
         coin_id = int(club.coin.pk)
         coin_info = Coin.objects.get_one(pk=coin_id)
         bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, play_id=play_id).aggregate(
