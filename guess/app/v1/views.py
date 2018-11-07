@@ -387,6 +387,7 @@ class PlayView(ListAPIView):
                         total_coin = 0
                     else:
                         total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
+
                     list.append({
                         "option_id": options.pk,
                         "title": title,

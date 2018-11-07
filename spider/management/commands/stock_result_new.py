@@ -258,6 +258,8 @@ class GuessRecording(object):
             # period.save()
 
             # 大小玩法
+            if len(str(dt['num']).split('.')[1]) == 1:
+                dt['num'] = str(dt['num']) + '0'
             num_spilt = str(dt['num']).split('.')[1]
             num_sum = int(num_spilt[1])
             if num_sum >= 5:
