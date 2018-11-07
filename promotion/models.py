@@ -56,6 +56,9 @@ class UserPresentationManager(BaseManager):
                 income = record.earn_coin - record.bet
             else:
                 income = record.earn_coin
+            # 转化为str避免失精
+            bet = str(bet)
+            income = str(income)
 
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
             if my_inviter is not None:
@@ -67,7 +70,7 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water += Decimal(bet)
-                    day_data.dividend_water += Decimal(bet) * Decimal(0.005)
+                    day_data.dividend_water += Decimal(bet) * Decimal('0.005')
                     day_data.income += Decimal(income)
                     day_data.created_at = created_at
                     day_data.save()
@@ -76,12 +79,12 @@ class UserPresentationManager(BaseManager):
                     day_data.user_id = my_inviter.inviter.id
                     day_data.club_id = club_id
                     day_data.bet_water = Decimal(bet)
-                    day_data.dividend_water = Decimal(bet) * Decimal(0.005)
+                    day_data.dividend_water = Decimal(bet) * Decimal('0.005')
                     day_data.income = Decimal(income)
                     day_data.created_at = created_at
                     day_data.save()
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                inviter_coin.balance += Decimal(bet) * Decimal(0.005)
+                inviter_coin.balance += Decimal(bet) * Decimal('0.005')
                 inviter_coin.save()
 
 
