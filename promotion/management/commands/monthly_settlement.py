@@ -51,4 +51,4 @@ class Command(BaseCommand, BaseView):
             if income_dividend > 0:
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
-                coin_info.save()
+                # coin_info.save()
