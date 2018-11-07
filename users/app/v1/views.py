@@ -3204,12 +3204,11 @@ class MoveFilishView(CreateAPIView):
         if recipient_number != 1:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
 
-        userinfo = User.objects.get(id=recipient_id)
         password = request.data.get('password')
-        if not userinfo.check_password(password):
+        if not user.check_password(password):
             raise ParamErrorException(error_code.API_70108_USER_PRESENT_PASSWORD_ERROR)
         code = request.data.get('code')
-        sms = Sms.objects.filter(telephone=userinfo.telephone, type=9).order_by('-id').first()
+        sms = Sms.objects.filter(telephone=user.telephone, type=9).order_by('-id').first()
         if (sms is None) or (sms.code != code):
             return self.response({'code': error_code.API_20402_INVALID_SMS_CODE})
         # 判断验证码是否已过期
