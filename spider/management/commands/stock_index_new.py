@@ -112,7 +112,11 @@ class StockIndex(object):
 
         # 道琼斯和纳斯达克
         elif stock.name == str(Stock.DOWJONES) or stock.name == str(Stock.NASDAQ):
-            response = requests.get(url_nasdaq, timeout=10)
+            if stock.name == str(Stock.DOWJONES):
+                response = requests.get(url_djia, timeout=10)
+            else:
+                response = requests.get(url_nasdaq, timeout=10)
+
             resp_json = response.json()
             begin_timestamp = int(str(resp_json['chart_begin_time'])[:-3])
             begin_time = datetime.datetime.utcfromtimestamp(begin_timestamp) + datetime.timedelta(hours=13)
