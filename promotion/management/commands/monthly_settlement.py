@@ -8,6 +8,7 @@ from datetime import timedelta
 from utils.functions import get_sql, reward_gradient_all, opposite_number
 from promotion.models import PresentationMonth
 from users.models import UserCoin
+from console.models import Address
 
 
 class Command(BaseCommand, BaseView):
@@ -51,6 +52,7 @@ class Command(BaseCommand, BaseView):
             presentation_month.created_at = start_time
             presentation_month.save()
             if income_dividend > 0:
+                Address.objects.initial(int(i[3]))  # 用户生成usercoin 加地址
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
                 # coin_info.save()
