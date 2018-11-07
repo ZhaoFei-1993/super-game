@@ -330,17 +330,6 @@ class PlayView(ListAPIView):
             list = []
             # options_list = Options.objects.filter(play_id=play.pk).order_by("order")
 
-            club = Club.objects.get(pk=club_id)
-            sql = "select sum(a.bets) from guess_record a"
-            sql += " where a.club_id = '" + str(club_id) + "'"
-            sql += " and a.periods_id = '" + str(periods_id) + "'"
-            sql += " and a.options_id = '" + str(options.pk) + "'"
-            total_coin = get_sql(sql)[0][0]  # 投注金额
-            if total_coin is None or total_coin == '':
-                total_coin = 0
-            else:
-                total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
-
             options_list = options_dic[play.pk]
             for options in reversed(options_list):
                 # is_record = Record.objects.filter(user_id=user.pk, club_id=club_id, periods_id=periods_id,
@@ -388,6 +377,17 @@ class PlayView(ListAPIView):
                     sub_title = options.sub_title_en
 
                 if int(play.play_name) == 0:
+                    club = Club.objects.get(pk=club_id)
+                    sql = "select sum(a.bets) from guess_record a"
+                    sql += " where a.club_id = '" + str(club_id) + "'"
+                    sql += " and a.periods_id = '" + str(periods_id) + "'"
+                    sql += " and a.options_id = '" + str(options.pk) + "'"
+                    total_coin = get_sql(sql)[0][0]  # 投注金额
+                    if total_coin == None or total_coin == '':
+                        total_coin = 0
+                    else:
+                        total_coin = normalize_fraction(str(total_coin), int(club.coin.coin_accuracy))
+
                     list.append({
                         "option_id": options.pk,
                         "title": title,
