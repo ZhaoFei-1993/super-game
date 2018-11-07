@@ -149,7 +149,8 @@ class StockIndex(object):
         elif stock.name == str(Stock.HANGSENG):
             pass
 
-    def handle_data(self, period, data_map):
+    @staticmethod
+    def handle_data(period, data_map):
         """
         处理data_map字典数据
         :param period:
@@ -372,20 +373,23 @@ class Command(BaseCommand):
 
         for stock in Stock.objects.all():
             print(Stock.STOCK[int(stock.name)][1], ': ')
-            if Periods.objects.filter(is_result=False, stock__name=stock.name).exists():
-                period = Periods.objects.filter(is_result=False, stock__name=stock.name).first()
-                stock_index.pk_periods_map[int(stock.name)] = period
-                if (stock_index.confirm_time(period) is not True) and (
-                        Periods.objects.filter(is_result=False, stock__name=stock.name,
-                                               lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    data_map = stock_index.fetch_data(period.stock)
-                    flag = stock_index.handle_data(period, data_map)
-                    if flag is True:
-                        # 开奖后放出题目
-                        stock_index.new_period(period)
-                        print('放出题目')
+            if Stock.STOCK[int(stock.name)][0] == 2:
+                print('恒生指数跳过')
+            else:
+                if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
+                    period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()
+                    stock_index.pk_periods_map[int(stock.name)] = period
+                    if (stock_index.confirm_time(period) is not True) and (
+                            Periods.objects.filter(is_result=False, stock__name=stock.name,
+                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        data_map = stock_index.fetch_data(period.stock)
+                        flag = stock_index.handle_data(period, data_map)
+                        if flag is True:
+                            # 开奖后放出题目
+                            stock_index.new_period(period)
+                            print('放出题目')
             print('==================================================================================')
         # 股指pk出题找答案,股指pk出题
         guess_pk_recording = GuessPKRecording()
