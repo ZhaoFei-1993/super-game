@@ -7,7 +7,7 @@ from utils.functions import *
 from time import time
 from django.db.models import Q
 from guess.consumers import guess_pk_result_list, guess_pk_index
-from promotion.models import PromotionRecord
+from promotion.models import PromotionRecord, UserPresentation
 
 
 class GuessRecording(object):
@@ -341,6 +341,7 @@ class GuessRecording(object):
         # 推广代理事宜
         if len(real_records) > 0:
             PromotionRecord.objects.insert_all(real_records, 4, 1)
+            UserPresentation.objects.club_flow_statistics(real_records, 4)
 
         end_time = time()
         cost_time = str(round(end_time - start_time)) + '秒'

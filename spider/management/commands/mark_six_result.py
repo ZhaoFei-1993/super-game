@@ -3,7 +3,7 @@ from marksix.models import SixRecord, Option
 from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail
-from promotion.models import PromotionRecord
+from promotion.models import PromotionRecord, UserPresentation
 
 coin_detail_list = []
 user_message_list = []
@@ -322,3 +322,4 @@ def ergodic_record(issue, answer_dic):
     real_records = SixRecord.objects.filter(~Q(source=str(SixRecord.ROBOT)), ~Q(club_id=1), issue=issue, status='1')
     if len(real_records) > 0:
         PromotionRecord.objects.insert_all(real_records, 3, 1)
+        UserPresentation.objects.club_flow_statistics(real_records, 3)

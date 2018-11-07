@@ -27,18 +27,36 @@ class UserPresentationManager(BaseManager):
     推广人下级日流水表操作
     """
 
-    def club_flow_statistics(self, user_id, club_id, bet, income):
+    def club_flow_statistics(self, real_records, source):
         """
-        :param user_id:            用户ID
-        :param club_id:            俱乐部ID
-        :param bet:               下注流水
-        :param type:              类型： 1.球赛  2. 猜股票  3.六合彩  4. 龙虎斗  5.百家乐
+        :param real_records:      投注记录
+        :param source:            类型： 1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗
         """
 
-        club_id = int(club_id)
-        if club_id == 1:
-            pass
-        else:
+        for record in real_records:
+            # 用户ID
+            user_id = real_records.user_id
+
+            # 俱乐部ID
+            if source == 1 or source == 2:
+                club_id = record.roomquiz_id
+            else:
+                club_id = record.club_id
+
+            # 下注流水
+            if source == 1 or source == 2:
+                bet = record.bet
+            elif source == 3:
+                bet = record.bet_coin
+            else:
+                bet = record.bets
+
+            # 盈亏
+            if record.earn_coin > 0:
+                income = record.earn_coin - record.bet
+            else:
+                income = record.earn_coin
+
             my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
             if my_inviter is not None:
                 created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期

@@ -6,7 +6,6 @@ from users.models import Coin, UserCoin, CoinDetail
 from quiz.models import Option, Record
 from users.models import UserMessage
 from decimal import Decimal
-from promotion.models import PromotionRecord
 
 
 def asia_option(quiz, rule_asia):

@@ -13,7 +13,7 @@ from utils.functions import normalize_fraction, to_decimal
 from decimal import Decimal
 from time import sleep
 from utils.functions import normalize_fraction, to_decimal
-from promotion.models import PromotionRecord
+from promotion.models import PromotionRecord, UserPresentation
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -322,6 +322,7 @@ def get_data_info(url, match_flag):
                                              is_distribution=True)
         if len(real_records) > 0:
             PromotionRecord.objects.insert_all(real_records, 2, 1)
+            UserPresentation.objects.club_flow_statistics(real_records, 2)
 
         print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
         return flag
