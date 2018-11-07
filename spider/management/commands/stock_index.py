@@ -263,7 +263,7 @@ def get_index_en(period, base_url):
         print('未有数据')
         return
 
-    cache_name = Stock.STOCK[int(period.stock.name)][1] + '_' + str(period.id)
+    cache_name = Stock.STOCK[int(period.stock.name)][0] + '_' + 'period_' + str(period.id)
 
     date_now = datetime.datetime.now()
     date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
