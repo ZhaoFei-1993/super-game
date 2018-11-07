@@ -35,7 +35,7 @@ class UserPresentationManager(BaseManager):
 
         for record in real_records:
             # 用户ID
-            user_id = real_records.user_id
+            user_id = record.user_id
 
             # 俱乐部ID
             if source == 1 or source == 2:
