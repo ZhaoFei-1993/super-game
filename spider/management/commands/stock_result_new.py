@@ -416,7 +416,6 @@ class GuessPKRecording(GuessRecording):
 
         issue = 0
         open_time = start_with + datetime.timedelta(minutes=5)
-        print()
         while open_time <= end_with:
             if rest_start_with is not None:
                 if rest_end_with > open_time > rest_start_with:

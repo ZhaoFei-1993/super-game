@@ -29,11 +29,11 @@ class Stock(models.Model):
     NASDAQ = 4
 
     STOCK_EN = (
-        (SSE, "上证指数"),
-        (SHENZHEN, "深证成指"),
-        (HANGSENG, "恒生指数"),
-        (DOWJONES, "道琼斯"),
-        (NASDAQ, "纳斯达克"),
+        (SSE, "SSE"),
+        (SHENZHEN, "SZSE"),
+        (HANGSENG, "HSI"),
+        (DOWJONES, "DJI"),
+        (NASDAQ, "NASDAQ"),
     )
     name = models.CharField(verbose_name="证券名称", choices=STOCK, max_length=1, default=SSE)
     icon = models.CharField(verbose_name="股票图标", max_length=255, default='')
