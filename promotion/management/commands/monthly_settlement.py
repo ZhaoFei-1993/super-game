@@ -56,4 +56,4 @@ class Command(BaseCommand, BaseView):
                 Address.objects.initial(int(i[3]))  # 用户生成usercoin 加地址
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
-                # coin_info.save()
+                coin_info.save()
