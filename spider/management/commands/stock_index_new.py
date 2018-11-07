@@ -47,8 +47,7 @@ class StockIndex(object):
             Stock.DOWJONES: None, Stock.NASDAQ: None
         }
 
-    @staticmethod
-    def fetch_data(stock):
+    def fetch_data(self, stock):
         """
         从数据源获得数据并组装成字典形式
         :param stock:
@@ -71,13 +70,18 @@ class StockIndex(object):
 
             open_index = data_list[0][1]
 
+            close_index = 0
+            if data_list[-1][0].strftime('%H:%M:%S') == self.market_rest_cn_end_time[0]:
+                close_index = data_list[-1][1]
+
             data_map = {}
             data_map.update(
                 {
                     'name': 'shang',
                     'begin_time': begin_time,
                     'open_index': open_index,
-                    'data_list': data_list
+                    'data_list': data_list,
+                    'close_index': close_index
                 }
             )
             return data_map
@@ -99,20 +103,29 @@ class StockIndex(object):
                 index_value = float(dt[1])
                 data_list.append([index_time, index_value])
 
+            close_index = 0
+            if data_list[-1][0].strftime('%H:%M:%S') == self.market_rest_cn_end_time[0]:
+                close_index = data_list[-1][1]
+
             data_map = {}
             data_map.update(
                 {
                     'name': 'shen',
                     'begin_time': begin_time,
                     'open_index': open_index,
-                    'data_list': data_list
+                    'data_list': data_list,
+                    'close_index': close_index
                 }
             )
             return data_map
 
         # 道琼斯和纳斯达克
         elif stock.name == str(Stock.DOWJONES) or stock.name == str(Stock.NASDAQ):
-            response = requests.get(url_nasdaq, timeout=10)
+            if stock.name == str(Stock.DOWJONES):
+                response = requests.get(url_djia, timeout=10)
+            else:
+                response = requests.get(url_nasdaq, timeout=10)
+
             resp_json = response.json()
             begin_timestamp = int(str(resp_json['chart_begin_time'])[:-3])
             begin_time = datetime.datetime.utcfromtimestamp(begin_timestamp) + datetime.timedelta(hours=13)
@@ -131,16 +144,20 @@ class StockIndex(object):
                 index_value = dt['y']
                 data_list.append([index_time, index_value])
 
+            close_index = 0
+            if data_list[-1][0].strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
+                close_index = data_list[-1][1]
+                if close_index != float(resp_json['Value']):
+                    close_index = float(resp_json['Value'])
+
             data_map = {}
-            if stock.name == str(Stock.DOWJONES):
-                data_map.update({'name': 'djia'})
-            else:
-                data_map.update({'name': 'nasdaq'})
+            data_map.update({'name': 'djia'})
             data_map.update(
                 {
                     'begin_time': begin_time,
                     'open_index': open_index,
-                    'data_list': data_list
+                    'data_list': data_list,
+                    'close_index': close_index
                 }
             )
             return data_map
@@ -149,7 +166,8 @@ class StockIndex(object):
         elif stock.name == str(Stock.HANGSENG):
             pass
 
-    def handle_data(self, period, data_map):
+    @staticmethod
+    def handle_data(period, data_map):
         """
         处理data_map字典数据
         :param period:
@@ -162,6 +180,7 @@ class StockIndex(object):
         begin_time = data_map['begin_time']
         open_index = data_map['open_index']
         data_list = data_map['data_list']
+        close_index = data_map['close_index']
         stock_name = period.stock.name
 
         # 判断时间是否符合股市时间
@@ -171,7 +190,7 @@ class StockIndex(object):
         if begin_time != period.lottery_time.strftime('%Y-%m-%d'):
             raise CommandError('警告：时间不吻合，请及时处理')
 
-        cache_name = str(Stock.STOCK[int(stock_name)][0]) + '_' + str(period.id)
+        cache_name = str(Stock.STOCK[int(stock_name)][0]) + '_' + 'period_' + str(period.id)
         date_now = datetime.datetime.now()
         date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                               "%Y-%m-%d %H:%M:%S")
@@ -262,41 +281,40 @@ class StockIndex(object):
         else:
             num_cache_name = str(Stock.STOCK[int(stock_name)][0]) + '_' + begin_time + '_num'
 
-            # TODO:
             index_time = data_list[-1][0]
-            value = float(data_list[-1][1])
-
-            if period.lottery_time == index_time:
+            if period.lottery_time == index_time and close_index != 0:
                 if get_cache(num_cache_name) is None:
-                    set_cache(num_cache_name, str(value) + ',' + begin_time + ',1', 3600)
+                    set_cache(num_cache_name, str(close_index) + ',' + begin_time + ',1', 3600)
                 else:
                     cache_dt = get_cache(num_cache_name)
                     print(cache_dt)
-                    if cache_dt.split(',')[0] == str(value):
+                    if cache_dt.split(',')[0] == str(close_index):
                         count = int(cache_dt.split(',')[2]) + 1
                         if count >= 6:
                             # 最后一期的确认
                             index = Index.objects.filter(periods=period, index_time=index_time).first()
-                            index.index_value = value
+                            index.index_value = close_index
                             index.save()
 
                             status = ''
-                            if float(period.start_value) > float(value):
+                            if float(period.start_value) > float(close_index):
                                 status = 'down'
-                            elif float(period.start_value) == float(value):
+                            elif float(period.start_value) == float(close_index):
                                 status = 'draw'
-                            elif float(period.start_value) < float(value):
+                            elif float(period.start_value) < float(close_index):
                                 status = 'up'
 
                             param_dic = {
-                                'num': value, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
+                                'num': close_index, 'status': status, 'auto': local_settings.GUESS_RESULT_AUTO,
                             }
                             guess_recording.take_result(period, param_dic, date_day)
                             return True
                         else:
-                            set_cache(num_cache_name, str(value) + ',' + begin_time + ',' + str(count), 3600)
+                            set_cache(num_cache_name, str(close_index) + ',' + begin_time + ',' + str(count), 3600)
                     else:
-                        set_cache(num_cache_name, str(value) + ',' + begin_time + ',1', 3600)
+                        set_cache(num_cache_name, str(close_index) + ',' + begin_time + ',1', 3600)
+            else:
+                print('数据不齐全，暂时不处理！')
 
     def confirm_time(self, period):
         """
@@ -372,20 +390,23 @@ class Command(BaseCommand):
 
         for stock in Stock.objects.all():
             print(Stock.STOCK[int(stock.name)][1], ': ')
-            if Periods.objects.filter(is_result=False, stock__name=stock.name).exists():
-                period = Periods.objects.filter(is_result=False, stock__name=stock.name).first()
-                stock_index.pk_periods_map[int(stock.name)] = period
-                if (stock_index.confirm_time(period) is not True) and (
-                        Periods.objects.filter(is_result=False, stock__name=stock.name,
-                                               lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                    print('空闲时间, 空闲时间')
-                else:
-                    data_map = stock_index.fetch_data(period.stock)
-                    flag = stock_index.handle_data(period, data_map)
-                    if flag is True:
-                        # 开奖后放出题目
-                        stock_index.new_period(period)
-                        print('放出题目')
+            if Stock.STOCK[int(stock.name)][0] == 2:
+                print('恒生指数跳过')
+            else:
+                if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
+                    period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()
+                    stock_index.pk_periods_map[int(stock.name)] = period
+                    if (stock_index.confirm_time(period) is not True) and (
+                            Periods.objects.filter(is_result=False, stock__name=stock.name,
+                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                        print('空闲时间, 空闲时间')
+                    else:
+                        data_map = stock_index.fetch_data(period.stock)
+                        flag = stock_index.handle_data(period, data_map)
+                        if flag is True:
+                            # 开奖后放出题目
+                            stock_index.new_period(period)
+                            print('放出题目')
             print('==================================================================================')
         # 股指pk出题找答案,股指pk出题
         guess_pk_recording = GuessPKRecording()
