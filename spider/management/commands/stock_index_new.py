@@ -181,8 +181,10 @@ class StockIndex(object):
             open_index = data_list[0][1]
 
             close_index = 0
-            if data_list[-1][0].strftime('%H:%M:%S') == self.market_hk_end_time[0]:
+            if data_list[-1][0].strftime('%H:%M:%S') == '16:00:00':
                 close_index = data_list[-1][1]
+                if close_index != float(resp_display['cur']['num']):
+                    close_index = float(resp_display['cur']['num'])
 
             data_map = {}
             data_map.update({'name': 'hsi'})
