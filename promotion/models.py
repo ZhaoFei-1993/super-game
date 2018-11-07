@@ -53,7 +53,7 @@ class UserPresentationManager(BaseManager):
 
             # 盈亏
             if record.earn_coin > 0:
-                income = record.earn_coin - record.bet
+                income = record.earn_coin - bet
             else:
                 income = record.earn_coin
             # 转化为str避免失精
