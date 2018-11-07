@@ -19,6 +19,7 @@ url_shen = 'http://www.szse.cn/api/market/ssjjhq/getTimeData?random=0.6430127918
 url_shang = 'http://yunhq.sse.com.cn:32041/v1/sh1/line/000001?callback=jQuery111208645993247577721_1541046387829&begin=0&end=-1&select=time%2Cprice%2Cvolume'
 url_djia = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=ixic'
 url_nasdaq = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=.indu'
+url_hsi = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=457e1aa48b5dc5ea25a0766d5d08c047&eprop=minute'
 
 
 class StockIndex(object):
@@ -164,7 +165,36 @@ class StockIndex(object):
 
         # 恒生指数
         elif stock.name == str(Stock.HANGSENG):
-            pass
+            response = requests.get(url_hsi, headers=headers, timeout=10)
+            resp_display = response.json()['data'][0]['disp_data'][0]['property'][0]['data']['display']
+
+            begin_time = resp_display['update']['text'].replace('/', '-').split(' ')[0]
+            data = resp_display['tab']['p'].split(';')[:-1]
+
+            data_list = []
+            for dt in data:
+                info_list = dt.split(',')
+                index_time = datetime.datetime.strptime(begin_time + ' ' + info_list[0] + ':00', "%Y-%m-%d %H:%M:%S")
+                index_value = float(info_list[1])
+                data_list.append([index_time, index_value])
+
+            open_index = data_list[0][1]
+
+            close_index = 0
+            if data_list[-1][0].strftime('%H:%M:%S') == self.market_hk_end_time[0]:
+                close_index = data_list[-1][1]
+
+            data_map = {}
+            data_map.update({'name': 'hsi'})
+            data_map.update(
+                {
+                    'begin_time': begin_time,
+                    'open_index': open_index,
+                    'data_list': data_list,
+                    'close_index': close_index
+                }
+            )
+            return data_map
 
     @staticmethod
     def handle_data(period, data_map):
@@ -390,23 +420,25 @@ class Command(BaseCommand):
 
         for stock in Stock.objects.all():
             print(Stock.STOCK[int(stock.name)][1], ': ')
-            if Stock.STOCK[int(stock.name)][0] == 2:
-                print('恒生指数跳过')
-            else:
-                if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
-                    period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()
-                    stock_index.pk_periods_map[int(stock.name)] = period
-                    if (stock_index.confirm_time(period) is not True) and (
-                            Periods.objects.filter(is_result=False, stock__name=stock.name,
-                                                   lottery_time__lt=datetime.datetime.now()).exists() is not True):
-                        print('空闲时间, 空闲时间')
-                    else:
+            if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
+                period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()
+                stock_index.pk_periods_map[int(stock.name)] = period
+                if (stock_index.confirm_time(period) is not True) and (
+                        Periods.objects.filter(is_result=False, stock__name=stock.name,
+                                               lottery_time__lt=datetime.datetime.now()).exists() is not True):
+                    print('空闲时间, 空闲时间')
+                else:
+                    try:
                         data_map = stock_index.fetch_data(period.stock)
                         flag = stock_index.handle_data(period, data_map)
-                        if flag is True:
-                            # 开奖后放出题目
-                            stock_index.new_period(period)
-                            print('放出题目')
+                    except Exception as e:
+                        print('Error is: ', e)
+                        continue
+
+                    if flag is True:
+                        # 开奖后放出题目
+                        stock_index.new_period(period)
+                        print('放出题目')
             print('==================================================================================')
         # 股指pk出题找答案,股指pk出题
         guess_pk_recording = GuessPKRecording()
