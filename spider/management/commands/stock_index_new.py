@@ -37,7 +37,7 @@ class StockIndex(object):
         self.market_en_start_time_winter = ['22:30:00']
 
         self.market_rest_cn_end_time = ['15:00:00']
-        self.market_hk_end_time = ['16:10:00']
+        self.market_hk_end_time = ['16:00:00']
         self.market_en_end_time = ['04:00:00']
         self.market_en_end_time_winter = ['05:00:00']
 
