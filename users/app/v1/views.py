@@ -3302,7 +3302,7 @@ class MoveRecordView(ListAPIView):
                     tmps = month
             data.append({
                 "year": years,
-                "month": month,
+                "time": month,
                 "telephone": mobile_coin[1],
                 "avatar": mobile_coin[0],
                 "remarks": mobile_coin[5],
