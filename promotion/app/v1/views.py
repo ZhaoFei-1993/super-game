@@ -24,7 +24,6 @@ from decimal import Decimal
 import time
 
 
-
 class PromotionInfoView(ListAPIView):
     """
     用户邀请信息
@@ -93,7 +92,6 @@ class PromotionListView(ListAPIView):
                 "coin_accuracy": coin.coin_accuracy
             })
 
-
         year = datetime.date.today().year  # 获取当前年份
         month = datetime.date.today().month  # 获取当前月份
         weekDay, monthCountDay = calendar.monthrange(year, month)  # 获取当月第一天的星期和当月的总天数
@@ -149,7 +147,8 @@ class PromotionListView(ListAPIView):
         for s in monthly_summary:
             monthly_summarys[s[1]] = s[0]
 
-        sql = "select club_id, sum(pu.bet_water) as sum_bet_water, sum(pu.dividend_water), sum(pu.income) from promotion_userpresentation pu"
+        sql = "select club_id, sum(pu.bet_water) as sum_bet_water, sum(pu.dividend_water), " \
+              "sum(pu.income) from promotion_userpresentation pu"
         sql += " where pu.club_id in (" + ','.join(coin_id_list) + ")"
         sql += " and pu.user_id = '" + str(user.id) + "'"
         sql += " and pu.created_at >= '" + str(start) + "'"
@@ -170,7 +169,7 @@ class PromotionListView(ListAPIView):
                 i["bet_water"] = normalize_fraction(coin_number_info[i["club_id"]][1], i["coin_accuracy"])
                 i["dividend_water"] = normalize_fraction(coin_number_info[i["club_id"]][2], i["coin_accuracy"])
                 i["income"] = normalize_fraction(coin_number_info[i["club_id"]][3], i["coin_accuracy"])
-                income_dividends_s =  normalize_fraction(income_dividends, i["coin_accuracy"])
+                income_dividends_s = normalize_fraction(income_dividends, i["coin_accuracy"])
                 if income_dividends_s <= 0:
                     income_dividends_s = 0
                 i["income_dividends"] = income_dividends_s
@@ -181,7 +180,6 @@ class PromotionListView(ListAPIView):
                 i["income_dividends"] = 0
             data.append(i)
         return self.response({'code': 0, 'data': data})
-
 
 
 class PromotioncClubView(ListAPIView):
@@ -1020,7 +1018,8 @@ class ClubDividendView(ListAPIView):
                 start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
                 start_year = start_day_test.year
                 start_month = start_day_test.month
-            else:  # 默认开始时间
+            else:
+                # 默认开始时间
                 start_day = settings.PROMOTER_EXCHANGE_START_DATE
                 start_time = str(start_day) + ' 00:00:00'
                 start_day_test = datetime.datetime.strptime(start_day, "%Y-%m-%d")
@@ -1034,7 +1033,8 @@ class ClubDividendView(ListAPIView):
                 end_day_test = datetime.datetime.strptime(end_day, "%Y-%m-%d")
                 end_year = end_day_test.year
                 end_month = end_day_test.month
-            else:  # 默认日期  当天结束时间
+            else:
+                # 默认日期 当天结束时间
                 end_day = datetime.datetime.now().strftime('%Y-%m-%d')
                 end_time = str(end_day) + ' 23:59:59'
                 end_year = datetime.datetime.now().year
@@ -1087,7 +1087,7 @@ class ClubDividendView(ListAPIView):
         sql += " and pu.created_at <= '" + str(end) + "'"
         the_month_list = get_sql(sql)
         month_list = {}
-        if the_month_list[0][1] == None:
+        if the_month_list[0][1] is None:
             the_month_income_proportion = 0  # 本月兑换比例比例
             month_list[datetime.datetime.now().strftime('%Y%m')] = {
                 "months": datetime.datetime.now().strftime('%Y%m'),
@@ -1110,7 +1110,7 @@ class ClubDividendView(ListAPIView):
         amount_list = get_sql(sql)
 
         for i in amount_list:
-            month_list[i[0]]={
+            month_list[i[0]] = {
                 "months": i[0],
                 "proportion": normalize_fraction(i[1], int(coin_accuracy))
             }
@@ -1127,7 +1127,7 @@ class ClubDividendView(ListAPIView):
         user_lists = {}
         data = []
         the_month_income_sum = 0
-        if user_id_list != []:
+        if len(user_id_list) != 0:
             data_list = []
             data_lists = []
             if int(type) == 1:  # 1.全部

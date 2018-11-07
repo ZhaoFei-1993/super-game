@@ -167,7 +167,6 @@ class PromotionRecordManager(BaseManager):
         :param status:  状态 (0,未开奖 1.已开奖 2.异常)
         :return:
         """
-        # promotion_list such as [{'record_id': record_id, 'source': source, 'earn_coin': earn_coin, 'status': status}]
         promotion_list = []
         # 开始处理
         if len(real_records) > 0:
@@ -185,7 +184,6 @@ class PromotionRecordManager(BaseManager):
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
             with connection.cursor() as cursor:
-                # print(sql)
                 if sql is not False:
                     cursor.execute(sql)
         else:
