@@ -51,6 +51,7 @@ class Command(BaseCommand, BaseView):
             presentation_month.is_receive = 1
             presentation_month.created_at = start_time
             presentation_month.save()
+            print("income_dividend=================", income_dividend)
             if income_dividend > 0:
                 Address.objects.initial(int(i[3]))  # 用户生成usercoin 加地址
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
