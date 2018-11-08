@@ -140,6 +140,8 @@ class StockIndex(object):
             for dt in data:
                 index_timestamp = int(str(dt['x'])[:-3])
                 index_time = datetime.datetime.utcfromtimestamp(index_timestamp) + datetime.timedelta(hours=13)
+                if index_time.strftime('%S') == '59' or index_time.strftime('%S') == '58':
+                    index_time = index_time + datetime.timedelta(minutes=1)
                 index_time = index_time.strftime('%Y-%m-%d %H:%M') + ':00'
                 index_time = datetime.datetime.strptime(index_time, '%Y-%m-%d %H:%M:%S')
                 index_value = dt['y']
@@ -198,8 +200,7 @@ class StockIndex(object):
             )
             return data_map
 
-    @staticmethod
-    def handle_data(period, data_map):
+    def handle_data(self, period, data_map):
         """
         处理data_map字典数据
         :param period:
@@ -306,6 +307,14 @@ class StockIndex(object):
                                                                          created_at=date_day).first()
                                     index_day.index_value = value
                                     index_day.save()
+                        # 最后一期再次确认，常常对不上
+                        if period.stock_id in [7, 9]:
+                            lottery_time = period.lottery_time
+                            if lottery_time.strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
+                                if close_index != data_list[-1][1]:
+                                    index = Index.objects.filter(periods=period, index_time=lottery_time).first()
+                                    index.index_value = value
+                                    index.save()
                     set_cache(cache_name, data_map, 24 * 60 * 60)  # 存入缓存作对比
             # 推送曲线图
             if len(new_index_dic['x']) > 0:
