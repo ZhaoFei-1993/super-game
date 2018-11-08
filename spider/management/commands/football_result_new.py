@@ -688,7 +688,6 @@ def handle_delay_game(delay_quiz):
                                          is_distribution=True)
     if len(real_records) > 0:
         PromotionRecord.objects.insert_all(real_records, 1, 2)
-        UserPresentation.objects.club_flow_statistics(real_records, 1)
 
     end_time = time()
     cost_time = str(round(end_time - start_time)) + '秒'

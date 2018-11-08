@@ -204,6 +204,7 @@ class PromotionRecordManager(BaseManager):
                 arr_values)
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
+            print(sql)
             with connection.cursor() as cursor:
                 if sql is not False:
                     cursor.execute(sql)

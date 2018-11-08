@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('Go Time')
         bagin_time = datetime.datetime.strptime('2018-09-07 00:00:00', '%Y-%m-%d %H:%M:%S')
-        records = PromotionRecord.objects.filter(created_at__gt=bagin_time)
+        records = PromotionRecord.objects.filter(created_at__gt=bagin_time, status=1)
         print('共', len(records), '条')
         UserPresentation.objects.club_flow_statistics(records, 7)
         print('End Time')
