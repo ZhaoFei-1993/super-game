@@ -694,7 +694,8 @@ class ClubDividendView(ListAPIView):
             end = datetime.date(year=start_year, month=end_month, day=monthCountDay).strftime(
                 '%Y-%m-%d') + ' 23:59:59'  # 当月最后一天
 
-        sql = "select date_format( pu.created_at, '%Y%m' ) AS created_ats, sum(pu.income) from promotion_userpresentation pu"
+        sql = "select date_format( pu.created_at, '%Y%m' ) AS created_ats, sum(pu.income) " \
+              "from promotion_userpresentation pu"
         sql += " where pu.club_id = '" + str(club_id) + "'"
         sql += " and pu.user_id = '" + str(user.id) + "'"
         sql += " and pu.created_at >= '" + str(start) + "'"
@@ -1218,11 +1219,9 @@ class ClubDividendView(ListAPIView):
                         "created_ats": i[7],
                         "times": i[9]
                     })
-            # data_one_list = sorted(data_list, key=lambda x: x['times'], reverse = True)
             data_one_list = data_list
 
             sum_coin = 0
-            # test_created_ats = datetime.datetime.now().strftime('%Y%m')
             for list in data_lists:
                 if list["earn_coin"] > 0:
                     reward_coin = list["earn_coin"] - list["bets"]
