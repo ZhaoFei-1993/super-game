@@ -448,6 +448,7 @@ class ClubDetailView(ListAPIView):
         sql += " and p.created_at <= '" + str(end_time) + "'"
         sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, p.source, p.user_id, p.status, p.bets"
         sql += " order by created_ats desc"
+        print("sql================", sql)
         list_info = self.get_list_by_sql(sql)
         for i in list_info:
             if i[4] is not None:
