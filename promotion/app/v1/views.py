@@ -428,7 +428,7 @@ class ClubDetailView(ListAPIView):
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.club_id = '" + club_id + "'"
         sql += " and p.created_at > '2018-09-07 00:00:00'"
-        if len(user_id_list) == 0:
+        if len(user_id_list) > 0:
             sql += " and p.user_id in (" + ','.join(user_id_list) + ")"
         if int(type) == 2:  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股指PK
             sql += " and p.source = 2"
