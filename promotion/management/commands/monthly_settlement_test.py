@@ -43,7 +43,7 @@ class Command(BaseCommand, BaseView):
                 record_list = GuessRecord.objects.get(pk=i.record_id)
                 if int(record_list.status) == 0:
                     status = 0
-                elif int(record_list.typstatuse) == 1:
+                elif int(record_list.status) == 1:
                     status = 1
                 else:
                     status = 2
