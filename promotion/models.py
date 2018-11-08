@@ -85,7 +85,7 @@ class UserPresentationManager(BaseManager):
                     day_data.save()
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
                 inviter_coin.balance += Decimal(bet) * Decimal('0.005')
-                # inviter_coin.save()
+                inviter_coin.save()
 
 
 @reversion.register()
@@ -204,6 +204,7 @@ class PromotionRecordManager(BaseManager):
                 arr_values)
             sql += " ON DUPLICATE KEY UPDATE earn_coin = VALUES (earn_coin), status = VALUES (status)"
 
+            print(sql)
             with connection.cursor() as cursor:
                 if sql is not False:
                     cursor.execute(sql)
