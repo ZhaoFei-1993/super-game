@@ -14,6 +14,8 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         list = PromotionRecord.objects.all()
         for i in list:
+            print("source============================", i.source)
+            print("record_id========================", i.record_id)
             if int(i.source) == 1 or int(i.source) == 2:
                 record_list = Record.objects.get(pk=i.record_id)
                 if int(record_list.type) == 0:
