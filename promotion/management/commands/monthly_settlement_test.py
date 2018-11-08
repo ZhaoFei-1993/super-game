@@ -16,6 +16,7 @@ class Command(BaseCommand, BaseView):
         for i in list:
             print("source============================", i.source)
             print("record_id========================", i.record_id)
+            s = [19942132, 19942133]
             if int(i.record_id) == 19942133:
                 i.delete()
             else:
