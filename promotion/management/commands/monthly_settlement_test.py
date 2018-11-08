@@ -16,38 +16,41 @@ class Command(BaseCommand, BaseView):
         for i in list:
             print("source============================", i.source)
             print("record_id========================", i.record_id)
-            if int(i.source) == 1 or int(i.source) == 2:
-                record_list = Record.objects.get(pk=i.record_id)
-                if int(record_list.type) == 0:
-                    status = 0
-                elif int(record_list.type) == 1 and int(record_list.type) == 2:
-                    status = 1
-                else:
-                    status = 2
-                i.status = status
-            elif int(i.source) == 3:
-                record_list = SixRecord.objects.get(pk=i.record_id)
-                if int(record_list.status) == 0:
-                    status = 0
-                else:
-                    status = 1
-                i.status = status
-            elif int(i.source) == 5:
-                record_list = RecordStockPk.objects.get(pk=i.record_id)
-                if int(record_list.status) == 0:
-                    status = 0
-                elif int(record_list.status) == 1:
-                    status = 1
-                else:
-                    status = 2
-                i.status = status
+            if int(i.record_id) == 19942133:
+                i.delete()
             else:
-                record_list = GuessRecord.objects.get(pk=i.record_id)
-                if int(record_list.status) == 0:
-                    status = 0
-                elif int(record_list.status) == 1:
-                    status = 1
+                if int(i.source) == 1 or int(i.source) == 2:
+                    record_list = Record.objects.get(pk=i.record_id)
+                    if int(record_list.type) == 0:
+                        status = 0
+                    elif int(record_list.type) == 1 and int(record_list.type) == 2:
+                        status = 1
+                    else:
+                        status = 2
+                    i.status = status
+                elif int(i.source) == 3:
+                    record_list = SixRecord.objects.get(pk=i.record_id)
+                    if int(record_list.status) == 0:
+                        status = 0
+                    else:
+                        status = 1
+                    i.status = status
+                elif int(i.source) == 5:
+                    record_list = RecordStockPk.objects.get(pk=i.record_id)
+                    if int(record_list.status) == 0:
+                        status = 0
+                    elif int(record_list.status) == 1:
+                        status = 1
+                    else:
+                        status = 2
+                    i.status = status
                 else:
-                    status = 2
-                i.status = status
-            i.save()
+                    record_list = GuessRecord.objects.get(pk=i.record_id)
+                    if int(record_list.status) == 0:
+                        status = 0
+                    elif int(record_list.status) == 1:
+                        status = 1
+                    else:
+                        status = 2
+                    i.status = status
+                i.save()
