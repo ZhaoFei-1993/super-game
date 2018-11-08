@@ -309,10 +309,9 @@ class StockIndex(object):
                                     index_day.save()
                         # 最后一期再次确认，常常对不上
                         if period.stock_id in [7, 9]:
-                            lottery_time = period.lottery_time
-                            if lottery_time.strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
+                            if data_list[-1][0].strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
                                 if close_index != data_list[-1][1]:
-                                    index = Index.objects.filter(periods=period, index_time=lottery_time).first()
+                                    index = Index.objects.filter(periods=period, index_time=period.lottery_time).first()
                                     index.index_value = value
                                     index.save()
                     set_cache(cache_name, data_map, 24 * 60 * 60)  # 存入缓存作对比
