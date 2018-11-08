@@ -85,7 +85,7 @@ class UserPresentationManager(BaseManager):
                     day_data.save()
                 inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
                 inviter_coin.balance += Decimal(bet) * Decimal('0.005')
-                inviter_coin.save()
+                # inviter_coin.save()
 
 
 @reversion.register()
