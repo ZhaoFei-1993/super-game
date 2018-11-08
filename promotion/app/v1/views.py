@@ -1029,10 +1029,10 @@ class UserInfoView(ListAPIView):
         if user_infos == ():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_info = {
-            "avatar":user_infos[0],
-            "nickname":user_infos[1],
-            "created_at":user_infos[2].strftime('%Y-%m-%d %H:%M'),
-            "login_time":user_infos[3].strftime('%Y-%m-%d %H:%M')
+            "avatar": user_infos[0],
+            "nickname": user_infos[1],
+            "created_at": user_infos[2].strftime('%Y-%m-%d %H:%M'),
+            "login_time": user_infos[3].strftime('%Y-%m-%d %H:%M')
         }
 
         coin_id_list = []
@@ -1057,7 +1057,6 @@ class UserInfoView(ListAPIView):
         enddays = datetime.datetime.now().strftime('%Y-%m-%d')
         end_time = str(enddays) + ' 23:59:59'  # 当前时间
 
-
         start_year = datetime.datetime.now().year
         end_month = datetime.datetime.now().month
         month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
@@ -1077,38 +1076,18 @@ class UserInfoView(ListAPIView):
 
         data_list = {}
         if start != start_time:
-            sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-            sql = "select " + sql_list + " from guess_record dtr"
-            sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-            sql += " and dtr.created_at >= '" + str(start_time) + "'"
-            sql += " and dtr.created_at <= '" + str(before_start) + "'"
-            sql += " and dtr.status = 1"
-            sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-            sql += " group by dtr.club_id, created_ats"
-            sql += " order by dtr.club_id desc"
-            before_record_list = get_sql(sql)  # 股票
-            for i in before_record_list:
-                data_list[i[0]][i[2]] = {
-                    "bets": i[1],
-                    "earn_coin": i[3]
-                }
+            sql_list = "p.club_id, sum(p.bets), date_format( p.created_at, '%Y%m' ) AS created_ats, " \
+                       "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin"
 
-            sql_list = "dtr.club_id, sum(dtr.bet_coin), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                       "dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
-            sql = "select " + sql_list + " from marksix_sixrecord dtr"
-            sql += " inner join users_user u on dtr.user_id=u.id"
-            sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-            sql += " and dtr.created_at >= '" + str(start_time) + "'"
-            sql += " and dtr.created_at <= '" + str(before_start) + "'"
-            sql += " and dtr.status = 1"
-            sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-            sql += " group by dtr.club_id, created_ats"
-            sql += " order by dtr.club_id desc"
-            marksix_list = get_sql(sql)  # 六合彩
-            for s in marksix_list:
+            sql = "select " + sql_list + " from promotion_promotionrecord p"
+            sql += " inner join users_user u on p.user_id=u.id"
+            sql += " where p.user_id = '" + str(invitee_id) + "'"
+            sql += " and p.created_at >= '" + str(start_time) + "'"
+            sql += " and p.created_at <= '" + str(before_start) + "'"
+            sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
+            sql += " group by p.club_id, created_ats"
+            old_month_list = get_sql(sql)  # 往月
+            for s in old_month_list:
                 if s[0] not in data_list:
                     data_list[s[0]] = {
                         s[2]: {
@@ -1128,115 +1107,20 @@ class UserInfoView(ListAPIView):
                             }
                         }
 
-            sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-            sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
-            sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-            sql += " and dtr.created_at >= '" + str(start_time) + "'"
-            sql += " and dtr.created_at <= '" + str(before_start) + "'"
-            sql += " and dtr.status = 1"
-            sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-            sql += " group by dtr.club_id, created_ats"
-            sql += " order by dtr.club_id desc"
-            baccarat_list = get_sql(sql)  # 百家乐
-            for s in baccarat_list:
-                if s[0] not in data_list:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-                else:
-                    if s[2] in data_list[s[0]]:
-                        data_list[s[0]][s[2]]["bets"] += s[1]
-                        data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                    else:
-                        data_list[s[0]] = {
-                            s[2]: {
-                                "bets": s[1],
-                                "earn_coin": s[3]
-                            }
-                        }
+        sql_list = "p.club_id, sum(p.bets), date_format( p.created_at, '%Y%m' ) AS created_ats, " \
+                   "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin"
 
-            sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                       "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-            sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
-            sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-            sql += " and dtr.created_at >= '" + str(start_time) + "'"
-            sql += " and dtr.created_at <= '" + str(before_start) + "'"
-            sql += " and dtr.status = 1"
-            sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-            sql += " group by dtr.club_id, created_ats"
-            sql += " order by dtr.club_id desc"
-            dragontiger_list = get_sql(sql)  # 龙虎斗
-            for s in dragontiger_list:
-                if s[0] not in data_list:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-                else:
-                    if s[2] in data_list[s[0]]:
-                        data_list[s[0]][s[2]]["bets"] += s[1]
-                        data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                    else:
-                        data_list[s[0]] = {
-                            s[2]: {
-                                "bets": s[1],
-                                "earn_coin": s[3]
-                            }
-                        }
+        sql = "select " + sql_list + " from promotion_promotionrecord p"
+        sql += " inner join users_user u on p.user_id=u.id"
+        sql += " where p.user_id = '" + str(invitee_id) + "'"
+        sql += " and p.created_at >= '" + str(start) + "'"
+        sql += " and p.created_at <= '" + str(end_time) + "'"
+        sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
+        sql += " group by p.club_id, created_ats"
 
-            sql_list = "dtr.roomquiz_id, sum(dtr.bet), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                       "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                       "dtr.earn_coin - dtr.bet ELSE dtr.earn_coin END)) AS earn_coin"
-            sql = "select " + sql_list + " from quiz_record dtr"
-            sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-            sql += " and dtr.created_at >= '" + str(start_time) + "'"
-            sql += " and dtr.created_at <= '" + str(before_start) + "'"
-            sql += " and dtr.type in (1, 2)"
-            sql += " and dtr.roomquiz_id in (" + ','.join(coin_id_list) + ")"
-            sql += " group by dtr.roomquiz_id, created_ats"
-            sql += " order by dtr.roomquiz_id desc"
-            quiz_list = self.get_list_by_sql(sql)  # 篮球
-            for s in quiz_list:
-                if s[0] not in data_list:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-                else:
-                    if s[2] in data_list[s[0]]:
-                        data_list[s[0]][s[2]]["bets"] += s[1]
-                        data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                    else:
-                        data_list[s[0]] = {
-                            s[2]: {
-                                "bets": s[1],
-                                "earn_coin": s[3]
-                            }
-                        }
-
-        sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-        sql = "select " + sql_list + " from guess_record dtr"
-        sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-        sql += " and dtr.created_at >= '" + str(start) + "'"
-        sql += " and dtr.created_at <= '" + str(end_time) + "'"
-        sql += " and dtr.status = 1"
-        sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-        sql += " group by dtr.club_id"
-        sql += " order by dtr.club_id desc"
-        before_record_list = get_sql(sql)  # 股票
-        for s in before_record_list:
+        print("sql===============", sql)
+        this_month_list = get_sql(sql)  # 本月
+        for s in this_month_list:
             if s[0] not in data_list:
                 data_list[s[0]] = {
                     s[2]: {
@@ -1255,135 +1139,6 @@ class UserInfoView(ListAPIView):
                             "earn_coin": s[3]
                         }
                     }
-
-        sql_list = "dtr.club_id, sum(dtr.bet_coin), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                   "dtr.earn_coin - dtr.bet_coin ELSE dtr.earn_coin END)) AS earn_coin"
-        sql = "select " + sql_list + " from marksix_sixrecord dtr"
-        sql += " inner join users_user u on dtr.user_id=u.id"
-        sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-        sql += " and dtr.created_at >= '" + str(start) + "'"
-        sql += " and dtr.created_at <= '" + str(end_time) + "'"
-        sql += " and dtr.status = 1"
-        sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-        sql += " group by dtr.club_id"
-        sql += " order by dtr.club_id desc"
-        marksix_list = get_sql(sql)  # 六合彩
-        for s in marksix_list:
-            if s[0] not in data_list:
-                data_list[s[0]] = {
-                    s[2]: {
-                        "bets": s[1],
-                        "earn_coin": s[3]
-                    }
-                }
-            else:
-                if s[2] in data_list[s[0]]:
-                    data_list[s[0]][s[2]]["bets"] += s[1]
-                    data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                else:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-
-        sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-        sql = "select " + sql_list + " from baccarat_baccaratrecord dtr"
-        sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-        sql += " and dtr.created_at >= '" + str(start) + "'"
-        sql += " and dtr.created_at <= '" + str(end_time) + "'"
-        sql += " and dtr.status = 1"
-        sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-        sql += " group by dtr.club_id"
-        sql += " order by dtr.club_id desc"
-        baccarat_list = get_sql(sql)  # 百家乐
-        for s in baccarat_list:
-            if s[0] not in data_list:
-                data_list[s[0]] = {
-                    s[2]: {
-                        "bets": s[1],
-                        "earn_coin": s[3]
-                    }
-                }
-            else:
-                if s[2] in data_list[s[0]]:
-                    data_list[s[0]][s[2]]["bets"] += s[1]
-                    data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                else:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-
-        sql_list = "dtr.club_id, sum(dtr.bets), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN " \
-                   "dtr.earn_coin - dtr.bets ELSE dtr.earn_coin END)) AS earn_coin"
-        sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
-        sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-        sql += " and dtr.created_at >= '" + str(start) + "'"
-        sql += " and dtr.created_at <= '" + str(end_time) + "'"
-        sql += " and dtr.status = 1"
-        sql += " and dtr.club_id in (" + ','.join(coin_id_list) + ")"
-        sql += " group by dtr.club_id"
-        sql += " order by dtr.club_id desc"
-        dragontiger_list = get_sql(sql)  # 龙虎斗
-        for s in dragontiger_list:
-            if s[0] not in data_list:
-                data_list[s[0]] = {
-                    s[2]: {
-                        "bets": s[1],
-                        "earn_coin": s[3]
-                    }
-                }
-            else:
-                if s[2] in data_list[s[0]]:
-                    data_list[s[0]][s[2]]["bets"] += s[1]
-                    data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                else:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-
-        sql_list = "dtr.roomquiz_id, sum(dtr.bet), date_format( dtr.created_at, '%Y%m' ) AS created_ats, " \
-                   "SUM((CASE WHEN dtr.earn_coin > 0 THEN dtr.earn_coin - dtr.bet ELSE dtr.earn_coin END)) AS earn_coin"
-        sql = "select " + sql_list + " from quiz_record dtr"
-        sql += " where dtr.user_id = '" + str(invitee_id) + "'"
-        sql += " and dtr.created_at >= '" + str(start) + "'"
-        sql += " and dtr.created_at <= '" + str(end_time) + "'"
-        sql += " and dtr.type in (1, 2)"
-        sql += " and dtr.roomquiz_id in (" + ','.join(coin_id_list) + ")"
-        sql += " group by dtr.roomquiz_id"
-        sql += " order by dtr.roomquiz_id desc"
-        quiz_list = self.get_list_by_sql(sql)  # 篮球
-        for s in quiz_list:
-            if s[0] not in data_list:
-                data_list[s[0]] = {
-                    s[2]: {
-                        "bets": s[1],
-                        "earn_coin": s[3]
-                    }
-                }
-            else:
-                if s[2] in data_list[s[0]]:
-                    data_list[s[0]][s[2]]["bets"] += s[1]
-                    data_list[s[0]][s[2]]["earn_coin"] += s[3]
-                else:
-                    data_list[s[0]] = {
-                        s[2]: {
-                            "bets": s[1],
-                            "earn_coin": s[3]
-                        }
-                    }
-
 
         month_list = {}
         sql_list = "pm.club_id, date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
@@ -1392,7 +1147,6 @@ class UserInfoView(ListAPIView):
         sql += " and pm.user_id = '" + str(user.id) + "'"
         sql += " and pm.created_at >= '" + str(start_time) + "'"
         sql += " and pm.created_at <= '" + str(end_time) + "'"
-        sql += " group by pm.club_id, created_ats"
         amount_list = get_sql(sql)
 
         for i in amount_list:
