@@ -16,19 +16,23 @@ class Command(BaseCommand, BaseView):
         for i in list:
             print("source============================", i.source)
             print("record_id========================", i.record_id)
-            s = [19942132, 19942133]
+            s = [19942132, 19942133, 19942129]
             if int(i.record_id) in s:
                 i.delete()
             else:
                 if int(i.source) == 1 or int(i.source) == 2:
-                    record_list = Record.objects.get(pk=i.record_id)
-                    if int(record_list.type) == 0:
-                        status = 0
-                    elif int(record_list.type) == 1 and int(record_list.type) == 2:
-                        status = 1
+                    a = Record.objects.filter(pk=i.record_id).count()
+                    if a == 0:
+                        i.delete()
                     else:
-                        status = 2
-                    i.status = status
+                        record_list = Record.objects.get(pk=i.record_id)
+                        if int(record_list.type) == 0:
+                            status = 0
+                        elif int(record_list.type) == 1 and int(record_list.type) == 2:
+                            status = 1
+                        else:
+                            status = 2
+                        i.status = status
                 elif int(i.source) == 3:
                     record_list = SixRecord.objects.get(pk=i.record_id)
                     if int(record_list.status) == 0:
