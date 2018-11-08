@@ -417,7 +417,7 @@ class BetsViews(ListCreateAPIView):
         club = Club.objects.get_one(pk=int(club_id))
         coin_id = int(club.coin.id)
         coin_info = Coin.objects.get_one(pk=coin_id)
-        bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, play_id=play_id).aggregate(
+        bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, issue=issue).aggregate(
             Sum('bet_coin'))
         bet_sum = bet_sum['bet_coin__sum'] if bet_sum['bet_coin__sum'] else 0
         bet_sum = Decimal(bet_sum) + Decimal(bet_coin)
