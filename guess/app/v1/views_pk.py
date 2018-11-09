@@ -60,7 +60,7 @@ class StockPkDetail(ListAPIView):
                 # 平日休市
                 else:
                     if time_now > qs.open:
-                        status = 1
+                        status = 0
                     else:
                         status = 6
                 open_market_time = qs.open - datetime.timedelta(minutes=5)
@@ -419,12 +419,18 @@ class StockPkRecordsList(ListAPIView):
             })
 
         data = []
+        last_date = ''
         for item_key, item_value in records_obj_dic.items():
             # 时间
             created_at = item_value['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             year = created_at.split(' ')[0].split('-')[0]
             date = created_at.split(' ')[0].split('-')[1] + '/' + created_at.split(' ')[0].split('-')[2]
-            time = created_at.split(' ')[1].split(':')[0] + ':' + created_at.split(' ')[1].split(':')[1]
+            if last_date == year + ' ' + date:
+                year = ''
+                date = ''
+            else:
+                last_date = year + ' ' + date
+            bet_time = created_at.split(' ')[1].split(':')[0] + ':' + created_at.split(' ')[1].split(':')[1]
 
             # earn_coin, is_right
             is_right = 0
@@ -468,7 +474,7 @@ class StockPkRecordsList(ListAPIView):
                 'id': item_key,
                 'year': year,
                 'date': date,
-                'time': time,
+                'time': bet_time,
                 'title': title,
                 'type': record_type,
                 'my_option': my_option,
