@@ -1444,6 +1444,8 @@ class RecordMarkManager(BaseManager):
             else:
                 pass
             record_mark.save()
+        else:
+            record_mark = self.get(user_id=user_id)
         return record_mark
 
     def update_record_mark(self, user_id, rule):
