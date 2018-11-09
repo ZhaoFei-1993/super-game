@@ -123,6 +123,7 @@ def save_rule_option(rule_type, quiz, result):
             option.flag = dt[0]
             num = num + 1
             option.order = num
+            option.odds = dt[-1]
             option.save()
 
             rule.estimate_score = dt[2]
