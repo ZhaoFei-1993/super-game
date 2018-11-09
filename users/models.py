@@ -1425,7 +1425,7 @@ class RecordMarkManager(BaseManager):
         :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
         :return:
         """
-        record_mark_number = self.filter(user_id=int(user_id)).count()
+        record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
         if record_mark_number == 0:
             record_mark = RecordMark()
             record_mark.user_id = user_id
@@ -1453,7 +1453,7 @@ class RecordMarkManager(BaseManager):
         :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
         :return:
         """
-        record_mark_number = self.filter(user_id=int(user_id)).count()
+        record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
         if record_mark_number == 0:
             self.insert_record_mark(user_id, rule)
         else:
