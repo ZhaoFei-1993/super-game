@@ -845,8 +845,8 @@ class BetView(ListCreateAPIView):
 
         record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
         if record_mark_number == 0:
-            RecordMark.object.insert_record_mark(user.id, 1)
-        RecordMark.object.update_record_mark(user.id, 1)
+            RecordMark.objects.insert_record_mark(user.id, 1)
+        RecordMark.objects.update_record_mark(user.id, 1)
 
         # 更新俱乐部对应竞猜投注的数据
         Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)

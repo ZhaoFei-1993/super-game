@@ -613,8 +613,8 @@ class StockPkBet(ListCreateAPIView):
 
         record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
         if record_mark_number == 0:
-            RecordMark.object.insert_record_mark(user.id, 6)
-        RecordMark.object.update_record_mark(user.id, 6)
+            RecordMark.objects.insert_record_mark(user.id, 6)
+        RecordMark.objects.update_record_mark(user.id, 6)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

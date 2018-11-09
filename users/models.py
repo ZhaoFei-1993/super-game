@@ -1444,6 +1444,7 @@ class RecordMarkManager(BaseManager):
             else:
                 pass
             record_mark.save()
+        return record_mark
 
     def update_record_mark(self, user_id, rule):
         """
@@ -1528,7 +1529,7 @@ class RecordMark(models.Model):
     dragon_tiger = models.IntegerField(verbose_name="龙虎斗", choices=TYPE_CHOICE, default=AWAIT)
     baccarat = models.IntegerField(verbose_name="百家乐", choices=TYPE_CHOICE, default=AWAIT)
 
-    object = RecordMarkManager()
+    objects = RecordMarkManager()
 
     class Meta:
         verbose_name = verbose_name_plural = "记录标记表"

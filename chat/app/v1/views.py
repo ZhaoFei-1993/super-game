@@ -4,7 +4,7 @@ from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
 from chat.models import Club, ClubRule, ClubBanner
 from base import code as error_code
-from users.models import UserMessage, DailyLog, Coin
+from users.models import UserMessage, DailyLog, Coin, RecordMark
 from base.exceptions import ParamErrorException
 from django.db.models import Q
 from utils.functions import message_hints, number_time_judgment
@@ -95,9 +95,27 @@ class ClubRuleView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
+        user_id = self.request.user.id
         items = results.data.get('results')
+        is_number = RecordMark.objects.filter(user_id=user_id).count()
+        if is_number == 0:
+            record_mark_info = RecordMark.objects.insert_record_mark(user_id)
+        else:
+            record_mark_info = RecordMark.objects.get(user_id=user_id)
         data = []
         for item in items:
+            if int(item['id']) == 1:
+                is_mark = record_mark_info.quiz
+            elif int(item['id']) == 2:
+                is_mark = record_mark_info.six
+            elif int(item['id']) == 3:
+                is_mark = record_mark_info.guess
+            elif int(item['id']) == 4:
+                is_mark = record_mark_info.guess_pk
+            elif int(item['id']) == 5:
+                is_mark = record_mark_info.dragon_tiger
+            else:
+                is_mark = record_mark_info.baccarat
             if int(item['id']) == 5:
                 data.append(
                     {
@@ -105,7 +123,8 @@ class ClubRuleView(ListAPIView):
                         "name": item['name'],
                         "icon": item['icon'],
                         "room_number": item['number'],
-                        "table_id": 1
+                        "table_id": 1,
+                        "is_mark": is_mark
                     }
                 )
             else:
@@ -114,7 +133,8 @@ class ClubRuleView(ListAPIView):
                         "clubrule_id": item['id'],
                         "name": item['name'],
                         "icon": item['icon'],
-                        "room_number": item['number']
+                        "room_number": item['number'],
+                        "is_mark": is_mark
                     }
                 )
         return self.response({"code": 0, "data": data})
