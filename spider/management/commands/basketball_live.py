@@ -68,6 +68,10 @@ def get_live_data():
                         files = files
                     host_team_score = data_list[13]
                     guest_team_score = data_list[12]
+                    if host_team_score == '':
+                        host_team_score = 0
+                    if guest_team_score == '':
+                        guest_team_score = 0
 
                     redis_conn = Redis()
                     q = Queue(connection=redis_conn)
