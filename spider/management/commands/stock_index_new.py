@@ -312,8 +312,16 @@ class StockIndex(object):
                             if data_list[-1][0].strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
                                 if close_index != data_list[-1][1]:
                                     index = Index.objects.filter(periods=period, index_time=period.lottery_time).first()
-                                    index.index_value = value
-                                    index.save()
+                                    if index is None:
+                                        index = Index()
+                                        index.periods = period
+                                        index.index_value = value
+                                        index.save()
+                                        index.index_time = index_time
+                                        index.save()
+                                    else:
+                                        index.index_value = value
+                                        index.save()
                     set_cache(cache_name, data_map, 24 * 60 * 60)  # 存入缓存作对比
             # 推送曲线图
             if len(new_index_dic['x']) > 0:
