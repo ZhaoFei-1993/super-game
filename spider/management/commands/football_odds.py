@@ -429,7 +429,8 @@ def get_data_info(url):
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
                 change_time = get_time()
                 quiz = Quiz.objects.get(match_flag=match_id)
-                print('=======================>', quiz.match_flag, 'now is ', datetime.datetime.now())
+                host_vs_guest = quiz.host_team + 'vs' + quiz.guest_team
+                print('=======================>', host_vs_guest, quiz.match_flag, 'now is ', datetime.datetime.now())
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
                 rule_had = rule_all.filter(type=0).first()
