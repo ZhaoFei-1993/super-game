@@ -1474,17 +1474,35 @@ class RecordMarkManager(BaseManager):
     def insert_all_record_mark(self, user_list, rule):
         """
         批量更新记录标记表
-        :param user_list: 用户ID
+        :param user_list: 用户ID 例子：[1,2,3,4]
         :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
         :return:
         """
         if len(user_list) > 0:
             list = [str(i) for i in user_list]
-            key = ", " + str(rule) + ", 1, "
-            record_list = ""
-            sql = "INSERT INTO users_recordmark () VALUES " + key.join(
-                list) + ", " + str(rule) + ", 1 "
-            sql += " ON DUPLICATE KEY UPDATE status = VALUES (status)"
+            key = ", 1), ("
+            if int(rule) == 1:
+                record_list = "user_id, quiz"
+                keys = "quiz = VALUES (quiz)"
+            elif int(rule) == 2:
+                record_list = "user_id, six"
+                keys = "six = VALUES (six)"
+            elif int(rule) == 3:
+                record_list = "user_id, guess"
+                keys = "guess = VALUES (guess)"
+            elif int(rule) == 4:
+                record_list = "user_id, dragon_tiger"
+                keys = "dragon_tiger = VALUES (dragon_tiger)"
+            elif int(rule) == 5:
+                record_list = "user_id, baccarat"
+                keys = "baccarat = VALUES (baccarat)"
+            else:
+                record_list = "user_id, guess_pk"
+                keys = "guess_pk = VALUES (guess_pk)"
+
+            sql = "INSERT INTO users_recordmark (" + record_list + ") VALUES (" + key.join(
+                list) + ", 1)"
+            sql += " ON DUPLICATE KEY UPDATE " + keys
             print(sql)
             with connection.cursor() as cursor:
                 if sql is not False:
