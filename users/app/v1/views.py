@@ -547,8 +547,6 @@ class InfoView(ListAPIView):
         coin_name = coin.name
         coin_id = coin.id
 
-        RecordMark.objects.insert_record_mark(user.id)
-
         # GSG币信息
         gsg = Coin.objects.get_gsg_coin()
 
