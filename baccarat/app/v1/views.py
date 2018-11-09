@@ -8,7 +8,7 @@ from decimal import Decimal
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
 from dragon_tiger.models import BetLimit, Options, Table
-from users.models import UserCoin, CoinDetail
+from users.models import UserCoin, CoinDetail, RecordMark
 from chat.models import Club
 import re
 # from utils.cache import get_cache, set_cache
@@ -375,6 +375,11 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 16
         coin_detail.save()
+
+        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
+        if record_mark_number == 0:
+            RecordMark.object.insert_record_mark(user.id, 5)
+        RecordMark.object.update_record_mark(user.id, 5)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

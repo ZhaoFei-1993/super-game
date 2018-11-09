@@ -5,7 +5,7 @@ from base.function import LoginRequired, time_data
 from base.app import ListAPIView, ListCreateAPIView
 from ...models import Category, Quiz, Record, Rule, Option, OptionOdds, ClubProfitAbroad, ChangeRecord, \
     EveryDayInjectionValue
-from users.models import CoinDetail
+from users.models import CoinDetail, RecordMark
 from chat.models import Club
 from users.models import UserCoin, CoinValue, Coin, CoinGiveRecords, User
 from base.exceptions import ParamErrorException
@@ -842,6 +842,11 @@ class BetView(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
+
+        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
+        if record_mark_number == 0:
+            RecordMark.object.insert_record_mark(user.id, 1)
+        RecordMark.object.update_record_mark(user.id, 1)
 
         # 更新俱乐部对应竞猜投注的数据
         Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)

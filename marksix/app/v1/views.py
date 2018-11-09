@@ -16,7 +16,7 @@ from base import code as error_code
 from chat.models import Club
 from marksix.functions import valied_content, CountPage
 from decimal import *
-from users.models import User, CoinDetail
+from users.models import User, CoinDetail, RecordMark
 from django.db.models import Sum
 from base.function import LoginRequired
 from rest_framework.views import APIView
@@ -468,6 +468,11 @@ class BetsViews(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
+
+        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
+        if record_mark_number == 0:
+            RecordMark.object.insert_record_mark(user.id, 2)
+        RecordMark.object.update_record_mark(user.id, 2)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

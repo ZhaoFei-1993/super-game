@@ -1418,40 +1418,58 @@ class RecordMarkManager(BaseManager):
     记录标记表数据库操作
     """
 
-    def insert_record_mark(self, user_id):
+    def insert_record_mark(self, user_id, rule=0):
         """
         录入记录标记表(单)
         :param user_id:用户ID
+        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
         :return:
         """
-        record_mark_user = "RECORD_MARK_USER"
-        user_list = get_cache(record_mark_user)
-        if user_list is None or user_id not in user_list:
-            list = range(1, 7)
-            for i in list:
-                record_mark = RecordMark()
-                record_mark.user_id = int(user_id)
-                record_mark.status = 0
-                record_mark.rule = i
-                record_mark.save()
-            if user_list is None:
-                user_list = [user_id]
+        record_mark_number = self.filter(user_id=int(user_id)).count()
+        if record_mark_number == 0:
+            record_mark = RecordMark()
+            record_mark.user_id = user_id
+            if int(rule) == 1:
+                record_mark.quiz = 1
+            elif int(rule) == 2:
+                record_mark.six = 1
+            elif int(rule) == 3:
+                record_mark.guess = 1
+            elif int(rule) == 4:
+                record_mark.guess_pk = 1
+            elif int(rule) == 5:
+                record_mark.dragon_tiger = 1
+            elif int(rule) == 6:
+                record_mark.baccarat = 1
             else:
-                user_list.append(user_id)
-            set_cache(record_mark_user, user_list)
+                pass
+            record_mark.save()
 
     def update_record_mark(self, user_id, rule):
         """
         更新记录标记表
         :param user_id: 用户ID
-        :param rule: 玩法
+        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
         :return:
         """
-        record_mark = RecordMark()
-        record_mark.user_id = int(user_id)
-        record_mark.status = 1
-        record_mark.rule = rule
-        record_mark.save()
+        record_mark_number = self.filter(user_id=int(user_id)).count()
+        if record_mark_number == 0:
+            self.insert_record_mark(user_id, rule)
+        else:
+            record_mark = self.get(user_id=int(user_id))
+            if int(rule) == 1:
+                record_mark.quiz = 1
+            elif int(rule) == 2:
+                record_mark.six = 1
+            elif int(rule) == 3:
+                record_mark.guess = 1
+            elif int(rule) == 4:
+                record_mark.guess_pk = 1
+            elif int(rule) == 5:
+                record_mark.dragon_tiger = 1
+            else:
+                record_mark.baccarat = 1
+            record_mark.save()
 
     def insert_all_record_mark(self, user_list, rule):
         """
@@ -1463,7 +1481,8 @@ class RecordMarkManager(BaseManager):
         if len(user_list) > 0:
             list = [str(i) for i in user_list]
             key = ", " + str(rule) + ", 1, "
-            sql = "INSERT INTO users_recordmark (user_id, ruld, status) VALUES " + key.join(
+            record_list = ""
+            sql = "INSERT INTO users_recordmark () VALUES " + key.join(
                 list) + ", " + str(rule) + ", 1 "
             sql += " ON DUPLICATE KEY UPDATE status = VALUES (status)"
             print(sql)
@@ -1483,23 +1502,13 @@ class RecordMark(models.Model):
         (AWAIT, "已读"),
         (OPEN, "未读"),
     )
-    QUIZ = 1
-    SIX = 2
-    GUESS = 3
-    DRAGON_TIGER = 4
-    BACCARAT = 5
-    GUESSPK = 6
-    STATUS_RULE = (
-        (QUIZ, "球赛"),
-        (SIX, "六合彩"),
-        (GUESS, "猜股票"),
-        (DRAGON_TIGER, "龙虎斗"),
-        (BACCARAT, "百家乐"),
-        (GUESSPK, "股票PK")
-    )
     user_id = models.IntegerField(verbose_name="用户ID", default=0)
-    rule = models.IntegerField(verbose_name="玩法", choices=STATUS_RULE, max_length=1, default=AWAIT)
-    status = models.IntegerField(verbose_name="状态", choices=TYPE_CHOICE, max_length=1, default=QUIZ)
+    quiz = models.IntegerField(verbose_name="球赛", choices=TYPE_CHOICE, default=AWAIT)
+    guess = models.IntegerField(verbose_name="股票", choices=TYPE_CHOICE, default=AWAIT)
+    guess_pk = models.IntegerField(verbose_name="股票PK", choices=TYPE_CHOICE, default=AWAIT)
+    six = models.IntegerField(verbose_name="六合彩", choices=TYPE_CHOICE, default=AWAIT)
+    dragon_tiger = models.IntegerField(verbose_name="龙虎斗", choices=TYPE_CHOICE, default=AWAIT)
+    baccarat = models.IntegerField(verbose_name="百家乐", choices=TYPE_CHOICE, default=AWAIT)
 
     object = RecordMarkManager()
 

@@ -11,7 +11,7 @@ import datetime
 import time
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero, to_decimal
 from utils.cache import get_cache, set_cache
-from users.models import UserCoin, CoinDetail, User
+from users.models import UserCoin, CoinDetail, User, RecordMark
 from spider.management.commands.stock_index import market_rest_cn_list
 from promotion.models import PromotionRecord
 from chat.models import Club
@@ -610,6 +610,11 @@ class StockPkBet(ListCreateAPIView):
         coin_detail.rest = user_coin.balance
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
+
+        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
+        if record_mark_number == 0:
+            RecordMark.object.insert_record_mark(user.id, 6)
+        RecordMark.object.update_record_mark(user.id, 6)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

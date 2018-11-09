@@ -8,7 +8,7 @@ from ...models import Stock, Record, Play, BetLimit, Options, Periods, Index, In
 from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
-from users.models import UserCoin, CoinDetail, Coin
+from users.models import UserCoin, CoinDetail, Coin, RecordMark
 from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
@@ -558,6 +558,11 @@ class BetView(ListCreateAPIView):
         coin_detail.rest = usercoin.balance
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
+
+        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
+        if record_mark_number == 0:
+            RecordMark.object.insert_record_mark(user.id, 3)
+        RecordMark.object.update_record_mark(user.id, 3)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
