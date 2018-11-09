@@ -97,7 +97,7 @@ class ClubRuleView(ListAPIView):
         results = super().list(request, *args, **kwargs)
         user_id = self.request.user.id
         items = results.data.get('results')
-        is_number = RecordMark.objects.filter(user_id=user_id).count()
+        is_number = RecordMark.objects.filter(user_id=int(user_id)).count()
         if is_number == 0:
             record_mark_info = RecordMark.objects.insert_record_mark(user_id)
         else:

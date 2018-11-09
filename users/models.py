@@ -1441,8 +1441,6 @@ class RecordMarkManager(BaseManager):
                 record_mark.dragon_tiger = 1
             elif int(rule) == 6:
                 record_mark.baccarat = 1
-            else:
-                pass
             record_mark.save()
         else:
             record_mark = self.get(user_id=user_id)
