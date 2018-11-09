@@ -171,3 +171,80 @@ class BannerView(ListAPIView):
                 }
             )
         return self.response({"code": 0, "data": data})
+
+
+class MarkClubView(ListAPIView):
+    """
+    玩法记录下俱乐部
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user_id = str(self.request.user.id)
+        rule_id = self.request.GET.get("rule_id")
+        data = []
+
+        if int(rule_id) == 1:       # 1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from quiz_record r"
+            sql += " inner join chat_club cc on r.roomquiz_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        elif int(rule_id) == 2:
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from marksix_sixrecord r"
+            sql += " inner join chat_club cc on r.club_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        elif int(rule_id) == 3:
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from guess_record r"
+            sql += " inner join chat_club cc on r.club_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        elif int(rule_id) == 4:
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord r"
+            sql += " inner join chat_club cc on r.club_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        elif int(rule_id) == 5:
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from banker_bankerbigheadrecord r"
+            sql += " inner join chat_club cc on r.club_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        else:
+            sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+            sql = "select " + sql_list + " from guess_recordstockpk r"
+            sql += " inner join chat_club cc on r.club_id=cc.id"
+            sql += " inner join users_coin c on cc.coin_id=c.id"
+            sql += " where r.user_id = '" + str(user_id) + "'"
+            sql += " group by cc.id, c.icon"
+            sql += " order by number desc"
+        list = self.get_list_by_sql(sql)
+        for i in list:
+            data.append({
+                "club_id": i[0],
+                "coin_icon": i[1]
+            })
+        return self.response({"code": 0, "data": data})

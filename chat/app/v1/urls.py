@@ -9,4 +9,6 @@ urlpatterns = [
     path('club/rule/', views.ClubRuleView.as_view(), name="chat-club-rule"),
     #  俱乐部轮播图
     path('club/banner/', views.BannerView.as_view(), name="chat-club-banner"),
+    #  玩法记录下俱乐部
+    path('mark/club/', views.MarkClubView.as_view(), name="record-mark-club"),
 ]

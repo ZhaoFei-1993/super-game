@@ -469,10 +469,7 @@ class BetsViews(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
-        if record_mark_number == 0:
-            RecordMark.objects.insert_record_mark(user.id, 2)
-        RecordMark.objects.update_record_mark(user.id, 2)
+        RecordMark.objects.update_record_mark(user.id, 2, 1)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
@@ -491,15 +488,25 @@ class BetsListViews(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         user_id = user.id
-        club_id = self.request.GET.get('club_id')
-        # user_id = 2476
         type = self.kwargs['type']
         if type == '0':  # 全部记录
-            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id)
+            if "club_id" not in self.request.GET:
+                res = SixRecord.objects.filter(user_id=user_id)
+            else:
+                club_id = self.request.GET.get('club_id')
+                res = SixRecord.objects.filter(user_id=user_id, club_id=club_id)
         elif type == '1':  # 未开奖
-            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=0)
+            if "club_id" not in self.request.GET:
+                res = SixRecord.objects.filter(user_id=user_id, status=0)
+            else:
+                club_id = self.request.GET.get('club_id')
+                res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=0)
         elif type == '2':  # 已开奖
-            res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=1)
+            if "club_id" not in self.request.GET:
+                res = SixRecord.objects.filter(user_id=user_id, status=1)
+            else:
+                club_id = self.request.GET.get('club_id')
+                res = SixRecord.objects.filter(user_id=user_id, club_id=club_id, status=1)
         else:
             res = []
         return res
@@ -508,6 +515,11 @@ class BetsListViews(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
         # 获取下注记录，以期数分类，按时间顺序排列
+        if "user_id" not in request.GET:
+            user_id = self.request.user.id
+        else:
+            user_id = self.request.GET.get("user_id")
+        RecordMark.objects.update_record_mark(user_id, 2, 0)
         issue_tag = ''
         for item in res:
             issue = item['issue']

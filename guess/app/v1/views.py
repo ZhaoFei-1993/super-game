@@ -559,10 +559,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
 
-        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
-        if record_mark_number == 0:
-            RecordMark.objects.insert_record_mark(user.id, 3)
-        RecordMark.objects.update_record_mark(user.id, 3)
+        RecordMark.objects.update_record_mark(user.id, 3, 1)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
@@ -588,26 +585,46 @@ class RecordsListView(ListCreateAPIView):
     serializer_class = RecordSerialize
 
     def get_queryset(self):
-        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
-                record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+                if "club_id" not in self.request.GET:
+                    record = Record.objects.filter(user_id=user_id).order_by('-created_at')
+                else:
+                    club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                    record = Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Record.objects.filter(
-                        status=0,
-                        user_id=user_id,
-                        club_id=club_id).order_by('-created_at')
+                    if "club_id" not in self.request.GET:
+                        return Record.objects.filter(
+                            status=0,
+                            user_id=user_id).order_by('-created_at')
+                    else:
+                        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                        return Record.objects.filter(
+                            status=0,
+                            user_id=user_id,
+                            club_id=club_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(status=1,
-                                                 user_id=user_id,
-                                                 club_id=club_id).order_by('-created_at')
+                    if "club_id" not in self.request.GET:
+                        return Record.objects.filter(status=1,
+                                                     user_id=user_id).order_by('-created_at')
+                    else:
+                        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                        return Record.objects.filter(status=1,
+                                                     user_id=user_id,
+                                                     club_id=club_id).order_by('-created_at')
         else:
-            user_id = self.request.GET.get('user_id')
-            return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
+            if "club_id" not in self.request.GET:
+                user_id = self.request.GET.get('user_id')
+                return Record.objects.filter(user_id=user_id).order_by('-created_at')
+            else:
+                club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                user_id = self.request.GET.get('user_id')
+                return Record.objects.filter(user_id=user_id, club_id=club_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         # 完成数据库查询构造
@@ -723,6 +740,11 @@ class RecordsListView(ListCreateAPIView):
                 pecific_dates = ""
             else:
                 tmp = pecific_date
+            if "user_id" not in request.GET:
+                user_id = self.request.user.id
+            else:
+                user_id = self.request.GET.get("user_id")
+            RecordMark.objects.update_record_mark(user_id, 3, 0)
             data.append({
                 "id": fav.get('id'),
                 "stock_id": stock_id,
