@@ -317,3 +317,4 @@ class ClubBanner(models.Model):
     class Meta:
         ordering = ['order']
         verbose_name = verbose_name_plural = "轮播图表"
+

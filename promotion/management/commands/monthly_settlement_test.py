@@ -14,8 +14,6 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         list = PromotionRecord.objects.all()
         for i in list:
-            print("source============================", i.source)
-            print("record_id========================", i.record_id)
             s = [19942132, 19942133, 19942129]
             if int(i.record_id) in s:
                 i.delete()
