@@ -1426,7 +1426,7 @@ class RecordMarkManager(BaseManager):
         :return:
         """
         record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
-        if record_mark_number == 0:
+        if int(record_mark_number) == 0:
             record_mark = RecordMark()
             record_mark.user_id = user_id
             if int(rule) == 1:
@@ -1454,7 +1454,7 @@ class RecordMarkManager(BaseManager):
         :return:
         """
         record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
-        if record_mark_number == 0:
+        if int(record_mark_number) == 0:
             self.insert_record_mark(user_id, rule)
         else:
             record_mark = self.get(user_id=int(user_id))
