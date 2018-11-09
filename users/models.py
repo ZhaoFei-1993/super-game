@@ -1438,7 +1438,7 @@ class RecordMarkManager(BaseManager):
                 user_list = [user_id]
             else:
                 user_list.append(user_id)
-            set_cache(user_list)
+            set_cache(record_mark_user, user_list)
 
     def update_record_mark(self, user_id, rule):
         """

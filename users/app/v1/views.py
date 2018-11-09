@@ -263,7 +263,7 @@ class UserRegister(object):
         daily.created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         daily.save()
 
-        RecordMark.objects.insert_record_mark(user.id)
+        RecordMark.object.insert_record_mark(user.id)
         Address.objects.initial(user.id)  # 用户生成usercoin 加地址
 
         # 活动: 货币赠送
@@ -546,6 +546,8 @@ class InfoView(ListAPIView):
         coin = Coin.objects.get_one(pk=clubinfo.coin_id)
         coin_name = coin.name
         coin_id = coin.id
+
+        RecordMark.object.insert_record_mark(user.id)
 
         # GSG币信息
         gsg = Coin.objects.get_gsg_coin()
