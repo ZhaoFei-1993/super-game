@@ -206,3 +206,7 @@ IS_ENABLE_USER_EOS_CODE = True
 
 # proxies地址
 PROXIES_URL = 'http://webapi.http.zhimacangku.com/getip?num=1&type=2&pro=&city=0&yys=0&port=1&pack=32366&ts=1&ys=0&cs=0&lb=1&sb=0&pb=4&mr=1&regions='
+
+# EOS Spark接口api key
+EOS_SPARK_API_KEY = 'bef6e5560124344a332968078d87124e'
+EOS_SPARK_WT_API_KEY = 'f195fe1e6b6f3a20ba77718ada215620'

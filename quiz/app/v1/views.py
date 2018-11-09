@@ -837,8 +837,18 @@ class BetView(ListCreateAPIView):
         record.option = option_odds
         record.bet = coins
         record.odds = option_odds.odds
-        if int(option_odds.option.rule.type) == Rule.AISA_RESULTS:
+        if int(option_odds.option.rule.type) == Rule.AISA_RESULTS:  # 亚盘盘口
             record.handicap = option_odds.option.rule.handicap
+        elif int(option_odds.option.rule.type) == Rule.POLITENESS_RESULT:  # 篮球让球盘口
+            home_let_score = option_odds.option.rule.home_let_score
+            guest_let_score = option_odds.option.rule.guest_let_score
+            if home_let_score != 0:
+                handicap = '-' + str(home_let_score)
+            else:
+                handicap = '+' + str(guest_let_score)
+            record.handicap = handicap
+        elif int(option_odds.option.rule.type) == Rule.SIZE_POINTS:  # 篮球大小球盘口
+            record.handicap = str(option_odds.option.rule.estimate_score)
         record.save()
         earn_coins = coins * option_odds.odds
         earn_coins = normalize_fraction(earn_coins, coin_accuracy)

@@ -8,11 +8,10 @@ import json
 from bs4 import BeautifulSoup
 from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
 from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
-from wc_auth.models import Admin
 from .get_time import get_time
 from django.db import transaction
 import datetime
-
+from .basketball_match import save_rule_option
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
 headers = {
@@ -34,59 +33,62 @@ def get_data(url):
 
 # 更改篮球比赛赔率放方法
 def update_odds(result, quiz, rule, change_time, play_flag):
-    # play_flag: {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
-    mark = False
-    for dt in result:
-        option = Option.objects.get(rule=rule, flag=dt[0])
-        if play_flag == 0 or play_flag == 3:
-            if float(option.odds) != float(dt[-1]):
-                mark = True
-                break
-        elif play_flag == 1:
-            let_score = dt[-2]
-            if '-' in let_score:
-                home_let_score = let_score.replace('-', '')
-                if float(option.odds) != float(dt[-1]) or float(home_let_score) != float(rule.home_let_score):
-                    mark = True
-                    break
-            else:
-                guest_let_score = let_score.replace('+', '')
-                if float(option.odds) != float(dt[-1]) or float(guest_let_score) != float(rule.guest_let_score):
-                    mark = True
-                    break
-        elif play_flag == 2:
-            if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
-                mark = True
-                break
-
-    if mark is True:
+    # rule_type_name: {4: 胜负, 5: 让分胜负, 6: 大小分, 7: 胜分差}
+    if rule is None:
+        save_rule_option(play_flag, quiz, result)
+        print('新储存 玩法：' + Rule.TYPE_CHOICE[play_flag][1])
+    else:
+        mark = False
         for dt in result:
-            # 对应选项赔率相应变化
             option = Option.objects.get(rule=rule, flag=dt[0])
-            if play_flag == 1:
+            if play_flag == 4 or play_flag == 7:
+                if float(option.odds) != float(dt[-1]):
+                    mark = True
+                    break
+            elif play_flag == 5:
                 let_score = dt[-2]
                 if '-' in let_score:
-                    rule.home_let_score = let_score.replace('-', '')
-                    rule.guest_let_score = 0
+                    home_let_score = let_score.replace('-', '')
+                    if float(option.odds) != float(dt[-1]) or float(home_let_score) != float(rule.home_let_score):
+                        mark = True
+                        break
                 else:
-                    rule.guest_let_score = let_score.replace('+', '')
-                    rule.home_let_score = 0
-                rule.save()
-            elif play_flag == 2:
-                option.option = dt[1].replace('+', '')
+                    guest_let_score = let_score.replace('+', '')
+                    if float(option.odds) != float(dt[-1]) or float(guest_let_score) != float(rule.guest_let_score):
+                        mark = True
+                        break
+            elif play_flag == 6:
+                if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
+                    mark = True
+                    break
 
-            option.odds = dt[-1]
-            option.save()
+        if mark is True:
+            for dt in result:
+                # 对应选项赔率相应变化
+                option = Option.objects.get(rule=rule, flag=dt[0])
+                if play_flag == 5:
+                    let_score = dt[-2]
+                    if '-' in let_score:
+                        rule.home_let_score = let_score.replace('-', '')
+                        rule.guest_let_score = 0
+                    else:
+                        rule.guest_let_score = let_score.replace('+', '')
+                        rule.home_let_score = 0
+                    rule.save()
+                elif play_flag == 6:
+                    option.option = dt[1].replace('+', '')
 
-            clubs = Club.objects.all()
-            for club in clubs:
-                option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
-                option_odds.odds = dt[-1]
-                option_odds.save()
-        print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
-        print('=================================================')
-    else:
-        print('无变化')
+                option.odds = dt[-1]
+                option.save()
+
+                clubs = Club.objects.all()
+                for club in clubs:
+                    option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
+                    option_odds.odds = dt[-1]
+                    option_odds.save()
+            print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
+        else:
+            print('无变化')
 
 
 @transaction.atomic()
@@ -117,7 +119,8 @@ def get_data_info(url):
                 odd_h_hdc = option_data_hdc['h']
                 flag_a_hdc = 'a'
                 flag_h_hdc = 'h'
-                result_hdc = [(flag_h_hdc, title_h_hdc, let_socre, odd_h_hdc), (flag_a_hdc, title_a_hdc, let_socre, odd_a_hdc)]
+                result_hdc = [(flag_h_hdc, title_h_hdc, let_socre, odd_h_hdc),
+                              (flag_a_hdc, title_a_hdc, let_socre, odd_a_hdc)]
 
             option_data_hilo = data[1].get('hilo')
             result_hilo = []
@@ -129,7 +132,8 @@ def get_data_info(url):
                 odd_l_holi = option_data_hilo['l']
                 flag_h_holi = 'h'
                 flag_l_holi = 'l'
-                result_hilo = [(flag_h_holi, title_h_hilo, total_socre, odd_h_holi), (flag_l_holi, title_l_hilo, total_socre, odd_l_holi)]
+                result_hilo = [(flag_h_holi, title_h_hilo, total_socre, odd_h_holi),
+                               (flag_l_holi, title_l_hilo, total_socre, odd_l_holi)]
 
             option_data_wnm = data[1].get('wnm')
             result_wnm = []
@@ -183,7 +187,8 @@ def get_data_info(url):
 
             if Quiz.objects.filter(match_flag=match_id).exists() is True:
                 quiz = Quiz.objects.get(match_flag=match_id)
-                print('=======================>', quiz.match_flag, 'now is ', datetime.datetime.now())
+                host_vs_guest = quiz.host_team + 'vs' + quiz.guest_team
+                print('=======================>', host_vs_guest, quiz.match_flag, 'now is ', datetime.datetime.now())
 
                 rule_all = Rule.objects.filter(quiz=quiz).all()
                 rule_had = rule_all.filter(type=4).first()
@@ -193,10 +198,10 @@ def get_data_info(url):
 
                 change_time = get_time()
 
-                # {0: 胜负, 1: 让分胜负, 2: 大小分, 3: 胜分差}
-                result_odds_dic = {0: result_mnl, 1: result_hdc, 2: result_hilo, 3: result_wnm}
-                rule_odds_dic = {0: rule_had, 1: rule_hhad, 2: rule_ttg, 3: rule_crs}
-                for i in range(0, 4):
+                # play_flag: {4: 胜负, 5: 让分胜负, 6: 大小分, 7: 胜分差}
+                result_odds_dic = {4: result_mnl, 5: result_hdc, 6: result_hilo, 7: result_wnm}
+                rule_odds_dic = {4: rule_had, 5: rule_hhad, 6: rule_ttg, 7: rule_crs}
+                for i in range(4, 8):
                     update_odds(result_odds_dic[i], quiz, rule_odds_dic[i], change_time, i)
     else:
         print('未请求到任何数据')
