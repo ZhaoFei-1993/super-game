@@ -171,3 +171,18 @@ class BannerView(ListAPIView):
                 }
             )
         return self.response({"code": 0, "data": data})
+
+
+class MarkClubView(ListAPIView):
+    """
+    玩法记录下俱乐部
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        data = []
+        return self.response({"code": 0, "data": data})

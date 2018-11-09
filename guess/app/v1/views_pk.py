@@ -350,8 +350,6 @@ class StockPkRecordsList(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
-        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
-
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
         else:
@@ -359,25 +357,37 @@ class StockPkRecordsList(ListAPIView):
 
         is_end = int(self.request.GET.get('is_end'))
         if is_end == RecordStockPk.AWAIT:
-            qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id, status=str(RecordStockPk.AWAIT))
+            if "club_id" not in self.request.GET:
+                qs = RecordStockPk.objects.filter(user_id=user_id, status=str(RecordStockPk.AWAIT))
+            else:
+                club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id, status=str(RecordStockPk.AWAIT))
         elif is_end == RecordStockPk.OPEN:
-            qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id, status=str(RecordStockPk.OPEN))
+            if "club_id" not in self.request.GET:
+                qs = RecordStockPk.objects.filter(user_id=user_id, status=str(RecordStockPk.OPEN))
+            else:
+                club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id, status=str(RecordStockPk.OPEN))
         else:
-            qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id)
+            if "club_id" not in self.request.GET:
+                qs = RecordStockPk.objects.filter(user_id=user_id)
+            else:
+                club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+                qs = RecordStockPk.objects.filter(user_id=user_id, club_id=club_id)
         return qs
 
     def list(self, request, *args, **kwargs):
-        club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
-
-        cache_club_value = get_club_info()
-        coin_accuracy = cache_club_value[club_id]['coin_accuracy']
-        coin_icon = cache_club_value[club_id]['coin_icon']
-        coin_name = cache_club_value[club_id]['coin_name']
-
         records_obj_dic = {}
         options_id_list = []
         issues_id_list = []
         for record in self.get_queryset():
+            club_id = int(record.club.id)  # 俱乐部表ID
+
+            cache_club_value = get_club_info()
+            coin_accuracy = cache_club_value[club_id]['coin_accuracy']
+            coin_icon = cache_club_value[club_id]['coin_icon']
+            coin_name = cache_club_value[club_id]['coin_name']
+
             if record.option_id not in options_id_list:
                 options_id_list.append(record.option_id)
             if record.issue_id not in issues_id_list:
@@ -385,7 +395,8 @@ class StockPkRecordsList(ListAPIView):
             records_obj_dic.update({
                 record.id: {
                     'issues_id': record.issue_id, 'options_id': record.option_id, 'bets': record.bets,
-                    'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status
+                    'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status,
+                    'coin_accuracy': coin_accuracy,'coin_icon': coin_icon,'coin_name': coin_name
                 }
             })
 
@@ -434,7 +445,7 @@ class StockPkRecordsList(ListAPIView):
 
             # earn_coin, is_right
             is_right = 0
-            earn_coin = normalize_fraction(item_value['earn_coin'], int(coin_accuracy))
+            earn_coin = normalize_fraction(item_value['earn_coin'], int(item_value['coin_accuracy']))
             if int(item_value['status']) == RecordStockPk.AWAIT:
                 record_type = 0
                 earn_coin_result = '待开奖'
@@ -470,6 +481,12 @@ class StockPkRecordsList(ListAPIView):
             right_stock_name = stock_pk_obj_dic[stock_pk_id]['right_stock_name']
             title = left_stock_name + ' PK ' + right_stock_name
 
+            if "user_id" not in request.GET:
+                user_id = self.request.user.id
+            else:
+                user_id = self.request.GET.get("user_id")
+            RecordMark.objects.update_record_mark(user_id, 6, 0)
+
             data.append({
                 'id': item_key,
                 'year': year,
@@ -480,11 +497,11 @@ class StockPkRecordsList(ListAPIView):
                 'my_option': my_option,
                 'is_right': is_right,
                 'earn_coin': earn_coin_result,
-                'coin_name': coin_name,
-                'coin_icon': coin_icon,
+                'coin_name': item_value['coin_name'],
+                'coin_icon': item_value['coin_icon'],
                 'issue': issue,
                 'result_answer': result_answer,
-                'bet': normalize_fraction(item_value['bets'], coin_accuracy),
+                'bet': normalize_fraction(item_value['bets'], int(item_value['coin_accuracy'])),
             })
         return self.response({'code': 0, 'data': data})
 
@@ -611,10 +628,7 @@ class StockPkBet(ListCreateAPIView):
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
 
-        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
-        if record_mark_number == 0:
-            RecordMark.objects.insert_record_mark(user.id, 6)
-        RecordMark.objects.update_record_mark(user.id, 6)
+        RecordMark.objects.update_record_mark(user.id, 6, 1)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

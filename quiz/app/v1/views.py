@@ -249,25 +249,41 @@ class RecordsListView(ListCreateAPIView):
     def get_queryset(self):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
-            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
             if 'is_end' not in self.request.GET:
-                record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+                if 'roomquiz_id' not in self.request.GET:
+                    record = Record.objects.filter(user_id=user_id).order_by('-created_at')
+                else:
+                    roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+                    record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    return Record.objects.filter(
-                        Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
-                        user_id=user_id,
-                        roomquiz_id=roomquiz_id).order_by('-created_at')
+                    if 'roomquiz_id' not in self.request.GET:
+                        return Record.objects.filter(
+                            Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
+                            user_id=user_id).order_by('-created_at')
+                    else:
+                        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+                        return Record.objects.filter(
+                            Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
+                            user_id=user_id,
+                            roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
-                    return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
-                                                 user_id=user_id,
-                                                 roomquiz_id=roomquiz_id).order_by('-created_at')
+                    if 'roomquiz_id' not in self.request.GET:
+                        return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
+                                                     user_id=user_id).order_by('-created_at')
+                    else:
+                        roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+                        return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
+                                                     user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-            return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+            if 'roomquiz_id' not in self.request.GET:
+                return Record.objects.filter(user_id=user_id).order_by('-created_at')
+            else:
+                roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -395,6 +411,12 @@ class RecordsListView(ListCreateAPIView):
             else:
                 option_str = option.option
             my_option = tips + ':' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
+
+            if "user_id" not in request.GET:
+                user_id = self.request.user.id
+            else:
+                user_id = self.request.GET.get("user_id")
+            RecordMark.objects.update_record_mark(user_id, 1, 0)
 
             data.append({
                 "id": fav.get('id'),
@@ -843,10 +865,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        record_mark_number = RecordMark.objects.filter(user_id=int(user.id)).count()
-        if record_mark_number == 0:
-            RecordMark.objects.insert_record_mark(user.id, 1)
-        RecordMark.objects.update_record_mark(user.id, 1)
+        RecordMark.objects.update_record_mark(user.id, 1, 1)
 
         # 更新俱乐部对应竞猜投注的数据
         Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)
