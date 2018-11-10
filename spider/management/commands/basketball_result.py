@@ -515,8 +515,11 @@ class Command(BaseCommand):
                 category__parent_id=1))
         if quizs.exists():
             for quiz in quizs:
-                flag = get_data_info(base_url, quiz.match_flag)
-                sleep(10)
+                try:
+                    flag = get_data_info(base_url, quiz.match_flag)
+                    sleep(10)
+                except Exception as e:
+                    print('Error is :', e)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                 # if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                 #     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))
