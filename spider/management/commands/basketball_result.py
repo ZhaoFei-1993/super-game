@@ -244,7 +244,8 @@ def get_data_info(url, match_flag):
                             is_right = True
                     # 让分胜负
                     if record.rule_id == rule_hdc.id:
-                        if to_decimal(host_team_score) + to_decimal(record.handicap) > to_decimal(guest_team_score):
+                        handicap = record.handicap.replace('+', '')
+                        if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
                             if record.option.option.flag == 'h':
                                 is_right = True
                         else:
