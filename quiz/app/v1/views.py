@@ -250,7 +250,7 @@ class RecordsListView(ListCreateAPIView):
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
-                if 'roomquiz_id' not in self.request.GET:
+                if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                     record = Record.objects.filter(user_id=user_id).order_by('-created_at')
                 else:
                     roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
@@ -259,7 +259,7 @@ class RecordsListView(ListCreateAPIView):
             else:
                 is_end = self.request.GET.get('is_end')
                 if int(is_end) == 1:
-                    if 'roomquiz_id' not in self.request.GET:
+                    if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                         return Record.objects.filter(
                             Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
                             user_id=user_id).order_by('-created_at')
@@ -270,7 +270,7 @@ class RecordsListView(ListCreateAPIView):
                             user_id=user_id,
                             roomquiz_id=roomquiz_id).order_by('-created_at')
                 else:
-                    if 'roomquiz_id' not in self.request.GET:
+                    if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                         return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
                                                      user_id=user_id).order_by('-created_at')
                     else:
@@ -279,7 +279,7 @@ class RecordsListView(ListCreateAPIView):
                                                      user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
-            if 'roomquiz_id' not in self.request.GET:
+            if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                 return Record.objects.filter(user_id=user_id).order_by('-created_at')
             else:
                 roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']

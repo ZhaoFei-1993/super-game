@@ -509,7 +509,8 @@ class Record(ListAPIView):
         sql = "select " +sql_list + " from baccarat_baccaratrecord dtr"
         sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
         sql += " left join baccarat_number_tab nt on dtr.number_tab_id = nt.id"
-        sql += " left join chat_club c on dtr.club_id = c.id"
+        sql += " left join chat_club cc on dtr.club_id = cc.id"
+        sql += " left join users_coin c on cc.coin_id = c.id"
         sql += " where dtr.number_tab_id in" + number_tab_id
         if "club_id" in self.request.GET:
             club_id = str(self.request.GET.get('club_id'))  # 俱乐部表ID

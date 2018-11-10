@@ -69,9 +69,7 @@ class ClublistView(ListAPIView):
                     "coin_key": coin.id,
                     "icon": item['icon'],
                     "coin_icon": coin.icon,
-                    "is_recommend": item['is_recommend'],
-                    "name": user.nickname,
-                    "avatar": user.avatar
+                    "is_recommend": item['is_recommend']
                 }
             )
 
@@ -79,7 +77,9 @@ class ClublistView(ListAPIView):
             "code": 0,
             "data": data,
             "is_sign": is_sign,
-            "is_message": is_message
+            "is_message": is_message,
+            "name": user.nickname,
+            "avatar": user.avatar
         }
         return self.response(content)
 
