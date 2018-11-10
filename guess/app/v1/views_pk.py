@@ -18,6 +18,7 @@ from chat.models import Club
 from decimal import Decimal
 from django.db.models import Sum
 from users.models import Coin
+from rest_framework.pagination import PageNumberPagination
 
 
 class StockPkDetail(ListAPIView):
@@ -349,6 +350,7 @@ class StockPkRecordsList(ListAPIView):
     """
     permission_classes = (LoginRequired,)
     serializer_class = StockPkRecordsListSerialize
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         if 'user_id' not in self.request.GET:

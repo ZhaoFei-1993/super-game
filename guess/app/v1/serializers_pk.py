@@ -25,3 +25,4 @@ class StockPkRecordsListSerialize(serializers.ModelSerializer):
     """
     class Meta:
         model = RecordStockPk
+        fields = ('id',)
