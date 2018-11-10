@@ -463,7 +463,8 @@ class QuizDetailView(ListAPIView):
             "begin_at": item['start'],
             "year": item['year'],
             "time": item['time'],
-            "status": item['status']
+            "status": item['status'],
+            "gaming_time": item['gaming_time']
         }})
 
 

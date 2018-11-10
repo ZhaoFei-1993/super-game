@@ -144,7 +144,7 @@ def get_data_info(url, match_flag):
 
     result_score = soup.select('span[class="k_bt"]')[0].string
     print('result_score   ======== ', result_score)
-    if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0 is not True:
+    if (len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0) is not True:
         print(match_flag + ',' + '未有开奖信息')
         raise CommandError('未有开奖信息')
     else:
@@ -244,7 +244,8 @@ def get_data_info(url, match_flag):
                             is_right = True
                     # 让分胜负
                     if record.rule_id == rule_hdc.id:
-                        if to_decimal(host_team_score) + to_decimal(record.handicap) > to_decimal(guest_team_score):
+                        handicap = record.handicap.replace('+', '')
+                        if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
                             if record.option.option.flag == 'h':
                                 is_right = True
                         else:
@@ -515,8 +516,11 @@ class Command(BaseCommand):
                 category__parent_id=1))
         if quizs.exists():
             for quiz in quizs:
-                flag = get_data_info(base_url, quiz.match_flag)
-                sleep(10)
+                try:
+                    flag = get_data_info(base_url, quiz.match_flag)
+                    sleep(10)
+                except Exception as e:
+                    print('Error is :', e)
                 # print(Quiz.objects.get(match_flag=quiz.match_flag).status)
                 # if int(Quiz.objects.get(match_flag=quiz.match_flag).status) == Quiz.BONUS_DISTRIBUTION and flag is True:
                 #     cash_back(Quiz.objects.get(match_flag=quiz.match_flag))

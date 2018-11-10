@@ -213,24 +213,24 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     """
     竞猜详情
     """
-    year = serializers.SerializerMethodField()  # 截止时间  年月日
-    time = serializers.SerializerMethodField()  # 截止时间  当天时间
+    year = serializers.SerializerMethodField()  # 截止时间, 年月日
+    time = serializers.SerializerMethodField()  # 截止时间, 当天时间
     # quiz_push = serializers.SerializerMethodField()  # 投注推送
     start = serializers.SerializerMethodField()  # 比赛开始时间
     status = serializers.SerializerMethodField()  # 比赛状态
-    guest_team = serializers.SerializerMethodField()  # 比赛状态
-    host_team = serializers.SerializerMethodField()  # 比赛状态
+    guest_team = serializers.SerializerMethodField()  # 客队名称
+    host_team = serializers.SerializerMethodField()  # 主队名称
 
     class Meta:
         model = Quiz
         fields = ("id", "host_team", "guest_team", "start", "year", "time", "status", "host_team_score",
-                  "guest_team_score")
+                  "guest_team_score", "gaming_time")
 
     def get_host_team(self, obj):
         host_team = obj.host_team
         if self.context['request'].GET.get('language') == 'en':
             host_team = obj.host_team_en
-            if host_team == '' or host_team == None:
+            if host_team == '' or host_team is None:
                 host_team = obj.host_team
         return host_team
 
@@ -238,7 +238,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
         guest_team = obj.guest_team
         if self.context['request'].GET.get('language') == 'en':
             guest_team = obj.guest_team_en
-            if guest_team == '' or guest_team == None:
+            if guest_team == '' or guest_team is None:
                 guest_team = obj.guest_team
         return guest_team
 
