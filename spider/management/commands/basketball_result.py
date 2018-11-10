@@ -144,7 +144,7 @@ def get_data_info(url, match_flag):
 
     result_score = soup.select('span[class="k_bt"]')[0].string
     print('result_score   ======== ', result_score)
-    if len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0 is not True:
+    if (len(re.findall('.*\((.*?:.*?)\)', result_score)) > 0) is not True:
         print(match_flag + ',' + '未有开奖信息')
         raise CommandError('未有开奖信息')
     else:
