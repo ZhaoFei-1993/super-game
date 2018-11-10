@@ -348,6 +348,7 @@ class StockPkRecordsList(ListAPIView):
     股指pk竞猜记录
     """
     permission_classes = (LoginRequired,)
+    serializer_class = StockPkResultListSerialize
 
     def get_queryset(self):
         if 'user_id' not in self.request.GET:
