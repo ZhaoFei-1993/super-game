@@ -18,7 +18,6 @@ from chat.models import Club
 from decimal import Decimal
 from django.db.models import Sum
 from users.models import Coin
-from rest_framework.pagination import PageNumberPagination
 
 
 class StockPkDetail(ListAPIView):
@@ -349,7 +348,6 @@ class StockPkRecordsList(ListAPIView):
     股指pk竞猜记录
     """
     permission_classes = (LoginRequired,)
-    serializer_class = StockPkRecordsListSerialize
 
     def get_queryset(self):
         if 'user_id' not in self.request.GET:
@@ -435,13 +433,7 @@ class StockPkRecordsList(ListAPIView):
 
         data = []
         last_date = ''
-
-        results = super().list(request, *args, **kwargs)
-        items = results.data.get('results')
-        for item in items:
-            item_key = item['id']
-            item_value = records_obj_dic[item_key]
-
+        for item_key, item_value in records_obj_dic.items():
             # 时间
             created_at = item_value['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             year = created_at.split(' ')[0].split('-')[0]
