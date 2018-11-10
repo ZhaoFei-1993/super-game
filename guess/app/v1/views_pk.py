@@ -380,10 +380,12 @@ class StockPkRecordsList(ListAPIView):
         records_obj_dic = {}
         options_id_list = []
         issues_id_list = []
+
+        cache_club_value = get_club_info()
+
         for record in self.get_queryset():
             club_id = int(record.club.id)  # 俱乐部表ID
 
-            cache_club_value = get_club_info()
             coin_accuracy = cache_club_value[club_id]['coin_accuracy']
             coin_icon = cache_club_value[club_id]['coin_icon']
             coin_name = cache_club_value[club_id]['coin_name']
@@ -396,7 +398,7 @@ class StockPkRecordsList(ListAPIView):
                 record.id: {
                     'issues_id': record.issue_id, 'options_id': record.option_id, 'bets': record.bets,
                     'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status,
-                    'coin_accuracy': coin_accuracy,'coin_icon': coin_icon,'coin_name': coin_name
+                    'coin_accuracy': coin_accuracy, 'coin_icon': coin_icon, 'coin_name': coin_name
                 }
             })
 
