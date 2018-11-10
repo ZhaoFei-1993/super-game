@@ -85,7 +85,6 @@ def get_live_data():
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
                                     quiz.status = quiz.ENDED
-                                    quiz.gaming_time = -1
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
@@ -113,6 +112,7 @@ def get_live_data():
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 4)
                                 # 1,2,3,4:第一二三四节，50中场休息
+                                quiz.gaming_time = int(data_list[28])
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
                                 quiz.save()
@@ -142,7 +142,6 @@ def get_live_data():
                                 quiz = Quiz.objects.filter(match_flag=match_id).first()
                                 if data_list[28] == '-1':
                                     quiz.status = quiz.ENDED
-                                    quiz.gaming_time = -1
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
@@ -170,6 +169,7 @@ def get_live_data():
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 4)
                                 # 1,2,3,4:第一二三四节，50中场休息
+                                quiz.gaming_time = int(data_list[28])
                                 quiz.host_team_score = host_team_score
                                 quiz.guest_team_score = guest_team_score
                                 quiz.save()

@@ -6,7 +6,8 @@ from utils.cache import set_cache, get_cache
 from .stock_result_new import GuessPKRecording
 import datetime
 from django.db.models import Q
-from promotion.models import PromotionRecord
+from promotion.models import PromotionRecord, UserPresentation
+from users.models import RecordMark
 
 
 class Command(BaseCommand):
@@ -50,6 +51,10 @@ class Command(BaseCommand):
                     # 推广代理事宜
                     if len(real_records) > 0:
                         PromotionRecord.objects.insert_all(real_records, 5, 1)
+                        UserPresentation.objects.club_flow_statistics(real_records, 5)
+
+                        # # 公告记录标记
+                        # RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 6)
                 issue.is_open = True
                 issue.save()
         else:
