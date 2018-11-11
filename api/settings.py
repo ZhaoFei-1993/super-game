@@ -326,3 +326,7 @@ IS_ENABLE_USER_EOS_CODE = local_settings.IS_ENABLE_USER_EOS_CODE
 
 # proxies地址
 PROXIES_URL = local_settings.PROXIES_URL
+
+# EOS Spark接口api key
+EOS_SPARK_API_KEY = local_settings.EOS_SPARK_API_KEY
+EOS_SPARK_WT_API_KEY = local_settings.EOS_SPARK_WT_API_KEY
