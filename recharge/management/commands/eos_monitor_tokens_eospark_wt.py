@@ -18,7 +18,7 @@ class Command(BaseCommand):
     help = "EOS-WT充值监控--eospark.com平台"
     cache_txid_key = 'key_eos_txid_eospark_wt'
     cache_invalid_memo_key = 'key_eos_invalid_memo_eospark_wt'
-    eos_monitor_url = 'https://api.eospark.com/api?module=contract&action=get_contract_trx_info&apikey=' + settings.EOS_SPARK_WT_API_KEY + '&account=' + settings.EOS_RECHARGE_ADDRESS + '&action_name=transfer&page=1&size=100&symbol=WT&code=wankeyun1111'
+    eos_monitor_url = 'https://api.eospark.com/api?module=account&action=get_account_related_trx_info&apikey=' + settings.EOS_SPARK_WT_API_KEY + '&account=' + settings.EOS_RECHARGE_ADDRESS + '&action_name=transfer&page=1&size=100&symbol=WT&code=wankeyun1111'
 
     def handle(self, *args, **options):
         user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
@@ -28,7 +28,7 @@ class Command(BaseCommand):
         if 'errno' not in transfers or transfers['errno'] > 0:
             raise CommandError(transfers['errmsg'])
 
-        if transfers['data']['num_of_trxs'] == 0:
+        if len(transfers['data']['trace_list']) == 0:
             raise CommandError('当前无EOS-WT充值记录')
 
         eos_cache_txid = get_cache(self.cache_txid_key, 'default')
@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
         transactions = []
         memos = []
-        for transfer in transfers['data']['trxs']:
+        for transfer in transfers['data']['trace_list']:
             memo = transfer['memo']
             tx_hash = transfer['trx_id']
             ts = time.strptime(transfer['timestamp'].replace('T', ' '), '%Y-%m-%d %H:%M:%S.%f')
@@ -119,8 +119,17 @@ class Command(BaseCommand):
                 ur.save()
 
                 # user coin增加对应值
-                user_coin = UserCoin.objects.get(coin_id=Coin.EOS, user_id=user_id)
-                user_coin.balance += Decimal(amount)
+                try:
+                    user_coin = UserCoin.objects.get(coin_id=Coin.WT, user_id=user_id)
+                    user_coin.balance += Decimal(amount)
+                except UserCoin.DoesNotExist:
+                    user_coin = UserCoin()
+                    user_coin.user_id = user_id
+                    user_coin.coin_id = Coin.WT
+                    user_coin.is_bet = False
+                    user_coin.is_opt = False
+                    user_coin.address = 'EOS-WT'
+                    user_coin.balance = Decimal(amount)
                 user_coin.save()
 
                 coin_detail = CoinDetail()
