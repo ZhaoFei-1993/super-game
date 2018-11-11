@@ -18,11 +18,3 @@ class StockPkResultListSerialize(serializers.ModelSerializer):
     def get_open_time(obj):
         return obj.open.strftime('%Y-%m-%d %H:%M')
 
-
-class StockPkRecordsListSerialize(serializers.ModelSerializer):
-    """
-    股指pk竞猜记录
-    """
-    class Meta:
-        model = RecordStockPk
-        fields = ('id',)
