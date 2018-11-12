@@ -559,7 +559,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = CoinDetail.BETS
         coin_detail.save()
 
-        RecordMark.objects.update_record_mark(user.id, 3, 1)
+        RecordMark.objects.update_record_mark(user.id, 3, 0)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

@@ -2630,7 +2630,7 @@ class InvitationMergeView(ListAPIView):
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=4,
+            box_size=3,
             border=1,
         )
         qr.add_data(qr_data)
