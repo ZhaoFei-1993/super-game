@@ -28,7 +28,7 @@ class Command(BaseCommand):
         if 'errno' not in transfers or transfers['errno'] > 0:
             raise CommandError(transfers['errmsg'])
 
-        if transfers['data']['num_of_trxs'] == 0:
+        if len(transfers['data']['trace_list']) == 0:
             raise CommandError('当前无EOS充值记录')
 
         eos_cache_txid = get_cache(self.cache_txid_key, 'default')
