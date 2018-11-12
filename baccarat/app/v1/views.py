@@ -376,7 +376,7 @@ class DragontigerBet(ListCreateAPIView):
         coin_detail.sources = 16
         coin_detail.save()
 
-        RecordMark.objects.update_record_mark(user.id, 5, 1)
+        RecordMark.objects.update_record_mark(user.id, 5, 0)
 
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass

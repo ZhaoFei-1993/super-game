@@ -876,7 +876,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        RecordMark.objects.update_record_mark(user.id, 1, 1)
+        RecordMark.objects.update_record_mark(user.id, 1, 0)
 
         # 更新俱乐部对应竞猜投注的数据
         Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)

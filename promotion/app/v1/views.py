@@ -463,9 +463,9 @@ class ClubDetailView(ListAPIView):
                     if int(i[6]) == 3:
                         rule_name = "六合彩"
                     if int(i[6]) == 4:
-                        rule_name = "股票"
+                        rule_name = "股指"
                     if int(i[6]) == 5:
-                        rule_name = "股票PK"
+                        rule_name = "股指PK"
                     if int(i[6]) == 6:
                         rule_name = "百家乐"
                     if int(i[6]) == 7:
@@ -787,9 +787,9 @@ class ClubDividendView(ListAPIView):
                 if int(i[3]) == 3:
                     rule_name = "六合彩"
                 if int(i[3]) == 4:
-                    rule_name = "股票"
+                    rule_name = "股指"
                 if int(i[3]) == 5:
-                    rule_name = "股票PK"
+                    rule_name = "股指PK"
                 if int(i[3]) == 6:
                     rule_name = "百家乐"
                 if int(i[3]) == 7:
