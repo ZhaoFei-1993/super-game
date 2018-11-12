@@ -10,6 +10,7 @@ from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
 from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
 from wc_auth.models import Admin
 from .get_time import get_time
+import datetime
 
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
@@ -165,6 +166,30 @@ def save_rule_option(rule_type, quiz, result):
         rule.min_odd = min(odds_pool_wnm)
         rule.save()
         odds_pool_wnm.clear()
+
+    # 记录初始赔率
+    change_time = get_time()
+    for rule in Rule.objects.filter(quiz=quiz):
+        for option in Option.objects.filter(rule=rule):
+            if OptionOdds.objects.filter(option_id=option.id).exists() is not True:
+                quiz_odds_log = QuizOddsLog()
+                quiz_odds_log.quiz = quiz
+                quiz_odds_log.rule = rule
+                quiz_odds_log.option = option
+                quiz_odds_log.option_title = option.option
+                quiz_odds_log.odds = option.odds
+                quiz_odds_log.change_at = change_time
+                quiz_odds_log.save()
+
+                # 生成俱乐部选项赔率表
+                clubs = Club.objects.all()
+                for club in clubs:
+                    option_odds = OptionOdds()
+                    option_odds.club = club
+                    option_odds.quiz = quiz
+                    option_odds.option = option
+                    option_odds.odds = option.odds
+                    option_odds.save()
 
 
 def get_data_info(url):
@@ -415,30 +440,6 @@ def get_data_info(url):
                         # 胜分差
                         elif i == 7 and len(result_wnm) > 0:
                             save_rule_option(i, quiz, result_wnm)
-
-                    # 记录初始赔率
-                    change_time = get_time()
-                    quiz = Quiz.objects.get(match_flag=match_id)
-                    for rule in Rule.objects.filter(quiz=quiz):
-                        for option in Option.objects.filter(rule=rule):
-                            quiz_odds_log = QuizOddsLog()
-                            quiz_odds_log.quiz = quiz
-                            quiz_odds_log.rule = rule
-                            quiz_odds_log.option = option
-                            quiz_odds_log.option_title = option.option
-                            quiz_odds_log.odds = option.odds
-                            quiz_odds_log.change_at = change_time
-                            quiz_odds_log.save()
-
-                            # 生成俱乐部选项赔率表
-                            clubs = Club.objects.all()
-                            for club in clubs:
-                                option_odds = OptionOdds()
-                                option_odds.club = club
-                                option_odds.quiz = quiz
-                                option_odds.option = option
-                                option_odds.odds = option.odds
-                                option_odds.save()
                 else:
                     print('已经存在')
                 # ------------------------------------------------------------------------------------------------------
