@@ -415,6 +415,8 @@ class ClubDetailView(ListAPIView):
         user_id_list = []
         for i in invitee_id_list:
             user_id_list.append(str(i[0]))
+        print("user_id===========================", user.id)
+        print("user_id_list===================", user_id_list)
 
         user_list = {}
         data_list = []
