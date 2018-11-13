@@ -109,11 +109,11 @@ class ClubRuleView(ListAPIView):
             elif int(item['id']) == 3:
                 is_mark = record_mark_info.guess
             elif int(item['id']) == 4:
-                is_mark = record_mark_info.guess_pk
-            elif int(item['id']) == 5:
                 is_mark = record_mark_info.dragon_tiger
-            else:
+            elif int(item['id']) == 5:
                 is_mark = record_mark_info.baccarat
+            else:
+                is_mark = record_mark_info.guess_pk
             if int(item['id']) == 5:
                 data.append(
                     {

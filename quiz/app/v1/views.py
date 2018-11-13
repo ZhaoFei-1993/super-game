@@ -381,7 +381,7 @@ class RecordsListView(ListCreateAPIView):
             earn_coin_str = '待开奖'
             if language == 'en':
                 earn_coin_str = 'Wait results'
-            if status in [Quiz.PUBLISHING_ANSWER, Quiz.BONUS_DISTRIBUTION]:
+            if status in [Quiz.PUBLISHING_ANSWER, Quiz.BONUS_DISTRIBUTION, Quiz.DELAY]:
                 if earn_coin <= 0:
                     earn_coin_str = "猜错"
                     if language == 'en':
