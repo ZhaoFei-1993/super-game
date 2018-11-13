@@ -6,7 +6,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from quiz.models import Quiz, Rule, Option, Record, CashBackLog, OptionOdds
-from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords
+from users.models import UserCoin, CoinDetail, Coin, UserMessage, User, CoinPrice, CoinGive, CoinGiveRecords, RecordMark
 from chat.models import Club
 from promotion.models import PromotionRecord, UserPresentation
 from utils.functions import normalize_fraction, make_insert_sql, make_batch_update_sql, to_decimal
@@ -556,6 +556,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         PromotionRecord.objects.insert_all(real_records, 1, 1)
         UserPresentation.objects.club_flow_statistics(real_records, 1)
 
+        # 公告记录标记
+        RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 1)
+
     print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
 
     end_time = time()
@@ -688,6 +691,9 @@ def handle_delay_game(delay_quiz):
                                          is_distribution=True)
     if len(real_records) > 0:
         PromotionRecord.objects.insert_all(real_records, 1, 2)
+
+        # 公告记录标记
+        RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 1)
 
     end_time = time()
     cost_time = str(round(end_time - start_time)) + '秒'

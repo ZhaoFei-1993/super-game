@@ -53,8 +53,8 @@ class Command(BaseCommand):
                         PromotionRecord.objects.insert_all(real_records, 5, 1)
                         UserPresentation.objects.club_flow_statistics(real_records, 5)
 
-                        # # 公告记录标记
-                        # RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 6)
+                        # 公告记录标记
+                        RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 6)
                 issue.is_open = True
                 issue.save()
         else:

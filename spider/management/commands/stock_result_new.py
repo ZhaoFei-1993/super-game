@@ -2,7 +2,7 @@
 from guess.models import Options, Periods, Index_day, Issues, Stock, StockPk, Index, RecordStockPk, OptionStockPk
 from guess.models import Record as Guess_Record
 from datetime import timedelta
-from users.models import CoinDetail
+from users.models import CoinDetail, RecordMark
 from utils.functions import *
 from time import time
 from django.db.models import Q
@@ -342,6 +342,9 @@ class GuessRecording(object):
         if len(real_records) > 0:
             PromotionRecord.objects.insert_all(real_records, 4, 1)
             UserPresentation.objects.club_flow_statistics(real_records, 4)
+
+            # 公告记录标记
+            RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 3)
 
         end_time = time()
         cost_time = str(round(end_time - start_time)) + '秒'
