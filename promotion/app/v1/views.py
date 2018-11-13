@@ -1148,7 +1148,6 @@ class UserInfoView(ListAPIView):
         sql = "select " + sql_list + " from promotion_presentationmonth pm"
         sql += " where pm.club_id in (" + ','.join(coin_id_list) + ")"
         sql += " and pm.user_id = '" + str(user.id) + "'"
-        sql += " and p.status = 1"
         sql += " and pm.created_at >= '" + str(start_time) + "'"
         sql += " and pm.created_at <= '" + str(end_time) + "'"
         amount_list = get_sql(sql)
