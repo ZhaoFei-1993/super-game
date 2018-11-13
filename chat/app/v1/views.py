@@ -24,13 +24,9 @@ class ClublistView(ListAPIView):
             name = self.request.GET.get('name')
 
             if self.request.GET.get('language') == 'en':
-                chat_list = Club.objects.filter(
-                    Q(room_title_en__icontains=name) | Q(room_number__istartswith=name)).order_by('user',
-                                                                                                  '-is_recommend')
+                chat_list = Club.objects.filter(room_title_en__icontains=name).order_by('user', '-is_recommend')
             else:
-                chat_list = Club.objects.filter(
-                    Q(room_title__icontains=name) | Q(room_number__istartswith=name)).order_by('user',
-                                                                                               '-is_recommend')
+                chat_list = Club.objects.filter(room_title__icontains=name).order_by('user', '-is_recommend')
         else:
             chat_list = Club.objects.filter(is_dissolve=0).order_by('user', '-is_recommend')
         return chat_list
