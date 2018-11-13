@@ -51,3 +51,17 @@ class Sms(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name = verbose_name_plural = '短信发送记录表'
+
+
+class Announcement(models.Model):
+    carousel_map = models.CharField(verbose_name="轮播图", max_length=255, default='')
+    thumbnail = models.CharField(verbose_name="公告列表", max_length=255, default='')
+    details = models.CharField(verbose_name="详情", max_length=255, default='')
+    is_map = models.IntegerField(verbose_name="是否轮播图", default=0)
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
+    order = models.IntegerField(verbose_name="轮播图排序", default=0)
+    created_at = models.DateTimeField(verbose_name="发送时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = verbose_name_plural = '公告表'

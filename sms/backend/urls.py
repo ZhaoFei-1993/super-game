@@ -7,5 +7,7 @@ urlpatterns = [
     path('code/', views.SmsView.as_view(), name="sms-backend-code"),
     # 校验手机短信验证码是否有效。
     path('code/verify/', views.SmsVerifyView.as_view(), name="sms-backend-code-verify"),
+    # 公告列表。
+    path('announcement/list/', views.AnnouncementVerifyView.as_view(), name="backend-announcement-list"),
 ]
 

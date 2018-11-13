@@ -1423,7 +1423,7 @@ class RecordMarkManager(BaseManager):
         """
         录入记录标记表(单)
         :param user_id:用户ID
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
+        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK， 公告）
         :return:
         """
         record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
@@ -1432,16 +1432,24 @@ class RecordMarkManager(BaseManager):
             record_mark.user_id = user_id
             if int(rule) == 1:
                 record_mark.quiz = 0
+                record_mark.message = 1
             elif int(rule) == 2:
                 record_mark.six = 0
+                record_mark.message = 1
             elif int(rule) == 3:
                 record_mark.guess = 0
+                record_mark.message = 1
             elif int(rule) == 4:
                 record_mark.guess_pk = 0
+                record_mark.message = 1
             elif int(rule) == 5:
                 record_mark.dragon_tiger = 0
+                record_mark.message = 1
             elif int(rule) == 6:
                 record_mark.baccarat = 0
+                record_mark.message = 1
+            else:
+                record_mark.message = 1
             record_mark.save()
         else:
             record_mark = self.get(user_id=user_id)
@@ -1451,7 +1459,7 @@ class RecordMarkManager(BaseManager):
         """
         更新记录标记表
         :param user_id: 用户ID
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
+        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.公告）
         :param status: 状态 0已读，1未读
         :return:
         """
@@ -1461,16 +1469,24 @@ class RecordMarkManager(BaseManager):
             record_mark = self.get(user_id=int(user_id))
             if int(rule) == 1:
                 record_mark.quiz = int(status)
+                record_mark.message = 1
             elif int(rule) == 2:
                 record_mark.six = int(status)
+                record_mark.message = 1
             elif int(rule) == 3:
                 record_mark.guess = int(status)
+                record_mark.message = 1
             elif int(rule) == 4:
                 record_mark.guess_pk = int(status)
+                record_mark.message = 1
             elif int(rule) == 5:
                 record_mark.dragon_tiger = int(status)
-            else:
+                record_mark.message = 1
+            elif int(rule) == 6:
                 record_mark.baccarat = int(status)
+                record_mark.message = 1
+            else:
+                record_mark.message = int(status)
             record_mark.save()
         else:
             record_mark = self.get(user_id=int(user_id))
@@ -1484,17 +1500,20 @@ class RecordMarkManager(BaseManager):
                 record_mark.guess_pk = int(status)
             elif int(rule) == 5:
                 record_mark.dragon_tiger = int(status)
-            else:
+            elif int(rule) == 6:
                 record_mark.baccarat = int(status)
+            else:
+                record_mark.message == int(status)
             record_mark.save()
 
     def insert_all_record_mark(self, user_list, rule):
         """
         批量更新记录标记表
         :param user_list: 用户ID 例子：[1,2,3,4]
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK）
+        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.公告）
         :return:
         """
+        sql = ""
         if len(user_list) > 0:
             list = [str(i) for i in user_list]
             key = ", 1), ("
@@ -1520,10 +1539,12 @@ class RecordMarkManager(BaseManager):
             sql = "INSERT INTO users_recordmark (" + record_list + ") VALUES (" + key.join(
                 list) + ", 1)"
             sql += " ON DUPLICATE KEY UPDATE " + keys
-            print(sql)
-            with connection.cursor() as cursor:
-                if sql is not False:
-                    cursor.execute(sql)
+        else:
+            if int(rule) == 7:
+                sql = "UPDATE users_recordmark SET message = 1"
+        with connection.cursor() as cursor:
+            if sql is not False:
+                cursor.execute(sql)
 
 
 @reversion.register()
@@ -1544,6 +1565,7 @@ class RecordMark(models.Model):
     six = models.IntegerField(verbose_name="六合彩", choices=TYPE_CHOICE, default=AWAIT)
     dragon_tiger = models.IntegerField(verbose_name="龙虎斗", choices=TYPE_CHOICE, default=AWAIT)
     baccarat = models.IntegerField(verbose_name="百家乐", choices=TYPE_CHOICE, default=AWAIT)
+    message = models.IntegerField(verbose_name="公告", choices=TYPE_CHOICE, default=AWAIT)
 
     objects = RecordMarkManager()
 

@@ -13,6 +13,9 @@ from users.models import User
 from rq import Queue
 from redis import Redis
 from sms.consumers import send_sms
+from base.function import LoginRequired
+from sms.models import Announcement
+from users.models import RecordMark
 
 
 class SmsView(ListCreateAPIView):
@@ -168,3 +171,65 @@ class SmsVerifyView(ListCreateAPIView):
         message.save()
 
         return self.response({'code': error_code.API_0_SUCCESS})
+
+
+class CarouselMapVerifyView(ListCreateAPIView):
+    """
+    轮播图
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        list = Announcement.objects.filter(is_map=1, is_deleted=False).order_by("order")
+        data = []
+        for i in list:
+            data.append({
+                "id": i.id,
+                "carousel_map": i.carousel_map,
+                "order": i.order
+            })
+        user = request.user
+        user_mark = RecordMark.objects.get(user_id=user.id)
+        return self.response({'code': 0, 'data': data, 'message': user_mark.message})
+
+
+class ListVerifyView(ListCreateAPIView):
+    """
+    公告列表
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        list = Announcement.objects.filter(is_deleted=False).order_by("-created_at")
+        user = request.user
+        user_mark = RecordMark.objects.get(user_id=user.id)
+        user_mark.message = 0
+        user_mark.save()
+        data = []
+        for i in list:
+            data.append({
+                "id": i.id,
+                "thumbnail": i.thumbnail
+            })
+        return self.response({'code': 0, 'data': data})
+
+
+class InfoVerifyView(ListCreateAPIView):
+    """
+    公告详情
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        pk = self.request.GET.get("pk")
+        info = Announcement.objects.get(pk=pk)
+        return self.response({'code': 0, 'details': info.details})
