@@ -1394,7 +1394,6 @@ class AssetView(ListAPIView):
             'data': data,
             'base_img': base_img
         }
-
         return self.response(response)
 
 
