@@ -384,7 +384,7 @@ class StockPkRecordsList(ListAPIView):
         cache_club_value = get_club_info()
 
         for record in self.paginate_queryset(self.get_queryset()):
-            club_id = int(record.club.id)  # 俱乐部表ID
+            club_id = int(record.club_id)  # 俱乐部表ID
 
             coin_accuracy = cache_club_value[club_id]['coin_accuracy']
             coin_icon = cache_club_value[club_id]['coin_icon']
