@@ -210,6 +210,7 @@ class Coin(models.Model):
     BCH = 10              # btc
     SOC = 11               # eth
     DB = 12                # eth
+    WT = 13                # EOS-WT
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
