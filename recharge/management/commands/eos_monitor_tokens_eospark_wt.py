@@ -110,7 +110,7 @@ class Command(BaseCommand):
 
                 ur = UserRecharge()
                 ur.address = memo
-                ur.coin_id = Coin.EOS
+                ur.coin_id = Coin.WT
                 ur.txid = txid
                 ur.user_id = user_id
                 ur.amount = Decimal(amount)
