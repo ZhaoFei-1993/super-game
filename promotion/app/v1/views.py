@@ -1113,7 +1113,6 @@ class UserInfoView(ListAPIView):
         sql_list = "p.club_id, sum(p.bets), date_format( p.created_at, '%Y%m' ) AS created_ats, " \
                    "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin"
 
-        status = str(1)
         sql = "select " + sql_list + " from promotion_promotionrecord p"
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.user_id = '" + str(invitee_id) + "'"
@@ -1123,7 +1122,7 @@ class UserInfoView(ListAPIView):
         sql += " and p.created_at <= '" + str(end_time) + "'"
         sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
         sql += " group by p.club_id, created_ats"
-
+        print("sql=================", sql)
         this_month_list = get_sql(sql)  # 本月
         for s in this_month_list:
             if s[0] not in data_list:
