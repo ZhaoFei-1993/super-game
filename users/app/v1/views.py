@@ -1719,7 +1719,8 @@ class RechargeListView(ListAPIView):
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
                     'status': x['status'],
-                    'trade_at': x['trade_at']
+                    'trade_at': x['trade_at'],
+                    'txid': x['txid'],
                 }
             )
         return self.response({'code': 0, 'data': data})
