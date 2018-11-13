@@ -1117,12 +1117,10 @@ class UserInfoView(ListAPIView):
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.user_id = '" + str(invitee_id) + "'"
         sql += " and p.created_at >= '" + str(start) + "'"
-        sql += " and p.status = 1"
-        sql += " and p.earn_coin != 0"
+        sql += " and p.status = '1'"
         sql += " and p.created_at <= '" + str(end_time) + "'"
         sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
         sql += " group by p.club_id, created_ats"
-        print("sql===============", sql)
 
         this_month_list = get_sql(sql)  # 本月
         for s in this_month_list:
