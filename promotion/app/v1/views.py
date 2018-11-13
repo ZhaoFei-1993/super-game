@@ -1117,6 +1117,7 @@ class UserInfoView(ListAPIView):
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.user_id = '" + str(invitee_id) + "'"
         sql += " and p.created_at >= '" + str(start) + "'"
+        sql += " and p.status = 2"
         sql += " and p.created_at <= '" + str(end_time) + "'"
         sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
         sql += " group by p.club_id, created_ats"
