@@ -740,11 +740,6 @@ class RecordsListView(ListCreateAPIView):
                 pecific_dates = ""
             else:
                 tmp = pecific_date
-            if "user_id" not in request.GET:
-                user_id = self.request.user.id
-            else:
-                user_id = self.request.GET.get("user_id")
-            RecordMark.objects.update_record_mark(user_id, 3, 0)
             data.append({
                 "id": fav.get('id'),
                 "stock_id": stock_id,
@@ -764,6 +759,13 @@ class RecordsListView(ListCreateAPIView):
                 'coin_name': fav.get('coin_name'),  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
+
+        if "user_id" not in request.GET:
+            user_id = self.request.user.id
+        else:
+            user_id = self.request.GET.get("user_id")
+        RecordMark.objects.update_record_mark(user_id, 3, 0)
+
         return self.response({'code': 0, 'data': data})
 
 

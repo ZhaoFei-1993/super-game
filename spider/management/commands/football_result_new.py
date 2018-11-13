@@ -839,7 +839,7 @@ class Command(BaseCommand):
 
                 # 删除缓存中直播的数据
                 football_live_dt = get_cache(key_football_live_dt)
-                if delay_quiz.id in football_live_dt.keys():
+                if delay_quiz.id in football_live_dt:
                     del football_live_dt[delay_quiz.id]
                     set_cache(key_football_live_dt, football_live_dt)
 
@@ -868,7 +868,7 @@ class Command(BaseCommand):
                             pass
                 # 删除缓存中直播的数据
                 football_live_dt = get_cache(key_football_live_dt)
-                if quiz.id in football_live_dt.keys():
+                if quiz.id in football_live_dt:
                     del football_live_dt[quiz.id]
                     set_cache(key_football_live_dt, football_live_dt)
         else:
