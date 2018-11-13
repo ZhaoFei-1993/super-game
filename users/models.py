@@ -1481,13 +1481,13 @@ class RecordMarkManager(BaseManager):
                 record_mark.guess = int(status)
                 record_mark.message = 1
             elif int(rule) == 4:
-                record_mark.guess_pk = int(status)
-                record_mark.message = 1
-            elif int(rule) == 5:
                 record_mark.dragon_tiger = int(status)
                 record_mark.message = 1
-            elif int(rule) == 6:
+            elif int(rule) == 5:
                 record_mark.baccarat = int(status)
+                record_mark.message = 1
+            elif int(rule) == 6:
+                record_mark.guess_pk = int(status)
                 record_mark.message = 1
             else:
                 record_mark.message = int(status)
