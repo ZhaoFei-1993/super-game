@@ -53,7 +53,7 @@ class UserManager(BaseUserManager):
                 return code.API_20405_CAPTCHA_ERROR
 
             # 验证完后删除数据库记录，避免重复使用
-            CodeModel.objects.filter(key=key,status=1).delete()
+            CodeModel.objects.filter(key=key, status=1).delete()
         return 0
 
 
@@ -207,10 +207,10 @@ class Coin(models.Model):
     GSG = 6
     EOS = 8
     USDT = 9
-    BCH = 10              # btc
-    SOC = 11               # eth
-    DB = 12                # eth
-    WT = 13                # EOS-WT
+    BCH = 10  # btc
+    SOC = 11  # eth
+    DB = 12  # eth
+    WT = 13  # EOS-WT
 
     icon = models.CharField(verbose_name="货币图标", max_length=255)
     name = models.CharField(verbose_name="货币名称", max_length=255)
@@ -426,8 +426,8 @@ class UserCoinLock(models.Model):
     coin_lock = models.ForeignKey(CoinLock, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="锁定金额", max_digits=32, decimal_places=18,
                                  default=0.000000000000000000)
-    total_amount= models.DecimalField(verbose_name="锁定总金额(不变)", max_digits=32, decimal_places=18,
-                                 default=0.000000000000000000)
+    total_amount = models.DecimalField(verbose_name="锁定总金额(不变)", max_digits=32, decimal_places=18,
+                                       default=0.000000000000000000)
     end_time = models.DateTimeField(verbose_name="锁定结束时间")
     is_free = models.BooleanField(verbose_name="是否已解锁", default=False)
     is_divided = models.BooleanField(verbose_name="是否已分红", default=False)
@@ -480,7 +480,7 @@ class DailyLogManager(models.Manager):
         :return:
         """
         key = self.IS_SIGN_KEY % (user_id, datetime.now().strftime('%Y-%m-%d'))
-        cache_expired = 24 * 3600   # 缓存自动过期时间（秒）
+        cache_expired = 24 * 3600  # 缓存自动过期时间（秒）
 
         cache_sign = get_cache(key)
         if cache_sign is not None:
@@ -568,6 +568,7 @@ class UserMessageManager(models.Manager):
     """
     用户消息数据操作
     """
+
     def add_system_user_message(self, user):
         """
         发送公共消息
@@ -863,6 +864,7 @@ class UserInvitationManager(models.Manager):
     """
     用户邀请
     """
+
     def activity(self, user):
         """
         邀请赠送USDT活动
@@ -1102,6 +1104,7 @@ class CoinGiveManager(models.Manager):
     """
     货币赠送数据操作
     """
+
     def coin_activity(self, user):
         """
         USDT赠送活动
@@ -1404,7 +1407,8 @@ class MobileCoin(models.Model):
     转账记录表
     """
     sponsor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='sponsor_user', verbose_name="委托人id")
-    recipient = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='recipient_user', verbose_name="接受人id")
+    recipient = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='recipient_user',
+                                  verbose_name="接受人id")
     coin = models.ForeignKey(Coin, on_delete=models.DO_NOTHING, related_name='mobile_coin', verbose_name="货币id")
     remarks = models.CharField(verbose_name="备注", max_length=255, default='')
     balance = models.DecimalField(verbose_name='操作金额', max_digits=32, decimal_places=18, default=0.000000000000000000)
@@ -1544,6 +1548,7 @@ class RecordMarkManager(BaseManager):
                 sql = "UPDATE users_recordmark SET message = 1"
         with connection.cursor() as cursor:
             if sql is not False:
+                print(sql)
                 cursor.execute(sql)
 
 
