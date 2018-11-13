@@ -15,6 +15,10 @@ from rq import Queue
 from redis import Redis
 from sms.consumers import send_sms
 from base.function import LoginRequired
+from users.models import RecordMark
+from sms.models import Announcement
+from django.db.models import Max
+from utils.functions import reversion_Decorator, value_judge
 
 
 class SmsView(ListCreateAPIView):
@@ -23,7 +27,6 @@ class SmsView(ListCreateAPIView):
     """
     permission_classes = (LoginRequired,)
     serializer_class = serializers.SmsSerializer
-
 
     def post(self, request, *args, **kwargs):
         """
@@ -111,4 +114,68 @@ class SmsVerifyView(ListCreateAPIView):
         message.save()
 
         return self.response({'code': error_code.API_0_SUCCESS})
+
+
+class AnnouncementVerifyView(ListCreateAPIView):
+    """
+    公告管理
+    """
+    def get(self, request, *args, **kwargs):
+        list = Announcement.objects.filter(is_deleted=False).order_by('order', 'id')
+        data = []
+        for i in list:
+            data.append({
+                "id": i.id,
+                "carousel_map": i.carousel_map,
+                "thumbnail": i.thumbnail,
+                "details": i.details,
+                "is_map": i.is_map,
+                "order": i.order
+            })
+        return self.response({'code': 0, 'data': data})
+
+    def post(self, request, *args, **kwargs):
+        announcement = Announcement()
+        value = value_judge(request, "thumbnail", "details")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        announcement.thumbnail = request.data.get('thumbnail')    # 公告列表
+        announcement.details = request.data.get('details')    # 详情
+        if 'carousel_map' in request.data:
+            announcement.carousel_map = request.data.get('carousel_map')  #轮播图
+            announcement.is_map = 1     #是否轮播图
+            order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
+            announcement.order = order + 1    #轮播图排序
+        announcement.save()
+        user_list = []
+        RecordMark.objects.insert_all_record_mark(user_list, 7)
+        return self.response({'code': 0})
+
+    @reversion_Decorator
+    def delete(self, request, *args, **kwargs):
+        announcement_id = self.request.parser_context['kwargs']['pk']
+        announcement = Announcement.objects.get(pk=announcement_id)
+        announcement.is_delete = True
+        announcement.save()
+        return self.response({'code': 0})
+
+    @reversion_Decorator
+    def update(self, request, *args, **kwargs):
+        value = value_judge(request, "pk")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        pk = int(request.data['pk'])
+        announcement = Announcement.objects.get(pk=pk, is_delete=0)
+        if 'thumbnail' in request.data:
+            announcement.thumbnail = request.data['thumbnail']
+        if 'details' in request.data:
+            announcement.details = request.data['details']
+        if 'carousel_map' in request.data:
+            announcement.carousel_map = request.data['carousel_map']
+            announcement.order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
+            announcement.is_map = int(request.data['is_map'])
+        if 'order' in request.data:
+            announcement.order = int(request.data['order'])
+        announcement.save()
+        return self.response({'code': 0})
 
