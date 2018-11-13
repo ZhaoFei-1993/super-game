@@ -483,12 +483,6 @@ class StockPkRecordsList(ListAPIView):
             right_stock_name = stock_pk_obj_dic[stock_pk_id]['right_stock_name']
             title = left_stock_name + ' PK ' + right_stock_name
 
-            if "user_id" not in request.GET:
-                user_id = self.request.user.id
-            else:
-                user_id = self.request.GET.get("user_id")
-            RecordMark.objects.update_record_mark(user_id, 6, 0)
-
             data.append({
                 'id': item_key,
                 'year': year,
@@ -505,6 +499,13 @@ class StockPkRecordsList(ListAPIView):
                 'result_answer': result_answer,
                 'bet': normalize_fraction(item_value['bets'], int(item_value['coin_accuracy'])),
             })
+
+        if "user_id" not in request.GET:
+            user_id = self.request.user.id
+        else:
+            user_id = self.request.GET.get("user_id")
+        RecordMark.objects.update_record_mark(user_id, 6, 0)
+
         return self.response({'code': 0, 'data': data})
 
 

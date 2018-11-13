@@ -515,11 +515,6 @@ class BetsListViews(ListAPIView):
         results = super().list(request, *args, **kwargs)
         res = results.data.get('results')
         # 获取下注记录，以期数分类，按时间顺序排列
-        if "user_id" not in request.GET:
-            user_id = self.request.user.id
-        else:
-            user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 2, 0)
         issue_tag = ''
         for item in res:
             issue = item['issue']
@@ -527,6 +522,13 @@ class BetsListViews(ListAPIView):
                 issue_tag = issue
             else:
                 item['issue'] = ''
+
+        if "user_id" not in request.GET:
+            user_id = self.request.user.id
+        else:
+            user_id = self.request.GET.get("user_id")
+        RecordMark.objects.update_record_mark(user_id, 2, 0)
+
         return self.response({'code': 0, 'data': res})
 
 

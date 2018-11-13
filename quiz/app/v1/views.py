@@ -412,12 +412,6 @@ class RecordsListView(ListCreateAPIView):
                 option_str = option.option
             my_option = tips + ':' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
 
-            if "user_id" not in request.GET:
-                user_id = self.request.user.id
-            else:
-                user_id = self.request.GET.get("user_id")
-            RecordMark.objects.update_record_mark(user_id, 1, 0)
-
             data.append({
                 "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
@@ -435,6 +429,13 @@ class RecordsListView(ListCreateAPIView):
                 'coin_name': map_coin_name[club_id],
                 'bet': normalize_fraction(fav.get('bet'), map_coin_accuracy[club_id])
             })
+
+        if "user_id" not in request.GET:
+            user_id = self.request.user.id
+        else:
+            user_id = self.request.GET.get("user_id")
+        RecordMark.objects.update_record_mark(user_id, 1, 0)
+
         return self.response({'code': 0, 'data': data})
 
 
