@@ -20,7 +20,7 @@ class Command(BaseCommand):
             for option in OptionStockPk.objects.all():
                 option_obj_dic.update({
                     option.id: {
-                        'title': option.title,
+                        'title': option.title
                     }
                 })
             i = 0
@@ -50,8 +50,10 @@ class Command(BaseCommand):
                                                                 issue_id=issue.id, status=str(RecordStockPk.OPEN))
                     # 推广代理事宜
                     if len(real_records) > 0:
+                        print('start')
                         PromotionRecord.objects.insert_all(real_records, 5, 1)
                         UserPresentation.objects.club_flow_statistics(real_records, 5)
+                        print('end')
 
                         # 公告记录标记
                         RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 6)
