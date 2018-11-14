@@ -204,17 +204,17 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
         if 'thumbnail' in request.data:
             announcement.thumbnail = request.data['thumbnail']
         if 'thumbnail_en' in request.data:
-            announcement.thumbnail = request.data['thumbnail_en']
+            announcement.thumbnail_en = request.data['thumbnail_en']
         if 'details' in request.data:
             announcement.details = request.data['details']
         if 'details_en' in request.data:
-            announcement.details = request.data['details_en']
+            announcement.details_en = request.data['details_en']
         if 'is_map' in request.data:
             announcement.is_map = int(request.data['is_map'])
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data['carousel_map']
         if 'carousel_map_en' in request.data:
-            announcement.carousel_map = request.data['carousel_map_en']
+            announcement.carousel_map_en = request.data['carousel_map_en']
         announcement.save()
         return self.response({'code': 0})
 
