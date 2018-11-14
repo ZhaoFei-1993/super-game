@@ -10,6 +10,7 @@ from django.db import connection
 from utils.cache import get_cache, set_cache
 from utils.functions import sign_confirmation, amount_presentation, normalize_fraction, get_sql
 from datetime import timedelta, datetime
+from quiz.models import EveryDayInjectionValue
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -681,7 +682,7 @@ class DivendListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Dividend
-        fields = ('date','coin_name', 'divide', 'coin_icon')
+        fields = ('date', 'coin_name', 'divide', 'coin_icon')
 
     @staticmethod
     def get_date(obj):
@@ -692,3 +693,31 @@ class DivendListSerializer(serializers.ModelSerializer):
     def get_divide(obj):
         divide = normalize_fraction(obj.divide, 18)
         return divide
+
+
+class CashBackRecordSerializer(serializers.ModelSerializer):
+    """
+        投注返现记录序列化
+    """
+    year = serializers.SerializerMethodField()
+    month = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EveryDayInjectionValue
+        fields = ('cash_back_gsg', 'injection_time', 'year', 'month', 'date')
+
+    @staticmethod
+    def get_year(obj):
+        record_time = obj.injection_time - timedelta(days=1)
+        return record_time.strftime('%Y')
+
+    @staticmethod
+    def get_month(obj):
+        record_time = obj.injection_time - timedelta(days=1)
+        return record_time.strftime('%m')
+
+    @staticmethod
+    def get_date(obj):
+        record_time = obj.injection_time - timedelta(days=1)
+        return record_time.strftime('%m-%d')

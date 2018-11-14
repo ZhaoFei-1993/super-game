@@ -122,4 +122,7 @@ urlpatterns = [
     # path('asset/dividend/', views.DividendView.as_view(), name='app-v1-user-asset-dividend'),
     # 用户充值
     # path('recharge/<int:index>/', views.UserRechargeView.as_view(), name='app-v1-user-recharge'),
+
+    # 投注返现记录
+    path('cash_back/record/', views.CashBackRecord.as_view(), name="cash_back_record"),
 ]
