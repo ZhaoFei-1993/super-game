@@ -168,7 +168,7 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         announcement_id = int(self.request.GET.get("pk"))
         announcement = Announcement.objects.get(pk=announcement_id)
-        announcement.is_delete = True
+        announcement.is_deleted = True
         announcement.save()
         return self.response({'code': 0})
 
