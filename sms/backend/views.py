@@ -148,6 +148,8 @@ class AnnouncementVerifyView(ListCreateAPIView):
         announcement.details_en = request.data.get('detailsn_en')    # 详情
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data.get('carousel_map')  #轮播图
+            if 'carousel_map_en' not in request.data:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             announcement.carousel_map_en = request.data.get('carousel_map_en')  #轮播图
             announcement.is_map = 1     #是否轮播图
             order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
@@ -200,12 +202,29 @@ class AnnouncementInfoView(ListCreateAPIView):
             announcement.details = request.data['details']
         if 'details_en' in request.data:
             announcement.details = request.data['details_en']
+        if 'is_map' in request.data:
+            announcement.is_map = int(request.data['is_map'])
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data['carousel_map']
-            announcement.carousel_map_en = request.data['carousel_map_en']
-            announcement.order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
-            announcement.is_map = int(request.data['is_map'])
-        if 'order' in request.data:
-            announcement.order = int(request.data['order'])
+        if 'carousel_map_en' in request.data:
+            announcement.carousel_map = request.data['carousel_map_en']
         announcement.save()
+        return self.response({'code': 0})
+
+
+class AnnouncementOrderView(ListCreateAPIView):
+    """
+    公告排序管理
+    """
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        value = value_judge(request, "list")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        list = request.data['list']
+        for i in list:
+            announcement = Announcement.objects.get(pk=int(i['id']), is_delete=0)
+            announcement.order = int(i['order'])
+            announcement.save()
         return self.response({'code': 0})

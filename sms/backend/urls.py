@@ -11,5 +11,7 @@ urlpatterns = [
     path('announcement/list/', views.AnnouncementVerifyView.as_view(), name="backend-announcement-list"),
     # 公告管理
     path('announcement/info/', views.AnnouncementInfoView.as_view(), name="backend-announcement-info"),
+    # 公告排序
+    path('announcement/order/', views.AnnouncementOrderView.as_view(), name="backend-announcement-order"),
 ]
 

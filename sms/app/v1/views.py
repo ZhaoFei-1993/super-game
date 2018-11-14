@@ -214,7 +214,7 @@ class ListVerifyView(ListCreateAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        list = Announcement.objects.filter(is_deleted=False).order_by("-created_at")
+        list = Announcement.objects.filter(is_deleted=False).order_by("order", "-created_at")
         user = request.user
         language = request.GET.get('language')
         user_mark = RecordMark.objects.get(user_id=user.id)
