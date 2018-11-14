@@ -127,7 +127,7 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
             data.append({
                 "id": i.id,
                 "carousel_map": i.carousel_map,
-                "carousel_map_env": i.carousel_map_en,
+                "carousel_map_en": i.carousel_map_en,
                 "thumbnail": i.thumbnail,
                 "thumbnail_en": i.thumbnail_en,
                 "details": i.details,
@@ -182,7 +182,7 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
         list = Announcement.objects.get(id=pk).order_by('order', 'id')
         data = {
             "carousel_map": list.carousel_map,
-            "carousel_map_env": list.carousel_map_en,
+            "carousel_map_en": list.carousel_map_en,
             "thumbnail": list.thumbnail,
             "thumbnail_en": list.thumbnail_en,
             "details": list.details,
