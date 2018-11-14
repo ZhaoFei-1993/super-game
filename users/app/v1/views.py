@@ -1300,14 +1300,18 @@ class AssetView(ListAPIView):
                 if presentation.status == 0:
                     map_user_presentation_amount[presentation.coin_id] += presentation.amount
 
+        print("coin_ids===============", coin_ids)
         # 提现手续费
         coin_out_charges = CoinOutServiceCharge.objects.filter(coin_out_id__in=coin_ids)
+        print("coin_out_charges==================", coin_out_charges)
         coin_id_charges = {}
         coin_payment = {}
         for charge in coin_out_charges:
             print('charge = ', charge.__dict__)
+            print("charge.value==================", charge.value)
             coin_id_charges[charge.coin_out_id] = normalize_fraction(charge.value, 8)
             coin_payment[charge.coin_out_id] = map_coins[charge.coin_payment_id].name
+        print("coin_id_charges================", coin_id_charges)
 
         # 获取锁定币数：提现锁定数量+用户锁定GSG数量
         gsg_coin_lock = UserCoinLock.objects.filter(user_id=user_id, is_free=0).aggregate(Sum('amount'))
