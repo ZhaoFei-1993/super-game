@@ -145,7 +145,7 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
         announcement.thumbnail = request.data.get('thumbnail')    # 公告列表
         announcement.thumbnail_en = request.data.get('thumbnail_en')    # 公告列表
         announcement.details = request.data.get('details')    # 详情
-        announcement.details_en = request.data.get('detailsn_en')    # 详情
+        announcement.details_en = request.data.get('details_en')    # 详情
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data.get('carousel_map')  #轮播图
             if 'carousel_map_en' not in request.data:
