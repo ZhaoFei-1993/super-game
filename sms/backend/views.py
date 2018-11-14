@@ -179,7 +179,7 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
     """
     def get(self, request, *args, **kwargs):
         pk = int(self.request.GET.get("pk"))
-        list = Announcement.objects.get(id=pk).order_by('order', 'id')
+        list = Announcement.objects.get(id=pk)
         data = {
             "carousel_map": list.carousel_map,
             "carousel_map_en": list.carousel_map_en,
