@@ -152,7 +152,10 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
                 raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
             announcement.carousel_map_en = request.data.get('carousel_map_en')  #轮播图
             announcement.is_map = 1     #是否轮播图
-            order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
+            order = Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order'))
+            if order is None:
+                order = 1
+            order = int(order)
             announcement.order = order + 1    #轮播图排序
         announcement.save()
         user_list = []
