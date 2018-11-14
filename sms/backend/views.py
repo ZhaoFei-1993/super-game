@@ -198,7 +198,7 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         pk = int(request.data['pk'])
-        announcement = Announcement.objects.get(pk=pk, is_delete=0)
+        announcement = Announcement.objects.get(pk=pk, is_deleted=0)
         if 'thumbnail' in request.data:
             announcement.thumbnail = request.data['thumbnail']
         if 'thumbnail_en' in request.data:
@@ -229,7 +229,7 @@ class AnnouncementOrderView(ListAPIView, DestroyAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         list = request.data['list']
         for i in list:
-            announcement = Announcement.objects.get(pk=int(i['id']), is_delete=0)
+            announcement = Announcement.objects.get(pk=int(i['id']), is_deleted=0)
             announcement.order = int(i['order'])
             announcement.save()
         return self.response({'code': 0})
