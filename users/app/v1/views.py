@@ -3334,7 +3334,6 @@ class CashBackRecord(ListAPIView):
         results = super().list(request, *args, **kwargs)
         items = results.data.get('results')
 
-        result_data = []
         cash_back_map = {}
         # 获取币的信息
         gsg = Coin.objects.get_gsg_coin()
@@ -3343,12 +3342,17 @@ class CashBackRecord(ListAPIView):
         # 返现gsg
         data = []
         pre_month = ''
+        pre_year = ''
         for item in items:
             month = item['month']
-            if pre_month == item['month']:
+            if pre_month == item['month'] and pre_year == item['year']:
                 month = ''
             else:
                 pre_month = month
+
+            if pre_year != item['year']:
+                pre_year = item['year']
+
             is_current_year = 0
             if item['year'] == datetime.now().strftime('%Y'):
                 is_current_year = 1
