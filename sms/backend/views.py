@@ -165,8 +165,28 @@ class AnnouncementVerifyView(ListCreateAPIView):
         announcement.save()
         return self.response({'code': 0})
 
+
+class AnnouncementInfoView(ListCreateAPIView):
+    """
+    公告管理
+    """
+    def get(self, request, *args, **kwargs):
+        pk = int(self.request.GET.get("pk"))
+        list = Announcement.objects.get(id=pk).order_by('order', 'id')
+        data = {
+            "carousel_map": list.carousel_map,
+            "carousel_map_env": list.carousel_map_en,
+            "thumbnail": list.thumbnail,
+            "thumbnail_en": list.thumbnail_en,
+            "details": list.details,
+            "details_en": list.details_en,
+            "is_map": list.is_map,
+            "order": list.order
+        }
+        return self.response({'code': 0, 'data': data})
+
     @reversion_Decorator
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         value = value_judge(request, "pk")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -189,4 +209,3 @@ class AnnouncementVerifyView(ListCreateAPIView):
             announcement.order = int(request.data['order'])
         announcement.save()
         return self.response({'code': 0})
-

@@ -245,7 +245,7 @@ class InfoVerifyView(ListCreateAPIView):
         pass
 
     def list(self, request, *args, **kwargs):
-        pk = self.request.GET.get("pk")
+        pk = int(self.request.GET.get("pk"))
         info = Announcement.objects.get(pk=pk)
         language = request.GET.get('language')
         if language == 'en':
