@@ -1346,12 +1346,13 @@ class AssetView(ListAPIView):
 
             address = item["address"]
             eos_code = ''
-            if coin.id == Coin.EOS:
+            if coin.id == Coin.EOS or coin.id == Coin.WT:
                 address = settings.EOS_RECHARGE_ADDRESS
                 eos_code = user_info.eos_code
 
             balance = item["balance"]
-            if coin.id == Coin.SOC and base_img != '':
+            key = (8, 13)
+            if coin.id in key:
                 balance += 100
 
             temp_dict = {
