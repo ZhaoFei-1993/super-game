@@ -2395,6 +2395,7 @@ class PresentUserLockDetail(ListAPIView):
             )
         return JsonResponse({'counts':counts, 'data':data}, status=status.HTTP_200_OK)
 
+
 class PresentLockFreeDetail(ListAPIView):
     """
     当天到期明细

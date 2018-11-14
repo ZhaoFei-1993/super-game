@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListCreateAPIView
+from base.backend import DestroyAPIView, ListAPIView, ListCreateAPIView
 from sms.backend import serializers
 from utils.functions import message_code
 from sms.models import Sms
@@ -116,7 +116,7 @@ class SmsVerifyView(ListCreateAPIView):
         return self.response({'code': error_code.API_0_SUCCESS})
 
 
-class AnnouncementVerifyView(ListCreateAPIView):
+class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
     """
     公告管理
     """
@@ -168,7 +168,7 @@ class AnnouncementVerifyView(ListCreateAPIView):
         return self.response({'code': 0})
 
 
-class AnnouncementInfoView(ListCreateAPIView):
+class AnnouncementInfoView(ListAPIView, DestroyAPIView):
     """
     公告管理
     """
@@ -212,7 +212,7 @@ class AnnouncementInfoView(ListCreateAPIView):
         return self.response({'code': 0})
 
 
-class AnnouncementOrderView(ListCreateAPIView):
+class AnnouncementOrderView(ListAPIView, DestroyAPIView):
     """
     公告排序管理
     """
