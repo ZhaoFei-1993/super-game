@@ -184,13 +184,21 @@ class CarouselMapVerifyView(ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         list = Announcement.objects.filter(is_map=1, is_deleted=False).order_by("order")
+        language = request.GET.get('language')
         data = []
         for i in list:
-            data.append({
-                "id": i.id,
-                "carousel_map": i.carousel_map,
-                "order": i.order
-            })
+            if language == 'en':
+                data.append({
+                    "id": i.id,
+                    "carousel_map": i.carousel_map_en,
+                    "order": i.order
+                })
+            else:
+                data.append({
+                    "id": i.id,
+                    "carousel_map": i.carousel_map,
+                    "order": i.order
+                })
         user = request.user
         user_mark = RecordMark.objects.get(user_id=user.id)
         return self.response({'code': 0, 'data': data, 'message': user_mark.message})
@@ -208,15 +216,22 @@ class ListVerifyView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         list = Announcement.objects.filter(is_deleted=False).order_by("-created_at")
         user = request.user
+        language = request.GET.get('language')
         user_mark = RecordMark.objects.get(user_id=user.id)
         user_mark.message = 0
         user_mark.save()
         data = []
         for i in list:
-            data.append({
-                "id": i.id,
-                "thumbnail": i.thumbnail
-            })
+            if language == 'en':
+                data.append({
+                    "id": i.id,
+                    "thumbnail": i.thumbnail
+                })
+            else:
+                data.append({
+                    "id": i.id,
+                    "thumbnail": i.thumbnail_en
+                })
         return self.response({'code': 0, 'data': data})
 
 
@@ -232,4 +247,9 @@ class InfoVerifyView(ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         pk = self.request.GET.get("pk")
         info = Announcement.objects.get(pk=pk)
-        return self.response({'code': 0, 'details': info.details})
+        language = request.GET.get('language')
+        if language == 'en':
+            details = info.details_en
+        else:
+            details = info.details
+        return self.response({'code': 0, 'details': details})

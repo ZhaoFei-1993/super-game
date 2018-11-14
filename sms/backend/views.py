@@ -127,8 +127,11 @@ class AnnouncementVerifyView(ListCreateAPIView):
             data.append({
                 "id": i.id,
                 "carousel_map": i.carousel_map,
+                "carousel_map_env": i.carousel_map_en,
                 "thumbnail": i.thumbnail,
+                "thumbnail_en": i.thumbnail_en,
                 "details": i.details,
+                "details_en": i.details_en,
                 "is_map": i.is_map,
                 "order": i.order
             })
@@ -136,13 +139,16 @@ class AnnouncementVerifyView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         announcement = Announcement()
-        value = value_judge(request, "thumbnail", "details")
+        value = value_judge(request, "thumbnail", "details", "thumbnail_en", "details_en")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         announcement.thumbnail = request.data.get('thumbnail')    # 公告列表
+        announcement.thumbnail_en = request.data.get('thumbnail_en')    # 公告列表
         announcement.details = request.data.get('details')    # 详情
+        announcement.details_en = request.data.get('detailsn_en')    # 详情
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data.get('carousel_map')  #轮播图
+            announcement.carousel_map_en = request.data.get('carousel_map_en')  #轮播图
             announcement.is_map = 1     #是否轮播图
             order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
             announcement.order = order + 1    #轮播图排序
@@ -168,10 +174,15 @@ class AnnouncementVerifyView(ListCreateAPIView):
         announcement = Announcement.objects.get(pk=pk, is_delete=0)
         if 'thumbnail' in request.data:
             announcement.thumbnail = request.data['thumbnail']
+        if 'thumbnail_en' in request.data:
+            announcement.thumbnail = request.data['thumbnail_en']
         if 'details' in request.data:
             announcement.details = request.data['details']
+        if 'details_en' in request.data:
+            announcement.details = request.data['details_en']
         if 'carousel_map' in request.data:
             announcement.carousel_map = request.data['carousel_map']
+            announcement.carousel_map_en = request.data['carousel_map_en']
             announcement.order = int(Announcement.objects.filter(is_map=True, is_deleted=False).annotate(Max('order')))
             announcement.is_map = int(request.data['is_map'])
         if 'order' in request.data:

@@ -54,9 +54,12 @@ class Sms(models.Model):
 
 
 class Announcement(models.Model):
-    carousel_map = models.CharField(verbose_name="轮播图", max_length=255, default='')
+    carousel_map = models.CharField(verbose_name="轮播图(英文)", max_length=255, default='')
+    carousel_map_en = models.CharField(verbose_name="轮播图", max_length=255, default='')
     thumbnail = models.CharField(verbose_name="公告列表", max_length=255, default='')
+    thumbnail_en = models.CharField(verbose_name="公告列表(英文)", max_length=255, default='')
     details = models.CharField(verbose_name="详情", max_length=255, default='')
+    details_en = models.CharField(verbose_name="详情(英文)", max_length=255, default='')
     is_map = models.IntegerField(verbose_name="是否轮播图", default=0)
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     order = models.IntegerField(verbose_name="轮播图排序", default=0)
