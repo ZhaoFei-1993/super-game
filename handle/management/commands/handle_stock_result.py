@@ -45,54 +45,54 @@ class Command(BaseCommand):
 
         # ---------------------------------------------------------------------------------------
 
-        dt = {'num': '7329.06', 'status': 'down', 'auto': True}
-        period = Periods.objects.get(id=334)
-        ergodic_record(period, dt, datetime.datetime.strptime('2018-10-12 23:59:59', '%Y-%m-%d %H:%M:%S'))
-        print('放出题目')
-        open_date = period.lottery_time.strftime('%Y-%m-%d')
-        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
-                                                '%Y-%m-%d %H:%M:%S')
-        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
-                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
-                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
-            next_end += datetime.timedelta(1)
-            next_start += datetime.timedelta(1)
-        per = int(period.periods) + 1
-        newobject(str(per), period.stock_id, next_start, next_end)
-
-        # ---------------------------------------------------------------------------------------
-
-        dt = {'num': '25052.83', 'status': 'down', 'auto': True}
-        period = Periods.objects.get(id=335)
-        ergodic_record(period, dt, datetime.datetime.strptime('2018-10-12 23:59:59', '%Y-%m-%d %H:%M:%S'))
-        print('放出题目')
-        open_date = period.lottery_time.strftime('%Y-%m-%d')
-        next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
-                                                '%Y-%m-%d %H:%M:%S')
-        next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
-                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
-                next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
-            next_end += datetime.timedelta(1)
-            next_start += datetime.timedelta(1)
-        per = int(period.periods) + 1
-        newobject(str(per), period.stock_id, next_start, next_end)
-
-        # ---------------------------------------------------------------------------------------
-
-        # dt = {'num': '27243.85', 'status': 'up', 'auto': True}
-        # period = Periods.objects.get(id=236)
-        # ergodic_record(period, dt, None)
+        # dt = {'num': '7329.06', 'status': 'down', 'auto': True}
+        # period = Periods.objects.get(id=334)
+        # ergodic_record(period, dt, datetime.datetime.strptime('2018-10-12 23:59:59', '%Y-%m-%d %H:%M:%S'))
         # print('放出题目')
         # open_date = period.lottery_time.strftime('%Y-%m-%d')
-        # next_start = datetime.datetime.strptime(open_date + ' ' + market_hk_start_time[0],
-        #                                         '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        # next_end = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
+        # next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+        #                                         '%Y-%m-%d %H:%M:%S')
+        # next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
         #                                       '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        # while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+        # while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
+        #         next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
         #     next_end += datetime.timedelta(1)
         #     next_start += datetime.timedelta(1)
         # per = int(period.periods) + 1
         # newobject(str(per), period.stock_id, next_start, next_end)
+
+        # ---------------------------------------------------------------------------------------
+
+        # dt = {'num': '25052.83', 'status': 'down', 'auto': True}
+        # period = Periods.objects.get(id=335)
+        # ergodic_record(period, dt, datetime.datetime.strptime('2018-10-12 23:59:59', '%Y-%m-%d %H:%M:%S'))
+        # print('放出题目')
+        # open_date = period.lottery_time.strftime('%Y-%m-%d')
+        # next_start = datetime.datetime.strptime(open_date + ' ' + market_en_start_time[0],
+        #                                         '%Y-%m-%d %H:%M:%S')
+        # next_end = datetime.datetime.strptime(open_date + ' ' + market_en_end_time[0],
+        #                                       '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+        # while (next_end - datetime.timedelta(hours=12)).isoweekday() >= 6 or (
+        #         next_end - datetime.timedelta(hours=12)).strftime('%Y-%m-%d') in market_en_end_time:
+        #     next_end += datetime.timedelta(1)
+        #     next_start += datetime.timedelta(1)
+        # per = int(period.periods) + 1
+        # newobject(str(per), period.stock_id, next_start, next_end)
+
+        # ---------------------------------------------------------------------------------------
+
+        dt = {'num': '25792.87', 'status': 'up', 'auto': True}
+        period = Periods.objects.get(id=451)
+        ergodic_record(period, dt, None)
+        print('放出题目')
+        open_date = period.lottery_time.strftime('%Y-%m-%d')
+        next_start = datetime.datetime.strptime(open_date + ' ' + market_hk_start_time[0],
+                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+        next_end = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
+                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
+        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
+            next_end += datetime.timedelta(1)
+            next_start += datetime.timedelta(1)
+        per = int(period.periods) + 1
+        newobject(str(per), period.stock_id, next_start, next_end)
         # # ---------------------------------------------------------------------------------------
