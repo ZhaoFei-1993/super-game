@@ -123,10 +123,10 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
     def get(self, request, *args, **kwargs):
         list = Announcement.objects.filter(is_deleted=False).order_by('order', 'id')
         data = []
-        i = 1
+        s = 1
         for i in list:
             data.append({
-                "pk": i,
+                "pk": s,
                 "id": i.id,
                 "carousel_map": i.carousel_map,
                 "carousel_map_en": i.carousel_map_en,
@@ -137,7 +137,7 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
                 "is_map": i.is_map,
                 "order": i.order
             })
-            i += 1
+            s += 1
         return self.response({'code': 0, 'data': data})
 
     def post(self, request, *args, **kwargs):
