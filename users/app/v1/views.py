@@ -2,10 +2,10 @@
 from django.db.models import Q
 from .serializers import UserInfoSerializer, UserSerializer, DailySerialize, MessageListSerialize, \
     PresentationSerialize, UserCoinSerialize, CoinOperateSerializer, LuckDrawSerializer, LockSerialize, \
-    CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize, DivendListSerializer
+    CountriesSerialize, UserRechargeSerizlize, HomeMessageSerialize, DivendListSerializer, CashBackRecordSerializer
 import qrcode
 from django.core.cache import caches
-from quiz.models import Quiz, Record
+from quiz.models import Quiz, Record, EveryDayInjectionValue
 from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     UserPresentation, UserCoin, Coin, UserRecharge, CoinDetail, \
     UserSettingOthors, UserInvitation, IntegralPrize, IntegralPrizeRecord, LoginRecord, \
@@ -26,7 +26,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, message_hints, language_switch, resize_img, normalize_fraction, \
-    random_invitation_code
+    random_invitation_code, handle_zero
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -3316,3 +3316,51 @@ class MoveRecordView(ListAPIView):
                               "coin_name": coin_name,
                               "coin_icon": coin_icon,
                               })
+
+
+class CashBackRecord(ListAPIView):
+    """
+       投注返现记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = CashBackRecordSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        qs = EveryDayInjectionValue.objects.filter(user_id=user_id).order_by('-injection_time')
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+
+        result_data = []
+        cash_back_map = {}
+        # 获取币的信息
+        gsg = Coin.objects.get_gsg_coin()
+        cash_back_map.update({gsg.name: {'icon': gsg.icon}})
+
+        # 返现gsg
+        data = []
+        pre_month = ''
+        for item in items:
+            month = item['month']
+            if pre_month == item['month']:
+                month = ''
+            else:
+                pre_month = month
+            is_current_year = 0
+            if item['year'] == datetime.now().strftime('%Y'):
+                is_current_year = 1
+
+            data.append({
+                'year': item['year'],
+                'month': month,
+                'date': item['date'],
+                'cash_back_gsg': handle_zero(item['cash_back_gsg']),
+                'is_current_year': is_current_year,
+            })
+        cash_back_map[gsg.name].update({'data': data})
+
+        result_data.append(cash_back_map)
+        return self.response({'code': 0, 'data': result_data})
