@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.core.management.base import BaseCommand
-from spider.management.commands.stock_result import ergodic_record, newobject
-from spider.management.commands.stock_index import *
+from spider.management.commands.stock_result_new import GuessRecording
+from spider.management.commands.stock_index_new import StockIndex
 from guess.models import Periods
 import datetime
 
@@ -80,19 +80,14 @@ class Command(BaseCommand):
         # newobject(str(per), period.stock_id, next_start, next_end)
 
         # ---------------------------------------------------------------------------------------
-
+        guess_recording = GuessRecording()
+        stock_index = StockIndex()
         dt = {'num': '25792.87', 'status': 'up', 'auto': True}
         period = Periods.objects.get(id=451)
-        ergodic_record(period, dt, None)
+        date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                              "%Y-%m-%d %H:%M:%S")
+        guess_recording.take_result(period, dt, date_day)
+        guess_recording.ergodic_record(period, dt, None)
         print('放出题目')
-        open_date = period.lottery_time.strftime('%Y-%m-%d')
-        next_start = datetime.datetime.strptime(open_date + ' ' + market_hk_start_time[0],
-                                                '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        next_end = datetime.datetime.strptime(open_date + ' ' + market_hk_end_time[0],
-                                              '%Y-%m-%d %H:%M:%S') + datetime.timedelta(1)
-        while next_end.isoweekday() >= 6 or next_end.strftime('%Y-%m-%d') in market_rest_cn_list:
-            next_end += datetime.timedelta(1)
-            next_start += datetime.timedelta(1)
-        per = int(period.periods) + 1
-        newobject(str(per), period.stock_id, next_start, next_end)
+        stock_index.new_period(period)
         # # ---------------------------------------------------------------------------------------
