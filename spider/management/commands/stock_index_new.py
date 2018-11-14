@@ -447,12 +447,12 @@ class Command(BaseCommand):
                                                lottery_time__lt=datetime.datetime.now()).exists() is not True):
                     print('空闲时间, 空闲时间')
                 else:
-                    try:
-                        data_map = stock_index.fetch_data(period.stock)
-                        flag = stock_index.handle_data(period, data_map)
-                    except Exception as e:
-                        print('Error is: ', e)
-                        continue
+                    # try:
+                    data_map = stock_index.fetch_data(period.stock)
+                    flag = stock_index.handle_data(period, data_map)
+                    # except Exception as e:
+                    #     print('Error is: ', e)
+                    #     continue
 
                     if flag is True:
                         # 开奖后放出题目
