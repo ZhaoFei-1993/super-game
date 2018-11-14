@@ -3338,7 +3338,7 @@ class CashBackRecord(ListAPIView):
         cash_back_map = {}
         # 获取币的信息
         gsg = Coin.objects.get_gsg_coin()
-        cash_back_map.update({gsg.name: {'icon': gsg.icon}})
+        cash_back_map.update({'coin_name': gsg.name, 'icon': gsg.icon})
 
         # 返现gsg
         data = []
@@ -3360,7 +3360,5 @@ class CashBackRecord(ListAPIView):
                 'cash_back_gsg': handle_zero(item['cash_back_gsg']),
                 'is_current_year': is_current_year,
             })
-        cash_back_map[gsg.name].update({'data': data})
-
-        result_data.append(cash_back_map)
-        return self.response({'code': 0, 'data': result_data})
+        cash_back_map.update({'data': data})
+        return self.response({'code': 0, 'data': cash_back_map})
