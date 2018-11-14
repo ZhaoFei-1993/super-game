@@ -166,7 +166,7 @@ class AnnouncementVerifyView(ListAPIView, DestroyAPIView):
 
     @reversion_Decorator
     def delete(self, request, *args, **kwargs):
-        announcement_id = self.request.parser_context['kwargs']['pk']
+        announcement_id = int(request.data['pk'])
         announcement = Announcement.objects.get(pk=announcement_id)
         announcement.is_delete = True
         announcement.save()
