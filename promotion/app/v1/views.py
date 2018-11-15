@@ -19,7 +19,8 @@ from promotion.models import UserPresentation
 import calendar
 import re
 from datetime import timedelta
-from utils.functions import normalize_fraction, value_judge, get_sql, reward_gradient, opposite_number, reward_gradient_all
+from utils.functions import normalize_fraction, value_judge, get_sql, reward_gradient, opposite_number, \
+    reward_gradient_all
 from decimal import Decimal
 import time
 
@@ -42,12 +43,17 @@ class PromotionInfoView(ListAPIView):
         yesterday_now = str(yesterday) + ' 00:00:00'
         yesterday_old = str(yesterday) + ' 23:59:59'
 
-        user_avatar = user.avatar          # 用户头像
-        nowadays_number = UserInvitation.objects.filter(Q(created_at__lte=nowadays_old),Q(created_at__gte=nowadays_now), inviter_id=user.id).count()            # 今天邀请人数
-        yesterday_number = UserInvitation.objects.filter(Q(created_at__lte=yesterday_old),Q(created_at__gte=yesterday_now), inviter_id=user.id).count()        # 昨天邀请人数
-        all_user_number = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1).count()        # 总邀请人数
-        all_user_gsg = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1, status=2).aggregate(Sum('money'))
-        sum_gsg = all_user_gsg['money__sum'] if all_user_gsg['money__sum'] is not None else 0                     # 总邀请获得GSG数
+        user_avatar = user.avatar  # 用户头像
+        nowadays_number = UserInvitation.objects.filter(Q(created_at__lte=nowadays_old),
+                                                        Q(created_at__gte=nowadays_now),
+                                                        inviter_id=user.id).count()  # 今天邀请人数
+        yesterday_number = UserInvitation.objects.filter(Q(created_at__lte=yesterday_old),
+                                                         Q(created_at__gte=yesterday_now),
+                                                         inviter_id=user.id).count()  # 昨天邀请人数
+        all_user_number = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1).count()  # 总邀请人数
+        all_user_gsg = UserInvitation.objects.filter(inviter_id=user.id, inviter_type=1, status=2).aggregate(
+            Sum('money'))
+        sum_gsg = all_user_gsg['money__sum'] if all_user_gsg['money__sum'] is not None else 0  # 总邀请获得GSG数
         qr_data = settings.SUPER_GAME_SUBDOMAIN + '/#/register?from_id=' + str(user.id)
         return self.response({'code': 0, "data": {
             "user_avatar": user_avatar,
@@ -70,7 +76,7 @@ class PromotionListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         type = self.request.GET.get('type')
-        regex = re.compile(r'^(1|2|3|4)$')              # 1.今天 2.昨天 3.本月 4.上月
+        regex = re.compile(r'^(1|2|3|4)$')  # 1.今天 2.昨天 3.本月 4.上月
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
 
@@ -96,9 +102,9 @@ class PromotionListView(ListAPIView):
         month = datetime.date.today().month  # 获取当前月份
         weekDay, monthCountDay = calendar.monthrange(year, month)  # 获取当月第一天的星期和当月的总天数
         start = datetime.date(year, month, day=1).strftime('%Y-%m-%d')  # 获取当月第一天
-        month_first_day = str(start) + ' 00:00:00'           # 这个月的开始时间
+        month_first_day = str(start) + ' 00:00:00'  # 这个月的开始时间
 
-        if int(type) == 1:          # 今天
+        if int(type) == 1:  # 今天
             created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
             start = str(created_at_day) + ' 00:00:00'  # 一天开始时间
             end = str(created_at_day) + ' 23:59:59'  # 一天结束时间
@@ -109,7 +115,7 @@ class PromotionListView(ListAPIView):
             sql += " and pu.created_at <= '" + str(end) + "'"
             sql += " group by pu.club_id"
             monthly_summary = get_sql(sql)
-        elif int(type) == 2:             # 昨天
+        elif int(type) == 2:  # 昨天
             yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             start = str(yesterday) + ' 00:00:00'
             end = str(yesterday) + ' 23:59:59'
@@ -120,8 +126,8 @@ class PromotionListView(ListAPIView):
             sql += " and pu.created_at <= '" + str(end) + "'"
             sql += " group by pu.club_id"
             monthly_summary = get_sql(sql)
-        elif int(type) == 3:        # 当月
-            end = datetime.date(year, month, day=monthCountDay).strftime('%Y-%m-%d')           # 获取当前月份最后一天
+        elif int(type) == 3:  # 当月
+            end = datetime.date(year, month, day=monthCountDay).strftime('%Y-%m-%d')  # 获取当前月份最后一天
             start = str(start) + ' 00:00:00'
             end = str(end) + ' 23:59:59'
             sql = "select sum(pu.income), pu.club_id from promotion_userpresentation pu"
@@ -131,10 +137,10 @@ class PromotionListView(ListAPIView):
             sql += " and pu.created_at <= '" + str(end) + "'"
             sql += " group by pu.club_id"
             monthly_summary = get_sql(sql)
-        else:              # 上月
+        else:  # 上月
             this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
-            end = this_month_start - timedelta(days=1)              # 上个月的最后一天
-            start = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'       # 上个月i第一天
+            end = this_month_start - timedelta(days=1)  # 上个月的最后一天
+            start = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
             end = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
             sql = "select sum(pu.income), pu.club_id from promotion_userpresentation pu"
             sql += " where pu.club_id in (" + ','.join(coin_id_list) + ")"
@@ -337,7 +343,7 @@ class ClubRuleView(ListAPIView):
                 "a": a
             })
         data = sorted(data, key=lambda x: x["a"], reverse=False)
-        return self.response({'code': 0, "data":data})
+        return self.response({'code': 0, "data": data})
 
 
 class ClubDetailView(ListAPIView):
@@ -388,7 +394,8 @@ class ClubDetailView(ListAPIView):
             else:  # 上月
                 this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
                 end = this_month_start - timedelta(days=1)  # 上个月的最后一天
-                start_time = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
+                start_time = str(
+                    datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
                 end_time = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
         else:
             if 'start_time' in self.request.GET:
@@ -569,15 +576,15 @@ class ClubDividendView(ListAPIView):
         user = self.request.user
         if 'club_id' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        club_id = self.request.GET.get('club_id')        # 俱乐部ID
+        club_id = self.request.GET.get('club_id')  # 俱乐部ID
         if int(club_id) == 1:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         sql = "select u.coin_accuracy, u.name from chat_club c"
         sql += " inner join users_coin u on c.coin_id=u.id"
         sql += " where c.id = '" + str(club_id) + "'"
         club_info = get_sql(sql)[0]
-        coin_accuracy = club_info[0]    # 货币精度
-        coin_name = club_info[1]        # 货币昵称
+        coin_accuracy = club_info[0]  # 货币精度
+        coin_name = club_info[1]  # 货币昵称
 
         type = str(self.request.GET.get('type'))
         regex = re.compile(r'^(1|2|3|4|5|6|7|8)$')  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股票PK
@@ -621,7 +628,8 @@ class ClubDividendView(ListAPIView):
             else:  # 上月
                 this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
                 end = this_month_start - timedelta(days=1)  # 上个月的最后一天
-                start_time = str(datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
+                start_time = str(
+                    datetime.datetime(end.year, end.month, 1).strftime('%Y-%m-%d')) + ' 00:00:00'  # 上个月i第一天
                 end_time = str(end.strftime('%Y-%m-%d')) + ' 23:59:59'
                 start_year = datetime.datetime(end.year, end.month, 1).year
                 start_month = datetime.datetime(end.year, end.month, 1).month
@@ -660,11 +668,11 @@ class ClubDividendView(ListAPIView):
         if start_year == end_year and start_month == end_month:
             current_year = datetime.datetime.now().year
             current_month = datetime.datetime.now().month
-            if current_year == 1:   # 获取上个月的年份
-                last_month_year = current_year-1
+            if current_year == 1:  # 获取上个月的年份
+                last_month_year = current_year - 1
             else:
                 last_month_year = current_year
-            last_month_month = current_month-1 or 12    # 获取上个月的月份
+            last_month_month = current_month - 1 or 12  # 获取上个月的月份
 
             if last_month_year == end_year and last_month_month == end_month:
                 this_month_start = datetime.datetime(datetime.datetime.now().year, datetime.datetime.now().month, 1)
@@ -680,7 +688,7 @@ class ClubDividendView(ListAPIView):
 
                 test_created_ats = str(start_year) + str(end_month)
 
-                weekDay, monthCountDay = calendar.monthrange(start_year, end_month)   #当月第一天的星期 当月的总天数
+                weekDay, monthCountDay = calendar.monthrange(start_year, end_month)  # 当月第一天的星期 当月的总天数
                 month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
                 start = str(month_first_day) + ' 00:00:00'  # 本月第一天
                 end = datetime.date(year=start_year, month=end_month, day=monthCountDay).strftime(
@@ -689,9 +697,9 @@ class ClubDividendView(ListAPIView):
             start_year = datetime.datetime.now().year
             end_month = datetime.datetime.now().month
 
-            test_created_ats = str(start_year)+str(end_month)
+            test_created_ats = str(start_year) + str(end_month)
 
-            weekDay, monthCountDay = calendar.monthrange(start_year, end_month)  #当月第一天的星期 当月的总天数
+            weekDay, monthCountDay = calendar.monthrange(start_year, end_month)  # 当月第一天的星期 当月的总天数
             month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
             start = str(month_first_day) + ' 00:00:00'  # 本月第一天
             end = datetime.date(year=start_year, month=end_month, day=monthCountDay).strftime(
@@ -880,7 +888,7 @@ class ClubDividendView(ListAPIView):
                 reward_coin = normalize_fraction(reward_coin, coin_accuracy)
                 if reward_coin < 0:
                     reward_coin = -(reward_coin)
-                    reward_coin = "- "+str(reward_coin)
+                    reward_coin = "- " + str(reward_coin)
                 data.append({
                     "nickname": fav["nickname"],
                     "avatar": fav["avatar"],
@@ -919,14 +927,14 @@ class CustomerView(ListAPIView):
             start_time = self.request.GET.get('start_time')
             start_time = str(start_time) + ' 00:00:00'
         else:
-            start_time = '2010-01-01 00:00:00'    # 开始时间
+            start_time = '2010-01-01 00:00:00'  # 开始时间
 
         if 'end_time' in self.request.GET:
             end_time = self.request.GET.get('end_time')
             end_time = str(end_time) + ' 23:59:59'
         else:
             enddays = datetime.datetime.now().strftime('%Y-%m-%d')
-            end_time = str(enddays) + ' 23:59:59' # 结束时间
+            end_time = str(enddays) + ' 23:59:59'  # 结束时间
 
         if 'type' not in self.request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
@@ -999,17 +1007,17 @@ class CustomerView(ListAPIView):
                 if i[5] == None:
                     login_time = ""
                 else:
-                    login_time = i[5].strftime('%Y-%m-%d %H:%M')
+                    login_time = i[5].strftime('%Y-%m-%d')
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
                     "nickname": i[2],
-                    "created_at": i[3].strftime('%Y-%m-%d %H:%M'),
+                    "created_at": i[3].strftime('%Y-%m-%d'),
                     "coin_info": coin_info,
                     "login_time": login_time
                 })
         user_number = len(user_list)
-        return self.response({'code': 0, "user_number":user_number, "data":data})
+        return self.response({'code': 0, "user_number": user_number, "data": data})
 
 
 class UserInfoView(ListAPIView):
@@ -1059,14 +1067,14 @@ class UserInfoView(ListAPIView):
                 "coin_accuracy": coin.coin_accuracy
             }
 
-        start_time = str(settings.PROMOTER_EXCHANGE_START_DATE) + ' 00:00:00'          # 活动开始时间
+        start_time = str(settings.PROMOTER_EXCHANGE_START_DATE) + ' 00:00:00'  # 活动开始时间
         enddays = datetime.datetime.now().strftime('%Y-%m-%d')
         end_time = str(enddays) + ' 23:59:59'  # 当前时间
 
         start_year = datetime.datetime.now().year
         end_month = datetime.datetime.now().month
         month_first_day = datetime.date(start_year, end_month, day=1).strftime('%Y-%m-%d')
-        if int(end_month)-1 == 0:
+        if int(end_month) - 1 == 0:
             before_month = 12
             before_yeas = int(start_year) - 1
             weekDay, monthCountDay = calendar.monthrange(before_yeas, before_month)
