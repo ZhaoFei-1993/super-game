@@ -876,7 +876,7 @@ class ClubDividendView(ListAPIView):
                     dividend = 0
                 if dividend < 0 and dividend != 0:
                     dividend = -(dividend)
-                    dividend = "- " + str(dividend)
+                    dividend = "-" + str(dividend)
 
                 pecific_dates = fav["yearss"]
                 pecific_date = fav["years"]
