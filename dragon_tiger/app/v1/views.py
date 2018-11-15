@@ -65,9 +65,9 @@ class Table_boots(ListAPIView):
             boot_list = {}
         else:
             boot_list = {
-                "boot_id": boot_info[0][0],           # 靴ID
-                "three_boot_id": boot_info[0][1],        # 第三方靴ID
-                "boot_number": boot_info[0][2]         # 靴号
+                "boot_id": boot_info[0][0],  # 靴ID
+                "three_boot_id": boot_info[0][1],  # 第三方靴ID
+                "boot_number": boot_info[0][2]  # 靴号
             }
 
         if boot_info == ():
@@ -93,7 +93,7 @@ class Table_boots(ListAPIView):
         else:
             sql_list = "nt.id, nt.number_tab_number, nt.opening, nt.pair, nt.bet_statu, nt.previous_number_tab_id, " \
                        "nt.number_tab_id"
-            sql = "select " +sql_list + " from dragon_tiger_number_tab nt"
+            sql = "select " + sql_list + " from dragon_tiger_number_tab nt"
             sql += " where nt.tid_id = '" + table_id + "'"
             sql += " and nt.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by nt.id desc limit 1"
@@ -118,31 +118,31 @@ class Table_boots(ListAPIView):
                 }
 
             sql_list = "sr.result_show, sr.show_x_show, sr.show_y_show"
-            sql = "select " +sql_list+ " from dragon_tiger_showroad sr"
+            sql = "select " + sql_list + " from dragon_tiger_showroad sr"
             sql += " where sr.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by sr.order_show"
             showroad_info = get_sql(sql)
-            showroad_list = []             # 结果图
+            showroad_list = []  # 结果图
             for i in showroad_info:
                 showroad_list.append({
-                    "show_x": i[1],      # X轴
-                    "show_y": i[2],      # Y轴
-                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲/3.和]
-                    })
+                    "show_x": i[1],  # X轴
+                    "show_y": i[2],  # Y轴
+                    "result": int(i[0])  # 结果[1.龙&庄/2.虎&闲/3.和]
+                })
 
             sql_list = "br.result_big, br.show_x_big, br.show_y_big, br.tie_num"
-            sql = "select " +sql_list+ " from dragon_tiger_bigroad br"
+            sql = "select " + sql_list + " from dragon_tiger_bigroad br"
             sql += " where br.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by br.order_big"
             bigroad_info = get_sql(sql)
-            bigroad_list = []             # 大路图
+            bigroad_list = []  # 大路图
             for i in bigroad_info:
                 bigroad_list.append({
-                    "show_x": i[1],      # X轴
-                    "show_y": i[2],      # Y轴
-                    "result": int(i[0]),     # 结果[1.龙&庄/2.虎&闲/3.和]
-                    "tie_num": int(i[3])     # 是否有和
-                    })
+                    "show_x": i[1],  # X轴
+                    "show_y": i[2],  # Y轴
+                    "result": int(i[0]),  # 结果[1.龙&庄/2.虎&闲/3.和]
+                    "tie_num": int(i[3])  # 是否有和
+                })
 
             sql_list = "be.result_big_eye, be.show_x_big_eye, be.show_y_big_eye"
             sql = "select " + sql_list + " from dragon_tiger_bigeyeroad be"
@@ -158,30 +158,30 @@ class Table_boots(ListAPIView):
                 })
 
             sql_list = "pw.result_psthway, pw.show_x_psthway, pw.show_y_psthway"
-            sql = "select " +sql_list+ " from dragon_tiger_psthway pw"
+            sql = "select " + sql_list + " from dragon_tiger_psthway pw"
             sql += " where pw.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by pw.order_psthway"
             psthway_info = get_sql(sql)
-            psthway_list = []             # 结果图
+            psthway_list = []  # 结果图
             for i in psthway_info:
                 psthway_list.append({
-                    "show_x": i[1],      # X轴
-                    "show_y": i[2],      # Y轴
-                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲]
-                    })
+                    "show_x": i[1],  # X轴
+                    "show_y": i[2],  # Y轴
+                    "result": int(i[0])  # 结果[1.龙&庄/2.虎&闲]
+                })
 
             sql_list = "r.result_roach, r.show_x_roach, r.show_y_roach"
-            sql = "select " +sql_list+ " from dragon_tiger_roach r"
+            sql = "select " + sql_list + " from dragon_tiger_roach r"
             sql += " where r.boots_id = '" + str(boot_info[0][0]) + "'"
             sql += " order by r.order_roach"
             roach_info = get_sql(sql)
-            roach_list = []             # 结果图
+            roach_list = []  # 结果图
             for i in roach_info:
                 roach_list.append({
-                    "show_x": i[1],      # X轴
-                    "show_y": i[2],      # Y轴
-                    "result": int(i[0])     # 结果[1.龙&庄/2.虎&闲]
-                    })
+                    "show_x": i[1],  # X轴
+                    "show_y": i[2],  # Y轴
+                    "result": int(i[0])  # 结果[1.龙&庄/2.虎&闲]
+                })
             ludan = {
                 "showroad_list": showroad_list,
                 "bigroad_list": bigroad_list,
@@ -217,7 +217,7 @@ class Table_list(ListAPIView):
         if types is None or not regex.match(types):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         sql_list = "dt.id, dt.three_table_id, dt.table_name, dt.status, dt.in_checkout, dt.wait_time, dt.game_name"
-        sql = "select "+sql_list+" from dragon_tiger_table dt"
+        sql = "select " + sql_list + " from dragon_tiger_table dt"
         sql += " where dt.game_name = '" + types + "'"
         table_list = get_sql(sql)  # 获取桌子信息
         data = []
@@ -226,14 +226,14 @@ class Table_list(ListAPIView):
         # table_in_checkou = dict(Table.TABLE_IN_CHECKOU)
         for i in table_list:
             data.append({
-                "table_id": i[0],     # 桌ID
+                "table_id": i[0],  # 桌ID
                 "three_table_id": i[1],  # 第三方桌ID
                 "table_name": i[2],  # 桌子昵称
-                "wait_time": i[5],     # 等待时间
-                "game_name": name_list[int(i[6])],   # 游戏昵称
+                "wait_time": i[5],  # 等待时间
+                "game_name": name_list[int(i[6])],  # 游戏昵称
                 # "status": table_status[int(i[3])],    # 桌子状态(开、停)
                 # "in_checkout": table_in_checkou[int(i[4])],    # 桌子状态
-                "in_checkout_number": i[4],    # 桌子状态(0.正常/1,洗牌/2.停桌)
+                "in_checkout_number": i[4],  # 桌子状态(0.正常/1,洗牌/2.停桌)
             })
 
         return self.response({'code': 0, "data": data})
@@ -442,9 +442,9 @@ class DragontigerBet(ListCreateAPIView):
         else:
             option_id_one = 1
             option_id_two = 2
-        option_number = "("+str(option_id_one)+", "+str(option_id_two)+")"
+        option_number = "(" + str(option_id_one) + ", " + str(option_id_two) + ")"
         sql = "select sum(dtr.bets) from dragon_tiger_dragontigerrecord dtr"
-        sql += " where dtr.option_id in"+option_number
+        sql += " where dtr.option_id in" + option_number
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number = get_sql(sql)[0][0]
         if coin_number is None or coin_number == 0:
@@ -464,7 +464,7 @@ class DragontigerBet(ListCreateAPIView):
             all_earn_coin = earn_coin  # 应赔金额
         else:
             coin_number_in = normalize_fraction(coin_number_in, int(coin_accuracy))
-            coin_number_in = coin_number_in*Decimal(option_odds.odds)
+            coin_number_in = coin_number_in * Decimal(option_odds.odds)
             all_earn_coin = float(coin_number_in) + earn_coin
         print("一共要赔======================", all_earn_coin)
 
@@ -623,7 +623,7 @@ class Avatar(ListAPIView):
         data = []
         if avatar_list is None or avatar_list == '':
             sql_list = "u.avatar, u.nickname, sum(dtr.bets) as sum_bets"
-            sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+            sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
             sql += " inner join users_user u on dtr.user_id=u.id"
             sql += " where dtr.number_tab_id = '" + number_tab_id + "'"
             sql += " and dtr.club_id = '" + club_id + "'"
@@ -637,7 +637,7 @@ class Avatar(ListAPIView):
                     "user_nickname": i[1],
                     "bet_amount": i[2],
                     "is_user": 1
-                    })
+                })
                 s += 1
         a = 5 - len(data)
         for i in range(a):
@@ -657,7 +657,7 @@ class Record(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
-       pass
+        pass
 
     def list(self, request, *args, **kwargs):
         # club_id = str(self.request.GET.get('club_id'))  # 俱乐部表ID
@@ -667,7 +667,7 @@ class Record(ListAPIView):
         # coin_info = get_sql(sql)[0]  # 获取货币精度，货币图标，货币昵称
 
         sql_list = " dtr.number_tab_id"
-        sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+        sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
         if 'user_id' not in self.request.GET:
             user_id = str(self.request.user.id)
             if 'is_end' not in self.request.GET:
@@ -688,7 +688,7 @@ class Record(ListAPIView):
             sql += " and dtr.club_id = '" + club_id + "'"
         sql += " order by dtr.created_at desc"
 
-        number_tab_id_list = get_sql(sql)    # 获取记录的number_tab_id
+        number_tab_id_list = get_sql(sql)  # 获取记录的number_tab_id
         data = []
         if number_tab_id_list == ():
             return self.response({'code': 0, "data": data})
@@ -706,7 +706,7 @@ class Record(ListAPIView):
         sql_list += " date_format( dtr.created_at, '%c/%e' ) as years, date_format( dtr.created_at, '%k:%i' ) as time,"
         sql_list += " dtr.number_tab_id, nt.opening, o.title, nt.number_tab_number, dtr.option_id, o.odds,"
         sql_list += " date_format( dtr.created_at, '%Y%c%e%k%i' ) AS created_ats, c.coin_accuracy, c.icon, c.name"
-        sql = "select " +sql_list + " from dragon_tiger_dragontigerrecord dtr"
+        sql = "select " + sql_list + " from dragon_tiger_dragontigerrecord dtr"
         sql += " left join dragon_tiger_options o on dtr.option_id=o.id"
         sql += " left join dragon_tiger_number_tab nt on dtr.number_tab_id = nt.id"
         sql += " left join chat_club cc on dtr.club_id = cc.id"
@@ -733,7 +733,7 @@ class Record(ListAPIView):
         sql += " group by dtr.number_tab_id, yearss, years, time, o.title, option_id, created_ats, " \
                "c.coin_accuracy, c.icon, c.name"
         sql += " order by created_ats desc"
-        record_list = self.get_list_by_sql(sql)    #
+        record_list = self.get_list_by_sql(sql)  #
 
         data = []
         tmp = ''

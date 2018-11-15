@@ -479,7 +479,8 @@ class ClubDetailView(ListAPIView):
                         "status": i[5],
                         "rule": rule_name,
                         "nickname": i[7],
-                        "avatar": i[8]
+                        "avatar": i[8],
+                        "user_id": i[9]
                     })
 
             list_infos = get_sql(sql)
@@ -540,6 +541,7 @@ class ClubDetailView(ListAPIView):
                 "divided_into": divided_into,
                 "nickname": fav["nickname"],
                 "avatar": fav["avatar"],
+                "user_id": fav["user_id"],
                 "bets": fav["bets"],
                 "rule": fav["rule"],
                 "pecific_dates": pecific_dates,
@@ -805,6 +807,7 @@ class ClubDividendView(ListAPIView):
                         "rule": rule_name,
                         "nickname": i[4],
                         "avatar": i[5],
+                        "user_id": i[8],
                         "created_ats": i[7],
                         "times": i[9]
                     })
@@ -881,6 +884,7 @@ class ClubDividendView(ListAPIView):
                 data.append({
                     "nickname": fav["nickname"],
                     "avatar": fav["avatar"],
+                    "user_id": fav["user_id"],
                     "bets": normalize_fraction(fav["bets"], coin_accuracy),
                     "reward_coin": reward_coin,
                     "dividend": dividend,

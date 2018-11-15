@@ -33,7 +33,7 @@ import random
 import requests
 from utils.cache import get_cache, set_cache, delete_cache
 from dragon_tiger.models import Showroad, Bigroad, Psthway, Bigeyeroad, Roach
-from baccarat.models import Showroad_baccarat,Bigroad_baccarat,Psthway_baccarat,Bigeyeroad_baccarat,Roach_baccarat
+from baccarat.models import Showroad_baccarat, Bigroad_baccarat, Psthway_baccarat, Bigeyeroad_baccarat, Roach_baccarat
 from dragon_tiger.consumers import dragon_tiger_showroad, dragon_tiger_bigroad, dragon_tiger_bigeyeroad, \
     dragon_tiger_pathway, dragon_tiger_roach
 from baccarat.consumers import baccarat_showroad, baccarat_bigroad, baccarat_bigeyeroad, \
@@ -404,7 +404,8 @@ def coin_initialization(user_id, coin_id, user_coins=None, user=None):
                 address.user = user.pk
                 address.save()
         else:
-            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).count()
+            user_coin_number = UserCoin.objects.filter(~Q(address=''), user_id=user_id,
+                                                       coin__is_eth_erc20=False).count()
             if user_coin_number != 0:
                 address = UserCoin.objects.filter(~Q(address=''), user_id=user_id, coin__is_eth_erc20=False).first()
             else:
@@ -667,7 +668,8 @@ def guess_is_seal(info):
 
 def effect_user():
     sql = "select a.id from users_user a"
-    sql += " inner join (select ip_address, count(username) as count from users_user group by ip_address) b on a.ip_address=b.ip_address"
+    sql += " inner join (select ip_address, count(username) as count from users_user group by " \
+           "ip_address) b on a.ip_address=b.ip_address"
     sql += " where b.count <=3 "
     sql += " and is_robot=0 and is_block=0"
     dt_all = list(get_sql(sql))
@@ -1401,7 +1403,7 @@ def reward_gradient(user_id, club_id, income):
         set_cache(gradient_income_key, value)
 
     all_income = Presentation.objects.filter(Q(created_at__gte=firstDay) | Q(created_at__lte=lastDay), club_id=club_id,
-                             user_id=user_id).aggregate(Sum('income'))
+                                             user_id=user_id).aggregate(Sum('income'))
     sum_income = all_income['income__sum'] if all_income['income__sum'] is not None else 0
     sum_income = Decimal(sum_income) + Decimal(income)
 
@@ -1525,4 +1527,3 @@ def request_with_proxy(url, headers=None, timeout=10):
             return response
         except Exception as e:
             raise CommandError('请求失败, Error is: ', e)
-
