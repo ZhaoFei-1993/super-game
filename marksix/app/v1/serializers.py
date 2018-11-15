@@ -213,6 +213,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
     content = serializers.SerializerMethodField()  # 下注内容
     coin_avartar = serializers.SerializerMethodField()  # 币种图标
     one_piece_value = serializers.SerializerMethodField()  # 一注的价值
+    status = serializers.SerializerMethodField()  # 状态
 
     class Meta:
         model = SixRecord
@@ -323,6 +324,19 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_one_piece_value(self, obj):
         return handle_zero(obj.bet_coin / obj.bet)
+
+    @staticmethod
+    def get_status(obj):
+        result = obj.status
+        earn_coin = obj.earn_coin
+        if result == '0':
+            status = 0
+        else:
+            if earn_coin < 0:
+                status = 2
+            else:
+                status = 1
+        return status
 
 
 class ColorSerializer(serializers.HyperlinkedModelSerializer):
