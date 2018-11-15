@@ -14,7 +14,7 @@ class Command(BaseCommand):
     help = "处理投注表"
 
     def handle(self, *args, **options):
-        issues = Issues.objects.filter(~Q(size_pk_result=''), result_confirm__gte=3, is_open=False).order_by('id')[:10]
+        issues = Issues.objects.filter(~Q(size_pk_result=''), result_confirm__gte=2, is_open=False).order_by('id')[:10]
         if len(issues) > 0:
             option_obj_dic = {}
             for option in OptionStockPk.objects.all():

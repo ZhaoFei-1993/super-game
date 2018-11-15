@@ -410,7 +410,7 @@ class RecordsListView(ListCreateAPIView):
                     option_str = option.option
             else:
                 option_str = option.option
-            my_option = tips + ':' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
+            my_option = tips + '：' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
 
             data.append({
                 "id": fav.get('id'),

@@ -470,7 +470,7 @@ class GuessPKRecording(GuessRecording):
         # 股指pk出题找答案
         issues_result_flag = False
         issues_id = ''
-        for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=3).order_by('open'):
+        for issues in Issues.objects.filter(open__lt=time_now, result_confirm__lt=2).order_by('open'):
             issues_id = issues.id
             left_periods_id = issues.left_periods_id
             right_periods_id = issues.right_periods_id
