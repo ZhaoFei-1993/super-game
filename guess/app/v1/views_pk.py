@@ -173,8 +173,8 @@ class StockPkDetail(ListAPIView):
                 'bets_one': bet_limit.bets_one,
                 'bets_two': bet_limit.bets_two,
                 'bets_three': bet_limit.bets_three,
-                'bets_min': bet_limit.bets_min,
-                'bets_max': bet_limit.bets_max,
+                'bets_min': normalize_fraction(str(bet_limit.bets_min), coin_accuracy),
+                'bets_max': normalize_fraction(str(bet_limit.bets_max), coin_accuracy),
             })
 
         # 获取玩法
