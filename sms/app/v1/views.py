@@ -225,12 +225,12 @@ class ListVerifyView(ListCreateAPIView):
             if language == 'en':
                 data.append({
                     "id": i.id,
-                    "thumbnail": i.thumbnail
+                    "thumbnail": i.thumbnail_en
                 })
             else:
                 data.append({
                     "id": i.id,
-                    "thumbnail": i.thumbnail_en
+                    "thumbnail": i.thumbnail
                 })
         return self.response({'code': 0, 'data': data})
 
