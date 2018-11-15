@@ -959,12 +959,12 @@ class CustomerView(ListAPIView):
                 if i[5] == None:
                     login_time = ""
                 else:
-                    login_time = i[5].strftime('%Y-%m-%d %H:%M')
+                    login_time = i[5].strftime('%Y-%m-%d')
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
                     "nickname": i[2],
-                    "created_at": i[3].strftime('%Y-%m-%d %H:%M'),
+                    "created_at": i[3].strftime('%Y-%m-%d'),
                     "coin_info": coin_info,
                     "login_time": login_time
                 })
