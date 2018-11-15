@@ -51,6 +51,7 @@ import qrcode
 from promotion.models import Gradient
 from promotion.models import UserPresentation as Presentation
 import calendar
+from django.core.management.base import CommandError
 
 
 def random_string(length=16):
@@ -1502,4 +1503,26 @@ def get_proxies():
             return get_proxies_from_url(key)
         else:
             return proxies_dic['proxies']
+
+
+def request_with_proxy(url, headers=None, timeout=10):
+    """
+        此方法先不使用proxy发起请求，如果请求失败则改用proxy再请求一次，
+        如果再发生错误就raise error
+        :return response:
+    """
+    # 先不用代理
+    try:
+        response = requests.get(url, headers=headers, timeout=timeout)
+        return response
+    except Exception as e:
+        print(e)
+        # 不使用代理请求失败，然后使用代理
+        try:
+            proxies = get_proxies()
+            response = requests.get(url, headers=headers, timeout=timeout, proxies=proxies)
+            print('使用了的代理是: ', proxies)
+            return response
+        except Exception as e:
+            raise CommandError('请求失败, Error is: ', e)
 

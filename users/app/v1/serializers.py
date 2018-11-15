@@ -709,15 +709,12 @@ class CashBackRecordSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_year(obj):
-        record_time = obj.injection_time - timedelta(days=1)
-        return record_time.strftime('%Y')
+        return obj.injection_time.strftime('%Y')
 
     @staticmethod
     def get_month(obj):
-        record_time = obj.injection_time - timedelta(days=1)
-        return record_time.strftime('%m')
+        return obj.injection_time.strftime('%m')
 
     @staticmethod
     def get_date(obj):
-        record_time = obj.injection_time - timedelta(days=1)
-        return record_time.strftime('%m-%d')
+        return obj.injection_time.strftime('%m-%d')

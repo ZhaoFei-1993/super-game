@@ -3347,7 +3347,7 @@ class CashBackRecord(ListAPIView):
         for item in items:
             month = item['month']
             if month[0] == '0':
-                month = month.replace('0', '')
+                month = month.replace('0', '') + '月'
             if pre_month == month and pre_year == item['year']:
                 month = ''
             else:
@@ -3362,7 +3362,7 @@ class CashBackRecord(ListAPIView):
 
             data.append({
                 'year': item['year'] + '年',
-                'month': month + '月',
+                'month': month,
                 'date': item['date'],
                 'cash_back_gsg': handle_zero(item['cash_back_gsg']),
                 'is_current_year': is_current_year,

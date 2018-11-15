@@ -87,7 +87,6 @@ class Command(BaseCommand):
         date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
                                               "%Y-%m-%d %H:%M:%S")
         guess_recording.take_result(period, dt, date_day)
-        guess_recording.ergodic_record(period, dt, None)
         print('放出题目')
         stock_index.new_period(period)
         # # ---------------------------------------------------------------------------------------
