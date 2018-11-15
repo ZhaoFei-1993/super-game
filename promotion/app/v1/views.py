@@ -1045,8 +1045,8 @@ class UserInfoView(ListAPIView):
         user_info = {
             "avatar": user_infos[0],
             "nickname": user_infos[1],
-            "created_at": user_infos[2].strftime('%Y-%m-%d %H:%M'),
-            "login_time": user_infos[3].strftime('%Y-%m-%d %H:%M')
+            "created_at": user_infos[2].strftime('%Y-%m-%d'),
+            "login_time": user_infos[3].strftime('%Y-%m-%d')
         }
 
         coin_id_list = []
