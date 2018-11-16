@@ -301,12 +301,12 @@ class StockIndex(object):
                                 new_index_dic['x'].append(index_time.strftime("%H:%M"))
                                 new_index_dic['y'].append(str(value))
 
-                                # 储存日曲线
-                                if data_list.index(data) == len(data_list) - 1:
-                                    index_day = Index_day.objects.filter(stock_id=period.stock.id,
-                                                                         created_at=date_day).first()
-                                    index_day.index_value = value
-                                    index_day.save()
+                            # 储存日曲线
+                            if data_list.index(data) == len(data_list) - 1:
+                                index_day = Index_day.objects.filter(stock_id=period.stock.id,
+                                                                     created_at=date_day).first()
+                                index_day.index_value = value
+                                index_day.save()
                     # 最后一期再次确认，常常对不上
                     if period.stock_id in [7, 9]:
                         if data_list[-1][0].strftime('%H:%M:%S') == self.market_en_end_time_winter[0]:
