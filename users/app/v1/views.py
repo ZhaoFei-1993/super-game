@@ -1352,9 +1352,8 @@ class AssetView(ListAPIView):
                 eos_code = user_info.eos_code
 
             balance = item["balance"]
-            # key = (8, 13)
-            # if coin.id in key:
-            #     balance += 100
+            if coin.id == Coin.SOC and base_img != '':
+                balance += 100
 
             temp_dict = {
                 'coin_order': coin.coin_order,
