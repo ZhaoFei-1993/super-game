@@ -561,6 +561,7 @@ class InfoView(ListAPIView):
         integral = 0  # GSG余额
         current_coin_balance = 0  # 当前俱乐部币余额
         current_coin_address = ''  # 当前俱乐部币充值地址
+        eos_key = (8, 13)
         if len(user_coins) > 0:
             for item in user_coins:
                 map_user_coin[item.coin_id] = item
@@ -572,7 +573,7 @@ class InfoView(ListAPIView):
                 if item.coin_id == coin_id:
                     current_coin_balance = item.balance
 
-                    if item.coin_id == Coin.EOS:
+                    if item.coin_id in eos_key:
                         current_coin_address = settings.EOS_RECHARGE_ADDRESS
                     else:
                         current_coin_address = item.address
@@ -599,7 +600,7 @@ class InfoView(ListAPIView):
             'usercoin_avatar': coin.icon,
             'gsg_icon': gsg.icon,
             'recharge_address': current_coin_address,
-            'eos_code': user.eos_code if coin_id == Coin.EOS else '',
+            'eos_code': user.eos_code if coin_id in eos_key else '',
             'integral': normalize_fraction(integral, 2),
             'area_code': items[0]["area_code"],
             'telephone': items[0]["telephone"],
