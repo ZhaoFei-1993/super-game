@@ -49,6 +49,7 @@ def get_live_data():
                     pass
                 else:
                     match_id = data_list[0]
+                    quiz_obj = Quiz.objects.filter(match_flag=match_id)
 
                     for root, sub_dirs, files in list(os.walk(BASE_DIR + '/cache/live_cache'))[0: 1]:
                         sub_dirs = sub_dirs
@@ -81,14 +82,14 @@ def get_live_data():
                             f.write(data_list[13] + ':' + data_list[12] + ',')
                             f.write(data_list[28])
 
-                            if Quiz.objects.filter(match_flag=match_id).first() is not None:
-                                quiz = Quiz.objects.filter(match_flag=match_id).first()
+                            if len(quiz_obj) > 0:
+                                quiz = quiz_obj.first()
                                 if data_list[28] == '-1':
                                     quiz.status = quiz.ENDED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
-                                    quiz.status = quiz.REPEALED
+                                    quiz.status = quiz.PUBLISHING
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 0)
                                 elif data_list[28] == '1':
@@ -138,14 +139,14 @@ def get_live_data():
                                 f.write(data_list[13] + ':' + data_list[12] + ',')
                                 f.write(data_list[28])
 
-                            if Quiz.objects.filter(match_flag=match_id).first() is not None:
-                                quiz = Quiz.objects.filter(match_flag=match_id).first()
+                            if len(quiz_obj) > 0:
+                                quiz = quiz_obj.first()
                                 if data_list[28] == '-1':
                                     quiz.status = quiz.ENDED
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, -1)
                                 elif data_list[28] == '0':
-                                    quiz.status = quiz.REPEALED
+                                    quiz.status = quiz.PUBLISHING
                                     # 推送比赛时间
                                     q.enqueue(quiz_send_basketball_time, quiz.id, 0)
                                 elif data_list[28] == '1':
