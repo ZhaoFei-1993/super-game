@@ -300,7 +300,7 @@ class StockPkResultList(ListAPIView):
                 left_periods_id = issues_pre_two.left_periods_id
                 right_periods_id = issues_pre_two.right_periods_id
 
-        qs = Issues.objects.filter(stock_pk_id=stock_pk_id, result_confirm=3,
+        qs = Issues.objects.filter(stock_pk_id=stock_pk_id, result_confirm=2,
                                    left_periods_id=left_periods_id, right_periods_id=right_periods_id)
         return qs
 
