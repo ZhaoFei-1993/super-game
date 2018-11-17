@@ -458,6 +458,7 @@ class ClubDetailView(ListAPIView):
                    "p.user_id, p.status, p.bets"
             sql += " order by created_ats desc"
             list_info = self.get_list_by_sql(sql)
+            print("sql====================", sql)
             for i in list_info:
                 if i[4] is not None:
                     if i[9] not in user_list:
