@@ -260,7 +260,7 @@ class PromotionRecord(models.Model):
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=20, decimal_places=8, default=0.00000000)
     source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
     status = models.IntegerField(verbose_name="下注状态", choices=TYPE_CHOICE, default=AWAIT)
-    is_presentation = models.IntegerField(verbose_name="是否已分钱", choices=TYPE_CHOICES, default=AWAIT)
+    is_presentation = models.IntegerField(verbose_name="是否已分钱", choices=TYPE_CHOICES, default=OPEN)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)
 
     objects = PromotionRecordManager()
