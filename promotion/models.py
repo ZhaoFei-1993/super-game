@@ -27,62 +27,61 @@ class UserPresentationManager(BaseManager):
     推广人下级日流水表操作
     """
 
-    def club_flow_statistics(self, real_records, source):
+    def club_flow_statistics(self, record, source):
         """
         :param real_records:      投注记录
         :param source:            类型： 1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗
         """
 
-        for record in real_records:
-            # 用户ID
-            user_id = record.user_id
+        # 用户ID
+        user_id = record.user_id
 
-            # 俱乐部ID
-            if source == 1 or source == 2:
-                club_id = record.roomquiz_id
+        # 俱乐部ID
+        if source == 1 or source == 2:
+            club_id = record.roomquiz_id
+        else:
+            club_id = record.club_id
+
+        # 下注流水
+        if source == 1 or source == 2:
+            bet = record.bet
+        elif source == 3:
+            bet = record.bet_coin
+        else:
+            bet = record.bets
+
+        # 盈亏
+        if record.earn_coin > 0:
+            income = record.earn_coin - bet
+        else:
+            income = record.earn_coin
+        # 转化为str避免失精
+        bet = str(bet)
+        income = str(income)
+
+        my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
+        if my_inviter is not None:
+            created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
+            created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
+            data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
+            if data_number > 0:
+                day_data = self.get(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at)
+                day_data.bet_water += Decimal(bet)
+                day_data.dividend_water += Decimal(bet) * Decimal('0.005')
+                day_data.income += Decimal(income)
+                day_data.save()
             else:
-                club_id = record.club_id
-
-            # 下注流水
-            if source == 1 or source == 2:
-                bet = record.bet
-            elif source == 3:
-                bet = record.bet_coin
-            else:
-                bet = record.bets
-
-            # 盈亏
-            if record.earn_coin > 0:
-                income = record.earn_coin - bet
-            else:
-                income = record.earn_coin
-            # 转化为str避免失精
-            bet = str(bet)
-            income = str(income)
-
-            my_inviter = UserInvitation.objects.filter(~Q(inviter_type=2), invitee_one=user_id).first()
-            if my_inviter is not None:
-                created_at_day = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
-                created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
-                data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
-                if data_number > 0:
-                    day_data = self.get(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at)
-                    day_data.bet_water += Decimal(bet)
-                    day_data.dividend_water += Decimal(bet) * Decimal('0.005')
-                    day_data.income += Decimal(income)
-                    day_data.save()
-                else:
-                    day_data = UserPresentation()
-                    day_data.user_id = my_inviter.inviter.id
-                    day_data.club_id = club_id
-                    day_data.bet_water = Decimal(bet)
-                    day_data.dividend_water = Decimal(bet) * Decimal('0.005')
-                    day_data.income = Decimal(income)
-                    day_data.created_at = created_at
-                    day_data.save()
-                inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-                inviter_coin.balance += Decimal(bet) * Decimal('0.005')
-                inviter_coin.save()
+                day_data = UserPresentation()
+                day_data.user_id = my_inviter.inviter.id
+                day_data.club_id = club_id
+                day_data.bet_water = Decimal(bet)
+                day_data.dividend_water = Decimal(bet) * Decimal('0.005')
+                day_data.income = Decimal(income)
+                day_data.created_at = created_at
+                day_data.save()
+            inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
+            inviter_coin.balance += Decimal(bet) * Decimal('0.005')
+            inviter_coin.save()
 
 
 @reversion.register()
@@ -152,6 +151,15 @@ class PromotionRecordManager(BaseManager):
     """
     推广人下注记录数据库操作
     """
+    def club_flow_statistics(self, real_records, source):
+        """
+        :param real_records:      投注记录
+        :param source:            类型： 1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗
+        """
+        for record in real_records:
+            data_number = self.filter(record_id=record.id, source=source, is_presentation=1).count()
+            if data_number > 0:
+                UserPresentation.objects.club_flow_statistics(record, source)
 
     def insert_record(self, user, club, record_id, bets, source, created_at):
         """
@@ -236,6 +244,12 @@ class PromotionRecord(models.Model):
         (OPEN, "开奖"),
         (ERROR, "异常")
     )
+    AWAIT = 0
+    OPEN = 1
+    TYPE_CHOICES = (
+        (AWAIT, "已分"),
+        (OPEN, "未分")
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     record_id = models.IntegerField(verbose_name="记录表ID", default=0)
@@ -243,6 +257,7 @@ class PromotionRecord(models.Model):
     earn_coin = models.DecimalField(verbose_name="获取金额", max_digits=20, decimal_places=8, default=0.00000000)
     source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
     status = models.IntegerField(verbose_name="下注状态", choices=TYPE_CHOICE, default=AWAIT)
+    is_presentation = models.IntegerField(verbose_name="是否已分钱", choices=TYPE_CHOICES, default=AWAIT)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)
 
     objects = PromotionRecordManager()
