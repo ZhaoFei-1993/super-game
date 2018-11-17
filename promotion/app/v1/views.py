@@ -784,7 +784,9 @@ class ClubDividendView(ListAPIView):
             sql += " and p.created_at <= '" + str(end_time) + "'"
             sql += " and p.created_at > '2018-09-07 00:00:00'"
             sql += " and p.user_id in (" + ','.join(user_id_list) + ")"
+            sql += "group by p.bets, p.user_id, yearss, years, u.nickname, u.avatar, p.source, created_ats, times"
             sql += " order by times desc"
+            print("sql=================", sql)
             football_list = self.get_list_by_sql(sql)
             for i in football_list:
                 rule_name = ""
