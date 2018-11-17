@@ -259,10 +259,10 @@ def get_data_info(url, match_flag):
                     if record.rule_id == rule_hilo.id:
                         sum_score = to_decimal(host_team_score) + to_decimal(guest_team_score)
                         if sum_score > to_decimal(record.handicap):
-                            if '大于' in record.option.option:
+                            if '大于' in record.option.option.option:
                                 is_right = True
                         else:
-                            if '小于' in record.option.option:
+                            if '小于' in record.option.option.option:
                                 is_right = True
                     # 胜分差
                     if record.rule_id == rule_wnm.id:
