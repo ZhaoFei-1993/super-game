@@ -758,7 +758,7 @@ class ClubDividendView(ListAPIView):
             sql_list += " date_format( p.created_at, '%H:%i:%s' ) as years,"
             sql_list += " p.source, u.nickname, u.avatar, sum(p.earn_coin),"
             sql_list += " date_format( p.created_at, '%Y%m' ) AS created_ats, p.user_id, " \
-                        "date_format( p.created_at, '%Y%m%d%H%i%s' ) as times"
+                        "date_format( p.created_at, '%Y%m%d%H%i%s' ) as times, p.id"
 
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
@@ -784,9 +784,8 @@ class ClubDividendView(ListAPIView):
             sql += " and p.created_at <= '" + str(end_time) + "'"
             sql += " and p.created_at > '2018-09-07 00:00:00'"
             sql += " and p.user_id in (" + ','.join(user_id_list) + ")"
-            sql += "group by p.bets, p.user_id, yearss, years, u.nickname, u.avatar, p.source, created_ats, times"
+            sql += "group by p.id"
             sql += " order by times desc"
-            print("sql=================", sql)
             football_list = self.get_list_by_sql(sql)
             for i in football_list:
                 rule_name = ""
