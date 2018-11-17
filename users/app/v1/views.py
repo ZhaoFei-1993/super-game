@@ -3346,9 +3346,10 @@ class CashBackRecord(ListAPIView):
         pre_month = ''
         pre_year = ''
         for item in items:
-            month = item['month']
+            month = item['month'] + '月'
             if month[0] == '0':
-                month = month.replace('0', '') + '月'
+                month = month.replace('0', '')
+
             if pre_month == month and pre_year == item['year']:
                 month = ''
             else:

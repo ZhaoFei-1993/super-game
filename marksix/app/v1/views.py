@@ -48,6 +48,7 @@ class SortViews(ListAPIView):
             prev_special = ""  # 上期特码
             current_issue = ""
             current_open = ""  # 这期开奖时间
+            current_close = ""  # 这期封盘时间
             begin_at = ""  # 这期开奖时间
         else:
             prev_issue = openprice.issue  # 上期开奖期数
@@ -57,6 +58,7 @@ class SortViews(ListAPIView):
             # current_issue = (3 - len(current_issue)) * '0' + current_issue
             current_issue = current_issue
             current_open = date_exchange(openprice.next_open)  # 这期开奖时间
+            current_close = openprice.next_closing  # 这期封盘时间
             begin_at = openprice.next_open.astimezone(pytz.timezone(settings.TIME_ZONE))
             begin_at = time.mktime(begin_at.timetuple())
             begin_at = int(begin_at)  # 这期开奖时间
@@ -68,6 +70,7 @@ class SortViews(ListAPIView):
                               'prev_special': prev_special,
                               'current_issue': current_issue,
                               'current_open': current_open,
+                              'current_close': current_close,
                               'begin_at': begin_at
                               })
 
