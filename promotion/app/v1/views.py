@@ -431,7 +431,7 @@ class ClubDetailView(ListAPIView):
             sql_list += " date_format( p.created_at, '%Y-%m-%d' ) as years, " \
                         "date_format( p.created_at, '%H:%i:%s' ) as time,"
             sql_list += " date_format( p.created_at, '%Y%m%d%H%i%s' ) AS created_ats, " \
-                        "p.status, p.source, u.nickname, u.avatar, p.user_id"
+                        "p.status, p.source, u.nickname, u.avatar, p.user_id, p.id"
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
             sql += " where p.club_id = '" + club_id + "'"
@@ -454,9 +454,9 @@ class ClubDetailView(ListAPIView):
                 sql += " and p.source = 5"
             sql += " and p.created_at >= '" + str(start_time) + "'"
             sql += " and p.created_at <= '" + str(end_time) + "'"
+            sql += "group by p.id"
             sql += " order by created_ats desc"
             list_info = self.get_list_by_sql(sql)
-            print("sql====================", sql)
             for i in list_info:
                 if i[4] is not None:
                     if i[9] not in user_list:
