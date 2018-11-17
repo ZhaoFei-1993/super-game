@@ -454,8 +454,6 @@ class ClubDetailView(ListAPIView):
                 sql += " and p.source = 5"
             sql += " and p.created_at >= '" + str(start_time) + "'"
             sql += " and p.created_at <= '" + str(end_time) + "'"
-            sql += " group by created_ats, years, time, yearss, u.nickname, u.avatar, p.source, " \
-                   "p.user_id, p.status, p.bets"
             sql += " order by created_ats desc"
             list_info = self.get_list_by_sql(sql)
             print("sql====================", sql)
@@ -786,7 +784,6 @@ class ClubDividendView(ListAPIView):
             sql += " and p.created_at <= '" + str(end_time) + "'"
             sql += " and p.created_at > '2018-09-07 00:00:00'"
             sql += " and p.user_id in (" + ','.join(user_id_list) + ")"
-            sql += "group by p.bets, p.user_id, yearss, years, u.nickname, u.avatar, p.source, created_ats, times"
             sql += " order by times desc"
             football_list = self.get_list_by_sql(sql)
             for i in football_list:
