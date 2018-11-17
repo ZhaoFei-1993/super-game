@@ -157,8 +157,11 @@ class PromotionRecordManager(BaseManager):
         :param source:            类型： 1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗
         """
         for record in real_records:
-            data_number = self.filter(record_id=record.id, source=source, is_presentation=1).count()
-            if data_number > 0:
+            data_number = self.filter(record_id=int(record.id), source=int(source), is_presentation=1).count()
+            if data_number == 1:
+                record_info = self.get(record_id=record.id, source=source, is_presentation=1)
+                record_info.is_presentation = 0
+                record_info.save()
                 UserPresentation.objects.club_flow_statistics(record, source)
 
     def insert_record(self, user, club, record_id, bets, source, created_at):
