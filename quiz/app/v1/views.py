@@ -415,6 +415,7 @@ class RecordsListView(ListCreateAPIView):
             data.append({
                 "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
+                "club_id": fav.get('roomquiz_id'),
                 "type": fav.get('type'),
                 'host_team': host_team,
                 'guest_team': guest_team,
