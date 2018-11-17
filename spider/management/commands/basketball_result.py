@@ -207,20 +207,24 @@ def get_data_info(url, match_flag):
             rule_wnm = rule_all.filter(type=7).first()
 
             option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
-            option_mnl.is_right = 1
-            option_mnl.save()
+            if option_mnl is not None:
+                option_mnl.is_right = 1
+                option_mnl.save()
 
             option_hdc = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
-            option_hdc.is_right = 1
-            option_hdc.save()
+            if option_hdc is not None:
+                option_hdc.is_right = 1
+                option_hdc.save()
 
             option_hilo = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
-            option_hilo.is_right = 1
-            option_hilo.save()
+            if option_hilo is not None:
+                option_hilo.is_right = 1
+                option_hilo.save()
 
             option_wnm = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
-            option_wnm.is_right = 1
-            option_wnm.save()
+            if option_wnm is not None:
+                option_wnm.is_right = 1
+                option_wnm.save()
 
             # 分配奖金
             records = Record.objects.filter(quiz=quiz, is_distribution=False, user__is_robot=False)
