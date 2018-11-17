@@ -52,7 +52,7 @@ class Command(BaseCommand):
                     if len(real_records) > 0:
                         print('start')
                         PromotionRecord.objects.insert_all(real_records, 5, 1)
-                        UserPresentation.objects.club_flow_statistics(real_records, 5)
+                        PromotionRecord.objects.club_flow_statistics(real_records, 5)
                         print('end')
 
                         # 公告记录标记

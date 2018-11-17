@@ -554,7 +554,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                                          is_distribution=True)
     if len(real_records) > 0:
         PromotionRecord.objects.insert_all(real_records, 1, 1)
-        UserPresentation.objects.club_flow_statistics(real_records, 1)
+        PromotionRecord.objects.club_flow_statistics(real_records, 1)
 
         # 公告记录标记
         RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 1)

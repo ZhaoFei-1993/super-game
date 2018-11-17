@@ -341,7 +341,7 @@ class GuessRecording(object):
         # 推广代理事宜
         if len(real_records) > 0:
             PromotionRecord.objects.insert_all(real_records, 4, 1)
-            UserPresentation.objects.club_flow_statistics(real_records, 4)
+            PromotionRecord.objects.club_flow_statistics(real_records, 4)
 
             # 公告记录标记
             RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 3)

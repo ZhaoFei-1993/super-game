@@ -322,7 +322,7 @@ def ergodic_record(issue, answer_dic):
     real_records = SixRecord.objects.filter(~Q(source=str(SixRecord.ROBOT)), ~Q(club_id=1), issue=issue, status='1')
     if len(real_records) > 0:
         PromotionRecord.objects.insert_all(real_records, 3, 1)
-        UserPresentation.objects.club_flow_statistics(real_records, 3)
+        PromotionRecord.objects.club_flow_statistics(real_records, 3)
 
         # 公告记录标记
         RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 2)
