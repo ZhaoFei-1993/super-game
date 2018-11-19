@@ -332,6 +332,11 @@ class StockIndex(object):
 
             index_time = data_list[-1][0]
             if period.lottery_time == index_time and close_index != 0:
+                if period.stock_id == 5:
+                    count_num = 6
+                else:
+                    count_num = 14
+
                 if get_cache(num_cache_name) is None:
                     set_cache(num_cache_name, str(close_index) + ',' + begin_time + ',1', 3600)
                 else:
@@ -339,7 +344,7 @@ class StockIndex(object):
                     print(cache_dt)
                     if cache_dt.split(',')[0] == str(close_index):
                         count = int(cache_dt.split(',')[2]) + 1
-                        if count >= 6:
+                        if count >= count_num:
                             # 最后一期的确认
                             index = Index.objects.filter(periods=period, index_time=index_time).first()
                             index.index_value = close_index
