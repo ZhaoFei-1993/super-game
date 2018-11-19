@@ -1,4 +1,5 @@
 from django.db import models
+import reversion
 
 
 # Create your models here.
