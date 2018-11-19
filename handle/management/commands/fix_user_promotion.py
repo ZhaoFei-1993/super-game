@@ -23,7 +23,7 @@ class Command(BaseCommand):
             quiz_status_map.update({quiz.id: int(quiz.status)})
 
         for record in PromotionRecord.objects.filter(status=2):
-            quiz_id = Record.objects.filter(id=record.record_id).values_list('quiz_id', flat=True)
+            quiz_id = Record.objects.filter(id=record.record_id).values_list('quiz_id', flat=True)[0]
             if quiz_status_map[quiz_id] != Quiz.DELAY:
                 record.status = 1
                 record.save()
