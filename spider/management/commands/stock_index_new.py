@@ -333,9 +333,9 @@ class StockIndex(object):
             index_time = data_list[-1][0]
             if period.lottery_time == index_time and close_index != 0:
                 if period.stock_id == 5:
-                    count_num = 6
-                else:
                     count_num = 14
+                else:
+                    count_num = 6
 
                 if get_cache(num_cache_name) is None:
                     set_cache(num_cache_name, str(close_index) + ',' + begin_time + ',1', 3600)
