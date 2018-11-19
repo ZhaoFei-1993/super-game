@@ -65,11 +65,11 @@ class Command(BaseCommand):
             if my_inviter is not None:
                 created_at_day = record.created_at.strftime('%Y-%m-%d')  # 当天日期
                 created_at = str(created_at_day) + ' 00:00:00'  # 创建时间
-                data_number = UserPresentation.filter(club_id=club_id, user_id=my_inviter.inviter.id,
-                                                      created_at=created_at).count()
+                data_number = UserPresentation.objects.filter(club_id=club_id, user_id=my_inviter.inviter.id,
+                                                              created_at=created_at).count()
                 if data_number > 0:
-                    day_data = UserPresentation.get(club_id=club_id, user_id=my_inviter.inviter.id,
-                                                    created_at=created_at)
+                    day_data = UserPresentation.objects.get(club_id=club_id, user_id=my_inviter.inviter.id,
+                                                            created_at=created_at)
                     day_data.bet_water += Decimal(bet)
                     day_data.dividend_water += Decimal(bet) * Decimal('0.005')
                     day_data.income += Decimal(income)
