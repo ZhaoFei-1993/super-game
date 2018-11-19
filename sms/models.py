@@ -1,4 +1,5 @@
 from django.db import models
+import reversion
 
 
 # Create your models here.
@@ -53,6 +54,7 @@ class Sms(models.Model):
         verbose_name = verbose_name_plural = '短信发送记录表'
 
 
+@reversion.register()
 class Announcement(models.Model):
     carousel_map = models.CharField(verbose_name="轮播图(英文)", max_length=255, default='')
     carousel_map_en = models.CharField(verbose_name="轮播图", max_length=255, default='')

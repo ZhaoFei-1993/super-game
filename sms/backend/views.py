@@ -202,7 +202,6 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         pk = int(request.data['pk'])
         data = request.data
-        print("data ============", data)
         announcement = Announcement.objects.get(pk=pk, is_deleted=0)
         if 'thumbnail' in request.data:
             announcement.thumbnail = request.data['thumbnail']
