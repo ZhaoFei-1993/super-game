@@ -205,24 +205,18 @@ class AnnouncementInfoView(ListAPIView, DestroyAPIView):
         print("data ============", data)
         announcement = Announcement.objects.get(pk=pk, is_deleted=0)
         if 'thumbnail' in request.data:
-            print("request.data['thumbnail']=================", request.data['thumbnail'])
             announcement.thumbnail = request.data['thumbnail']
         if 'thumbnail_en' in request.data:
-            print("equest.data['thumbnail_en']====================", request.data['thumbnail_en'])
             announcement.thumbnail_en = request.data['thumbnail_en']
         if 'details' in request.data:
-            print("request.data['details']========================", request.data['details'])
             announcement.details = request.data['details']
         if 'details_en' in request.data:
-            print("request.data['details_en']===============", request.data['details_en'])
             announcement.details_en = request.data['details_en']
         if 'is_map' in request.data:
             announcement.is_map = int(request.data['is_map'])
         if 'carousel_map' in request.data:
-            print("request.data['carousel_map']====================", request.data['carousel_map'])
             announcement.carousel_map = request.data['carousel_map']
         if 'carousel_map_en' in request.data:
-            print("request.data['carousel_map_en']=====================", request.data['carousel_map_en'])
             announcement.carousel_map_en = request.data['carousel_map_en']
         announcement.save()
         return self.response({'code': 0})
