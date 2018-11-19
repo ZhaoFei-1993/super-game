@@ -29,7 +29,7 @@ class UserPresentationManager(BaseManager):
 
     def club_flow_statistics(self, record, source):
         """
-        :param real_records:      投注记录
+        :param record:      投注记录
         :param source:            类型： 1.足球 2.篮球 3.六合彩 4.猜股票 5.股票PK 6.百家乐 7.龙虎斗
         """
 
