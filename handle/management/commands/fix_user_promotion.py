@@ -34,29 +34,20 @@ class Command(BaseCommand):
         print('共', len(records), '条')
 
         for record in records:
-            source = record.source
             # 用户ID
             user_id = record.user_id
 
-            # 俱乐部ID
-            if source == 1 or source == 2:
-                club_id = record.roomquiz_id
-            else:
-                club_id = record.club_id
+            club_id = record.club_id
 
             # 下注流水
-            if source == 1 or source == 2:
-                bet = record.bet
-            elif source == 3:
-                bet = record.bet_coin
-            else:
-                bet = record.bets
+            bet = record.bets
 
             # 盈亏
             if record.earn_coin > 0:
                 income = record.earn_coin - bet
             else:
                 income = record.earn_coin
+
             # 转化为str避免失精
             bet = str(bet)
             income = str(income)
