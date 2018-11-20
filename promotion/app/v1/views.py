@@ -947,7 +947,7 @@ class CustomerView(ListAPIView):
         if int(type) == 1:
             sql_list = "ui.invitee_one, u.avatar, u.nickname, u.created_at, ui.inviter_type,"
             sql_list += " (select l.login_time from users_loginrecord l where " \
-                        "l.user_id=ui.invitee_one order by l.login_time desc limit 1) as login_time"
+                        "l.user_id=ui.invitee_one order by l.login_time desc limit 1) as login_time, ui.status"
             sql = "select " + sql_list + " from users_userinvitation ui"
             sql += " inner join users_user u on ui.invitee_one=u.id"
             sql += " where ui.invitee_one != 0"
@@ -965,15 +965,13 @@ class CustomerView(ListAPIView):
             data = []
             for i in invitee_list:
                 coin_info = ""
-                if int(i[4]) == 1:
+                if int(i[6]) == 2:
                     coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] is None:
                     login_time = ""
                 else:
                     login_time = i[5].strftime('%Y-%m-%d')
-                    if int(i[4]) == 0:
-                        coin_info = "+ 20 GSG"
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
@@ -985,7 +983,7 @@ class CustomerView(ListAPIView):
         else:
             sql_list = "ui.invitee_one, u.avatar, u.nickname, u.created_at, ui.inviter_type,"
             sql_list += " (select l.login_time from users_loginrecord l where " \
-                        "l.user_id=ui.invitee_one order by l.login_time desc limit 1) as login_time"
+                        "l.user_id=ui.invitee_one order by l.login_time desc limit 1) as login_time, ui.status"
             sql = "select " + sql_list + " from users_userinvitation ui"
             sql += " inner join users_user u on ui.invitee_one=u.id"
             sql += " where ui.invitee_one != 0"
@@ -1003,15 +1001,13 @@ class CustomerView(ListAPIView):
             data = []
             for i in invitee_list:
                 coin_info = ""
-                if int(i[4]) == 1:
+                if int(i[6]) == 2:
                     coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] is None:
                     login_time = ""
                 else:
                     login_time = i[5].strftime('%Y-%m-%d')
-                    if int(i[4]) == 0:
-                        coin_info = "+ 20 GSG"
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
