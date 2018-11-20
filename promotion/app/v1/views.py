@@ -469,7 +469,7 @@ class ClubDetailView(ListAPIView):
                     if int(i[6]) == 3:
                         rule_name = "六合彩"
                     if int(i[6]) == 4:
-                        rule_name = "股指"
+                        rule_name = "猜股指"
                     if int(i[6]) == 5:
                         rule_name = "股指PK"
                     if int(i[6]) == 6:
@@ -583,7 +583,6 @@ class ClubDividendView(ListAPIView):
         sql += " where c.id = '" + str(club_id) + "'"
         club_info = get_sql(sql)[0]
         coin_accuracy = club_info[0]  # 货币精度
-        coin_name = club_info[1]  # 货币昵称
 
         type = str(self.request.GET.get('type'))
         regex = re.compile(r'^(1|2|3|4|5|6|7|8)$')  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股票PK
@@ -796,7 +795,7 @@ class ClubDividendView(ListAPIView):
                 if int(i[3]) == 3:
                     rule_name = "六合彩"
                 if int(i[3]) == 4:
-                    rule_name = "股指"
+                    rule_name = "猜股指"
                 if int(i[3]) == 5:
                     rule_name = "股指PK"
                 if int(i[3]) == 6:
