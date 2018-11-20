@@ -964,12 +964,16 @@ class CustomerView(ListAPIView):
             invitee_list = self.get_list_by_sql(sql)
             data = []
             for i in invitee_list:
-                coin_info = "+ 20 GSG"
+                coin_info = ""
+                if int(i[4]) == 1:
+                    coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
-                if i[5] == None:
+                if i[5] is None:
                     login_time = ""
                 else:
                     login_time = i[5].strftime('%Y-%m-%d')
+                    if int(i[4]) == 0:
+                        coin_info = "+ 20 GSG"
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
@@ -998,12 +1002,16 @@ class CustomerView(ListAPIView):
             invitee_list = self.get_list_by_sql(sql)
             data = []
             for i in invitee_list:
-                coin_info = "+ 20 GSG"
+                coin_info = ""
+                if int(i[4]) == 1:
+                    coin_info = "+ 20 GSG"
                 user_list[i[0]] = i[0]
                 if i[5] is None:
                     login_time = ""
                 else:
                     login_time = i[5].strftime('%Y-%m-%d')
+                    if int(i[4]) == 0:
+                        coin_info = "+ 20 GSG"
                 data.append({
                     "user_id": i[0],
                     "avatar": i[1],
