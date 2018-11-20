@@ -757,7 +757,7 @@ class ClubDividendView(ListAPIView):
             sql_list += " date_format( p.created_at, '%H:%i:%s' ) as years,"
             sql_list += " p.source, u.nickname, u.avatar, sum(p.earn_coin),"
             sql_list += " date_format( p.created_at, '%Y%m' ) AS created_ats, p.user_id, " \
-                        "date_format( p.created_at, '%Y%m%d%H%i%s' ) as times, p.id"
+                        "date_format( p.created_at, '%Y%m%d%H%i%s' ) as times, p.id, p.status"
 
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
@@ -815,7 +815,8 @@ class ClubDividendView(ListAPIView):
                         "avatar": i[5],
                         "user_id": i[8],
                         "created_ats": i[7],
-                        "times": i[9]
+                        "times": i[9],
+                        "status": i[10]
                     })
 
             football_lists = get_sql(sql)
@@ -896,6 +897,7 @@ class ClubDividendView(ListAPIView):
                     "dividend": dividend,
                     "result": result,
                     "rule": fav["rule"],
+                    "status": int(fav["status"]),
                     "pecific_dates": pecific_dates,
                     "pecific_date": pecific_date,
                 })
