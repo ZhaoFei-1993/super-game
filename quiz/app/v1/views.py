@@ -230,11 +230,13 @@ class QuizListView(ListCreateAPIView):
             sql += " and a.roomquiz_id = '" + str(roomquiz_id) + "'"
             sql += " group by a.quiz_id"
             total_coin = get_sql(sql)  # 投注金额
-            club = Club.objects.get(pk=roomquiz_id)
+
+            coin_id = Club.objects.get_one(pk=roomquiz_id).coin_id
+            coin_accuracy = Coin.objects.get_one(pk=coin_id).coin_accuracy
             for s in total_coin:
                 for a in data:
                     if a['id'] == s[0]:
-                        a['total_coin'] = normalize_fraction(s[1], int(club.coin.coin_accuracy))
+                        a['total_coin'] = normalize_fraction(s[1], int(coin_accuracy))
 
         return self.response({"code": 0, "data": data})
 
