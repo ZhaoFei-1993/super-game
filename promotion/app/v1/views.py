@@ -816,7 +816,7 @@ class ClubDividendView(ListAPIView):
                         "user_id": i[8],
                         "created_ats": i[7],
                         "times": i[9],
-                        "status": i[10]
+                        "status": i[11]
                     })
 
             football_lists = get_sql(sql)
