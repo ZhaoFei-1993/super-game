@@ -17,8 +17,8 @@ headers = {
 # 各个股票数据源地址
 url_shen = 'http://www.szse.cn/api/market/ssjjhq/getTimeData?random=0.6430127918854951&marketId=1&code=399001'
 url_shang = 'http://yunhq.sse.com.cn:32041/v1/sh1/line/000001?callback=jQuery111208645993247577721_1541046387829&begin=0&end=-1&select=time%2Cprice%2Cvolume'
-url_djia = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=ixic'
-url_nasdaq = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=.indu'
+url_djia = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=.indu'
+url_nasdaq = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=ixic'
 url_hsi = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=457e1aa48b5dc5ea25a0766d5d08c047&eprop=minute'
 
 
