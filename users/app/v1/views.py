@@ -1634,7 +1634,8 @@ class PresentationListView(ListAPIView):
                     'amount': normalize_fraction(x['amount'], 8),
                     'address': x['address'],
                     'status_code': x['status'],
-                    'created_at': x['created_at']
+                    'created_at': x['created_at'],
+                    'txid': x['txid'],
                 }
             )
         return self.response({'code': 0, 'data': data})
