@@ -1635,7 +1635,6 @@ class PresentationListView(ListAPIView):
                     'address': x['address'],
                     'status_code': x['status'],
                     'created_at': x['created_at'],
-                    'txid': x['txid'],
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -1667,7 +1666,8 @@ class PresentationDetailView(RetrieveAPIView):
             'service_coin_name': service.coin_payment.name,
             'address_name': sers['address_name'],
             'address': sers['address'],
-            'created_at': sers['created_at']
+            'created_at': sers['created_at'],
+            'txid': sers['txid'],
         }
         status = int(sers['status'])
         data['status_code'] = status
@@ -1722,7 +1722,6 @@ class RechargeListView(ListAPIView):
                     'address': x['address'],
                     'status': x['status'],
                     'trade_at': x['trade_at'],
-                    'txid': x['txid'],
                 }
             )
         return self.response({'code': 0, 'data': data})
@@ -1749,7 +1748,8 @@ class RechargeDetailView(RetrieveAPIView):
             'address_name': sers['address'],
             'address': sers['address'],
             'status': sers['status'],
-            'trade_at': sers['trade_at']
+            'trade_at': sers['trade_at'],
+            'txid': sers['txid'],
         }
         return self.response({'code': 0, 'data': data})
 
