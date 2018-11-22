@@ -512,9 +512,9 @@ class Command(BaseCommand):
         print('正在执行开奖脚本...  ', 'now is ', datetime.datetime.now())
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
         if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                               category__parent_id=2).exists():
+                               category__parent_id=1).exists():
             for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                                                  category__parent_id=2):
+                                                  category__parent_id=1):
                 delay_quiz.status = Quiz.DELAY
                 handle_delay_game(delay_quiz)
                 delay_quiz.save()

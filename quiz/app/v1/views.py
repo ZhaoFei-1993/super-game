@@ -157,6 +157,9 @@ class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
+        # 父分类 1: 篮球, 2: 足球
+        category_parent = self.request.parser_context['kwargs']['category_parent']
+
         # 竞猜赛事分类
         category_id = None
         if 'category' in self.request.GET and self.request.GET.get('category') != '':
@@ -170,24 +173,28 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if category_id is None:
                 if quiz_type == 1:  # 未结束
-                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False).order_by('begin_at')
+                    return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
+                                               category__parent_id=category_parent).order_by('begin_at')
                 elif quiz_type == 2:  # 已结束
-                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False).order_by('-begin_at')
+                    return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5), is_delete=False,
+                                               category__parent_id=category_parent).order_by(
+                        '-begin_at')
             else:
                 category_id = str(category_id)
                 category_arr = category_id.split(',')
                 if quiz_type == 1:  # 未开始
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
-                                               is_delete=False, category__in=category_arr).order_by('begin_at')
+                                               is_delete=False, category__parent_id=category_parent,
+                                               category__in=category_arr).order_by('begin_at')
                 elif quiz_type == 2:  # 已结束
                     return Quiz.objects.filter(Q(status=3) | Q(status=4) | Q(status=5),
-                                               is_delete=False, category__in=category_arr).order_by('-begin_at')
+                                               is_delete=False, category__parent_id=category_parent,
+                                               category__in=category_arr).order_by('-begin_at')
         else:
             user_id = self.request.user.id
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-            quiz_id = list(
-                set(Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)))
-            my_quiz = Quiz.objects.filter(id__in=quiz_id).order_by('-begin_at')
+            quiz_id = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).values_list('quiz_id', flat=True)
+            my_quiz = Quiz.objects.filter(id__in=quiz_id, category__parent_id=category_parent).order_by('-begin_at')
             return my_quiz
 
     def list(self, request, *args, **kwargs):
@@ -598,7 +605,8 @@ class RuleView(ListAPIView):
                 map_rule_option_odds[rule.id].append(option_odd)
                 all_option_odds_ids.append(option_odd.id)
 
-        record_option_total = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id__in=rule_ids).values_list('option_id').annotate(Count('id')).order_by('option_id')
+        record_option_total = Record.objects.filter(roomquiz_id=roomquiz_id, rule_id__in=rule_ids).values_list(
+            'option_id').annotate(Count('id')).order_by('option_id')
         # 每个玩法总下注数
         record_rule_total = {}
         # 每个选项总下注数
@@ -1084,14 +1092,14 @@ class Change(ListAPIView):
         sql += "  ORDER BY v.created_at DESC limit 1"
         # gsg_list = get_sql(sql)    # gsg价格列表
         # print("gsg_list====================================", gsg_list)
-        gsg_values = get_sql(sql)[0][0]    # gsg价格
+        gsg_values = get_sql(sql)[0][0]  # gsg价格
 
         sql = "select a.price from users_coinprice a"
         sql += " where coin_name='ETH'"
         sql += " and a.platform_name!=''"
         eth_vlue = get_sql(sql)[0][0]  # ETH 价格
         # gsg_value = Decimal(0.3)
-        gsg_value = gsg_values*eth_vlue
+        gsg_value = gsg_values * eth_vlue
         convert_ratio = int(eth_vlue / gsg_value)  # 1 ETH 换多少 GSG
         toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
 
