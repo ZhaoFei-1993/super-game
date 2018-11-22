@@ -98,7 +98,10 @@ class HotestView(ListAPIView):
     serializer_class = QuizSerialize
 
     def get_queryset(self):
-        return Quiz.objects.filter(status=0, is_delete=False).order_by('-total_people')[:10]
+        # 父分类 1: 篮球, 2: 足球
+        category_parent = self.request.parser_context['kwargs']['category_parent']
+        return Quiz.objects.filter(status=0, is_delete=False, category__parent_id=category_parent).order_by(
+            '-total_people')[:10]
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
@@ -256,14 +259,19 @@ class RecordsListView(ListCreateAPIView):
     serializer_class = RecordSerialize
 
     def get_queryset(self):
+        # 父分类 1: 篮球, 2: 足球
+        category_parent = self.request.parser_context['kwargs']['category_parent']
+
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
                 if 'roomquiz_id' not in self.request.parser_context['kwargs']:
-                    record = Record.objects.filter(user_id=user_id).order_by('-created_at')
+                    record = Record.objects.filter(user_id=user_id, quiz__category__parent_id=category_parent).order_by(
+                        '-created_at')
                 else:
                     roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-                    record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+                    record = Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id,
+                                                   quiz__category__parent_id=category_parent).order_by('-created_at')
                 return record
             else:
                 is_end = self.request.GET.get('is_end')
@@ -271,28 +279,32 @@ class RecordsListView(ListCreateAPIView):
                     if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                         return Record.objects.filter(
                             Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
-                            user_id=user_id).order_by('-created_at')
+                            user_id=user_id, quiz__category__parent_id=category_parent).order_by('-created_at')
                     else:
                         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
                         return Record.objects.filter(
                             Q(quiz__status=0) | Q(quiz__status=1) | Q(quiz__status=2) | Q(quiz__status=3),
                             user_id=user_id,
-                            roomquiz_id=roomquiz_id).order_by('-created_at')
+                            roomquiz_id=roomquiz_id, quiz__category__parent_id=category_parent).order_by('-created_at')
                 else:
                     if 'roomquiz_id' not in self.request.parser_context['kwargs']:
                         return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
-                                                     user_id=user_id).order_by('-created_at')
+                                                     user_id=user_id,
+                                                     quiz__category__parent_id=category_parent).order_by('-created_at')
                     else:
                         roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
                         return Record.objects.filter(Q(quiz__status=4) | Q(quiz__status=5) | Q(quiz__status=6),
-                                                     user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+                                                     user_id=user_id, roomquiz_id=roomquiz_id,
+                                                     quiz__category__parent_id=category_parent).order_by('-created_at')
         else:
             user_id = self.request.GET.get('user_id')
             if 'roomquiz_id' not in self.request.parser_context['kwargs']:
-                return Record.objects.filter(user_id=user_id).order_by('-created_at')
+                return Record.objects.filter(user_id=user_id, quiz__category__parent_id=category_parent).order_by(
+                    '-created_at')
             else:
                 roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id).order_by('-created_at')
+                return Record.objects.filter(user_id=user_id, roomquiz_id=roomquiz_id,
+                                             quiz__category__parent_id=category_parent).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
