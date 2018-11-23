@@ -1688,10 +1688,10 @@ class PresentationDetailView(RetrieveAPIView):
         else:
             if language == 'en':
                 data['status'] = 'Fail'
-                data['text'] = 'Reject:' + sers['feedback']
+                data['text'] = sers['feedback']
             else:
                 data['status'] = '提现失败'
-                data['text'] = '拒绝理由：' + sers['feedback']
+                data['text'] = sers['feedback']
         return self.response({'code': 0, 'data': data})
 
 
