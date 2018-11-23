@@ -1427,7 +1427,7 @@ class RecordMarkManager(BaseManager):
         """
         录入记录标记表(单)
         :param user_id:用户ID
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK， 7.公告）
+        :param rule: 类型 (1.足球, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.篮球, 8.公告）
         :return:
         """
         record_mark_number = RecordMark.objects.filter(user_id=int(user_id)).count()
@@ -1435,7 +1435,10 @@ class RecordMarkManager(BaseManager):
             record_mark = RecordMark()
             record_mark.user_id = user_id
             if int(rule) == 1:
-                record_mark.quiz = 0
+                record_mark.quiz_football = 0
+                record_mark.message = 1
+            elif int(rule) == 7:
+                record_mark.quiz_basketball = 0
                 record_mark.message = 1
             elif int(rule) == 2:
                 record_mark.six = 0
@@ -1463,7 +1466,7 @@ class RecordMarkManager(BaseManager):
         """
         更新记录标记表
         :param user_id: 用户ID
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.公告）
+        :param rule: 类型 (1.足球, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.篮球, 8.公告）
         :param status: 状态 0已读，1未读
         :return:
         """
@@ -1472,7 +1475,10 @@ class RecordMarkManager(BaseManager):
             self.insert_record_mark(user_id, rule)
             record_mark = self.get(user_id=int(user_id))
             if int(rule) == 1:
-                record_mark.quiz = int(status)
+                record_mark.quiz_football = int(status)
+                record_mark.message = 1
+            elif int(rule) == 7:
+                record_mark.quiz_basketball = int(status)
                 record_mark.message = 1
             elif int(rule) == 2:
                 record_mark.six = int(status)
@@ -1495,7 +1501,9 @@ class RecordMarkManager(BaseManager):
         else:
             record_mark = self.get(user_id=int(user_id))
             if int(rule) == 1:
-                record_mark.quiz = int(status)
+                record_mark.quiz_football = int(status)
+            elif int(rule) == 7:
+                record_mark.quiz_basketball = int(status)
             elif int(rule) == 2:
                 record_mark.six = int(status)
             elif int(rule) == 3:
@@ -1514,7 +1522,7 @@ class RecordMarkManager(BaseManager):
         """
         批量更新记录标记表
         :param user_list: 用户ID 例子：[1,2,3,4]
-        :param rule: 类型 (1. 球赛, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.公告）
+        :param rule: 类型 (1.足球, 2.六合彩, 3.猜股票, 4.龙虎斗, 5.百家乐, 6.股票PK, 7.篮球, 8.公告）
         :return:
         """
         sql = ""
@@ -1522,8 +1530,11 @@ class RecordMarkManager(BaseManager):
             list = [str(i) for i in user_list]
             key = ", 1), ("
             if int(rule) == 1:
-                record_list = "user_id, quiz"
-                keys = "quiz = VALUES (quiz)"
+                record_list = "user_id, quiz_football"
+                keys = "quiz_football = VALUES (quiz_football)"
+            elif int(rule) == 7:
+                record_list = "user_id, quiz_basketball"
+                keys = "quiz_basketball = VALUES (quiz_basketball)"
             elif int(rule) == 2:
                 record_list = "user_id, six"
                 keys = "six = VALUES (six)"
@@ -1564,7 +1575,8 @@ class RecordMark(models.Model):
         (OPEN, "未读"),
     )
     user_id = models.IntegerField(verbose_name="用户ID", default=0)
-    quiz = models.IntegerField(verbose_name="球赛", choices=TYPE_CHOICE, default=AWAIT)
+    quiz_football = models.IntegerField(verbose_name="足球", choices=TYPE_CHOICE, default=AWAIT)
+    quiz_basketball = models.IntegerField(verbose_name="篮球", choices=TYPE_CHOICE, default=AWAIT)
     guess = models.IntegerField(verbose_name="股票", choices=TYPE_CHOICE, default=AWAIT)
     guess_pk = models.IntegerField(verbose_name="股票PK", choices=TYPE_CHOICE, default=AWAIT)
     six = models.IntegerField(verbose_name="六合彩", choices=TYPE_CHOICE, default=AWAIT)

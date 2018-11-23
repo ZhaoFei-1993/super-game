@@ -347,7 +347,7 @@ def get_data_info(url, match_flag):
                 PromotionRecord.objects.club_flow_statistics(real_records, 2)
 
                 # 公告记录标记
-                RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 1)
+                RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 7)
 
             print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
             return flag
@@ -409,7 +409,7 @@ def handle_delay_game(delay_quiz):
         PromotionRecord.objects.insert_all(real_records, 2, 2)
 
         # 公告记录标记
-        RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 1)
+        RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 7)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
