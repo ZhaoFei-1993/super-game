@@ -452,11 +452,15 @@ class RecordsListView(ListCreateAPIView):
                 'bet': normalize_fraction(fav.get('bet'), map_coin_accuracy[club_id])
             })
 
+        # 父分类 1: 篮球, 2: 足球
+        category_parent = int(self.request.GET.get('category_parent'))
+        cate_to_mark = {1: 7, 2: 1}
+
         if "user_id" not in request.GET:
             user_id = self.request.user.id
         else:
             user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 1, 0)
+        RecordMark.objects.update_record_mark(user_id, 1, cate_to_mark[category_parent])
 
         return self.response({'code': 0, 'data': data})
 
@@ -900,7 +904,7 @@ class BetView(ListCreateAPIView):
         coin_detail.sources = 3
         coin_detail.save()
 
-        RecordMark.objects.update_record_mark(user.id, 1, 0)
+        # RecordMark.objects.update_record_mark(user.id, 1, 0)
 
         # 更新俱乐部对应竞猜投注的数据
         Record.objects.update_club_quiz_bet_data(quiz_id=quiz.id, club_id=roomquiz_id, user_id=user.id)
