@@ -13,7 +13,7 @@ urlpatterns = [
     # 竞猜列表
     path('list/<int:roomquiz_id>/<int:category_parent>/', views.QuizListView.as_view(), name="app-v1-quiz-list"),
     # 我的竞猜记录
-    path('records/<int:roomquiz_id>/<int:category_parent>/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
+    path('records/<int:roomquiz_id>/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
     # 他人的竞猜记录
     path('records/', views.RecordsListView.as_view(), name="app-v1-quiz-records"),
     # 竞猜详情
