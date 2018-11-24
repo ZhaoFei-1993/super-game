@@ -191,10 +191,14 @@ def get_data_info(url, match_flag):
             print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
-        is_open = True
+        is_open = False
+        if result_mnl_flag != '' and result_hdc_flag != '' and result_hilo_flag != '' and result_wnm_flag != '':
+            is_open = True
         # ------------------------------------------------------------------------------------------------
         flag = False
-        if is_open is True:
+        if is_open is not True:
+            print('===================== {match_flag} 未达到开奖要求 ====================='.format(match_flag=match_flag))
+        else:
             quiz = Quiz.objects.filter(match_flag=match_flag).first()
             quiz.host_team_score = host_team_score
             quiz.guest_team_score = guest_team_score
