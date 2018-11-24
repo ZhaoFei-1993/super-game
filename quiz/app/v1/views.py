@@ -460,7 +460,7 @@ class RecordsListView(ListCreateAPIView):
             user_id = self.request.user.id
         else:
             user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 1, cate_to_mark[category_parent])
+        RecordMark.objects.update_record_mark(user_id, cate_to_mark[category_parent], 0)
 
         return self.response({'code': 0, 'data': data})
 
