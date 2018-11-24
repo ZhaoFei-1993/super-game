@@ -317,6 +317,7 @@ class ClubRuleView(ListAPIView):
 
         sql = "select title from chat_clubrule"
         sql += " where id > 1"
+        sql += " and id < 6"
         club_rule_info = get_sql(sql)
         for i in club_rule_info:
             if i[0] == "猜股指":
@@ -534,7 +535,7 @@ class ClubDetailView(ListAPIView):
                     status = "Settled"
                 bets = Decimal(fav["bets"])
             divided_into = bets * Decimal(0.005)
-            divided_into = "+ " + str(normalize_fraction(divided_into, coin_accuracy))
+            divided_into = "+ " + str(normalize_fraction(divided_into, 8))
 
             pecific_dates = fav["years"]
             pecific_date = fav["time"]
