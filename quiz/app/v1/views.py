@@ -260,7 +260,7 @@ class RecordsListView(ListCreateAPIView):
 
     def get_queryset(self):
         # 父分类 1: 篮球, 2: 足球
-        category_parent = self.request.parser_context['kwargs']['category_parent']
+        category_parent = self.request.GET.get('category_parent')
 
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
