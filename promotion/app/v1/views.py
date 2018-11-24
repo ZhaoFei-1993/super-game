@@ -219,11 +219,11 @@ class PromotioncClubView(ListAPIView):
         if all_amount[0] is None or all_amount[0] == 0:
             all_bet_water = 0
         else:
-            all_bet_water = normalize_fraction(all_amount[0], int(coin_accuracy))
+            all_bet_water = normalize_fraction(all_amount[0], 8)
         if all_amount[1] is None or all_amount[1] == 0:
             all_dividend_water = 0
         else:
-            all_dividend_water = normalize_fraction(all_amount[1], int(coin_accuracy))
+            all_dividend_water = normalize_fraction(all_amount[1], 8)
         nowadays = datetime.datetime.now().strftime('%Y-%m-%d')  # 当天日期
         nowadays_start = str(nowadays) + ' 00:00:00'
         nowadays_end = str(nowadays) + ' 23:59:59'
