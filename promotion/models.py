@@ -7,7 +7,7 @@ import reversion
 from sms.models import Sms
 from captcha.models import CaptchaStore
 from utils.models import CodeModel
-from users.models import User
+from users.models import User, CoinDetail
 from chat.models import Club
 from base.models import BaseManager
 import datetime
@@ -82,6 +82,14 @@ class UserPresentationManager(BaseManager):
             inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
             inviter_coin.balance += Decimal(bet) * Decimal('0.005')
             inviter_coin.save()
+
+            coin_detail = CoinDetail()
+            coin_detail.user = inviter_coin.user
+            coin_detail.coin_name = day_data.club.coin.name
+            coin_detail.amount = Decimal(bet) * Decimal('0.005')
+            coin_detail.rest = inviter_coin.balance
+            coin_detail.sources = 19
+            coin_detail.save()
 
 
 @reversion.register()

@@ -389,10 +389,10 @@ class UserAllSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_integral(obj):
         try:
-            integral = UserCoin.objects.get(user_id = obj.id, coin_id=6)
+            integral = UserCoin.objects.get(user_id=obj.id, coin_id=6)
         except Exception:
             return 0
-        return round(float(integral.balance),2)
+        return round(float(integral.balance), 2)
 
     @staticmethod
     def get_ip_count(obj):
@@ -408,9 +408,6 @@ class UserAllSerializer(serializers.ModelSerializer):
             ip_count = dt_all[0][0] if dt_all[0][0] else 0
             # ip_count = User.objects.filter(ip_address__contains=ip).count()
             return ip_count
-
-
-
 
 
 class CoinDetailSerializer(serializers.ModelSerializer):
@@ -550,7 +547,6 @@ class MessageBackendSerializer(serializers.ModelSerializer):
         return created_time
 
 
-
 class DividendHistorySerializer(serializers.ModelSerializer):
     """
     历史分红序列化
@@ -624,7 +620,7 @@ class UserCoinLockSerializer(serializers.ModelSerializer):
     def get_delta(obj):
         now_time = datetime.now()
         delta = obj.end_time - now_time
-        if delta.seconds <=0:
+        if delta.seconds <= 0:
             value = '剩余锁定时间:0天0小时0分'
         else:
             d = delta.days
@@ -642,6 +638,7 @@ class UserCoinLockSerializer(serializers.ModelSerializer):
         lock_days = obj.end_time.date() - obj.created_at.date()
         return lock_days.days
 
+
 class DividendCoinSerializer(serializers.ModelSerializer):
     """
     分红详情
@@ -649,17 +646,20 @@ class DividendCoinSerializer(serializers.ModelSerializer):
     coin_name = serializers.CharField(source='coin.name')
     total_number = serializers.SerializerMethodField()
     total_revenue = serializers.SerializerMethodField()
+
     class Meta:
         model = DividendConfigCoin
-        fields = ('coin_name', 'scale', 'price', 'dividend_price', 'total_number', 'coin_dividend', 'coin_titular_dividend', 'revenue', 'total_revenue')
+        fields = (
+        'coin_name', 'scale', 'price', 'dividend_price', 'total_number', 'coin_dividend', 'coin_titular_dividend',
+        'revenue', 'total_revenue')
 
     @staticmethod
     def get_total_number(obj):
         if obj.price > 0:
-            return normalize_fraction(obj.dividend_price/obj.price, 12)
+            return normalize_fraction(obj.dividend_price / obj.price, 12)
         else:
             return 0
 
     @staticmethod
     def get_total_revenue(obj):
-        return normalize_fraction(obj.revenue*obj.price, 12)
+        return normalize_fraction(obj.revenue * obj.price, 12)

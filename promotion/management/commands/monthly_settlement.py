@@ -7,8 +7,9 @@ import datetime
 from datetime import timedelta
 from utils.functions import get_sql, reward_gradient_all, opposite_number
 from promotion.models import PresentationMonth
-from users.models import UserCoin
+from users.models import UserCoin, CoinDetail
 from console.models import Address
+from decimal import Decimal
 
 
 class Command(BaseCommand, BaseView):
@@ -52,3 +53,11 @@ class Command(BaseCommand, BaseView):
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
                 coin_info.save()
+
+                coin_detail = CoinDetail()
+                coin_detail.user = UserCoin.user
+                coin_detail.coin_name = UserCoin.coin.name
+                coin_detail.amount = Decimal(income_dividend)
+                coin_detail.rest = coin_info.balance
+                coin_detail.sources = 20
+                coin_detail.save()

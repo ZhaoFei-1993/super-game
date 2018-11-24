@@ -172,10 +172,10 @@ class PromotionListView(ListAPIView):
                 all_income_dividend = opposite_number(all_income_dividend)
                 income_dividends = all_income_dividend * Decimal(income_dividend)
 
-                i["bet_water"] = normalize_fraction(coin_number_info[i["club_id"]][1], i["coin_accuracy"])
-                i["dividend_water"] = normalize_fraction(coin_number_info[i["club_id"]][2], i["coin_accuracy"])
-                i["income"] = normalize_fraction(coin_number_info[i["club_id"]][3], i["coin_accuracy"])
-                income_dividends_s = normalize_fraction(income_dividends, i["coin_accuracy"])
+                i["bet_water"] = normalize_fraction(coin_number_info[i["club_id"]][1], 8)
+                i["dividend_water"] = normalize_fraction(coin_number_info[i["club_id"]][2], 8)
+                i["income"] = normalize_fraction(coin_number_info[i["club_id"]][3], 8)
+                income_dividends_s = normalize_fraction(income_dividends, 8)
                 if income_dividends_s <= 0:
                     income_dividends_s = 0
                 i["income_dividends"] = income_dividends_s
@@ -236,11 +236,11 @@ class PromotioncClubView(ListAPIView):
         if nowadays_amount[0] is None or nowadays_amount[0] == 0:
             nowadays_bet_water = 0
         else:
-            nowadays_bet_water = normalize_fraction(nowadays_amount[0], int(coin_accuracy))
+            nowadays_bet_water = normalize_fraction(nowadays_amount[0], 8)
         if nowadays_amount[1] is None or nowadays_amount[1] == 0:
             nowadays_dividend_water = 0
         else:
-            nowadays_dividend_water = normalize_fraction(nowadays_amount[1], int(coin_accuracy))
+            nowadays_dividend_water = normalize_fraction(nowadays_amount[1], 8)
         yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         yesterday_start = str(yesterday) + ' 00:00:00'
         yesterday_end = str(yesterday) + ' 23:59:59'
@@ -253,11 +253,11 @@ class PromotioncClubView(ListAPIView):
         if yesterday_amount[0] is None or yesterday_amount[0] == 0:
             yesterday_bet_water = 0
         else:
-            yesterday_bet_water = normalize_fraction(yesterday_amount[0], int(coin_accuracy))
+            yesterday_bet_water = normalize_fraction(yesterday_amount[0], 8)
         if yesterday_amount[1] is None or yesterday_amount[1] == 0:
             yesterday_dividend_water = 0
         else:
-            yesterday_dividend_water = normalize_fraction(yesterday_amount[1], int(coin_accuracy))
+            yesterday_dividend_water = normalize_fraction(yesterday_amount[1], 8)
 
         sql = "select DATE_FORMAT(pm.created_at,'%Y年%m月')months, pm.income, pm.income_dividend, pm.proportion " \
               "from promotion_presentationmonth pm"
@@ -270,11 +270,11 @@ class PromotioncClubView(ListAPIView):
             sum_coin += Decimal(i[2])
             month_list.append({
                 "months": i[0],
-                "income": normalize_fraction(i[1], int(coin_accuracy)),
-                "income_dividend": normalize_fraction(i[2], int(coin_accuracy)),
-                "proportion": normalize_fraction(i[3], int(coin_accuracy))
+                "income": normalize_fraction(i[1], 8),
+                "income_dividend": normalize_fraction(i[2], 8),
+                "proportion": normalize_fraction(i[3], 8)
             })
-        sum_coin = normalize_fraction(sum_coin, int(coin_accuracy))
+        sum_coin = normalize_fraction(sum_coin,8)
 
         return self.response({'code': 0, 'data': {
             "coin_icon": coin_icon,
@@ -478,7 +478,7 @@ class ClubDetailView(ListAPIView):
                     if int(i[6]) == 7:
                         rule_name = "龙虎斗"
                     data_list.append({
-                        "bets": normalize_fraction(i[0], coin_accuracy),
+                        "bets": normalize_fraction(i[0], 8),
                         "yearss": i[1],
                         "years": i[2],
                         "time": i[3],
@@ -496,7 +496,7 @@ class ClubDetailView(ListAPIView):
                     if i[9] not in user_list:
                         user_list[i[9]] = i[9]
                     data_lists.append({
-                        "bets": normalize_fraction(i[0], coin_accuracy),
+                        "bets": normalize_fraction(i[0], 8),
                         "yearss": i[1],
                         "years": i[2],
                         "time": i[3],
@@ -516,8 +516,8 @@ class ClubDetailView(ListAPIView):
             if int(fav["status"]) == 1:
                 bet_water += Decimal(fav["bets"])
         dividend_water = Decimal(bet_water) * Decimal(0.005)
-        bet_water = str(normalize_fraction(bet_water, coin_accuracy)) + " " + coin_name
-        dividend_water = str(normalize_fraction(dividend_water, coin_accuracy)) + " " + coin_name
+        bet_water = str(normalize_fraction(bet_water, 8)) + " " + coin_name
+        dividend_water = str(normalize_fraction(dividend_water, 8)) + " " + coin_name
 
         for fav in data_one_list:
             bets = Decimal(0)
@@ -738,7 +738,7 @@ class ClubDividendView(ListAPIView):
         for i in amount_list:
             month_list[i[0]] = {
                 "months": i[0],
-                "proportion": normalize_fraction(i[1], int(coin_accuracy))
+                "proportion": normalize_fraction(i[1], 8)
             }
         sql = "select ui.invitee_one from users_userinvitation ui"
         sql += " where ui.inviter_id = '" + str(user.id) + "'"
@@ -853,7 +853,7 @@ class ClubDividendView(ListAPIView):
             else:
                 test_proportion = month_list[test_created_ats]["proportion"]
             the_month_income_sum = Decimal(sum_coin) * Decimal(test_proportion)
-            the_month_income_sum = normalize_fraction(the_month_income_sum, coin_accuracy)
+            the_month_income_sum = normalize_fraction(the_month_income_sum, 8)
             if the_month_income_sum == 0:
                 the_month_income_sum = 0
 
@@ -871,7 +871,7 @@ class ClubDividendView(ListAPIView):
                     result = 0
                     reward_coin = fav["earn_coin"]
 
-                dividend = normalize_fraction((opposite_number(reward_coin) * proportion), coin_accuracy)
+                dividend = normalize_fraction((opposite_number(reward_coin) * proportion), 8)
                 if dividend == 0:
                     dividend = 0
                 if dividend < 0 and dividend != 0:
@@ -885,7 +885,7 @@ class ClubDividendView(ListAPIView):
                 else:
                     tmps = pecific_dates
 
-                reward_coin = normalize_fraction(reward_coin, coin_accuracy)
+                reward_coin = normalize_fraction(reward_coin, 8)
                 if reward_coin < 0:
                     reward_coin = -(reward_coin)
                     reward_coin = "- " + str(reward_coin)
@@ -893,7 +893,7 @@ class ClubDividendView(ListAPIView):
                     "nickname": fav["nickname"],
                     "avatar": fav["avatar"],
                     "user_id": fav["user_id"],
-                    "bets": normalize_fraction(fav["bets"], coin_accuracy),
+                    "bets": normalize_fraction(fav["bets"], 8),
                     "reward_coin": reward_coin,
                     "dividend": dividend,
                     "result": result,
@@ -1230,8 +1230,8 @@ class UserInfoView(ListAPIView):
                         income_dividend = month_list[club_id][s]["proportion"]
                     else:
                         income_dividend = 0
-                    sum_bet += normalize_fraction(data_list[club_id][s]["bets"], int(coin_accuracy))
-                    income = normalize_fraction(data_list[club_id][s]["earn_coin"], int(coin_accuracy))
+                    sum_bet += normalize_fraction(data_list[club_id][s]["bets"], 8)
+                    income = normalize_fraction(data_list[club_id][s]["earn_coin"], 8)
                     sum_income += income
                     sum_income_water += Decimal(income_dividend) * Decimal(opposite_number(income))
                 sum_bet_water = sum_bet * Decimal(0.005)
@@ -1239,8 +1239,8 @@ class UserInfoView(ListAPIView):
                 "coin_name": coin_name,
                 "coin_icon": coin_icon,
                 "sum_bet": sum_bet,
-                "sum_bet_water": normalize_fraction(sum_bet_water, int(coin_accuracy)),
+                "sum_bet_water": normalize_fraction(sum_bet_water, 8),
                 "sum_income": sum_income,
-                "sum_income_water": normalize_fraction(sum_income_water, int(coin_accuracy))
+                "sum_income_water": normalize_fraction(sum_income_water, 8)
             })
         return self.response({'code': 0, "user_info": user_info, "data": data})

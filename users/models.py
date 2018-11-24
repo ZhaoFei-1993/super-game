@@ -367,6 +367,8 @@ class CoinDetail(models.Model):
     BACCARAT = 16
     MOBILE = 17
     BANKER = 18
+    WATER = 19
+    REWARD = 20
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -388,6 +390,8 @@ class CoinDetail(models.Model):
         (UNLOCK, "解锁"),
         (MOBILE, "转账"),
         (BANKER, "联合做庄"),
+        (WATER, "流水分成"),
+        (REWARD, "盈亏分成"),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
