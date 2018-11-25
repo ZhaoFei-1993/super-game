@@ -111,7 +111,7 @@ class PromotionListView(ListAPIView):
             sql = "select sum(pu.income), pu.club_id from promotion_userpresentation pu"
             sql += " where pu.club_id in (" + ','.join(coin_id_list) + ")"
             sql += " and pu.user_id = '" + str(user.id) + "'"
-            sql += " and pu.created_at >= '" + str(month_first_day) + "'"
+            sql += " and pu.created_at >= '" + str(start) + "'"
             sql += " and pu.created_at <= '" + str(end) + "'"
             sql += " group by pu.club_id"
             monthly_summary = get_sql(sql)
@@ -122,7 +122,7 @@ class PromotionListView(ListAPIView):
             sql = "select sum(pu.income), pu.club_id from promotion_userpresentation pu"
             sql += " where pu.club_id in (" + ','.join(coin_id_list) + ")"
             sql += " and pu.user_id = '" + str(user.id) + "'"
-            sql += " and pu.created_at >= '" + str(month_first_day) + "'"
+            sql += " and pu.created_at >= '" + str(start) + "'"
             sql += " and pu.created_at <= '" + str(end) + "'"
             sql += " group by pu.club_id"
             monthly_summary = get_sql(sql)
