@@ -189,8 +189,11 @@ class QuizListView(ListCreateAPIView):
         if 'is_user' not in self.request.GET:
             if category_id is None:
                 if quiz_type == 0:  # 全部
-                    return Quiz.objects.filter(status__in=['0', '1', '2', '3', '4', '5'], is_delete=False,
-                                               category__parent_id=category_parent).order_by('begin_at')
+                    quiz_list = list(Quiz.objects.filter(status__in=['0', '1', '2', ], is_delete=False,
+                                                         category__parent_id=category_parent).order_by('begin_at'))
+                    quiz_end_list = list(Quiz.objects.filter(status__in=['3', '4', '5'], is_delete=False,
+                                                             category__parent_id=category_parent).order_by('-begin_at'))
+                    return quiz_list + quiz_end_list
                 elif quiz_type == 1:  # 未结束
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
                                                category__parent_id=category_parent).order_by('begin_at')
@@ -202,9 +205,13 @@ class QuizListView(ListCreateAPIView):
                 category_id = str(category_id)
                 category_arr = category_id.split(',')
                 if quiz_type == 0:  # 全部
-                    return Quiz.objects.filter(status__in=['0', '1', '2', '3', '4', '5'], is_delete=False,
-                                               category__parent_id=category_parent, category__in=category_arr).order_by(
-                        'begin_at')
+                    quiz_list = list(Quiz.objects.filter(status__in=['0', '1', '2', ], is_delete=False,
+                                                         category__parent_id=category_parent,
+                                                         category__in=category_arr).order_by('begin_at'))
+                    quiz_end_list = list(Quiz.objects.filter(status__in=['3', '4', '5'], is_delete=False,
+                                                             category__parent_id=category_parent,
+                                                             category__in=category_arr).order_by('-begin_at'))
+                    return quiz_list + quiz_end_list
                 elif quiz_type == 1:  # 未开始
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
                                                is_delete=False, category__parent_id=category_parent,
