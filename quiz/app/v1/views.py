@@ -46,10 +46,14 @@ class CategoryView(ListAPIView):
 
         root_category = sorted(root_category, key=lambda r: r.order)
         quiz_category = Quiz.objects.filter(category_id__in=child_category_ids).values_list('category_id', flat=True)
+        quiz_ing_category = Quiz.objects.filter(Q(status=str(Quiz.PUBLISHING)) | Q(status=str(Quiz.REPEALED)),
+                                                category_id__in=child_category_ids).values_list('category_id',
+                                                                                                flat=True)
 
         items = []
         for category in root_category:
             children = []
+            children_ing = []
 
             # 分类名称
             category_name = category.name
@@ -76,15 +80,24 @@ class CategoryView(ListAPIView):
                 # 分类下无竞猜记录的不显示
                 if child.id not in quiz_category:
                     continue
-                children.append({
-                    'category_id': child.id,
-                    'category_name': child_category_name,
-                })
+
+                if child.id in quiz_ing_category:
+                    children_ing.append({
+                        'category_id': child.id,
+                        'category_name': child_category_name,
+                        'is_ing': 1
+                    })
+                else:
+                    children.append({
+                        'category_id': child.id,
+                        'category_name': child_category_name,
+                        'is_ing': 0
+                    })
 
             items.append({
                 'category_id': category.id,
                 'category_name': category_name,
-                'children': children,
+                'children': children_ing + children,
             })
 
         return self.response({'code': 0, 'data': items})
@@ -168,14 +181,17 @@ class QuizListView(ListCreateAPIView):
         if 'category' in self.request.GET and self.request.GET.get('category') != '':
             category_id = self.request.GET.get('category')
 
-        # 赛事类型：1＝未结束，2＝已结束
-        quiz_type = 1
+        # 赛事类型：0=全部，1＝未结束，2＝已结束
+        quiz_type = 0
         if 'type' in self.request.GET and self.request.GET['type'] != '':
             quiz_type = int(self.request.GET.get('type'))
 
         if 'is_user' not in self.request.GET:
             if category_id is None:
-                if quiz_type == 1:  # 未结束
+                if quiz_type == 0:  # 全部
+                    return Quiz.objects.filter(status__in=['0', '1', '2', '3', '4', '5'], is_delete=False,
+                                               category__parent_id=category_parent).order_by('begin_at')
+                elif quiz_type == 1:  # 未结束
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2), is_delete=False,
                                                category__parent_id=category_parent).order_by('begin_at')
                 elif quiz_type == 2:  # 已结束
@@ -185,7 +201,11 @@ class QuizListView(ListCreateAPIView):
             else:
                 category_id = str(category_id)
                 category_arr = category_id.split(',')
-                if quiz_type == 1:  # 未开始
+                if quiz_type == 0:  # 全部
+                    return Quiz.objects.filter(status__in=['0', '1', '2', '3', '4', '5'], is_delete=False,
+                                               category__parent_id=category_parent, category__in=category_arr).order_by(
+                        'begin_at')
+                elif quiz_type == 1:  # 未开始
                     return Quiz.objects.filter(Q(status=0) | Q(status=1) | Q(status=2),
                                                is_delete=False, category__parent_id=category_parent,
                                                category__in=category_arr).order_by('begin_at')
