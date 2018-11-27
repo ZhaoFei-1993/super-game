@@ -178,7 +178,7 @@ API_ERROR_MESSAGE = {
     API_100101_USER_MOBILE_COIN: '该币暂不支持转账',
     API_100102_USER_MOBILE_COIN: '该用户不存在',
     API_100103_USER_MOBILE_COIN: '不可选自己为收款人',
-    API_110101_USER_BANKER: '比赛或已开始！该状态吧接受下注！',
+    API_110101_USER_BANKER: '比赛或已开始！该状态不接受下注！',
     API_110102_USER_BANKER: '不在接受做庄时间！',
     API_110103_USER_BANKER: '剩余可认购额不足！',
 

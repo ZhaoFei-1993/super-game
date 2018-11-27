@@ -11,6 +11,7 @@ from utils.cache import set_cache, get_cache, decr_cache, incr_cache, delete_cac
 from users.models import Coin, UserCoin
 from guess.models import Periods
 import re
+import json
 import datetime
 from django.db import transaction
 from users.models import CoinDetail
@@ -48,7 +49,7 @@ class BankerHomeView(ListAPIView):
                     "type": id,                    # id
                     "icon": s.banker_icon,          # 图片
                     "name": s.title,             # 标题
-                    "stop": s.is_banker,        # 是否停止  1:是 2.否
+                    "stop": s.is_banker,        # 是否停止  1:是 0.否
                     "order": s.banker_sort   # 排序
                 })
             banker_rule_info = sorted(banker_rule_info, key=lambda x: x['order'], reverse=False)
@@ -248,67 +249,86 @@ class BankerBuyView(CreateAPIView):
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
         user = request.user
-        value = value_judge(request, "type", "club_id", "key_id", "amount")
+        value = value_judge(request, "type", "club_id", "data")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         type = self.request.data['type']  # 玩法类型
         regex = re.compile(r'^(1|2|3|4)$')      # 1.足球 2.篮球  3.六合彩  4.猜股票
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        type = int(type)
         club_id = int(self.request.data['club_id'])  # 俱乐部id
-        key_id = int(self.request.data['key_id'])  # key_id
-        amount = Decimal(self.request.data['amount'])  # 金额
+        data = self.request.data['data']  # key_id
+        data = json.loads(str(data))
         # club_info = Club.objects.get(pk=club_id)
         club_info = Club.objects.get_one(pk=club_id)
         # coin_info = Coin.objects.get(id=club_info.coin_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
-        if amount <= 0:
-            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        if user_coin.balance < amount:
+
+        info = []
+        new_sum_balance = 0
+
+        for i in data:
+            amount = Decimal(i["amount"])
+            key_id = int(i["key_id"])
+
+            if amount <= 0:
+                raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+            if type == 1 or type == 2:  # 1.足球  2.篮球
+                list_info = Quiz.objects.get(id=key_id)
+                if int(list_info.status) != 0:
+                    raise ParamErrorException(error_code.API_110101_USER_BANKER)
+            elif type == 3:  # 六合彩
+                list_info = OpenPrice.objects.get(id=key_id)
+                next_closing = list_info.next_closing + datetime.timedelta(hours=1)
+                if datetime.datetime.now() > next_closing:
+                    raise ParamErrorException(error_code.API_110102_USER_BANKER)
+            else:  # 股票
+                list_info = Periods.objects.get(id=key_id)
+                rotary_header_time = list_info.rotary_header_time + datetime.timedelta(hours=1)
+                if datetime.datetime.now() > rotary_header_time:
+                    raise ParamErrorException(error_code.API_110102_USER_BANKER)
+
+            all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
+            sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
+            sum_amount = Decimal(sum_balance) + amount   # 认购以后该局的总已认购额
+
+            banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
+            sum_share = Decimal(banker_share.balance)  # 总可购份额
+
+            info.append({
+                "key_id": key_id,
+                "sum_amount": sum_amount,
+                "sum_share": sum_share,
+                "amount": amount
+            })
+
+            if sum_amount > sum_share:
+                raise ParamErrorException(error_code.API_110103_USER_BANKER)
+            new_sum_balance += amount
+        if user_coin.balance < new_sum_balance:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
-        if int(type) == 1 or int(type) == 2:
-            list_info = Quiz.objects.get(id=key_id)
-            if int(list_info.status) != 0:
-                raise ParamErrorException(error_code.API_110101_USER_BANKER)
-        elif int(type) == 3:
-            list_info = OpenPrice.objects.get(id=key_id)
-            next_closing = list_info.next_closing + datetime.timedelta(hours=1)
-            if datetime.datetime.now() > next_closing:
-                raise ParamErrorException(error_code.API_110102_USER_BANKER)
-        else:
-            list_info = Periods.objects.get(id=key_id)
-            rotary_header_time = list_info.rotary_header_time + datetime.timedelta(hours=1)
-            if datetime.datetime.now() > rotary_header_time:
-                raise ParamErrorException(error_code.API_110102_USER_BANKER)
+        for s in info:
+            banker_record = BankerRecord()
+            banker_record.club = club_info
+            banker_record.user = user
+            banker_record.balance = s["amount"]
+            proportion = s["amount"]/s["sum_share"]
+            banker_record.proportion = proportion
+            banker_record.source = type
+            banker_record.key_id = s["key_id"]
+            banker_record.save()
 
-        all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
-        sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
-        sum_amount = sum_balance + amount
-
-        banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
-        sum_share = int(banker_share.balance)  # 份额
-
-        if sum_amount > sum_share:
-            raise ParamErrorException(error_code.API_110103_USER_BANKER)
-
-        banker_record = BankerRecord()
-        banker_record.club = club_info
-        banker_record.user = user
-        banker_record.balance = amount
-        proportion = amount/sum_share
-        banker_record.proportion = proportion
-        banker_record.source = type
-        banker_record.key_id = key_id
-        banker_record.save()
-
-        user_coin.balance -= amount
+        user_coin.balance -= Decimal(new_sum_balance)
         user_coin.save()
 
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = coin_info.name
+        coin_detail.amount = Decimal('-' + str(new_sum_balance))
         coin_detail.rest = user_coin.balance
         coin_detail.sources = 18
         coin_detail.save()
@@ -330,9 +350,7 @@ class BankerRecordView(ListAPIView):
         banker_list = BankerRecord.objects.filter(use_id=user.id)
         for i in banker_list:
             print("i=========================", i)
-            quiz_list = []
-            # if i.source in (1, 2):
-            #
+
             pass
         return self.response({"code": 0})
 
