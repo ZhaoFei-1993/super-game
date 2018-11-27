@@ -33,30 +33,17 @@ class BankerHomeView(ListAPIView):
         # delete_cache(BANKER_RULE_INFO)
         banker_rule_info = get_cache(BANKER_RULE_INFO)
         if banker_rule_info is None:
-            quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
-            rule_info = ClubRule.objects.filter(~Q(id__in=[1, 2, 7])).order_by('banker_sort')
+            # quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
+            # rule_info = ClubRule.objects.filter(id=2).order_by('banker_sort')
+            rule_info = ClubRule.objects.filter(id__in=[1, 2, 7]).order_by('banker_sort')
 
             banker_rule_info = []
-            a = True
-            m = 0
-            for i in quiz_info:
-                m += 1
-                if int(i.id) == 1:
-                    order = 1
-                elif int(i.id) == 7:
-                    order = 2
-                else:
-                    order = 3
-                banker_rule_info.append({
-                    "type": m,
-                    "icon": i.icon,
-                    "name": i.name,
-                    "stop": a,
-                    "order": order
-                })
-
             for s in rule_info:
-                id = int(s.id) + 1
+                id = int(s.id)
+                if id > 1 and id != 7:
+                    id = id + 1
+                elif id == 7:
+                    id = 2
                 banker_rule_info.append({
                     "type": id,                    # id
                     "icon": s.banker_icon,          # 图片
