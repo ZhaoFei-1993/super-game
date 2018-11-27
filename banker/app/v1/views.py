@@ -34,19 +34,25 @@ class BankerHomeView(ListAPIView):
         banker_rule_info = get_cache(BANKER_RULE_INFO)
         if banker_rule_info is None:
             quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
-            rule_info = ClubRule.objects.filter(~Q(id__in=[1, 4, 5, 6])).order_by('banker_sort')
+            rule_info = ClubRule.objects.filter(~Q(id__in=[1, 2, 7])).order_by('banker_sort')
 
             banker_rule_info = []
             a = True
             m = 0
             for i in quiz_info:
                 m += 1
+                if int(i.id) == 1:
+                    order = 1
+                elif int(i.id) == 7:
+                    order = 2
+                else:
+                    order = 3
                 banker_rule_info.append({
                     "type": m,
                     "icon": i.icon,
                     "name": i.name,
                     "stop": a,
-                    "order": m
+                    "order": order
                 })
 
             for s in rule_info:
@@ -123,7 +129,7 @@ class BankerInfoView(ListAPIView):
             sql_list += " date_format( m.next_closing, '%H:%i' ) as time"
             sql = "select " + sql_list + " from marksix_openprice m"
             sql += " order by created_at desc limit 3"
-            list = get_sql(sql)
+            list = self.get_list_by_sql(sql)
         else:                # 4.猜股票
             sql_list = " g.id, s.name, "
             sql_list += " date_format( g.rotary_header_time, '%Y%m%d%H%i%s' ) as times,"
@@ -136,7 +142,7 @@ class BankerInfoView(ListAPIView):
             sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
             sql += " order by times desc"
-            list = get_sql(sql)
+            list = self.get_list_by_sql(sql)
         data = []
         for i in list:
             if int(type) in (1, 2):
