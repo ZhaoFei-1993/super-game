@@ -55,7 +55,7 @@ class BankerHomeView(ListAPIView):
                     "type": id,                    # id
                     "icon": s.banker_icon,          # 图片
                     "name": s.title,             # 标题
-                    "stop": s.is_banker,     # 是否停止 1.是 2.否
+                    "stop": s.is_banker,        # 是否停止  1:是 2.否
                     "order": s.banker_sort   # 排序
                 })
             banker_rule_info = sorted(banker_rule_info, key=lambda x: x['order'], reverse=False)
@@ -142,7 +142,7 @@ class BankerInfoView(ListAPIView):
             if int(type) in (1, 2):
                 data.append({
                     "key_id": i[0],
-                    "host_t∂eam": i[1],
+                    "host_team": i[1],
                     "host_team_avatar": i[2],
                     "guest_team": i[3],
                     "guest_team_avatar": i[4],
@@ -278,17 +278,17 @@ class BankerBuyView(CreateAPIView):
         if int(type) == 1 or int(type) == 2:
             list_info = Quiz.objects.get(id=key_id)
             if int(list_info.status) != 0:
-                raise ParamErrorException(error_code.API_11011_USER_BANKER)
+                raise ParamErrorException(error_code.API_110101_USER_BANKER)
         elif int(type) == 3:
             list_info = OpenPrice.objects.get(id=key_id)
             next_closing = list_info.next_closing + datetime.timedelta(hours=1)
             if datetime.datetime.now() > next_closing:
-                raise ParamErrorException(error_code.API_11012_USER_BANKER)
+                raise ParamErrorException(error_code.API_110102_USER_BANKER)
         else:
             list_info = Periods.objects.get(id=key_id)
             rotary_header_time = list_info.rotary_header_time + datetime.timedelta(hours=1)
             if datetime.datetime.now() > rotary_header_time:
-                raise ParamErrorException(error_code.API_11012_USER_BANKER)
+                raise ParamErrorException(error_code.API_110102_USER_BANKER)
 
         all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
         sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
@@ -298,7 +298,7 @@ class BankerBuyView(CreateAPIView):
         sum_share = int(banker_share.balance)  # 份额
 
         if sum_amount > sum_share:
-            raise ParamErrorException(error_code.API_11013_USER_BANKER)
+            raise ParamErrorException(error_code.API_110103_USER_BANKER)
 
         banker_record = BankerRecord()
         banker_record.club = club_info
