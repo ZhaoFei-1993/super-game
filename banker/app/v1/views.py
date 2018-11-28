@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListAPIView, CreateAPIView
-from base.function import LoginRequired
+from base.app import ListAPIView, ListCreateAPIView, CreateAPIView
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from django.db.models import Q, Sum
@@ -246,7 +245,7 @@ class BankerDetailsView(ListAPIView):
                             })
 
 
-class BankerBuyView(CreateAPIView):
+class BankerBuyView(ListCreateAPIView):
     """
        联合坐庄：   确认做庄
     """
