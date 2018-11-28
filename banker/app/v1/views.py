@@ -449,6 +449,7 @@ class BankerRecordView(ListAPIView):
                 "rule": rule,  # 玩法
                 "club_name": club_info.room_title,  # 俱乐部标题
                 "key_id": key_id,  # key_id
+                "club_id": int(i[0]),  # 俱乐部id
                 "coin_icon": coin_info.icon,  # 货币图标
                 "coin_name": coin_info.name,  # 货币昵称
                 "earn_coin": earn_coin,  # 获得金额
