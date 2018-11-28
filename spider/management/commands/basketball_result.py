@@ -191,24 +191,26 @@ def get_data_info(url, match_flag):
             print('error:  ', e)
             print(match_flag + ',' + result_match['未捕抓到数据'])
             print('----------------------------------------')
+
+        quiz = Quiz.objects.filter(match_flag=match_flag).first()
+        rule_all = Rule.objects.filter(quiz=quiz).all()
+        rule_mnl = rule_all.filter(type=4).first()
+        rule_hdc = rule_all.filter(type=5).first()
+        rule_hilo = rule_all.filter(type=6).first()
+        rule_wnm = rule_all.filter(type=7).first()
+
         is_open = False
-        if result_mnl_flag != '' and result_hdc_flag != '' and result_hilo_flag != '' and result_wnm_flag != '':
+        if (result_mnl_flag != '' or rule_mnl is None) and (result_hdc_flag != '' or rule_hdc is None) and (
+                result_hilo_flag != '' or rule_hilo is None) and (result_wnm_flag != '' or rule_wnm is None):
             is_open = True
         # ------------------------------------------------------------------------------------------------
         flag = False
         if is_open is not True:
             print('===================== {match_flag} 未达到开奖要求 ====================='.format(match_flag=match_flag))
         else:
-            quiz = Quiz.objects.filter(match_flag=match_flag).first()
             quiz.host_team_score = host_team_score
             quiz.guest_team_score = guest_team_score
             quiz.save()
-
-            rule_all = Rule.objects.filter(quiz=quiz).all()
-            rule_mnl = rule_all.filter(type=4).first()
-            rule_hdc = rule_all.filter(type=5).first()
-            rule_hilo = rule_all.filter(type=6).first()
-            rule_wnm = rule_all.filter(type=7).first()
 
             option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
             if option_mnl is not None:
