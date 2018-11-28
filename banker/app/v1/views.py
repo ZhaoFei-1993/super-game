@@ -17,7 +17,7 @@ from django.db import transaction
 from users.models import CoinDetail
 from decimal import Decimal
 from banker.models import BankerShare, BankerRecord
-from utils.functions import  get_sql, is_number, normalize_fraction, value_judge
+from utils.functions import get_sql, is_number, normalize_fraction, value_judge
 from guess.models import Stock
 
 
@@ -45,11 +45,11 @@ class BankerHomeView(ListAPIView):
                 elif id == 7:
                     id = 2
                 banker_rule_info.append({
-                    "type": id,                    # id
-                    "icon": s.banker_icon,          # 图片
-                    "name": s.title,             # 标题
-                    "stop": s.is_banker,        # 是否停止  1:是 0.否
-                    "order": s.banker_sort   # 排序
+                    "type": id,  # id
+                    "icon": s.banker_icon,  # 图片
+                    "name": s.title,  # 标题
+                    "stop": s.is_banker,  # 是否停止  1:是 0.否
+                    "order": s.banker_sort  # 排序
                 })
             banker_rule_info = sorted(banker_rule_info, key=lambda x: x['order'], reverse=False)
             set_cache(BANKER_RULE_INFO, banker_rule_info)
@@ -92,7 +92,7 @@ class BankerInfoView(ListAPIView):
         regex = re.compile(r'^(1|2|3|4)$')
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
-        if int(type) in (1, 2):      # 1.足球 2.篮球
+        if int(type) in (1, 2):  # 1.足球 2.篮球
             if request.GET.get('language') == 'en':
                 sql_list = "q.id, q.host_team_en, q.host_team_avatar, q.guest_team_en, q.guest_team_avatar"
             else:
@@ -109,7 +109,7 @@ class BankerInfoView(ListAPIView):
             sql += " and q.begin_at > '" + str(begin_at) + "'"
             sql += " order by times desc"
             list = self.get_list_by_sql(sql)
-        elif type == 3:        # 3.六合彩
+        elif type == 3:  # 3.六合彩
             sql_list = " m.id, m.next_issue, "
             sql_list += " date_format( m.next_closing, '%Y%m%d%H%i%s' ) as times,"
             sql_list += " date_format( m.next_closing, '%m月%d日' ) as yeas,"
@@ -117,7 +117,7 @@ class BankerInfoView(ListAPIView):
             sql = "select " + sql_list + " from marksix_openprice m"
             sql += " order by created_at desc limit 3"
             list = self.get_list_by_sql(sql)
-        else:                # 4.猜股票
+        else:  # 4.猜股票
             sql_list = " g.id, s.name, "
             sql_list += " date_format( g.rotary_header_time, '%Y%m%d%H%i%s' ) as times,"
             sql_list += " date_format( g.rotary_header_time, '%m月%d日' ) as yeas,"
@@ -183,8 +183,8 @@ class BankerDetailsView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        type = self.request.GET.get('type')   # 1.足球 2.篮球  3.六合彩  4.猜股票
-        key_id = int(self.request.GET.get('key_id'))       # 玩法对应的key_id
+        type = self.request.GET.get('type')  # 1.足球 2.篮球  3.六合彩  4.猜股票
+        key_id = int(self.request.GET.get('key_id'))  # 玩法对应的key_id
         if is_number(key_id) is False:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = int(self.request.GET.get('club_id'))
@@ -199,11 +199,11 @@ class BankerDetailsView(ListAPIView):
         club_info = Club.objects.get_one(pk=club_id)
         # coin_info = Coin.objects.get(id=club_info.coin_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
-        coin_name = coin_info.name   # 货币昵称
-        coin_icon = coin_info.icon   # 货币图标
+        coin_name = coin_info.name  # 货币昵称
+        coin_icon = coin_info.icon  # 货币图标
         banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
-        sum_share = int(banker_share.balance)   # 份额
-        sum_proportion = int(banker_share.proportion*100)   # 占比
+        sum_share = int(banker_share.balance)  # 份额
+        sum_proportion = int(banker_share.proportion * 100)  # 占比
 
         sql_list = " SUM(r.balance) AS balance, SUM(r.proportion) AS proportion"
         sql = "select " + sql_list + " from banker_bankerrecord r"
@@ -237,13 +237,12 @@ class BankerDetailsView(ListAPIView):
                               "sum_share": sum_share,
                               "sum_proportion": sum_proportion,
                               "sum_user_number": len(bamker_list),
-                              "many_share": normalize_fraction(many_share,
-                                                 int(coin_info.coin_accuracy)),
+                              "many_share": normalize_fraction(many_share, int(coin_info.coin_accuracy)),
                               "user_banker_balance": normalize_fraction(user_banker_balance,
-                                                                        int(coin_info.coin_accuracy)),   # 用户已购份额
-                              "user_banker_proportion": normalize_fraction(user_banker_proportion, 3),   # 用户已购占比
+                                                                        int(coin_info.coin_accuracy)),  # 用户已购份额
+                              "user_banker_proportion": normalize_fraction(user_banker_proportion, 3),  # 用户已购占比
                               "user_icon": user_icon,
-                            })
+                              })
 
 
 class BankerBuyView(ListCreateAPIView):
@@ -259,7 +258,7 @@ class BankerBuyView(ListCreateAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         type = self.request.data['type']  # 玩法类型
-        regex = re.compile(r'^(1|2|3|4)$')      # 1.足球 2.篮球  3.六合彩  4.猜股票
+        regex = re.compile(r'^(1|2|3|4)$')  # 1.足球 2.篮球  3.六合彩  4.猜股票
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         type = int(type)
@@ -300,7 +299,7 @@ class BankerBuyView(ListCreateAPIView):
 
             all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
             sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
-            sum_amount = Decimal(sum_balance) + amount   # 认购以后该局的总已认购额
+            sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
 
             banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
             sum_share = Decimal(banker_share.balance)  # 总可购份额
@@ -325,7 +324,7 @@ class BankerBuyView(ListCreateAPIView):
             banker_record.balance = s["amount"]
             print("amount==============", s["amount"])
             print("sum_share==============", s["sum_share"])
-            proportion = normalize_fraction(s["amount"]/s["sum_share"], 2)
+            proportion = normalize_fraction(s["amount"] / s["sum_share"], 2)
             print("proportion===============", proportion)
             banker_record.proportion = Decimal(proportion)
             banker_record.source = type
@@ -430,20 +429,51 @@ class BankerRecordView(ListAPIView):
             else:
                 tmp = date
             data.append({
-                "rule": rule,     # 玩法
-                "club_name": club_info.room_title,   # 俱乐部标题
-                "coin_icon": coin_info.icon,   # 货币图标
-                "coin_name": coin_info.name,    # 货币昵称
-                "earn_coin": earn_coin,   # 获得金额
-                "proportion": proportion,     # 占比
-                "name": name,     # 占比
-                "time": i[9],     # 时:分
-                "years": years,     # 年
-                "date": date,     # 月/日
-                "balance": normalize_fraction(i[4], coin_accuracy),   # 认购金额
-                "status": int(i[3])   # 1.待结算 2.已结算 3.流盘
+                "rule": rule,  # 玩法
+                "club_name": club_info.room_title,  # 俱乐部标题
+                "coin_icon": coin_info.icon,  # 货币图标
+                "coin_name": coin_info.name,  # 货币昵称
+                "earn_coin": earn_coin,  # 获得金额
+                "proportion": proportion,  # 占比
+                "name": name,  # 占比
+                "time": i[9],  # 时:分
+                "years": years,  # 年
+                "date": date,  # 月/日
+                "balance": normalize_fraction(i[4], coin_accuracy),  # 认购金额
+                "status": int(i[3])  # 1.待结算 2.已结算 3.流盘
             })
         return self.response({"code": 0, "data": data})
 
 
+class BankerClubView(ListAPIView):
+    """
+    记录下俱乐部
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user_id = str(self.request.user.id)
+        type = self.request.GET.get("type")
+        data = []
+        sql_list = " cc.id, c.icon, count(cc.id) as number"
+
+        sql = "select " + sql_list + " from banker_bankerrecord r"
+        sql += " inner join chat_club cc on r.club_id=cc.id"
+        sql += " inner join users_coin c on cc.coin_id=c.id"
+        sql += " where r.user_id = '" + str(user_id) + "'"
+        sql += " and r.source = '" + str(type) + "'"
+        sql += " group by cc.id, c.icon"
+        sql += " order by number desc"
+
+        print(sql)
+        list = self.get_list_by_sql(sql)
+        for i in list:
+            data.append({
+                "club_id": i[0],
+                "coin_icon": i[1]
+            })
+        return self.response({"code": 0, "data": data})
 

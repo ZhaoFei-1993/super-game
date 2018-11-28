@@ -13,5 +13,7 @@ urlpatterns = [
     path('banker/buy/', views.BankerBuyView.as_view(), name='banker_buy'),
     # 联合坐庄：   投注记录
     path('banker/record/', views.BankerRecordView.as_view(), name='banker_record'),
+    #  记录下俱乐部
+    path('banker/club/', views.BankerClubView.as_view(), name="record-banker-club"),
 
 ]
