@@ -394,6 +394,7 @@ class BankerRecordView(ListAPIView):
         data = []
         tmp = ""
         for i in banker_list:
+            status = int(i[3])
             name = ""
             if type in (1, 2):
                 name = str(i[10]) + " VS " + str(i[11])
@@ -413,17 +414,23 @@ class BankerRecordView(ListAPIView):
             # coin_info = Coin.objects.get(id=int(club_info.coin_id))
             coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
             coin_accuracy = int(coin_info.coin_accuracy)
-            rule = BankerRecord.SOURCE[int(i[1])][1]
+            rule = BankerRecord.SOURCE[int(i[1])-1][1]
 
             proportion = i[2] * 100 * Decimal(0.4)
             proportion = normalize_fraction(proportion, 2)
             proportion = str(proportion) + "%"
 
             earn_coin = normalize_fraction(i[5], coin_accuracy)
-            if earn_coin > 0:
-                earn_coin = "+ " + str(earn_coin)
-            else:
-                earn_coin = "- " + str(earn_coin)
+            if status not in (1, 3):
+                if earn_coin > 0:
+                    earn_coin = "+" + str(earn_coin)
+                    status = 2
+                else:
+                    if Decimal(earn_coin) < Decimal("-" + str(i[4])):
+                        earn_coin = normalize_fraction(Decimal(i[4]), coin_accuracy)
+                        earn_coin = "-" + str(earn_coin)
+                    earn_coin = str(earn_coin)
+                    status = 4
 
             years = i[7]
             date = i[8]
@@ -444,7 +451,7 @@ class BankerRecordView(ListAPIView):
                 "years": years,  # 年
                 "date": date,  # 月/日
                 "balance": normalize_fraction(i[4], coin_accuracy),  # 认购金额
-                "status": int(i[3])  # 1.待结算 2.已结算 3.流盘
+                "status": status  # 1.待结算 2.赢 3.流盘 4.输
             })
         return self.response({"code": 0, "data": data})
 
