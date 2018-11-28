@@ -397,7 +397,7 @@ class CoinDetail(models.Model):
         (REWARD, "盈亏分成"),
         (BANKER_EARN, "做庄_赚"),
         (BANKER_DEFICIT, "做庄_亏_余"),
-        (BANKER_LEVEL, "做庄_平"),
+        (BANKER_LEVEL, "做庄_平_流"),
 
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)

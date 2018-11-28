@@ -52,12 +52,14 @@ class BankerRecordManager(BaseManager):
         :return:
         """
         info = {}
+        print("list=======================", list)
         for i in list:
             key_id = int(i["key_id"])
             profit = Decimal(i["profit"])
+            print("单局，盈亏===================", profit)
             club_id = int(i["club_id"])
             club_info = Club.objects.get_one(pk=club_id)
-            coin_id = club_info.id
+            coin_id = club_info.coin_id
             status = int(i["status"])
             info_list = BankerRecord.objects.filter(club_id=club_id, source=int(source), key_id=key_id, status=1)
             if len(info_list) > 0:  # 判断当局有无做庄记录
@@ -65,20 +67,26 @@ class BankerRecordManager(BaseManager):
                     if status == 2:    # 正常开奖才要录入总收益
                         proportion = Decimal(s.proportion)
                         s.earn_coin = proportion*profit
+                        print("个人盈亏================", proportion)
+                    else:
+                        s.earn_coin = 0
                     s.status = status
                     s.save()
-                    if status == 2:   # 正常开奖:老夫准备派钱
-                        info[key_id] = {
-                            "coin_id": coin_id,
-                            "user_id": s.user_id,
-                            "earn_coin": Decimal(s.earn_coin),
-                            "balance": Decimal(s.balance),
-                        }
+                    print("个人盈亏================", s.earn_coin)
+                    print("个人押金================", s.balance)
+                    info[key_id] = {
+                        "coin_id": coin_id,
+                        "user_id": s.user_id,
+                        "earn_coin": Decimal(s.earn_coin),
+                        "balance": Decimal(s.balance),
+                    }
+        print("info================", info)
         if len(info) > 0:   # info有数据老夫才派钱
             for a in info:
-                coin_id = info[a]["coin_id"]
+                coin_id = int(info[a]["coin_id"])
                 coin_info = Coin.objects.get_one(pk=coin_id)
-                user_id = info[a]["user_id"]
+                user_id = int(info[a]["user_id"])
+                print("user_id============" + str(user_id) + "coin_id=================" + str(coin_id))
                 earn_coin = info[a]["earn_coin"]
                 balance = info[a]["balance"]
                 if earn_coin > 0:        # 有赚的情况下派钱
@@ -94,7 +102,8 @@ class BankerRecordManager(BaseManager):
                     coin_detail.rest = user_coin_info.balance
                     coin_detail.sources = 21
                     coin_detail.save()
-                elif abs(earn_coin) == balance:     # 不赚不亏还钱
+                    print("用户--" + str(user_id) + "做庄赚了，加本金合计归还" + str(amount) + "个" + str(coin_info.name))
+                elif abs(earn_coin) == 0:     # 不赚不亏或流盘,还钱
                     amount = balance
                     user_coin_info = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
                     user_coin_info.balance += amount
@@ -107,7 +116,10 @@ class BankerRecordManager(BaseManager):
                     coin_detail.rest = user_coin_info.balance
                     coin_detail.sources = 23
                     coin_detail.save()
+                    print("用户--" + str(user_id) + "做庄没有赚没有亏或者流盘，系统还回做庄押金" + str(amount) + "个" + str(coin_info.name))
                 else:    # 亏，但是没有亏完，交还部分本金
+                    print("earn_coin=================", earn_coin)
+                    print("earn_coin=================", abs(earn_coin))
                     if abs(earn_coin) < balance:
                         amount = balance + earn_coin
                         user_coin_info = UserCoin.objects.get(coin_id=coin_id, user_id=user_id)
@@ -121,7 +133,9 @@ class BankerRecordManager(BaseManager):
                         coin_detail.rest = user_coin_info.balance
                         coin_detail.sources = 22
                         coin_detail.save()
-                    # else:   # 倾家荡产的忽略
+                        print("用户--" + str(user_id) + "做庄亏了, 但押金还有剩，归还剩余" + str(amount) + "个" + str(coin_info.name))
+                    else:   # 倾家荡产的忽略
+                        print("用户--" + str(user_id) + "做庄，倾家荡产，亏了" + str(balance) + "个" + str(coin_info.name))
                     #     pass
 
 
