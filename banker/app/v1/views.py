@@ -18,6 +18,7 @@ from users.models import CoinDetail
 from decimal import Decimal
 from banker.models import BankerShare, BankerRecord
 from utils.functions import  get_sql, is_number, normalize_fraction, value_judge
+from guess.models import Stock
 
 
 class BankerHomeView(ListAPIView):
@@ -34,8 +35,6 @@ class BankerHomeView(ListAPIView):
         # delete_cache(BANKER_RULE_INFO)
         banker_rule_info = get_cache(BANKER_RULE_INFO)
         if banker_rule_info is None:
-            # quiz_info = Category.objects.filter(Q(id=1) | Q(id=2))
-            # rule_info = ClubRule.objects.filter(id=2).order_by('banker_sort')
             rule_info = ClubRule.objects.filter(id__in=[1, 2, 7]).order_by('banker_sort')
 
             banker_rule_info = []
@@ -144,7 +143,10 @@ class BankerInfoView(ListAPIView):
                     "time": i[7]
                 })
             elif int(type) == 3:
-                name = str("第") + str(i[1]) + str("期")
+                if request.GET.get('language') == 'en':
+                    name = str("Phase ") + str(i[1])
+                else:
+                    name = str("第") + str(i[1]) + str("期")
                 data.append({
                     "key_id": i[0],
                     "name": name,
@@ -152,9 +154,13 @@ class BankerInfoView(ListAPIView):
                     "time": i[4]
                 })
             else:
+                if request.GET.get('language') == 'en':
+                    name = Stock.STOCK_EN[int(i[1])][1]
+                else:
+                    name = Stock.STOCK[int(i[1])][1]
                 data.append({
                     "key_id": i[0],
-                    "name": i[1],
+                    "name": name,
                     "day_time": i[3],
                     "time": i[4]
                 })
@@ -265,6 +271,7 @@ class BankerBuyView(CreateAPIView):
         # coin_info = Coin.objects.get(id=club_info.coin_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
+        coin_accuracy = int(coin_info.coin_accuracy)
 
         info = []
         new_sum_balance = 0
@@ -301,8 +308,8 @@ class BankerBuyView(CreateAPIView):
             info.append({
                 "key_id": key_id,
                 "sum_amount": sum_amount,
-                "sum_share": sum_share,
-                "amount": amount
+                "sum_share": Decimal(sum_share),
+                "amount": Decimal(amount)
             })
 
             if sum_amount > sum_share:
@@ -316,8 +323,11 @@ class BankerBuyView(CreateAPIView):
             banker_record.club = club_info
             banker_record.user = user
             banker_record.balance = s["amount"]
-            proportion = s["amount"]/s["sum_share"]
-            banker_record.proportion = proportion
+            print("amount==============", s["amount"])
+            print("sum_share==============", s["sum_share"])
+            proportion = normalize_fraction(s["amount"]/s["sum_share"], 2)
+            print("proportion===============", proportion)
+            banker_record.proportion = Decimal(proportion)
             banker_record.source = type
             banker_record.key_id = s["key_id"]
             banker_record.save()
@@ -333,12 +343,12 @@ class BankerBuyView(CreateAPIView):
         coin_detail.sources = 18
         coin_detail.save()
 
-        return self.response({'code': 0, "balance": user_coin.balance})
+        return self.response({'code': 0, "balance": normalize_fraction(user_coin.balance, coin_accuracy)})
 
 
 class BankerRecordView(ListAPIView):
     """
-       联合坐庄：   投注流水
+       联合坐庄：   投注记录
     """
     permission_classes = (LoginRequired,)
 
@@ -347,12 +357,93 @@ class BankerRecordView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        banker_list = BankerRecord.objects.filter(use_id=user.id)
-        for i in banker_list:
-            print("i=========================", i)
+        type = self.request.GET.get('type')  # 1.足球 2.篮球  3.六合彩  4.猜股票
+        regex = re.compile(r'^(1|2|3|4)$')  # 1.足球 2.篮球  3.六合彩  4.猜股票
+        if type is None or not regex.match(type):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        type = int(type)
+        sql_list = "r.club_id, r.source, r.proportion, r.status, r.balance, r.earn_coin, r.created_at,"
+        sql_list += "  date_format(r.created_at, '%Y') as yearss, date_format( r.created_at, '%c/%e' ) as years,"
+        sql_list += " date_format( r.created_at, '%k:%i' ) as time,"
+        if type in (1, 2):
+            if request.GET.get('language') == 'en':
+                sql_list += " q.host_team_en, q.guest_team_en"
+            else:
+                sql_list += " q.host_team, q.guest_team"
+        elif type == 3:
+            sql_list += " q.next_issue"
+        elif type == 4:
+            sql_list += " s.name"
 
-            pass
-        return self.response({"code": 0})
+        sql = "select " + sql_list + " from banker_bankerrecord r"
+        if type in (1, 2):
+            sql += " inner join quiz_quiz q on r.key_id=q.id"
+        elif type == 3:
+            sql += " inner join marksix_openprice q on r.key_id=q.id"
+        elif type == 4:
+            sql += " inner join guess_periods q on r.key_id=q.id"
+            sql += " inner join guess_stock s on q.stock_id=s.id"
+        sql += " where r.user_id = '" + str(user.id) + "'"
+        sql += " and r.source = '" + str(type) + "'"
+        sql += " order by r.created_at desc"
+        banker_list = self.get_list_by_sql(sql)
+
+        data = []
+        tmp = ""
+        for i in banker_list:
+            name = ""
+            if type in (1, 2):
+                name = str(i[10]) + " VS " + str(i[11])
+            elif type == 3:
+                if request.GET.get('language') == 'en':
+                    name = str("Phase ") + str(i[10])
+                else:
+                    name = str("第") + str(i[10]) + str("期")
+            elif type == 4:
+                if request.GET.get('language') == 'en':
+                    name = Stock.STOCK_EN[int(i[10])][1]
+                else:
+                    name = Stock.STOCK[int(i[10])][1]
+
+            # club_info = Club.objects.get(id=int(i.club_id))
+            club_info = Club.objects.get_one(pk=int(i[0]))
+            # coin_info = Coin.objects.get(id=int(club_info.coin_id))
+            coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+            coin_accuracy = int(coin_info.coin_accuracy)
+            rule = BankerRecord.SOURCE[int(i[1])][1]
+
+            proportion = i[2] * 100 * Decimal(0.4)
+            proportion = normalize_fraction(proportion, 2)
+            proportion = str(proportion) + "%"
+
+            earn_coin = normalize_fraction(i[5], coin_accuracy)
+            if earn_coin > 0:
+                earn_coin = "+ " + str(earn_coin)
+            else:
+                earn_coin = "- " + str(earn_coin)
+
+            years = i[7]
+            date = i[8]
+            if tmp == date:
+                date = ""
+                years = ""
+            else:
+                tmp = date
+            data.append({
+                "rule": rule,     # 玩法
+                "club_name": club_info.room_title,   # 俱乐部标题
+                "coin_icon": coin_info.icon,   # 货币图标
+                "coin_name": coin_info.name,    # 货币昵称
+                "earn_coin": earn_coin,   # 获得金额
+                "proportion": proportion,     # 占比
+                "name": name,     # 占比
+                "time": i[9],     # 时:分
+                "years": years,     # 年
+                "date": date,     # 月/日
+                "balance": normalize_fraction(i[4], coin_accuracy),   # 认购金额
+                "status": int(i[3])   # 1.待结算 2.已结算 3.流盘
+            })
+        return self.response({"code": 0, "data": data})
 
 
 
