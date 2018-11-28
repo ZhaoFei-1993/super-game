@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListAPIView, CreateAPIView, ListCreateAPIView
+from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -248,7 +248,7 @@ class BankerDetailsView(ListAPIView):
 
 class BankerBuyView(ListCreateAPIView):
     """
-          联合坐庄：   确认做庄
+    联合坐庄：   确认做庄
     """
     permission_classes = (LoginRequired,)
 
