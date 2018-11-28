@@ -367,13 +367,13 @@ class BankerRecordView(ListAPIView):
         sql_list += " date_format( r.created_at, '%k:%i' ) as time,"
         if type in (1, 2):
             if request.GET.get('language') == 'en':
-                sql_list += " q.host_team_en, q.guest_team_en"
+                sql_list += " q.host_team_en, q.guest_team_en, r.key_id"
             else:
-                sql_list += " q.host_team, q.guest_team"
+                sql_list += " q.host_team, q.guest_team, r.key_id"
         elif type == 3:
-            sql_list += " q.next_issue"
+            sql_list += " q.next_issue, r.key_id"
         elif type == 4:
-            sql_list += " s.name"
+            sql_list += " s.name, r.key_id"
 
         sql = "select " + sql_list + " from banker_bankerrecord r"
         if type in (1, 2):
@@ -396,18 +396,24 @@ class BankerRecordView(ListAPIView):
         for i in banker_list:
             status = int(i[3])
             name = ""
+            key_id = ""
             if type in (1, 2):
                 name = str(i[10]) + " VS " + str(i[11])
+                key_id = int(i[12])
             elif type == 3:
                 if request.GET.get('language') == 'en':
                     name = str("Phase ") + str(i[10])
+                    key_id = int(i[11])
                 else:
                     name = str("第") + str(i[10]) + str("期")
+                    key_id = int(i[11])
             elif type == 4:
                 if request.GET.get('language') == 'en':
                     name = Stock.STOCK_EN[int(i[10])][1]
+                    key_id = int(i[11])
                 else:
                     name = Stock.STOCK[int(i[10])][1]
+                    key_id = int(i[11])
 
             # club_info = Club.objects.get(id=int(i.club_id))
             club_info = Club.objects.get_one(pk=int(i[0]))
@@ -442,6 +448,7 @@ class BankerRecordView(ListAPIView):
             data.append({
                 "rule": rule,  # 玩法
                 "club_name": club_info.room_title,  # 俱乐部标题
+                "key_id": key_id,  # key_id
                 "coin_icon": coin_info.icon,  # 货币图标
                 "coin_name": coin_info.name,  # 货币昵称
                 "earn_coin": earn_coin,  # 获得金额
