@@ -255,7 +255,7 @@ class BankerBuyView(ListCreateAPIView):
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
         user = request.user
-        value = value_judge(request, "type", "club_id", "data")
+        value = value_judge(request, "type", "club_id", "list")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         type = self.request.data['type']  # 玩法类型
@@ -264,7 +264,7 @@ class BankerBuyView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
         type = int(type)
         club_id = int(self.request.data['club_id'])  # 俱乐部id
-        data = self.request.data['data']  # key_id
+        data = self.request.data['list']  # key_id
         data = json.loads(str(data))
         # club_info = Club.objects.get(pk=club_id)
         club_info = Club.objects.get_one(pk=club_id)
