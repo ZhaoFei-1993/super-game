@@ -181,7 +181,7 @@ class BankerDetailsView(ListAPIView):
     def get_queryset(self):
         pass
 
-    def post(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         user = self.request.user
         type = self.request.GET.get('type')   # 1.足球 2.篮球  3.六合彩  4.猜股票
         key_id = int(self.request.GET.get('key_id'))       # 玩法对应的key_id
