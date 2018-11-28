@@ -246,7 +246,7 @@ class BankerDetailsView(ListAPIView):
                             })
 
 
-class BankerBuyView(CreateAPIView):
+class BankerBuyView(ListCreateAPIView):
     """
           联合坐庄：   确认做庄
     """
