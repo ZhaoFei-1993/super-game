@@ -19,7 +19,7 @@ url_shen = 'http://www.szse.cn/api/market/ssjjhq/getTimeData?random=0.6430127918
 url_shang = 'http://yunhq.sse.com.cn:32041/v1/sh1/line/000001?callback=jQuery111208645993247577721_1541046387829&begin=0&end=-1&select=time%2Cprice%2Cvolume'
 url_djia = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=.indu'
 url_nasdaq = 'https://www.nasdaq.com/aspx/IndexData.ashx?index=ixic'
-url_hsi = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8189&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=457e1aa48b5dc5ea25a0766d5d08c047&eprop=minute'
+url_hsi = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?resource_id=8190&from_mid=1&query=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&hilight=disp_data.*.title&sitesign=457e1aa48b5dc5ea25a0766d5d08c047&eprop=minute'
 
 
 class StockIndex(object):
@@ -27,7 +27,7 @@ class StockIndex(object):
         # 2018休市日期
         self.market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04',
                                     '2018-10-05']
-        self.market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-25']
+        self.market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-24', '2018-12-25']
         self.market_rest_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
 
         # 开市，闭市时间点
