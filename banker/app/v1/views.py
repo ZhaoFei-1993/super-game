@@ -357,6 +357,7 @@ class BankerRecordView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         type = self.request.GET.get('type')  # 1.足球 2.篮球  3.六合彩  4.猜股票
+
         regex = re.compile(r'^(1|2|3|4)$')  # 1.足球 2.篮球  3.六合彩  4.猜股票
         if type is None or not regex.match(type):
             raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
@@ -383,6 +384,9 @@ class BankerRecordView(ListAPIView):
             sql += " inner join guess_periods q on r.key_id=q.id"
             sql += " inner join guess_stock s on q.stock_id=s.id"
         sql += " where r.user_id = '" + str(user.id) + "'"
+        if "club_id" in self.request.GET:
+            club_id = str(self.request.GET.get('club_id'))  # 俱乐部id
+            sql += " and r.club_id = '" + club_id + "'"
         sql += " and r.source = '" + str(type) + "'"
         sql += " order by r.created_at desc"
         banker_list = self.get_list_by_sql(sql)
