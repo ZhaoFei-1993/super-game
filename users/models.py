@@ -369,6 +369,9 @@ class CoinDetail(models.Model):
     BANKER = 18
     WATER = 19
     REWARD = 20
+    BANKER_EARN = 21
+    BANKER_DEFICIT = 22
+    BANKER_LEVEL = 23
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -389,9 +392,13 @@ class CoinDetail(models.Model):
         (EXCHANGE, "兑换"),
         (UNLOCK, "解锁"),
         (MOBILE, "转账"),
-        (BANKER, "联合做庄"),
+        (BANKER, "确认做庄"),
         (WATER, "流水分成"),
         (REWARD, "盈亏分成"),
+        (BANKER_EARN, "做庄_赚"),
+        (BANKER_DEFICIT, "做庄_亏_余"),
+        (BANKER_LEVEL, "做庄_平"),
+
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
