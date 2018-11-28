@@ -246,14 +246,11 @@ class BankerDetailsView(ListAPIView):
                             })
 
 
-class BankerBuyView(ListCreateAPIView):
+class BankerBuyView(CreateAPIView):
     """
           联合坐庄：   确认做庄
     """
     permission_classes = (LoginRequired,)
-
-    def get_queryset(self):
-        pass
 
     @transaction.atomic()
     def post(self, request, *args, **kwargs):
