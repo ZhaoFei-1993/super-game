@@ -113,8 +113,8 @@ class BankerInfoView(ListAPIView):
             sql_list += " date_format( m.next_closing, '%m月%d日' ) as yeas,"
             sql_list += " date_format( m.next_closing, '%H:%i' ) as time"
             sql = "select " + sql_list + " from marksix_openprice m"
-            sql += " order by m.next_closing desc limit 0,3"
-            print("sql==================", sql)
+            sql += " where m.next_closing > '" + str(begin_at) + "'"
+            sql += " order by m.next_closing desc"
             list = get_sql(sql)
         else:  # 4.猜股票
             sql_list = " g.id, s.name, "
@@ -264,9 +264,7 @@ class BankerBuyView(ListCreateAPIView):
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         data = self.request.data['list']  # key_id
         data = json.loads(str(data))
-        # club_info = Club.objects.get(pk=club_id)
         club_info = Club.objects.get_one(pk=club_id)
-        # coin_info = Coin.objects.get(id=club_info.coin_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
         coin_accuracy = int(coin_info.coin_accuracy)
@@ -288,13 +286,15 @@ class BankerBuyView(ListCreateAPIView):
             elif type == 3:  # 六合彩
                 keys_id = key_id - 1
                 list_info = OpenPrice.objects.get(id=keys_id)
-                next_closing = list_info.next_closing + datetime.timedelta(hours=1)
-                if datetime.datetime.now() > next_closing:
+                just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
+                next_closing = list_info.next_closing
+                if just_now > next_closing:
                     raise ParamErrorException(error_code.API_110102_USER_BANKER)
             else:  # 股票
                 list_info = Periods.objects.get(id=key_id)
-                rotary_header_time = list_info.rotary_header_time + datetime.timedelta(hours=1)
-                if datetime.datetime.now() > rotary_header_time:
+                just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
+                rotary_header_time = list_info.rotary_header_time
+                if just_now > rotary_header_time:
                     raise ParamErrorException(error_code.API_110102_USER_BANKER)
 
             all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
