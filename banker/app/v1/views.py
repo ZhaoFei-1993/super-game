@@ -84,9 +84,7 @@ class BankerInfoView(ListAPIView):
         club_id = int(self.request.GET.get('club_id'))
         if 'club_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        # club_info = Club.objects.get(pk=club_id)
         club_info = Club.objects.get_one(pk=club_id)
-        # coin_info = Coin.objects.get(pk=club_info.coin.id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         begin_at = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
         regex = re.compile(r'^(1|2|3|4)$')
@@ -288,7 +286,8 @@ class BankerBuyView(ListCreateAPIView):
                 if int(list_info.status) != 0:
                     raise ParamErrorException(error_code.API_110101_USER_BANKER)
             elif type == 3:  # 六合彩
-                list_info = OpenPrice.objects.get(id=key_id)
+                keys_id = key_id - 1
+                list_info = OpenPrice.objects.get(id=keys_id)
                 next_closing = list_info.next_closing + datetime.timedelta(hours=1)
                 if datetime.datetime.now() > next_closing:
                     raise ParamErrorException(error_code.API_110102_USER_BANKER)
@@ -372,7 +371,7 @@ class BankerRecordView(ListAPIView):
             else:
                 sql_list += " q.host_team, q.guest_team, r.key_id"
         elif type == 3:
-            sql_list += " q.issue, r.key_id"
+            sql_list += " q.next_issue, r.key_id"
         elif type == 4:
             sql_list += " s.name, r.key_id"
 
@@ -380,7 +379,7 @@ class BankerRecordView(ListAPIView):
         if type in (1, 2):
             sql += " inner join quiz_quiz q on r.key_id=q.id"
         elif type == 3:
-            sql += " inner join marksix_openprice q on r.key_id=q.id"
+            sql += " inner join marksix_openprice q on r.key_id-1=q.id"
         elif type == 4:
             sql += " inner join guess_periods q on r.key_id=q.id"
             sql += " inner join guess_stock s on q.stock_id=s.id"
@@ -525,7 +524,6 @@ class AmountDetailsView(ListAPIView):
             sql += " inner join quiz_record q on r.record_id=q.id"
         elif type == 3:
             sql += " inner join marksix_sixrecord q on r.record_id=q.id"
-            sql += " inner join marksix_openprice a on q.issue=q.issue"
         elif type == 4:
             sql += " inner join guess_record q on r.record_id=q.id"
 
@@ -533,7 +531,7 @@ class AmountDetailsView(ListAPIView):
         if type in (1, 2):
             sql += " and q.quiz_id = '" + str(key_id) + "'"
         elif type == 3:
-            sql += " and a.id = '" + str(key_id) + "'"
+            sql += " and q.open_price_id = '" + str(key_id) + "'"
         elif type == 4:
             sql += " and q.periods_id = '" + str(key_id) + "'"
 
