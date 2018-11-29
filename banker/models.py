@@ -66,7 +66,7 @@ class BankerRecordManager(BaseManager):
                 for s in info_list:
                     if status == 2:    # 正常开奖才要录入总收益
                         proportion = Decimal(s.proportion)
-                        s.earn_coin = proportion*profit
+                        s.earn_coin = proportion*profit*0.4
                         print("个人盈亏================", proportion)
                     else:
                         s.earn_coin = 0
