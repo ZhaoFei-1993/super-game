@@ -329,6 +329,7 @@ class BankerBuyView(ListCreateAPIView):
 
         for i in data:
             amount = Decimal(i["amount"])
+            print("amount===================", amount)
             key_id = int(i["key_id"])
 
             if amount <= 0:
@@ -354,6 +355,7 @@ class BankerBuyView(ListCreateAPIView):
 
             all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
             sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
+            print("sum_balance========================", sum_balance)
             sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
             print("sum_amount=====================", sum_amount)
 
