@@ -22,6 +22,11 @@ class BaseView(generics.GenericAPIView):
         """
         page = 1
         page_size = page_size
+        if 'page_size' in self.request.GET:
+            try:
+                page_size = int(self.request.GET.get('page_size'))
+            except Exception:
+                pass
         if 'page' in self.request.GET:
             try:
                 page = int(self.request.GET.get('page'))
