@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import requests
 from marksix.models import OpenPrice, Number, Animals, Option
 import datetime
 from .mark_six_result import ergodic_record
-from users.finance.functions import get_now
 from marksix.consumers import mark_six_result_code
 from bs4 import BeautifulSoup
 
@@ -111,8 +110,9 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
         'animal_result_list': animal_result_list,
     }
 
-    now = get_now()
     openprice = OpenPrice.objects.all().order_by('-id').first()
+    if int(issue) != int(openprice.next_issue):
+        raise CommandError('警告：mark_six期数不匹配，请及时处理')
 
     open_price = OpenPrice()
     open_price.issue = issue
@@ -137,7 +137,7 @@ def mark_six_result(pre_draw_code_list, pre_draw_date, issue):
 
     # 处理投注记录
     print(answer_dic)
-    ergodic_record(issue, answer_dic)
+    ergodic_record(issue, answer_dic, openprice.id)
 
     open_price.is_open = True
     open_price.save()

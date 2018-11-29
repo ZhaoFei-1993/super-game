@@ -4,6 +4,7 @@ from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail, RecordMark
 from promotion.models import PromotionRecord, UserPresentation
+from banker.models import BankerRecord
 
 coin_detail_list = []
 user_message_list = []
@@ -282,14 +283,14 @@ def special_animal(record, answer_dic, cache_club_value):
     base_functions(record, coin_id, coin_name, earn_coin)
 
 
-def ergodic_record(issue, answer_dic):
+def ergodic_record(issue, answer_dic, openprice_id):
     cache_club_value = Club.objects.get_club_info()
     issue = (3 - len(issue)) * '0' + issue
     play_dic = {
         1: special_code_result, 2: color_result, 3: continuous_result, 4: two_sides_result,
         5: animal_result, 6: special_head_tail_result, 7: elements_result, 8: special_animal,
     }
-    records = SixRecord.objects.filter(issue=issue, status='0')
+    records = SixRecord.objects.filter(issue=issue, status='0', open_price_id=openprice_id)
     if len(records) > 0:
         for record in records:
             play_dic[record.play_id](record, answer_dic, cache_club_value)
@@ -318,9 +319,10 @@ def ergodic_record(issue, answer_dic):
         if sql is not False:
             cursor.execute(sql)
 
-    # 推广代理事宜
-    real_records = SixRecord.objects.filter(~Q(source=str(SixRecord.ROBOT)), ~Q(club_id=1), issue=issue, status='1')
+    real_records = SixRecord.objects.filter(~Q(source=str(SixRecord.ROBOT)), ~Q(club_id=1), issue=issue, status='1',
+                                            open_price_id=openprice_id)
     if len(real_records) > 0:
+        # 推广代理事宜
         PromotionRecord.objects.insert_all(real_records, 3, 1)
         PromotionRecord.objects.club_flow_statistics(real_records, 3)
 

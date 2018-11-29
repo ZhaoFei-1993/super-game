@@ -166,6 +166,7 @@ class SixRecord(models.Model):
     earn_coin = models.DecimalField(verbose_name="实际赚取金额", max_digits=18, decimal_places=8, default=0.00000000)
     status = models.CharField(verbose_name="状态", choices=TYPE_CHOICE, max_length=1, default=AWAIT)
     created_at = models.DateTimeField(verbose_name="下注时间", auto_now_add=True)
+    open_price_id = models.IntegerField(verbose_name="开奖表id", default=0)
     issue = models.CharField(verbose_name="期数", max_length=3)
     content = models.CharField(verbose_name="下注内容", max_length=1000)
     source = models.CharField(verbose_name="下注来源", choices=SOURCE, max_length=1, default=ROBOT)

@@ -455,6 +455,7 @@ class BetsViews(ListCreateAPIView):
         sixcord.odds = odds
         sixcord.bet = bet
         sixcord.bet_coin = bet_coin
+        sixcord.open_price_id = openprice.id
         sixcord.issue = issue
         sixcord.content = content
         sixcord.source = source
