@@ -109,14 +109,15 @@ class BankerInfoView(ListAPIView):
             sql += " and q.begin_at > '" + str(begin_at) + "'"
             sql += " order by times desc"
             list = self.get_list_by_sql(sql)
-        elif type == 3:  # 3.六合彩
+        elif int(type) == 3:  # 3.六合彩
             sql_list = " m.id, m.next_issue, "
             sql_list += " date_format( m.next_closing, '%Y%m%d%H%i%s' ) as times,"
             sql_list += " date_format( m.next_closing, '%m月%d日' ) as yeas,"
             sql_list += " date_format( m.next_closing, '%H:%i' ) as time"
             sql = "select " + sql_list + " from marksix_openprice m"
-            sql += " order by created_at desc limit 3"
-            list = self.get_list_by_sql(sql)
+            sql += " order by m.next_closing desc limit 0,3"
+            print("sql==================", sql)
+            list = get_sql(sql)
         else:  # 4.猜股票
             sql_list = " g.id, s.name, "
             sql_list += " date_format( g.rotary_header_time, '%Y%m%d%H%i%s' ) as times,"
@@ -148,7 +149,7 @@ class BankerInfoView(ListAPIView):
                 else:
                     name = str("第") + str(i[1]) + str("期")
                 data.append({
-                    "key_id": i[0],
+                    "key_id": int(i[0])+1,
                     "name": name,
                     "day_time": i[3],
                     "time": i[4]
@@ -371,7 +372,7 @@ class BankerRecordView(ListAPIView):
             else:
                 sql_list += " q.host_team, q.guest_team, r.key_id"
         elif type == 3:
-            sql_list += " q.next_issue, r.key_id"
+            sql_list += " q.issue, r.key_id"
         elif type == 4:
             sql_list += " s.name, r.key_id"
 
@@ -495,4 +496,64 @@ class BankerClubView(ListAPIView):
                 "coin_icon": i[1]
             })
         return self.response({"code": 0, "data": data})
+
+
+class AmountDetailsView(ListAPIView):
+    """
+    投注流水
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        type = int(self.request.GET.get("type"))
+        club_id = self.request.GET.get("club_id")
+        club_info = Club.objects.get_one(pk=int(club_id))
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        key_id = self.request.GET.get("key_id")
+        data = []
+        sql_list = "date_format( r.created_at, '%k:%i' ) as time, r.bets, u.telephone, u.area_code, u.nickname"
+        sql_list += ", r.created_at"
+
+        sql = "select " + sql_list + " from promotion_promotionrecord r"
+        sql += " inner join chat_club cc on r.club_id=cc.id"
+        sql += " inner join users_coin c on cc.coin_id=c.id"
+        sql += " inner join users_user u on r.user_id=u.id"
+        if type in (1, 2):
+            sql += " inner join quiz_record q on r.record_id=q.id"
+        elif type == 3:
+            sql += " inner join marksix_sixrecord q on r.record_id=q.id"
+            sql += " inner join marksix_openprice a on q.issue=q.issue"
+        elif type == 4:
+            sql += " inner join guess_record q on r.record_id=q.id"
+
+        sql += " where r.club_id = '" + str(club_id) + "'"
+        if type in (1, 2):
+            sql += " and q.quiz_id = '" + str(key_id) + "'"
+        elif type == 3:
+            sql += " and a.id = '" + str(key_id) + "'"
+        elif type == 4:
+            sql += " and q.periods_id = '" + str(key_id) + "'"
+
+        sql += " and r.source = '" + str(type) + "'"
+        sql += " and u.is_robot = 0"
+        sql += " order by r.created_at desc"
+        print(sql)
+        list = self.get_list_by_sql(sql)
+        sum_bet = 0
+        for i in list:
+            sum_bet += Decimal(i[1])
+            nickname = str(i[2][0:3]) + "***" + str(i[2][7:])
+            data.append({
+                "telephone": nickname,
+                "coin_icon": coin_info.icon,
+                "coin_name": coin_info.name,
+                "time": i[0],
+                "bets": normalize_fraction(i[1], coin_info.coin_accuracy),
+                "area_code": i[3],
+                "nickname": i[4],
+            })
+        return self.response({"code": 0, "data": data, "sum_bet": normalize_fraction(sum_bet, coin_info.coin_accuracy)})
 

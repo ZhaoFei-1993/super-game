@@ -15,5 +15,7 @@ urlpatterns = [
     path('banker/record/', views.BankerRecordView.as_view(), name='banker_record'),
     #  记录下俱乐部
     path('banker/club/', views.BankerClubView.as_view(), name="record-banker-club"),
+    #  投注流水
+    path('banker/amount_details/', views.AmountDetailsView.as_view(), name="record-banker-amount-details"),
 
 ]
