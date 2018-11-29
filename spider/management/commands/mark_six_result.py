@@ -328,3 +328,18 @@ def ergodic_record(issue, answer_dic, openprice_id):
 
         # 公告记录标记
         RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 2)
+
+        # 联合坐庄事宜
+        banker_result = []
+        target = {}
+        for club in Club.objects.get_all():
+            target.update({club.id: {"key_id": openprice_id, "profit": 0, "club_id": club.id, "status": 2}})
+        profit_list = real_records.values('bet_coin', 'earn_coin', 'club_id')
+        for profit_dt in profit_list:
+            if profit_dt['earn_coin'] < 0:
+                target[profit_dt['club_id']]['profit'] += abs(profit_dt['earn_coin'])
+            else:
+                target[profit_dt['club_id']]['profit'] -= profit_dt['earn_coin'] - profit_dt['bet_coin']
+        for key, value in target.items():
+            banker_result.append(value)
+        BankerRecord.objects.banker_settlement(banker_result, 3)
