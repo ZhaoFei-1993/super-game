@@ -82,6 +82,7 @@ class BankerInfoView(ListAPIView):
         user = self.request.user
         type = self.request.GET.get('type')
         club_id = int(self.request.GET.get('club_id'))
+        page_size = int(self.request.GET.get('page_size'))
         if 'club_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_info = Club.objects.get_one(pk=club_id)
@@ -106,7 +107,7 @@ class BankerInfoView(ListAPIView):
                 sql += " where c.parent_id = 2"
             sql += " and q.begin_at > '" + str(begin_at) + "'"
             sql += " order by times desc"
-            list = self.get_list_by_sql(sql)
+            list = self.get_list_by_sql(sql, page_size)
         elif int(type) == 3:  # 3.六合彩
             sql_list = " m.id, m.next_issue, "
             sql_list += " date_format( m.next_closing, '%Y%m%d%H%i%s' ) as times,"
@@ -128,7 +129,7 @@ class BankerInfoView(ListAPIView):
             sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
             sql += " order by times desc"
-            list = self.get_list_by_sql(sql)
+            list = self.get_list_by_sql(sql, page_size)
         data = []
         for i in list:
             if int(type) in (1, 2):
