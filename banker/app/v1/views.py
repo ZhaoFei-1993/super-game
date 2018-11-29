@@ -245,6 +245,61 @@ class BankerDetailsView(ListAPIView):
                               })
 
 
+class BankerDetailsTestView(ListAPIView):
+    """
+    认购信息下校验
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        value = value_judge(request, "type", "club_id", "amount", "key_id")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        type = self.request.GET.get("type")
+        club_id = int(self.request.data['club_id'])  # 俱乐部id
+        key_id = int(self.request.data['key_id'])  # 俱乐部id
+        amount = Decimal(self.request.data['amount'])
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
+        user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
+
+        if type == 1 or type == 2:  # 1.足球  2.篮球
+            list_info = Quiz.objects.get(id=key_id)
+            if int(list_info.status) != 0:
+                raise ParamErrorException(error_code.API_110101_USER_BANKER)
+        elif type == 3:  # 六合彩
+            keys_id = key_id - 1
+            list_info = OpenPrice.objects.get(id=keys_id)
+            just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
+            next_closing = list_info.next_closing
+            if just_now > next_closing:
+                raise ParamErrorException(error_code.API_110102_USER_BANKER)
+        else:  # 股票
+            list_info = Periods.objects.get(id=key_id)
+            just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
+            rotary_header_time = list_info.rotary_header_time
+            if just_now > rotary_header_time:
+                raise ParamErrorException(error_code.API_110102_USER_BANKER)
+
+        all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
+        sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
+        sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
+
+        banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
+        sum_share = Decimal(banker_share.balance)  # 总可购份额
+
+        if sum_amount > sum_share:
+            raise ParamErrorException(error_code.API_110103_USER_BANKER)
+        if user_coin.balance < amount:
+            raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
+        return self.response({"code": 0})
+
+
+
 class BankerBuyView(ListCreateAPIView):
     """
     联合坐庄：   确认做庄
@@ -545,6 +600,10 @@ class AmountDetailsView(ListAPIView):
         for i in list:
             sum_bet += Decimal(i[1])
             nickname = str(i[2][0:3]) + "***" + str(i[2][7:])
+            f = len(str(i[4]))
+            if f > 1:
+                fs = f - 1
+            telephone = str(i[4][0:1]) + "***" + str(i[4][fs:f])
             data.append({
                 "telephone": nickname,
                 "coin_icon": coin_info.icon,
@@ -552,7 +611,7 @@ class AmountDetailsView(ListAPIView):
                 "time": i[0],
                 "bets": normalize_fraction(i[1], coin_info.coin_accuracy),
                 "area_code": i[3],
-                "nickname": i[4],
+                "nickname": telephone,
             })
         return self.response({"code": 0, "data": data, "sum_bet": normalize_fraction(sum_bet, coin_info.coin_accuracy)})
 
