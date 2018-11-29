@@ -602,7 +602,9 @@ class AmountDetailsView(ListAPIView):
             f = len(str(i[4]))
             if f > 1:
                 fs = f - 1
-            telephone = str(i[4][0:1]) + "***" + str(i[4][fs:f])
+                telephone = str(i[4][0:1]) + "***" + str(i[4][fs:f])
+            else:
+                telephone = str(i[4][0:1]) + "***"
             data.append({
                 "telephone": nickname,
                 "coin_icon": coin_info.icon,
