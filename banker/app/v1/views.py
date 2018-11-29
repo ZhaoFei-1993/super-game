@@ -355,9 +355,11 @@ class BankerBuyView(ListCreateAPIView):
             all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id).aggregate(Sum('balance'))
             sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
             sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
+            print("sum_amount=====================", sum_amount)
 
             banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
             sum_share = Decimal(banker_share.balance)  # 总可购份额
+            print("sum_share====================", sum_share)
 
             info.append({
                 "key_id": key_id,
