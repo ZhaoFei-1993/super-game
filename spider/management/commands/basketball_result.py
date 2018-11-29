@@ -14,6 +14,8 @@ from decimal import Decimal
 from time import sleep
 from utils.functions import normalize_fraction, to_decimal
 from promotion.models import PromotionRecord, UserPresentation
+from banker.models import BankerRecord
+
 
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
@@ -345,15 +347,30 @@ def get_data_info(url, match_flag):
             quiz.status = Quiz.BONUS_DISTRIBUTION
             quiz.save()
 
-            # 推广代理事宜
             real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=quiz,
                                                  is_distribution=True)
             if len(real_records) > 0:
+                # 推广代理事宜
                 PromotionRecord.objects.insert_all(real_records, 2, 1)
                 PromotionRecord.objects.club_flow_statistics(real_records, 2)
 
                 # 公告记录标记
                 RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 7)
+
+                # 联合坐庄事宜
+                banker_result = []
+                target = {}
+                for club in Club.objects.get_all():
+                    target.update({club.id: {"key_id": quiz.id, "profit": 0, "club_id": club.id, "status": 2}})
+                profit_list = real_records.values('bet', 'earn_coin', 'roomquiz_id')
+                for profit_dt in profit_list:
+                    if profit_dt['earn_coin'] < 0:
+                        target[profit_dt['roomquiz_id']]['profit'] += abs(profit_dt['earn_coin'])
+                    else:
+                        target[profit_dt['roomquiz_id']]['profit'] -= profit_dt['earn_coin'] - profit_dt['bet']
+                for key, value in target.items():
+                    banker_result.append(value)
+                BankerRecord.objects.banker_settlement(banker_result, 2)
 
             print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
             return flag
@@ -408,14 +425,20 @@ def handle_delay_game(delay_quiz):
             record.is_distribution = True
             record.save()
 
-    # 推广代理事宜
     real_records = Record.objects.filter(~Q(source=str(Record.CONSOLE)), ~Q(roomquiz_id=1), quiz=delay_quiz,
                                          is_distribution=True)
     if len(real_records) > 0:
+        # 推广代理事宜
         PromotionRecord.objects.insert_all(real_records, 2, 2)
 
         # 公告记录标记
         RecordMark.objects.insert_all_record_mark(real_records.values_list('user_id', flat=True), 7)
+
+        # 联合坐庄事宜
+        banker_result = []
+        for club in Club.objects.get_all():
+            banker_result.append({"key_id": delay_quiz.id, "profit": 0, "club_id": club.id, "status": 3})
+        BankerRecord.objects.banker_settlement(banker_result, 2)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
