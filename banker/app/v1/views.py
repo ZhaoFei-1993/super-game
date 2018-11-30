@@ -336,7 +336,7 @@ class BankerBuyView(ListCreateAPIView):
         new_sum_balance = 0
 
         for i in data:
-            amount = Decimal(i["amount"])
+            amount = i["amount"]
             amount = normalize_fraction(amount, 5)
             print("amount==================", amount)
             key_id = int(i["key_id"])
