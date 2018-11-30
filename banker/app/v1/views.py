@@ -486,9 +486,14 @@ class BankerRecordView(ListAPIView):
             coin_accuracy = int(coin_info.coin_accuracy)
             rule = BankerRecord.SOURCE[int(i[1])-1][1]
 
+            print("i[2]=================", i[2])
+            print("i[2]=================", i[2] * 100)
             proportion = i[2] * 100 * Decimal(0.4)
+            print("proportion=================", proportion)
             proportion = normalize_fraction(proportion, 2)
+            print("proportion===============", proportion)
             proportion = str(proportion) + "%"
+            print("proportion================", proportion)
 
             earn_coin = normalize_fraction(i[5], coin_accuracy)
             if status not in (1, 3):
