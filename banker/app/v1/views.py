@@ -167,7 +167,7 @@ class BankerInfoView(ListAPIView):
 
         if 'page_size' in request.GET:
             lists = self.get_all_by_sql(sql)
-            page_size = self.request.GET.get('page_size')
+            page_size = int(self.request.GET.get('page_size'))
             a = len(lists)
             m = a/page_size
             b = a//page_size
