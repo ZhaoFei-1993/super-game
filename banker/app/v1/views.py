@@ -165,9 +165,22 @@ class BankerInfoView(ListAPIView):
                 })
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
 
+        if 'page_size' in request.GET:
+            lists = self.get_all_by_sql(sql)
+            page_size = self.request.GET.get('page_size')
+            a = len(lists)
+            m = a/page_size
+            b = a//page_size
+            if m == b:
+                page = b
+            else:
+                page = b + 1
+        else:
+            page = 1
         return self.response({"code": 0,
                               "data": data,
-                              "balance": normalize_fraction(user_coin.balance, int(coin_info.coin_accuracy))
+                              "balance": normalize_fraction(user_coin.balance, int(coin_info.coin_accuracy)),
+                              "page": page
                               })
 
 
@@ -255,7 +268,7 @@ class BankerDetailsTestView(ListCreateAPIView):
         value = value_judge(request, "type", "club_id", "amount", "key_id")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        type = self.request.data("type")
+        type = self.request.data['type']  # 玩法类型
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         key_id = int(self.request.data['key_id'])  # 俱乐部id
         amount = Decimal(self.request.data['amount'])
