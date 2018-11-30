@@ -338,7 +338,6 @@ class BankerBuyView(ListCreateAPIView):
         for i in data:
             amount = Decimal(i["amount"])
             amount = normalize_fraction(amount, 5)
-            print("amount==================", type(amount))
             print("amount==================", amount)
             key_id = int(i["key_id"])
 
