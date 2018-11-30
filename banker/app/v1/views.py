@@ -125,7 +125,7 @@ class BankerInfoView(ListAPIView):
             sql += " inner join guess_stock s on g.stock_id=s.id"
             sql += " where s.stock_guess_open = 0"
             sql += " and s.is_delete = 0"
-            sql += " and g.start_value is null"
+            # sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
             sql += " order by times desc"
             list = self.get_list_by_sql(sql)
