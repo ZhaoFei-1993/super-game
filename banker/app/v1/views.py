@@ -268,7 +268,7 @@ class BankerDetailsTestView(ListCreateAPIView):
         value = value_judge(request, "type", "club_id", "amount", "key_id")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        type = self.request.data['type']  # 玩法类型
+        type = int(self.request.data['type'])  # 玩法类型
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         key_id = int(self.request.data['key_id'])  # 俱乐部id
         amount = Decimal(self.request.data['amount'])
