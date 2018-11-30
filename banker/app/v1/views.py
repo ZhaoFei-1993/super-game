@@ -147,7 +147,7 @@ class BankerInfoView(ListAPIView):
                 else:
                     name = str("第") + str(i[1]) + str("期")
                 data.append({
-                    "key_id": int(i[0])+1,
+                    "key_id": int(i[0]),
                     "name": name,
                     "day_time": i[3],
                     "time": i[4]
@@ -281,8 +281,7 @@ class BankerDetailsTestView(ListCreateAPIView):
             if int(list_info.status) != 0:
                 raise ParamErrorException(error_code.API_110101_USER_BANKER)
         elif type == 3:  # 六合彩
-            keys_id = key_id - 1
-            list_info = OpenPrice.objects.get(id=keys_id)
+            list_info = OpenPrice.objects.get(id=key_id)
             just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
             next_closing = list_info.next_closing
             if just_now > next_closing:
@@ -443,7 +442,7 @@ class BankerRecordView(ListAPIView):
         if type in (1, 2):
             sql += " inner join quiz_quiz q on r.key_id=q.id"
         elif type == 3:
-            sql += " inner join marksix_openprice q on r.key_id-1=q.id"
+            sql += " inner join marksix_openprice q on r.key_id=q.id"
         elif type == 4:
             sql += " inner join guess_periods q on r.key_id=q.id"
             sql += " inner join guess_stock s on q.stock_id=s.id"
