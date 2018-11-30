@@ -374,6 +374,9 @@ class BankerBuyView(ListCreateAPIView):
                 "amount": Decimal(amount)
             })
 
+            print("sum_amount==================", sum_amount)
+            print("sum_share==================", sum_share)
+            print("amount==================", amount)
             if sum_amount > sum_share:
                 raise ParamErrorException(error_code.API_110103_USER_BANKER)
             new_sum_balance += amount
