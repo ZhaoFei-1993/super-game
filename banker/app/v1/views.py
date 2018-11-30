@@ -244,21 +244,18 @@ class BankerDetailsView(ListAPIView):
                               })
 
 
-class BankerDetailsTestView(ListAPIView):
+class BankerDetailsTestView(ListCreateAPIView):
     """
     认购信息下校验
     """
     permission_classes = (LoginRequired,)
 
-    def get_queryset(self):
-        pass
-
-    def list(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = request.user
         value = value_judge(request, "type", "club_id", "amount", "key_id")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
-        type = self.request.GET.get("type")
+        type = self.request.data("type")
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         key_id = int(self.request.data['key_id'])  # 俱乐部id
         amount = Decimal(self.request.data['amount'])
