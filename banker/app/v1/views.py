@@ -351,8 +351,7 @@ class BankerBuyView(ListCreateAPIView):
                 if int(list_info.status) != 0:
                     raise ParamErrorException(error_code.API_110101_USER_BANKER)
             elif type == 3:  # 六合彩
-                keys_id = key_id - 1
-                list_info = OpenPrice.objects.get(id=keys_id)
+                list_info = OpenPrice.objects.get(id=key_id)
                 just_now = datetime.datetime.now() + datetime.timedelta(hours=1)
                 next_closing = list_info.next_closing
                 if just_now > next_closing:
