@@ -388,7 +388,7 @@ class BankerBuyView(ListCreateAPIView):
             banker_record.balance = s["amount"]
             print("amount==============", s["amount"])
             print("sum_share==============", s["sum_share"])
-            proportion = normalize_fraction(s["amount"] / s["sum_share"], 2)
+            proportion = normalize_fraction(s["amount"] / s["sum_share"], 4)
             print("proportion===============", proportion)
             banker_record.proportion = Decimal(proportion)
             banker_record.source = type
