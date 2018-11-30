@@ -123,9 +123,9 @@ class BankerInfoView(ListAPIView):
             sql_list += " date_format( g.rotary_header_time, '%H:%i' ) as time"
             sql = "select " + sql_list + " from guess_periods g"
             sql += " inner join guess_stock s on g.stock_id=s.id"
-            sql += " where s.stock_guess_open = 0"
+            sql += " where s.stock_guess_open = 1"
             sql += " and s.is_delete = 0"
-            # sql += " and g.start_value is null"
+            sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
             sql += " order by times desc"
             print("begin_at==========", begin_at)
