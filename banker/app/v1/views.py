@@ -105,7 +105,7 @@ class BankerInfoView(ListAPIView):
             else:
                 sql += " where c.parent_id = 2"
             sql += " and q.begin_at > '" + str(begin_at) + "'"
-            sql += " order by times desc"
+            sql += " order by times"
             list = self.get_list_by_sql(sql)
         elif int(type) == 3:  # 3.六合彩
             sql_list = " m.id, m.next_issue, "
@@ -114,7 +114,7 @@ class BankerInfoView(ListAPIView):
             sql_list += " date_format( m.next_closing, '%H:%i' ) as time"
             sql = "select " + sql_list + " from marksix_openprice m"
             sql += " where m.next_closing > '" + str(begin_at) + "'"
-            sql += " order by m.next_closing desc"
+            sql += " order by m.next_closing"
             list = get_sql(sql)
         else:  # 4.猜股票
             sql_list = " g.id, s.name, "
@@ -127,7 +127,7 @@ class BankerInfoView(ListAPIView):
             sql += " and s.is_delete = 0"
             sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
-            sql += " order by times desc"
+            sql += " order by times"
             print("begin_at==========", begin_at)
             print("sql=====================", sql)
             list = self.get_list_by_sql(sql)
@@ -436,13 +436,13 @@ class BankerRecordView(ListAPIView):
         sql_list += " date_format( r.created_at, '%k:%i' ) as time,"
         if type in (1, 2):
             if request.GET.get('language') == 'en':
-                sql_list += " q.host_team_en, q.guest_team_en, r.key_id"
+                sql_list += " q.host_team_en, q.guest_team_en, r.key_id, date_format( q.begin_at, '%m/%d' ) as times"
             else:
-                sql_list += " q.host_team, q.guest_team, r.key_id"
+                sql_list += " q.host_team, q.guest_team, r.key_id, date_format( q.begin_at, '%m/%d' ) as times"
         elif type == 3:
             sql_list += " q.next_issue, r.key_id"
         elif type == 4:
-            sql_list += " s.name, r.key_id"
+            sql_list += " s.name, r.key_id, date_format( q.lottery_time, '%m/%d' ) as times"
 
         sql = "select " + sql_list + " from banker_bankerrecord r"
         if type in (1, 2):
@@ -467,7 +467,8 @@ class BankerRecordView(ListAPIView):
             name = ""
             key_id = ""
             if type in (1, 2):
-                name = str(i[10]) + " VS " + str(i[11])
+                name = str(i[10]) + " VS " + str(i[11]) + " " + str(i[13])
+
                 key_id = int(i[12])
             elif type == 3:
                 if request.GET.get('language') == 'en':
@@ -479,9 +480,11 @@ class BankerRecordView(ListAPIView):
             elif type == 4:
                 if request.GET.get('language') == 'en':
                     name = Stock.STOCK_EN[int(i[10])][1]
+                    name = str(name) + " " + str(i[12])
                     key_id = int(i[11])
                 else:
                     name = Stock.STOCK[int(i[10])][1]
+                    name = str(name) + " " + str(i[12])
                     key_id = int(i[11])
 
             # club_info = Club.objects.get(id=int(i.club_id))
