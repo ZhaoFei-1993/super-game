@@ -128,6 +128,8 @@ class BankerInfoView(ListAPIView):
             # sql += " and g.start_value is null"
             sql += " and g.rotary_header_time > '" + str(begin_at) + "'"
             sql += " order by times desc"
+            print("begin_at==========", begin_at)
+            print("sql=====================", sql)
             list = self.get_list_by_sql(sql)
         data = []
         for i in list:
