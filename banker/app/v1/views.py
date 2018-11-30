@@ -32,7 +32,7 @@ class BankerHomeView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         BANKER_RULE_INFO = "BANKER_RULE_INFO"  # 缓存
-        # delete_cache(BANKER_RULE_INFO)
+        delete_cache(BANKER_RULE_INFO)
         banker_rule_info = get_cache(BANKER_RULE_INFO)
         if banker_rule_info is None:
             rule_info = ClubRule.objects.filter(is_banker=True).order_by('banker_sort')
