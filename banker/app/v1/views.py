@@ -337,6 +337,9 @@ class BankerBuyView(ListCreateAPIView):
 
         for i in data:
             amount = Decimal(i["amount"])
+            amount = normalize_fraction(amount, 5)
+            print("amount==================", type(amount))
+            print("amount==================", amount)
             key_id = int(i["key_id"])
 
             if amount <= 0:
@@ -376,7 +379,6 @@ class BankerBuyView(ListCreateAPIView):
 
             print("sum_amount==================", sum_amount)
             print("sum_share==================", sum_share)
-            print("amount==================", amount)
             if sum_amount > sum_share:
                 raise ParamErrorException(error_code.API_110103_USER_BANKER)
             new_sum_balance += amount
