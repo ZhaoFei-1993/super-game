@@ -56,7 +56,7 @@ class Command(BaseCommand, BaseView):
 
                 coin_detail = CoinDetail()
                 coin_detail.user = coin_info.user
-                coin_detail.coin_name = UserCoin.coin.name
+                coin_detail.coin_name = coin_info.coin.name
                 coin_detail.amount = Decimal(income_dividend)
                 coin_detail.rest = coin_info.balance
                 coin_detail.sources = 20
