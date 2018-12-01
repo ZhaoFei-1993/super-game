@@ -251,31 +251,35 @@ def get_data_info(url, match_flag):
                     # 判断是否回答正确
                     is_right = False
                     # 胜负
-                    if record.rule_id == rule_mnl.id:
-                        if record.option.option_id == option_mnl.id:
-                            is_right = True
+                    if rule_mnl is not None:
+                        if record.rule_id == rule_mnl.id:
+                            if record.option.option_id == option_mnl.id:
+                                is_right = True
                     # 让分胜负
-                    if record.rule_id == rule_hdc.id:
-                        handicap = record.handicap.replace('+', '')
-                        if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
-                            if record.option.option.flag == 'h':
-                                is_right = True
-                        else:
-                            if record.option.option.flag == 'a':
-                                is_right = True
+                    if rule_hdc is not None:
+                        if record.rule_id == rule_hdc.id:
+                            handicap = record.handicap.replace('+', '')
+                            if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
+                                if record.option.option.flag == 'h':
+                                    is_right = True
+                            else:
+                                if record.option.option.flag == 'a':
+                                    is_right = True
                     # 大小分
-                    if record.rule_id == rule_hilo.id:
-                        sum_score = to_decimal(host_team_score) + to_decimal(guest_team_score)
-                        if sum_score > to_decimal(record.handicap):
-                            if '大于' in record.option.option.option:
-                                is_right = True
-                        else:
-                            if '小于' in record.option.option.option:
-                                is_right = True
+                    if rule_hilo is not None:
+                        if record.rule_id == rule_hilo.id:
+                            sum_score = to_decimal(host_team_score) + to_decimal(guest_team_score)
+                            if sum_score > to_decimal(record.handicap):
+                                if '大于' in record.option.option.option:
+                                    is_right = True
+                            else:
+                                if '小于' in record.option.option.option:
+                                    is_right = True
                     # 胜分差
-                    if record.rule_id == rule_wnm.id:
-                        if record.option.option_id == option_wnm.id:
-                            is_right = True
+                    if rule_wnm is not None:
+                        if record.rule_id == rule_wnm.id:
+                            if record.option.option_id == option_wnm.id:
+                                is_right = True
 
                     earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
                     earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
@@ -387,10 +391,10 @@ def handle_delay_game(delay_quiz):
             record.save()
 
             # 用户增加回退还金额
-            club = Club.objects.get(pk=record.roomquiz_id)
+            club = Club.objects.get_one(pk=record.roomquiz_id)
 
             # 获取币信息
-            coin = Coin.objects.get(pk=club.coin_id)
+            coin = Coin.objects.get_one(pk=club.coin_id)
 
             try:
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
@@ -402,25 +406,27 @@ def handle_delay_game(delay_quiz):
             user_coin.balance = to_decimal(user_coin.balance) + to_decimal(return_coin)
             user_coin.save()
 
-            # 用户资金明细表
-            coin_detail = CoinDetail()
-            coin_detail.user_id = record.user_id
-            coin_detail.coin_name = coin.name
-            coin_detail.amount = str(return_coin)
-            coin_detail.rest = user_coin.balance
-            coin_detail.sources = CoinDetail.RETURN
-            coin_detail.save()
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = coin.name
+                coin_detail.amount = str(return_coin)
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.RETURN
+                coin_detail.save()
 
-            # 发送信息
-            u_mes = UserMessage()
-            u_mes.status = 0
-            u_mes.user_id = record.user_id
-            u_mes.message_id = 6  # 私人信息
-            u_mes.title = club.room_title + '退回公告'
-            u_mes.title_en = 'Return to announcement from ' + club.room_title_en
-            u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
-            u_mes.content_en = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
-            u_mes.save()
+            # # 发送信息
+            # u_mes = UserMessage()
+            # u_mes.status = 0
+            # u_mes.user_id = record.user_id
+            # u_mes.message_id = 6  # 私人信息
+            # u_mes.title = club.room_title + '退回公告'
+            # u_mes.title_en = 'Return to announcement from ' + club.room_title_en
+            # u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
+            # u_mes.content_en = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
+            # u_mes.save()
 
             record.is_distribution = True
             record.save()
@@ -540,13 +546,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('正在执行开奖脚本...  ', 'now is ', datetime.datetime.now())
         after_24_hours = datetime.datetime.now() - datetime.timedelta(hours=24)
-        if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                               category__parent_id=1).exists():
-            for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
-                                                  category__parent_id=1):
-                delay_quiz.status = Quiz.DELAY
-                handle_delay_game(delay_quiz)
-                delay_quiz.save()
+        # if Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+        #                        category__parent_id=1).exists():
+        #     for delay_quiz in Quiz.objects.filter(begin_at__lt=after_24_hours, status=str(Quiz.PUBLISHING),
+        #                                           category__parent_id=1):
+        #         delay_quiz.status = Quiz.DELAY
+        #         handle_delay_game(delay_quiz)
+        #         delay_quiz.save()
 
         # 在此基础上增加2小时
         after_2_hours = datetime.datetime.now() - datetime.timedelta(hours=2)
