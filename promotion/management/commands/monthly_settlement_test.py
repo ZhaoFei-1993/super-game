@@ -6,54 +6,16 @@ from promotion.models import PromotionRecord
 from quiz.models import Record
 from guess.models import RecordStockPk, Record as GuessRecord
 from marksix.models import SixRecord
+from banker.models import BankerRecord
+from users.models import CoinDetail
 
 
 class Command(BaseCommand, BaseView):
-    help = "推广人月结算"
+    help = "联合做庄结算方法测试"
 
     def handle(self, *args, **options):
-        list = PromotionRecord.objects.all()
-        for i in list:
-            s = [19942132, 19942133, 19942129]
-            if int(i.record_id) in s:
-                i.delete()
-            else:
-                if int(i.source) == 1 or int(i.source) == 2:
-                    a = Record.objects.filter(pk=i.record_id).count()
-                    if a == 0:
-                        i.delete()
-                    else:
-                        record_list = Record.objects.get(pk=i.record_id)
-                        if int(record_list.type) == 0:
-                            status = 0
-                        elif int(record_list.type) == 1 and int(record_list.type) == 2:
-                            status = 1
-                        else:
-                            status = 2
-                        i.status = status
-                elif int(i.source) == 3:
-                    record_list = SixRecord.objects.get(pk=i.record_id)
-                    if int(record_list.status) == 0:
-                        status = 0
-                    else:
-                        status = 1
-                    i.status = status
-                elif int(i.source) == 5:
-                    record_list = RecordStockPk.objects.get(pk=i.record_id)
-                    if int(record_list.status) == 0:
-                        status = 0
-                    elif int(record_list.status) == 1:
-                        status = 1
-                    else:
-                        status = 2
-                    i.status = status
-                else:
-                    record_list = GuessRecord.objects.get(pk=i.record_id)
-                    if int(record_list.status) == 0:
-                        status = 0
-                    elif int(record_list.status) == 1:
-                        status = 1
-                    else:
-                        status = 2
-                    i.status = status
-                i.save()
+        user_list = (41239, 52120, 78691, 78833, 78899)
+        for i in user_list:
+            list = CoinDetail.objects.filter(user_id=int(i), sources=20)
+            for s in list:
+                print(str(s.user_id) +"----"+str(s.created_at.strftime('%Y-%m-%d'))+"----"+ str(s.amount) +"--------"+ str(s.coin_name))
