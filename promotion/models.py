@@ -117,7 +117,7 @@ class PresentationMonth(models.Model):
     income_dividend = models.DecimalField(verbose_name='盈亏分红', max_digits=32, decimal_places=10, default=0.0000000000)
     proportion = models.DecimalField(verbose_name='分成比例', max_digits=5, decimal_places=2, default=0.00)
     is_receive = models.BooleanField(verbose_name="是否已经获得盈亏分红", default=False)
-    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    created_at = models.DateTimeField(verbose_name="创建时间", null=True)
 
     # updated_at = models.DateTimeField(verbose_name="更新时间", auto_now=True)
 
