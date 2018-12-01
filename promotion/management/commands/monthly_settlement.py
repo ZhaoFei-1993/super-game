@@ -46,13 +46,13 @@ class Command(BaseCommand, BaseView):
             presentation_month.proportion = proportion
             presentation_month.is_receive = 1
             presentation_month.created_at = start_time
-            # presentation_month.save()
+            presentation_month.save()
             print("income_dividend=================", income_dividend)
             if income_dividend > 0:
                 Address.objects.initial(int(i[3]))  # 用户生成usercoin 加地址
                 coin_info = UserCoin.objects.get(user_id=i[3], coin_id=i[5])
                 coin_info.balance += income_dividend
-                # coin_info.save()
+                coin_info.save()
 
                 coin_detail = CoinDetail()
                 coin_detail.user = coin_info.user
@@ -60,4 +60,4 @@ class Command(BaseCommand, BaseView):
                 coin_detail.amount = Decimal(income_dividend)
                 coin_detail.rest = coin_info.balance
                 coin_detail.sources = 20
-                # coin_detail.save()
+                coin_detail.save()
