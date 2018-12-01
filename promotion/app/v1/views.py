@@ -1084,10 +1084,10 @@ class UserInfoView(ListAPIView):
             before_yeas = int(start_year) - 1
             weekDay, monthCountDay = calendar.monthrange(before_yeas, before_month)
             before_first_day = datetime.date(before_yeas, before_month, day=monthCountDay).strftime('%Y-%m-%d')
-            before_start = str(before_first_day) + ' 00:00:00'  # 本月第一天
+            before_start = str(before_first_day) + ' 23:59:59'  # 本月第一天
         else:
             before_month = int(end_month) - 1
-            before_yeas = int(start_year) - 1
+            before_yeas = int(start_year)
             weekDay, monthCountDay = calendar.monthrange(before_yeas, before_month)
             before_first_day = datetime.date(before_yeas, before_month, day=monthCountDay).strftime('%Y-%m-%d')
             before_start = str(before_first_day) + ' 23:59:59'  # 本月第一天
