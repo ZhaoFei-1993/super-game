@@ -1043,6 +1043,7 @@ class UserInfoView(ListAPIView):
         user_infos = get_sql(sql)[0]
         if user_infos == ():
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        print("login_time===================", user_infos[3])
         user_info = {
             "avatar": user_infos[0],
             "nickname": user_infos[1],
