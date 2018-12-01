@@ -29,7 +29,9 @@ class BankerShare(models.Model):
     )
     club = models.ForeignKey(Club, on_delete=models.DO_NOTHING, related_name='banker_club', verbose_name="俱乐部ID")
     source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
-    balance = models.DecimalField(verbose_name='份额', max_digits=32, decimal_places=18, default=0.000000000000000000)
+    balance = models.DecimalField(verbose_name='40%份额', max_digits=32, decimal_places=18, default=0.000000000000000000)
+    all_balance = models.DecimalField(verbose_name='100%份额', max_digits=32, decimal_places=18,
+                                      default=0.000000000000000000)
     proportion = models.DecimalField(verbose_name='占比', max_digits=4, decimal_places=3, default=0.000)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
