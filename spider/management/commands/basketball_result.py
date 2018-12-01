@@ -391,10 +391,10 @@ def handle_delay_game(delay_quiz):
             record.save()
 
             # 用户增加回退还金额
-            club = Club.objects.get(pk=record.roomquiz_id)
+            club = Club.objects.get_one(pk=record.roomquiz_id)
 
             # 获取币信息
-            coin = Coin.objects.get(pk=club.coin_id)
+            coin = Coin.objects.get_one(pk=club.coin_id)
 
             try:
                 user_coin = UserCoin.objects.get(user_id=record.user_id, coin=coin)
@@ -406,14 +406,16 @@ def handle_delay_game(delay_quiz):
             user_coin.balance = to_decimal(user_coin.balance) + to_decimal(return_coin)
             user_coin.save()
 
-            # 用户资金明细表
-            coin_detail = CoinDetail()
-            coin_detail.user_id = record.user_id
-            coin_detail.coin_name = coin.name
-            coin_detail.amount = str(return_coin)
-            coin_detail.rest = user_coin.balance
-            coin_detail.sources = CoinDetail.RETURN
-            coin_detail.save()
+            # 排除机器人
+            if record.source != str(Record.CONSOLE):
+                # 用户资金明细表
+                coin_detail = CoinDetail()
+                coin_detail.user_id = record.user_id
+                coin_detail.coin_name = coin.name
+                coin_detail.amount = str(return_coin)
+                coin_detail.rest = user_coin.balance
+                coin_detail.sources = CoinDetail.RETURN
+                coin_detail.save()
 
             # # 发送信息
             # u_mes = UserMessage()
