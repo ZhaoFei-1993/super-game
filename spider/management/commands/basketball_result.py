@@ -251,31 +251,35 @@ def get_data_info(url, match_flag):
                     # 判断是否回答正确
                     is_right = False
                     # 胜负
-                    if record.rule_id == rule_mnl.id:
-                        if record.option.option_id == option_mnl.id:
-                            is_right = True
+                    if rule_mnl is not None:
+                        if record.rule_id == rule_mnl.id:
+                            if record.option.option_id == option_mnl.id:
+                                is_right = True
                     # 让分胜负
-                    if record.rule_id == rule_hdc.id:
-                        handicap = record.handicap.replace('+', '')
-                        if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
-                            if record.option.option.flag == 'h':
-                                is_right = True
-                        else:
-                            if record.option.option.flag == 'a':
-                                is_right = True
+                    if rule_hdc is not None:
+                        if record.rule_id == rule_hdc.id:
+                            handicap = record.handicap.replace('+', '')
+                            if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
+                                if record.option.option.flag == 'h':
+                                    is_right = True
+                            else:
+                                if record.option.option.flag == 'a':
+                                    is_right = True
                     # 大小分
-                    if record.rule_id == rule_hilo.id:
-                        sum_score = to_decimal(host_team_score) + to_decimal(guest_team_score)
-                        if sum_score > to_decimal(record.handicap):
-                            if '大于' in record.option.option.option:
-                                is_right = True
-                        else:
-                            if '小于' in record.option.option.option:
-                                is_right = True
+                    if rule_hilo is not None:
+                        if record.rule_id == rule_hilo.id:
+                            sum_score = to_decimal(host_team_score) + to_decimal(guest_team_score)
+                            if sum_score > to_decimal(record.handicap):
+                                if '大于' in record.option.option.option:
+                                    is_right = True
+                            else:
+                                if '小于' in record.option.option.option:
+                                    is_right = True
                     # 胜分差
-                    if record.rule_id == rule_wnm.id:
-                        if record.option.option_id == option_wnm.id:
-                            is_right = True
+                    if rule_wnm is not None:
+                        if record.rule_id == rule_wnm.id:
+                            if record.option.option_id == option_wnm.id:
+                                is_right = True
 
                     earn_coin = to_decimal(record.bet) * to_decimal(record.odds)
                     earn_coin = normalize_fraction(earn_coin, int(coin.coin_accuracy))
