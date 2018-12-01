@@ -1090,7 +1090,7 @@ class UserInfoView(ListAPIView):
             before_yeas = int(start_year) - 1
             weekDay, monthCountDay = calendar.monthrange(before_yeas, before_month)
             before_first_day = datetime.date(before_yeas, before_month, day=monthCountDay).strftime('%Y-%m-%d')
-            before_start = str(before_first_day) + ' 00:00:00'  # 本月第一天
+            before_start = str(before_first_day) + ' 23:59:59'  # 本月第一天
         start = str(month_first_day) + ' 00:00:00'  # 本月第一天
 
         data_list = {}
@@ -1109,6 +1109,7 @@ class UserInfoView(ListAPIView):
             sql += " and p.created_at <= '" + str(before_start) + "'"
             sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
             sql += " group by p.club_id, created_ats"
+            print("sql=======================", sql)
             old_month_list = get_sql(sql)  # 往月
             for s in old_month_list:
                 if s[0] not in data_list:
