@@ -1095,9 +1095,6 @@ class UserInfoView(ListAPIView):
 
         data_list = {}
         if start != start_time:
-            print("invitee_id=============", invitee_id)
-            print("start_time=============", start_time)
-            print("before_start=============", before_start)
             sql_list = "p.club_id, sum(p.bets), date_format( p.created_at, '%Y%m' ) AS created_ats, " \
                        "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin"
 
@@ -1109,7 +1106,6 @@ class UserInfoView(ListAPIView):
             sql += " and p.created_at <= '" + str(before_start) + "'"
             sql += " and p.club_id in (" + ','.join(coin_id_list) + ")"
             sql += " group by p.club_id, created_ats"
-            print("sql=======================", sql)
             old_month_list = get_sql(sql)  # 往月
             for s in old_month_list:
                 if s[0] not in data_list:
@@ -1130,7 +1126,6 @@ class UserInfoView(ListAPIView):
                                 "earn_coin": s[3]
                             }
                         }
-            print("data_list================", data_list)
 
         sql_list = "p.club_id, sum(p.bets), date_format( p.created_at, '%Y%m' ) AS created_ats, " \
                    "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin"
@@ -1163,7 +1158,6 @@ class UserInfoView(ListAPIView):
                             "earn_coin": s[3]
                         }
                     }
-        print("data_list==================", data_list)
 
         month_list = {}
         sql_list = "pm.club_id, date_format( pm.created_at, '%Y%m' ) AS created_ats, pm.proportion"
@@ -1193,7 +1187,6 @@ class UserInfoView(ListAPIView):
                             "proportion": i[2]
                         }
                     }
-        print("month_list===================", month_list)
 
         sql_list = "pm.club_id, date_format( pm.created_at, '%Y%m' ) AS created_ats, sum(pm.income)"
         sql = "select " + sql_list + " from promotion_userpresentation pm"
@@ -1224,7 +1217,6 @@ class UserInfoView(ListAPIView):
                                 "proportion": reward_gradient_all(i[0], i[2])
                             }
                         }
-        print("month_list==============", month_list)
 
         data = []
         for i in club_list:
@@ -1255,5 +1247,4 @@ class UserInfoView(ListAPIView):
                 "sum_income": sum_income,
                 "sum_income_water": normalize_fraction(sum_income_water, 8)
             })
-        print("data==================", data)
         return self.response({'code': 0, "user_info": user_info, "data": data})
