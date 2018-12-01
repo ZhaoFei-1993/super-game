@@ -39,6 +39,6 @@ class Command(BaseCommand, BaseView):
             else:
                 b = 275000000
                 s = 110000000
-            i.balance = b
-            i.all_balance = s
+            i.all_balance = b
+            i.balance = s
             i.save()
