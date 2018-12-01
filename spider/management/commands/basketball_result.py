@@ -415,16 +415,16 @@ def handle_delay_game(delay_quiz):
             coin_detail.sources = CoinDetail.RETURN
             coin_detail.save()
 
-            # 发送信息
-            u_mes = UserMessage()
-            u_mes.status = 0
-            u_mes.user_id = record.user_id
-            u_mes.message_id = 6  # 私人信息
-            u_mes.title = club.room_title + '退回公告'
-            u_mes.title_en = 'Return to announcement from ' + club.room_title_en
-            u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
-            u_mes.content_en = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
-            u_mes.save()
+            # # 发送信息
+            # u_mes = UserMessage()
+            # u_mes.status = 0
+            # u_mes.user_id = record.user_id
+            # u_mes.message_id = 6  # 私人信息
+            # u_mes.title = club.room_title + '退回公告'
+            # u_mes.title_en = 'Return to announcement from ' + club.room_title_en
+            # u_mes.content = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 赛事延期或已中断(您的下注已全额退回)'
+            # u_mes.content_en = delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' The game has been postponed or has been interrupted (your wager has been fully returned)'
+            # u_mes.save()
 
             record.is_distribution = True
             record.save()
