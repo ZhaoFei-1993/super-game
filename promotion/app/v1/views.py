@@ -301,7 +301,7 @@ class ClubRuleView(ListAPIView):
         sql = "select name from quiz_category"
         # sql += " where id in (1, 2)"
         # quiz_rule = get_sql(sql)
-        # data = []
+        data = []
         # for s in quiz_rule:
         #     if s[0] == "篮球":
         #         number = 2
