@@ -299,30 +299,34 @@ class ClubRuleView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         sql = "select name from quiz_category"
-        sql += " where id in (1, 2)"
-        quiz_rule = get_sql(sql)
-        data = []
-        for s in quiz_rule:
-            if s[0] == "篮球":
-                number = 2
-                a = 2
-            else:
-                number = 3
-                a = 1
-            data.append({
-                "name": s[0],
-                "number": number,
-                "a": a
-            })
+        # sql += " where id in (1, 2)"
+        # quiz_rule = get_sql(sql)
+        # data = []
+        # for s in quiz_rule:
+        #     if s[0] == "篮球":
+        #         number = 2
+        #         a = 2
+        #     else:
+        #         number = 3
+        #         a = 1
+        #     data.append({
+        #         "name": s[0],
+        #         "number": number,
+        #         "a": a
+        #     })
 
         sql = "select title from chat_clubrule"
-        sql += " where id > 1"
-        sql += " and id < 6"
         club_rule_info = get_sql(sql)
         for i in club_rule_info:
             if i[0] == "猜股指":
                 number = 4
                 a = 4
+            elif i[0] == "篮球":
+                number = 2
+                a = 2
+            elif i[0] == "足球":
+                number = 3
+                a = 1
             elif i[0] == "六合彩":
                 number = 5
                 a = 3
