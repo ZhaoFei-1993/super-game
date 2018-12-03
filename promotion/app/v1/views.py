@@ -1235,7 +1235,7 @@ class UserInfoView(ListAPIView):
             if club_id in data_list:
                 for s in data_list[club_id]:
                     if club_id in month_list:
-                        if "proportion" in month_list[club_id][s]:
+                        if s in month_list[club_id]:
                             income_dividend = month_list[club_id][s]["proportion"]
                         else:
                             income_dividend = 0
