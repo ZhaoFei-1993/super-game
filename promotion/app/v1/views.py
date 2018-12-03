@@ -1235,7 +1235,10 @@ class UserInfoView(ListAPIView):
             if club_id in data_list:
                 for s in data_list[club_id]:
                     if club_id in month_list:
-                        income_dividend = month_list[club_id][s]["proportion"]
+                        if "proportion" in month_list[club_id][s]:
+                            income_dividend = month_list[club_id][s]["proportion"]
+                        else:
+                            income_dividend = 0
                     else:
                         income_dividend = 0
                     sum_bet += normalize_fraction(data_list[club_id][s]["bets"], 8)
