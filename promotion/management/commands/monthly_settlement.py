@@ -28,8 +28,9 @@ class Command(BaseCommand, BaseView):
         sql += " inner join chat_club c on pu.club_id=c.id"
         sql += " where pu.created_at >= '" + str(start_time) + "'"
         sql += " and pu.created_at <= '" + str(end_time) + "'"
-        sql += " and pu.club_id not in (1, 5)"
+        sql += " and pu.club_id =5"
         sql += " group by pu.user_id, pu.club_id"
+        print("sql==========", sql)
         userpresentation_list = get_sql(sql)
         for i in userpresentation_list:
             income = i[2]
