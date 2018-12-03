@@ -10,6 +10,7 @@ from api.settings import BASE_DIR, MEDIA_DOMAIN_HOST
 from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOddsLog
 from wc_auth.models import Admin
 from .get_time import get_time
+from utils.functions import request_with_proxy
 import datetime
 
 
@@ -23,7 +24,7 @@ cache_dir = BASE_DIR + '/cache'
 
 def get_data(url):
     try:
-        response = requests.get(url, headers=headers, timeout=15)
+        response = request_with_proxy(url, headers=headers, timeout=15)
         if response.status_code == 200:
             dt = response.text.encode("utf-8").decode('unicode_escape')
             result = json.loads(dt[8:-2])
@@ -224,8 +225,8 @@ def get_data_info(url):
 
             host_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + host_team_id
             guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
-            response_host_team = requests.get(host_team_url, headers=headers)
-            response_guest_team = requests.get(guest_team_url, headers=headers)
+            response_host_team = request_with_proxy(host_team_url, headers=headers)
+            response_guest_team = request_with_proxy(guest_team_url, headers=headers)
 
             host_team_dt = response_host_team.json()
             guest_team_dt = response_guest_team.json()
