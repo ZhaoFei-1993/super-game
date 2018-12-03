@@ -1518,12 +1518,13 @@ def request_with_proxy(url, headers=None, timeout=10):
         response = requests.get(url, headers=headers, timeout=timeout)
         return response
     except Exception as e:
-        print(e)
+        print(e, '\n', 'url is: ', url)
         # 不使用代理请求失败，然后使用代理
         try:
             proxies = get_proxies()
-            response = requests.get(url, headers=headers, timeout=timeout, proxies=proxies)
             print('使用了的代理是: ', proxies)
+            response = requests.get(url, headers=headers, timeout=timeout, proxies=proxies)
             return response
         except Exception as e:
-            raise CommandError('请求失败, Error is: ', e)
+            print('请求失败, Error is: ', e, '\n', 'url is: ', url)
+            return None
