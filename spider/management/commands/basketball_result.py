@@ -381,6 +381,7 @@ def get_data_info(url, match_flag):
 
 
 def handle_delay_game(delay_quiz):
+    print('match_flag === ', delay_quiz.match_flag)
     records = Record.objects.filter(quiz=delay_quiz, is_distribution=False)
     if len(records) > 0:
         for record in records:
@@ -447,94 +448,6 @@ def handle_delay_game(delay_quiz):
         BankerRecord.objects.banker_settlement(banker_result, 2)
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
-
-
-# def cash_back(quiz):
-#     cash_back_rate = 0.1
-#
-#     for club in Club.objects.filter(~Q(room_title='HAND俱乐部')):
-#         records = Record.objects.filter(quiz=quiz, roomquiz_id=club.id, user__is_robot=False)
-#         if len(records) > 0:
-#             platform_sum = 0
-#             profit = 0
-#             cash_back_sum = 0
-#             user_list = []
-#             coin_price = CoinPrice.objects.get(coin_name=club.room_title[:-3])
-#             for record in records:
-#                 platform_sum = platform_sum + record.bet
-#                 if record.earn_coin > 0:
-#                     profit = profit + (record.earn_coin - record.bet)
-#                 else:
-#                     profit = profit + record.earn_coin
-#                 if record.user_id not in user_list:
-#                     user_list.append(record.user_id)
-#
-#             print('club====>' + club.room_title)
-#             if profit <= 0:
-#                 print('profit====>' + str(abs(profit)))
-#             elif profit > 0:
-#                 print('profit====>' + '-' + str(profit))
-#             print('platform_sum====>' + str(platform_sum))
-#
-#             if profit < 0:
-#                 profit_abs = abs(profit)
-#                 for user_id in user_list:
-#                     personal_sum = 0
-#                     for record_personal in records.filter(user_id=user_id):
-#                         personal_sum = personal_sum + record_personal.bet
-#                     gsg_cash_back = float(profit_abs) * cash_back_rate * (float(personal_sum) / float(platform_sum)) * (
-#                             float(coin_price.price) / float(CoinPrice.objects.get(coin_name='GSG').price))
-#                     gsg_cash_back = trunc(gsg_cash_back, 2)
-#                     if float(gsg_cash_back) > 0:
-#                         user = User.objects.get(pk=user_id)
-#                         user_coin_gsg = UserCoin.objects.filter(user=user, coin_id=6).first()
-#
-#                         user_coin_gsg.balance = float(user_coin_gsg.balance) + float(gsg_cash_back)
-#                         user_coin_gsg.save()
-#
-#                         # 用户资金明细表
-#                         coin_detail = CoinDetail()
-#                         coin_detail.user_id = user_id
-#                         coin_detail.coin_name = "GSG"
-#                         coin_detail.amount = float(gsg_cash_back)
-#                         coin_detail.rest = user_coin_gsg.balance
-#                         coin_detail.sources = CoinDetail.CASHBACK
-#                         coin_detail.save()
-#
-#                         # 发送信息
-#                         u_mes = UserMessage()
-#                         u_mes.status = 0
-#                         u_mes.user_id = user_id
-#                         u_mes.message_id = 6  # 私人信息
-#                         u_mes.title = club.room_title + '返现公告'
-#                         u_mes.title_en = 'Cash-back announcement from ' + club.room_title_en
-#                         u_mes.content = quiz.host_team + ' VS ' + quiz.guest_team + ' 已经开奖' + ',您得到的返现为：' + str(
-#                             gsg_cash_back) + '个GSG'
-#                         u_mes.content_en = quiz.host_team + ' VS ' + quiz.guest_team + ' Lottery has already been announced' + ',he volume of cash-back you get is：' + str(
-#                             gsg_cash_back) + '个GSG'
-#                         u_mes.save()
-#
-#                         print('use_id===>' + str(user_id) + ',cash_back====>' + str(gsg_cash_back))
-#
-#                         cash_back_sum = cash_back_sum + float(gsg_cash_back)
-#
-#             cash_back_log = CashBackLog()
-#             cash_back_log.quiz = quiz
-#             cash_back_log.roomquiz_id = club.id
-#             cash_back_log.platform_sum = platform_sum
-#             if profit <= 0:
-#                 cash_back_log.profit = abs(profit)
-#             elif profit > 0:
-#                 cash_back_log.profit = float('-' + str(profit))
-#             cash_back_log.cash_back_sum = cash_back_sum
-#             cash_back_log.coin_proportion = cash_back_rate
-#             cash_back_log.save()
-#
-#             print('cash_back_sum====>' + str(cash_back_sum))
-#             print('---------------------------')
-#             quiz.is_reappearance = 1
-#             quiz.save()
-#     print('\n')
 
 
 class Command(BaseCommand):
