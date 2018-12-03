@@ -225,8 +225,8 @@ def get_data_info(url):
 
             host_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + host_team_id
             guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
-            response_host_team = request_with_proxy.get(host_team_url, headers=headers)
-            response_guest_team = request_with_proxy.get(guest_team_url, headers=headers)
+            response_host_team = request_with_proxy(host_team_url, headers=headers)
+            response_guest_team = request_with_proxy(guest_team_url, headers=headers)
 
             host_team_dt = response_host_team.json()
             guest_team_dt = response_guest_team.json()
