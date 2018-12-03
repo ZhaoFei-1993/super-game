@@ -221,7 +221,6 @@ class Coin(models.Model):
     betting_toplimit = models.DecimalField(verbose_name="投注上限", max_digits=18, decimal_places=3, default=0.000)
     coin_order = models.IntegerField(verbose_name="币种顺序", default=0)
     coin_accuracy = models.IntegerField(verbose_name="币种精度", default=0)
-    limit_accuracy = models.IntegerField(verbose_name="精度限制", default=0)
     is_eth_erc20 = models.BooleanField(verbose_name="是否ETH代币", default=False)
     is_criterion = models.BooleanField(verbose_name="是否为垃圾币", default=False)
     is_disabled = models.BooleanField(verbose_name="是否禁用", default=False)
