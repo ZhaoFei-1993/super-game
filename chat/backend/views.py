@@ -291,6 +291,7 @@ class ClubBankerRecord(ListAPIView):
                 "user_telephone": user_telephone,
                 "starting_time": i.starting_time.strftime('%Y-%m-%d %H:%M'),
                 "is_deleted": i.is_deleted,
+                "amount": i.amount,
                 "end_time": end_time
             })
         return self.response({'code': 0, 'data': data})
