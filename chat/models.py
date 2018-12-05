@@ -325,6 +325,7 @@ class ClubIdentity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(verbose_name="做庄压金", max_digits=32, decimal_places=8, default=0.00000000)
     starting_time = models.DateTimeField(verbose_name='开始时间', null=True)
+    end_time = models.DateTimeField(verbose_name='结束时间', null=True)
     is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
     created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 

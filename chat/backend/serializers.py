@@ -12,7 +12,7 @@ class ClubBackendSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
         fields = ('id', 'room_title', 'autograph', 'icon', 'created_at', 'room_number', 'coin_name', 'is_recommend',
-                  'is_dissolve', 'user')
+                  'is_dissolve', 'user', 'is_banker')
 
     @staticmethod
     def get_created_at(obj):

@@ -109,7 +109,25 @@ class ClubBackendSortView(CreateAPIView):
             club.user = sorts[club_id]
             club.save()
 
+        delete_cache(Club.objects.key)
+
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class ClubBankerSwitchView(CreateAPIView):
+    """
+    俱乐部散户局头开关
+    """
+    def post(self, request, *args, **kwargs):
+        is_banker = request.data.get('is_banker')
+        club_id = int(request.data.get('club_id'))
+        club_info = Club.objects.get(id=club_id)
+        club_info.is_banker = is_banker
+        club_info.save()
+
+        delete_cache(Club.objects.key)
+
+        return self.response({'code': 0, "is_banker": club_info.is_banker})
 
 
 class BannerImage(ListCreateAPIView):
@@ -251,6 +269,33 @@ class ClubBankerList(ListAPIView):
         return self.response({'code': 0, 'data': data})
 
 
+class ClubBankerRecord(ListAPIView):
+    """
+    俱乐部局头记录
+    """
+    def get(self, request, *args, **kwargs):
+        club_id = int(self.request.GET.get("club_id"))
+        identity_list = ClubIdentity.objects.filter(club_id=club_id).order_by("-created_at")
+        data = []
+        for i in identity_list:
+            end_time = ""
+            if i.is_deleted is True:
+                end_time = i.end_time.strftime('%Y-%m-%d %H:%M')
+            user_telephone =  str(i.user.area_code) + " " + str(i.user.telephone)
+            data.append({
+                "club_identity_id": i.id,
+                "club_id": i.club_id,
+                "club_name": i.club.room_title,
+                "club_icon": i.club.icon,
+                "user_name": i.user.nickname,
+                "user_telephone": user_telephone,
+                "starting_time": i.starting_time.strftime('%Y-%m-%d %H:%M'),
+                "is_deleted": i.is_deleted,
+                "end_time": end_time
+            })
+        return self.response({'code': 0, 'data': data})
+
+
 class UserBanker(ListAPIView, DestroyAPIView):
     """
     做庄局头操作
@@ -374,6 +419,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         announcement.is_deleted = True
+        announcement.end_time = datetime.datetime.now()
         announcement.save()
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=int(club_info.coin_id))
         user_coin.balance += Decimal(announcement.amount)
