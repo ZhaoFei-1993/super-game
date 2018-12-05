@@ -260,7 +260,7 @@ class Club(models.Model):
     room_number = models.IntegerField(verbose_name="俱乐部编号", default=0)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.IntegerField(verbose_name="俱乐部创始人", default=0)
-    is_banker = models.BooleanField(verbose_name="是否开启联合做庄", default=True)
+    is_banker = models.BooleanField(verbose_name="是否开启散户做庄", default=True)
     is_recommend = models.CharField(verbose_name="", choices=STATUS_CHOICE, max_length=1, default=PENDING)
     is_dissolve = models.BooleanField(verbose_name="是否删除俱乐部", default=False)
 

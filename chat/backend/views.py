@@ -239,7 +239,7 @@ class ClubBankerList(ListAPIView):
     做庄俱乐部选择列表
     """
     def get(self, request, *args, **kwargs):
-        club_list = Club.objects.filter(~Q(is_recommend=0))
+        club_list = Club.objects.filter(~Q(is_recommend=0), is_dissolve=False, is_banker=False)
         data = []
         for i in club_list:
             data.append({
