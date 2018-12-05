@@ -309,7 +309,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         :return:
         """
         list = ClubIdentity.objects.filter(is_deleted=False).order_by("created_at")
-        data = {}
+        data = []
         for i in list:
             club_info = Club.objects.get_one(pk=int(i.club_id))
             user_coin = UserCoin.objects.get(coin_id=int(club_info.coin_id), user_id=i.user_id)
@@ -317,7 +317,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
             telephone = i.user.telephone
             area_code = i.user.area_code
             user_telephone = str(area_code) + " " + str(telephone)
-            data = {
+            data.append({
                 "club_identity_id": i.id,  # 局头做庄表ID
                 "club_id": int(club_info.id),   # 俱乐部表ID
                 "club_name": club_info.room_title,    # 俱乐部名称
@@ -328,7 +328,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
                 "balance": normalize_fraction(user_balance, 8),  # 做庄用户对应货币余额
                 "user_telephone": user_telephone,    # 做庄用户手机区号+手机号
                 "starting_time": i.starting_time.strftime('%Y-%m-%d %H:%M')     # 做庄开始时间
-            }
+            })
         return self.response({'code': 0, 'data': data})
 
     @reversion_Decorator
