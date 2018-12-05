@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.db.models import Q
 from base import code as error_code
 from base.exceptions import ParamErrorException
+from banker.models import BankerRecord
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -122,6 +123,10 @@ class ClubBankerSwitchView(CreateAPIView):
         is_banker = request.data.get('is_banker')
         club_id = int(request.data.get('club_id'))
         club_info = Club.objects.get(id=club_id)
+        if is_banker is True or int(is_banker) == 1:
+            number = ClubIdentity.objects.filter(club_id=club_id, is_deleted=False).count()
+            if number > 0:
+                raise ParamErrorException(error_code.API_110111_BACKEND_BANKER)
         club_info.is_banker = is_banker
         club_info.save()
 
@@ -362,6 +367,10 @@ class UserBanker(ListAPIView, DestroyAPIView):
         number = ClubIdentity.objects.filter(club_id=int(club_info.id), is_deleted=False).count()
         if number > 0:                 # 判断该俱乐部是否已有有效局头
             raise ParamErrorException(error_code.API_110107_BACKEND_BANKER)
+
+        number = BankerRecord.objects.filter(club_id=club_id, status=1).count()
+        if number > 0:
+            raise ParamErrorException(error_code.API_110112_BACKEND_BANKER)
 
         try:
             user_info = User.objects.get(area_code=area_code, telephone=telephone)  # 获取用户ID
