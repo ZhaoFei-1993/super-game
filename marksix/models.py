@@ -131,6 +131,9 @@ class OpenPrice(models.Model):
     next_closing = models.DateTimeField(verbose_name="下期封盘时间", null=True)
     is_open = models.BooleanField(verbose_name="是否开奖", default=0)
 
+    bet_sum = models.TextField(verbose_name="投注流水", default='')
+    profit = models.TextField(verbose_name="盈亏状况", default='')
+
     class Meta:
         ordering = ['-issue']
         verbose_name = verbose_name_plural = "开奖表"

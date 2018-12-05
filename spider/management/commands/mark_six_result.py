@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from marksix.models import SixRecord, Option
+from marksix.models import SixRecord, Option, OpenPrice
 from itertools import combinations
 from utils.functions import *
 from users.models import CoinDetail, RecordMark
 from promotion.models import PromotionRecord, UserPresentation
 from banker.models import BankerRecord
+
 
 coin_detail_list = []
 user_message_list = []
@@ -332,14 +333,37 @@ def ergodic_record(issue, answer_dic, openprice_id):
         # 联合坐庄事宜
         banker_result = []
         target = {}
+        profit_result = {}
+        bet_sum_result = {}
         for club in Club.objects.get_all():
-            target.update({club.id: {"key_id": openprice_id, "profit": 0, "club_id": club.id, "status": 2}})
+            target.update({club.id: {"key_id": openprice_id, "bet_sum": 0, "profit": 0, "club_id": club.id, "status": 2}})
         profit_list = real_records.values('bet_coin', 'earn_coin', 'club_id')
         for profit_dt in profit_list:
+            target[profit_dt['club_id']]['bet_sum'] += profit_dt['bet_coin']
             if profit_dt['earn_coin'] < 0:
                 target[profit_dt['club_id']]['profit'] += abs(profit_dt['earn_coin'])
             else:
                 target[profit_dt['club_id']]['profit'] -= profit_dt['earn_coin'] - profit_dt['bet_coin']
         for key, value in target.items():
             banker_result.append(value)
+            bet_sum_result.update({key: value['bet_sum']})
+            profit_result.update({key: value['profit']})
         BankerRecord.objects.banker_settlement(banker_result, 3)
+
+        # 计算盈亏
+        open_price = OpenPrice.objects.get(pk=openprice_id)
+        open_price.bet_sum = str(bet_sum_result)
+        open_price.profit = str(profit_result)
+        open_price.save()
+    else:
+        # 计算盈亏
+        profit_result = {}
+        bet_sum_result = {}
+        for club in Club.objects.get_all():
+            bet_sum_result.update({club.id: 0})
+            profit_result.update({club.id: 0})
+        open_price = OpenPrice.objects.get(pk=openprice_id)
+        open_price.bet_sum = str(bet_sum_result)
+        open_price.profit = str(profit_result)
+        open_price.save()
+
