@@ -581,6 +581,7 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         BankerRecord.objects.banker_settlement(banker_result, 1)
 
         # 计算盈亏
+        quiz.bet_sum = str(bet_sum_result)
         quiz.profit = str(profit_result)
         quiz.save()
     else:
