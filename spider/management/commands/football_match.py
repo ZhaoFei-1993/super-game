@@ -44,12 +44,18 @@ def get_data_info(url):
     if 'match_cache.txt' not in files:
         with open('match_cache.txt', 'a+') as f:
             pass
+    with open('match_cache.txt', 'r+') as f:
+        dt = f.read()
+    match_id_list = dt.split(',')
 
     datas = get_data(url)
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
-
+            # 判断比赛是否已经获取了
+            if match_id in match_id_list:
+                print(match_id, ' 已经存在')
+                continue
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
             guest_team = data[1].get('a_cn')
@@ -630,6 +636,12 @@ def get_data_info(url):
                                 option_odds.option = option
                                 option_odds.odds = option.odds
                                 option_odds.save()
+
+                    # 写入文件不再重复获取比赛
+                    os.chdir(cache_dir)
+                    if match_id not in match_id_list:
+                        with open('match_cache.txt', 'a+') as f:
+                            f.write(match_id + ',')
                 else:
                     print('已经存在')
                 # --------------------------------------------------------------------------------------------------

@@ -201,11 +201,18 @@ def get_data_info(url):
     if 'match_cache.txt' not in files:
         with open('match_cache.txt', 'a+') as f:
             pass
+    with open('match_cache.txt', 'r+') as f:
+        dt = f.read()
+    match_id_list = dt.split(',')
 
     datas = get_data(url)
     if len(datas['data']) != 0:
         for data in list(datas['data'].items()):
             match_id = data[1].get('id')
+            # 判断比赛是否已经获取了
+            if match_id in match_id_list:
+                print(match_id, ' 已经存在')
+                continue
             league = data[1].get('l_cn')
             league_abbr = data[1].get('l_cn_abbr')
             guest_team = data[1].get('a_cn')
@@ -227,6 +234,8 @@ def get_data_info(url):
             guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
             response_host_team = request_with_proxy(host_team_url, headers=headers)
             response_guest_team = request_with_proxy(guest_team_url, headers=headers)
+            if response_host_team is None or response_guest_team is None:
+                continue
 
             host_team_dt = response_host_team.json()
             guest_team_dt = response_guest_team.json()
@@ -329,13 +338,6 @@ def get_data_info(url):
                               (flag_l4, title_l4, odd_l4), (flag_l5, title_l5, odd_l5), (flag_l6, title_l6, odd_l6)]
 
             # ------------------------------------------------------------------------------------------------------
-            os.chdir(cache_dir)
-            with open('match_cache.txt', 'r+') as f:
-                dt = f.read()
-            match_id_list = dt.split(',')
-            if match_id not in match_id_list:
-                with open('match_cache.txt', 'a+') as f:
-                    f.write(match_id + ',')
 
                 host_team_avatar = '篮球主队.png'
                 guest_team_avatar = '篮球客队.png'
@@ -441,6 +443,13 @@ def get_data_info(url):
                         # 胜分差
                         elif i == 7 and len(result_wnm) > 0:
                             save_rule_option(i, quiz, result_wnm)
+
+                    # 写入文件不再重复获取比赛
+                    os.chdir(cache_dir)
+                    if match_id not in match_id_list:
+                        with open('match_cache.txt', 'a+') as f:
+                            f.write(match_id + ',')
+
                 else:
                     print('已经存在')
                 # ------------------------------------------------------------------------------------------------------
