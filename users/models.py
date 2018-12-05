@@ -372,6 +372,7 @@ class CoinDetail(models.Model):
     BANKER_EARN = 21
     BANKER_DEFICIT = 22
     BANKER_LEVEL = 23
+    BANKER_DEPOSIT = 24
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -398,6 +399,7 @@ class CoinDetail(models.Model):
         (BANKER_EARN, "做庄_赚"),
         (BANKER_DEFICIT, "做庄_亏_余"),
         (BANKER_LEVEL, "做庄_平_流"),
+        (BANKER_DEPOSIT, "局头押金"),
 
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)

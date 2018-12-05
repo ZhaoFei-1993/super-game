@@ -554,7 +554,7 @@ class InfoView(ListAPIView):
         LoginRecord.objects.log(request)
 
         # 发消息
-        UserMessage.objects.add_system_user_message(user=user)
+        # UserMessage.objects.add_system_user_message(user=user)
 
         user_coins = UserCoin.objects.filter(user_id=user_id)
         map_user_coin = {}

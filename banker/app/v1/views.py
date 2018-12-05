@@ -333,6 +333,8 @@ class BankerBuyView(ListCreateAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
         coin_accuracy = int(coin_info.coin_accuracy)
+        if club_info.is_banker is False:
+            raise ParamErrorException(error_code.API_110104_USER_BANKER)
 
         info = []
         new_sum_balance = 0
