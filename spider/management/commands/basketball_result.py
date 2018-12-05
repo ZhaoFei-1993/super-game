@@ -364,17 +364,37 @@ def get_data_info(url, match_flag):
                 # 联合坐庄事宜
                 banker_result = []
                 target = {}
+                profit_result = {}
+                bet_sum_result = {}
                 for club in Club.objects.get_all():
-                    target.update({club.id: {"key_id": quiz.id, "profit": 0, "club_id": club.id, "status": 2}})
+                    target.update({club.id: {"key_id": quiz.id, "bet_sum": 0, "profit": 0, "club_id": club.id, "status": 2}})
                 profit_list = real_records.values('bet', 'earn_coin', 'roomquiz_id')
                 for profit_dt in profit_list:
+                    target[profit_dt['roomquiz_id']]['bet_sum'] += profit_dt['bet']
                     if profit_dt['earn_coin'] < 0:
                         target[profit_dt['roomquiz_id']]['profit'] += abs(profit_dt['earn_coin'])
                     else:
                         target[profit_dt['roomquiz_id']]['profit'] -= profit_dt['earn_coin'] - profit_dt['bet']
                 for key, value in target.items():
                     banker_result.append(value)
+                    bet_sum_result.update({key: value['bet_sum']})
+                    profit_result.update({key: value['profit']})
                 BankerRecord.objects.banker_settlement(banker_result, 2)
+
+                # 计算盈亏
+                quiz.bet_sum = str(bet_sum_result)
+                quiz.profit = str(profit_result)
+                quiz.save()
+            else:
+                # 计算盈亏
+                profit_result = {}
+                bet_sum_result = {}
+                for club in Club.objects.get_all():
+                    bet_sum_result.update({club.id: 0})
+                    profit_result.update({club.id: 0})
+                quiz.bet_sum = str(bet_sum_result)
+                quiz.profit = str(profit_result)
+                quiz.save()
 
             print(quiz.host_team + ' VS ' + quiz.guest_team + ' 开奖成功！共' + str(len(records)) + '条投注记录！')
             return flag
@@ -446,6 +466,15 @@ def handle_delay_game(delay_quiz):
         for club in Club.objects.get_all():
             banker_result.append({"key_id": delay_quiz.id, "profit": 0, "club_id": club.id, "status": 3})
         BankerRecord.objects.banker_settlement(banker_result, 2)
+    # 计算盈亏
+    profit_result = {}
+    bet_sum_result = {}
+    for club in Club.objects.get_all():
+        bet_sum_result.update({club.id: 0})
+        profit_result.update({club.id: 0})
+    delay_quiz.bet_sum = str(bet_sum_result)
+    delay_quiz.profit = str(profit_result)
+    delay_quiz.save()
 
     print(delay_quiz.host_team + ' VS ' + delay_quiz.guest_team + ' 返还成功！共' + str(len(records)) + '条投注记录！')
 
