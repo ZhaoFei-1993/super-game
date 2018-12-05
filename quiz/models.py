@@ -124,6 +124,8 @@ class Quiz(models.Model):
     gaming_time = models.IntegerField(verbose_name="比赛进行时间", default=0)
     match_flag = models.CharField(verbose_name='比赛标识', null=True, max_length=16, default='')
     is_reappearance = models.BooleanField(verbose_name="是否已返现", default=False)
+    bet_sum = models.TextField(verbose_name="投注流水", default='')
+    profit = models.TextField(verbose_name="盈亏状况", default='')
 
     objects = QuizManager()
 

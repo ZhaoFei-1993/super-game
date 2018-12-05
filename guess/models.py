@@ -247,6 +247,9 @@ class Issues(models.Model):
     update_at = models.DateTimeField(verbose_name="开奖时间", auto_now=True)
     created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
+    bet_sum = models.TextField(verbose_name="投注流水", default='')
+    profit = models.TextField(verbose_name="盈亏状况", default='')
+
     class Meta:
         ordering = ['-id']
         verbose_name = verbose_name_plural = "股指pk期数"
