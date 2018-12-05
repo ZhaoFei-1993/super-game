@@ -4,8 +4,8 @@ from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
 from chat.models import Club, ClubRule, ClubBanner
 from base import code as error_code
-from users.models import UserMessage, DailyLog, Coin, RecordMark
 from base.exceptions import ParamErrorException
+from users.models import UserMessage, DailyLog, Coin, RecordMark
 from django.db.models import Q
 from utils.functions import message_hints, number_time_judgment
 from datetime import datetime
@@ -37,7 +37,7 @@ class ClublistView(ListAPIView):
         user = request.user
 
         # 发消息
-        UserMessage.objects.add_system_user_message(user=user)
+        # UserMessage.objects.add_system_user_message(user=user)
 
         is_sign = DailyLog.objects.is_signed(user.id)  # 是否签到
         is_message = message_hints(user.id)  # 是否有未读消息

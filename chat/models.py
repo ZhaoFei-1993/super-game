@@ -260,7 +260,7 @@ class Club(models.Model):
     room_number = models.IntegerField(verbose_name="俱乐部编号", default=0)
     coin = models.ForeignKey(Coin, on_delete=models.CASCADE)
     user = models.IntegerField(verbose_name="俱乐部创始人", default=0)
-    is_banker = models.BooleanField(verbose_name="是否开启联合做庄", default=True)
+    is_banker = models.BooleanField(verbose_name="是否开启散户做庄", default=True)
     is_recommend = models.CharField(verbose_name="", choices=STATUS_CHOICE, max_length=1, default=PENDING)
     is_dissolve = models.BooleanField(verbose_name="是否删除俱乐部", default=False)
 
@@ -318,3 +318,56 @@ class ClubBanner(models.Model):
         ordering = ['order']
         verbose_name = verbose_name_plural = "轮播图表"
 
+
+@reversion.register()
+class ClubIdentity(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(verbose_name="做庄压金", max_digits=32, decimal_places=8, default=0.00000000)
+    starting_time = models.DateTimeField(verbose_name='开始时间', null=True)
+    is_deleted = models.BooleanField(verbose_name="是否删除", default=False)
+    created_at = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = verbose_name_plural = "俱乐部(资格表)(局头表)"
+
+
+@reversion.register()
+class ClubIncome(models.Model):
+    FOOTBALL = 1
+    BASKETBALL = 2
+    SIX = 3
+    GUESS = 4
+    GUESSPK = 5
+    BACCARAT = 6
+    DRAGON_TIGER = 7
+    SOURCE = (
+        (FOOTBALL, "足球"),
+        (BASKETBALL, "篮球"),
+        (SIX, "六合彩"),
+        (GUESS, "猜股指"),
+        (GUESSPK, "股指PK"),
+        (BACCARAT, "百家乐"),
+        (DRAGON_TIGER, "龙虎斗")
+    )
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    earn_coin = models.DecimalField(verbose_name="日收益金额", max_digits=32, decimal_places=8, default=0.00000000)
+    source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
+    created_at = models.DateTimeField(verbose_name='创建时间', null=True)
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = verbose_name_plural = "俱乐部日收益明细表"
+
+
+@reversion.register()
+class ClubDetail(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    recharge = models.DecimalField(verbose_name="日充值金额", max_digits=32, decimal_places=8, default=0.00000000)
+    withdraw = models.DecimalField(verbose_name="日提现金额", max_digits=32, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name='创建时间', null=True)
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = verbose_name_plural = "俱乐部日充值，提现明细表"
