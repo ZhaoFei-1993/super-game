@@ -363,7 +363,8 @@ class UserBanker(ListAPIView, DestroyAPIView):
 
         starting_time = datetime.datetime.now()
         if "starting_time" in request.data:
-            starting_time = str(request.data['starting_time']) + " 00:00:00"
+            starting_time = str(request.data['starting_time']) + ' 00:00:00'
+            print("starting_time===================", starting_time)
         number = ClubIdentity.objects.filter(club_id=int(club_info.id), is_deleted=False).count()
         if number > 0:                 # 判断该俱乐部是否已有有效局头
             raise ParamErrorException(error_code.API_110107_BACKEND_BANKER)
@@ -408,6 +409,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         club_identity.save()
         club_info.is_banker = False
         club_info.save()
+        print("2222222222222222222222222")
         list = {
             "user_name": user_info.nickname,
             "area_code": user_info.area_code,
