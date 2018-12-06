@@ -346,7 +346,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         :param kwargs:
         :return:
         """
-        value = value_judge(request, "club_id", "area_code", "telephone", "amount")
+        value = value_judge(request, "club_id", "area_code", "telephone", "amount", "starting_time")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = int(request.data['club_id'])
@@ -361,10 +361,8 @@ class UserBanker(ListAPIView, DestroyAPIView):
         if isinstance(amount, int) is False:        # 为了计算不出错局头押金必须为整数
             raise ParamErrorException(error_code.API_110106_BACKEND_BANKER)
 
-        starting_time = datetime.datetime.now()
-        if "starting_time" in request.data:
-            starting_time = str(request.data['starting_time'])
-            print("starting_time===================", starting_time)
+        starting_time = request.data['starting_time']
+        print("starting_time===================", starting_time)
         number = ClubIdentity.objects.filter(club_id=int(club_info.id), is_deleted=False).count()
         if number > 0:                 # 判断该俱乐部是否已有有效局头
             raise ParamErrorException(error_code.API_110107_BACKEND_BANKER)
@@ -404,8 +402,12 @@ class UserBanker(ListAPIView, DestroyAPIView):
         club_identity = ClubIdentity()
         club_identity.club = club_info
         club_identity.user = user_info
-        starting_time = datetime.datetime.strptime(starting_time, '%Y-%m-%d')
-        print("starting_time==============", starting_time)
+        if len(starting_time) == 0:
+            starting_time = datetime.datetime.now()
+            print("starting_time1==============", starting_time)
+        else:
+            starting_time = datetime.datetime.strptime(str(starting_time), '%Y-%m-%d')
+            print("starting_time2==============", starting_time)
         club_identity.starting_time = starting_time
         club_identity.amount = Decimal(amount)
         club_identity.save()
