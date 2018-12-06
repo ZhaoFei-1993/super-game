@@ -22,6 +22,10 @@ urlpatterns = [
     path('coins/', views.CoinsList.as_view(), name='backend-coin-data'),
     # 做庄俱乐部选择列表
     path('club/banker/', views.ClubBankerList.as_view(), name='user—club-banker'),
+    # 俱乐部局头记录
+    path('banker/record/', views.ClubBankerRecord.as_view(), name='club-banker-record'),
+    # 俱乐部散户局头开关
+    path('banker/switch/', views.ClubBankerSwitchView.as_view(), name='club-banker-switch'),
     # 做庄局头操作
     path('user/banker/', views.UserBanker.as_view(), name='club-user-banker'),
 ]

@@ -373,6 +373,8 @@ class CoinDetail(models.Model):
     BANKER_DEFICIT = 22
     BANKER_LEVEL = 23
     BANKER_DEPOSIT = 24
+    TRANSFER_GO = 25
+    TRANSFER_IN = 26
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -400,6 +402,8 @@ class CoinDetail(models.Model):
         (BANKER_DEFICIT, "做庄_亏_余"),
         (BANKER_LEVEL, "做庄_平_流"),
         (BANKER_DEPOSIT, "局头押金"),
+        (TRANSFER_GO, "转账_出"),
+        (TRANSFER_IN, "转账_收"),
 
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.db.models import Q
 from base import code as error_code
 from base.exceptions import ParamErrorException
+from banker.models import BankerRecord
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -109,7 +110,29 @@ class ClubBackendSortView(CreateAPIView):
             club.user = sorts[club_id]
             club.save()
 
+        delete_cache(Club.objects.key)
+
         return JsonResponse({}, status=status.HTTP_200_OK)
+
+
+class ClubBankerSwitchView(CreateAPIView):
+    """
+    俱乐部散户局头开关
+    """
+    def post(self, request, *args, **kwargs):
+        is_banker = request.data.get('is_banker')
+        club_id = int(request.data.get('club_id'))
+        club_info = Club.objects.get(id=club_id)
+        if is_banker is True or int(is_banker) == 1:
+            number = ClubIdentity.objects.filter(club_id=club_id, is_deleted=False).count()
+            if number > 0:
+                raise ParamErrorException(error_code.API_110111_BACKEND_BANKER)
+        club_info.is_banker = is_banker
+        club_info.save()
+
+        delete_cache(Club.objects.key)
+
+        return self.response({'code': 0, "is_banker": club_info.is_banker})
 
 
 class BannerImage(ListCreateAPIView):
@@ -251,6 +274,34 @@ class ClubBankerList(ListAPIView):
         return self.response({'code': 0, 'data': data})
 
 
+class ClubBankerRecord(ListAPIView):
+    """
+    俱乐部局头记录
+    """
+    def get(self, request, *args, **kwargs):
+        club_id = int(self.request.GET.get("club_id"))
+        identity_list = ClubIdentity.objects.filter(club_id=club_id).order_by("-created_at")
+        data = []
+        for i in identity_list:
+            end_time = ""
+            if i.is_deleted is True:
+                end_time = i.end_time.strftime('%Y-%m-%d %H:%M')
+            user_telephone =  str(i.user.area_code) + " " + str(i.user.telephone)
+            data.append({
+                "club_identity_id": i.id,
+                "club_id": i.club_id,
+                "club_name": i.club.room_title,
+                "club_icon": i.club.icon,
+                "user_name": i.user.nickname,
+                "user_telephone": user_telephone,
+                "starting_time": i.starting_time.strftime('%Y-%m-%d %H:%M'),
+                "is_deleted": i.is_deleted,
+                "amount": i.amount,
+                "end_time": end_time
+            })
+        return self.response({'code': 0, 'data': data})
+
+
 class UserBanker(ListAPIView, DestroyAPIView):
     """
     做庄局头操作
@@ -264,7 +315,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         :return:
         """
         list = ClubIdentity.objects.filter(is_deleted=False).order_by("created_at")
-        data = {}
+        data = []
         for i in list:
             club_info = Club.objects.get_one(pk=int(i.club_id))
             user_coin = UserCoin.objects.get(coin_id=int(club_info.coin_id), user_id=i.user_id)
@@ -272,7 +323,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
             telephone = i.user.telephone
             area_code = i.user.area_code
             user_telephone = str(area_code) + " " + str(telephone)
-            data = {
+            data.append({
                 "club_identity_id": i.id,  # 局头做庄表ID
                 "club_id": int(club_info.id),   # 俱乐部表ID
                 "club_name": club_info.room_title,    # 俱乐部名称
@@ -283,7 +334,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
                 "balance": normalize_fraction(user_balance, 8),  # 做庄用户对应货币余额
                 "user_telephone": user_telephone,    # 做庄用户手机区号+手机号
                 "starting_time": i.starting_time.strftime('%Y-%m-%d %H:%M')     # 做庄开始时间
-            }
+            })
         return self.response({'code': 0, 'data': data})
 
     @reversion_Decorator
@@ -316,6 +367,10 @@ class UserBanker(ListAPIView, DestroyAPIView):
         number = ClubIdentity.objects.filter(club_id=int(club_info.id), is_deleted=False).count()
         if number > 0:                 # 判断该俱乐部是否已有有效局头
             raise ParamErrorException(error_code.API_110107_BACKEND_BANKER)
+
+        number = BankerRecord.objects.filter(club_id=club_id, status=1).count()
+        if number > 0:
+            raise ParamErrorException(error_code.API_110112_BACKEND_BANKER)
 
         try:
             user_info = User.objects.get(area_code=area_code, telephone=telephone)  # 获取用户ID
@@ -374,6 +429,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         announcement.is_deleted = True
+        announcement.end_time = datetime.datetime.now()
         announcement.save()
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=int(club_info.coin_id))
         user_coin.balance += Decimal(announcement.amount)

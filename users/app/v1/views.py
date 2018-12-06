@@ -3239,10 +3239,27 @@ class MoveFilishView(CreateAPIView):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
         sponsor_user_coin.balance -= amount
         sponsor_user_coin.save()
+
+        coin_detail = CoinDetail()
+        coin_detail.user = sponsor_user_coin.user
+        coin_detail.coin_name = sponsor_user_coin.coin.name
+        coin_detail.amount = Decimal('-' + str(amount))
+        coin_detail.rest = sponsor_user_coin.balance
+        coin_detail.sources = 25
+        coin_detail.save()
+
         # 收款人的余额
         recipient_user_coin = UserCoin.objects.get(user_id=recipient_id, coin_id=coin_id)
         recipient_user_coin.balance += amount
         recipient_user_coin.save()
+
+        coin_detail = CoinDetail()
+        coin_detail.user = recipient_user_coin.user
+        coin_detail.coin_name = recipient_user_coin.coin.name
+        coin_detail.amount = Decimal('+' + str(amount))
+        coin_detail.rest = recipient_user_coin.balance
+        coin_detail.sources = 25
+        coin_detail.save()
 
         return self.response(
             {'code': 0, "balance": normalize_fraction(sponsor_user_coin.balance, coin_info.coin_accuracy)})
