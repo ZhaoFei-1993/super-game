@@ -579,39 +579,39 @@ def get_data_info(url):
                                 rule.min_odd = min(odds_pool_ttg)
                                 rule.save()
                                 odds_pool_ttg.clear()
-                    # 亚盘玩法
-                    print('发起亚盘请求', datetime.datetime.now())
-                    try:
-                        response_asia = requests.get(asia_url + match_id, headers=headers, timeout=10)
-                        dt = response_asia.text.encode("utf-8").decode('unicode_escape')
-                        json_dt = eval(dt[8:-2])
-                    except Exception as e:
-                        print('asia Error', e.args)
-                    else:
-                        if json_dt['status']['code'] == 0:
-                            rule = Rule()
-                            rule.quiz = quiz
-                            rule.type = str(Rule.AISA_RESULTS)
-                            rule.type_en = str(Rule.AISA_RESULTS)
-                            rule.tips = '亚盘'
-                            rule.tips_en = 'Asian Handicap'
-                            rule.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
-                            rule.save()
-
-                            for i in range(1, 3):
-                                option = Option()
-                                option.rule = rule
-                                if i == 1:
-                                    option.option = '主队'
-                                    option.option_en = 'Home'
-                                    option.odds = json_dt['result']['data'][0]['o1']
-                                else:
-                                    option.option = '客队'
-                                    option.option_en = 'Guest'
-                                    option.odds = json_dt['result']['data'][0]['o2']
-                                option.order = i
-                                option.save()
-                    print('结束亚盘请求', datetime.datetime.now())
+                    # # 亚盘玩法
+                    # print('发起亚盘请求', datetime.datetime.now())
+                    # try:
+                    #     response_asia = requests.get(asia_url + match_id, headers=headers, timeout=10)
+                    #     dt = response_asia.text.encode("utf-8").decode('unicode_escape')
+                    #     json_dt = eval(dt[8:-2])
+                    # except Exception as e:
+                    #     print('asia Error', e.args)
+                    # else:
+                    #     if json_dt['status']['code'] == 0:
+                    #         rule = Rule()
+                    #         rule.quiz = quiz
+                    #         rule.type = str(Rule.AISA_RESULTS)
+                    #         rule.type_en = str(Rule.AISA_RESULTS)
+                    #         rule.tips = '亚盘'
+                    #         rule.tips_en = 'Asian Handicap'
+                    #         rule.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
+                    #         rule.save()
+                    #
+                    #         for i in range(1, 3):
+                    #             option = Option()
+                    #             option.rule = rule
+                    #             if i == 1:
+                    #                 option.option = '主队'
+                    #                 option.option_en = 'Home'
+                    #                 option.odds = json_dt['result']['data'][0]['o1']
+                    #             else:
+                    #                 option.option = '客队'
+                    #                 option.option_en = 'Guest'
+                    #                 option.odds = json_dt['result']['data'][0]['o2']
+                    #             option.order = i
+                    #             option.save()
+                    # print('结束亚盘请求', datetime.datetime.now())
 
                     # 记录初始赔率
                     change_time = get_time()
