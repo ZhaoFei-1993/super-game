@@ -10,7 +10,6 @@ from quiz.consumers import quiz_send_score, quiz_send_football_time
 from quiz.models import Quiz
 from utils.cache import get_cache, set_cache
 
-base_url = 'http://i.sporttery.cn/api/match_live_2/get_match_updated?callback=?'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
@@ -74,15 +73,4 @@ class Command(BaseCommand):
                 q.enqueue(quiz_send_score, quiz_id, 0, 0)
             print('推送成功')
             print('-----------------------')
-
-            # with open('/tmp/debug_football_synctime', 'a+') as f:
-            #     f.write('successed')
-            #     f.write("\n")
-            #
-            # redis_conn = Redis()
-            # q = Queue(connection=redis_conn)
-            # # 推送比赛时间
-            # q.enqueue(quiz_send_football_time, quiz_id, 0, 500)
-            # # 推送比分
-            # q.enqueue(quiz_send_score, quiz_id, 10, 0)
 
