@@ -361,9 +361,9 @@ class UserBanker(ListAPIView, DestroyAPIView):
         if isinstance(amount, int) is False:        # 为了计算不出错局头押金必须为整数
             raise ParamErrorException(error_code.API_110106_BACKEND_BANKER)
 
-        starting_time = datetime.datetime.now()
-        if "starting_time" in request.data:
-            starting_time = str(request.data['starting_time']) + " 00:00:00"
+        if 'starting_time' not in request.data:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        starting_time = request.data['starting_time']
         number = ClubIdentity.objects.filter(club_id=int(club_info.id), is_deleted=False).count()
         if number > 0:                 # 判断该俱乐部是否已有有效局头
             raise ParamErrorException(error_code.API_110107_BACKEND_BANKER)
@@ -403,6 +403,10 @@ class UserBanker(ListAPIView, DestroyAPIView):
         club_identity = ClubIdentity()
         club_identity.club = club_info
         club_identity.user = user_info
+        if len(starting_time) == 0:
+            starting_time = datetime.datetime.now()
+        else:
+            starting_time = datetime.datetime.strptime(str(starting_time), '%Y-%m-%d')
         club_identity.starting_time = starting_time
         club_identity.amount = Decimal(amount)
         club_identity.save()
