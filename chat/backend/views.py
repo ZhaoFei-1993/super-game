@@ -346,7 +346,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         :param kwargs:
         :return:
         """
-        value = value_judge(request, "club_id", "area_code", "telephone", "amount", "starting_time")
+        value = value_judge(request, "club_id", "area_code", "telephone", "amount")
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = int(request.data['club_id'])
