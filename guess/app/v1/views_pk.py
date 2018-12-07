@@ -12,7 +12,7 @@ import time
 from utils.functions import get_club_info, normalize_fraction, value_judge, handle_zero, to_decimal
 from utils.cache import get_cache, set_cache
 from users.models import UserCoin, CoinDetail, User, RecordMark
-from spider.management.commands.stock_index import market_rest_cn_list
+from spider.management.commands.stock_index_new import StockIndex
 from promotion.models import PromotionRecord
 from chat.models import Club
 from decimal import Decimal
@@ -55,7 +55,7 @@ class StockPkDetail(ListAPIView):
                     open_time = qs.open - datetime.timedelta(hours=12)
                 before_open_time = open_time - datetime.timedelta(days=1)
                 if before_open_time.isoweekday() > 5 or \
-                        before_open_time.strftime('%Y-%m-%d') in market_rest_cn_list:
+                        before_open_time.strftime('%Y-%m-%d') in StockIndex().market_rest_cn_list:
                     status = 3
                 # 平日休市
                 else:
