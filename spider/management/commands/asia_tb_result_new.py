@@ -15,10 +15,10 @@ def asia_option(quiz, rule_asia):
         '两球半': '2.5', '两球半/三球': '2.5/3', '三球': '3', '三球/三球半': '3/3.5', '三球半': '3.5', '四球': '4',
     }
 
-    handicap = rule_asia.handicap.replace('受让', '')
+    handicap = rule_asia.handicap.replace('受', '')
     host_team_score = int(quiz.host_team_score)
     guest_team_score = int(quiz.guest_team_score)
-    if '受让' in rule_asia.handicap:
+    if '受' in rule_asia.handicap:
         clean_score = guest_team_score - host_team_score
         position_dic = {'下盘': '主队', '上盘': '客队'}
     else:
@@ -116,7 +116,7 @@ def asia_result(quiz, records_asia):
         coin_name = cache_club_value[record.roomquiz_id]['coin_name']
         coin_accuracy = cache_club_value[record.roomquiz_id]['coin_accuracy']
 
-        handicap = record.handicap.replace('受让', '')
+        handicap = record.handicap.replace('受', '')
         host_team_score = int(quiz.host_team_score)
         guest_team_score = int(quiz.guest_team_score)
 
@@ -124,7 +124,7 @@ def asia_result(quiz, records_asia):
         record_bet = to_decimal(record.bet)
         record_odds = to_decimal(record.odds)
 
-        if '受让' in record.handicap:
+        if '受' in record.handicap:
             clean_score = guest_team_score - host_team_score
             position_dic = {'主队': '下盘', '客队': '上盘'}
         else:
