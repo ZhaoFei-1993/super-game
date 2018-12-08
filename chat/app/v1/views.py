@@ -407,6 +407,7 @@ class ClubHomeView(ListAPIView):
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
+        icon = coin_info.icon
         user_number = User.objects.filter(is_robot=0).count()    # 总用户
         user_day_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=day_start,
                                                       created_at__lte=day_end).values('user_id').distinct().count()    # 今天新增加
@@ -451,6 +452,7 @@ class ClubHomeView(ListAPIView):
             "sum_earn_coin": sum_earn_coin,    # 总投注流水
             "sum_bets": sum_bets,    # 总盈亏
             "sum_coin": sum_coin,    # 总金额
+            "icon": icon,    # 总金额
             "user_number": user_number,    # 总用户
             "user_day_number": user_day_number,   # 今天新增加
             "user_two_number": user_two_number,   # 昨天新增加
@@ -476,6 +478,7 @@ class ClubUserInfoView(ListAPIView):
         coin_id = int(club_info.coin_id)
         coin_info = Coin.objects.get_one(pk=coin_id)
         coin_accuracy = coin_info.coin_accuracy
+        icon = coin_info.name
 
         user_id = int(request.GET.get("user_id"))
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
@@ -488,6 +491,7 @@ class ClubUserInfoView(ListAPIView):
             "avatar": self.request.user.avatar,
             "area_code": self.request.user.area_code,
             "balance": balance,
+            "name": icon
         }
         return self.response({"code": 0, "data": data})
 
@@ -613,6 +617,7 @@ class PayClubView(ListAPIView):
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
+        name = coin_info.name
         key = "CLUB_DATA_MONTH_INFO"
         month_info = get_cache(key)
         month_info = month_info[month_id]
@@ -657,7 +662,7 @@ class PayClubView(ListAPIView):
                 list.append({
                     "user_id": i.user_id,
                     "amount": normalize_fraction(i.amount, coin_accuracy),
-                    "user_number": user_number,
+                    "telephone": user_number,
                     "created_at": i.created_at.strftime('%Y-%m-%d %H:%M:%S')
                 })
             if month_id in [2, 3]:
@@ -681,6 +686,7 @@ class PayClubView(ListAPIView):
         tail = page * page_size
         data = {
             "sum_recharge": sum_recharge,   # 总充值
+            "name": name,
             "recharge_user_number": recharge_user_number,   # 总充值人数
             "sum_presentat": sum_presentat,   # 总提现
             "list": list[head:tail],   # 数据详情

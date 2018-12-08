@@ -490,6 +490,15 @@ class BetsListViews(ListAPIView):
     serializer_class = RecordSerializer
 
     def get_queryset(self):
+        if 'sb_time' in self.request.GET:
+            club_id = self.request.GET.get('club_id')
+            sb_time = str(self.request.GET.get('sb_time'))
+            start = sb_time + " 00:00:00"
+            end = sb_time + " 23:59:59"
+            record = SixRecord.objects.filter(club_id=club_id, user__is_robot=0,
+                                              created_at__gte=start,
+                                              created_at__lte=end).order_by('-created_at')
+            return record
         if "user_id" in self.request.GET:
             user_id = int(self.request.GET.get("user_id"))
         else:
@@ -500,14 +509,6 @@ class BetsListViews(ListAPIView):
                 res = SixRecord.objects.filter(user_id=user_id)
             else:
                 club_id = self.request.GET.get('club_id')
-                if 'sb_time' in self.request.GET:
-                    sb_time = str(self.request.GET.get('sb_time'))
-                    start = sb_time + " 00:00:00"
-                    end = sb_time + " 23:59:59"
-                    record = SixRecord.objects.filter(club_id=club_id, user__is_robot=0,
-                                                      created_at__gte=start,
-                                                      created_at__lte=end).order_by('-created_at')
-                    return record
                 res = SixRecord.objects.filter(user_id=user_id, club_id=club_id)
         elif type == '1':  # 未开奖
             if "club_id" not in self.request.GET:
