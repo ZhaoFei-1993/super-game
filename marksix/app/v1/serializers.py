@@ -218,7 +218,7 @@ class RecordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = SixRecord
         fields = (
-            "bet", "bet_coin", "status", "created_time", "issue",
+            "bet", "bet_coin", "user_id", "status", "created_time", "issue",
             "content", 'coin_name', 'option_name', 'earn', 'coin_avartar',
             "one_piece_value"
         )

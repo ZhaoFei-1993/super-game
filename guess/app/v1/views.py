@@ -8,7 +8,7 @@ from ...models import Stock, Record, Play, BetLimit, Options, Periods, Index, In
 from chat.models import Club
 from base import code as error_code
 from base.exceptions import ParamErrorException
-from users.models import UserCoin, CoinDetail, Coin, RecordMark
+from users.models import UserCoin, CoinDetail, Coin, RecordMark, User
 from utils.functions import value_judge, guess_is_seal, language_switch, get_sql
 from utils.functions import normalize_fraction
 from decimal import Decimal
@@ -586,6 +586,16 @@ class RecordsListView(ListCreateAPIView):
 
     def get_queryset(self):
 
+        if 'sb_time' in self.request.GET:
+            sb_time = str(self.request.GET.get('sb_time'))
+            start = sb_time + " 00:00:00"
+            end = sb_time + " 23:59:59"
+            club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+            record = Record.objects.filter(club_id=club_id, user__is_robot=0,
+                                           created_at__gte=start,
+                                           created_at__lte=end).order_by('-created_at')
+            return record
+
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
@@ -740,6 +750,16 @@ class RecordsListView(ListCreateAPIView):
                 pecific_dates = ""
             else:
                 tmp = pecific_date
+            avatar = ""
+            user_number = ""
+            if 'sb_time' in self.request.GET:
+                user_id = int(fav.get('user_id'))
+                user_info = User.objects.get(id=user_id)
+                avatar = user_info.avatar
+                area_code = user_info.area_code
+                telephone = user_info.telephone
+                user_number = "+" + str(area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
+
             data.append({
                 "id": fav.get('id'),
                 "stock_id": stock_id,
@@ -757,14 +777,14 @@ class RecordsListView(ListCreateAPIView):
                 'index_colour': index_colour,  # 指数颜色
                 'guess_result': guess_result,  # 当期结果
                 'coin_name': fav.get('coin_name'),  # 货币昵称
+                'avatar': avatar,  # 货币昵称
+                'telephone': user_number,  # 货币昵称
                 'bet': fav.get('bet')  # 下注金额
             })
 
         if "user_id" not in request.GET:
             user_id = self.request.user.id
-        else:
-            user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 3, 0)
+            RecordMark.objects.update_record_mark(user_id, 3, 0)
 
         return self.response({'code': 0, 'data': data})
 

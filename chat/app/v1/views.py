@@ -3,13 +3,22 @@ from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
 from chat.models import Club, ClubRule, ClubBanner
+from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
-from users.models import UserMessage, DailyLog, Coin, RecordMark
+from users.models import UserMessage, DailyLog, Coin, RecordMark, UserRecharge, UserPresentation, UserCoin
 from django.db.models import Q
-from utils.functions import message_hints, number_time_judgment
-from datetime import datetime
-from utils.cache import get_cache
+from utils.functions import message_hints, normalize_fraction, get_sql
+from django.db.models import Sum
+import datetime
+import calendar
+from decimal import Decimal
+from datetime import timedelta
+from django.conf import settings
+from utils.cache import get_cache, set_cache, delete_cache
+from promotion.models import PromotionRecord
+from django.db import connection
+
 
 
 class ClublistView(ListAPIView):
@@ -251,3 +260,489 @@ class MarkClubView(ListAPIView):
                 "coin_icon": i[1]
             })
         return self.response({"code": 0, "data": data})
+
+
+class ClubMonthView(ListAPIView):
+    """
+    月份
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        data = []
+        list = {}
+        key = "CLUB_DATA_MONTH_INFO"
+        year = datetime.date.today().year  # 获取当前年份
+        month = datetime.date.today().month  # 获取当前月份
+        this_month = datetime.date(year, month, day=1)  # 当月
+        this_months = str(this_month.month) + "月"
+
+        this_year = this_month.year
+        this_monthss = this_month.month
+        weekDay, monthCountDay = calendar.monthrange(this_year, this_monthss)  # 获取当月第一天的星期和当月的总天数
+        start = str(datetime.date(this_year, this_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
+        end = str(datetime.date(this_year, this_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
+        data.append({
+            "month_id": 1,
+            "month": this_months
+        })
+        list[1] = {
+            "month_id": 1,
+            "month": this_months,
+            "start": start,
+            "end": end
+        }
+        last_month = this_month - timedelta(days=1)  # 上月
+        last_months = str(last_month.month) + "月"
+
+        last_year = last_month.year
+        last_monthss = last_month.month
+        weekDay, monthCountDay = calendar.monthrange(last_year, last_monthss)  # 获取当月第一天的星期和当月的总天数
+        last_start = str(datetime.date(last_year, last_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
+        last_end = str(
+            datetime.date(last_year, last_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
+        data.append({
+            "month_id": 2,
+            "month": last_months
+        })
+        list[2] = {
+            "month_id": 2,
+            "month": last_months,
+            "start": last_start,
+            "end": last_end
+        }
+        lasts_month = last_month - timedelta(days=32)  # 上上月
+        lasts_months = str(lasts_month.month) + "月"
+
+        lasts_year = lasts_month.year
+        lasts_monthss = lasts_month.month
+        weekDay, monthCountDay = calendar.monthrange(lasts_year, lasts_monthss)  # 获取当月第一天的星期和当月的总天数
+        lasts_start = str(datetime.date(lasts_year, lasts_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
+        lasts_end = str(
+            datetime.date(lasts_year, lasts_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
+        data.append({
+            "month_id": 3,
+            "month": lasts_months
+        })
+        list[3] = {
+            "month_id": 3,
+            "month": lasts_months,
+            "start": lasts_start,
+            "end": lasts_end
+        }
+        set_cache(key, list)
+        return self.response({"code": 0, "data": data})
+
+
+class ClubUserView(ListAPIView):
+    """
+    用户列表
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        data = []
+        type = int(request.GET.get("type"))
+        club_id = int(request.GET.get("club_id"))
+        coin_id = int(Club.objects.get_one(pk=club_id).coin_id)
+        print(coin_id)
+        sql_list = " u.id, u.area_code, u.telephone, u.is_block, date_format( u.created_at, '%Y-%m-%d' ) as time,"
+        if type == 1: # 登陆
+            sql_list += " (select l.login_time from users_loginrecord l where l.user_id=u.id " \
+                        "order by l.login_time desc limit 1) as sb_time"
+        else:    # 激活
+            sql_list += " (select l.created_at from users_userrecharge l where l.user_id=u.id and l.coin_id= '"
+            sql_list += str(coin_id) + "' order by l.created_at limit 1) as sb_time"
+        sql = "select " + sql_list + " from users_user u"
+        sql += " where u.is_robot = 0"
+        if "telephone" in request.GET:
+            telephone = "%" + str(request.GET.get("telephone")) + "%"
+            sql += " and u.telephone like '" + telephone + "'"
+        sql += " order by u.created_at desc"
+        list = self.get_list_by_sql(sql)
+        for i in list:
+            if i[5] is None:
+                sb_time = ""
+            else:
+                sb_time = i[5].strftime('%Y-%m-%d')
+            telephone = str(i[2])
+            telephone = str(telephone[0:3]) + "***" + str(telephone[7:])
+            data.append({
+                "user_id": i[0],
+                "area_code": i[1],
+                "telephone": telephone,
+                "is_block": i[3],
+                "time": i[4],
+                "sb_time": sb_time
+            })
+
+        return self.response({"code": 0, "data": data})
+
+
+class ClubHomeView(ListAPIView):
+    """
+    首页
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+        day = datetime.datetime.now().strftime('%Y-%m-%d')
+        day_start = str(day) + " 00:00:00"
+        day_end = str(day) + " 23:59:59"
+        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        yesterday_start = str(yesterday) + ' 00:00:00'
+        yesterday_end = str(yesterday) + ' 23:59:59'
+
+        club_id = int(self.request.GET.get("club_id"))
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+        user_number = User.objects.filter(is_robot=0).count()    # 总用户
+        user_day_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=day_start,
+                                                      created_at__lte=day_end).values('user_id').distinct().count()    # 今天新增加
+        user_two_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=yesterday_start,
+                                                      created_at__lte=yesterday_end).values('user_id').distinct().count()    # 昨天新增加
+
+        recharge_coin = UserRecharge.objects.filter(coin_id=int(coin_info.id)).aggregate(Sum('amount'))
+        if recharge_coin['amount__sum'] is None:
+            sum_recharge = 0
+        else:
+            sum_recharge = normalize_fraction(recharge_coin['amount__sum'], coin_accuracy)       # 总充值
+
+        presentat_coin = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1).aggregate(Sum('amount'))
+        if presentat_coin['amount__sum'] is None:
+            sum_presentat = 0
+        else:
+            sum_presentat = normalize_fraction(presentat_coin['amount__sum'], coin_accuracy)       # 总提现
+
+        user_coin = UserCoin.objects.filter(coin_id=int(coin_info.id), user__is_block=0,
+                                            user__is_robot=0).aggregate(Sum('balance'))
+        if user_coin['balance__sum'] is None:
+            sum_coin = 0
+        else:
+            sum_coin = normalize_fraction(user_coin['balance__sum'], coin_accuracy)       # 总金额
+
+        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('bets'))
+        if sum_list['bets__sum'] is None:
+            sum_bets = 0
+        else:
+            sum_bets = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
+
+        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+        print(connection.queries)
+        if sum_list['earn_coin__sum'] is None:
+            sum_earn_coin = 0
+        else:
+            sum_earn_coin = sum_list['earn_coin__sum']
+            if sum_earn_coin > 0:
+                sum_earn_coin = sum_earn_coin * Decimal(0.95)
+            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)
+        data = {
+            "sum_earn_coin": sum_earn_coin,    # 总投注流水
+            "sum_bets": sum_bets,    # 总盈亏
+            "sum_coin": sum_coin,    # 总金额
+            "user_number": user_number,    # 总用户
+            "user_day_number": user_day_number,   # 今天新增加
+            "user_two_number": user_two_number,   # 昨天新增加
+            "sum_recharge": sum_recharge,       # 总充值
+            "sum_presentat": sum_presentat,    # 总提现
+        }
+        return self.response({"code": 0, "data": data})
+
+
+class ClubUserInfoView(ListAPIView):
+    """
+    用户详情
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        club_id = int(request.GET.get("club_id"))
+        club_info = Club.objects.get_one(pk=club_id)
+
+        coin_id = int(club_info.coin_id)
+        coin_info = Coin.objects.get_one(pk=coin_id)
+        coin_accuracy = coin_info.coin_accuracy
+
+        user_id = int(request.GET.get("user_id"))
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
+        balance = normalize_fraction(user_coin.balance, coin_accuracy)
+        telephone = str(self.request.user.telephone)
+        telephone = str(telephone[0:3]) + "***" + str(telephone[7:])
+        data = {
+            "user_id": user_id,
+            "telephone": telephone,
+            "avatar": self.request.user.avatar,
+            "area_code": self.request.user.area_code,
+            "balance": balance,
+        }
+        return self.response({"code": 0, "data": data})
+
+
+class ClubBetListView(ListAPIView):
+    """
+    俱乐部投注列表
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+
+        month_id = int(self.request.GET.get("month_id"))
+        club_id = int(self.request.GET.get("club_id"))
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+
+        key = "CLUB_DATA_MONTH_INFO"
+        month_info = get_cache(key)
+        month_info = month_info[month_id]
+        month_month = month_info["month"]
+        month_start = month_info["start"]
+        month_end = month_info["end"]
+
+        key = "MONTH_BET_LIST_" + str(club_id) + "_" + str(month_month) + str(type)
+        # delete_cache(key)
+        list = None
+        list = get_cache(key)
+        if list is None:
+            sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), sum(p.earn_coin), "
+            sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb"
+            sql = "select " + sql_list + " from promotion_promotionrecord p"
+            sql += " inner join users_user u on p.user_id=u.id"
+            sql += " where p.club_id = '" + str(club_id) + "'"
+            sql += " and p.status != 2"
+            sql += " and u.is_robot = 0"
+            sql += " and p.created_at >= '" + str(month_start) + "'"
+            sql += " and p.created_at <= '" + str(month_end) + "'"
+            sql += "group by years, sb, time"
+            sql += " order by time desc"
+            list_info = get_sql(sql)
+            list = []
+            for i in list_info:
+                earn_coin = Decimal(i[2])
+                if earn_coin > 0:
+                    earn_coin = earn_coin * Decimal(0.95)
+                divided_into = normalize_fraction((Decimal(i[1]) * Decimal(0.005)), coin_accuracy)
+                list.append({
+                    "time": i[0],
+                    "sb_time": i[4],
+                    "bets": normalize_fraction(i[1], coin_accuracy),
+                    "divided_into": divided_into,
+                    "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
+                })
+            if month_id in [2, 3]:
+                set_cache(key, list)
+        return self.response({"code": 0, "list": list})
+
+
+class ClubBetsView(ListAPIView):
+    """
+    盈利奖励
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+
+        club_id = int(self.request.GET.get("club_id"))
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+
+        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, sum(p.earn_coin), "
+        sql_list += "date_format( p.created_at, '%Y%m' ) as time"
+        sql = "select " + sql_list + " from promotion_promotionrecord p"
+        sql += " inner join users_user u on p.user_id=u.id"
+        sql += " where p.club_id = '" + str(club_id) + "'"
+        sql += " and p.status = 1"
+        sql += " and u.is_robot = 0"
+        sql += " group by years, time"
+        sql += " order by time desc"
+        print("sql==========", sql)
+        list_info = get_sql(sql)
+        list = []
+        for i in list_info:
+            earn_coin = Decimal(i[1])
+            if earn_coin > 0:
+                earn_coin = earn_coin * Decimal(0.95)
+            list.append({
+                "time": i[0],
+                "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
+            })
+        return self.response({"code": 0, "list": list})
+
+
+class PayClubView(ListAPIView):
+    """
+    俱乐部充值提现明细
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+
+        month_id = int(self.request.GET.get("month_id"))
+        club_id = int(self.request.GET.get("club_id"))
+        if "type" in request.GET:
+            type = int(self.request.GET.get("type"))   # 1.充值 2.提现
+        else:
+            type = 1
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+        key = "CLUB_DATA_MONTH_INFO"
+        month_info = get_cache(key)
+        month_info = month_info[month_id]
+        month_start = month_info["start"]
+        month_month = month_info["month"]
+        month_end = month_info["end"]
+
+        # cache_file = settings.CACHE_DIR + '/' + str(club_id) + '/' + str(quiz_id) + '/' + self.KEY_CLUB_QUIZ_BET_USERS
+
+        user_recharge = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                    created_at__lte=month_end).aggregate(Sum('amount'))
+        if user_recharge['amount__sum'] is None:
+            sum_recharge = 0
+        else:
+            sum_recharge = normalize_fraction(user_recharge['amount__sum'], coin_accuracy)       # 当月总充值
+
+        recharge_user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                           created_at__lte=month_end).count()   # 当月总充值人数
+
+        user_presentat = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1,
+                                                         created_at__gte=month_start,
+                                                         created_at__lte=month_end).aggregate(Sum('amount'))
+        if user_presentat['amount__sum'] is None:
+            sum_presentat = 0
+        else:
+            sum_presentat = normalize_fraction(user_presentat['amount__sum'], coin_accuracy)  # 当月总提现
+
+        key = "MONTH_RECHARGE_" + str(club_id) + "_" + str(month_month) + str(type)
+        # delete_cache(key)
+        list = get_cache(key)
+        if list is None:
+            if type == 1:
+                list_info = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                        created_at__lte=month_end).order_by("-created_at")
+            else:
+                list_info = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                            created_at__lte=month_end).order_by("-created_at")
+            list = []
+            for i in list_info:
+                telephone = str(i.user.telephone)
+                user_number = "+" + str(i.user.area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
+                list.append({
+                    "user_id": i.user_id,
+                    "amount": normalize_fraction(i.amount, coin_accuracy),
+                    "user_number": user_number,
+                    "created_at": i.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            if month_id in [2, 3]:
+                set_cache(key, list)
+
+        if "page_size" in request.GET:
+            page_size = int(self.request.GET.get("page_size"))
+        else:
+            page_size = 10
+
+        if "page" in request.GET:
+            page = int(self.request.GET.get("page"))  # 1.充值 2.提现
+            if page == 0:
+                page = 1
+        else:
+            page = 1
+        head = (page - 1) * page_size
+        if page == 1:
+            head = 0
+
+        tail = page * page_size
+        data = {
+            "sum_recharge": sum_recharge,   # 总充值
+            "recharge_user_number": recharge_user_number,   # 总充值人数
+            "sum_presentat": sum_presentat,   # 总提现
+            "list": list[head:tail],   # 数据详情
+        }
+
+        return self.response({"code": 0, "data": data})
+
+
+class ClubDayBetView(ListAPIView):
+    """
+    单天投注记录
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+
+        sb_time = str(self.request.GET.get("sb_time"))
+        start = sb_time + " 00:00:00"
+        end = sb_time + " 23:59:59"
+
+        club_id = int(self.request.GET.get("club_id"))
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+        type = str(self.request.GET.get('type'))
+
+        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, sum(p.earn_coin), "
+        sql_list += "date_format( p.created_at, '%Y%m' ) as time"
+        sql = "select " + sql_list + " from promotion_promotionrecord p"
+        sql += " inner join users_user u on p.user_id=u.id"
+        sql += " where p.club_id = '" + str(club_id) + "'"
+        if int(type) == 2:  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股指PK
+            sql += " and p.source = 2"
+        elif int(type) == 3:
+            sql += " and p.source = 1"
+        elif int(type) == 4:
+            sql += " and p.source = 4"
+        elif int(type) == 5:
+            sql += " and p.source = 3"
+        elif int(type) == 6:
+            sql += " and p.source = 7"
+        elif int(type) == 7:
+            sql += " and p.source = 6"
+        elif int(type) == 8:
+            sql += " and p.source = 5"
+        sql += " and p.status = 1"
+        sql += " and u.is_robot = 0"
+        sql += " group by years, time"
+        sql += " order by time desc"
+        print("sql==========", sql)
+        list_info = get_sql(sql)
+        list = []
+        for i in list_info:
+            earn_coin = Decimal(i[1])
+            if earn_coin > 0:
+                earn_coin = earn_coin * Decimal(0.95)
+            list.append({
+                "time": i[0],
+                "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
+            })
+        return self.response({"code": 0, "list": list})

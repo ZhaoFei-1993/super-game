@@ -490,14 +490,24 @@ class BetsListViews(ListAPIView):
     serializer_class = RecordSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        user_id = user.id
+        if "user_id" in self.request.GET:
+            user_id = int(self.request.GET.get("user_id"))
+        else:
+            user_id = int(self.request.user.id)
         type = self.kwargs['type']
         if type == '0':  # 全部记录
             if "club_id" not in self.request.GET:
                 res = SixRecord.objects.filter(user_id=user_id)
             else:
                 club_id = self.request.GET.get('club_id')
+                if 'sb_time' in self.request.GET:
+                    sb_time = str(self.request.GET.get('sb_time'))
+                    start = sb_time + " 00:00:00"
+                    end = sb_time + " 23:59:59"
+                    record = SixRecord.objects.filter(club_id=club_id, user__is_robot=0,
+                                                      created_at__gte=start,
+                                                      created_at__lte=end).order_by('-created_at')
+                    return record
                 res = SixRecord.objects.filter(user_id=user_id, club_id=club_id)
         elif type == '1':  # 未开奖
             if "club_id" not in self.request.GET:
@@ -521,6 +531,15 @@ class BetsListViews(ListAPIView):
         # 获取下注记录，以期数分类，按时间顺序排列
         issue_tag = ''
         for item in res:
+            if 'sb_time' in self.request.GET:
+                user_id = int(item['user_id'])
+                user_info = User.objects.get(id=user_id)
+                avatar = user_info.avatar
+                area_code = user_info.area_code
+                telephone = user_info.telephone
+                user_number = "+" + str(area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
+                item['avatar'] = avatar
+                item['telephone'] = user_number
             issue = item['issue']
             if issue != issue_tag:
                 issue_tag = issue
@@ -529,9 +548,7 @@ class BetsListViews(ListAPIView):
 
         if "user_id" not in request.GET:
             user_id = self.request.user.id
-        else:
-            user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 2, 0)
+            RecordMark.objects.update_record_mark(user_id, 2, 0)
 
         return self.response({'code': 0, 'data': res})
 

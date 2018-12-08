@@ -352,7 +352,7 @@ class RecordSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ("id", "type", "periods_id", "bet", "created_at", "coin_avatar",
+        fields = ("id", "user_id", "type", "periods_id", "bet", "created_at", "coin_avatar",
                   "coin_name", "earn_coin", "earn_coin_result", "is_right", "obj")
 
     @staticmethod

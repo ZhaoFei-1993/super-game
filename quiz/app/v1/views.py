@@ -289,6 +289,16 @@ class RecordsListView(ListCreateAPIView):
         # 父分类 1: 篮球, 2: 足球
         category_parent = int(self.request.GET.get('category_parent'))
 
+        if 'sb_time' in self.request.GET:
+            sb_time = str(self.request.GET.get('sb_time'))
+            start = sb_time + " 00:00:00"
+            end = sb_time + " 23:59:59"
+            roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
+            record = Record.objects.filter(roomquiz_id=roomquiz_id, user__is_robot=0,
+                                           created_at__gte=start,
+                                           created_at__lte=end).order_by('-created_at')
+            return record
+
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
             if 'is_end' not in self.request.GET:
@@ -459,6 +469,15 @@ class RecordsListView(ListCreateAPIView):
             else:
                 option_str = option.option
             my_option = tips + '：' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
+            avatar = ""
+            user_number = ""
+            if 'sb_time' in self.request.GET:
+                user_id = int(fav.get('user_id'))
+                user_info = User.objects.get(id=user_id)
+                avatar = user_info.avatar
+                area_code = user_info.area_code
+                telephone = user_info.telephone
+                user_number = "+" + str(area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
 
             data.append({
                 "id": fav.get('id'),
@@ -476,6 +495,8 @@ class RecordsListView(ListCreateAPIView):
                 'coin_avatar': map_coin_icon[club_id],
                 'category_name': map_quiz_category_name[quiz.id],
                 'coin_name': map_coin_name[club_id],
+                'avatar': avatar,
+                'telephone': user_number,
                 'bet': normalize_fraction(fav.get('bet'), map_coin_accuracy[club_id])
             })
 
@@ -485,9 +506,7 @@ class RecordsListView(ListCreateAPIView):
 
         if "user_id" not in request.GET:
             user_id = self.request.user.id
-        else:
-            user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, cate_to_mark[category_parent], 0)
+            RecordMark.objects.update_record_mark(user_id, cate_to_mark[category_parent], 0)
 
         return self.response({'code': 0, 'data': data})
 

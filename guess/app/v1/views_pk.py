@@ -350,6 +350,16 @@ class StockPkRecordsList(ListAPIView):
     permission_classes = (LoginRequired,)
 
     def get_queryset(self):
+        if 'sb_time' in self.request.GET:
+            sb_time = str(self.request.GET.get('sb_time'))
+            start = sb_time + " 00:00:00"
+            end = sb_time + " 23:59:59"
+            club_id = int(self.request.GET.get('club_id'))  # 俱乐部表ID
+            record = RecordStockPk.objects.filter(club_id=club_id, user__is_robot=0,
+                                                  created_at__gte=start,
+                                                  created_at__lte=end).order_by('-created_at')
+            return record
+
         if 'user_id' not in self.request.GET:
             user_id = self.request.user.id
         else:
@@ -398,7 +408,8 @@ class StockPkRecordsList(ListAPIView):
                 record.id: {
                     'issues_id': record.issue_id, 'options_id': record.option_id, 'bets': record.bets,
                     'earn_coin': record.earn_coin, 'created_at': record.created_at, 'status': record.status,
-                    'coin_accuracy': coin_accuracy, 'coin_icon': coin_icon, 'coin_name': coin_name
+                    'coin_accuracy': coin_accuracy, 'coin_icon': coin_icon, 'coin_name': coin_name,
+                    'user_id': record.user_id
                 }
             })
 
@@ -434,6 +445,15 @@ class StockPkRecordsList(ListAPIView):
         data = []
         last_date = ''
         for item_key, item_value in records_obj_dic.items():
+            avatar = ""
+            user_number = ""
+            if 'sb_time' in self.request.GET:
+                user_id = int(item_value('user_id'))
+                user_info = User.objects.get(id=user_id)
+                avatar = user_info.avatar
+                area_code = user_info.area_code
+                telephone = user_info.telephone
+                user_number = "+" + str(area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
             # 时间
             created_at = item_value['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             year = created_at.split(' ')[0].split('-')[0]
@@ -496,15 +516,15 @@ class StockPkRecordsList(ListAPIView):
                 'coin_name': item_value['coin_name'],
                 'coin_icon': item_value['coin_icon'],
                 'issue': issue,
+                'avatar': avatar,
+                'telephone': user_number,
                 'result_answer': result_answer,
                 'bet': normalize_fraction(item_value['bets'], int(item_value['coin_accuracy'])),
             })
 
         if "user_id" not in request.GET:
             user_id = self.request.user.id
-        else:
-            user_id = self.request.GET.get("user_id")
-        RecordMark.objects.update_record_mark(user_id, 6, 0)
+            RecordMark.objects.update_record_mark(user_id, 6, 0)
 
         return self.response({'code': 0, 'data': data})
 
