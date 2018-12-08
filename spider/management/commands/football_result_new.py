@@ -542,10 +542,10 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
             if sql_false is not False:
                 cursor.execute(sql_false)
 
-        # 分配亚盘奖金
-        records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
-        if len(records_asia) > 0:
-            asia_result(quiz, records_asia)
+    # 分配亚盘奖金
+    records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
+    if len(records_asia) > 0:
+        asia_result(quiz, records_asia)
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
