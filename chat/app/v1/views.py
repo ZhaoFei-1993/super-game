@@ -2,7 +2,7 @@
 from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
-from chat.models import Club, ClubRule, ClubBanner
+from chat.models import Club, ClubRule, ClubBanner, ClubIdentity
 from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -18,7 +18,6 @@ from django.conf import settings
 from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
 from django.db import connection
-
 
 
 class ClublistView(ListAPIView):
@@ -59,7 +58,7 @@ class ClublistView(ListAPIView):
         data = []
         for item in items:
             club_id = item['id']
-
+            is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id), club_id=club_id).count()
             coin = coins[item['coin_id']]
             user_number = Club.objects.get_club_online(club_id)
 
@@ -74,6 +73,7 @@ class ClublistView(ListAPIView):
                     "coin_key": coin.id,
                     "icon": item['icon'],
                     "coin_icon": coin.icon,
+                    "is_identity": is_identity,
                     "is_recommend": item['is_recommend']
                 }
             )
