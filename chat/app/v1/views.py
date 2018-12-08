@@ -715,40 +715,25 @@ class ClubDayBetView(ListAPIView):
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
-        type = str(self.request.GET.get('type'))
 
-        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, sum(p.earn_coin), "
-        sql_list += "date_format( p.created_at, '%Y%m' ) as time"
-        sql = "select " + sql_list + " from promotion_promotionrecord p"
-        sql += " inner join users_user u on p.user_id=u.id"
-        sql += " where p.club_id = '" + str(club_id) + "'"
-        if int(type) == 2:  # 1.全部 2. 篮球  3.足球 4. 股票 5. 六合彩 6. 龙虎斗 7. 百家乐 8.股指PK
-            sql += " and p.source = 2"
-        elif int(type) == 3:
-            sql += " and p.source = 1"
-        elif int(type) == 4:
-            sql += " and p.source = 4"
-        elif int(type) == 5:
-            sql += " and p.source = 3"
-        elif int(type) == 6:
-            sql += " and p.source = 7"
-        elif int(type) == 7:
-            sql += " and p.source = 6"
-        elif int(type) == 8:
-            sql += " and p.source = 5"
-        sql += " and p.status = 1"
-        sql += " and u.is_robot = 0"
-        sql += " group by years, time"
-        sql += " order by time desc"
-        print("sql==========", sql)
-        list_info = get_sql(sql)
-        list = []
-        for i in list_info:
-            earn_coin = Decimal(i[1])
-            if earn_coin > 0:
-                earn_coin = earn_coin * Decimal(0.95)
-            list.append({
-                "time": i[0],
-                "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
-            })
-        return self.response({"code": 0, "list": list})
+        number = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start,
+                                                created_at__lte=end, user__is_block=0
+                                                ).values('user_id').distinct().count()
+        sum_bets = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start,
+                                                  created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
+        sum_earn_coin = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, created_at__lte=end,
+                                                       user__is_block=0).aggregate(Sum('earn_coin'))
+        if sum_bets['bets__sum'] is None:
+            sum_bets = 0
+        else:
+            sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)  # 总投注流水
+
+        if sum_earn_coin['earn_coin__sum'] is None:
+            sum_earn_coin = 0
+        else:
+            sum_earn_coin = sum_earn_coin['earn_coin__sum']
+            if sum_earn_coin > 0:
+                sum_earn_coin = sum_earn_coin * Decimal(0.95)
+            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
+
+        return self.response({"code": 0, "number": number, "sum_bets": sum_bets, "sum_earn_coin": sum_earn_coin})
