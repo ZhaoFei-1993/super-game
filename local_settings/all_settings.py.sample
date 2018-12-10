@@ -210,3 +210,6 @@ PROXIES_URL = 'http://webapi.http.zhimacangku.com/getip?num=1&type=2&pro=&city=0
 # EOS Spark接口api key
 EOS_SPARK_API_KEY = 'bef6e5560124344a332968078d87124e'
 EOS_SPARK_WT_API_KEY = 'f195fe1e6b6f3a20ba77718ada215620'
+
+# 测试账户user_id
+TEST_USER_ID = [78914, 78909, 78908, 78907, 78899, 78850, 78849, 78828, 78824, 78810, 78811, 78816, 78818, 78822, 52120]
