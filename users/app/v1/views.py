@@ -3276,6 +3276,8 @@ class MoveRecordView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user_id = self.request.user.id
+        if 'user_id' in self.request.GET:
+            user_id = self.request.GET.get('user_id')
         if 'coin_id' not in request.GET:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         coin_id = request.GET.get('coin_id')
