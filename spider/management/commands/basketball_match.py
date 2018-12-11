@@ -195,6 +195,9 @@ def save_rule_option(rule_type, quiz, result):
 
 @transaction.atomic()
 def get_data_info(url):
+    # 记录成功入库的比赛的match_flag
+    cache_flag_list = []
+
     os.chdir(cache_dir)
     files = []
     for root, sub_dirs, files in list(os.walk(cache_dir))[0:1]:
@@ -233,13 +236,17 @@ def get_data_info(url):
 
             host_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + host_team_id
             guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
-            response_host_team = request_with_proxy(host_team_url, headers=headers)
-            response_guest_team = request_with_proxy(guest_team_url, headers=headers)
-            if response_host_team is None or response_guest_team is None:
-                continue
+            try:
+                response_host_team = request_with_proxy(host_team_url, headers=headers)
+                response_guest_team = request_with_proxy(guest_team_url, headers=headers)
+                if response_host_team is None or response_guest_team is None:
+                    continue
 
-            host_team_dt = response_host_team.json()
-            guest_team_dt = response_guest_team.json()
+                host_team_dt = response_host_team.json()
+                guest_team_dt = response_guest_team.json()
+            except Exception as e:
+                print(e)
+                continue
 
             if host_team_dt['status']['code'] == 0:
                 host_team_en = host_team_dt['result']['official_name']
@@ -445,12 +452,7 @@ def get_data_info(url):
                     elif i == 7 and len(result_wnm) > 0:
                         save_rule_option(i, quiz, result_wnm)
 
-                # 写入文件不再重复获取比赛
-                os.chdir(cache_dir)
-                if match_id not in match_id_list:
-                    with open('match_cache.txt', 'a+') as f:
-                        f.write(match_id + ',')
-
+                cache_flag_list.append(match_id)
             else:
                 print('已经存在')
             # ------------------------------------------------------------------------------------------------------
@@ -466,6 +468,11 @@ def get_data_info(url):
             print(result_wnm)
             print(result_hilo)
             print('-----------------------------------------------------------------------------------------------')
+
+        # 写入文件不再重复获取比赛
+        os.chdir(cache_dir)
+        with open('match_cache.txt', 'a+') as f:
+            f.write(','.join(cache_flag_list))
     else:
         print('未请求到任何数据')
 
