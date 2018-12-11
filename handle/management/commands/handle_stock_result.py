@@ -80,15 +80,15 @@ class Command(BaseCommand):
         # newobject(str(per), period.stock_id, next_start, next_end)
 
         # ---------------------------------------------------------------------------------------
-        # guess_recording = GuessRecording()
-        # stock_index = StockIndex()
-        # dt = {'num': '25792.87', 'status': 'up', 'auto': True}
-        # period = Periods.objects.get(id=451)
-        # date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
-        #                                       "%Y-%m-%d %H:%M:%S")
-        # guess_recording.take_result(period, dt, date_day)
-        # print('放出题目')
-        # stock_index.new_period(period)
+        guess_recording = GuessRecording()
+        stock_index = StockIndex()
+        dt = {'num': '6969.25', 'status': 'down', 'auto': True}
+        period = Periods.objects.get(id=541)
+        date_day = datetime.datetime.strptime(period.lottery_time.strftime('%Y-%m-%d') + ' ' + '23:59:59',
+                                              "%Y-%m-%d %H:%M:%S")
+        guess_recording.take_result(period, dt, date_day)
+        print('放出题目')
+        stock_index.new_period(period)
         # # ---------------------------------------------------------------------------------------
 
         # 股指pk出题找答案,股指pk出题
@@ -96,8 +96,8 @@ class Command(BaseCommand):
         from guess.models import Periods
 
         start_time = '22:30:00'
-        left_periods = Periods.objects.get(id=501)
-        right_periods = Periods.objects.get(id=502)
+        left_periods = Periods.objects.get(id=549)
+        right_periods = Periods.objects.get(id=546)
         guess_pk_recording = GuessPKRecording()
         guess_pk_recording.new_issues(left_periods, right_periods, start_time, 2)
 
