@@ -280,23 +280,29 @@ class ClubMonthView(ListAPIView):
         this_month = datetime.date(year, month, day=1)  # 当月
         this_months = str(this_month.month) + "月"
 
-        this_year = this_month.year
-        this_monthss = this_month.month
-        weekDay, monthCountDay = calendar.monthrange(this_year, this_monthss)  # 获取当月第一天的星期和当月的总天数
-        start = str(datetime.date(this_year, this_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
-        end = str(datetime.date(this_year, this_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
-        data.append({
-            "month_id": 1,
-            "month": this_months
-        })
-        list[1] = {
-            "month_id": 1,
-            "month": this_months,
-            "start": start,
-            "end": end
-        }
         last_month = this_month - timedelta(days=1)  # 上月
         last_months = str(last_month.month) + "月"
+
+        lasts_month = last_month - timedelta(days=32)  # 上上月
+        lasts_months = str(lasts_month.month) + "月"
+
+        lasts_year = lasts_month.year
+        lasts_monthss = lasts_month.month
+        weekDay, monthCountDay = calendar.monthrange(lasts_year, lasts_monthss)  # 获取当月第一天的星期和当月的总天数
+        lasts_start = str(datetime.date(lasts_year, lasts_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
+        lasts_end = str(
+            datetime.date(lasts_year, lasts_monthss, day=monthCountDay).strftime(
+                '%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
+        data.append({
+            "month_id": 3,
+            "month": lasts_months
+        })
+        list[3] = {
+            "month_id": 3,
+            "month": lasts_months,
+            "start": lasts_start,
+            "end": lasts_end
+        }
 
         last_year = last_month.year
         last_monthss = last_month.month
@@ -314,24 +320,22 @@ class ClubMonthView(ListAPIView):
             "start": last_start,
             "end": last_end
         }
-        lasts_month = last_month - timedelta(days=32)  # 上上月
-        lasts_months = str(lasts_month.month) + "月"
 
-        lasts_year = lasts_month.year
-        lasts_monthss = lasts_month.month
-        weekDay, monthCountDay = calendar.monthrange(lasts_year, lasts_monthss)  # 获取当月第一天的星期和当月的总天数
-        lasts_start = str(datetime.date(lasts_year, lasts_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
-        lasts_end = str(
-            datetime.date(lasts_year, lasts_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
+        this_year = this_month.year
+        this_monthss = this_month.month
+        weekDay, monthCountDay = calendar.monthrange(this_year, this_monthss)  # 获取当月第一天的星期和当月的总天数
+        start = str(datetime.date(this_year, this_monthss, day=1).strftime('%Y-%m-%d')) + " 00:00:00"  # 获取当月第一天
+        end = str(
+            datetime.date(this_year, this_monthss, day=monthCountDay).strftime('%Y-%m-%d')) + " 23:59:59"  # 获取当前月份最后一天
         data.append({
-            "month_id": 3,
-            "month": lasts_months
+            "month_id": 1,
+            "month": this_months
         })
-        list[3] = {
-            "month_id": 3,
-            "month": lasts_months,
-            "start": lasts_start,
-            "end": lasts_end
+        list[1] = {
+            "month_id": 1,
+            "month": this_months,
+            "start": start,
+            "end": end
         }
         set_cache(key, list)
         return self.response({"code": 0, "data": data})
