@@ -487,13 +487,13 @@ class ClubUserInfoView(ListAPIView):
         user_id = int(request.GET.get("user_id"))
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_id)
         balance = normalize_fraction(user_coin.balance, coin_accuracy)
-        telephone = str(self.request.user.telephone)
+        telephone = str(user_coin.user.telephone)
         telephone = str(telephone[0:3]) + "***" + str(telephone[7:])
         data = {
             "user_id": user_id,
             "telephone": telephone,
-            "avatar": self.request.user.avatar,
-            "area_code": self.request.user.area_code,
+            "avatar": user_coin.avatar,
+            "area_code": user_coin.area_code,
             "balance": balance,
             "name": icon
         }
