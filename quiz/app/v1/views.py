@@ -473,8 +473,8 @@ class RecordsListView(ListCreateAPIView):
             my_option = tips + '：' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
             avatar = ""
             user_number = ""
+            user_id = int(fav.get('user_id'))
             if 'sb_time' in self.request.GET:
-                user_id = int(fav.get('user_id'))
                 user_info = User.objects.get(id=user_id)
                 avatar = user_info.avatar
                 area_code = user_info.area_code
@@ -484,6 +484,7 @@ class RecordsListView(ListCreateAPIView):
             data.append({
                 "id": fav.get('id'),
                 "quiz_id": fav.get('quiz_id'),
+                "user_id": user_id,
                 "club_id": fav.get('roomquiz_id'),
                 "type": fav.get('type'),
                 'host_team': host_team,

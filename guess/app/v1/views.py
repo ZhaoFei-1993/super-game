@@ -752,8 +752,8 @@ class RecordsListView(ListCreateAPIView):
                 tmp = pecific_date
             avatar = ""
             user_number = ""
+            user_id = int(fav.get('user_id'))
             if 'sb_time' in self.request.GET:
-                user_id = int(fav.get('user_id'))
                 user_info = User.objects.get(id=user_id)
                 avatar = user_info.avatar
                 area_code = user_info.area_code
@@ -763,6 +763,7 @@ class RecordsListView(ListCreateAPIView):
             data.append({
                 "id": fav.get('id'),
                 "stock_id": stock_id,
+                "user_id": user_id,
                 "periods_id": periods_id,
                 "guess_title": guess_title,  # 股票昵称
                 'earn_coin': earn_coin_result,  # 竞猜结果
