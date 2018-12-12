@@ -493,7 +493,7 @@ class ClubUserInfoView(ListAPIView):
         data = {
             "user_id": user_id,
             "telephone": telephone,
-            "avatar": user_coin.avatar,
+            "avatar": user_coin.user.avatar,
             "area_code": user_coin.area_code,
             "balance": balance,
             "name": icon
