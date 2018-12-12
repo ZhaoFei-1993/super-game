@@ -11,7 +11,7 @@ from quiz.models import Category, Quiz, Rule, Option, Club, OptionOdds, QuizOdds
 from wc_auth.models import Admin
 from .get_time import get_time
 from utils.functions import request_with_proxy
-import datetime
+from django.db import transaction
 
 
 base_url = 'http://i.sporttery.cn/odds_calculator/get_odds?i_format=json&i_callback=getData&poolcode[]=mnl&poolcode[]=hdc&poolcode[]=wnm&poolcode[]=hilo'
@@ -193,7 +193,11 @@ def save_rule_option(rule_type, quiz, result):
                     option_odds.save()
 
 
+@transaction.atomic()
 def get_data_info(url):
+    # 记录成功入库的比赛的match_flag
+    cache_flag_list = []
+
     os.chdir(cache_dir)
     files = []
     for root, sub_dirs, files in list(os.walk(cache_dir))[0:1]:
@@ -232,13 +236,17 @@ def get_data_info(url):
 
             host_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + host_team_id
             guest_team_url = 'http://i.sporttery.cn/api/bk_match_info/get_team_data?tid=' + guest_team_id
-            response_host_team = request_with_proxy(host_team_url, headers=headers)
-            response_guest_team = request_with_proxy(guest_team_url, headers=headers)
-            if response_host_team is None or response_guest_team is None:
-                continue
+            try:
+                response_host_team = request_with_proxy(host_team_url, headers=headers)
+                response_guest_team = request_with_proxy(guest_team_url, headers=headers)
+                if response_host_team is None or response_guest_team is None:
+                    continue
 
-            host_team_dt = response_host_team.json()
-            guest_team_dt = response_guest_team.json()
+                host_team_dt = response_host_team.json()
+                guest_team_dt = response_guest_team.json()
+            except Exception as e:
+                print(e)
+                continue
 
             if host_team_dt['status']['code'] == 0:
                 host_team_en = host_team_dt['result']['official_name']
@@ -339,132 +347,132 @@ def get_data_info(url):
 
             # ------------------------------------------------------------------------------------------------------
 
-                host_team_avatar = '篮球主队.png'
-                guest_team_avatar = '篮球客队.png'
-                os.chdir(img_dir)
-                if os.path.exists(host_team_abbr + '.png'):
-                    host_team_avatar = host_team_abbr + '.png'
-                elif os.path.exists(host_team + '.png'):
-                    host_team_avatar = host_team + '.png'
+            host_team_avatar = '篮球主队.png'
+            guest_team_avatar = '篮球客队.png'
+            os.chdir(img_dir)
+            if os.path.exists(host_team_abbr + '.png'):
+                host_team_avatar = host_team_abbr + '.png'
+            elif os.path.exists(host_team + '.png'):
+                host_team_avatar = host_team + '.png'
 
-                if os.path.exists(guest_team_abbr + '.png'):
-                    guest_team_avatar = guest_team_abbr + '.png'
-                elif os.path.exists(guest_team + '.png'):
-                    host_team_avatar = guest_team + '.png'
+            if os.path.exists(guest_team_abbr + '.png'):
+                guest_team_avatar = guest_team_abbr + '.png'
+            elif os.path.exists(guest_team + '.png'):
+                host_team_avatar = guest_team + '.png'
 
-                # try:
-                #     img_base_url = 'http://info.sporttery.cn/basketball/info/bk_match_mnl.php?m=' + match_id
-                #     response_img_url = requests.get(img_base_url, headers=headers)
-                #     if response_img_url.status_code == 200:
-                #         soup = BeautifulSoup(response_img_url.text, 'lxml')
-                #         img_list = soup.select('div[class="aga-m"]')
-                #         host_team_img_url = img_list[1].img['src']
-                #         guest_team_img_url = img_list[0].img['src']
-                #
-                #         if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
-                #                 len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
-                #             host_team_avatar = \
-                #                 re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][1].replace(
-                #                     '/', '_')
-                #             guest_team_avatar = \
-                #                 re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
-                #                     1].replace('/', '_')
-                #
-                #             files = []
-                #             source_dir = img_dir
-                #             for root, sub_dirs, files in os.walk(source_dir):
-                #                 files = files
-                #
-                #             if host_team_avatar not in files:
-                #                 response_img = requests.get(host_team_img_url)
-                #                 img = response_img.content
-                #                 os.chdir(img_dir)
-                #                 with open(host_team_avatar, 'wb') as f:
-                #                     f.write(img)
-                #             else:
-                #                 print('图片已经存在')
-                #
-                #             if guest_team_avatar not in files:
-                #                 response_img = requests.get(guest_team_img_url)
-                #                 img = response_img.content
-                #                 os.chdir(img_dir)
-                #                 with open(guest_team_avatar, 'wb') as f:
-                #                     f.write(img)
-                #             else:
-                #                 print('图片已经存在')
-                #
-                # except requests.ConnectionError as e:
-                #     print('Error', e.args)
+            # try:
+            #     img_base_url = 'http://info.sporttery.cn/basketball/info/bk_match_mnl.php?m=' + match_id
+            #     response_img_url = requests.get(img_base_url, headers=headers)
+            #     if response_img_url.status_code == 200:
+            #         soup = BeautifulSoup(response_img_url.text, 'lxml')
+            #         img_list = soup.select('div[class="aga-m"]')
+            #         host_team_img_url = img_list[1].img['src']
+            #         guest_team_img_url = img_list[0].img['src']
+            #
+            #         if len(re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)) > 0 and \
+            #                 len(re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)) > 0:
+            #             host_team_avatar = \
+            #                 re.findall('http://static.sporttery.(cn|com)/(.*)', host_team_img_url)[0][1].replace(
+            #                     '/', '_')
+            #             guest_team_avatar = \
+            #                 re.findall('http://static.sporttery.(cn|com)/(.*)', guest_team_img_url)[0][
+            #                     1].replace('/', '_')
+            #
+            #             files = []
+            #             source_dir = img_dir
+            #             for root, sub_dirs, files in os.walk(source_dir):
+            #                 files = files
+            #
+            #             if host_team_avatar not in files:
+            #                 response_img = requests.get(host_team_img_url)
+            #                 img = response_img.content
+            #                 os.chdir(img_dir)
+            #                 with open(host_team_avatar, 'wb') as f:
+            #                     f.write(img)
+            #             else:
+            #                 print('图片已经存在')
+            #
+            #             if guest_team_avatar not in files:
+            #                 response_img = requests.get(guest_team_img_url)
+            #                 img = response_img.content
+            #                 os.chdir(img_dir)
+            #                 with open(guest_team_avatar, 'wb') as f:
+            #                     f.write(img)
+            #             else:
+            #                 print('图片已经存在')
+            #
+            # except requests.ConnectionError as e:
+            #     print('Error', e.args)
 
+        # ------------------------------------------------------------------------------------------------------
+            if Quiz.objects.filter(match_flag=match_id).first() is None:
+                quiz = Quiz()
+                quiz.match_flag = match_id
+
+                if Category.objects.filter(name=league_abbr).first() is None:
+                    category = Category()
+                    category.name = league_abbr
+                    category.admin = Admin.objects.filter(id=1).first()
+                    category.parent = Category.objects.filter(id=2).first()
+                    category.save()
+                quiz.category = Category.objects.filter(name=league_abbr).first()
+
+                # if quiz.category.name != '美职篮':
+                #     return
+
+                quiz.host_team = host_team_abbr
+                quiz.host_team_fullname = host_team
+                quiz.host_team_en = host_team_en
+                quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + host_team_avatar
+                quiz.guest_team = guest_team_abbr
+                quiz.guest_team_fullname = guest_team
+                quiz.guest_team_en = guest_team_en
+                quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + guest_team_avatar
+                quiz.match_name = league_abbr
+                quiz.begin_at = time
+                quiz.updated_at = created_at
+                quiz.admin = Admin.objects.filter(id=1).first()
+                quiz.created_at = created_at
+                quiz.save()
+
+                for i in range(4, 8):
+                    # 胜负
+                    if i == 4 and len(result_mnl) > 0:
+                        save_rule_option(i, quiz, result_mnl)
+
+                    # 让分胜负
+                    elif i == 5 and len(result_hdc) > 0:
+                        save_rule_option(i, quiz, result_hdc)
+
+                    # 大小分
+                    elif i == 6 and len(result_hilo) > 0:
+                        save_rule_option(i, quiz, result_hilo)
+
+                    # 胜分差
+                    elif i == 7 and len(result_wnm) > 0:
+                        save_rule_option(i, quiz, result_wnm)
+
+                cache_flag_list.append(match_id)
+            else:
+                print('已经存在')
             # ------------------------------------------------------------------------------------------------------
-                if Quiz.objects.filter(match_flag=match_id).first() is None:
-                    quiz = Quiz()
-                    quiz.match_flag = match_id
+            print(match_id)
+            print(league)
+            print(league_abbr)
+            print(guest_team)
+            print(host_team)
+            print(time)
+            print(created_at)
+            print(result_mnl)
+            print(result_hdc)
+            print(result_wnm)
+            print(result_hilo)
+            print('-----------------------------------------------------------------------------------------------')
 
-                    if Category.objects.filter(name=league_abbr).first() is None:
-                        category = Category()
-                        category.name = league_abbr
-                        category.admin = Admin.objects.filter(id=1).first()
-                        category.parent = Category.objects.filter(id=2).first()
-                        category.save()
-                    quiz.category = Category.objects.filter(name=league_abbr).first()
-
-                    # if quiz.category.name != '美职篮':
-                    #     return
-
-                    quiz.host_team = host_team_abbr
-                    quiz.host_team_fullname = host_team
-                    quiz.host_team_en = host_team_en
-                    quiz.host_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + host_team_avatar
-                    quiz.guest_team = guest_team_abbr
-                    quiz.guest_team_fullname = guest_team
-                    quiz.guest_team_en = guest_team_en
-                    quiz.guest_team_avatar = MEDIA_DOMAIN_HOST + '/images/spider/basketball/team_icon/' + guest_team_avatar
-                    quiz.match_name = league_abbr
-                    quiz.begin_at = time
-                    quiz.updated_at = created_at
-                    quiz.admin = Admin.objects.filter(id=1).first()
-                    quiz.created_at = created_at
-                    quiz.save()
-
-                    for i in range(4, 8):
-                        # 胜负
-                        if i == 4 and len(result_mnl) > 0:
-                            save_rule_option(i, quiz, result_mnl)
-
-                        # 让分胜负
-                        elif i == 5 and len(result_hdc) > 0:
-                            save_rule_option(i, quiz, result_hdc)
-
-                        # 大小分
-                        elif i == 6 and len(result_hilo) > 0:
-                            save_rule_option(i, quiz, result_hilo)
-
-                        # 胜分差
-                        elif i == 7 and len(result_wnm) > 0:
-                            save_rule_option(i, quiz, result_wnm)
-
-                    # 写入文件不再重复获取比赛
-                    os.chdir(cache_dir)
-                    if match_id not in match_id_list:
-                        with open('match_cache.txt', 'a+') as f:
-                            f.write(match_id + ',')
-
-                else:
-                    print('已经存在')
-                # ------------------------------------------------------------------------------------------------------
-                print(match_id)
-                print(league)
-                print(league_abbr)
-                print(guest_team)
-                print(host_team)
-                print(time)
-                print(created_at)
-                print(result_mnl)
-                print(result_hdc)
-                print(result_wnm)
-                print(result_hilo)
-                print('-----------------------------------------------------------------------------------------------')
+        # 写入文件不再重复获取比赛
+        os.chdir(cache_dir)
+        with open('match_cache.txt', 'a+') as f:
+            f.write(','.join(cache_flag_list))
     else:
         print('未请求到任何数据')
 

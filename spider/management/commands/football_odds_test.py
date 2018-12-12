@@ -183,6 +183,9 @@ def update_asia_odds(json_dt, rule, quiz, change_time):
             option_odds_guest.odds = guest_team_odds
             option_odds_guest.save()
 
+        option_home.save()
+        option_guest.save()
+
         print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
         print('=================================================')
     else:
@@ -230,7 +233,6 @@ def update_odds(result, rule, quiz, change_time, flag):
                 quiz_odds_log.save()
                 # 对应选项赔率相应变化
                 option.odds = dt[2]
-                option.save()
 
                 rule.home_let_score = float(home_let_score)
                 rule.guest_let_score = float(guest_let_score)
@@ -241,6 +243,8 @@ def update_odds(result, rule, quiz, change_time, flag):
                     option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
                     option_odds.odds = dt[2]
                     option_odds.save()
+
+                option.save()
             else:
                 option = Option.objects.get(rule=rule, flag=dt[0])
                 quiz_odds_log = QuizOddsLog()
@@ -253,13 +257,13 @@ def update_odds(result, rule, quiz, change_time, flag):
                 quiz_odds_log.save()
                 # 对应选项赔率相应变化
                 option.odds = dt[2]
-                option.save()
 
                 clubs = Club.objects.all()
                 for club in clubs:
                     option_odds = OptionOdds.objects.get(club=club, quiz=quiz, option=option)
                     option_odds.odds = dt[2]
                     option_odds.save()
+                option.save()
         print(quiz.match_flag + ',' + quiz.host_team + 'VS' + quiz.guest_team + ' 的玩法:' + rule.tips + ',赔率已变化')
         print('=================================================')
     else:
