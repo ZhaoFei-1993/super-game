@@ -717,17 +717,18 @@ class ClubDayBetView(ListAPIView):
         end = sb_time + " 23:59:59"
 
         club_id = int(self.request.GET.get("club_id"))
+        type = int(self.request.GET.get("type"))   # 1.足球  2.篮球 3. 六合彩 4. 股票 5. 股票PK 6. 百家乐 7.龙虎斗
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
 
-        number = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start,
+        number = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
                                                 created_at__lte=end, user__is_block=0
                                                 ).values('user_id').distinct().count()
-        sum_bets = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start,
+        sum_bets = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
                                                   created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
         sum_earn_coin = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, created_at__lte=end,
-                                                       user__is_block=0).aggregate(Sum('earn_coin'))
+                                                       source = type, user__is_block=0).aggregate(Sum('earn_coin'))
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
         else:
