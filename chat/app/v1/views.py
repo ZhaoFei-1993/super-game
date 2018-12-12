@@ -456,7 +456,7 @@ class ClubHomeView(ListAPIView):
             "sum_earn_coin": sum_earn_coin,    # 总投注流水
             "sum_bets": sum_bets,    # 总盈亏
             "sum_coin": sum_coin,    # 总金额
-            "club_name": club_info.room_title,    # 总金额
+            "coin_name": coin_info.name,    # 总金额
             "icon": icon,    # 总金额
             "user_number": user_number,    # 总用户
             "user_day_number": user_day_number,   # 今天新增加
@@ -745,4 +745,4 @@ class ClubDayBetView(ListAPIView):
                               "number": number,
                               "sum_bets": sum_bets,
                               "sum_earn_coin": sum_earn_coin,
-                              "club_name": club_info.room_title})
+                              "coin_name": coin_info.name})
