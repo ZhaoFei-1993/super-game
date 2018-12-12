@@ -294,7 +294,9 @@ class RecordsListView(ListCreateAPIView):
             start = sb_time + " 00:00:00"
             end = sb_time + " 23:59:59"
             roomquiz_id = self.request.parser_context['kwargs']['roomquiz_id']
-            record = Record.objects.filter(roomquiz_id=roomquiz_id, user__is_robot=0,
+            record = Record.objects.filter(roomquiz_id=roomquiz_id,
+                                           quiz__category__parent_id=category_parent,
+                                           user__is_robot=0,
                                            created_at__gte=start,
                                            created_at__lte=end).order_by('-created_at')
             return record
