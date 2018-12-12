@@ -448,7 +448,7 @@ class StockPkRecordsList(ListAPIView):
             avatar = ""
             user_number = ""
             if 'sb_time' in self.request.GET:
-                user_id = int(item_value('user_id'))
+                user_id = int(item_value['user_id'])
                 user_info = User.objects.get(id=user_id)
                 avatar = user_info.avatar
                 area_code = user_info.area_code
