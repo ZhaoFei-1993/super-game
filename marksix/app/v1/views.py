@@ -532,8 +532,8 @@ class BetsListViews(ListAPIView):
         # 获取下注记录，以期数分类，按时间顺序排列
         issue_tag = ''
         for item in res:
+            user_id = int(item['user_id'])
             if 'sb_time' in self.request.GET:
-                user_id = int(item['user_id'])
                 user_info = User.objects.get(id=user_id)
                 avatar = user_info.avatar
                 area_code = user_info.area_code
@@ -541,6 +541,7 @@ class BetsListViews(ListAPIView):
                 user_number = "+" + str(area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
                 item['avatar'] = avatar
                 item['telephone'] = user_number
+            item['user_id'] = user_id
             issue = item['issue']
             if issue != issue_tag:
                 issue_tag = issue
