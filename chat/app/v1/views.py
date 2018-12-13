@@ -643,8 +643,12 @@ class PayClubView(ListAPIView):
         else:
             sum_recharge = normalize_fraction(user_recharge['amount__sum'], coin_accuracy)       # 当月总充值
 
-        recharge_user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
-                                                           created_at__lte=month_end).count()   # 当月总充值人数
+        if type == 1:
+            recharge_user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                               created_at__lte=month_end).values('user_id').count()  # 当月总充值人数
+        else:
+            recharge_user_number = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                                                                   created_at__lte=month_end).values('user_id').count()
 
         user_presentat = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1,
                                                          created_at__gte=month_start,
