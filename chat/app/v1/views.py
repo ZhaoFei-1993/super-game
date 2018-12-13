@@ -369,7 +369,7 @@ class ClubUserView(ListAPIView):
             telephone = "%" + str(request.GET.get("telephone")) + "%"
             sql += " and u.telephone like '" + telephone + "'"
         if type == 1:  # 登陆
-            sql += " order by sb_time, u.created_at desc"
+            sql += " order by sb_time desc"
         else:  # 激活
             sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
