@@ -373,6 +373,7 @@ class ClubUserView(ListAPIView):
         else:  # 激活
             sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
+        print("sql======================", sql)
         for i in list:
             print("5=================", i[5])
             if i[5] is None:
