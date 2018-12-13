@@ -76,6 +76,9 @@ def update_odds(result, quiz, rule, change_time, play_flag):
                         rule.home_let_score = 0
                     rule.save()
                 elif play_flag == 6:
+                    rule.estimate_score = dt[2].replace('+', '')
+                    rule.save()
+
                     option.option = dt[1].replace('+', '')
 
                 option.odds = dt[-1]
