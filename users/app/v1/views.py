@@ -1616,7 +1616,9 @@ class PresentationListView(ListAPIView):
     serializer_class = PresentationSerialize
 
     def get_queryset(self):
-        userid = self.request.user.id
+        user_id = self.request.user.id
+        if 'user_id' in self.request.GET:
+            user_id = self.request.GET.get('user_id')
         c_id = int(self.kwargs['c_id'])
         query = UserPresentation.objects.filter(user_id=userid, coin_id=c_id)
         return query
@@ -1703,7 +1705,9 @@ class RechargeListView(ListAPIView):
     serializer_class = UserRechargeSerizlize
 
     def get_queryset(self):
-        user = self.request.user.id
+        user_id = self.request.user.id
+        if 'user_id' in self.request.GET:
+            user_id = self.request.GET.get('user_id')
         coin_id = self.kwargs['coin_id']
         recharges = UserRecharge.objects.filter(user_id=user, coin_id=coin_id, is_deleted=0)
         return recharges
