@@ -16,7 +16,7 @@ from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, Q
 from utils.functions import value_judge, get_sql
 from datetime import datetime, timedelta
 from django.conf import settings
-from utils.functions import normalize_fraction
+from utils.functions import normalize_fraction, handle_zero
 from utils.cache import get_cache, set_cache
 from promotion.models import PromotionRecord
 
@@ -472,7 +472,7 @@ class RecordsListView(ListCreateAPIView):
                 option_str = option.option
             my_option = tips + '：' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
             if rule.type == str(Rule.AISA_RESULTS) or rule.type == str(Rule.POLITENESS_RESULT):
-                my_option = my_option + ' ' + '({handicap})'.format(handicap=rule.handicap)
+                my_option = my_option + ' ' + '({handicap})'.format(handicap=fav.get('handicap'))
 
             avatar = ""
             user_number = ""
@@ -924,9 +924,9 @@ class BetView(ListCreateAPIView):
             home_let_score = option_odds.option.rule.home_let_score
             guest_let_score = option_odds.option.rule.guest_let_score
             if home_let_score != 0:
-                handicap = '-' + str(home_let_score)
+                handicap = '-' + str(handle_zero(home_let_score))
             else:
-                handicap = '+' + str(guest_let_score)
+                handicap = '+' + str(handle_zero(guest_let_score))
             record.handicap = handicap
         elif int(option_odds.option.rule.type) == Rule.SIZE_POINTS:  # 篮球大小球盘口
             record.handicap = str(option_odds.option.rule.estimate_score)
