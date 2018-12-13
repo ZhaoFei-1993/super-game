@@ -471,6 +471,9 @@ class RecordsListView(ListCreateAPIView):
             else:
                 option_str = option.option
             my_option = tips + '：' + option_str + '/' + str(normalize_fraction(fav.get('odds'), 2))
+            if rule.type == str(Rule.AISA_RESULTS) or rule.type == str(Rule.POLITENESS_RESULT):
+                my_option = my_option + ' ' + '({handicap})'.format(handicap=rule.handicap)
+
             avatar = ""
             user_number = ""
             user_id = int(fav.get('user_id'))

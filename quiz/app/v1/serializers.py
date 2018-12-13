@@ -194,7 +194,9 @@ class RecordSerialize(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ("id", "quiz_id", "user_id", "created_at", "odds", "earn_coin", "type", "bet", 'roomquiz_id', 'option_id')
+        fields = (
+            "id", "quiz_id", "user_id", "created_at", "odds", "earn_coin", "type", "bet", 'roomquiz_id', 'option_id',
+            'handicap')
 
     @staticmethod
     def get_created_at(obj):
