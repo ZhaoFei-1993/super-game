@@ -16,7 +16,6 @@ from utils.functions import normalize_fraction, to_decimal
 from promotion.models import PromotionRecord, UserPresentation
 from banker.models import BankerRecord
 
-
 base_url = 'http://info.sporttery.cn/basketball/pool_result.php?id='
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
@@ -202,8 +201,7 @@ def get_data_info(url, match_flag):
         rule_wnm = rule_all.filter(type=7).first()
 
         is_open = False
-        if (result_mnl_flag != '' or rule_mnl is None) and (result_hdc_flag != '' or rule_hdc is None) and (
-                result_hilo_flag != '' or rule_hilo is None) and (result_wnm_flag != '' or rule_wnm is None):
+        if (result_mnl_flag != '' or rule_mnl is None) and (result_wnm_flag != '' or rule_wnm is None):
             is_open = True
         # ------------------------------------------------------------------------------------------------
         flag = False
@@ -214,22 +212,42 @@ def get_data_info(url, match_flag):
             quiz.guest_team_score = guest_team_score
             quiz.save()
 
-            option_mnl = Option.objects.filter(rule=rule_mnl).filter(flag=result_mnl_flag).first()
+            # 胜负
+            option_mnl = Option.objects.filter(rule=rule_mnl, flag=result_hdc_flag).first()
             if option_mnl is not None:
                 option_mnl.is_right = 1
                 option_mnl.save()
 
-            option_hdc = Option.objects.filter(rule=rule_hdc).filter(flag=result_hdc_flag).first()
-            if option_hdc is not None:
-                option_hdc.is_right = 1
-                option_hdc.save()
+            # 让分胜负
+            if rule_hdc is not None:
+                if rule_hdc.home_let_score != 0:
+                    handicap = '-' + str(rule_hdc.home_let_score)
+                else:
+                    handicap = str(rule_hdc.guest_let_score)
 
-            option_hilo = Option.objects.filter(rule=rule_hilo).filter(flag=result_hilo_flag).first()
-            if option_hilo is not None:
-                option_hilo.is_right = 1
-                option_hilo.save()
+                if to_decimal(host_team_score) + to_decimal(handicap) > to_decimal(guest_team_score):
+                    result_hdc_flag = 'h'
+                else:
+                    result_hdc_flag = 'a'
+                option_hdc = Option.objects.filter(rule=rule_hdc, flag=result_hdc_flag).first()
+                if option_hdc is not None:
+                    option_hdc.is_right = 1
+                    option_hdc.save()
 
-            option_wnm = Option.objects.filter(rule=rule_wnm).filter(flag=result_wnm_flag).first()
+            # 大小分
+            if rule_hilo is not None:
+                estimate_score = rule_hilo.estimate_score
+                if to_decimal(host_team_score) + to_decimal(guest_team_score) > to_decimal(estimate_score):
+                    result_hilo_flag = 'h'  # 大于
+                else:
+                    result_hilo_flag = 'l'  # 小于
+                option_hilo = Option.objects.filter(rule=rule_hilo, flag=result_hilo_flag).first()
+                if option_hilo is not None:
+                    option_hilo.is_right = 1
+                    option_hilo.save()
+
+            # 胜分差
+            option_wnm = Option.objects.filter(rule=rule_wnm, flag=result_wnm_flag).first()
             if option_wnm is not None:
                 option_wnm.is_right = 1
                 option_wnm.save()
@@ -367,7 +385,8 @@ def get_data_info(url, match_flag):
                 profit_result = {}
                 bet_sum_result = {}
                 for club in Club.objects.get_all():
-                    target.update({club.id: {"key_id": quiz.id, "bet_sum": 0, "profit": 0, "club_id": club.id, "status": 2}})
+                    target.update(
+                        {club.id: {"key_id": quiz.id, "bet_sum": 0, "profit": 0, "club_id": club.id, "status": 2}})
                 profit_list = real_records.values('bet', 'earn_coin', 'roomquiz_id')
                 for profit_dt in profit_list:
                     target[profit_dt['roomquiz_id']]['bet_sum'] += profit_dt['bet']
