@@ -1617,6 +1617,8 @@ class PresentationListView(ListAPIView):
 
     def get_queryset(self):
         userid = self.request.user.id
+        if 'user_id' in self.request.GET:
+            userid = self.request.GET.get('user_id')
         c_id = int(self.kwargs['c_id'])
         query = UserPresentation.objects.filter(user_id=userid, coin_id=c_id)
         return query
@@ -1703,9 +1705,11 @@ class RechargeListView(ListAPIView):
     serializer_class = UserRechargeSerizlize
 
     def get_queryset(self):
-        user = self.request.user.id
+        user_id = self.request.user.id
+        if 'user_id' in self.request.GET:
+            user_id = self.request.GET.get('user_id')
         coin_id = self.kwargs['coin_id']
-        recharges = UserRecharge.objects.filter(user_id=user, coin_id=coin_id, is_deleted=0)
+        recharges = UserRecharge.objects.filter(user_id=user_id, coin_id=coin_id, is_deleted=0)
         return recharges
 
     def list(self, request, *args, **kwargs):
@@ -3292,7 +3296,9 @@ class MoveRecordView(ListAPIView):
             user_id) + "' THEN ui.telephone ELSE u.telephone END) as telephone, "
         sql_list += "date_format( m.created_at, '%Y%m%d%H%i%s' ) as times,"
         sql_list += " date_format( m.created_at, '%Y-%m-%d' ) as years, date_format( m.created_at, '%H:%i' ) as month,"
-        sql_list += " m.remarks, m.balance, (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN 1 ELSE 2 END) as type"
+        sql_list += " m.remarks, m.balance, (CASE WHEN m.sponsor_id = '" + str(user_id) + "' THEN 1 ELSE 2 END) as type,"
+        sql_list += " (CASE WHEN m.sponsor_id = '" + str(
+            user_id) + "' THEN ui.area_code ELSE u.area_code END) as area_code"
         sql = "select " + sql_list + " from users_mobilecoin m"
         sql += " inner join users_user u on m.sponsor_id=u.id"
         sql += " inner join users_user ui on m.recipient_id=ui.id"
@@ -3311,22 +3317,28 @@ class MoveRecordView(ListAPIView):
 
             years = mobile_coin[3]
             month = mobile_coin[4]
-            if tmp == years:
-                if tmps == month:
-                    month = ""
+            area_code = mobile_coin[8]
+            telephone = mobile_coin[1]
+            if 'user_id' in self.request.GET:
+                telephone = str(telephone[0:3]) + "***" + str(telephone[7:])
+            if 'user_id' not in self.request.GET:
+                if tmp == years:
+                    if tmps == month:
+                        month = ""
+                    else:
+                        tmps = month
+                    years = ""
                 else:
-                    tmps = month
-                years = ""
-            else:
-                tmp = years
-                if tmps == month:
-                    month = ""
-                else:
-                    tmps = month
+                    tmp = years
+                    if tmps == month:
+                        month = ""
+                    else:
+                        tmps = month
             data.append({
                 "year": years,
                 "time": month,
-                "telephone": mobile_coin[1],
+                "area_code": area_code,
+                "telephone": telephone,
                 "avatar": mobile_coin[0],
                 "remarks": mobile_coin[5],
                 "balance": balance,
