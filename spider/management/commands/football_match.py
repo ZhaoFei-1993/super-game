@@ -662,7 +662,7 @@ def get_data_info(url):
         # 写入文件不再重复获取比赛
         os.chdir(cache_dir)
         with open('match_cache.txt', 'a+') as f:
-            f.write(','.join(cache_flag_list))
+            f.write(','.join(cache_flag_list) + ',')
     else:
         print('未请求到任何数据')
 
