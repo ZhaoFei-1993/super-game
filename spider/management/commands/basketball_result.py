@@ -201,8 +201,7 @@ def get_data_info(url, match_flag):
         rule_wnm = rule_all.filter(type=7).first()
 
         is_open = False
-        if (result_mnl_flag != '' or rule_mnl is None) and (rule_hdc is None) and (rule_hilo is None) and (
-                result_wnm_flag != '' or rule_wnm is None):
+        if (result_mnl_flag != '' or rule_mnl is None) and (result_wnm_flag != '' or rule_wnm is None):
             is_open = True
         # ------------------------------------------------------------------------------------------------
         flag = False
