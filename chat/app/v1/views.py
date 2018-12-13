@@ -374,6 +374,7 @@ class ClubUserView(ListAPIView):
             sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
         for i in list:
+            print("5=================", i[5])
             if i[5] is None:
                 sb_time = ""
             else:
