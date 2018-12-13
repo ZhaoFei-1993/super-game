@@ -368,7 +368,10 @@ class ClubUserView(ListAPIView):
         if "telephone" in request.GET:
             telephone = "%" + str(request.GET.get("telephone")) + "%"
             sql += " and u.telephone like '" + telephone + "'"
-        sql += " order by u.created_at desc"
+        if type == 1:  # 登陆
+            sql += " order by sb_time desc"
+        else:  # 激活
+            sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
         for i in list:
             if i[5] is None:
@@ -412,7 +415,7 @@ class ClubHomeView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
         icon = coin_info.icon
-        user_number = User.objects.filter(is_robot=0).count()    # 总用户
+        user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id)).values('user_id').distinct().count()    # 总用户
         user_day_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=day_start,
                                                       created_at__lte=day_end).values('user_id').distinct().count()    # 今天新增加
         user_two_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=yesterday_start,
