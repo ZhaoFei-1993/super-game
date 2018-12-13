@@ -58,7 +58,8 @@ def update_odds(result, quiz, rule, change_time, play_flag):
                         mark = True
                         break
             elif play_flag == 6:
-                if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', ''):
+                if float(option.odds) != float(dt[-1]) or option.option != dt[1].replace('+', '') or \
+                        rule.estimate_score != dt[2].replace('+', ''):
                     mark = True
                     break
 
