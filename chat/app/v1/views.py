@@ -496,6 +496,7 @@ class ClubUserInfoView(ListAPIView):
             "avatar": user_coin.user.avatar,
             "area_code": user_coin.user.area_code,
             "balance": balance,
+            "coin_id": coin_id,
             "name": icon
         }
         return self.response({"code": 0, "data": data})
