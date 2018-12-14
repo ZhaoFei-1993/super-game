@@ -599,6 +599,7 @@ class ClubBetListView(ListAPIView):
                     earn_coin = 0
                 else:
                     earn_coin = Decimal(i[2])   # 总赢
+                    print("earn_coi=============", earn_coin)
                     earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
                 print("earn_coi=============", earn_coin)
                 if i[5] is None:
