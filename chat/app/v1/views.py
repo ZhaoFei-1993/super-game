@@ -592,6 +592,7 @@ class ClubBetListView(ListAPIView):
             sql += " and p.created_at <= '" + str(month_end) + "'"
             sql += "group by years, sb, time"
             sql += " order by time desc"
+            print("sql===================", sql)
             list_info = get_sql(sql)
             list = []
             for i in list_info:
