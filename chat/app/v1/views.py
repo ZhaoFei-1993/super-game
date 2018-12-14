@@ -482,6 +482,7 @@ class ClubHomeView(ListAPIView):
                 sum_bets = (sum_bets - sum_betss) * Decimal(0.95)
             if sum_bets > 0:
                 sum_bets = (sum_bets - sum_betss)
+                print("sum_bets==========", sum_bets)
                 sum_bets = Decimal("-" + str(sum_bets))
             sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
