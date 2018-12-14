@@ -457,11 +457,11 @@ class ClubHomeView(ListAPIView):
             sum_coin = normalize_fraction(user_coin['balance__sum'], coin_accuracy)       # 总金额
 
         sum_list = Promotion.objects.filter(~Q(user_id__in=user_list),
-                                            club_id=int(club_id), user__is_block=0).aggregate(Sum('dividend_water'))
-        if sum_list['dividend_water__sum'] is None:
-            sum_earn_coin = 0
+                                            club_id=int(club_id), user__is_block=0).aggregate(Sum('bet_water'))
+        if sum_list['bet_water__sum'] is None:
+            sum_bet_water = 0
         else:
-            sum_earn_coin = normalize_fraction(sum_list['dividend_water__sum'], coin_accuracy)       # 总投注流水
+            sum_bet_water = normalize_fraction(sum_list['bet_water__sum'], coin_accuracy)       # 总投注流水
 
         sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                   club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
@@ -477,17 +477,17 @@ class ClubHomeView(ListAPIView):
             sum_bets = 0
         else:
             sum_bets = sum_list['earn_coin__sum'] + sum_betss
-            if sum_earn_coin < 0:
-                sum_earn_coin = Decimal(abs(sum_earn_coin * Decimal(0.95)))
-            if sum_earn_coin > 0:
-                sum_earn_coin = Decimal("-" + str(sum_earn_coin))
-            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)
+            if sum_bets < 0:
+                sum_bets = Decimal(abs(sum_bets * Decimal(0.95)))
+            if sum_bets > 0:
+                sum_bets = Decimal("-" + str(sum_bets))
+            sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
-            "sum_earn_coin": sum_earn_coin,    # 总投注流水
+            "sum_earn_coin": sum_bet_water,    # 总投注流水
             "sum_bets": sum_bets,    # 总盈亏
             "sum_coin": sum_coin,    # 总金额
-            "coin_name": coin_info.name,    # 总金额
-            "icon": icon,    # 总金额
+            "coin_name": coin_info.name,    # 货币昵称
+            "icon": icon,    # 货币头像
             "user_number": user_number,    # 总用户
             "user_day_number": user_day_number,   # 今天新增加
             "user_two_number": user_two_number,   # 昨天新增加
