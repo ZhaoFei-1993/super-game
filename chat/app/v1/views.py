@@ -827,10 +827,12 @@ class ClubDayBetView(ListAPIView):
                                                   created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
 
         sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  club_id=int(club_id),
                                                   earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
                                                   source=type, user__is_block=0).aggregate(Sum('earn_coin'))
         # 赔的钱
         sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                   club_id=int(club_id),
                                                    earn_coin__lt=0, created_at__gte=start, created_at__lte=end,
                                                    source=type, user__is_block=0).aggregate(Sum('earn_coin'))
         # 赚的钱
