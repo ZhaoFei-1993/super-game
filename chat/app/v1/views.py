@@ -479,9 +479,9 @@ class ClubHomeView(ListAPIView):
             sum_bets = sum_list['earn_coin__sum']
             if sum_bets < 0:
                 sum_bets = Decimal(abs(sum_bets))
-                sum_bets = (sum_bets + sum_betss) * Decimal(0.95)
+                sum_bets = (sum_bets - sum_betss) * Decimal(0.95)
             if sum_bets > 0:
-                sum_bets = (sum_bets + sum_betss)
+                sum_bets = (sum_bets - sum_betss)
                 sum_bets = Decimal("-" + str(sum_bets))
             sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
@@ -823,9 +823,9 @@ class ClubDayBetView(ListAPIView):
             sum_earn_coin = sum_earn_coin['earn_coin__sum']
             if sum_earn_coin < 0:
                 sum_earn_coin = Decimal(abs(sum_earn_coin))
-                sum_earn_coin = (sum_earn_coin + sum_betss) * Decimal(0.95)
+                sum_earn_coin = (sum_earn_coin - sum_betss) * Decimal(0.95)
             if sum_earn_coin > 0:
-                sum_earn_coin = (sum_earn_coin + sum_betss)
+                sum_earn_coin = (sum_earn_coin - sum_betss)
                 sum_earn_coin = Decimal("-" + str(sum_earn_coin))
 
             sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
