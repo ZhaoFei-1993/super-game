@@ -369,6 +369,7 @@ class ClubUserView(ListAPIView):
         sql += " inner join users_loginrecord l on l.user_id=u.id"
         sql += " where u.is_robot = 0"
         sql += " and u.id not in " + user_list
+        sql += " and ur.coin_id = '" + str(coin_id) + "'"
         if "telephone" in request.GET:
             telephone = "%" + str(request.GET.get("telephone")) + "%"
             sql += " and u.telephone like '" + telephone + "'"
