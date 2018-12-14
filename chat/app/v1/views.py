@@ -601,13 +601,7 @@ class ClubBetListView(ListAPIView):
                 if i[2] is None:
                     earn_coin = 0
                 else:
-                    print("2=============", i[2])
-                    if i[2] > 0:
-                        print("3================", i[2])
-                        earn_coin = Decimal("-" + str(i[2]))
-                    else:
-                        print("4================", i[2])
-                        earn_coin = abs(i[2])
+                    earn_coin = i[2]
                 # if i[2] is None:
                 #     earn_coin = 0
                 # else:
@@ -686,10 +680,7 @@ class ClubBetsView(ListAPIView):
             if i[1] is None:
                 earn_coin = 0
             else:
-                if i[1] > 0:
-                    earn_coin = Decimal("-" + str(i[1]))
-                else:
-                    earn_coin = abs(i[1])
+                earn_coin = i[1]
             list.append({
                 "time": i[0],
                 "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
