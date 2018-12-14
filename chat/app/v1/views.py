@@ -581,7 +581,7 @@ class ClubBetListView(ListAPIView):
             sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN 0 ELSE p.earn_coin END)) AS earn_coin, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb, "
             sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
-            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss, "
+            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
             sql += " where p.club_id = '" + str(club_id) + "'"
