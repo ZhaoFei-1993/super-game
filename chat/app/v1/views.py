@@ -476,10 +476,12 @@ class ClubHomeView(ListAPIView):
         if sum_list['earn_coin__sum'] is None:
             sum_bets = 0
         else:
-            sum_bets = sum_list['earn_coin__sum'] + sum_betss
+            sum_bets = sum_list['earn_coin__sum']
             if sum_bets < 0:
-                sum_bets = Decimal(abs(sum_bets * Decimal(0.95)))
+                sum_bets = Decimal(abs(sum_bets))
+                sum_bets = (sum_bets + sum_betss) * Decimal(0.95)
             if sum_bets > 0:
+                sum_bets = (sum_bets + sum_betss)
                 sum_bets = Decimal("-" + str(sum_bets))
             sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
@@ -818,11 +820,13 @@ class ClubDayBetView(ListAPIView):
         if sum_earn_coin['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_earn_coin['earn_coin__sum'] + sum_betss
-            if sum_earn_coin < 0:
-                sum_earn_coin = Decimal(abs(sum_earn_coin * Decimal(0.95)))
-            if sum_earn_coin > 0:
-                sum_earn_coin = Decimal("-" + str(sum_earn_coin))
+            sum_earn_coin = sum_earn_coin['earn_coin__sum']
+            if sum_bets < 0:
+                sum_bets = Decimal(abs(sum_bets))
+                sum_bets = (sum_bets + sum_betss) * Decimal(0.95)
+            if sum_bets > 0:
+                sum_bets = (sum_bets + sum_betss)
+                sum_bets = Decimal("-" + str(sum_bets))
 
             sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
 
