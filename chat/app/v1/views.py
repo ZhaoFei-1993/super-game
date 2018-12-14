@@ -580,10 +580,10 @@ class ClubBetListView(ListAPIView):
         list = get_cache(key)
         if list is None:
             sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
-            sql_list += "SUM((CASE WHEN p.earn_coin < 0 THEN p.earn_coin ELSE 0 END)) AS earn_coin, "
+            sql_list += "sum(IF(earn_coin > 0, 0 - (earn_coin - bets), ABS(earn_coin*0.95))) as profit, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb, "
-            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
-            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
+            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
+            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
             sql += " where p.club_id = '" + str(club_id) + "'"
@@ -601,21 +601,28 @@ class ClubBetListView(ListAPIView):
                 if i[2] is None:
                     earn_coin = 0
                 else:
-                    earn_coin = Decimal(i[2])   # 总赢
-                    print("总赚=============", earn_coin)
-                    earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
-                print("总赚*0.95=============", earn_coin)
-                if i[5] is None:
-                    bet_coin = 0
-                else:
-                    bet_coin = Decimal(i[5])   # 本金
-                print("应该扣除的本金==================", bet_coin)
-                if i[6] is None:
-                    win_coin = 0
-                else:
-                    win_coin = Decimal(i[6])   # 总亏
-                    print("总亏=================", win_coin)
-                earn_coin = earn_coin - win_coin + bet_coin
+                    if i[2] > 0:
+                        earn_coin = Decimal("-" + str(i[2]))
+                    else:
+                        earn_coin = abs(i[2])
+                # if i[2] is None:
+                #     earn_coin = 0
+                # else:
+                #     earn_coin = Decimal(i[2])   # 总赢
+                #     print("总赚=============", earn_coin)
+                #     earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
+                # print("总赚*0.95=============", earn_coin)
+                # if i[5] is None:
+                #     bet_coin = 0
+                # else:
+                #     bet_coin = Decimal(i[5])   # 本金
+                # print("应该扣除的本金==================", bet_coin)
+                # if i[6] is None:
+                #     win_coin = 0
+                # else:
+                #     win_coin = Decimal(i[6])   # 总亏
+                #     print("总亏=================", win_coin)
+                # earn_coin = earn_coin - win_coin + bet_coin
                 print("收益=============", earn_coin)
                 test_time = i[4] + ' 00:00:00'
                 test_times = i[4] + ' 23:59:59'
@@ -659,7 +666,7 @@ class ClubBetsView(ListAPIView):
         user_list = str(settings.TEST_USER_IDS)
 
         sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, "
-        sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin, "
+        sql_list += "sum(IF(earn_coin > 0, 0 - (earn_coin - bets), ABS(earn_coin*0.95))) as profit, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
         sql = "select " + sql_list + " from promotion_promotionrecord p"
         sql += " inner join users_user u on p.user_id=u.id"
@@ -673,11 +680,13 @@ class ClubBetsView(ListAPIView):
         list_info = get_sql(sql)
         list = []
         for i in list_info:
-            earn_coin = Decimal(i[1])
-            if earn_coin < 0:
-                earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
-            if earn_coin > 0:
-                earn_coin = Decimal("-" + str(earn_coin))
+            if i[1] is None:
+                earn_coin = 0
+            else:
+                if i[1] > 0:
+                    earn_coin = Decimal("-" + str(i[1]))
+                else:
+                    earn_coin = abs(i[1])
             list.append({
                 "time": i[0],
                 "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
