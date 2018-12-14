@@ -797,7 +797,21 @@ class ClubDayBetView(ListAPIView):
         end = sb_time + " 23:59:59"
 
         club_id = int(self.request.GET.get("club_id"))
-        type = int(self.request.GET.get("type"))   # 1.足球  2.篮球 3. 六合彩 4. 股票 5. 股票PK 6. 百家乐 7.龙虎斗
+        type = int(self.request.GET.get("type"))   # 1.1足球  2.7篮球 3. 2六合彩 4. 3股票 5. 6股票PK 6. 5百家乐 7.4龙虎斗
+        if int(type) == 7:
+            type = 2
+        elif int(type) == 1:
+            type = 1
+        elif int(type) == 3:
+            type = 4
+        elif int(type) == 2:
+            type = 3
+        elif int(type) == 4:
+            type = 7
+        elif int(type) == 5:
+            type = 6
+        elif int(type) == 6:
+            type = 5
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
