@@ -862,13 +862,16 @@ class ClubDayBetView(ListAPIView):
             sum_bets_list = sum_list['earn_coin__sum']  # 赔的钱
         sum_bets_list = sum_bets_list - sum_betss
         sum_bets_list = Decimal('-' + str(sum_bets_list))
+        print("sum_bets_list============", sum_bets_list)
 
         if sum_lists['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
+            print("sum_lists['earn_coin__sum']=====================", sum_lists['earn_coin__sum'])
             sum_earn_coin = sum_lists['earn_coin__sum'] * Decimal(0.95)  # 赚的钱
+            print("sum_earn_coin======================", sum_earn_coin)
         sum_earn_coin = sum_bets_list + abs(sum_earn_coin)
-
+        print("sum_earn_coin========================", sum_earn_coin)
         sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
 
         return self.response({"code": 0,
