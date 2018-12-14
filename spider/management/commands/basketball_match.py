@@ -34,8 +34,9 @@ def get_data(url):
 
 
 def save_rule_option(rule_type, quiz, result):
+    coll_option_flag = True
     # 胜负
-    if rule_type == 4 and len(result) > 0:
+    if rule_type == 4 and len(result) > 0 and Rule.objects.filter(type=rule_type, quiz=quiz).exists() is not True:
         odds_pool_mnl = []
         num = 0
         rule = Rule()
@@ -66,7 +67,7 @@ def save_rule_option(rule_type, quiz, result):
         odds_pool_mnl.clear()
 
     # 让分胜负
-    elif rule_type == 5 and len(result) > 0:
+    elif rule_type == 5 and len(result) > 0 and Rule.objects.filter(type=rule_type, quiz=quiz).exists() is not True:
         odds_pool_hdc = []
         num = 0
         rule = Rule()
@@ -103,7 +104,7 @@ def save_rule_option(rule_type, quiz, result):
         odds_pool_hdc.clear()
 
     # 大小分
-    elif rule_type == 6 and len(result) > 0:
+    elif rule_type == 6 and len(result) > 0 and Rule.objects.filter(type=rule_type, quiz=quiz).exists() is not True:
         odds_pool_hilo = []
         num = 0
         rule = Rule()
@@ -136,7 +137,7 @@ def save_rule_option(rule_type, quiz, result):
         odds_pool_hilo.clear()
 
     # 胜分差
-    elif rule_type == 7 and len(result) > 0:
+    elif rule_type == 7 and len(result) > 0 and Rule.objects.filter(type=rule_type, quiz=quiz).exists() is not True:
         odds_pool_wnm = []
         num_h = 0
         num_a = 0
@@ -167,30 +168,33 @@ def save_rule_option(rule_type, quiz, result):
         rule.min_odd = min(odds_pool_wnm)
         rule.save()
         odds_pool_wnm.clear()
+    else:
+        coll_option_flag = False
 
     # 记录初始赔率
-    change_time = get_time()
-    for rule in Rule.objects.filter(quiz=quiz):
-        for option in Option.objects.filter(rule=rule):
-            if OptionOdds.objects.filter(option_id=option.id).exists() is not True:
-                quiz_odds_log = QuizOddsLog()
-                quiz_odds_log.quiz = quiz
-                quiz_odds_log.rule = rule
-                quiz_odds_log.option = option
-                quiz_odds_log.option_title = option.option
-                quiz_odds_log.odds = option.odds
-                quiz_odds_log.change_at = change_time
-                quiz_odds_log.save()
+    if coll_option_flag is True:
+        change_time = get_time()
+        for rule in Rule.objects.filter(quiz=quiz):
+            for option in Option.objects.filter(rule=rule):
+                if OptionOdds.objects.filter(option_id=option.id).exists() is not True:
+                    quiz_odds_log = QuizOddsLog()
+                    quiz_odds_log.quiz = quiz
+                    quiz_odds_log.rule = rule
+                    quiz_odds_log.option = option
+                    quiz_odds_log.option_title = option.option
+                    quiz_odds_log.odds = option.odds
+                    quiz_odds_log.change_at = change_time
+                    quiz_odds_log.save()
 
-                # 生成俱乐部选项赔率表
-                clubs = Club.objects.all()
-                for club in clubs:
-                    option_odds = OptionOdds()
-                    option_odds.club = club
-                    option_odds.quiz = quiz
-                    option_odds.option = option
-                    option_odds.odds = option.odds
-                    option_odds.save()
+                    # 生成俱乐部选项赔率表
+                    clubs = Club.objects.all()
+                    for club in clubs:
+                        option_odds = OptionOdds()
+                        option_odds.club = club
+                        option_odds.quiz = quiz
+                        option_odds.option = option
+                        option_odds.odds = option.odds
+                        option_odds.save()
 
 
 @transaction.atomic()
