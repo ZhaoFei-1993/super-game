@@ -330,3 +330,7 @@ PROXIES_URL = local_settings.PROXIES_URL
 # EOS Spark接口api key
 EOS_SPARK_API_KEY = local_settings.EOS_SPARK_API_KEY
 EOS_SPARK_WT_API_KEY = local_settings.EOS_SPARK_WT_API_KEY
+
+# proxies地址
+TEST_USER_ID = local_settings.TEST_USER_ID
+TEST_USER_IDS = local_settings.TEST_USER_IDS

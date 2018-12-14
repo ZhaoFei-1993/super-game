@@ -18,6 +18,7 @@ from django.conf import settings
 from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
 from django.db import connection
+from promotion.models import UserPresentation as Promotion
 
 
 class ClublistView(ListAPIView):
@@ -356,26 +357,28 @@ class ClubUserView(ListAPIView):
         club_id = int(request.GET.get("club_id"))
         coin_id = int(Club.objects.get_one(pk=club_id).coin_id)
         print(coin_id)
+        user_list = str(settings.TEST_USER_IDS)
+
         sql_list = " u.id, u.area_code, u.telephone, u.is_block, date_format( u.created_at, '%Y-%m-%d' ) as time,"
         if type == 1: # 登陆
             sql_list += " (select l.login_time from users_loginrecord l where l.user_id=u.id " \
                         "order by l.login_time desc limit 1) as sb_time"
         else:    # 激活
-            sql_list += " (select l.created_at from users_userrecharge l where l.user_id=u.id and l.coin_id= '"
-            sql_list += str(coin_id) + "' order by l.created_at limit 1) as sb_time"
-        sql = "select " + sql_list + " from users_user u"
+            sql_list += " max(ur.created_at) as sb_time"
+        sql = "select " + sql_list + " from users_userrecharge ur"
+        sql += " inner join users_user u on ur.user_id=u.id"
         sql += " where u.is_robot = 0"
+        sql += " and u.id not in " + user_list
         if "telephone" in request.GET:
             telephone = "%" + str(request.GET.get("telephone")) + "%"
             sql += " and u.telephone like '" + telephone + "'"
+        sql += " group by u.id"
         if type == 1:  # 登陆
             sql += " order by sb_time desc"
         else:  # 激活
             sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
-        print("sql======================", sql)
         for i in list:
-            print("5=================", i[5])
             if i[5] is None:
                 sb_time = ""
             else:
@@ -417,45 +420,67 @@ class ClubHomeView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
         icon = coin_info.icon
-        user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id)).values('user_id').distinct().count()    # 总用户
-        user_day_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=day_start,
+        user_list = settings.TEST_USER_ID
+        print("user_list=====================", user_list)
+        user_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                  coin_id=int(coin_info.id)
+                                                  ).values('user_id').distinct().count()    # 总用户
+        user_day_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                      coin_id=int(coin_info.id), created_at__gte=day_start,
                                                       created_at__lte=day_end).values('user_id').distinct().count()    # 今天新增加
-        user_two_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=yesterday_start,
-                                                      created_at__lte=yesterday_end).values('user_id').distinct().count()    # 昨天新增加
+        user_two_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                      coin_id=int(coin_info.id),
+                                                      created_at__gte=yesterday_start,
+                                                      created_at__lte=yesterday_end
+                                                      ).values('user_id').distinct().count()    # 昨天新增加
 
-        recharge_coin = UserRecharge.objects.filter(coin_id=int(coin_info.id)).aggregate(Sum('amount'))
+        recharge_coin = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                    coin_id=int(coin_info.id)).aggregate(Sum('amount'))
         if recharge_coin['amount__sum'] is None:
             sum_recharge = 0
         else:
             sum_recharge = normalize_fraction(recharge_coin['amount__sum'], coin_accuracy)       # 总充值
 
-        presentat_coin = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1).aggregate(Sum('amount'))
+        presentat_coin = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                         coin_id=int(coin_info.id), status=1).aggregate(Sum('amount'))
         if presentat_coin['amount__sum'] is None:
             sum_presentat = 0
         else:
             sum_presentat = normalize_fraction(presentat_coin['amount__sum'], coin_accuracy)       # 总提现
 
-        user_coin = UserCoin.objects.filter(coin_id=int(coin_info.id), user__is_block=0,
+        user_coin = UserCoin.objects.filter(~Q(user_id__in=user_list),
+                                            coin_id=int(coin_info.id), user__is_block=0,
                                             user__is_robot=0).aggregate(Sum('balance'))
         if user_coin['balance__sum'] is None:
             sum_coin = 0
         else:
             sum_coin = normalize_fraction(user_coin['balance__sum'], coin_accuracy)       # 总金额
 
-        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('bets'))
-        if sum_list['bets__sum'] is None:
-            sum_bets = 0
-        else:
-            sum_bets = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
-
-        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
-        print(connection.queries)
-        if sum_list['earn_coin__sum'] is None:
+        sum_list = Promotion.objects.filter(~Q(user_id__in=user_list),
+                                            club_id=int(club_id), user__is_block=0).aggregate(Sum('dividend_water'))
+        if sum_list['dividend_water__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_list['earn_coin__sum']
+            sum_earn_coin = normalize_fraction(sum_list['dividend_water__sum'], coin_accuracy)       # 总投注流水
+
+        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+        sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id),
+                                                      earn_coin__gt=0, user__is_block=0).aggregate(Sum('bets'))
+        if sum_win_list['bets__sum'] is None:
+            sum_betss = 0
+        else:
+            sum_betss = sum_win_list['bets__sum']
+
+        if sum_list['earn_coin__sum'] is None:
+            sum_bets = 0
+        else:
+            sum_bets = sum_list['earn_coin__sum'] + sum_betss
+            if sum_earn_coin < 0:
+                sum_earn_coin = Decimal(abs(sum_earn_coin * Decimal(0.95)))
             if sum_earn_coin > 0:
-                sum_earn_coin = sum_earn_coin * Decimal(0.95)
+                sum_earn_coin = Decimal("-" + str(sum_earn_coin))
             sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)
         data = {
             "sum_earn_coin": sum_earn_coin,    # 总投注流水
@@ -532,17 +557,21 @@ class ClubBetListView(ListAPIView):
         month_start = month_info["start"]
         month_end = month_info["end"]
 
+        user_list = str(settings.TEST_USER_IDS)
+        user_lists = settings.TEST_USER_ID
+
         key = "MONTH_BET_LIST_" + str(club_id) + "_" + str(month_month) + str(type)
-        # delete_cache(key)
-        list = None
+        delete_cache(key)
         list = get_cache(key)
         if list is None:
-            sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), sum(p.earn_coin), "
+            sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
+            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb"
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
             sql += " where p.club_id = '" + str(club_id) + "'"
             sql += " and p.status != 2"
+            sql += " and p.user_id not in " + user_list
             sql += " and u.is_robot = 0"
             sql += " and p.created_at >= '" + str(month_start) + "'"
             sql += " and p.created_at <= '" + str(month_end) + "'"
@@ -552,9 +581,20 @@ class ClubBetListView(ListAPIView):
             list = []
             for i in list_info:
                 earn_coin = Decimal(i[2])
+                test_time = i[0] + ' 00:00:00'
+                test_times = i[0] + ' 23:59:59'
+                divided_into = Promotion.objects.filter(~Q(user_id__in=user_lists),
+                                                        club_id=int(club_id),
+                                                        created_at__gte=test_time,
+                                                        created_at__lte=test_times).aggregate(Sum('dividend_water'))
+                if divided_into['dividend_water__sum'] is None:
+                    divided_into = 0
+                else:
+                    divided_into = normalize_fraction(divided_into['dividend_water__sum'], coin_accuracy)  # 当天流水分成
+                if earn_coin < 0:
+                    earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
                 if earn_coin > 0:
-                    earn_coin = earn_coin * Decimal(0.95)
-                divided_into = normalize_fraction((Decimal(i[1]) * Decimal(0.005)), coin_accuracy)
+                    earn_coin = Decimal("-" + str(earn_coin))
                 list.append({
                     "time": i[0],
                     "sb_time": i[4],
@@ -584,11 +624,15 @@ class ClubBetsView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
 
-        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, sum(p.earn_coin), "
+        user_list = str(settings.TEST_USER_IDS)
+
+        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, "
+        sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin - p.bets ELSE p.earn_coin END)) AS earn_coin, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
         sql = "select " + sql_list + " from promotion_promotionrecord p"
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.club_id = '" + str(club_id) + "'"
+        sql += " and p.user_id not in " + user_list
         sql += " and p.status = 1"
         sql += " and u.is_robot = 0"
         sql += " group by years, time"
@@ -598,8 +642,10 @@ class ClubBetsView(ListAPIView):
         list = []
         for i in list_info:
             earn_coin = Decimal(i[1])
+            if earn_coin < 0:
+                earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
             if earn_coin > 0:
-                earn_coin = earn_coin * Decimal(0.95)
+                earn_coin = Decimal("-" + str(earn_coin))
             list.append({
                 "time": i[0],
                 "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
@@ -637,8 +683,10 @@ class PayClubView(ListAPIView):
         month_end = month_info["end"]
 
         # cache_file = settings.CACHE_DIR + '/' + str(club_id) + '/' + str(quiz_id) + '/' + self.KEY_CLUB_QUIZ_BET_USERS
+        user_list = settings.TEST_USER_ID
 
-        user_recharge = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+        user_recharge = UserRecharge.objects.filter(~Q(user_id__in=user_list), coin_id=int(coin_info.id),
+                                                    created_at__gte=month_start,
                                                     created_at__lte=month_end).aggregate(Sum('amount'))
         if user_recharge['amount__sum'] is None:
             sum_recharge = 0
@@ -646,13 +694,17 @@ class PayClubView(ListAPIView):
             sum_recharge = normalize_fraction(user_recharge['amount__sum'], coin_accuracy)       # 当月总充值
 
         if type == 1:   # 1.充值 2.提现
-            recharge_user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+            recharge_user_number = UserRecharge.objects.filter(~Q(user_id__in=user_list), coin_id=int(coin_info.id),
+                                                               created_at__gte=month_start,
                                                                created_at__lte=month_end).values('user_id').count()  # 当月总充值人数
         else:
-            recharge_user_number = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+            recharge_user_number = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                                   coin_id=int(coin_info.id),
+                                                                   created_at__gte=month_start,
                                                                    created_at__lte=month_end).values('user_id').count()
 
-        user_presentat = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1,
+        user_presentat = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                         coin_id=int(coin_info.id), status=1,
                                                          created_at__gte=month_start,
                                                          created_at__lte=month_end).aggregate(Sum('amount'))
         if user_presentat['amount__sum'] is None:
@@ -661,14 +713,18 @@ class PayClubView(ListAPIView):
             sum_presentat = normalize_fraction(user_presentat['amount__sum'], coin_accuracy)  # 当月总提现
 
         key = "MONTH_RECHARGE_" + str(club_id) + "_" + str(month_month) + str(type)
-        # delete_cache(key)
+        delete_cache(key)
         list = get_cache(key)
         if list is None:
             if type == 1:     # 1.充值 2.提现
-                list_info = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                list_info = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                        coin_id=int(coin_info.id),
+                                                        created_at__gte=month_start,
                                                         created_at__lte=month_end).order_by("-created_at")
             else:
-                list_info = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                list_info = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                            coin_id=int(coin_info.id),
+                                                            created_at__gte=month_start,
                                                             created_at__lte=month_end).order_by("-created_at")
             list = []
             for i in list_info:
@@ -732,13 +788,28 @@ class ClubDayBetView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
 
-        number = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
+        user_list = settings.TEST_USER_ID
+
+        number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                club_id=int(club_id), created_at__gte=start, source=type,
                                                 created_at__lte=end, user__is_block=0
                                                 ).values('user_id').distinct().count()
-        sum_bets = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
+        sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  club_id=int(club_id), created_at__gte=start, source=type,
                                                   created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-        sum_earn_coin = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, created_at__lte=end,
-                                                       source = type, user__is_block=0).aggregate(Sum('earn_coin'))
+        sum_earn_coin = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                       club_id=int(club_id), created_at__gte=start, created_at__lte=end,
+                                                       source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+
+        sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id), created_at__gte=start, created_at__lte=end,
+                                                      earn_coin__gt=0,
+                                                      source=type, user__is_block=0).aggregate(Sum('bets'))
+        if sum_win_list['bets__sum'] is None:
+            sum_betss = 0
+        else:
+            sum_betss = sum_win_list['bets__sum']
+
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
         else:
@@ -747,9 +818,12 @@ class ClubDayBetView(ListAPIView):
         if sum_earn_coin['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_earn_coin['earn_coin__sum']
+            sum_earn_coin = sum_earn_coin['earn_coin__sum'] + sum_betss
+            if sum_earn_coin < 0:
+                sum_earn_coin = Decimal(abs(sum_earn_coin * Decimal(0.95)))
             if sum_earn_coin > 0:
-                sum_earn_coin = sum_earn_coin * Decimal(0.95)
+                sum_earn_coin = Decimal("-" + str(sum_earn_coin))
+
             sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
 
         return self.response({"code": 0,
