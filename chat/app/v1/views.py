@@ -456,8 +456,8 @@ class ClubHomeView(ListAPIView):
         else:
             sum_coin = normalize_fraction(user_coin['balance__sum'], coin_accuracy)       # 总金额
 
-        sum_list = Promotion.objects.filter(~Q(user_id__in=user_list),
-                                            club_id=int(club_id), user__is_block=0).aggregate(Sum('bet_water'))
+        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  club_id=int(club_id), user__is_block=0).aggregate(Sum('bet_water'))
         if sum_list['bet_water__sum'] is None:
             sum_bet_water = 0
         else:
