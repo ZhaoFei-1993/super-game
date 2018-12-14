@@ -825,36 +825,44 @@ class ClubDayBetView(ListAPIView):
         sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                   club_id=int(club_id), created_at__gte=start, source=type,
                                                   created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-        sum_earn_coin = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                       club_id=int(club_id), created_at__gte=start, created_at__lte=end,
-                                                       source=type, user__is_block=0).aggregate(Sum('earn_coin'))
 
+        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
+                                                  source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+        # 赔的钱
+        sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                   earn_coin__lt=0, created_at__gte=start, created_at__lte=end,
+                                                   source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+        # 赚的钱
         sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       club_id=int(club_id), created_at__gte=start, created_at__lte=end,
-                                                      earn_coin__gt=0,
                                                       source=type, user__is_block=0).aggregate(Sum('bets'))
-        if sum_win_list['bets__sum'] is None:
-            sum_betss = 0
-        else:
-            sum_betss = sum_win_list['bets__sum']
+        # 应该扣的本金
 
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
         else:
             sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)  # 总投注流水
 
-        if sum_earn_coin['earn_coin__sum'] is None:
+        if sum_win_list['bets__sum'] is None:
+            sum_betss = 0
+        else:
+            sum_betss = sum_win_list['bets__sum']  # 应扣除的本金
+
+        if sum_list['earn_coin__sum'] is None:
+            sum_bets_list = 0
+        else:
+            sum_bets_list = sum_list['earn_coin__sum']  # 赔的钱
+        sum_bets_list = sum_bets_list - sum_betss
+        sum_bets_list = Decimal('-' + str(sum_bets_list))
+
+        if sum_lists['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_earn_coin['earn_coin__sum']
-            if sum_earn_coin < 0:
-                sum_earn_coin = Decimal(abs(sum_earn_coin))
-                sum_earn_coin = (sum_earn_coin - sum_betss) * Decimal(0.95)
-            if sum_earn_coin > 0:
-                sum_earn_coin = (sum_earn_coin - sum_betss)
-                sum_earn_coin = Decimal("-" + str(sum_earn_coin))
+            sum_earn_coin = sum_lists['earn_coin__sum'] * Decimal(0.95)  # 赚的钱
+        sum_earn_coin = sum_bets_list + abs(sum_earn_coin)
 
-            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
+        sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
 
         return self.response({"code": 0,
                               "number": number,
