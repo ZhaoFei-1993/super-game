@@ -361,12 +361,12 @@ class ClubUserView(ListAPIView):
 
         sql_list = " u.id, u.area_code, u.telephone, u.is_block, date_format( u.created_at, '%Y-%m-%d' ) as time,"
         if type == 1: # 登陆
-            sql_list += " (select l.login_time from users_loginrecord l where l.user_id=u.id " \
-                        "order by l.login_time desc limit 1) as sb_time"
+            sql_list += " max(l.login_time) as sb_time"
         else:    # 激活
             sql_list += " max(ur.created_at) as sb_time"
         sql = "select " + sql_list + " from users_userrecharge ur"
         sql += " inner join users_user u on ur.user_id=u.id"
+        sql += " inner join users_loginrecord l on l.user_id=u.id"
         sql += " where u.is_robot = 0"
         sql += " and u.id not in " + user_list
         if "telephone" in request.GET:
