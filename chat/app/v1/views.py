@@ -581,12 +581,11 @@ class ClubBetListView(ListAPIView):
             list = []
             for i in list_info:
                 earn_coin = Decimal(i[2])
-                test_time = i[0] + ' 00:00:00'
-                test_times = i[0] + ' 23:59:59'
+                test_time = i[0]
                 divided_into = Promotion.objects.filter(~Q(user_id__in=user_lists),
                                                         club_id=int(club_id),
-                                                        created_at__gte=test_time,
-                                                        created_at__lte=test_times).aggregate(Sum('dividend_water'))
+                                                        created_at=test_time,
+                                                        ).aggregate(Sum('dividend_water'))
                 if divided_into['dividend_water__sum'] is None:
                     divided_into = 0
                 else:
