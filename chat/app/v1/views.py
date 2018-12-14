@@ -578,7 +578,7 @@ class ClubBetListView(ListAPIView):
         list = get_cache(key)
         if list is None:
             sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
-            sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN 0 ELSE p.earn_coin END)) AS earn_coin, "
+            sql_list += "SUM((CASE WHEN p.earn_coin < 0 THEN p.earn_coin ELSE 0 END)) AS earn_coin, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb, "
             sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
             sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
