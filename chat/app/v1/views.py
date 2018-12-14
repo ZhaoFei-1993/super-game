@@ -602,20 +602,21 @@ class ClubBetListView(ListAPIView):
                     earn_coin = 0
                 else:
                     earn_coin = Decimal(i[2])   # 总赢
-                    print("earn_coi=============", earn_coin)
+                    print("总赚=============", earn_coin)
                     earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
-                print("earn_coi=============", earn_coin)
+                print("总赚*0.95=============", earn_coin)
                 if i[5] is None:
                     bet_coin = 0
                 else:
                     bet_coin = Decimal(i[5])   # 本金
-                print("bet_coin==================", bet_coin)
+                print("应该扣除的本金==================", bet_coin)
                 if i[6] is None:
                     win_coin = 0
                 else:
                     win_coin = Decimal(i[6])   # 总亏
+                    print("总亏=================", win_coin)
                 earn_coin = earn_coin - win_coin + bet_coin
-                print("earn_coi=============", earn_coin)
+                print("收益=============", earn_coin)
                 test_time = i[4] + ' 00:00:00'
                 test_times = i[4] + ' 23:59:59'
                 divided_into = Promotion.objects.filter(~Q(user_id__in=user_lists),
