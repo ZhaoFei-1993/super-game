@@ -580,7 +580,7 @@ class ClubBetListView(ListAPIView):
         list = get_cache(key)
         if list is None:
             sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
-            sql_list += "sum(IF(earn_coin > 0, 0 - (earn_coin - bets), ABS(earn_coin*0.95))) as profit, "
+            sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb, "
             # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
             # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
@@ -666,7 +666,7 @@ class ClubBetsView(ListAPIView):
         user_list = str(settings.TEST_USER_IDS)
 
         sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, "
-        sql_list += "sum(IF(earn_coin > 0, 0 - (earn_coin - bets), ABS(earn_coin*0.95))) as profit, "
+        sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
         sql = "select " + sql_list + " from promotion_promotionrecord p"
         sql += " inner join users_user u on p.user_id=u.id"
