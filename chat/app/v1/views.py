@@ -464,27 +464,37 @@ class ClubHomeView(ListAPIView):
             sum_bet_water = normalize_fraction(sum_list['bet_water__sum'], coin_accuracy)       # 总投注流水
 
         sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  earn_coin__gt=0,
                                                   club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+        # 赔的钱
+        sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                   earn_coin__lt=0,
+                                                   club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+        # 赚的钱
         sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       club_id=int(club_id),
                                                       earn_coin__gt=0, user__is_block=0).aggregate(Sum('bets'))
+        # 应扣除的本金
+
         if sum_win_list['bets__sum'] is None:
             sum_betss = 0
         else:
-            sum_betss = sum_win_list['bets__sum']
+            sum_betss = sum_win_list['bets__sum']     # 应扣除的本金
 
         if sum_list['earn_coin__sum'] is None:
             sum_bets = 0
         else:
-            sum_bets = sum_list['earn_coin__sum']
-            if sum_bets < 0:
-                sum_bets = Decimal(abs(sum_bets))
-                sum_bets = (sum_bets - sum_betss) * Decimal(0.95)
-            if sum_bets > 0:
-                sum_bets = (sum_bets - sum_betss)
-                print("sum_bets==========", sum_bets)
-                sum_bets = Decimal("-" + str(sum_bets))
-            sum_bets = normalize_fraction(sum_bets, coin_accuracy)
+            sum_bets = sum_list['earn_coin__sum']      # 赔的钱
+        sum_bets = sum_bets - sum_betss
+        sum_bets = Decimal('-' + str(sum_bets))
+
+        if sum_lists['earn_coin__sum'] is None:
+            sum_win_bets = 0
+        else:
+            sum_win_bets = sum_lists['earn_coin__sum']     # 赚的钱
+        sum_bets = sum_bets + abs(sum_win_bets)
+
+        sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
             "sum_earn_coin": sum_bet_water,    # 总投注流水
             "sum_bets": sum_bets,    # 总盈亏
