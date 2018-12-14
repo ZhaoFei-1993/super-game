@@ -491,7 +491,7 @@ class ClubHomeView(ListAPIView):
         if sum_lists['earn_coin__sum'] is None:
             sum_win_bets = 0
         else:
-            sum_win_bets = sum_lists['earn_coin__sum']     # 赚的钱
+            sum_win_bets = sum_lists['earn_coin__sum'] * Decimal(0.95)    # 赚的钱
         sum_bets = sum_bets + abs(sum_win_bets)
 
         sum_bets = normalize_fraction(sum_bets, coin_accuracy)
@@ -594,6 +594,7 @@ class ClubBetListView(ListAPIView):
             list = []
             for i in list_info:
                 earn_coin = Decimal(i[2])
+                print("earn_coin==================", earn_coin)
                 test_time = i[4] + ' 00:00:00'
                 test_times = i[4] + ' 23:59:59'
                 divided_into = Promotion.objects.filter(~Q(user_id__in=user_lists),
