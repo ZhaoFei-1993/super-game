@@ -852,33 +852,61 @@ class ClubDayBetView(ListAPIView):
 
         user_list = settings.TEST_USER_ID
 
-        number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                club_id=int(club_id), created_at__gte=start, source=type,
-                                                created_at__lte=end, user__is_block=0
-                                                ).values('user_id').distinct().count()
-        sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                  club_id=int(club_id), created_at__gte=start, source=type,
-                                                  created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-
-        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                  club_id=int(club_id),
-                                                  earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
-                                                  source=type, user__is_block=0).aggregate(Sum('earn_coin'))
-        # 赔的钱
-        sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                   club_id=int(club_id),
-                                                   earn_coin__lt=0,
-                                                   created_at__gte=start,
-                                                   created_at__lte=end,
-                                                   source=type, user__is_block=0).aggregate(Sum('earn_coin'))
-        # 赚的钱
-        sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      earn_coin__gt=0,
+        if type == 0:
+            number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                    club_id=int(club_id), created_at__gte=start,
+                                                    created_at__lte=end, user__is_block=0
+                                                    ).values('user_id').distinct().count()
+            sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id), created_at__gte=start,
+                                                      created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
+            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       club_id=int(club_id),
-                                                      created_at__gte=start,
-                                                      created_at__lte=end,
-                                                      source=type, user__is_block=0).aggregate(Sum('bets'))
-        # 应该扣的本金
+                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
+                                                      user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赔的钱
+            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                       club_id=int(club_id),
+                                                       earn_coin__lt=0,
+                                                       created_at__gte=start,
+                                                       created_at__lte=end,
+                                                       user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赚的钱
+            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          earn_coin__gt=0,
+                                                          club_id=int(club_id),
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).aggregate(Sum('bets'))
+            # 应该扣的本金
+        else:
+            number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                    club_id=int(club_id), created_at__gte=start, source=type,
+                                                    created_at__lte=end, user__is_block=0
+                                                    ).values('user_id').distinct().count()
+            sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id), created_at__gte=start, source=type,
+                                                      created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
+
+            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id),
+                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
+                                                      source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赔的钱
+            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                       club_id=int(club_id),
+                                                       earn_coin__lt=0,
+                                                       created_at__gte=start,
+                                                       created_at__lte=end,
+                                                       source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赚的钱
+            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          earn_coin__gt=0,
+                                                          club_id=int(club_id),
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          source=type, user__is_block=0).aggregate(Sum('bets'))
+            # 应该扣的本金
 
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
