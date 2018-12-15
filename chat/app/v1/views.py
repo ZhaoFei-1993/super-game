@@ -470,15 +470,17 @@ class ClubHomeView(ListAPIView):
 
         sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                   earn_coin__gt=0,
-                                                  club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+                                                  club_id=int(club_id),
+                                                  user__is_block=0).aggregate(Sum('earn_coin'))
         # 赔的钱
         sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                    earn_coin__lt=0,
                                                    club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
         # 赚的钱
         sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      earn_coin__gt=0,
                                                       club_id=int(club_id),
-                                                      earn_coin__gt=0, user__is_block=0).aggregate(Sum('bets'))
+                                                      user__is_block=0).aggregate(Sum('bets'))
         # 应扣除的本金
 
         if sum_win_list['bets__sum'] is None:
@@ -490,6 +492,8 @@ class ClubHomeView(ListAPIView):
             sum_bets = 0
         else:
             sum_bets = sum_list['earn_coin__sum']      # 赔的钱
+        print("赔==============", sum_bets)
+        print("本金==============", sum_betss)
         sum_bets = sum_bets - sum_betss
         sum_bets = Decimal('-' + str(sum_bets))
 
