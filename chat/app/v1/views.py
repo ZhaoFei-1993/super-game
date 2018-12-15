@@ -471,16 +471,20 @@ class ClubHomeView(ListAPIView):
         sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                   earn_coin__gt=0,
                                                   club_id=int(club_id),
-                                                  user__is_block=0).aggregate(Sum('earn_coin'))
+                                                  user__is_block=0,
+                                                  user__is_robot=0).aggregate(Sum('earn_coin'))
         # 赔的钱
         sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                    earn_coin__lt=0,
-                                                   club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
+                                                   club_id=int(club_id),
+                                                   user__is_block=0,
+                                                   user__is_robot=0).aggregate(Sum('earn_coin'))
         # 赚的钱
         sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       earn_coin__gt=0,
                                                       club_id=int(club_id),
-                                                      user__is_block=0).aggregate(Sum('bets'))
+                                                      user__is_block=0,
+                                                      user__is_robot=0).aggregate(Sum('bets'))
         # 应扣除的本金
 
         if sum_win_list['bets__sum'] is None:
@@ -1017,6 +1021,7 @@ class ClubRecordView(ListAPIView):
                 record_info = SixRecord.objects.get(id=record_id)
                 issue = record_info.issue
                 bet_coin = record_info.bet_coin
+                number = Decimal(record_info.bet)
 
                 play = record_info.play
                 option_id = record_info.option_id
@@ -1078,7 +1083,7 @@ class ClubRecordView(ListAPIView):
                 list = {
                     "title": name,
                     "issue": issue,
-                    "bet_coin": normalize_fraction(bet_coin, int(item['coin_info'].coin_accuracy)),
+                    "bet_coin": normalize_fraction((bet_coin/number), int(item['coin_info'].coin_accuracy)),
                     "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "options": options
                 }

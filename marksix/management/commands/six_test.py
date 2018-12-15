@@ -16,6 +16,6 @@ class Command(BaseCommand, BaseView):
             record_id = int(i.record_id)
             info = SixRecord.objects.get(id=record_id)
             print("原来===================", i.bets)
-            i.bets = Decimal(info.bet)*info.bet_coin
+            i.bets = info.bet_coin
             i.save()
             print("现在=======================", i.bets)
