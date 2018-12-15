@@ -1117,6 +1117,7 @@ class ClubRecordView(ListAPIView):
                     "user_telephone": item['user_info']['user_telephone'],
                     "coin_name": item['coin_info'].name,
                     "source_name": item['source_key'],
+                    "source": item['source'],
                     "status": item['status'],
                     "earn_coin": normalize_fraction(item['earn_coin'], int(item['coin_info'].coin_accuracy)),
                     "time": item['time']['time'],

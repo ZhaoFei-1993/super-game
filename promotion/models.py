@@ -241,8 +241,8 @@ class PromotionRecord(models.Model):
         (FOOTBALL, "足球"),
         (BASKETBALL, "篮球"),
         (SIX, "六合彩"),
-        (GUESS, "猜股票"),
-        (GUESSPK, "股票PK"),
+        (GUESS, "猜股指"),
+        (GUESSPK, "股指PK"),
         (BACCARAT, "百家乐"),
         (DRAGON_TIGER, "龙虎斗")
     )
