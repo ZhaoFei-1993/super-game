@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
+from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
 from chat.models import Club, ClubRule, ClubBanner, ClubIdentity
 from users.models import User
 from base import code as error_code
@@ -19,6 +19,9 @@ from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
 from django.db import connection
 from promotion.models import UserPresentation as Promotion
+from quiz.models import Record as QuizRecord, Rule as QuizRule
+from guess.models import Record as GuessRecord, RecordStockPk as GuesspkRecord, StockPk, Play, Stock
+from marksix.models import SixRecord, Option
 
 
 class ClublistView(ListAPIView):
@@ -896,3 +899,229 @@ class ClubDayBetView(ListAPIView):
                               "sum_bets": sum_bets,
                               "sum_earn_coin": sum_earn_coin,
                               "coin_name": coin_info.name})
+
+
+class ClubRecordView(ListAPIView):
+    """
+    下注记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = RecordSerialize
+
+    def get_queryset(self):
+        type = int(self.request.GET.get('type'))   # 0,全部 剩下分类按照玩法列表
+        club_id = int(self.request.GET.get('club_id'))
+        user_list = settings.TEST_USER_ID
+        if int(type) == 7:
+            type = 2
+        elif int(type) == 1:
+            type = 1
+        elif int(type) == 3:
+            type = 4
+        elif int(type) == 2:
+            type = 3
+        elif int(type) == 4:
+            type = 7
+        elif int(type) == 5:
+            type = 6
+        elif int(type) == 6:
+            type = 5
+        if type == 0:
+            if 'sb_time' in self.request.GET:
+                sb_time = str(self.request.GET.get("sb_time"))
+                start = sb_time + " 00:00:00"
+                end = sb_time + " 23:59:59"
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          club_id=club_id,
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=club_id,
+                                                      created_at__gte=start,
+                                                      created_at__lte=end,
+                                                      user__is_block=0).order_by('-created_at')
+            else:
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=club_id,
+                                                      user__is_block=0).order_by('-created_at')
+        else:
+            if 'sb_time' in self.request.GET:
+                sb_time = str(self.request.GET.get("sb_time"))
+                start = sb_time + " 00:00:00"
+                end = sb_time + " 23:59:59"
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      source=type,
+                                                      club_id=club_id,
+                                                      created_at__gte=start,
+                                                      created_at__lte=end,
+                                                      user__is_block=0).order_by('-created_at')
+            else:
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      source=type,
+                                                      club_id=club_id,
+                                                      user__is_block=0).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            type = int(item['source'])
+            record_id = int(item['record_id'])
+            list = ''
+            if type in (1, 2):
+                quiz_info = QuizRecord.objects.get(id=record_id)
+                odds = str(quiz_info.odds)
+                rule = str(QuizRule.TYPE_CHOICE[int(quiz_info.rule.type)][1])
+                option = str(quiz_info.option.option.option)
+                options = rule + ": " + option + "/" + odds
+                name = str(quiz_info.quiz.host_team) + " VS " + str(quiz_info.quiz.guest_team)
+                list = {
+                    "titlev": name,
+                    "bets": item['bets'],
+                    "options": options
+                }
+            elif type == 3:
+                record_info = SixRecord.objects.get(id=record_id)
+                issue = record_info.issue
+                bet_coin = record_info.bet_coin
+
+                play = record_info.play
+                option_id = record_info.option_id
+                res = record_info.content
+                language = self.request.GET.get('language') == 'en'
+                res_list = res.split(',')
+                if (play.id != 1 and not option_id) or play.id == 8:  # 排除连码和特码
+                    content_list = []
+                    for pk in res_list:
+                        if language == 'zh':
+                            title = Option.objects.get(id=pk).option
+                        else:
+                            title = Option.objects.get(id=pk).option_en
+                        content_list.append(title)
+                    res = ','.join(content_list)
+
+                # 判断注数
+                if language == 'zh':
+                    last = '注'
+                else:
+                    last = 'notes'
+                title = ''
+                if option_id:
+                    title = Option.objects.get(id=option_id).option
+
+                if play.id == 8:
+                    next = '共' + str(record_info.bet) + last
+                    options = res + '/' + next
+                    print(options)
+                elif play.id != 3 or title == '平码':
+                    next = '共' + str(len(res.split(','))) + last
+                    options = res + '/' + next
+                else:
+                    n = len(res.split(','))
+                    if title == '二中二':
+                        sum = int(n * (n - 1) / 2)
+                    else:
+                        sum = int(n * (n - 1) * (n - 2) / 6)
+                    next = '共' + str(sum) + last
+                    options = res + '/' + next
+
+                option_id = record_info.option_id
+                if option_id:
+                    res = Option.objects.get(id=option_id)
+                    three_to_two = '三中二'
+                    name = res.option
+                    if three_to_two in name:
+                        name = three_to_two
+                    if self.request.GET.get('language') == 'en':
+                        three_to_two = 'Three Hit Two'
+                        name = res.option_en
+                        if three_to_two in name:
+                            name = three_to_two
+                else:
+                    name = record_info.play.title
+                    if self.request.GET.get('language') == 'en':
+                        name = record_info.play.title_en
+
+                list = {
+                    "title": name,
+                    "issue": issue,
+                    "bet_coin": bet_coin,
+                    "bets": item['bets'],
+                    "options": options
+                }
+            elif type == 4:  # 股票
+                record_info = GuessRecord.objects.get(id=record_id)
+                periods = record_info.periods.periods   # 期数
+                name = record_info.periods.stock.name    # 股票昵称
+                name = str(Stock.STOCK[int(name)][1])   # 玩法昵称
+                play_name = str(Play.PLAY[int(record_info.play.play_name)][1])   # 玩法昵称
+                options = record_info.options.title   # 选项
+                list = {
+                    "bets": item['bets'],
+                    "periods": periods,
+                    "name": name,
+                    "options": options,
+                    "play_name": play_name
+                }
+            elif type == 5:   # 股票PK
+                record_info = GuesspkRecord.objects.get(id=record_id)
+
+                issue = record_info.issue.issue
+                result_answer = record_info.issue.size_pk_result
+                left_stock_name = record_info.issue.stock_pk.left_stock_name
+                right_stock_name = record_info.issue.stock_pk.right_stock_name
+                title = left_stock_name + ' PK ' + right_stock_name
+                list = {
+                    "bets": item['bets'],
+                    "result_answer": result_answer,
+                    "issue": issue,
+                    "title": title
+                }
+            elif type == 6:
+                pass
+            elif type == 7:
+                pass
+            data.append(
+                {
+                    "user_id": item['user_info']['user_id'],
+                    "user_avatar": item['user_info']['user_avatar'],
+                    "user_telephone": item['user_info']['user_telephone'],
+                    "coin_name": item['coin_info'].name,
+                    "source_name": item['source_key'],
+                    "source": item['source'],
+                    "status": item['status'],
+                    "earn_coin": item['earn_coin'],
+                    "time": item['time']['time'],
+                    "yeas": item['time']['yeas'],
+                    "created_ats": item['time']['created_ats'],
+                    "list": list
+                }
+            )
+        return self.response({"code": 0, "data": data})

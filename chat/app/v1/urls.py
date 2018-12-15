@@ -27,4 +27,6 @@ urlpatterns = [
     path('club/user/info/', views.ClubUserInfoView.as_view(), name="club-user-info"),
     #  单天投注
     path('club/day/bet/', views.ClubDayBetView.as_view(), name="club-day-bet"),
+    #  投注记录
+    path('club/record/', views.ClubRecordView.as_view(), name="club-bet-record"),
 ]
