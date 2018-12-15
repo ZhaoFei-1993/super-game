@@ -1112,6 +1112,7 @@ class ClubRecordView(ListAPIView):
                 list = {
                     "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "result_answer": result_answer,
+                    "option": record_info.option.title,
                     "issue": issue,
                     "title": title
                 }
