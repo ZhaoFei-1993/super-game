@@ -1004,7 +1004,7 @@ class ClubRecordView(ListAPIView):
                 name = str(quiz_info.quiz.host_team) + " VS " + str(quiz_info.quiz.guest_team)
                 list = {
                     "titlev": name,
-                    "bets": item['bets'],
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "options": options
                 }
             elif type == 3:
@@ -1015,7 +1015,7 @@ class ClubRecordView(ListAPIView):
                 play = record_info.play
                 option_id = record_info.option_id
                 res = record_info.content
-                language = self.request.GET.get('language') == 'en'
+                language = self.request.GET.get('language')
                 res_list = res.split(',')
                 if (play.id != 1 and not option_id) or play.id == 8:  # 排除连码和特码
                     content_list = []
@@ -1072,8 +1072,8 @@ class ClubRecordView(ListAPIView):
                 list = {
                     "title": name,
                     "issue": issue,
-                    "bet_coin": bet_coin,
-                    "bets": item['bets'],
+                    "bet_coin": normalize_fraction(bet_coin, int(item['coin_info'].coin_accuracy)),
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "options": options
                 }
             elif type == 4:  # 股票
@@ -1084,7 +1084,7 @@ class ClubRecordView(ListAPIView):
                 play_name = str(Play.PLAY[int(record_info.play.play_name)][1])   # 玩法昵称
                 options = record_info.options.title   # 选项
                 list = {
-                    "bets": item['bets'],
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "periods": periods,
                     "name": name,
                     "options": options,
@@ -1099,7 +1099,7 @@ class ClubRecordView(ListAPIView):
                 right_stock_name = record_info.issue.stock_pk.right_stock_name
                 title = left_stock_name + ' PK ' + right_stock_name
                 list = {
-                    "bets": item['bets'],
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
                     "result_answer": result_answer,
                     "issue": issue,
                     "title": title
@@ -1115,9 +1115,8 @@ class ClubRecordView(ListAPIView):
                     "user_telephone": item['user_info']['user_telephone'],
                     "coin_name": item['coin_info'].name,
                     "source_name": item['source_key'],
-                    "source": item['source'],
                     "status": item['status'],
-                    "earn_coin": item['earn_coin'],
+                    "earn_coin": normalize_fraction(item['earn_coin'], int(item['coin_info'].coin_accuracy)),
                     "time": item['time']['time'],
                     "yeas": item['time']['yeas'],
                     "created_ats": item['time']['created_ats'],
