@@ -576,6 +576,7 @@ class ClubBetListView(ListAPIView):
         month_end = month_info["end"]
 
         user_list = str(settings.TEST_USER_IDS)
+        club_rule = str(settings.CLUB_RULE)
         user_lists = settings.TEST_USER_ID
 
         key = "MONTH_BET_LIST_" + str(club_id) + "_" + str(month_month) + str(type)
@@ -592,6 +593,7 @@ class ClubBetListView(ListAPIView):
             sql += " where p.club_id = '" + str(club_id) + "'"
             sql += " and p.status != 2"
             sql += " and p.user_id not in " + user_list
+            sql += " and p.source in " + club_rule
             sql += " and u.is_robot = 0"
             sql += " and p.created_at >= '" + str(month_start) + "'"
             sql += " and p.created_at <= '" + str(month_end) + "'"

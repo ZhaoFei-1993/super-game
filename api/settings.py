@@ -333,4 +333,6 @@ EOS_SPARK_WT_API_KEY = local_settings.EOS_SPARK_WT_API_KEY
 
 # proxies地址
 TEST_USER_ID = local_settings.TEST_USER_ID
+CLUB_RULE = local_settings.CLUB_RULE
+CLUB_RULES = local_settings.CLUB_RULES
 TEST_USER_IDS = local_settings.TEST_USER_IDS
