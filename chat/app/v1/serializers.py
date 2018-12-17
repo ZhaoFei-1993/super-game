@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 from rest_framework import serializers
 from chat.models import Club, ClubRule, ClubBanner
+from users.models import User, Coin
+from promotion.models import PromotionRecord
 
 
 class ClubListSerialize(serializers.ModelSerializer):
@@ -71,3 +73,62 @@ class ClubBannerSerialize(serializers.ModelSerializer):
     class Meta:
         model = ClubBanner
         fields = ('active', 'image', 'banner_type', 'param', 'title')
+
+
+class RecordSerialize(serializers.ModelSerializer):
+    """
+    下注详细记录
+    """
+    user_info = serializers.SerializerMethodField()
+    source_key = serializers.SerializerMethodField()
+    coin_info = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PromotionRecord
+        fields = ('user_info', 'source_key', 'status', 'record_id', 'source', 'earn_coin', 'bets', 'coin_info',
+                  'created_at', 'source', 'time')
+
+    def get_user_info(self, obj):
+        """
+        下注人信息
+        """
+        info = User.objects.get(id=obj.user_id)
+        telephone = str(info.telephone)
+        telephone = "+" + str(info.area_code) + " " + str(telephone[0:3]) + "***" + str(telephone[7:])
+        user_info = {
+            "user_id": info.id,
+            "user_avatar": info.avatar,
+            "user_telephone": telephone
+        }
+        return user_info
+
+    def get_source_key(self, obj):
+        """
+        类型
+        """
+        source = PromotionRecord.SOURCE[int(obj.source)-1][1]
+        return source
+
+    def get_time(self, obj):
+        """
+        sjian
+        """
+        time = obj.created_at.strftime('%H:%M:%S')
+        yeas = obj.created_at.strftime('%Y-%m-%d')
+        created_ats = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        list = {
+            "time": time,
+            "yeas": yeas,
+            "created_ats": created_ats,
+        }
+        return list
+
+    def get_coin_info(self, obj):
+        """
+        货币信息
+        """
+        club_id = int(obj.club_id)
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        return coin_info

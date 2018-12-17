@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView
 from base.function import LoginRequired
-from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize
+from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
 from chat.models import Club, ClubRule, ClubBanner, ClubIdentity
 from users.models import User
 from base import code as error_code
@@ -18,6 +18,10 @@ from django.conf import settings
 from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
 from django.db import connection
+from promotion.models import UserPresentation as Promotion
+from quiz.models import Record as QuizRecord, Rule as QuizRule
+from guess.models import Record as GuessRecord, RecordStockPk as GuesspkRecord, StockPk, Play, Stock
+from marksix.models import SixRecord, Option
 
 
 class ClublistView(ListAPIView):
@@ -356,26 +360,29 @@ class ClubUserView(ListAPIView):
         club_id = int(request.GET.get("club_id"))
         coin_id = int(Club.objects.get_one(pk=club_id).coin_id)
         print(coin_id)
+        user_list = str(settings.TEST_USER_IDS)
+
         sql_list = " u.id, u.area_code, u.telephone, u.is_block, date_format( u.created_at, '%Y-%m-%d' ) as time,"
         if type == 1: # 登陆
-            sql_list += " (select l.login_time from users_loginrecord l where l.user_id=u.id " \
-                        "order by l.login_time desc limit 1) as sb_time"
+            sql_list += " max(l.login_time) as sb_time"
         else:    # 激活
-            sql_list += " (select l.created_at from users_userrecharge l where l.user_id=u.id and l.coin_id= '"
-            sql_list += str(coin_id) + "' order by l.created_at limit 1) as sb_time"
-        sql = "select " + sql_list + " from users_user u"
+            sql_list += " max(ur.created_at) as sb_time"
+        sql = "select " + sql_list + " from users_userrecharge ur"
+        sql += " inner join users_user u on ur.user_id=u.id"
+        sql += " inner join users_loginrecord l on l.user_id=u.id"
         sql += " where u.is_robot = 0"
+        sql += " and u.id not in " + user_list
+        sql += " and ur.coin_id = '" + str(coin_id) + "'"
         if "telephone" in request.GET:
             telephone = "%" + str(request.GET.get("telephone")) + "%"
             sql += " and u.telephone like '" + telephone + "'"
+        sql += " group by u.id"
         if type == 1:  # 登陆
             sql += " order by sb_time desc"
         else:  # 激活
             sql += " order by u.created_at desc"
         list = self.get_list_by_sql(sql)
-        print("sql======================", sql)
         for i in list:
-            print("5=================", i[5])
             if i[5] is None:
                 sb_time = ""
             else:
@@ -417,52 +424,96 @@ class ClubHomeView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
         icon = coin_info.icon
-        user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id)).values('user_id').distinct().count()    # 总用户
-        user_day_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=day_start,
+        user_list = settings.TEST_USER_ID
+        print("user_list=====================", user_list)
+        user_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                  coin_id=int(coin_info.id)
+                                                  ).values('user_id').distinct().count()    # 总用户
+        user_day_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                      coin_id=int(coin_info.id), created_at__gte=day_start,
                                                       created_at__lte=day_end).values('user_id').distinct().count()    # 今天新增加
-        user_two_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=yesterday_start,
-                                                      created_at__lte=yesterday_end).values('user_id').distinct().count()    # 昨天新增加
+        user_two_number = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                      coin_id=int(coin_info.id),
+                                                      created_at__gte=yesterday_start,
+                                                      created_at__lte=yesterday_end
+                                                      ).values('user_id').distinct().count()    # 昨天新增加
 
-        recharge_coin = UserRecharge.objects.filter(coin_id=int(coin_info.id)).aggregate(Sum('amount'))
+        recharge_coin = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                    coin_id=int(coin_info.id)).aggregate(Sum('amount'))
         if recharge_coin['amount__sum'] is None:
             sum_recharge = 0
         else:
             sum_recharge = normalize_fraction(recharge_coin['amount__sum'], coin_accuracy)       # 总充值
 
-        presentat_coin = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1).aggregate(Sum('amount'))
+        presentat_coin = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                         coin_id=int(coin_info.id), status=1).aggregate(Sum('amount'))
         if presentat_coin['amount__sum'] is None:
             sum_presentat = 0
         else:
             sum_presentat = normalize_fraction(presentat_coin['amount__sum'], coin_accuracy)       # 总提现
 
-        user_coin = UserCoin.objects.filter(coin_id=int(coin_info.id), user__is_block=0,
+        user_coin = UserCoin.objects.filter(~Q(user_id__in=user_list),
+                                            coin_id=int(coin_info.id), user__is_block=0,
                                             user__is_robot=0).aggregate(Sum('balance'))
         if user_coin['balance__sum'] is None:
             sum_coin = 0
         else:
             sum_coin = normalize_fraction(user_coin['balance__sum'], coin_accuracy)       # 总金额
 
-        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('bets'))
+        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  club_id=int(club_id),
+                                                  user__is_block=0).aggregate(Sum('bets'))
         if sum_list['bets__sum'] is None:
+            sum_bet_water = 0
+        else:
+            sum_bet_water = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
+
+        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                  earn_coin__gt=0,
+                                                  club_id=int(club_id),
+                                                  user__is_block=0,
+                                                  user__is_robot=0).aggregate(Sum('earn_coin'))
+        # 赔的钱
+        sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                   earn_coin__lt=0,
+                                                   club_id=int(club_id),
+                                                   user__is_block=0,
+                                                   user__is_robot=0).aggregate(Sum('earn_coin'))
+        # 赚的钱
+        sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      earn_coin__gt=0,
+                                                      club_id=int(club_id),
+                                                      user__is_block=0,
+                                                      user__is_robot=0).aggregate(Sum('bets'))
+        # 应扣除的本金
+
+        if sum_win_list['bets__sum'] is None:
+            sum_betss = 0
+        else:
+            sum_betss = sum_win_list['bets__sum']     # 应扣除的本金
+
+        if sum_list['earn_coin__sum'] is None:
             sum_bets = 0
         else:
-            sum_bets = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
+            sum_bets = sum_list['earn_coin__sum']      # 赔的钱
+        print("赔==============", sum_bets)
+        print("本金==============", sum_betss)
+        sum_bets = sum_bets - sum_betss
+        sum_bets = Decimal('-' + str(sum_bets))
 
-        sum_list = PromotionRecord.objects.filter(club_id=int(club_id), user__is_block=0).aggregate(Sum('earn_coin'))
-        print(connection.queries)
-        if sum_list['earn_coin__sum'] is None:
-            sum_earn_coin = 0
+        if sum_lists['earn_coin__sum'] is None:
+            sum_win_bets = 0
         else:
-            sum_earn_coin = sum_list['earn_coin__sum']
-            if sum_earn_coin > 0:
-                sum_earn_coin = sum_earn_coin * Decimal(0.95)
-            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)
+            sum_win_bets = sum_lists['earn_coin__sum'] * Decimal(0.95)    # 赚的钱
+        sum_bets = sum_bets + abs(sum_win_bets)
+
+        sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
-            "sum_earn_coin": sum_earn_coin,    # 总投注流水
+            "sum_earn_coin": sum_bet_water,    # 总投注流水
             "sum_bets": sum_bets,    # 总盈亏
             "sum_coin": sum_coin,    # 总金额
-            "coin_name": coin_info.name,    # 总金额
-            "icon": icon,    # 总金额
+            "coin_name": coin_info.name,    # 货币昵称
+            "icon": icon,    # 货币头像
             "user_number": user_number,    # 总用户
             "user_day_number": user_day_number,   # 今天新增加
             "user_two_number": user_two_number,   # 昨天新增加
@@ -532,29 +583,67 @@ class ClubBetListView(ListAPIView):
         month_start = month_info["start"]
         month_end = month_info["end"]
 
+        user_list = str(settings.TEST_USER_IDS)
+        club_rule = str(settings.CLUB_RULE)
+        user_lists = settings.TEST_USER_ID
+
         key = "MONTH_BET_LIST_" + str(club_id) + "_" + str(month_month) + str(type)
-        # delete_cache(key)
-        list = None
+        delete_cache(key)
         list = get_cache(key)
         if list is None:
-            sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), sum(p.earn_coin), "
+            sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
+            sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb"
+            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
+            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
             sql = "select " + sql_list + " from promotion_promotionrecord p"
             sql += " inner join users_user u on p.user_id=u.id"
             sql += " where p.club_id = '" + str(club_id) + "'"
             sql += " and p.status != 2"
+            sql += " and p.user_id not in " + user_list
+            sql += " and p.source in " + club_rule
             sql += " and u.is_robot = 0"
             sql += " and p.created_at >= '" + str(month_start) + "'"
             sql += " and p.created_at <= '" + str(month_end) + "'"
             sql += "group by years, sb, time"
             sql += " order by time desc"
+            print("sql===================", sql)
             list_info = get_sql(sql)
             list = []
             for i in list_info:
-                earn_coin = Decimal(i[2])
-                if earn_coin > 0:
-                    earn_coin = earn_coin * Decimal(0.95)
-                divided_into = normalize_fraction((Decimal(i[1]) * Decimal(0.005)), coin_accuracy)
+                if i[2] is None:
+                    earn_coin = 0
+                else:
+                    earn_coin = i[2]
+                # if i[2] is None:
+                #     earn_coin = 0
+                # else:
+                #     earn_coin = Decimal(i[2])   # 总赢
+                #     print("总赚=============", earn_coin)
+                #     earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
+                # print("总赚*0.95=============", earn_coin)
+                # if i[5] is None:
+                #     bet_coin = 0
+                # else:
+                #     bet_coin = Decimal(i[5])   # 本金
+                # print("应该扣除的本金==================", bet_coin)
+                # if i[6] is None:
+                #     win_coin = 0
+                # else:
+                #     win_coin = Decimal(i[6])   # 总亏
+                #     print("总亏=================", win_coin)
+                # earn_coin = earn_coin - win_coin + bet_coin
+                print("收益=============", earn_coin)
+                test_time = i[4] + ' 00:00:00'
+                test_times = i[4] + ' 23:59:59'
+                divided_into = Promotion.objects.filter(~Q(user_id__in=user_lists),
+                                                        club_id=int(club_id),
+                                                        created_at__gte=test_time,
+                                                        created_at__lte=test_times).aggregate(Sum('dividend_water'))
+                if divided_into['dividend_water__sum'] is None:
+                    divided_into = 0
+                else:
+                    divided_into = normalize_fraction(divided_into['dividend_water__sum'], coin_accuracy)  # 当天流水分成
                 list.append({
                     "time": i[0],
                     "sb_time": i[4],
@@ -584,11 +673,15 @@ class ClubBetsView(ListAPIView):
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
 
-        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, sum(p.earn_coin), "
+        user_list = str(settings.TEST_USER_IDS)
+
+        sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, "
+        sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
         sql = "select " + sql_list + " from promotion_promotionrecord p"
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.club_id = '" + str(club_id) + "'"
+        sql += " and p.user_id not in " + user_list
         sql += " and p.status = 1"
         sql += " and u.is_robot = 0"
         sql += " group by years, time"
@@ -597,9 +690,10 @@ class ClubBetsView(ListAPIView):
         list_info = get_sql(sql)
         list = []
         for i in list_info:
-            earn_coin = Decimal(i[1])
-            if earn_coin > 0:
-                earn_coin = earn_coin * Decimal(0.95)
+            if i[1] is None:
+                earn_coin = 0
+            else:
+                earn_coin = i[1]
             list.append({
                 "time": i[0],
                 "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
@@ -637,8 +731,10 @@ class PayClubView(ListAPIView):
         month_end = month_info["end"]
 
         # cache_file = settings.CACHE_DIR + '/' + str(club_id) + '/' + str(quiz_id) + '/' + self.KEY_CLUB_QUIZ_BET_USERS
+        user_list = settings.TEST_USER_ID
 
-        user_recharge = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+        user_recharge = UserRecharge.objects.filter(~Q(user_id__in=user_list), coin_id=int(coin_info.id),
+                                                    created_at__gte=month_start,
                                                     created_at__lte=month_end).aggregate(Sum('amount'))
         if user_recharge['amount__sum'] is None:
             sum_recharge = 0
@@ -646,13 +742,17 @@ class PayClubView(ListAPIView):
             sum_recharge = normalize_fraction(user_recharge['amount__sum'], coin_accuracy)       # 当月总充值
 
         if type == 1:   # 1.充值 2.提现
-            recharge_user_number = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
-                                                               created_at__lte=month_end).values('user_id').count()  # 当月总充值人数
+            recharge_user_number = UserRecharge.objects.filter(~Q(user_id__in=user_list), coin_id=int(coin_info.id),
+                                                               created_at__gte=month_start,
+                                                               created_at__lte=month_end).values('user_id').distinct().count()  # 当月总充值人数
         else:
-            recharge_user_number = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
-                                                                   created_at__lte=month_end).values('user_id').count()
+            recharge_user_number = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                                   coin_id=int(coin_info.id),
+                                                                   created_at__gte=month_start,
+                                                                   created_at__lte=month_end).values('user_id').distinct().count()
 
-        user_presentat = UserPresentation.objects.filter(coin_id=int(coin_info.id), status=1,
+        user_presentat = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                         coin_id=int(coin_info.id), status=1,
                                                          created_at__gte=month_start,
                                                          created_at__lte=month_end).aggregate(Sum('amount'))
         if user_presentat['amount__sum'] is None:
@@ -661,14 +761,18 @@ class PayClubView(ListAPIView):
             sum_presentat = normalize_fraction(user_presentat['amount__sum'], coin_accuracy)  # 当月总提现
 
         key = "MONTH_RECHARGE_" + str(club_id) + "_" + str(month_month) + str(type)
-        # delete_cache(key)
+        delete_cache(key)
         list = get_cache(key)
         if list is None:
             if type == 1:     # 1.充值 2.提现
-                list_info = UserRecharge.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                list_info = UserRecharge.objects.filter(~Q(user_id__in=user_list),
+                                                        coin_id=int(coin_info.id),
+                                                        created_at__gte=month_start,
                                                         created_at__lte=month_end).order_by("-created_at")
             else:
-                list_info = UserPresentation.objects.filter(coin_id=int(coin_info.id), created_at__gte=month_start,
+                list_info = UserPresentation.objects.filter(~Q(user_id__in=user_list),
+                                                            coin_id=int(coin_info.id),
+                                                            created_at__gte=month_start,
                                                             created_at__lte=month_end).order_by("-created_at")
             list = []
             for i in list_info:
@@ -727,33 +831,337 @@ class ClubDayBetView(ListAPIView):
         end = sb_time + " 23:59:59"
 
         club_id = int(self.request.GET.get("club_id"))
-        type = int(self.request.GET.get("type"))   # 1.足球  2.篮球 3. 六合彩 4. 股票 5. 股票PK 6. 百家乐 7.龙虎斗
+        type = int(self.request.GET.get("type"))   # 1.1足球  2.7篮球 3. 2六合彩 4. 3股票 5. 6股票PK 6. 5百家乐 7.4龙虎斗
+        if int(type) == 7:
+            type = 2
+        elif int(type) == 1:
+            type = 1
+        elif int(type) == 3:
+            type = 4
+        elif int(type) == 2:
+            type = 3
+        elif int(type) == 4:
+            type = 7
+        elif int(type) == 5:
+            type = 6
+        elif int(type) == 6:
+            type = 5
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
 
-        number = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
-                                                created_at__lte=end, user__is_block=0
-                                                ).values('user_id').distinct().count()
-        sum_bets = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, source=type,
-                                                  created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-        sum_earn_coin = PromotionRecord.objects.filter(club_id=int(club_id), created_at__gte=start, created_at__lte=end,
-                                                       source = type, user__is_block=0).aggregate(Sum('earn_coin'))
+        user_list = settings.TEST_USER_ID
+
+        if type == 0:
+            number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                    club_id=int(club_id), created_at__gte=start,
+                                                    created_at__lte=end, user__is_block=0
+                                                    ).values('user_id').distinct().count()
+            sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id), created_at__gte=start,
+                                                      created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
+            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id),
+                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
+                                                      user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赔的钱
+            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                       club_id=int(club_id),
+                                                       earn_coin__lt=0,
+                                                       created_at__gte=start,
+                                                       created_at__lte=end,
+                                                       user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赚的钱
+            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          earn_coin__gt=0,
+                                                          club_id=int(club_id),
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).aggregate(Sum('bets'))
+            # 应该扣的本金
+        else:
+            number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                    club_id=int(club_id), created_at__gte=start, source=type,
+                                                    created_at__lte=end, user__is_block=0
+                                                    ).values('user_id').distinct().count()
+            sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id), created_at__gte=start, source=type,
+                                                      created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
+
+            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=int(club_id),
+                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
+                                                      source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赔的钱
+            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                       club_id=int(club_id),
+                                                       earn_coin__lt=0,
+                                                       created_at__gte=start,
+                                                       created_at__lte=end,
+                                                       source=type, user__is_block=0).aggregate(Sum('earn_coin'))
+            # 赚的钱
+            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          earn_coin__gt=0,
+                                                          club_id=int(club_id),
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          source=type, user__is_block=0).aggregate(Sum('bets'))
+            # 应该扣的本金
+
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
         else:
             sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)  # 总投注流水
 
-        if sum_earn_coin['earn_coin__sum'] is None:
+        if sum_win_list['bets__sum'] is None:
+            sum_betss = 0
+        else:
+            sum_betss = sum_win_list['bets__sum']  # 应扣除的本金
+
+        if sum_list['earn_coin__sum'] is None:
+            sum_bets_list = 0
+        else:
+            sum_bets_list = sum_list['earn_coin__sum']  # 赔的钱
+        sum_bets_list = sum_bets_list - sum_betss
+        sum_bets_list = Decimal('-' + str(sum_bets_list))
+
+        if sum_lists['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_earn_coin['earn_coin__sum']
-            if sum_earn_coin > 0:
-                sum_earn_coin = sum_earn_coin * Decimal(0.95)
-            sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
+            sum_earn_coin = sum_lists['earn_coin__sum'] * Decimal(0.95)  # 赚的钱
+        sum_earn_coin = sum_bets_list + abs(sum_earn_coin)
+        sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
 
         return self.response({"code": 0,
                               "number": number,
                               "sum_bets": sum_bets,
                               "sum_earn_coin": sum_earn_coin,
                               "coin_name": coin_info.name})
+
+
+class ClubRecordView(ListAPIView):
+    """
+    下注记录
+    """
+    permission_classes = (LoginRequired,)
+    serializer_class = RecordSerialize
+
+    def get_queryset(self):
+        type = int(self.request.GET.get('type'))   # 0,全部 剩下分类按照玩法列表
+        club_id = int(self.request.GET.get('club_id'))
+        user_list = settings.TEST_USER_ID
+        if int(type) == 7:
+            type = 2
+        elif int(type) == 1:
+            type = 1
+        elif int(type) == 3:
+            type = 4
+        elif int(type) == 2:
+            type = 3
+        elif int(type) == 4:
+            type = 7
+        elif int(type) == 5:
+            type = 6
+        elif int(type) == 6:
+            type = 5
+        if type == 0:
+            if 'sb_time' in self.request.GET:
+                sb_time = str(self.request.GET.get("sb_time"))
+                start = sb_time + " 00:00:00"
+                end = sb_time + " 23:59:59"
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          club_id=club_id,
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=club_id,
+                                                      created_at__gte=start,
+                                                      created_at__lte=end,
+                                                      user__is_block=0).order_by('-created_at')
+            else:
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      club_id=club_id,
+                                                      user__is_block=0).order_by('-created_at')
+        else:
+            if 'sb_time' in self.request.GET:
+                sb_time = str(self.request.GET.get("sb_time"))
+                start = sb_time + " 00:00:00"
+                end = sb_time + " 23:59:59"
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          created_at__gte=start,
+                                                          created_at__lte=end,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      source=type,
+                                                      club_id=club_id,
+                                                      created_at__gte=start,
+                                                      created_at__lte=end,
+                                                      user__is_block=0).order_by('-created_at')
+            else:
+                if 'user_id' in self.request.GET:
+                    user_id = self.request.GET.get('user_id')
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          user_id=user_id,
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-created_at')
+                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      source=type,
+                                                      club_id=club_id,
+                                                      user__is_block=0).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        results = super().list(request, *args, **kwargs)
+        items = results.data.get('results')
+        data = []
+        for item in items:
+            type = int(item['source'])
+            record_id = int(item['record_id'])
+            list = ''
+            if type in (1, 2):
+                quiz_info = QuizRecord.objects.get(id=record_id)
+                odds = str(quiz_info.odds)
+                rule = str(QuizRule.TYPE_CHOICE[int(quiz_info.rule.type)][1])
+                option = str(quiz_info.option.option.option)
+                options = rule + ": " + option + "/" + odds
+                name = str(quiz_info.quiz.host_team) + " VS " + str(quiz_info.quiz.guest_team)
+                list = {
+                    "titlev": name,
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
+                    "options": options
+                }
+            elif type == 3:
+                record_info = SixRecord.objects.get(id=record_id)
+                issue = record_info.issue
+                bet_coin = record_info.bet_coin
+                number = Decimal(record_info.bet)
+
+                play = record_info.play
+                option_id = record_info.option_id
+                res = record_info.content
+                language = self.request.GET.get('language')
+                res_list = res.split(',')
+                if (play.id != 1 and not option_id) or play.id == 8:  # 排除连码和特码
+                    content_list = []
+                    for pk in res_list:
+                        if language == 'zh':
+                            title = Option.objects.get(id=pk).option
+                        else:
+                            title = Option.objects.get(id=pk).option_en
+                        content_list.append(title)
+                    res = ','.join(content_list)
+
+                # 判断注数
+                if language == 'zh':
+                    last = '注'
+                else:
+                    last = 'notes'
+                title = ''
+                if option_id:
+                    title = Option.objects.get(id=option_id).option
+
+                if play.id == 8:
+                    next = '共' + str(record_info.bet) + last
+                    options = res + '/' + next
+                    print(options)
+                elif play.id != 3 or title == '平码':
+                    next = '共' + str(len(res.split(','))) + last
+                    options = res + '/' + next
+                else:
+                    n = len(res.split(','))
+                    if title == '二中二':
+                        sum = int(n * (n - 1) / 2)
+                    else:
+                        sum = int(n * (n - 1) * (n - 2) / 6)
+                    next = '共' + str(sum) + last
+                    options = res + '/' + next
+
+                option_id = record_info.option_id
+                if option_id:
+                    res = Option.objects.get(id=option_id)
+                    three_to_two = '三中二'
+                    name = res.option
+                    if three_to_two in name:
+                        name = three_to_two
+                    if self.request.GET.get('language') == 'en':
+                        three_to_two = 'Three Hit Two'
+                        name = res.option_en
+                        if three_to_two in name:
+                            name = three_to_two
+                else:
+                    name = record_info.play.title
+                    if self.request.GET.get('language') == 'en':
+                        name = record_info.play.title_en
+
+                list = {
+                    "title": name,
+                    "issue": issue,
+                    "bet_coin": normalize_fraction((bet_coin/number), int(item['coin_info'].coin_accuracy)),
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
+                    "options": options
+                }
+            elif type == 4:  # 股票
+                record_info = GuessRecord.objects.get(id=record_id)
+                periods = record_info.periods.periods   # 期数
+                name = record_info.periods.stock.name    # 股票昵称
+                name = str(Stock.STOCK[int(name)][1])   # 玩法昵称
+                play_name = str(Play.PLAY[int(record_info.play.play_name)][1])   # 玩法昵称
+                options = record_info.options.title   # 选项
+                list = {
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
+                    "periods": periods,
+                    "name": name,
+                    "options": options,
+                    "play_name": play_name
+                }
+            elif type == 5:   # 股票PK
+                record_info = GuesspkRecord.objects.get(id=record_id)
+
+                issue = record_info.issue.issue
+                result_answer = record_info.issue.size_pk_result
+                left_stock_name = record_info.issue.stock_pk.left_stock_name
+                right_stock_name = record_info.issue.stock_pk.right_stock_name
+                title = left_stock_name + ' PK ' + right_stock_name
+                list = {
+                    "bets": normalize_fraction(item['bets'], int(item['coin_info'].coin_accuracy)),
+                    "result_answer": result_answer,
+                    "option": record_info.option.title,
+                    "issue": issue,
+                    "title": title
+                }
+            elif type == 6:
+                pass
+            elif type == 7:
+                pass
+            data.append(
+                {
+                    "user_id": item['user_info']['user_id'],
+                    "user_avatar": item['user_info']['user_avatar'],
+                    "user_telephone": item['user_info']['user_telephone'],
+                    "coin_name": item['coin_info'].name,
+                    "source_name": item['source_key'],
+                    "source": item['source'],
+                    "status": item['status'],
+                    "earn_coin": normalize_fraction(item['earn_coin'], int(item['coin_info'].coin_accuracy)),
+                    "time": item['time']['time'],
+                    "yeas": item['time']['yeas'],
+                    "created_ats": item['time']['created_ats'],
+                    "list": list
+                }
+            )
+        return self.response({"code": 0, "data": data})

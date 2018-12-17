@@ -2,18 +2,20 @@
 
 from django.core.management.base import BaseCommand
 from base.app import BaseView
-from marksix.models import MarkSixBetLimit, Option
+from promotion.models import PromotionRecord
+from marksix.models import SixRecord
+from decimal import Decimal
 
 
 class Command(BaseCommand, BaseView):
     help = "test"
 
     def handle(self, *args, **options):
-        list = Option.objects.all()
-        for i in list:
-            betlimit = MarkSixBetLimit()
-            betlimit.club_id = 10
-            betlimit.options = i
-            betlimit.max_limit = 5000
-            betlimit.min_limit = 10
-            betlimit.save()
+        record_list = PromotionRecord.objects.filter(source=3)
+        for i in record_list:
+            record_id = int(i.record_id)
+            info = SixRecord.objects.get(id=record_id)
+            print("原来===================", i.bets)
+            i.bets = info.bet_coin
+            i.save()
+            print("现在=======================", i.bets)
