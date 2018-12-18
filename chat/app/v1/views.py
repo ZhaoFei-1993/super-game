@@ -3,21 +3,18 @@ from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
 from chat.models import Club, ClubRule, ClubBanner, ClubIdentity, ClubIncome
-from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
-from users.models import UserMessage, DailyLog, Coin, RecordMark, UserRecharge, UserPresentation, UserCoin
+from users.models import DailyLog, Coin, RecordMark, UserRecharge, UserPresentation, UserCoin
 from django.db.models import Q
 from utils.functions import message_hints, normalize_fraction, get_sql, to_decimal
 from django.db.models import Sum
 import datetime
 import calendar
-from decimal import Decimal
 from datetime import timedelta
 from django.conf import settings
 from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
-from django.db import connection
 from promotion.models import UserPresentation as Promotion
 from quiz.models import Record as QuizRecord, Rule as QuizRule
 from guess.models import Record as GuessRecord, RecordStockPk as GuesspkRecord, StockPk, Play, Stock
