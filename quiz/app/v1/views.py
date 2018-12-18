@@ -16,7 +16,7 @@ from .serializers import QuizSerialize, RecordSerialize, QuizDetailSerializer, Q
 from utils.functions import value_judge, get_sql
 from datetime import datetime, timedelta
 from django.conf import settings
-from utils.functions import normalize_fraction, handle_zero
+from utils.functions import normalize_fraction, handle_zero, to_decimal
 from utils.cache import get_cache, set_cache
 from promotion.models import PromotionRecord
 
@@ -435,7 +435,7 @@ class RecordsListView(ListCreateAPIView):
                 guest_team = quiz.guest_team
 
             status = int(quiz.status)
-            earn_coin = Decimal(str(float(fav.get('earn_coin'))))
+            earn_coin = to_decimal(str(float(fav.get('earn_coin'))))
 
             # 获取盈亏数据
             earn_coin_str = '待开奖'
@@ -722,9 +722,9 @@ class RuleView(ListAPIView):
                     accuracy = "0"
                 else:
                     accuracy = number / total
-                    accuracy = Decimal(str(accuracy)).quantize(Decimal('0.00'))
+                    accuracy = to_decimal(str(accuracy)).quantize(to_decimal('0.00'))
                     if s == option[-1]:
-                        accuracy = Decimal('1') - sum(accuracy_list)
+                        accuracy = to_decimal('1') - sum(accuracy_list)
                     else:
                         accuracy_list.append(accuracy)
                 option_title = option_info.option
@@ -857,7 +857,7 @@ class BetView(ListCreateAPIView):
         # 单个下注
         option = self.request.data['option']  # 获取选项ID
         coins = self.request.data['wager']  # 获取投注金额
-        coins = Decimal(coins)
+        coins = to_decimal(coins)
         # coins = float(coins)
 
         clubinfo = Club.objects.get_one(pk=int(roomquiz_id))
@@ -872,9 +872,9 @@ class BetView(ListCreateAPIView):
         if int(option_odds.quiz.id) != int(quiz_id):
             raise ParamErrorException(error_code.API_50101_QUIZ_OPTION_ID_INVALID)
         i = 0
-        Decimal(i)
+        to_decimal(i)
         # 判断赌注是否有效
-        if i >= Decimal(coins):
+        if i >= to_decimal(coins):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
         quiz = Quiz.objects.get(pk=quiz_id)  # 判断比赛
         nowtime = datetime.now()
@@ -882,8 +882,8 @@ class BetView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_50108_THE_GAME_HAS_STARTED)
         if int(quiz.status) != 0 or quiz.is_delete is True:
             raise ParamErrorException(error_code.API_50107_USER_BET_TYPE_ID_INVALID)
-        coin_betting_control = Decimal(clubinfo.coin.betting_control)
-        coin_betting_toplimit = Decimal(clubinfo.coin.betting_toplimit)
+        coin_betting_control = to_decimal(clubinfo.coin.betting_control)
+        coin_betting_toplimit = to_decimal(clubinfo.coin.betting_toplimit)
         if coin_betting_control > coins or coin_betting_toplimit < coins:
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
@@ -893,9 +893,9 @@ class BetView(ListCreateAPIView):
             Sum('bet'))
 
         bet_sum = bet_sum['bet__sum'] if bet_sum['bet__sum'] else 0
-        bet_sum = Decimal(bet_sum) + Decimal(coins)
+        bet_sum = to_decimal(bet_sum) + to_decimal(coins)
 
-        if Decimal(bet_sum) > coin_betting_toplimit:
+        if to_decimal(bet_sum) > coin_betting_toplimit:
             raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
@@ -951,7 +951,7 @@ class BetView(ListCreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = usercoin.coin.name
-        coin_detail.amount = Decimal('-' + str(coins))
+        coin_detail.amount = to_decimal('-' + str(coins))
         coin_detail.rest = usercoin.balance
         coin_detail.sources = 3
         coin_detail.save()
@@ -1166,10 +1166,10 @@ class Change(ListAPIView):
         sql += " where coin_name='ETH'"
         sql += " and a.platform_name!=''"
         eth_vlue = get_sql(sql)[0][0]  # ETH 价格
-        # gsg_value = Decimal(0.3)
+        # gsg_value = to_decimal(0.3)
         gsg_value = gsg_values * eth_vlue
         convert_ratio = int(eth_vlue / gsg_value)  # 1 ETH 换多少 GSG
-        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        toplimit = to_decimal(100000000 / 50)  # 一天容许兑换的总数
 
         day = datetime.now().strftime('%Y-%m-%d')
         if 'days' in self.request.GET:
@@ -1256,7 +1256,7 @@ class ChangeGsg(ListAPIView):
         if coins < coin_astrict:
             raise ParamErrorException(error_code.API_70204_ETH_UNQUALIFIED_CONVERTIBILITY)  # 判断兑换值是否大于0.01
 
-        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        toplimit = to_decimal(100000000 / 50)  # 一天容许兑换的总数
         day = datetime.now().strftime('%Y-%m-%d')
         start_time = str(day) + ' 00:00:00'  # 开始时间
         end_time = str(day) + ' 23:59:59'  # 开始时间
@@ -1275,7 +1275,7 @@ class ChangeGsg(ListAPIView):
         has_user_change = get_sql(sql)[0][0]  # 用户当天已经兑换了多少GSG
         if has_user_change == None or has_user_change == '':
             has_user_change = 0
-        user_change = Decimal(coins) + has_user_change
+        user_change = to_decimal(coins) + has_user_change
         if user_change > 5:
             raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
 
@@ -1294,13 +1294,13 @@ class ChangeGsg(ListAPIView):
 
         change_record = ChangeRecord()
         change_record.user = request.user
-        change_record.change_eth_value = Decimal(coins)
-        change_record.change_gsg_value = Decimal(gsg_ratio)
+        change_record.change_eth_value = to_decimal(coins)
+        change_record.change_gsg_value = to_decimal(gsg_ratio)
         change_record.is_robot = request.user.is_robot
         change_record.save()
 
         user_coin_gsg = UserCoin.objects.get(user_id=request.user.id, coin_id=6)
-        user_coin_gsg.balance += Decimal(gsg_ratio)
+        user_coin_gsg.balance += to_decimal(gsg_ratio)
         user_coin_gsg.save()
         coin_detail = CoinDetail()
         coin_detail.user = request.user
@@ -1311,7 +1311,7 @@ class ChangeGsg(ListAPIView):
         coin_detail.save()
 
         user_coin_ETH = UserCoin.objects.get(user_id=request.user.id, coin_id=2)
-        user_coin_ETH.balance -= Decimal(coins)
+        user_coin_ETH.balance -= to_decimal(coins)
         user_coin_ETH.save()
         coin_detail = CoinDetail()
         coin_detail.user = request.user
@@ -1481,7 +1481,7 @@ class ChangeRemainder(ListAPIView):
         if coins < coin_astrict:
             raise ParamErrorException(error_code.API_70204_ETH_UNQUALIFIED_CONVERTIBILITY)  # 判断兑换值是否大于0.01
 
-        toplimit = Decimal(100000000 / 50)  # 一天容许兑换的总数
+        toplimit = to_decimal(100000000 / 50)  # 一天容许兑换的总数
         day = datetime.now().strftime('%Y-%m-%d')
         start_time = str(day) + ' 00:00:00'  # 开始时间
         end_time = str(day) + ' 23:59:59'  # 开始时间
@@ -1500,7 +1500,7 @@ class ChangeRemainder(ListAPIView):
         has_user_change = get_sql(sql)[0][0]  # 用户当天已经兑换了多少GSG
         if has_user_change == None or has_user_change == '':
             has_user_change = 0
-        user_change = Decimal(coins) + has_user_change
+        user_change = to_decimal(coins) + has_user_change
         if user_change > 5:
             raise ParamErrorException(error_code.API_70207_REACH_THE_UPPER_LIMIT)  # 判断用户兑换是否超过5个ETH
 

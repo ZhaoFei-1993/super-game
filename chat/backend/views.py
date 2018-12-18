@@ -5,7 +5,7 @@ from ..models import Club, ClubBanner, ClubRule, ClubIdentity
 from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer, CoinSerialize
 from users.models import Coin, UserCoin, User, CoinDetail
 from rest_framework import status
-from utils.functions import reversion_Decorator, value_judge, normalize_fraction
+from utils.functions import reversion_Decorator, value_judge, normalize_fraction, to_decimal
 from url_filter.integrations.drf import DjangoFilterBackend
 from utils.cache import delete_cache
 import json
@@ -389,13 +389,13 @@ class UserBanker(ListAPIView, DestroyAPIView):
             user_coin = ''
         if user_balance < amount:          # 判断该账号是否给钱开局头
             raise ParamErrorException(error_code.API_110105_BACKEND_BANKER)
-        user_coin.balance -= Decimal(amount)
+        user_coin.balance -= to_decimal(amount)
         user_coin.save()
 
         coin_detail = CoinDetail()
         coin_detail.user = user_coin.user
         coin_detail.coin_name = club_info.coin.name
-        coin_detail.amount = Decimal('-' + str(amount))
+        coin_detail.amount = to_decimal('-' + str(amount))
         coin_detail.rest = user_coin.balance
         coin_detail.sources = 24
         coin_detail.save()
@@ -408,7 +408,7 @@ class UserBanker(ListAPIView, DestroyAPIView):
         else:
             starting_time = datetime.datetime.strptime(str(starting_time), '%Y-%m-%d')
         club_identity.starting_time = starting_time
-        club_identity.amount = Decimal(amount)
+        club_identity.amount = to_decimal(amount)
         club_identity.save()
         club_info.is_banker = False
         club_info.save()
@@ -436,6 +436,6 @@ class UserBanker(ListAPIView, DestroyAPIView):
         announcement.end_time = datetime.datetime.now()
         announcement.save()
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=int(club_info.coin_id))
-        user_coin.balance += Decimal(announcement.amount)
+        user_coin.balance += to_decimal(announcement.amount)
         user_coin.save()
         return self.response({'code': 0, "amount": normalize_fraction(announcement.amount, 8)})

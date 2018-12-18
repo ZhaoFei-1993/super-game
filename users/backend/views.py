@@ -18,7 +18,7 @@ from users.models import Coin, CoinLock, Admin, UserCoinLock, UserCoin, User, Co
 from users.app.v1.serializers import PresentationSerialize
 from rest_framework import status
 import jsonfield
-from utils.functions import normalize_fraction, get_sql, sc2str
+from utils.functions import normalize_fraction, get_sql, sc2str, to_decimal
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from django.http import HttpResponse
@@ -161,17 +161,17 @@ class CurrencyListView(ListCreateAPIView):
         coin_value = CoinValue()
         coin_value.coin = coin
         coin_value.value_index = 1
-        coin_value.value = Decimal(betting_value_one)
+        coin_value.value = to_decimal(betting_value_one)
         coin_value.save()
         coin_value = CoinValue()
         coin_value.coin = coin
         coin_value.value_index = 2
-        coin_value.value = Decimal(betting_value_two)
+        coin_value.value = to_decimal(betting_value_two)
         coin_value.save()
         coin_value = CoinValue()
         coin_value.coin = coin
         coin_value.value_index = 3
-        coin_value.value = Decimal(betting_value_three)
+        coin_value.value = to_decimal(betting_value_three)
         coin_value.save()
 
         coin_service = CoinOutServiceCharge()
@@ -2134,7 +2134,7 @@ class CoinDividendProposalView(ListCreateAPIView):
         # except DividendConfig.DoesNotExist:
         #     dividend_config = DividendConfig()
         dividend_config = DividendConfig()
-        dividend_config.dividend = Decimal(dividend)
+        dividend_config.dividend = to_decimal(dividend)
         dividend_config.dividend_date = dividend_date
         dividend_config.save()
 

@@ -5,7 +5,7 @@ import random
 from base.app import BaseView
 import datetime
 from datetime import timedelta
-from utils.functions import get_sql, reward_gradient_all, opposite_number
+from utils.functions import get_sql, reward_gradient_all, opposite_number, to_decimal
 from promotion.models import PresentationMonth
 from users.models import UserCoin, CoinDetail
 from console.models import Address
@@ -34,7 +34,7 @@ class Command(BaseCommand, BaseView):
         userpresentation_list = get_sql(sql)
         for i in userpresentation_list:
             income = i[2]
-            print("income=============================", Decimal(income))
+            print("income=============================", to_decimal(income))
             print("user_id=============================", i[3])
             print("coin_id=============================", i[5])
             proportion = reward_gradient_all(i[4], i[2])
@@ -61,7 +61,7 @@ class Command(BaseCommand, BaseView):
                 coin_detail = CoinDetail()
                 coin_detail.user = coin_info.user
                 coin_detail.coin_name = coin_info.coin.name
-                coin_detail.amount = Decimal(income_dividend)
+                coin_detail.amount = to_decimal(income_dividend)
                 coin_detail.rest = coin_info.balance
                 coin_detail.sources = 20
                 coin_detail.save()

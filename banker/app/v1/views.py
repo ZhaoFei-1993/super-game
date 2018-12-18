@@ -17,7 +17,7 @@ from django.db import transaction
 from users.models import CoinDetail
 from decimal import Decimal
 from banker.models import BankerShare, BankerRecord
-from utils.functions import get_sql, is_number, normalize_fraction, value_judge
+from utils.functions import get_sql, is_number, normalize_fraction, value_judge, to_decimal
 from guess.models import Stock
 
 
@@ -273,7 +273,7 @@ class BankerDetailsTestView(ListCreateAPIView):
         type = int(self.request.data['type'])  # 玩法类型
         club_id = int(self.request.data['club_id'])  # 俱乐部id
         key_id = int(self.request.data['key_id'])  # 俱乐部id
-        amount = Decimal(self.request.data['amount'])
+        amount = to_decimal(self.request.data['amount'])
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin.id))
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_info.id)
@@ -297,10 +297,10 @@ class BankerDetailsTestView(ListCreateAPIView):
 
         all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id, club_id=club_id).aggregate(Sum('balance'))
         sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
-        sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
+        sum_amount = to_decimal(sum_balance) + amount  # 认购以后该局的总已认购额
 
         banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
-        sum_share = Decimal(banker_share.balance)  # 总可购份额
+        sum_share = to_decimal(banker_share.balance)  # 总可购份额
 
         if sum_amount > sum_share:
             raise ParamErrorException(error_code.API_110103_USER_BANKER)
@@ -368,16 +368,16 @@ class BankerBuyView(ListCreateAPIView):
             all_user_gsg = BankerRecord.objects.filter(source=type, key_id=key_id, club_id=club_id).aggregate(Sum('balance'))
             sum_balance = all_user_gsg['balance__sum'] if all_user_gsg['balance__sum'] is not None else 0  # 该局总已认购额
             print("sum_balance==================", sum_balance)
-            sum_amount = Decimal(sum_balance) + amount  # 认购以后该局的总已认购额
+            sum_amount = to_decimal(sum_balance) + amount  # 认购以后该局的总已认购额
 
             banker_share = BankerShare.objects.filter(club_id=int(club_id), source=int(type)).first()
-            sum_share = Decimal(banker_share.balance)  # 总可购份额
+            sum_share = to_decimal(banker_share.balance)  # 总可购份额
 
             info.append({
                 "key_id": key_id,
                 "sum_amount": sum_amount,
-                "sum_share": Decimal(sum_share),
-                "amount": Decimal(amount)
+                "sum_share": to_decimal(sum_share),
+                "amount": to_decimal(amount)
             })
 
             print("sum_amount==================", sum_amount)
@@ -397,18 +397,18 @@ class BankerBuyView(ListCreateAPIView):
             print("sum_share==============", s["sum_share"])
             proportion = normalize_fraction(s["amount"] / s["sum_share"], 4)
             print("proportion===============", proportion)
-            banker_record.proportion = Decimal(proportion)
+            banker_record.proportion = to_decimal(proportion)
             banker_record.source = type
             banker_record.key_id = s["key_id"]
             banker_record.save()
 
-        user_coin.balance -= Decimal(new_sum_balance)
+        user_coin.balance -= to_decimal(new_sum_balance)
         user_coin.save()
 
         coin_detail = CoinDetail()
         coin_detail.user = user
         coin_detail.coin_name = coin_info.name
-        coin_detail.amount = Decimal('-' + str(new_sum_balance))
+        coin_detail.amount = to_decimal('-' + str(new_sum_balance))
         coin_detail.rest = user_coin.balance
         coin_detail.sources = 18
         coin_detail.save()
@@ -498,7 +498,7 @@ class BankerRecordView(ListAPIView):
 
             print("i[2]=================", i[2])
             print("i[2]=================", i[2] * 100)
-            proportion = i[2] * 100 * Decimal(0.4)
+            proportion = i[2] * 100 * to_decimal(0.4)
             print("proportion=================", proportion)
             proportion = normalize_fraction(proportion, 2)
             print("proportion===============", proportion)
@@ -511,8 +511,8 @@ class BankerRecordView(ListAPIView):
                     earn_coin = "+" + str(earn_coin)
                     status = 2
                 else:
-                    if Decimal(earn_coin) < Decimal("-" + str(i[4])):
-                        earn_coin = normalize_fraction(Decimal(i[4]), coin_accuracy)
+                    if to_decimal(earn_coin) < to_decimal("-" + str(i[4])):
+                        earn_coin = normalize_fraction(to_decimal(i[4]), coin_accuracy)
                         earn_coin = "-" + str(earn_coin)
                     earn_coin = str(earn_coin)
                     status = 4
@@ -621,7 +621,7 @@ class AmountDetailsView(ListAPIView):
         list = self.get_list_by_sql(sql)
         sum_bet = 0
         for i in list:
-            sum_bet += Decimal(i[1])
+            sum_bet += to_decimal(i[1])
             nickname = str(i[2][0:3]) + "***" + str(i[2][7:])
             f = len(str(i[4]))
             if f > 1:

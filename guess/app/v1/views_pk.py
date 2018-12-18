@@ -547,7 +547,7 @@ class StockPkBet(ListCreateAPIView):
         club_id = int(self.request.data.get('club_id'))
         play_id = int(self.request.data.get('play_id'))
         option_id = int(self.request.data.get('option_id'))
-        bet = Decimal(self.request.data.get('bet'))
+        bet = to_decimal(self.request.data.get('bet'))
         stock_pk_id = int(self.request.data.get('stock_pk_id'))
         open_time = datetime.datetime.strptime(self.request.data.get('open_time'), '%Y-%m-%d %H:%M:%S')
 
@@ -570,7 +570,7 @@ class StockPkBet(ListCreateAPIView):
                                                stock_pk_id=stock_pk_id).first()
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
-        if 0 >= Decimal(bet):
+        if 0 >= to_decimal(bet):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         # 是否封盘
@@ -592,7 +592,7 @@ class StockPkBet(ListCreateAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_40105_SMS_WAGER_PARAMETER)
 
-        if bet > Decimal(bet_limit_dic['bets_max']) or bet < Decimal(bet_limit_dic['bets_min']):
+        if bet > to_decimal(bet_limit_dic['bets_max']) or bet < to_decimal(bet_limit_dic['bets_min']):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         # 单场比赛最大下注
@@ -600,16 +600,16 @@ class StockPkBet(ListCreateAPIView):
             Sum('bets'))
 
         bet_sum = bet_sum['bets__sum'] if bet_sum['bets__sum'] else 0
-        bet_sum = Decimal(bet_sum) + Decimal(bet)
+        bet_sum = to_decimal(bet_sum) + to_decimal(bet)
 
         coin_info = Coin.objects.get_one(pk=coin_id)
         betting_toplimit = coin_info.betting_toplimit
-        if Decimal(bet_sum) > betting_toplimit:
+        if to_decimal(bet_sum) > betting_toplimit:
             raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if bet > Decimal(user_coin.balance):
+        if bet > to_decimal(user_coin.balance):
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         bet = normalize_fraction(bet, coin_accuracy)
@@ -658,7 +658,7 @@ class StockPkBet(ListCreateAPIView):
             pass
         else:
             clubinfo = Club.objects.get_one(pk=int(club_id))
-            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(bet), 5, record.created_at)
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, to_decimal(bet), 5, record.created_at)
 
         response = {
             'code': 0,

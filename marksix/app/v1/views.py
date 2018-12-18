@@ -10,7 +10,7 @@ from users.finance.functions import get_now
 from marksix.functions import date_exchange, change_num
 from django.db import transaction
 from datetime import datetime
-from utils.functions import value_judge, handle_zero
+from utils.functions import value_judge, handle_zero, to_decimal
 from base.exceptions import ParamErrorException
 from base import code as error_code
 from chat.models import Club
@@ -296,7 +296,7 @@ class BetsViews(ListCreateAPIView):
         club_id = request.data.get('club_id')
         play_id = request.data.get('play')
         bet = request.data.get('bet')
-        bet_coin = Decimal(request.data.get('bet_coin'))
+        bet_coin = to_decimal(request.data.get('bet_coin'))
         issue = request.data.get('issue')
         content = request.data.get('content')  # 数组，当为特码或者连码时，传入号码串；当为其他类型时，传入id
 
@@ -423,10 +423,10 @@ class BetsViews(ListCreateAPIView):
         bet_sum = SixRecord.objects.filter(user_id=user.id, club_id=club_id, issue=issue).aggregate(
             Sum('bet_coin'))
         bet_sum = bet_sum['bet_coin__sum'] if bet_sum['bet_coin__sum'] else 0
-        bet_sum = Decimal(bet_sum) + Decimal(bet_coin)
+        bet_sum = to_decimal(bet_sum) + to_decimal(bet_coin)
 
         betting_toplimit = coin_info.betting_toplimit
-        if Decimal(bet_sum) > betting_toplimit:
+        if to_decimal(bet_sum) > betting_toplimit:
             raise ParamErrorException(error_code.API_50109_BET_LIMITED)
 
         # 查看用户余额是否足够
@@ -479,7 +479,7 @@ class BetsViews(ListCreateAPIView):
             pass
         else:
             clubinfo = Club.objects.get_one(pk=int(club_id))
-            PromotionRecord.objects.insert_record(user, clubinfo, sixcord.id, Decimal(bet_coin), 3, sixcord.created_at)
+            PromotionRecord.objects.insert_record(user, clubinfo, sixcord.id, to_decimal(bet_coin), 3, sixcord.created_at)
 
         return self.response({'code': 0})
 

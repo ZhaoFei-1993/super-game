@@ -3,7 +3,7 @@ import websocket
 import json
 from dragon_tiger.models import Table
 from baccarat.models import Boots, Number_tab, Baccaratrecord
-from utils.functions import baccarat_ludan_save, normalize_fraction
+from utils.functions import baccarat_ludan_save, normalize_fraction, to_decimal
 import hashlib
 import time
 from urllib import parse
@@ -171,7 +171,7 @@ class Command(BaseCommand):
                         else:
                             print("------------用户id：" + str(record.user.id) + "----庄/闲/和---答案错误--------")
                             old_earn_coin = "-" + str(record.bets)
-                            old_earn_coin = Decimal(old_earn_coin)
+                            old_earn_coin = to_decimal(old_earn_coin)
                             record.earn_coin = old_earn_coin
                             record.is_distribution = True
                             record.status = 1
@@ -277,7 +277,7 @@ class Command(BaseCommand):
                             else:
                                 print("------------用户id：" + str(record.user.id) + "----庄和/闲和---答案错误--------")
                                 old_earn_coin = "-" + str(record.bets)
-                                old_earn_coin = Decimal(old_earn_coin)
+                                old_earn_coin = to_decimal(old_earn_coin)
                                 record.earn_coin = old_earn_coin
                                 record.is_distribution = True
                                 record.status = 1

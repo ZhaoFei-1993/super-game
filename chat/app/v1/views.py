@@ -8,7 +8,7 @@ from base import code as error_code
 from base.exceptions import ParamErrorException
 from users.models import UserMessage, DailyLog, Coin, RecordMark, UserRecharge, UserPresentation, UserCoin
 from django.db.models import Q
-from utils.functions import message_hints, normalize_fraction, get_sql
+from utils.functions import message_hints, normalize_fraction, get_sql, to_decimal
 from django.db.models import Sum
 import datetime
 import calendar
@@ -944,7 +944,7 @@ class ClubRecordView(ListAPIView):
                 record_info = SixRecord.objects.get(id=record_id)
                 issue = record_info.issue
                 bet_coin = record_info.bet_coin
-                number = Decimal(record_info.bet)
+                number = to_decimal(record_info.bet)
 
                 play = record_info.play
                 option_id = record_info.option_id

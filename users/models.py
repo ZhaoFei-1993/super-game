@@ -14,6 +14,7 @@ from django.conf import settings
 from base.error_code import get_code
 from utils.models import CodeModel
 from base.models import BaseManager
+from utils.functions import to_decimal
 from utils.cache import get_cache, set_cache, delete_cache, incr_cache
 from django.core.management import call_command
 from django.db import connection
@@ -738,7 +739,7 @@ class UserRechargeManager(models.Manager):
                 return True
 
             user_reward = UserCoin.objects.get(user_id=user_id, coin_id=Coin.HAND)
-            user_reward.balance += Decimal(coin_reward)
+            user_reward.balance += to_decimal(coin_reward)
             user_reward.save()
 
             # 插入用户余额变更记录表
@@ -806,7 +807,7 @@ class UserRechargeManager(models.Manager):
         coin_bankruptcy.user = user
         coin_bankruptcy.coin_name = 'SOC'
         coin_bankruptcy.amount = '+' + str(activity.number)
-        coin_bankruptcy.rest = Decimal(user_coin.balance)
+        coin_bankruptcy.rest = to_decimal(user_coin.balance)
         coin_bankruptcy.sources = 4
         if user.is_robot is False:
             coin_bankruptcy.save()
@@ -1162,7 +1163,7 @@ class CoinGiveManager(models.Manager):
         coin_bankruptcy.user = user
         coin_bankruptcy.coin_name = 'USDT'
         coin_bankruptcy.amount = '+' + str(activity.number)
-        coin_bankruptcy.rest = Decimal(user_coin.balance)
+        coin_bankruptcy.rest = to_decimal(user_coin.balance)
         coin_bankruptcy.sources = 4
         if user.is_robot is False:
             coin_bankruptcy.save()

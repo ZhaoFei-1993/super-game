@@ -3,7 +3,7 @@ from base.app import ListAPIView, ListCreateAPIView
 from django.db import transaction
 from base import code as error_code
 from base.exceptions import ParamErrorException
-from utils.functions import value_judge, get_sql
+from utils.functions import value_judge, get_sql, to_decimal
 from decimal import Decimal
 from utils.functions import normalize_fraction
 from base.function import LoginRequired
@@ -219,7 +219,7 @@ class DragontigerBet(ListCreateAPIView):
         option_id = self.request.data['option_id']  # 获取俱乐部ID
         club_id = self.request.data['club_id']  # 获取俱乐部ID
         coins = self.request.data['bet']  # 获取投注金额
-        coins = Decimal(coins)
+        coins = to_decimal(coins)
 
         try:
             number_tab_info = Number_tab.objects.get(pk=number_tab_id)
@@ -245,7 +245,7 @@ class DragontigerBet(ListCreateAPIView):
             raise ParamErrorException(error_code.API_90101_DRAGON_TIGER_NO_BET)
         i = float(0)
         # 判断赌注是否有效
-        if i >= Decimal(coins):
+        if i >= to_decimal(coins):
             raise ParamErrorException(error_code.API_50102_WAGER_INVALID)
 
         try:
@@ -295,14 +295,14 @@ class DragontigerBet(ListCreateAPIView):
         sql += " where dtr.option_id = '" + str(option_id) + "'"
         sql += " and dtr.number_tab_id = '" + str(number_tab_id) + "'"
         coin_number_in = get_sql(sql)[0][0]
-        earn_coin = Decimal(option_odds.odds) * coins  # 应赔金额
+        earn_coin = to_decimal(option_odds.odds) * coins  # 应赔金额
         if coin_number_in == None or coin_number_in == 0:
             coin_number_in = 0
             all_earn_coin = earn_coin  # 应赔金额
         else:
             coin_number_in = normalize_fraction(coin_number_in, int(coin_accuracy))
-            coin_number_in = coin_number_in*Decimal(option_odds.odds)
-            all_earn_coin = Decimal(coin_number_in) + earn_coin
+            coin_number_in = coin_number_in*to_decimal(option_odds.odds)
+            all_earn_coin = to_decimal(coin_number_in) + earn_coin
         print("一共要赔======================", all_earn_coin)
 
         if all_earn_coin > all_earn_coins:
@@ -313,7 +313,7 @@ class DragontigerBet(ListCreateAPIView):
 
         usercoin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
         # 判断用户金币是否足够
-        if Decimal(usercoin.balance) < coins:
+        if to_decimal(usercoin.balance) < coins:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
 
         record = Baccaratrecord()
@@ -365,7 +365,7 @@ class DragontigerBet(ListCreateAPIView):
 
         # 用户减少金币
         # balance = float_to_str(float(usercoin.balance), coin_accuracy)
-        usercoin.balance = usercoin.balance - Decimal(coins)
+        usercoin.balance = usercoin.balance - to_decimal(coins)
         usercoin.save()
 
         coin_detail = CoinDetail()
@@ -381,7 +381,7 @@ class DragontigerBet(ListCreateAPIView):
         if int(club_id) == 1 or int(user.is_robot) == 1:
             pass
         else:
-            PromotionRecord.objects.insert_record(user, clubinfo, record.id, Decimal(coins), 6, record.created_at)
+            PromotionRecord.objects.insert_record(user, clubinfo, record.id, to_decimal(coins), 6, record.created_at)
         response = {
             'code': 0,
             'data': {

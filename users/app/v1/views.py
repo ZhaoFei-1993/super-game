@@ -26,7 +26,7 @@ from django.conf import settings
 from base import code as error_code
 from base.exceptions import ParamErrorException, UserLoginException
 from utils.functions import random_salt, message_hints, language_switch, resize_img, normalize_fraction, \
-    random_invitation_code, handle_zero
+    random_invitation_code, handle_zero, to_decimal
 from rest_framework_jwt.settings import api_settings
 from django.db import transaction
 import linecache
@@ -291,7 +291,7 @@ class UserRegister(object):
             coin_bankruptcy.user = user
             coin_bankruptcy.coin_name = 'USDT'
             coin_bankruptcy.amount = '+' + str(give_info.number)
-            coin_bankruptcy.rest = Decimal(user_coin.balance)
+            coin_bankruptcy.rest = to_decimal(user_coin.balance)
             coin_bankruptcy.sources = 4
             if user.is_robot is False:
                 coin_bankruptcy.save()
@@ -318,13 +318,13 @@ class UserRegister(object):
                     user_message.save()
                 if int_invitation.money > 0:
                     int_user_coin = UserCoin.objects.get(user_id=user.pk, coin_id=1)
-                    int_user_coin.balance += Decimal(int_invitation.money)
+                    int_user_coin.balance += to_decimal(int_invitation.money)
                     int_user_coin.save()
                     coin_bankruptcy = CoinDetail()
                     coin_bankruptcy.user = user
                     coin_bankruptcy.coin_name = 'INT'
                     coin_bankruptcy.amount = '+' + str(int_invitation.money)
-                    coin_bankruptcy.rest = Decimal(int_user_coin.balance)
+                    coin_bankruptcy.rest = to_decimal(int_user_coin.balance)
                     coin_bankruptcy.sources = 4
                     if user.is_robot is False:
                         coin_bankruptcy.save()
@@ -349,7 +349,7 @@ class UserRegister(object):
                 coin_detail.user = user
                 coin_detail.coin_name = 'HAND'
                 coin_detail.amount = '+' + str(user_money)
-                coin_detail.rest = Decimal(user_balance.balance)
+                coin_detail.rest = to_decimal(user_balance.balance)
                 coin_detail.sources = 6
                 coin_detail.save()
                 user.is_money = 1
@@ -1091,7 +1091,7 @@ class DailySignListView(ListCreateAPIView):
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         rewards = dailysettings.rewards
         user_coin = UserCoin.objects.get(user_id=user_id, coin_id=dailysettings.coin.id)
-        user_coin.balance += Decimal(rewards)
+        user_coin.balance += to_decimal(rewards)
         user_coin.save()
         daily.sign_date = time.strftime('%Y-%m-%d %H:%M:%S')
         daily.user_id = user_id
@@ -1100,7 +1100,7 @@ class DailySignListView(ListCreateAPIView):
         coin_detail.user = user
         coin_detail.coin_name = dailysettings.coin.name
         coin_detail.amount = '+' + str(rewards)
-        coin_detail.rest = Decimal(user_coin.balance)
+        coin_detail.rest = to_decimal(user_coin.balance)
         coin_detail.sources = 7
         coin_detail.save()
 
@@ -1415,7 +1415,7 @@ class AssetLock(CreateAPIView):
             userinfo = User.objects.get(id=userid)
         except Exception:
             raise
-        amounts = Decimal(str(request.data.get('amounts')))
+        amounts = to_decimal(str(request.data.get('amounts')))
         locked_days = int(request.data.get('locked_days'))
         # coin_id = int(request.data.get('coin_id'))
         coin_id = Coin.GSG
@@ -1524,7 +1524,7 @@ class UserPresentationView(CreateAPIView):
                 coin_give = CoinGiveRecords.objects.get(user_id=userid, coin_give_id=1)
             except Exception:
                 raise
-            balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+            balance = user_coin.balance - to_decimal(str(coin_give.lock_coin))
             if balance < coin_out.value:
                 raise ParamErrorException(error_code.API_70107_USER_PRESENT_BALANCE_NOT_ENOUGH)
         else:
@@ -1542,7 +1542,7 @@ class UserPresentationView(CreateAPIView):
                         coin_give = CoinGiveRecords.objects.get(user_id=userid, coin_give_id=1)
                     except Exception:
                         raise
-                    balance = user_coin.balance - Decimal(str(coin_give.lock_coin))
+                    balance = user_coin.balance - to_decimal(str(coin_give.lock_coin))
                     if p_amount > balance:
                         raise ParamErrorException(error_code.API_70101_USER_PRESENT_AMOUNT_GT)
 
@@ -1573,9 +1573,9 @@ class UserPresentationView(CreateAPIView):
             raise ParamErrorException(error_code.API_70106_USER_PRESENT_ADDRESS_NAME)
 
         if coin.name != 'HAND':
-            user_coin.balance = user_coin.balance - Decimal(str(p_amount))
+            user_coin.balance = user_coin.balance - to_decimal(str(p_amount))
         else:
-            user_coin.balance -= Decimal(str(p_amount))
+            user_coin.balance -= to_decimal(str(p_amount))
             if coin_eth.balance >= coin_out.value:
                 coin_eth.balance -= coin_out.value
                 coin_eth.save()
@@ -1584,9 +1584,9 @@ class UserPresentationView(CreateAPIView):
         presentation.user = userinfo
         presentation.coin = coin
         if coin.name == 'HAND':
-            presentation.amount = Decimal(str(p_amount))
+            presentation.amount = to_decimal(str(p_amount))
         else:
-            presentation.amount = Decimal(str(p_amount)) - coin_out.value
+            presentation.amount = to_decimal(str(p_amount)) - coin_out.value
         try:
             presentation.rest = user_coin.balance
         except Exception:
@@ -1598,10 +1598,10 @@ class UserPresentationView(CreateAPIView):
         coin_detail.user = userinfo
         coin_detail.coin_name = coin.name
         if coin.name == 'HAND':
-            coin_detail.amount = Decimal(str(p_amount))
+            coin_detail.amount = to_decimal(str(p_amount))
         else:
-            coin_detail.amount = Decimal(str(p_amount)) - coin_out.value
-        coin_detail.rest = Decimal(user_coin.balance)
+            coin_detail.amount = to_decimal(str(p_amount)) - coin_out.value
+        coin_detail.rest = to_decimal(user_coin.balance)
         coin_detail.sources = 2
         coin_detail.save()
         content = {'code': 0}
@@ -2180,7 +2180,7 @@ class ChangePasswordView(ListAPIView):
 #             user_coin = UserCoin.objects.get(id=index, user_id=uuid)
 #         except Exception:
 #             raise
-#         recharge = Decimal(request.data.get('recharge'))
+#         recharge = to_decimal(request.data.get('recharge'))
 #         if recharge <= 0:
 #             raise ParamErrorException(error_code.API_70202_USER_RECHARGE_AMOUNT)
 #         user_coin.balance += recharge
@@ -2195,7 +2195,7 @@ class ChangePasswordView(ListAPIView):
 #                     user_reward = UserCoin.objects.get(user_id=uuid, coin__name='HAND')
 #                 except Exception:
 #                     raise
-#                 user_reward.balance += Decimal('2888')
+#                 user_reward.balance += to_decimal('2888')
 #                 user_reward.save()
 #                 reward_detail = CoinDetail(user_id=uuid, coin_name=user_reward.coin.name, amount='2888',
 #                                            rest=user_reward.balance, sources=4)
@@ -2733,7 +2733,7 @@ class ClickLuckDrawView(CreateAPIView):
         integral_all = IntegralPrize.objects.filter()
         prize_consume = integral_all[0].prize_consume
         user_gsg = UserCoin.objects.get(user_id=user_info.id, coin_id=6)
-        if is_gratis != 1 and Decimal(user_gsg.balance) < Decimal(prize_consume):
+        if is_gratis != 1 and to_decimal(user_gsg.balance) < to_decimal(prize_consume):
             raise ParamErrorException(error_code=error_code.API_60103_INTEGRAL_INSUFFICIENT)
         if int(number) <= 0 and is_gratis != 1:
             raise ParamErrorException(error_code=error_code.API_60102_LUCK_DRAW_FREQUENCY_INSUFFICIENT)
@@ -2748,13 +2748,13 @@ class ClickLuckDrawView(CreateAPIView):
             decr_cache(NUMBER_OF_LOTTERY_AWARDS)
         elif int(is_gratis) != 1:
             decr_cache(NUMBER_OF_PRIZES_PER_DAY)
-            user_gsg.balance -= Decimal(prize_consume)
+            user_gsg.balance -= to_decimal(prize_consume)
             user_gsg.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = user_gsg.coin.name
             coin_detail.amount = '-' + str(prize_consume)
-            coin_detail.rest = Decimal(user_gsg.balance)
+            coin_detail.rest = to_decimal(user_gsg.balance)
             coin_detail.sources = 4
             coin_detail.save()
         try:
@@ -2765,14 +2765,14 @@ class ClickLuckDrawView(CreateAPIView):
             incr_cache(NUMBER_OF_LOTTERY_AWARDS)
 
         if choice == "GSG":
-            integral = Decimal(integral_prize.prize_number)
+            integral = to_decimal(integral_prize.prize_number)
             user_gsg.balance += integral
             user_gsg.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = user_gsg.coin.name
             coin_detail.amount = '+' + str(integral)
-            coin_detail.rest = Decimal(user_gsg.balance)
+            coin_detail.rest = to_decimal(user_gsg.balance)
             coin_detail.sources = 4
             coin_detail.save()
 
@@ -2791,13 +2791,13 @@ class ClickLuckDrawView(CreateAPIView):
                 user_coin = UserCoin.objects.get(user_id=user_info.pk, coin__name=choice)
             except DailyLog.DoesNotExist:
                 return 0
-            user_coin.balance += Decimal(integral_prize.prize_number)
+            user_coin.balance += to_decimal(integral_prize.prize_number)
             user_coin.save()
             coin_detail = CoinDetail()
             coin_detail.user = user_info
             coin_detail.coin_name = choice
-            coin_detail.amount = Decimal(integral_prize.prize_number)
-            coin_detail.rest = Decimal(user_coin.balance)
+            coin_detail.amount = to_decimal(integral_prize.prize_number)
+            coin_detail.rest = to_decimal(user_coin.balance)
             coin_detail.sources = 4
             coin_detail.save()
 
@@ -3231,7 +3231,7 @@ class MoveFilishView(CreateAPIView):
         remarks = ''
         if 'remarks' in self.request.data:
             remarks = self.request.data.get('remarks')  # 获取备注
-        amount = Decimal(self.request.data['amount'])  # 获取转账的金额
+        amount = to_decimal(self.request.data['amount'])  # 获取转账的金额
         if amount <= 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         MobileCoin.objects.create(sponsor_id=user.id, recipient_id=int(recipient_id),
@@ -3239,7 +3239,7 @@ class MoveFilishView(CreateAPIView):
 
         # 用户的余额
         sponsor_user_coin = UserCoin.objects.get(user_id=user.id, coin_id=coin_id)
-        if Decimal(sponsor_user_coin.balance) < amount:
+        if to_decimal(sponsor_user_coin.balance) < amount:
             raise ParamErrorException(error_code.API_50104_USER_COIN_NOT_METH)
         sponsor_user_coin.balance -= amount
         sponsor_user_coin.save()
@@ -3247,7 +3247,7 @@ class MoveFilishView(CreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = sponsor_user_coin.user
         coin_detail.coin_name = sponsor_user_coin.coin.name
-        coin_detail.amount = Decimal('-' + str(amount))
+        coin_detail.amount = to_decimal('-' + str(amount))
         coin_detail.rest = sponsor_user_coin.balance
         coin_detail.sources = 25
         coin_detail.save()
@@ -3260,7 +3260,7 @@ class MoveFilishView(CreateAPIView):
         coin_detail = CoinDetail()
         coin_detail.user = recipient_user_coin.user
         coin_detail.coin_name = recipient_user_coin.coin.name
-        coin_detail.amount = Decimal('+' + str(amount))
+        coin_detail.amount = to_decimal('+' + str(amount))
         coin_detail.rest = recipient_user_coin.balance
         coin_detail.sources = 25
         coin_detail.save()

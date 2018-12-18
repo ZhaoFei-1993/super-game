@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 import websocket
 import json
 from dragon_tiger.models import Table, Boots, Number_tab, Dragontigerrecord
-from utils.functions import ludan_save, normalize_fraction
+from utils.functions import ludan_save, normalize_fraction, to_decimal
 import hashlib
 import time
 from urllib import parse
@@ -160,7 +160,7 @@ class Command(BaseCommand):
                         else:
                             print("------------用户id：" + str(record.user.id) + "-------答案错误--------")
                             old_earn_coin = "-" + str(record.bets)
-                            old_earn_coin = Decimal(old_earn_coin)
+                            old_earn_coin = to_decimal(old_earn_coin)
                             record.earn_coin = old_earn_coin
                             record.is_distribution = True
                             record.status = 1

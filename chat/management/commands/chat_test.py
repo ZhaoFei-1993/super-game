@@ -6,6 +6,7 @@ from chat.models import ClubIncome, Club, ClubRule
 from utils.functions import get_sql
 from decimal import Decimal
 from django.conf import settings
+from utils.functions import to_decimal
 import datetime
 
 
@@ -93,7 +94,7 @@ class Command(BaseCommand, BaseView):
                         if a[0] not in info[key_name]:
                             number = a[2]
                             if number > 0:
-                                number = number*Decimal(str(0.95))
+                                number = number*to_decimal(str(0.95))
                             info[key_name][a[0]] = {
                                 "earn_coin": number,
                                 "bets": a[4]
@@ -103,14 +104,14 @@ class Command(BaseCommand, BaseView):
                         else:
                             number = a[2]
                             if number > 0:
-                                number = number * Decimal(str(0.95))
+                                number = number * to_decimal(str(0.95))
                             info[key_name][a[0]]["earn_coin"] += number
                             info[key_name][a[0]]["bets"] += a[4]
                     else:
                         if a[0] not in info[key_name]:
                             number = a[2]
                             if number > 0:
-                                number = number * Decimal(str(0.95))
+                                number = number * to_decimal(str(0.95))
                             info[key_name][a[0]] = {
                                 "earn_coin": number,
                                 "bets": a[4]
@@ -118,7 +119,7 @@ class Command(BaseCommand, BaseView):
                         else:
                             number = a[2]
                             if number > 0:
-                                number = number * Decimal(str(0.95))
+                                number = number * to_decimal(str(0.95))
                             info[key_name][a[0]]["earn_coin"] += number
                             info[key_name][a[0]]["bets"] += a[4]
             print("info =================", info)
