@@ -353,6 +353,7 @@ class ClubIncome(models.Model):
         (DRAGON_TIGER, "龙虎斗")
     )
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    bets = models.DecimalField(verbose_name="日下注金额", max_digits=20, decimal_places=8, default=0.00000000)
     earn_coin = models.DecimalField(verbose_name="日收益金额", max_digits=32, decimal_places=8, default=0.00000000)
     source = models.IntegerField(verbose_name="类型", choices=SOURCE, default=FOOTBALL)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)

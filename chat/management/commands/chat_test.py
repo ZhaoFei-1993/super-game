@@ -4,20 +4,19 @@ from django.core.management.base import BaseCommand
 from base.app import BaseView
 from chat.models import ClubIncome, Club, ClubRule
 from utils.functions import get_sql
-from promotion.models import PromotionRecord
-from users.models import CoinDetail
 from decimal import Decimal
 from django.conf import settings
 import datetime
 
 
 class Command(BaseCommand, BaseView):
-    help = "联合做庄结算方法测试"
+    help = "日收益结算"
 
     def handle(self, *args, **options):
         user_list = str(settings.TEST_USER_IDS)
         yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        yesterday = yesterday + " 23:59:59"
+        # yesterday_start = yesterday + " 00:00:00"
+        yesterday_end = yesterday + " 23:59:59"
         print("yesterday==============", yesterday)
         club_list = Club.objects.get_all()
         for i in club_list:
@@ -57,7 +56,7 @@ class Command(BaseCommand, BaseView):
                 elif type == 5:  # 股票PK
                     sql_list += "r.issue_id as key_id, "
                 sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin))) as profit, "
-                sql_list += "p.source"
+                sql_list += "p.source, sum(p.bets)"
                 sql = "select " + sql_list + " from promotion_promotionrecord p"
                 if type == 1:  # 足球
                     sql += " inner join quiz_record r on p.record_id=r.id"
@@ -71,15 +70,13 @@ class Command(BaseCommand, BaseView):
                     sql += " inner join guess_recordstockpk r on p.record_id=r.id"
                 sql += " where p.club_id = '" + str(club_id) + "'"
                 sql += " and p.source = '" + str(type) + "'"
-                sql += " and p.created_at <= '" + str(yesterday) + "'"
+                sql += " and p.created_at <= '" + str(yesterday_end) + "'"
+                # sql += " and p.created_at >= '" + str(yesterday_start) + "'"
                 sql += " and p.user_id not in " + user_list
                 sql += " group by years, key_id"
-                # sql += " order by years desc"
-                print("sql==========", sql)
                 list_info = get_sql(sql)
                 print("list_info================", list_info)
                 for a in list_info:
-                    print("1111111111111111")
                     key_name = ""
                     if a[3] == 1:
                         key_name = "足球"
@@ -97,23 +94,33 @@ class Command(BaseCommand, BaseView):
                             number = a[2]
                             if number > 0:
                                 number = number*Decimal(str(0.95))
-                            info[key_name][a[0]] = number
+                            info[key_name][a[0]] = {
+                                "earn_coin": number,
+                                "bets": a[4]
+                            }
+                            # info[key_name][a[0]]["earn_coin"] = number
+                            # info[key_name][a[0]]["bets"] = a[4]
                         else:
                             number = a[2]
                             if number > 0:
                                 number = number * Decimal(str(0.95))
-                            info[key_name][a[0]] += number
+                            info[key_name][a[0]]["earn_coin"] += number
+                            info[key_name][a[0]]["bets"] += a[4]
                     else:
                         if a[0] not in info[key_name]:
                             number = a[2]
                             if number > 0:
                                 number = number * Decimal(str(0.95))
-                            info[key_name][a[0]] = number
+                            info[key_name][a[0]] = {
+                                "earn_coin": number,
+                                "bets": a[4]
+                            }
                         else:
                             number = a[2]
                             if number > 0:
                                 number = number * Decimal(str(0.95))
-                            info[key_name][a[0]] += number
+                            info[key_name][a[0]]["earn_coin"] += number
+                            info[key_name][a[0]]["bets"] += a[4]
             print("info =================", info)
             for k in info:
                 rule_name = 0
@@ -131,11 +138,13 @@ class Command(BaseCommand, BaseView):
                 for o in info[k]:
                     time = o + " 00:00:00"
                     print("time===============", time)
-                    earn_coin = info[k][o]
+                    earn_coin = info[k][o]["earn_coin"]
+                    bets = info[k][o]["bets"]
                     print("coin_number==================", earn_coin)
                     club_income = ClubIncome()
                     club_income.club = club_info
                     club_income.earn_coin = earn_coin
+                    club_income.bets = bets
                     club_income.created_at = time
                     club_income.source = rule_name
                     club_income.save()

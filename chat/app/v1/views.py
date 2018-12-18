@@ -2,7 +2,7 @@
 from base.app import ListAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
-from chat.models import Club, ClubRule, ClubBanner, ClubIdentity
+from chat.models import Club, ClubRule, ClubBanner, ClubIdentity, ClubIncome
 from users.models import User
 from base import code as error_code
 from base.exceptions import ParamErrorException
@@ -468,44 +468,11 @@ class ClubHomeView(ListAPIView):
         else:
             sum_bet_water = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
 
-        sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                  earn_coin__gt=0,
-                                                  club_id=int(club_id),
-                                                  user__is_block=0,
-                                                  user__is_robot=0).aggregate(Sum('earn_coin'))
-        # 赔的钱
-        sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                   earn_coin__lt=0,
-                                                   club_id=int(club_id),
-                                                   user__is_block=0,
-                                                   user__is_robot=0).aggregate(Sum('earn_coin'))
-        # 赚的钱
-        sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      earn_coin__gt=0,
-                                                      club_id=int(club_id),
-                                                      user__is_block=0,
-                                                      user__is_robot=0).aggregate(Sum('bets'))
-        # 应扣除的本金
-
-        if sum_win_list['bets__sum'] is None:
-            sum_betss = 0
-        else:
-            sum_betss = sum_win_list['bets__sum']     # 应扣除的本金
-
-        if sum_list['earn_coin__sum'] is None:
+        sum_bets = ClubIncome.objects.filter(club_id=int(club_id)).aggregate(Sum('earn_coin'))
+        if sum_bets['earn_coin__sum'] is None:
             sum_bets = 0
         else:
-            sum_bets = sum_list['earn_coin__sum']      # 赔的钱
-        print("赔==============", sum_bets)
-        print("本金==============", sum_betss)
-        sum_bets = sum_bets - sum_betss
-        sum_bets = Decimal('-' + str(sum_bets))
-
-        if sum_lists['earn_coin__sum'] is None:
-            sum_win_bets = 0
-        else:
-            sum_win_bets = sum_lists['earn_coin__sum'] * Decimal(0.95)    # 赚的钱
-        sum_bets = sum_bets + abs(sum_win_bets)
+            sum_bets = normalize_fraction(sum_bets['earn_coin__sum'], coin_accuracy)  # 总盈亏
 
         sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
