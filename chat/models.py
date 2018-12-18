@@ -1,6 +1,6 @@
 from django.db import models
 from wc_auth.models import Admin
-from users.models import User, Coin
+from users.models import Coin, User
 import reversion
 from base.models import BaseManager
 import json

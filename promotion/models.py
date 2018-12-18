@@ -15,7 +15,7 @@ import calendar
 from decimal import Decimal
 from utils.cache import get_cache, set_cache
 from users.models import UserInvitation, UserCoin
-from utils.functions import to_decimal
+# from utils.functions import normalize_fraction
 from django.db import connection
 from quiz.models import Record as Quiz_Record
 from marksix.models import SixRecord
@@ -66,27 +66,27 @@ class UserPresentationManager(BaseManager):
             data_number = self.filter(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at).count()
             if data_number > 0:
                 day_data = self.get(club_id=club_id, user_id=my_inviter.inviter.id, created_at=created_at)
-                day_data.bet_water += to_decimal(bet)
-                day_data.dividend_water += to_decimal(bet) * to_decimal('0.005')
-                day_data.income += to_decimal(income)
+                day_data.bet_water += Decimal(str(bet))
+                day_data.dividend_water += Decimal(bet) * Decimal('0.005')
+                day_data.income += Decimal(str(income))
                 day_data.save()
             else:
                 day_data = UserPresentation()
                 day_data.user_id = my_inviter.inviter.id
                 day_data.club_id = club_id
-                day_data.bet_water = to_decimal(bet)
-                day_data.dividend_water = to_decimal(bet) * to_decimal('0.005')
-                day_data.income = to_decimal(income)
+                day_data.bet_water = Decimal(str(bet))
+                day_data.dividend_water = Decimal(str(bet)) * Decimal('0.005')
+                day_data.income = Decimal(str(income))
                 day_data.created_at = created_at
                 day_data.save()
             inviter_coin = UserCoin.objects.get(coin_id=day_data.club.coin.id, user_id=my_inviter.inviter.id)
-            inviter_coin.balance += to_decimal(bet) * to_decimal('0.005')
+            inviter_coin.balance += Decimal(str(bet)) * Decimal('0.005')
             inviter_coin.save()
 
             coin_detail = CoinDetail()
             coin_detail.user = inviter_coin.user
             coin_detail.coin_name = day_data.club.coin.name
-            coin_detail.amount = to_decimal(bet) * to_decimal('0.005')
+            coin_detail.amount = Decimal(str(bet)) * Decimal('0.005')
             coin_detail.rest = inviter_coin.balance
             coin_detail.sources = 19
             coin_detail.save()
