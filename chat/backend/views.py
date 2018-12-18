@@ -350,9 +350,11 @@ class UserBanker(ListAPIView, DestroyAPIView):
         if value == 0:
             raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         club_id = int(request.data['club_id'])
+        if club_id == 1:
+            raise ParamErrorException(error_code.API_110108_BACKEND_BANKER)
         club_info = Club.objects.get_one(pk=club_id)   # 获取俱乐部信息
         if club_info.is_banker is True:
-            raise ParamErrorException(error_code.API_110108_BACKEND_BANKER)
+            raise ParamErrorException(error_code.API_110113_BACKEND_BANKER)
 
         area_code = int(request.data['area_code'])
         telephone = int(request.data['telephone'])
