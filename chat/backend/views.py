@@ -15,6 +15,7 @@ from django.db.models import Q
 from base import code as error_code
 from base.exceptions import ParamErrorException
 from banker.models import BankerRecord
+from utils.cache import get_cache, set_cache, delete_cache
 
 
 class ClubBackendListView(ListCreateAPIView):
@@ -300,6 +301,37 @@ class ClubBankerRecord(ListAPIView):
                 "end_time": end_time
             })
         return self.response({'code': 0, 'data': data})
+
+
+class ClubIncome(ListAPIView):
+    """
+    做庄局头操作
+    """
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        """
+         用户做庄
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        key = "CLUB_INCOME_ALL"
+        delete_cache(key)
+        value = value_judge(request, "area_code", "telephone")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+
+        area_code = int(request.data['area_code'])
+        telephone = int(request.data['telephone'])
+
+        try:
+            user_info = User.objects.get(area_code=area_code, telephone=telephone)  # 获取用户ID
+        except Exception:
+            raise ParamErrorException(error_code.API_110110_BACKEND_BANKER)
+        set_cache(key, user_info.id)
+        return self.response({'code': 0})
 
 
 class UserBanker(ListAPIView, DestroyAPIView):

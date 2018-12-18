@@ -591,14 +591,19 @@ class InfoView(ListAPIView):
 
         is_message = message_hints(user_id)  # 是否有未读消息
 
-        is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id)).count()
-        club_id = ""
-        if is_identity == 1:
-            club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
-            club_id = club_identity.club_id
+        key = "CLUB_INCOME_ALL"
+        user_id = get_cache(key)
+        if int(items[0]["id"]) == int(user_id):
+            club_id = 0
+        else:
+            is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id)).count()
+            club_id = ""
+            if is_identity == 1:
+                club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
+                club_id = club_identity.club_id
 
         return self.response({'code': 0, 'data': {
-            'user_id': items[0]["id"],
+            'user_id': items[0]["id"], 
             'nickname': items[0]["nickname"],
             'avatar': items[0]["avatar"],
             'usercoin': normalize_fraction(current_coin_balance, int(coin.coin_accuracy)),

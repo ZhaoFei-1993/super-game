@@ -356,9 +356,14 @@ class ClubUserView(ListAPIView):
         type = int(request.GET.get("type"))
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         coin_id = int(Club.objects.get_one(pk=club_id).coin_id)
         print(coin_id)
         user_list = str(settings.TEST_USER_IDS)
@@ -414,9 +419,14 @@ class ClubHomeView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         day = datetime.datetime.now().strftime('%Y-%m-%d')
         day_start = str(day) + " 00:00:00"
         day_end = str(day) + " 23:59:59"
@@ -507,9 +517,14 @@ class ClubUserInfoView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         club_info = Club.objects.get_one(pk=club_id)
 
         coin_id = int(club_info.coin_id)
@@ -546,9 +561,14 @@ class ClubBetListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         month_id = int(self.request.GET.get("month_id"))
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
@@ -622,9 +642,14 @@ class ClubBetsView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         club_info = Club.objects.get_one(pk=club_id)
         coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
         coin_accuracy = int(coin_info.coin_accuracy)
@@ -666,9 +691,14 @@ class PayClubView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         month_id = int(self.request.GET.get("month_id"))
         if "type" in request.GET:
             type = int(self.request.GET.get("type"))   # 1.充值 2.提现
@@ -781,9 +811,14 @@ class ClubDayBetView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         sb_time = str(self.request.GET.get("sb_time"))
         start = sb_time + " 00:00:00"
         end = sb_time + " 23:59:59"
@@ -862,9 +897,14 @@ class ClubRecordView(ListAPIView):
         type = int(self.request.GET.get('type'))   # 0,全部 剩下分类按照玩法列表
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
-        club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
-        if club_identity != 1:
-            raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if int(user.id) == int(key_user_id):
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
         user_list = settings.TEST_USER_ID
         if int(type) == 7:
             type = 2

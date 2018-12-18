@@ -28,4 +28,6 @@ urlpatterns = [
     path('banker/switch/', views.ClubBankerSwitchView.as_view(), name='club-banker-switch'),
     # 做庄局头操作
     path('user/banker/', views.UserBanker.as_view(), name='club-user-banker'),
+    # 设置局头管理员
+    path('club/income/', views.ClubIncome.as_view(), name='club-income-user'),
 ]
