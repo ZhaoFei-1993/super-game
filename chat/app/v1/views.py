@@ -556,7 +556,7 @@ class ClubBetListView(ListAPIView):
         list = get_cache(key)
         if list is None:
             sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
-            sql_list += "p.earn_coin, "
+            sql_list += "sum(p.earn_coin), "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb"
             sql = "select " + sql_list + " from chat_clubincome p"
             sql += " where p.club_id = '" + str(club_id) + "'"
