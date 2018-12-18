@@ -559,17 +559,11 @@ class ClubBetListView(ListAPIView):
         list = get_cache(key)
         if list is None:
             sql_list = "date_format( p.created_at, '%Y年%m月%d日' ) as years, sum(p.bets), "
-            sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
+            sql_list += "p.earn_coin, "
             sql_list += "date_format( p.created_at, '%Y%m%d' ) as time, date_format( p.created_at, '%Y-%m-%d' ) as sb"
-            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.bets ELSE 0 END)) AS earn_coins, "
-            # sql_list += "SUM((CASE WHEN p.earn_coin > 0 THEN p.earn_coin ELSE 0 END)) AS earn_coinss"
-            sql = "select " + sql_list + " from promotion_promotionrecord p"
-            sql += " inner join users_user u on p.user_id=u.id"
+            sql = "select " + sql_list + " from chat_clubincome p"
             sql += " where p.club_id = '" + str(club_id) + "'"
-            sql += " and p.status != 2"
-            sql += " and p.user_id not in " + user_list
             sql += " and p.source in " + club_rule
-            sql += " and u.is_robot = 0"
             sql += " and p.created_at >= '" + str(month_start) + "'"
             sql += " and p.created_at <= '" + str(month_end) + "'"
             sql += "group by years, sb, time"
@@ -582,24 +576,6 @@ class ClubBetListView(ListAPIView):
                     earn_coin = 0
                 else:
                     earn_coin = i[2]
-                # if i[2] is None:
-                #     earn_coin = 0
-                # else:
-                #     earn_coin = Decimal(i[2])   # 总赢
-                #     print("总赚=============", earn_coin)
-                #     earn_coin = Decimal(abs(earn_coin * Decimal(0.95)))
-                # print("总赚*0.95=============", earn_coin)
-                # if i[5] is None:
-                #     bet_coin = 0
-                # else:
-                #     bet_coin = Decimal(i[5])   # 本金
-                # print("应该扣除的本金==================", bet_coin)
-                # if i[6] is None:
-                #     win_coin = 0
-                # else:
-                #     win_coin = Decimal(i[6])   # 总亏
-                #     print("总亏=================", win_coin)
-                # earn_coin = earn_coin - win_coin + bet_coin
                 print("收益=============", earn_coin)
                 test_time = i[4] + ' 00:00:00'
                 test_times = i[4] + ' 23:59:59'
@@ -643,14 +619,11 @@ class ClubBetsView(ListAPIView):
         user_list = str(settings.TEST_USER_IDS)
 
         sql_list = "date_format( p.created_at, '%Y年%m月' ) as years, "
-        sql_list += "sum(IF(p.earn_coin > 0, 0 - (p.earn_coin - p.bets), ABS(p.earn_coin*0.95))) as profit, "
+        sql_list += "sum(p.earn_coin) as profit, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
-        sql = "select " + sql_list + " from promotion_promotionrecord p"
+        sql = "select " + sql_list + " from chat_clubincome p"
         sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.club_id = '" + str(club_id) + "'"
-        sql += " and p.user_id not in " + user_list
-        sql += " and p.status = 1"
-        sql += " and u.is_robot = 0"
         sql += " group by years, time"
         sql += " order by time desc"
         print("sql==========", sql)
@@ -827,25 +800,10 @@ class ClubDayBetView(ListAPIView):
             sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       club_id=int(club_id), created_at__gte=start,
                                                       created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      club_id=int(club_id),
-                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
-                                                      user__is_block=0).aggregate(Sum('earn_coin'))
-            # 赔的钱
-            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                       club_id=int(club_id),
-                                                       earn_coin__lt=0,
-                                                       created_at__gte=start,
-                                                       created_at__lte=end,
-                                                       user__is_block=0).aggregate(Sum('earn_coin'))
-            # 赚的钱
-            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                          earn_coin__gt=0,
-                                                          club_id=int(club_id),
-                                                          created_at__gte=start,
-                                                          created_at__lte=end,
-                                                          user__is_block=0).aggregate(Sum('bets'))
-            # 应该扣的本金
+            sum_earn_coin = ClubIncome.objects.filter(club_id=int(club_id),
+                                                      created_at__gte=start,
+                                                      created_at__lte=end).aggregate(Sum('earn_coin'))
+
         else:
             number = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                     club_id=int(club_id), created_at__gte=start, source=type,
@@ -854,50 +812,20 @@ class ClubDayBetView(ListAPIView):
             sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       club_id=int(club_id), created_at__gte=start, source=type,
                                                       created_at__lte=end, user__is_block=0).aggregate(Sum('bets'))
-
-            sum_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      club_id=int(club_id),
-                                                      earn_coin__gt=0, created_at__gte=start, created_at__lte=end,
-                                                      source=type, user__is_block=0).aggregate(Sum('earn_coin'))
-            # 赔的钱
-            sum_lists = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                       club_id=int(club_id),
-                                                       earn_coin__lt=0,
-                                                       created_at__gte=start,
-                                                       created_at__lte=end,
-                                                       source=type, user__is_block=0).aggregate(Sum('earn_coin'))
-            # 赚的钱
-            sum_win_list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                          earn_coin__gt=0,
-                                                          club_id=int(club_id),
-                                                          created_at__gte=start,
-                                                          created_at__lte=end,
-                                                          source=type, user__is_block=0).aggregate(Sum('bets'))
-            # 应该扣的本金
+            sum_earn_coin = ClubIncome.objects.filter(club_id=int(club_id),
+                                                      created_at__gte=start,
+                                                      created_at__lte=end,
+                                                      source=type).aggregate(Sum('earn_coin'))
 
         if sum_bets['bets__sum'] is None:
             sum_bets = 0
         else:
             sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)  # 总投注流水
 
-        if sum_win_list['bets__sum'] is None:
-            sum_betss = 0
-        else:
-            sum_betss = sum_win_list['bets__sum']  # 应扣除的本金
-
-        if sum_list['earn_coin__sum'] is None:
-            sum_bets_list = 0
-        else:
-            sum_bets_list = sum_list['earn_coin__sum']  # 赔的钱
-        sum_bets_list = sum_bets_list - sum_betss
-        sum_bets_list = Decimal('-' + str(sum_bets_list))
-
-        if sum_lists['earn_coin__sum'] is None:
+        if sum_bets['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = sum_lists['earn_coin__sum'] * Decimal(0.95)  # 赚的钱
-        sum_earn_coin = sum_bets_list + abs(sum_earn_coin)
-        sum_earn_coin = normalize_fraction(sum_earn_coin, coin_accuracy)  # 总分红
+            sum_earn_coin = normalize_fraction(sum_bets['earn_coin__sum'], coin_accuracy)  # 总盈亏
 
         return self.response({"code": 0,
                               "number": number,
