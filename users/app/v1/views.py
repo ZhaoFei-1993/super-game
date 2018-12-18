@@ -12,7 +12,7 @@ from ...models import User, DailyLog, DailySettings, UserMessage, Message, \
     CoinOutServiceCharge, CoinGive, CoinGiveRecords, IntInvitation, CoinLock, \
     UserCoinLock, Countries, Dividend, UserCoinLockLog, PreReleaseUnlockMessageLog, CoinValue, EosCode, MobileCoin, \
     RecordMark
-from chat.models import Club
+from chat.models import Club, ClubIdentity
 from base.app import CreateAPIView, ListCreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, \
     RetrieveUpdateAPIView
 from base.function import LoginRequired
@@ -591,6 +591,12 @@ class InfoView(ListAPIView):
 
         is_message = message_hints(user_id)  # 是否有未读消息
 
+        is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id)).count()
+        club_id = ""
+        if is_identity == 1:
+            club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
+            club_id = club_identity.club_id
+
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"],
             'nickname': items[0]["nickname"],
@@ -608,6 +614,7 @@ class InfoView(ListAPIView):
             'is_message': is_message,
             'is_sound': items[0]["is_sound"],
             'is_notify': items[0]["is_notify"],
+            'club_id': club_id,
             'is_sign': is_sign}})
 
 
