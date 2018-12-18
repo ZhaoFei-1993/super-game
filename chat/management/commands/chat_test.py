@@ -8,6 +8,7 @@ from promotion.models import PromotionRecord
 from users.models import CoinDetail
 from decimal import Decimal
 from django.conf import settings
+import datetime
 
 
 class Command(BaseCommand, BaseView):
@@ -15,6 +16,9 @@ class Command(BaseCommand, BaseView):
 
     def handle(self, *args, **options):
         user_list = str(settings.TEST_USER_IDS)
+        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        yesterday = yesterday + " 23:59:59"
+        print("yesterday==============", yesterday)
         club_list = Club.objects.get_all()
         for i in club_list:
             club_info = i
@@ -67,6 +71,7 @@ class Command(BaseCommand, BaseView):
                     sql += " inner join guess_recordstockpk r on p.record_id=r.id"
                 sql += " where p.club_id = '" + str(club_id) + "'"
                 sql += " and p.source = '" + str(type) + "'"
+                sql += " and p.created_at <= '" + str(yesterday) + "'"
                 sql += " and p.user_id not in " + user_list
                 sql += " group by years, key_id"
                 # sql += " order by years desc"
