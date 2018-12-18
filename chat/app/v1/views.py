@@ -822,10 +822,10 @@ class ClubDayBetView(ListAPIView):
         else:
             sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)  # 总投注流水
 
-        if sum_bets['earn_coin__sum'] is None:
+        if sum_earn_coin['earn_coin__sum'] is None:
             sum_earn_coin = 0
         else:
-            sum_earn_coin = normalize_fraction(sum_bets['earn_coin__sum'], coin_accuracy)  # 总盈亏
+            sum_earn_coin = normalize_fraction(sum_earn_coin['earn_coin__sum'], coin_accuracy)  # 总盈亏
 
         return self.response({"code": 0,
                               "number": number,
