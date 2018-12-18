@@ -110,3 +110,27 @@ class Command(BaseCommand, BaseView):
                                 number = number * Decimal(str(0.95))
                             info[key_name][a[0]] += number
             print("info =================", info)
+            for k in info:
+                rule_name = 0
+                if k == "足球":
+                    rule_name = 1
+                elif k == "篮球":
+                    rule_name = 2
+                elif k == "六合彩":
+                    rule_name = 3
+                elif k == "股票":
+                    rule_name = 4
+                elif k == "股票PK":
+                    rule_name = 5
+                print("rule_name==============", rule_name)
+                for o in info[k]:
+                    time = o + " 00:00:00"
+                    print("time===============", time)
+                    earn_coin = info[k][o]
+                    print("coin_number==================", earn_coin)
+                    club_income = ClubIncome()
+                    club_income.club = club_info
+                    club_income.earn_coin = earn_coin
+                    club_income.created_at = time
+                    club_income.source = rule_name
+                    club_income.save()
