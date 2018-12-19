@@ -593,14 +593,15 @@ class InfoView(ListAPIView):
 
         key = "CLUB_INCOME_ALL"
         user_id = get_cache(key)
-        if int(items[0]["id"]) == int(user_id):
-            club_id = 0
-        else:
-            is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id)).count()
-            club_id = ""
-            if is_identity == 1:
-                club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
-                club_id = club_identity.club_id
+        if user_id is not None:
+            if int(items[0]["id"]) == int(user_id):
+                club_id = 0
+            else:
+                is_identity = ClubIdentity.objects.filter(is_deleted=0, user_id=int(user.id)).count()
+                club_id = ""
+                if is_identity == 1:
+                    club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
+                    club_id = club_identity.club_id
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"], 
