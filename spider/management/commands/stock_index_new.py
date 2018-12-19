@@ -444,7 +444,7 @@ class Command(BaseCommand):
 
         stock_index = StockIndex()
 
-        for stock in Stock.objects.all(~Q(name=str(Stock.HANGSENG))):
+        for stock in Stock.objects.all().filter(~Q(name=str(Stock.HANGSENG))):
             print(Stock.STOCK[int(stock.name)][1], ': ')
             if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
                 period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()
