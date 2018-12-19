@@ -5,6 +5,7 @@ from guess.models import Index, Periods, Index_day, Issues, Stock
 from .stock_result_new import GuessRecording, GuessPKRecording
 import requests
 import datetime
+from django.db.models import Q
 from utils.cache import *
 import re
 import local_settings
@@ -26,9 +27,10 @@ class StockIndex(object):
     def __init__(self):
         # 2018休市日期
         self.market_rest_cn_list = ['2018-06-18', '2018-09-24', '2018-10-01', '2018-10-02', '2018-10-03', '2018-10-04',
-                                    '2018-10-05']
-        self.market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-24', '2018-12-25']
-        self.market_rest_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26']
+                                    '2018-10-05', '2018-12-31', '2019-01-01']
+        self.market_rest_en_dic = ['2018-09-03', '2018-11-22', '2018-12-24', '2018-12-25', '2018-12-31', '2019-01-01']
+        self.market_rest_hk_dic = ['2018-09-25', '2018-10-01', '2018-10-17', '2018-12-25', '2018-12-26', '2018-12-31',
+                                   '2019-01-01']
 
         # 开市，闭市时间点
         self.market_rest_cn_start_time = ['09:30:00']
@@ -442,7 +444,7 @@ class Command(BaseCommand):
 
         stock_index = StockIndex()
 
-        for stock in Stock.objects.all():
+        for stock in Stock.objects.all(~Q(name=str(Stock.HANGSENG))):
             print(Stock.STOCK[int(stock.name)][1], ': ')
             if Periods.objects.filter(is_result=False, stock_id=stock.id).exists():
                 period = Periods.objects.filter(is_result=False, stock_id=stock.id).first()

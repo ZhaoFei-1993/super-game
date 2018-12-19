@@ -17,7 +17,8 @@ class BaseView(generics.GenericAPIView):
     def get_list_by_sql(self, sql, page_size=10):
         """
         使用原生SQL获取数据
-        :param sql: 
+        :param sql:
+        :param page_size:
         :return: 
         """
         page = 1
