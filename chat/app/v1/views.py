@@ -358,7 +358,7 @@ class ClubUserView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -421,7 +421,7 @@ class ClubHomeView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -519,7 +519,7 @@ class ClubUserInfoView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -563,7 +563,7 @@ class ClubBetListView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -644,7 +644,7 @@ class ClubBetsView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -693,7 +693,7 @@ class PayClubView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -813,7 +813,7 @@ class ClubDayBetView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
@@ -899,7 +899,7 @@ class ClubRecordView(ListAPIView):
         club_id = int(self.request.GET.get("club_id"))
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
-        if int(user.id) == int(key_user_id):
+        if (key_user_id is not None) and int(user.id) == int(key_user_id):
             pass
         else:
             club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
