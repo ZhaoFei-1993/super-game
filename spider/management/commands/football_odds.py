@@ -521,47 +521,23 @@ def get_data_info(url):
 
                 # 亚盘玩法
                 # try:
-                team_name_map, game_map = get_asia_game()
-                if (quiz.host_team + 'vs' + quiz.guest_team) in game_map:
-                    if rule_all.filter(type=8).exists():
-                        rule_asia = rule_all.filter(type=8).first()
-                    else:
-                        rule_asia = Rule()
-                        rule_asia.quiz = quiz
-                        rule_asia.type = str(Rule.AISA_RESULTS)
-                        rule_asia.type_en = str(Rule.AISA_RESULTS)
-                        rule_asia.tips = '亚盘'
-                        rule_asia.tips_en = 'Asian Handicap'
-                        rule_asia.handicap = ''
-                        rule_asia.save()
-                    json_dt = get_asia_handicap(game_map[quiz.host_team + 'vs' + quiz.guest_team])
-                    update_asia_odds(json_dt, rule_asia, quiz, change_time)
-                # except Exception as e:
+                # team_name_map, game_map = get_asia_game()
+                # if (quiz.host_team + 'vs' + quiz.guest_team) in game_map:
+                #     if rule_all.filter(type=8).exists():
+                #         rule_asia = rule_all.filter(type=8).first()
+                #     else:
+                #         rule_asia = Rule()
+                #         rule_asia.quiz = quiz
+                #         rule_asia.type = str(Rule.AISA_RESULTS)
+                #         rule_asia.type_en = str(Rule.AISA_RESULTS)
+                #         rule_asia.tips = '亚盘'
+                #         rule_asia.tips_en = 'Asian Handicap'
+                #         rule_asia.handicap = ''
+                #         rule_asia.save()
+                #     json_dt = get_asia_handicap(game_map[quiz.host_team + 'vs' + quiz.guest_team])
+                #     update_asia_odds(json_dt, rule_asia, quiz, change_time)
+                # # except Exception as e:
                 #     print('亚盘 Error is : ', e)
-
-                # # 亚盘玩法
-                # try:
-                #     proxies = get_proxies()
-                #     response_asia = requests.get(asia_url + match_id, headers=headers, proxies=proxies, timeout=15)
-                #     dt = response_asia.text.encode("utf-8").decode('unicode_escape')
-                #     json_dt = eval(dt[8:-2])
-                # except Exception as e:
-                #     # raise CommandError('亚盘 Error is : ', e)
-                #     print('亚盘 Error is : ', e)
-                # else:
-                #     if json_dt['status']['code'] == 0:
-                #         if rule_all.filter(type=8).exists():
-                #             rule_asia = rule_all.filter(type=8).first()
-                #         else:
-                #             rule_asia = Rule()
-                #             rule_asia.quiz = quiz
-                #             rule_asia.type = str(Rule.AISA_RESULTS)
-                #             rule_asia.type_en = str(Rule.AISA_RESULTS)
-                #             rule_asia.tips = '亚盘'
-                #             rule_asia.tips_en = 'Asian Handicap'
-                #             rule_asia.handicap = json_dt['result']['data'][0]['o3'].replace('\\', '')
-                #             rule_asia.save()
-                #         update_asia_odds(json_dt, rule_asia, quiz, change_time)
 
                 for i in range(0, 4):
                     # 赛果
