@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from base.backend import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView, CreateAPIView, DestroyAPIView
 from django.http import JsonResponse
-from ..models import Club, ClubBanner, ClubRule, ClubIdentity
+from ..models import Club, ClubBanner, ClubRule, ClubIdentity, ClubIncomeDetail
 from .serializers import ClubBackendSerializer, BannerImageSerializer, ClubRuleBackendSerializer, CoinSerialize
 from users.models import Coin, UserCoin, User, CoinDetail
 from rest_framework import status
@@ -308,6 +308,18 @@ class ClubIncome(ListAPIView):
     做庄局头操作
     """
 
+    def get(self, request, *args, **kwargs):
+        key = "CLUB_INCOME_ALL"
+        user_id = set_cache(key)
+        if user_id is None:
+            area_code = ""
+            telephone = ""
+        else:
+            user = User.objects.get(id=int(user_id))
+            area_code = user.area_code
+            telephone = user.telephone
+        return self.response({'code': 0, 'area_code': area_code, 'telephone': telephone})
+
     @reversion_Decorator
     def post(self, request, *args, **kwargs):
         """
@@ -331,6 +343,78 @@ class ClubIncome(ListAPIView):
         except Exception:
             raise ParamErrorException(error_code.API_110110_BACKEND_BANKER)
         set_cache(key, user_info.id)
+        return self.response({'code': 0})
+
+
+class ClubIncomeRecord(ListAPIView):
+    """
+    局头转账
+    """
+
+    def get(self, request, *args, **kwargs):
+        """
+        转账号记录列表
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        list = ClubIncomeDetail.objects.all().order_by("-created_at")
+        data = []
+        for i in list:
+            data.append({
+                "user_id": i.user_id,
+                "nickname": i.user.nickname,
+                "telephone": i.user.telephone,
+                "area_code": i.user.area_code,
+                "club_id": i.club_id,
+                "coin_name": i.club.coin.name,
+                "club_icon": i.club.icon,
+                "club_name": i.club.room_title,
+                "earn_coin": i.earn_coin,
+                "created_at": i.created_at.strftime('%Y-%m-%d %H:%M'),
+            })
+        return self.response({'code': 0, 'data': data})
+
+    @reversion_Decorator
+    def post(self, request, *args, **kwargs):
+        """
+        转账
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        value = value_judge(request, "club_id", "user_id", "amount")
+        if value == 0:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
+        club_id = int(request.data['club_id'])
+        user_id = int(request.data['user_id'])
+        amount = Decimal(str(request.data['amount']))
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        number = ClubIdentity.objects.filter(club_id=club_id, user_id=user_id, is_deleted=0).count()
+        if number <= 0:
+            raise ParamErrorException(error_code.API_110116_BACKEND_BANKER)
+        user_coin = UserCoin.objects.get(user_id=user_id, coin_id=coin_info.id)
+        balance = user_coin.balance
+        balance = balance + amount
+        if balance < 0:
+            raise ParamErrorException(error_code.API_110115_BACKEND_BANKER)
+        user_coin.balance = balance
+        user_coin.save()
+        club_income_detail = ClubIncomeDetail()
+        club_income_detail.club = club_info
+        club_income_detail.user_id = user_id
+        club_income_detail.earn_coin = amount
+        club_income_detail.save()
+        coin_detail = CoinDetail()
+        coin_detail.user = user_coin.user
+        coin_detail.coin_name = club_info.coin.name
+        coin_detail.amount = amount
+        coin_detail.rest = user_coin.balance
+        coin_detail.sources = 27
+        coin_detail.save()
         return self.response({'code': 0})
 
 

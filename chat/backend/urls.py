@@ -30,4 +30,6 @@ urlpatterns = [
     path('user/banker/', views.UserBanker.as_view(), name='club-user-banker'),
     # 设置局头管理员
     path('club/income/', views.ClubIncome.as_view(), name='club-income-user'),
+    # 局头转账
+    path('club/income/record/', views.ClubIncomeRecord.as_view(), name='club-income-record'),
 ]

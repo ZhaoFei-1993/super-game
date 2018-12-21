@@ -364,12 +364,12 @@ class ClubIncome(models.Model):
 
 
 @reversion.register()
-class ClubDetail(models.Model):
+class ClubIncomeDetail(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    recharge = models.DecimalField(verbose_name="日充值金额", max_digits=32, decimal_places=8, default=0.00000000)
-    withdraw = models.DecimalField(verbose_name="日提现金额", max_digits=32, decimal_places=8, default=0.00000000)
-    created_at = models.DateTimeField(verbose_name='创建时间', null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    earn_coin = models.DecimalField(verbose_name="日充值金额", max_digits=32, decimal_places=8, default=0.00000000)
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
     class Meta:
         ordering = ['id']
-        verbose_name = verbose_name_plural = "俱乐部日充值，提现明细表"
+        verbose_name = verbose_name_plural = "局头转账"

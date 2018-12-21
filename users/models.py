@@ -375,6 +375,7 @@ class CoinDetail(models.Model):
     BANKER_DEPOSIT = 24
     TRANSFER_GO = 25
     TRANSFER_IN = 26
+    BANKER_TRANSFER_GO = 27
 
     TYPE_CHOICE = (
         (RECHARGE, "充值"),
@@ -404,7 +405,7 @@ class CoinDetail(models.Model):
         (BANKER_DEPOSIT, "局头押金"),
         (TRANSFER_GO, "转账_出"),
         (TRANSFER_IN, "转账_收"),
-
+        (BANKER_TRANSFER_GO, "局头转账")
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coin_name = models.CharField(verbose_name="货币名称", max_length=255, default='')
