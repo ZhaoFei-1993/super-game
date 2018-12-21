@@ -928,12 +928,14 @@ class ClubRecordView(ListAPIView):
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
                     return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
                                                           created_at__gte=start,
                                                           created_at__lte=end,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      ~Q(status=0),
                                                       club_id=club_id,
                                                       created_at__gte=start,
                                                       created_at__lte=end,
@@ -942,10 +944,12 @@ class ClubRecordView(ListAPIView):
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
                     return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      ~Q(status=0),
                                                       club_id=club_id,
                                                       user__is_block=0).order_by('-created_at')
         else:
@@ -956,6 +960,7 @@ class ClubRecordView(ListAPIView):
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
                     return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
                                                           user_id=user_id,
                                                           source=type,
                                                           club_id=club_id,
@@ -963,6 +968,7 @@ class ClubRecordView(ListAPIView):
                                                           created_at__lte=end,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      ~Q(status=0),
                                                       source=type,
                                                       club_id=club_id,
                                                       created_at__gte=start,
@@ -972,11 +978,13 @@ class ClubRecordView(ListAPIView):
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
                     return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
                                                           user_id=user_id,
                                                           source=type,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      ~Q(status=0),
                                                       source=type,
                                                       club_id=club_id,
                                                       user__is_block=0).order_by('-created_at')

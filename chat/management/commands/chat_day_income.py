@@ -16,7 +16,7 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         user_list = str(settings.TEST_USER_IDS)
         yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        yesterday_start = yesterday + " 00:00:00"
+        # yesterday_start = yesterday + " 00:00:00"
         yesterday_end = yesterday + " 23:59:59"
         club_list = Club.objects.get_all()
         for i in club_list:
@@ -44,7 +44,7 @@ class Command(BaseCommand, BaseView):
                     continue
                 elif int(type) == 6:
                     type = 5
-                sql_list = "date_format( p.created_at, '%Y-%m-%d' ) as years, "
+                sql_list = "date_format( p.open_prize_time, '%Y-%m-%d' ) as years, "
                 if type == 1:  # 足球
                     sql_list += "r.quiz_id as key_id, "
                 elif type == 2:  # 篮球
@@ -70,8 +70,8 @@ class Command(BaseCommand, BaseView):
                     sql += " inner join guess_recordstockpk r on p.record_id=r.id"
                 sql += " where p.club_id = '" + str(club_id) + "'"
                 sql += " and p.source = '" + str(type) + "'"
-                sql += " and p.created_at <= '" + str(yesterday_end) + "'"
-                sql += " and p.created_at >= '" + str(yesterday_start) + "'"
+                sql += " and p.open_prize_time <= '" + str(yesterday_end) + "'"
+                # sql += " and p.open_prize_time >= '" + str(yesterday_start) + "'"
                 sql += " and p.user_id not in " + user_list
                 sql += " group by years, key_id"
                 list_info = get_sql(sql)

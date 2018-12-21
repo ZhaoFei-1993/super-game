@@ -169,6 +169,7 @@ class PromotionRecordManager(BaseManager):
             if data_number == 1:
                 record_info = self.get(record_id=record.id, source=source, is_presentation=1)
                 record_info.is_presentation = 0
+                record_info.open_prize_time = datetime.datetime.now()
                 record_info.save()
                 UserPresentation.objects.club_flow_statistics(record, source)
 
@@ -270,6 +271,7 @@ class PromotionRecord(models.Model):
     status = models.IntegerField(verbose_name="下注状态", choices=TYPE_CHOICE, default=AWAIT)
     is_presentation = models.IntegerField(verbose_name="是否已分钱", choices=TYPE_CHOICES, default=OPEN)
     created_at = models.DateTimeField(verbose_name='创建时间', null=True)
+    open_prize_time = models.DateTimeField(verbose_name="开奖时间", null=True)
 
     objects = PromotionRecordManager()
 
