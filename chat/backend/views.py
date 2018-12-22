@@ -310,7 +310,7 @@ class ClubIncome(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         key = "CLUB_INCOME_ALL"
-        user_id = set_cache(key)
+        user_id = get_cache(key)
         print("user_id==============", user_id)
         if user_id is None:
             area_code = ""
