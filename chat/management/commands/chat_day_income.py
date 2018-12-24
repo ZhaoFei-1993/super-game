@@ -23,10 +23,10 @@ class Command(BaseCommand, BaseView):
         for i in club_list:
             club_info = i
             club_id = i.id
-            if club_id == 10:
-                odds = 0.99
-            else:
-                odds = 0.95
+            # if club_id == 10:
+            #     odds = 0.99
+            # else:
+            odds = 0.95
             if club_id == 1:
                 continue
             club_rule = ClubRule.objects.all()
