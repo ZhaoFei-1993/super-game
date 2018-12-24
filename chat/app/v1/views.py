@@ -1031,14 +1031,14 @@ class ClubRecordView(ListAPIView):
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
-                                                          created_at__gte=start,
-                                                          created_at__lte=end,
+                                                          open_prize_time__gte=start,
+                                                          open_prize_time__lte=end,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       ~Q(status=0),
                                                       club_id=club_id,
-                                                      created_at__gte=start,
-                                                      created_at__lte=end,
+                                                      open_prize_time__gte=start,
+                                                      open_prize_time__lte=end,
                                                       user__is_block=0).order_by('-created_at')
             else:
                 if 'user_id' in self.request.GET:
@@ -1064,15 +1064,15 @@ class ClubRecordView(ListAPIView):
                                                           user_id=user_id,
                                                           source=type,
                                                           club_id=club_id,
-                                                          created_at__gte=start,
-                                                          created_at__lte=end,
+                                                          open_prize_time__gte=start,
+                                                          open_prize_time__lte=end,
                                                           user__is_block=0).order_by('-created_at')
                 return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       ~Q(status=0),
                                                       source=type,
                                                       club_id=club_id,
-                                                      created_at__gte=start,
-                                                      created_at__lte=end,
+                                                      open_prize_time__gte=start,
+                                                      open_prize_time__lte=end,
                                                       user__is_block=0).order_by('-created_at')
             else:
                 if 'user_id' in self.request.GET:

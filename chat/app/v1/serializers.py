@@ -114,9 +114,9 @@ class RecordSerialize(serializers.ModelSerializer):
         """
         sjian
         """
-        time = obj.created_at.strftime('%H:%M:%S')
-        yeas = obj.created_at.strftime('%Y-%m-%d')
-        created_ats = obj.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        time = obj.open_prize_time.strftime('%H:%M:%S')
+        yeas = obj.open_prize_time.strftime('%Y-%m-%d')
+        created_ats = obj.open_prize_time.strftime('%Y-%m-%d %H:%M:%S')
         list = {
             "time": time,
             "yeas": yeas,
