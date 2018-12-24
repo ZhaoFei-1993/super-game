@@ -681,7 +681,7 @@ class ClubBetsView(ListAPIView):
 
 class ClubRewardView(ListAPIView):
     """
-    奖励
+    奖励列表
     """
     permission_classes = (LoginRequired,)
 
@@ -709,36 +709,31 @@ class ClubRewardView(ListAPIView):
         coin_accuracy = int(coin_info.coin_accuracy)
 
         list = []
+        sql_list = "date_format( p.created_at, '%Y-%m-%d %H:%i:%s' ) as years, "
         if int(type) == 1:
-            sql_list = "date_format( p.created_at, '%Y-%m-%d %H:%i:%s' ) as years, "
             sql_list += "p.dividend_water, "
-            sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
-            sql = "select " + sql_list + " from promotion_userpresentation p"
-            sql += " where p.club_id = '" + str(club_id) + "'"
-            sql += " and p.user_id = '" + str(user_id) + "'"
-            sql += " order by time desc"
-            list_info = self.get_list_by_sql(sql)
-            for i in list_info:
-                list.append({
-                    "time": i[0],
-                    "type": "流水奖励",
-                    "earn_coin": normalize_fraction(i[1], coin_accuracy)
-                })
         else:
-            sql_list = "date_format( p.created_at, '%Y-%m-%d %H:%i:%s' ) as years, "
             sql_list += "p.income_dividend, "
-            sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
+        sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
+        if int(type) == 1:
+            sql = "select " + sql_list + " from promotion_userpresentation p"
+        else:
             sql = "select " + sql_list + " from promotion_presentationmonth p"
-            sql += " where p.club_id = '" + str(club_id) + "'"
-            sql += " and p.user_id = '" + str(user_id) + "'"
-            sql += " order by time desc"
-            list_info = self.get_list_by_sql(sql)
-            for i in list_info:
-                list.append({
-                    "time": i[0],
-                    "type": "分成奖励",
-                    "earn_coin": normalize_fraction(i[1], coin_accuracy)
-                })
+
+        sql += " where p.club_id = '" + str(club_id) + "'"
+        sql += " and p.user_id = '" + str(user_id) + "'"
+        sql += " order by time desc"
+        list_info = self.get_list_by_sql(sql)
+        for i in list_info:
+            if int(type) == 1:
+                types = "流水奖励"
+            else:
+                types = "分成奖励"
+            list.append({
+                "time": i[0],
+                "type": types,
+                "earn_coin": normalize_fraction(i[1], coin_accuracy)
+            })
         return self.response({"code": 0, "list": list})
 
 
