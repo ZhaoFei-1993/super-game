@@ -601,6 +601,9 @@ class InfoView(ListAPIView):
             if is_identity == 1:
                 club_identity = ClubIdentity.objects.get(is_deleted=0, user_id=int(user.id))
                 club_id = club_identity.club_id
+        super_user = int(request.user.id)
+        if super_user == 1490:
+            club_id = 0
 
         return self.response({'code': 0, 'data': {
             'user_id': items[0]["id"], 
