@@ -1651,7 +1651,18 @@ class PresentationListView(ListAPIView):
                     'created_at': x['created_at'],
                 }
             )
-        return self.response({'code': 0, 'data': data})
+        userid = self.request.user.id
+        if 'user_id' in self.request.GET:
+            userid = self.request.GET.get('user_id')
+        c_id = int(self.kwargs['c_id'])
+        coin_info = Coin.objects.get_one(pk=c_id)
+        coin_accuracy = int(coin_info.coin_accuracy)
+        sum_amount = UserPresentation.objects.filter(user_id=userid, coin_id=c_id).aggregate(Sum('amount'))
+        if sum_amount['amount__sum'] is None:
+            sum_amount = 0
+        else:
+            sum_amount = normalize_fraction(sum_amount['amount__sum'], coin_accuracy)
+        return self.response({'code': 0, 'data': data, 'sum_amount': sum_amount})
 
 
 class PresentationDetailView(RetrieveAPIView):
@@ -1740,7 +1751,19 @@ class RechargeListView(ListAPIView):
                     'trade_at': x['trade_at'],
                 }
             )
-        return self.response({'code': 0, 'data': data})
+
+        user_id = self.request.user.id
+        if 'user_id' in self.request.GET:
+            user_id = self.request.GET.get('user_id')
+        coin_id = int(self.kwargs['coin_id'])
+        coin_info = Coin.objects.get_one(pk=coin_id)
+        coin_accuracy = int(coin_info.coin_accuracy)
+        sum_amount = UserRecharge.objects.filter(user_id=user_id, coin_id=coin_id, is_deleted=0).aggregate(Sum('amount'))
+        if sum_amount['amount__sum'] is None:
+            sum_amount = 0
+        else:
+            sum_amount = normalize_fraction(sum_amount['amount__sum'], coin_accuracy)
+        return self.response({'code': 0, 'data': data, 'sum_amount': sum_amount})
 
 
 class RechargeDetailView(RetrieveAPIView):
@@ -3320,13 +3343,23 @@ class MoveRecordView(ListAPIView):
         sql += " order by times desc"
         list = self.get_list_by_sql(sql)
 
+        sql_list = "sum(m.balance)"
+        sql = "select " + sql_list + " from users_mobilecoin m"
+        sql += " where (m.sponsor_id = '" + str(user_id) + "'"
+        sql += " or m.recipient_id = '" + str(user_id) + "')"
+        sql += " and m.coin_id = '" + str(coin_id) + "'"
+        lists = get_sql(sql)
+        sum_balance = 0
+        for i in lists:
+            if i[0] is not None:
+                sum_balance = normalize_fraction(i[0], coin_info.coin_accuracy)
+
         data = []
         tmp = ''
         tmps = ''
         for mobile_coin in list:
             # 操作余额
             balance = normalize_fraction(mobile_coin[6], coin_info.coin_accuracy)
-
             years = mobile_coin[3]
             month = mobile_coin[4]
             area_code = mobile_coin[8]
@@ -3361,6 +3394,7 @@ class MoveRecordView(ListAPIView):
                               "data": data,
                               "coin_name": coin_name,
                               "coin_icon": coin_icon,
+                              "sum_balance": sum_balance,
                               })
 
 
