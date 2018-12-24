@@ -29,4 +29,6 @@ urlpatterns = [
     path('club/day/bet/', views.ClubDayBetView.as_view(), name="club-day-bet"),
     #  投注记录
     path('club/record/', views.ClubRecordView.as_view(), name="club-bet-record"),
+    #  奖励
+    path('club/reward/', views.ClubRewardView.as_view(), name="club-bet-reward"),
 ]

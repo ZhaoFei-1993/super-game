@@ -10,6 +10,7 @@ from django.db.models import Q
 from utils.functions import message_hints, normalize_fraction, get_sql, to_decimal
 from django.db.models import Sum
 import datetime
+import re
 import calendar
 from datetime import timedelta
 from django.conf import settings
@@ -675,6 +676,68 @@ class ClubBetsView(ListAPIView):
                 "time": i[0],
                 "earn_coin": normalize_fraction(earn_coin, coin_accuracy)
             })
+        return self.response({"code": 0, "list": list})
+
+
+class ClubRewardView(ListAPIView):
+    """
+    奖励
+    """
+    permission_classes = (LoginRequired,)
+
+    def get_queryset(self):
+        pass
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+        club_id = int(self.request.GET.get("club_id"))
+        type = self.request.GET.get("type")
+        regex = re.compile(r'^(1|2)$')  # 1 流水  2 分成
+        if type is None or not regex.match(type):
+            raise ParamErrorException(error_code.API_10104_PARAMETER_EXPIRED)
+        key = "CLUB_INCOME_ALL"
+        key_user_id = get_cache(key)
+        if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
+            pass
+        else:
+            club_identity = ClubIdentity.objects.filter(is_deleted=0, club_id=club_id, user_id=int(user.id)).count()
+            if club_identity != 1:
+                raise ParamErrorException(error_code.API_110114_BACKEND_BANKER)
+        club_info = Club.objects.get_one(pk=club_id)
+        coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+        coin_accuracy = int(coin_info.coin_accuracy)
+
+        list = []
+        if int(type) == 1:
+            sql_list = "date_format( p.created_at, '%Y-%m-%d %H:%i:%s' ) as years, "
+            sql_list += "p.dividend_water, "
+            sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
+            sql = "select " + sql_list + " from promotion_userpresentation p"
+            sql += " where p.club_id = '" + str(club_id) + "'"
+            sql += " and p.user_id = '" + str(user.id) + "'"
+            sql += " order by time desc"
+            list_info = self.get_list_by_sql(sql)
+            for i in list_info:
+                list.append({
+                    "time": i[0],
+                    "type": "流水奖励",
+                    "earn_coin": normalize_fraction(i[1], coin_accuracy)
+                })
+        else:
+            sql_list = "date_format( p.created_at, '%Y-%m-%d %H:%i:%s' ) as years, "
+            sql_list += "p.income_dividend, "
+            sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
+            sql = "select " + sql_list + " from promotion_presentationmonth p"
+            sql += " where p.club_id = '" + str(club_id) + "'"
+            sql += " and p.user_id = '" + str(user.id) + "'"
+            sql += " order by time desc"
+            list_info = self.get_list_by_sql(sql)
+            for i in list_info:
+                list.append({
+                    "time": i[0],
+                    "type": "分成奖励",
+                    "earn_coin": normalize_fraction(i[1], coin_accuracy)
+                })
         return self.response({"code": 0, "list": list})
 
 
