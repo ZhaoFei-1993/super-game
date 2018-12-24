@@ -660,7 +660,6 @@ class ClubBetsView(ListAPIView):
         sql_list += "sum(p.earn_coin) as profit, "
         sql_list += "date_format( p.created_at, '%Y%m' ) as time"
         sql = "select " + sql_list + " from chat_clubincome p"
-        sql += " inner join users_user u on p.user_id=u.id"
         sql += " where p.club_id = '" + str(club_id) + "'"
         sql += " group by years, time"
         sql += " order by time desc"
