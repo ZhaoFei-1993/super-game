@@ -691,6 +691,7 @@ class ClubRewardView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        user_id = self.request.GET.get('user_id')
         type = self.request.GET.get("type")
         regex = re.compile(r'^(1|2)$')  # 1 流水  2 分成
         if type is None or not regex.match(type):
@@ -714,7 +715,7 @@ class ClubRewardView(ListAPIView):
             sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
             sql = "select " + sql_list + " from promotion_userpresentation p"
             sql += " where p.club_id = '" + str(club_id) + "'"
-            sql += " and p.user_id = '" + str(user.id) + "'"
+            sql += " and p.user_id = '" + str(user_id) + "'"
             sql += " order by time desc"
             list_info = self.get_list_by_sql(sql)
             for i in list_info:
@@ -729,7 +730,7 @@ class ClubRewardView(ListAPIView):
             sql_list += "date_format( p.created_at, '%Y%m%d%H%i%s' ) as time"
             sql = "select " + sql_list + " from promotion_presentationmonth p"
             sql += " where p.club_id = '" + str(club_id) + "'"
-            sql += " and p.user_id = '" + str(user.id) + "'"
+            sql += " and p.user_id = '" + str(user_id) + "'"
             sql += " order by time desc"
             list_info = self.get_list_by_sql(sql)
             for i in list_info:
