@@ -312,9 +312,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
         pass
 
     # 亚盘的正确选项
-    if rule_all.filter(type=8).exists():
-        for rule_asia in rule_all.filter(type=8):
-            asia_option(quiz, rule_asia)
+    # if rule_all.filter(type=8).exists():
+    #     for rule_asia in rule_all.filter(type=8):
+    #         asia_option(quiz, rule_asia)
 
     flag = False
     # 分配奖金
@@ -543,9 +543,9 @@ def get_data_info(url, match_flag, result_data=None, host_team_score=None, guest
                 cursor.execute(sql_false)
 
     # 分配亚盘奖金
-    records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
-    if len(records_asia) > 0:
-        asia_result(quiz, records_asia)
+    # records_asia = Record.objects.filter(quiz=quiz, is_distribution=False, rule__type=str(Rule.AISA_RESULTS))
+    # if len(records_asia) > 0:
+    #     asia_result(quiz, records_asia)
 
     quiz.status = Quiz.BONUS_DISTRIBUTION
     quiz.save()
