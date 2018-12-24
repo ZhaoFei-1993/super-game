@@ -16,7 +16,7 @@ from datetime import timedelta
 from django.conf import settings
 from utils.cache import get_cache, set_cache, delete_cache
 from promotion.models import PromotionRecord
-from promotion.models import UserPresentation as Promotion
+from promotion.models import UserPresentation as Promotion, UserPresentation as PromotionUserPresentation
 from quiz.models import Record as QuizRecord, Rule as QuizRule
 from guess.models import Record as GuessRecord, RecordStockPk as GuesspkRecord, StockPk, Play, Stock
 from marksix.models import SixRecord, Option
@@ -491,10 +491,17 @@ class ClubHomeView(ListAPIView):
             sum_bet_water = normalize_fraction(sum_list['bets__sum'], coin_accuracy)       # 总投注流水
 
         sum_bets = ClubIncome.objects.filter(club_id=int(club_id)).aggregate(Sum('earn_coin'))
+        sum_dividend_water = PromotionUserPresentation.objects.filter(club_id=int(club_id),
+                                                                      created_at__gte='2018-12-03 00:00:00'
+                                                                      ).aggregate(Sum('dividend_water'))
+        if sum_dividend_water['dividend_water__sum'] is None:
+            sum_dividend_water = 0
+        else:
+            sum_dividend_water = normalize_fraction(sum_dividend_water['dividend_water__sum'], coin_accuracy)
         if sum_bets['earn_coin__sum'] is None:
             sum_bets = 0
         else:
-            sum_bets = normalize_fraction(sum_bets['earn_coin__sum'], coin_accuracy)  # 总盈亏
+            sum_bets = normalize_fraction((sum_bets['earn_coin__sum'] - sum_dividend_water), coin_accuracy)  # 总盈亏
 
         sum_bets = normalize_fraction(sum_bets, coin_accuracy)
         data = {
