@@ -355,8 +355,12 @@ class ClubUserView(ListAPIView):
     def list(self, request, *args, **kwargs):
         data = []
         type = int(request.GET.get("type"))
+        if 'type' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -420,6 +424,8 @@ class ClubHomeView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -518,6 +524,8 @@ class ClubUserInfoView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -562,6 +570,8 @@ class ClubBetListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -643,6 +653,8 @@ class ClubBetsView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -691,7 +703,11 @@ class ClubRewardView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user_id = self.request.GET.get('user_id')
+        if 'user_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         type = self.request.GET.get("type")
         regex = re.compile(r'^(1|2)$')  # 1 流水  2 分成
         if type is None or not regex.match(type):
@@ -749,6 +765,8 @@ class PayClubView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -869,6 +887,8 @@ class ClubDayBetView(ListAPIView):
     def list(self, request, *args, **kwargs):
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
@@ -953,8 +973,12 @@ class ClubRecordView(ListAPIView):
 
     def get_queryset(self):
         type = int(self.request.GET.get('type'))   # 0,全部 剩下分类按照玩法列表
+        if 'type' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         user = self.request.user
         club_id = int(self.request.GET.get("club_id"))
+        if 'club_id' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         key = "CLUB_INCOME_ALL"
         key_user_id = get_cache(key)
         if (key_user_id is not None) and int(user.id) == int(key_user_id) or user.id == 1490:
