@@ -103,8 +103,6 @@ class Command(BaseCommand, BaseView):
                                 "earn_coin": number,
                                 "bets": a[4]
                             }
-                            # info[key_name][a[0]]["earn_coin"] = number
-                            # info[key_name][a[0]]["bets"] = a[4]
                         else:
                             number = a[2]
                             if number > 0:

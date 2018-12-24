@@ -740,6 +740,24 @@ class ClubRewardView(ListAPIView):
         sql += " and p.user_id = '" + str(user_id) + "'"
         sql += " order by time desc"
         list_info = self.get_list_by_sql(sql)
+
+        if int(type) == 1:
+            sql_list = "sum(p.dividend_water)"
+        else:
+            sql_list = "sum(p.income_dividend)"
+        if int(type) == 1:
+            sql = "select " + sql_list + " from promotion_userpresentation p"
+        else:
+            sql = "select " + sql_list + " from promotion_presentationmonth p"
+
+        sql += " where p.club_id = '" + str(club_id) + "'"
+        sql += " and p.user_id = '" + str(user_id) + "'"
+        lists = get_sql(sql)
+        sum_earn_coin = 0
+        for i in lists:
+            if i[0] is not None:
+                sum_earn_coin = normalize_fraction(i[0], coin_accuracy)
+
         for i in list_info:
             if int(type) == 1:
                 types = "流水奖励"
@@ -750,7 +768,7 @@ class ClubRewardView(ListAPIView):
                 "type": types,
                 "earn_coin": normalize_fraction(i[1], coin_accuracy)
             })
-        return self.response({"code": 0, "list": list})
+        return self.response({"code": 0, "list": list, "sum_earn_coin": sum_earn_coin})
 
 
 class PayClubView(ListAPIView):
