@@ -1127,4 +1127,34 @@ class ClubRecordView(ListAPIView):
                     "list": list
                 }
             )
-        return self.response({"code": 0, "data": data})
+        types = int(self.request.GET.get('type'))
+        sum_earn_coin = 0
+        sum_bets = 0
+        if types == 0 and 'sb_time' not in self.request.GET and 'user_id' in self.request.GET:
+            club_id = int(self.request.GET.get("club_id"))
+            club_info = Club.objects.get_one(pk=club_id)
+            coin_info = Coin.objects.get_one(pk=int(club_info.coin_id))
+            coin_accuracy = int(coin_info.coin_accuracy)
+            user_id = self.request.GET.get('user_id')
+            user_list = settings.TEST_USER_ID
+            sum_earn_coin = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                           ~Q(status=0),
+                                                           user_id=user_id,
+                                                           club_id=club_id,
+                                                           user__is_block=0).aggregate(Sum('earn_coin'))
+            sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                      ~Q(status=0),
+                                                      user_id=user_id,
+                                                      club_id=club_id,
+                                                      user__is_block=0).aggregate(Sum('bets'))
+            if sum_bets['bets__sum'] is None:
+                sum_bets = 0
+            else:
+                sum_bets = normalize_fraction(sum_bets['bets__sum'], coin_accuracy)
+
+            if sum_earn_coin['earn_coin__sum'] is None:
+                sum_earn_coin = 0
+            else:
+                sum_earn_coin = normalize_fraction(sum_earn_coin['earn_coin__sum'], coin_accuracy)
+
+        return self.response({"code": 0, "data": data, "sum_bets": sum_bets, "sum_earn_coin": sum_earn_coin})
