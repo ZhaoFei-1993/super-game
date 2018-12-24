@@ -16,17 +16,17 @@ class Command(BaseCommand, BaseView):
     def handle(self, *args, **options):
         user_list = str(settings.TEST_USER_IDS)
         yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        # yesterday_start = yesterday + " 00:00:00"
-        yesterday_start = "2018-12-03 00:00:00"
+        yesterday_start = yesterday + " 00:00:00"
+        # yesterday_start = "2018-12-03 00:00:00"
         yesterday_end = yesterday + " 23:59:59"
         club_list = Club.objects.get_all()
         for i in club_list:
             club_info = i
             club_id = i.id
-            # if club_id == 10:
-            #     odds = 0.99
-            # else:
-            odds = 0.95
+            if club_id == 10:
+                odds = 0.99
+            else:
+                odds = 0.95
             if club_id == 1:
                 continue
             club_rule = ClubRule.objects.all()
