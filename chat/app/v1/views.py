@@ -1250,6 +1250,16 @@ class ClubRecordView(ListAPIView):
                                                            user_id=user_id,
                                                            club_id=club_id,
                                                            user__is_block=0).aggregate(Sum('earn_coin'))
+            sum__win_earn_coin = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                                ~Q(status=0),
+                                                                earn_coin__gt=0,
+                                                                user_id=user_id,
+                                                                club_id=club_id,
+                                                                user__is_block=0).aggregate(Sum('bets'))
+            if sum__win_earn_coin['bets__sum'] is None:
+                sum__win_earn_coin = 0
+            else:
+                sum__win_earn_coin = sum__win_earn_coin['bets__sum']
             sum_bets = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                       ~Q(status=0),
                                                       user_id=user_id,
@@ -1263,6 +1273,7 @@ class ClubRecordView(ListAPIView):
             if sum_earn_coin['earn_coin__sum'] is None:
                 sum_earn_coin = 0
             else:
-                sum_earn_coin = normalize_fraction(sum_earn_coin['earn_coin__sum'], coin_accuracy)
+                sum_earn_coin = sum_earn_coin['earn_coin__sum']
+            sum_earn_coin = normalize_fraction((sum_earn_coin - sum__win_earn_coin), coin_accuracy)
 
         return self.response({"code": 0, "data": data, "sum_bets": sum_bets, "sum_earn_coin": sum_earn_coin})
