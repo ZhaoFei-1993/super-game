@@ -1096,6 +1096,7 @@ class ClubRecordView(ListAPIView):
                                                           source=type,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-open_prize_time')
+        print("list=================", list)
         print(connection.queries)
         return list
 
