@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from base.app import ListAPIView, ListCreateAPIView
+from django.db import connection
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
 from chat.models import Club, ClubRule, ClubBanner, ClubIdentity, ClubIncome
@@ -1034,14 +1035,14 @@ class ClubRecordView(ListAPIView):
                 end = sb_time + " 23:59:59"
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
                                                           open_prize_time__range=[start, end],
                                                           user__is_block=0).order_by('-open_prize_time')
                 else:
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           club_id=club_id,
                                                           open_prize_time__range=[start, end],
@@ -1049,13 +1050,13 @@ class ClubRecordView(ListAPIView):
             else:
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-open_prize_time')
                 else:
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-open_prize_time')
@@ -1066,7 +1067,7 @@ class ClubRecordView(ListAPIView):
                 end = sb_time + " 23:59:59"
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           source=type,
@@ -1074,7 +1075,7 @@ class ClubRecordView(ListAPIView):
                                                           open_prize_time__range=[start, end],
                                                           user__is_block=0).order_by('-open_prize_time')
                 else:
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           source=type,
                                                           club_id=club_id,
@@ -1083,18 +1084,20 @@ class ClubRecordView(ListAPIView):
             else:
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           source=type,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-open_prize_time')
                 else:
-                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                    list = PromotionRecord.objects.filter(~Q(user_id__in=user_list),
                                                           ~Q(status=0),
                                                           source=type,
                                                           club_id=club_id,
                                                           user__is_block=0).order_by('-open_prize_time')
+        print(connection.queries)
+        return list
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
