@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from base.app import ListAPIView
+from base.app import ListAPIView, ListCreateAPIView
 from base.function import LoginRequired
 from .serializers import ClubListSerialize, ClubRuleSerialize, ClubBannerSerialize, RecordSerialize
 from chat.models import Club, ClubRule, ClubBanner, ClubIdentity, ClubIncome
@@ -900,7 +900,7 @@ class PayClubView(ListAPIView):
         return self.response({"code": 0, "data": data})
 
 
-class ClubDayBetView(ListAPIView):
+class ClubDayBetView(ListCreateAPIView):
     """
     单天投注记录
     """
