@@ -1040,13 +1040,14 @@ class ClubRecordView(ListAPIView):
                                                           club_id=club_id,
                                                           open_prize_time__gte=start,
                                                           open_prize_time__lte=end,
-                                                          user__is_block=0).order_by('-created_at')
-                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      ~Q(status=0),
-                                                      club_id=club_id,
-                                                      open_prize_time__gte=start,
-                                                      open_prize_time__lte=end,
-                                                      user__is_block=0).order_by('-created_at')
+                                                          user__is_block=0).order_by('-open_prize_time')
+                else:
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
+                                                          club_id=club_id,
+                                                          open_prize_time__gte=start,
+                                                          open_prize_time__lte=end,
+                                                          user__is_block=0).order_by('-open_prize_time')
             else:
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
@@ -1054,11 +1055,12 @@ class ClubRecordView(ListAPIView):
                                                           ~Q(status=0),
                                                           user_id=user_id,
                                                           club_id=club_id,
-                                                          user__is_block=0).order_by('-created_at')
-                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      ~Q(status=0),
-                                                      club_id=club_id,
-                                                      user__is_block=0).order_by('-created_at')
+                                                          user__is_block=0).order_by('-open_prize_time')
+                else:
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-open_prize_time')
         else:
             if 'sb_time' in self.request.GET:
                 sb_time = str(self.request.GET.get("sb_time"))
@@ -1073,14 +1075,15 @@ class ClubRecordView(ListAPIView):
                                                           club_id=club_id,
                                                           open_prize_time__gte=start,
                                                           open_prize_time__lte=end,
-                                                          user__is_block=0).order_by('-created_at')
-                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      ~Q(status=0),
-                                                      source=type,
-                                                      club_id=club_id,
-                                                      open_prize_time__gte=start,
-                                                      open_prize_time__lte=end,
-                                                      user__is_block=0).order_by('-created_at')
+                                                          user__is_block=0).order_by('-open_prize_time')
+                else:
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          open_prize_time__gte=start,
+                                                          open_prize_time__lte=end,
+                                                          user__is_block=0).order_by('-open_prize_time')
             else:
                 if 'user_id' in self.request.GET:
                     user_id = self.request.GET.get('user_id')
@@ -1089,12 +1092,13 @@ class ClubRecordView(ListAPIView):
                                                           user_id=user_id,
                                                           source=type,
                                                           club_id=club_id,
-                                                          user__is_block=0).order_by('-created_at')
-                return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
-                                                      ~Q(status=0),
-                                                      source=type,
-                                                      club_id=club_id,
-                                                      user__is_block=0).order_by('-created_at')
+                                                          user__is_block=0).order_by('-open_prize_time')
+                else:
+                    return PromotionRecord.objects.filter(~Q(user_id__in=user_list),
+                                                          ~Q(status=0),
+                                                          source=type,
+                                                          club_id=club_id,
+                                                          user__is_block=0).order_by('-open_prize_time')
 
     def list(self, request, *args, **kwargs):
         results = super().list(request, *args, **kwargs)
