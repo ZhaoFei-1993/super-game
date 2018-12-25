@@ -557,7 +557,10 @@ class BillView(ListCreateAPIView):
             item = UserPresentation.objects.get(pk=id)
         except Exception:
             return JsonResponse({'Error': 'Instance Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
-        txid = '11111'
+        # txid = '11111'
+        txid = self.request.GET.get('txid')
+        if 'txid' not in self.request.GET:
+            raise ParamErrorException(error_code.API_405_WAGER_PARAMETER)
         state = 1
         if state == 1:
             item.is_bill = 1
