@@ -149,7 +149,7 @@ def new_issue(now_issue, now_open_date):
     now_open_ymd = now_open_date.strftime('%Y-%m-%d')
     now_open_hms = now_open_date.strftime('%H:%M:%S')
 
-    six_url = 'https://www.lotto-8.com/listltohk.asp'
+    six_url = 'https://www.lotto-8.com/listltohkbbk.asp'
     response = requests.get(url=six_url, headers=headers)
     soup = BeautifulSoup(response.text, 'lxml')
     next_open_oth_ymd = ''
