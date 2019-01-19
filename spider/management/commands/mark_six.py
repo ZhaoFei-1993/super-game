@@ -188,7 +188,7 @@ class Command(BaseCommand):
 
         data = {
             'type': 1,
-            'year': 2018,
+            'year': 2019,
         }
         open_price = OpenPrice.objects.order_by('-open').first()
         next_open = open_price.next_open
